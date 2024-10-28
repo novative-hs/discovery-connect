@@ -3,33 +3,33 @@ import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const SampleArea = () => {
+const ResearcherArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
+  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of researcher to delete
   const [formData, setFormData] = useState({
-    title: "",
-    age: "",
+    username: "",
+    email: "",
     gender: "",
-    price: "",
-    quantity: "",
-    endTime: "",
+    phoneNumber: "",
+    fullAddress: "",
+    country: "",
     // logo: ""
   });
-  const [editSample, setEditSample] = useState(null); // State for selected sample to edit
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
+  const [editSample, setEditSample] = useState(null); // State for selected researcher to edit
+  const [researchers, setSamples] = useState([]); // State to hold fetched researchers
   const [successMessage, setSuccessMessage] = useState('');
 
 
-  // Fetch samples from backend when component loads
+  // Fetch researchers from backend when component loads
   useEffect(() => {
     const fetchSamples = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/sample/get');
-        setSamples(response.data); // Store fetched samples in state
+        const response = await axios.get('http://localhost:5000/api/researcher/get');
+        setSamples(response.data); // Store fetched researchers in state
       } catch (error) {
-        console.error("Error fetching samples:", error);
+        console.error("Error fetching researchers:", error);
       }
     };
 
@@ -48,25 +48,25 @@ const SampleArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/samples/post', formData);
-      console.log("Sample added successfully:", response.data);
+      const response = await axios.post('http://localhost:5000/api/researchers/post', formData);
+      console.log("Researcher added successfully:", response.data);
 
-      // Refresh the sample list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
+      // Refresh the researcher list after successful submission
+      const newResponse = await axios.get('http://localhost:5000/api/researcher/get');
       setSamples(newResponse.data); // Update state with the new list
 
       // Clear form after submission
       setFormData({
-        title: "",
-        age: "",
+        username: "",
+        email: "",
         gender: "",
-        price: "",
-        quantity: "",
-        endTime: "",
+        phoneNumber: "",
+        fullAddress: "",
+        country: "",
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding sample:", error);
+      console.error("Error adding researcher:", error);
     }
   };
 
@@ -74,39 +74,39 @@ const SampleArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/samples/delete/${selectedSampleId}`);
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+      await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedSampleId}`);
+      console.log(`Researcher with ID ${selectedSampleId} deleted successfully.`);
 
       // Set success message
-      setSuccessMessage('Sample deleted successfully.');
+      setSuccessMessage('Researcher deleted successfully.');
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
 
-      // Refresh the sample list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
+      // Refresh the researcher list after deletion
+      const newResponse = await axios.get('http://localhost:5000/api/researcher/get');
       setSamples(newResponse.data);
 
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedSampleId(null);
     } catch (error) {
-      console.error(`Error deleting sample with ID ${selectedSampleId}:`, error);
+      console.error(`Error deleting researcher with ID ${selectedSampleId}:`, error);
     }
   };
-  const handleEditClick = (sample) => {
-    setSelectedSampleId(sample.id);
-    setEditSample(sample); // Store the sample data to edit
+  const handleEditClick = (researcher) => {
+    setSelectedSampleId(researcher.id);
+    setEditSample(researcher); // Store the researcher data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
-      title: sample.title,
-      age: sample.age,
-      gender: sample.gender,
-      price: sample.price,
-      quantity: sample.quantity,
-      endTime: sample.endTime,
+      username: researcher.username,
+      email: researcher.email,
+      gender: researcher.gender,
+      phoneNumber: researcher.phoneNumber,
+      fullAddress: researcher.fullAddress,
+      country: researcher.country,
     });
   };
 
@@ -115,24 +115,24 @@ const SampleArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/samples/edit/${selectedSampleId}`,
+        `http://localhost:5000/api/researchers/edit/${selectedSampleId}`,
         formData
       );
-      console.log("Sample updated successfully:", response.data);
+      console.log("Researcher updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/sample/get"
+        "http://localhost:5000/api/researcher/get"
       );
       setSamples(newResponse.data);
 
       setShowEditModal(false);
-      setSuccessMessage("Sample updated successfully.");
+      setSuccessMessage("Researcher updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+      console.error(`Error updating researcher with ID ${selectedSampleId}:`, error);
     }
   };
 
@@ -149,10 +149,10 @@ const SampleArea = () => {
                   {successMessage}
                 </div>
               )}
-              {/* Add Samples Button */}
+              {/* Add Researchers Button */}
               <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
                 <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                  Add Samples
+                  Add Researchers
                 </button>
               </div>
 
@@ -162,36 +162,36 @@ const SampleArea = () => {
                   <thead className="thead-dark">
                     <tr>
                       <th>ID</th>
-                      <th>Name</th>
-                      <th>Age</th>
+                      <th>username</th>
+                      <th>Email</th>
                       <th>Gender</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>End Time</th>
+                      <th>Phone Number</th>
+                      <th>Full Address</th>
+                      <th>Country</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {samples.length > 0 ? (
-                      samples.map((sample) => (
-                        <tr key={sample.id}>
-                          <td>{sample.id}</td>
-                          <td>{sample.title}</td>
-                          <td>{sample.age}</td>
-                          <td>{sample.gender}</td>
-                          <td>{sample.price}</td>
-                          <td>{sample.quantity}</td>
-                          <td>{sample.endTime}</td>
+                    {researchers.length > 0 ? (
+                      researchers.map((researcher) => (
+                        <tr key={researcher.id}>
+                          <td>{researcher.id}</td>
+                          <td>{researcher.username}</td>
+                          <td>{researcher.email}</td>
+                          <td>{researcher.gender}</td>
+                          <td>{researcher.phoneNumber}</td>
+                          <td>{researcher.fullAddress}</td>
+                          <td>{researcher.country}</td>
                           <td>
                             <button
                               className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}>
+                              onClick={() => handleEditClick(researcher)}>
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedSampleId(sample.id);
+                                setSelectedSampleId(researcher.id);
                                 setShowDeleteModal(true);
                               }}
                             >
@@ -203,7 +203,7 @@ const SampleArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">
-                          No samples available
+                          No researchers available
                         </td>
                       </tr>
                     )}
@@ -211,13 +211,13 @@ const SampleArea = () => {
                 </table>
               </div>
 
-              {/* Modal for Adding Samples */}
+              {/* Modal for Adding Researchers */}
               {showAddModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Add Sample</h5>
+                        <h5 className="modal-title">Add Researcher</h5>
                         <button
                           type="button"
                           className="close"
@@ -237,23 +237,23 @@ const SampleArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>Name</label>
+                            <label>username</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="title"
-                              value={formData.title}
+                              name="username"
+                              value={formData.username}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Age</label>
+                            <label>Email</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="age"
-                              value={formData.age}
+                              name="email"
+                              value={formData.email}
                               onChange={handleInputChange}
                               required
                             />
@@ -272,35 +272,36 @@ const SampleArea = () => {
                               <option value="Female">Female</option>
                             </select>
                           </div>
+
                           <div className="form-group">
-                            <label>Price</label>
+                            <label>Phone Number</label>
                             <input
-                              type="number"
+                              type="text"
                               className="form-control"
-                              name="price"
-                              value={formData.price}
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Quantity</label>
+                            <label>Full Address</label>
                             <input
-                              type="number"
+                              type="text"
                               className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
+                              name="fullAddress"
+                              value={formData.fullAddress}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>End Time</label>
+                            <label>Country</label>
                             <input
-                              type="datetime-local"
+                              type="text"
                               className="form-control"
-                              name="endTime"
-                              value={formData.endTime}
+                              name="country"
+                              value={formData.country}
                               onChange={handleInputChange}
                               required
                             />
@@ -317,13 +318,13 @@ const SampleArea = () => {
                 </div>
               )}
 
-              {/* Edit Sample Modal */}
+              {/* Edit Researcher Modal */}
               {showEditModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Edit Sample</h5>
+                        <h5 className="modal-title">Edit Researcher</h5>
                         <button
                           type="button"
                           className="close"
@@ -345,67 +346,70 @@ const SampleArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>Title</label>
+                            <label>Username</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="title"
-                              value={formData.title}
+                              name="username"
+                              value={formData.username}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Age</label>
+                            <label>Email</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="age"
-                              value={formData.age}
+                              name="email"
+                              value={formData.email}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
                             <label>Gender</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="gender"
                               value={formData.gender}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Gender</option>
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                            </select>
                           </div>
                           <div className="form-group">
-                            <label>Price</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="price"
-                              value={formData.price}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Quantity</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>End Time</label>
+                            <label>Phone Number</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="endTime"
-                              value={formData.endTime}
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Full Address</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="fullAddress"
+                              value={formData.fullAddress}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Country</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="country"
+                              value={formData.country}
                               onChange={handleInputChange}
                               required
                             />
@@ -414,7 +418,7 @@ const SampleArea = () => {
                         <div className="modal-footer">
 
                           <button type="submit" className="btn btn-primary">
-                            Update Sample
+                            Update Researcher
                           </button>
                         </div>
                       </form>
@@ -423,13 +427,13 @@ const SampleArea = () => {
                 </div>
               )}
 
-              {/* Modal for Deleting Samples */}
+              {/* Modal for Deleting Researchers */}
               {showDeleteModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Delete Sample</h5>
+                        <h5 className="modal-title">Delete Researcher</h5>
                         <button
                           type="button"
                           className="close"
@@ -439,7 +443,7 @@ const SampleArea = () => {
                         </button>
                       </div>
                       <div className="modal-body">
-                        <p>Are you sure you want to delete this sample?</p>
+                        <p>Are you sure you want to delete this researcher?</p>
                       </div>
                       <div className="modal-footer">
                         <button
@@ -467,4 +471,4 @@ const SampleArea = () => {
   );
 };
 
-export default SampleArea;
+export default ResearcherArea;

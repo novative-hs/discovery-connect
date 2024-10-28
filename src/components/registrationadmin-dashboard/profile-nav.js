@@ -53,18 +53,34 @@ const ProfileNav = () => {
 
           <button
             className="nav-link"
-            id="nav-sample-tab"
+            id="nav-collectionsite-tab"
             data-bs-toggle="tab"
-            data-bs-target="#nav-sample"
+            data-bs-target="#nav-collectionsite"
             type="button"
             role="tab"
-            aria-controls="nav-sample"
+            aria-controls="nav-collectionsite"
             aria-selected="false"
           >
             <span>
               <i className="fa-regular fa-circle-info"></i>
             </span>{" "}
-            Researchers List
+            Collection Site List
+          </button>
+
+          <button
+            className="nav-link"
+            id="nav-committemember-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-committemember"
+            type="button"
+            role="tab"
+            aria-controls="nav-committemember"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            Committe Members List
           </button>
 
           <button

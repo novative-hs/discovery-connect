@@ -80,7 +80,7 @@ const ProfileNav = () => {
             <span>
               <i className="fa-regular fa-circle-info"></i>
             </span>{" "}
-            Information
+            Update Profile
           </button>
 
           <button
@@ -97,6 +97,22 @@ const ProfileNav = () => {
               <i className="fa-regular fa-lock"></i>
             </span>{" "}
             Change Password
+          </button>
+
+          <button
+            className="nav-link"
+            id="nav-feedback-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-feedback"
+            type="button"
+            role="tab"
+            aria-controls="nav-feedback"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-lock"></i>
+            </span>{" "}
+            Feedback
           </button>
 
           <button onClick={handleLogout} className="nav-link" type="button">

@@ -23,7 +23,7 @@ function createTables() {
         email VARCHAR(100),
         password VARCHAR(100),
         confirmPassword VARCHAR(100),
-        accountType VARCHAR(255) NOT NULL,
+        accountType VARCHAR(255),
         ResearcherName VARCHAR(100),
         phoneNumber VARCHAR(15),
         fullAddress TEXT,
@@ -31,7 +31,11 @@ function createTables() {
         district VARCHAR(50),
         country VARCHAR(50),
         nameofOrganization VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        logo VARCHAR(255),
+        age VARCHAR(100),
+        gender VARCHAR(100)
     )`;
 
     const organizationTable = `
@@ -68,7 +72,24 @@ function createTables() {
         city VARCHAR(50),
         district VARCHAR(50),
         country VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'Pending',
         phoneNumber VARCHAR(15),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`;
+
+    const committememberTable = `
+    CREATE TABLE IF NOT EXISTS committe_member (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        CommitteMemberName VARCHAR(100),
+        email VARCHAR(100),
+        phoneNumber VARCHAR(15),
+        cnic VARCHAR(15),
+        fullAddress TEXT,
+        city VARCHAR(50),
+        district VARCHAR(50),
+        country VARCHAR(50),
+        organization VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'inactive',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`;
 
@@ -85,41 +106,17 @@ function createTables() {
     CREATE TABLE IF NOT EXISTS sample (
       id INT AUTO_INCREMENT PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
-      age VARCHAR(255) NOT NULL,
-      gender VARCHAR(255) NOT NULL,
+      storagetemp VARCHAR(255) NOT NULL,
       price DECIMAL(10,2) NOT NULL,
       quantity VARCHAR(255) NOT NULL,
+      labname VARCHAR(255) NOT NULL,
       endTime DATETIME NOT NULL,
       logo VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )`;
 
-    const createAddResearcherTable = `
-    CREATE TABLE IF NOT EXISTS addresearcher (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      phone VARCHAR(255) NOT NULL UNIQUE,
-      requiredsample VARCHAR(255) NOT NULL,
-      description VARCHAR(255) NOT NULL,
-      organizationname VARCHAR(255) NOT NULL,
-      status VARCHAR(255) DEFAULT 'pending'
-      
-    )`;
-
-
-    const createaddlabTable = `
-    CREATE TABLE IF NOT EXISTS addlab (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL,
-      phone VARCHAR(255) NOT NULL,
-      logo VARCHAR(255),
-      status VARCHAR(255) DEFAULT 'pending',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`;
+   
 
     // const createlabpendingTable = `
     // CREATE TABLE IF NOT EXISTS labpending (
@@ -156,17 +153,7 @@ function createTables() {
     //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     // )`;
 
-    const createaddinstituteTable = `
-    CREATE TABLE IF NOT EXISTS addinstitute (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL,
-      phone VARCHAR(255) NOT NULL,
-      logo VARCHAR(255),
-      status VARCHAR(255) DEFAULT 'pending',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`;
+    
 
     // const createcorporatependingTable = `
     // CREATE TABLE IF NOT EXISTS corporatepending (
@@ -238,6 +225,11 @@ function createTables() {
         else console.log("CollectionSites table created or already exists");
     });
 
+    mysqlConnection.query(committememberTable, (err, results) => {
+       if (err) console.error("Error creating committemember table: ", err);
+       else console.log("committemember table created or already exists");
+    });
+
     mysqlConnection.query(createAdminSignupTable, (err, result) => {
         if (err) {
           console.error("Error creating admin_signup table:", err);
@@ -254,21 +246,7 @@ function createTables() {
         }
       });
 
-    mysqlConnection.query(createAddResearcherTable, (err, result) => {
-        if (err) {
-          console.error("Error creating add researcher table:", err);
-        } else {
-          console.log("add researcher table created or already exists.");
-        }
-      });
-
-    mysqlConnection.query(createaddlabTable, (err, result) => {
-        if (err) {
-          console.error("Error creating addlab table:", err);
-        } else {
-          console.log("addlab table created or already exists.");
-        }
-      });
+  
 
     // mysqlConnection.query(createlabpendingTable, (err, result) => {
     //     if (err) {
@@ -294,13 +272,6 @@ function createTables() {
     //     }
     //   });
 
-    mysqlConnection.query(createaddinstituteTable, (err, result) => {
-        if (err) {
-          console.error("Error creating addcorporate table:", err);
-        } else {
-          console.log("addcorporate table created or already exists.");
-        }
-      });
 
     // mysqlConnection.query(createcorporatependingTable, (err, result) => {
     //     if (err) {

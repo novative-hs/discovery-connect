@@ -30,22 +30,22 @@ const ChangePassword = () => {
   });
 
   // on submit
-  const onSubmit = (data) => {
-    changePassword({
-      email: user?.email,
-      password: data.password,
-      newPassword: data.newPassword,
-    }).then((result) => {
-      console.log(result)
-      if (result?.error) {
-        notifyError(result?.error?.data?.message)
-      }
-      else {
-        notifySuccess(result?.data?.message)
-      }
-    });
-    reset();
-  };
+const onSubmit = (data) => {
+  changePassword({
+    email: data.email,  // Capture email from form data
+    password: data.password,
+    newPassword: data.newPassword,
+  }).then((result) => {
+    console.log(result);
+    if (result?.error) {
+      notifyError(result?.error?.data?.message);
+    } else {
+      notifySuccess(result?.data?.message);
+    }
+  });
+  reset();
+};
+
   return (
     <div className="profile__password">
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -57,7 +57,6 @@ const ChangePassword = () => {
                 <input
                   {...register("email", { required: `Email is required!` })}
                   type="email"
-                  defaultValue={user?.email}
                   placeholder="Enter Email Address"
                 />
                 <ErrorMessage message={errors.email?.message} />
@@ -72,7 +71,7 @@ const ChangePassword = () => {
                   {...register("password", {
                     required: `Password is required!`,
                   })}
-                  type="text"
+                  type="password"
                   placeholder="Enter current password"
                 />
                 <ErrorMessage message={errors.password?.message} />
@@ -87,7 +86,7 @@ const ChangePassword = () => {
                   {...register("newPassword", {
                     required: `New Password is required!`,
                   })}
-                  type="text"
+                  type="password"
                   placeholder="Enter new password"
                 />
                 <ErrorMessage message={errors.password?.newPassword} />
