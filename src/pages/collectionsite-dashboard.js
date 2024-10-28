@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 // internal
 import SEO from "@components/seo";
-import Header from "@layout/header";
+import Header from "@layout/collectionsiteheader";
 import Wrapper from "@layout/wrapper";
 import Footer from "@layout/footer";
 import DashboardArea from "@components/collectionsite-dashboard/dashboard-area"; // You can keep this if there's static content

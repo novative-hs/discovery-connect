@@ -3,6 +3,7 @@ import React from "react";
 import TextArea from "./text-area";
 // import Services from "./services";
 // import AboutGallery from "./about-gallery";
+// import AboutFaqs from "./about-faqs";
 // import Teams from "@components/teams";
 // import Brands from "@components/brands";
 // import Awards from "@components/awards";
@@ -23,6 +24,7 @@ const About = () => {
       {/* <Services /> */}
       {/* <AboutGallery /> */}
       {/* <Awards /> */}
+      {/* <AboutFaqs /> */}
       {/* <Teams /> */}
       {/* <Brands /> */}
     </React.Fragment>

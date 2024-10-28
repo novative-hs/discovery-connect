@@ -4,11 +4,11 @@ const menu_data = [
     title: 'Home',
     link: '/',
   },
-  {
-    id: 2,
-    title: 'About Us',
-    link: '/about'
-  },
+  // {
+  //   id: 2,
+  //   title: 'About Us',
+  //   link: '/about'
+  // },
   {
     id: 3,
     title: 'Shop',
@@ -31,11 +31,11 @@ const menu_data = [
       { title: 'Error 404', link: '/404' },
     ]
   },
-  {
-    id: 5,
-    title: 'Contact us',
-    link: '/contact'
-  },
+  // {
+  //   id: 5,
+  //   title: 'Contact us',
+  //   link: '/contact'
+  // },
 ]
 
 export default menu_data;

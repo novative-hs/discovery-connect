@@ -6,8 +6,9 @@ import ProfileShapes from "./profile-shapes";
 import ProfileNav from './profile-nav';
 import MyOrders from './my-orders';
 import ChangePassword from './change-password';
-import UpdateUser from './update-user';
-import SampleArea from './samples';
+import UpdateOrganization from './update-organization';
+import CollectionsiteArea from './collectionsite';
+import CommitteMemberArea from './committe-members';
 
 
 const DashboardArea = ({orderData}) => {
@@ -43,14 +44,25 @@ const DashboardArea = ({orderData}) => {
                       <MyOrders orderData={orderData} />
                     </div>
 
-                     {/* Sample List */}
+                     {/* CollectionSite List */}
                      <div
                       className="tab-pane fade"
-                      id="nav-sample"
+                      id="nav-collectionsite"
                       role="tabpanel"
-                      aria-labelledby="nav-sample-tab"
+                      aria-labelledby="nav-collectionsite-tab"
                     >
-                      <SampleArea/>
+                      <CollectionsiteArea/>
+                    </div>
+
+
+                     {/* CommitteMember List */}
+                     <div
+                      className="tab-pane fade"
+                      id="nav-committemember"
+                      role="tabpanel"
+                      aria-labelledby="nav-committemember-tab"
+                    >
+                      <CommitteMemberArea/>
                     </div>
 
                     {/* profile__info */}
@@ -60,7 +72,7 @@ const DashboardArea = ({orderData}) => {
                       role="tabpanel"
                       aria-labelledby="nav-information-tab"
                     >
-                      <UpdateUser/>
+                      <UpdateOrganization/>
                     </div>
                     {/* change password */}
                     <div

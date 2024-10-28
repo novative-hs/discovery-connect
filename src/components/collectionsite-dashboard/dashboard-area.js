@@ -6,8 +6,9 @@ import ProfileShapes from "./profile-shapes";
 import ProfileNav from './profile-nav';
 import MyOrders from './my-orders';
 import ChangePassword from './change-password';
+import Feedback from './feedback';
 import UpdateCollectionsite from './update-collectionsite';
-import SampleList from './samples';
+import SampleArea from './samples';
 
 
 const DashboardArea = ({orderData}) => {
@@ -50,7 +51,7 @@ const DashboardArea = ({orderData}) => {
                       role="tabpanel"
                       aria-labelledby="nav-sample-tab"
                     >
-                      <SampleList/>
+                      <SampleArea/>
                     </div>
 
                     {/* profile__info */}
@@ -70,6 +71,15 @@ const DashboardArea = ({orderData}) => {
                       aria-labelledby="nav-password-tab"
                     >
                       <ChangePassword/>
+                    </div>
+                     {/* Feedback */}
+                     <div
+                      className="tab-pane fade"
+                      id="nav-feedback"
+                      role="tabpanel"
+                      aria-labelledby="nav-feedback-tab"
+                    >
+                      <Feedback/>
                     </div>
                     {/*  */}
                   </div>

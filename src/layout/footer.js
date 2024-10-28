@@ -68,13 +68,26 @@ const Footer = () => {
                   col_3="2"
                   title="Company"
                   contents={[
-                    { url: "#", title: "About us" },
+                    { url: "/about", title: "About us" },
                     { url: "#", title: "Careers" },
                     { url: "#", title: "Store Locations" },
                     { url: "#", title: "Our Blog" },
                     { url: "#", title: "Reviews" },
                   ]}
                 />
+                {/* <SingleWidget
+                  col="3"
+                  col_2="3"
+                  col_3="3"
+                  title="Shop"
+                  contents={[
+                    { url: "#", title: "Game & Video" },
+                    { url: "#", title: "Phone &Tablets" },
+                    { url: "#", title: "Computers & Laptop" },
+                    { url: "#", title: "Sport Watches" },
+                    { url: "#", title: "Discounts" },
+                  ]}
+                /> */}
                 <SingleWidget
                   col="1"
                   col_2="3"
@@ -82,7 +95,7 @@ const Footer = () => {
                   title="Support"
                   contents={[
                     { url: "", title: "Reviews" },
-                    { url: "", title: "Contact Us" },
+                    { url: "/contact", title: "Contact Us" },
                     { url: "", title: "Shipping" },
                     { url: "", title: "Returns" },
                   ]}

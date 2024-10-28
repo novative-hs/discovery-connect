@@ -5,7 +5,7 @@ import SEO from "@components/seo";
 import Header from "@layout/organizationheader";
 import Wrapper from "@layout/wrapper";
 import Footer from "@layout/footer";
-import DashboardArea from "@components/organization-dashboard/dashboard-area"; // You can keep this if there's static content
+import DashboardArea from "@components/registrationadmin-dashboard/dashboard-area"; // You can keep this if there's static content
 import Loader from "@components/loader/loader"; // Only needed if you're showing a loading state
 
 const UserOrdersPage = () => {

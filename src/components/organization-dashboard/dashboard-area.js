@@ -7,7 +7,7 @@ import ProfileNav from './profile-nav';
 import MyOrders from './my-orders';
 import ChangePassword from './change-password';
 import UpdateOrganization from './update-organization';
-import SampleList from './samples';
+import ResearcherArea from './researchers';
 
 
 const DashboardArea = ({orderData}) => {
@@ -50,7 +50,7 @@ const DashboardArea = ({orderData}) => {
                       role="tabpanel"
                       aria-labelledby="nav-sample-tab"
                     >
-                      <SampleList/>
+                      <ResearcherArea/>
                     </div>
 
                     {/* profile__info */}

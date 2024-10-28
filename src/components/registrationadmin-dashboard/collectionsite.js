@@ -3,37 +3,37 @@ import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const SampleArea = () => {
+const CollectionsiteArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
+  const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null); // Store ID of collectionsite to delete
   const [formData, setFormData] = useState({
-    title: "",
-    storagetemp: "",
-    price: "",
-    quantity: "",
-    labname: "",
-    endTime: "",
+    CollectionSiteName: "",
+    email: "",
+    phoneNumber: "",
+    created_at: "",
+    status: "",
     // logo: ""
   });
-  const [editSample, setEditSample] = useState(null); // State for selected sample to edit
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
+  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
+  const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [successMessage, setSuccessMessage] = useState('');
+  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
 
 
-  // Fetch samples from backend when component loads
+  // Fetch collectionsites from backend when component loads
   useEffect(() => {
-    const fetchSamples = async () => {
+    const fetchCollectionsites = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/sample/get');
-        setSamples(response.data); // Store fetched samples in state
+        const response = await axios.get('http://localhost:5000/api/collectionsite/get');
+        setCollectionsites(response.data); // Store fetched collectionsites in state
       } catch (error) {
-        console.error("Error fetching samples:", error);
+        console.error("Error fetching collectionsites:", error);
       }
     };
 
-    fetchSamples(); // Call the function when the component mounts
+    fetchCollectionsites(); // Call the function when the component mounts
   }, []);
 
   const handleInputChange = (e) => {
@@ -43,30 +43,36 @@ const SampleArea = () => {
     });
   };
 
+  // const formatDateTime = (dateTime) => {
+  //   const date = new Date(dateTime);
+  //   const formattedDate = date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
+  //   return formattedDate;
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/samples/post', formData);
-      console.log("Sample added successfully:", response.data);
+      const response = await axios.post('http://localhost:5000/api/collectionsites/post', formData);
+      console.log("Collectionsite added successfully:", response.data);
 
-      // Refresh the sample list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
-      setSamples(newResponse.data); // Update state with the new list
+      // Refresh the collectionsite list after successful submission
+      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
+      setCollectionsites(newResponse.data); // Update state with the new list
 
       // Clear form after submission
       setFormData({
-        title: "",
-        storagetemp: "",
-        price: "",
-        quantity: "",
-        labname: "",
-        endTime: "",
+        CollectionSiteName: "",
+        email: "",
+        phoneNumber: "",
+        created_at: "",
+        status: "",
+
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding sample:", error);
+      console.error("Error adding collectionsite:", error);
     }
   };
 
@@ -74,39 +80,38 @@ const SampleArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/samples/delete/${selectedSampleId}`);
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+      await axios.delete(`http://localhost:5000/api/collectionsites/delete/${selectedCollectionsiteId}`);
+      console.log(`Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`);
 
       // Set success message
-      setSuccessMessage('Sample deleted successfully.');
+      setSuccessMessage('Collectionsite deleted successfully.');
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
 
-      // Refresh the sample list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
-      setSamples(newResponse.data);
+      // Refresh the collectionsite list after deletion
+      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
+      setCollectionsites(newResponse.data);
 
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedSampleId(null);
+      setSelectedCollectionsiteId(null);
     } catch (error) {
-      console.error(`Error deleting sample with ID ${selectedSampleId}:`, error);
+      console.error(`Error deleting collectionsite with ID ${selectedCollectionsiteId}:`, error);
     }
   };
-  const handleEditClick = (sample) => {
-    setSelectedSampleId(sample.id);
-    setEditSample(sample); // Store the sample data to edit
+  const handleEditClick = (collectionsite) => {
+    setSelectedCollectionsiteId(collectionsite.id);
+    setEditCollectionsite(collectionsite); // Store the collectionsite data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
-      title: sample.title,
-      storagetemp: sample.storagetemp,
-      price: sample.price,
-      quantity: sample.quantity,
-      labname: sample.labname,
-      endTime: sample.endTime,
+      CollectionSiteName: collectionsite.CollectionSiteName,
+      email: collectionsite.email,
+      phoneNumber: collectionsite.phoneNumber,
+      created_at: collectionsite.created_at,
+      status: collectionsite.status,
     });
   };
 
@@ -115,26 +120,38 @@ const SampleArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/samples/edit/${selectedSampleId}`,
+        `http://localhost:5000/api/collectionsites/edit/${selectedCollectionsiteId}`,
         formData
       );
-      console.log("Sample updated successfully:", response.data);
+      console.log("Collectionsite updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/sample/get"
+        "http://localhost:5000/api/collectionsite/get"
       );
-      setSamples(newResponse.data);
+      setCollectionsites(newResponse.data);
 
       setShowEditModal(false);
-      setSuccessMessage("Sample updated successfully.");
+      setSuccessMessage("Collectionsite updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+      console.error(`Error updating collectionsite with ID ${selectedCollectionsiteId}:`, error);
     }
   };
+
+
+  // Handle filter change
+  const handleFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  // Filter samples based on the selected status
+  const filteredCollectionSites = collectionsites.filter(collectionsite => {
+    if (!statusFilter) return true; // If no filter is selected, show all
+    return collectionsite.status === statusFilter;
+  });
 
   return (
     <section className="policy__area pb-120">
@@ -149,11 +166,22 @@ const SampleArea = () => {
                   {successMessage}
                 </div>
               )}
-              {/* Add Samples Button */}
-              <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                  Add Samples
-                </button>
+              <div className="d-flex justify-content-between align-items-center mb-3" style={{ marginTop: "-20px", width: "120%", marginLeft: "-80px" }}>
+                <div className="d-flex align-items-center">
+                <label htmlFor="statusFilter" className="mr-2" style={{ marginLeft: "60px", marginRight: "10px", fontSize: "16px", fontWeight: "bold" }}>Status:</label>
+                  <select
+                    id="statusFilter"
+                    className="form-control"
+                    style={{ width: "100px" }}
+                    onChange={handleFilterChange}
+                  >
+                    <option value="">All</option>
+                    <option value="pending">pending</option>
+                    <option value="approved">approved</option>
+                    <option value="unapproved">unapproved</option>
+                  </select>
+                </div>
+
               </div>
 
               {/* Table */}
@@ -162,36 +190,34 @@ const SampleArea = () => {
                   <thead className="thead-dark">
                     <tr>
                       <th>ID</th>
-                      <th>Sample Name</th>
-                      <th>Storage Temperature</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>Lab Name</th>
-                      <th>End Time</th>
+                      <th>Collection Site name</th>
+                      <th>Email</th>
+                      <th>Phone Number</th>
+                      <th>Registered_at</th>
+                      <th>Status</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {samples.length > 0 ? (
-                      samples.map((sample) => (
-                        <tr key={sample.id}>
-                          <td>{sample.id}</td>
-                          <td>{sample.title}</td>
-                          <td>{sample.storagetemp}</td>
-                          <td>{sample.price}</td>
-                          <td>{sample.quantity}</td>
-                          <td>{sample.labname}</td>
-                          <td>{sample.endTime}</td>
+                    {filteredCollectionSites.length > 0 ? (
+                      filteredCollectionSites.map((collectionsite) => (
+                        <tr key={collectionsite.id}>
+                          <td>{collectionsite.id}</td>
+                          <td>{collectionsite.CollectionSiteName}</td>
+                          <td>{collectionsite.email}</td>
+                          <td>{collectionsite.phoneNumber}</td>
+                          <td>{collectionsite.created_at}</td>
+                          <td>{collectionsite.status}</td>
                           <td>
                             <button
                               className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}>
+                              onClick={() => handleEditClick(collectionsite)}>
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedSampleId(sample.id);
+                                setSelectedCollectionsiteId(collectionsite.id);
                                 setShowDeleteModal(true);
                               }}
                             >
@@ -203,7 +229,7 @@ const SampleArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">
-                          No samples available
+                          No collectionsites available
                         </td>
                       </tr>
                     )}
@@ -211,13 +237,13 @@ const SampleArea = () => {
                 </table>
               </div>
 
-              {/* Modal for Adding Samples */}
-              {showAddModal && (
+              {/* Modal for Adding Collectionsites */}
+              {/* {showAddModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Add Sample</h5>
+                        <h5 className="modal-title">Add Collectionsite</h5>
                         <button
                           type="button"
                           className="close"
@@ -234,70 +260,37 @@ const SampleArea = () => {
                         </button>
                       </div>
                       <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Sample Name</label>
+                        <div className="modal-body"> */}
+              {/* Form Fields */}
+              {/* <div className="form-group">
+                            <label>Collection Site Name</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="title"
-                              value={formData.title}
+                              name="CollectionSiteName"
+                              value={formData.CollectionSiteName}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Storagetemp</label>
+                            <label>Email</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="storagetemp"
-                              value={formData.storagetemp}
+                              name="email"
+                              value={formData.email}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Price</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="price"
-                              value={formData.price}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Quantity</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Labname</label>
+                            <label>Phone Number</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="labname"
-                              value={formData.labname}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>End Time</label>
-                            <input
-                              type="datetime-local"
-                              className="form-control"
-                              name="endTime"
-                              value={formData.endTime}
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
                               onChange={handleInputChange}
                               required
                             />
@@ -312,15 +305,15 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
-              {/* Edit Sample Modal */}
+              {/* Edit Collectionsite Modal */}
               {showEditModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Edit Sample</h5>
+                        <h5 className="modal-title">Edit Collectionsite</h5>
                         <button
                           type="button"
                           className="close"
@@ -342,77 +335,67 @@ const SampleArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>Title</label>
+                            <label>Collection Site name</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="title"
-                              value={formData.title}
+                              name="CollectionSiteName"
+                              value={formData.CollectionSiteName}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Storagetemp</label>
+                            <label>Email</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="storagetemp"
-                              value={formData.storagetemp}
+                              name="email"
+                              value={formData.email}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
                           <div className="form-group">
-                            <label>Price</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="price"
-                              value={formData.price}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Quantity</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Labname</label>
+                            <label>Phone Number</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="labname"
-                              value={formData.labname}
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
                               onChange={handleInputChange}
                               required
                             />
                           </div>
-                        
-                          <div className="form-group">
-                            <label>End Time</label>
+                          {/* <div className="form-group">
+                            <label>Registered_at</label>
                             <input
-                              type="text"
+                              type="datetime-local"
                               className="form-control"
-                              name="endTime"
-                              value={formData.endTime}
+                              name="created_at"
+                              value={formData.created_at ? formatDateTime(formData.created_at) : ''}
                               onChange={handleInputChange}
                               required
                             />
+                          </div> */}
+                          <div className="form-group">
+                            <label>Status</label>
+                            <select
+                              className="form-control"
+                              name="status"
+                              value={formData.status}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="pending">pending</option>
+                              <option value="approved">approved</option>
+                              <option value="unapproved">unapproved</option>
+                            </select>
                           </div>
                         </div>
                         <div className="modal-footer">
-
                           <button type="submit" className="btn btn-primary">
-                            Update Sample
+                            Update Collection Site
                           </button>
                         </div>
                       </form>
@@ -421,13 +404,13 @@ const SampleArea = () => {
                 </div>
               )}
 
-              {/* Modal for Deleting Samples */}
+              {/* Modal for Deleting Collectionsites */}
               {showDeleteModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Delete Sample</h5>
+                        <h5 className="modal-title">Delete Collectionsite</h5>
                         <button
                           type="button"
                           className="close"
@@ -437,7 +420,7 @@ const SampleArea = () => {
                         </button>
                       </div>
                       <div className="modal-body">
-                        <p>Are you sure you want to delete this sample?</p>
+                        <p>Are you sure you want to delete this collectionsite?</p>
                       </div>
                       <div className="modal-footer">
                         <button
@@ -465,4 +448,4 @@ const SampleArea = () => {
   );
 };
 
-export default SampleArea;
+export default CollectionsiteArea;
