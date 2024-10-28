@@ -16,10 +16,7 @@ app.use(bodyParser.json());
 // Enable CORS for all routes and origins
 app.use(cors());
 // Middleware setup
-app.use(cors());
-app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 
 
 // Fetch User Profile
