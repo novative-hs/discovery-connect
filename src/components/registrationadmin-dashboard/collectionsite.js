@@ -313,7 +313,7 @@ const CollectionsiteArea = () => {
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Edit Collectionsite</h5>
+                        <h5 className="modal-title">Edit Collection Site</h5>
                         <button
                           type="button"
                           className="close"
@@ -342,7 +342,7 @@ const CollectionsiteArea = () => {
                               name="CollectionSiteName"
                               value={formData.CollectionSiteName}
                               onChange={handleInputChange}
-                              required
+                              disabled
                             />
                           </div>
                           <div className="form-group">
@@ -353,7 +353,7 @@ const CollectionsiteArea = () => {
                               name="email"
                               value={formData.email}
                               onChange={handleInputChange}
-                              required
+                              disabled
                             />
                           </div>
                           <div className="form-group">
@@ -364,7 +364,7 @@ const CollectionsiteArea = () => {
                               name="phoneNumber"
                               value={formData.phoneNumber}
                               onChange={handleInputChange}
-                              required
+                              disabled
                             />
                           </div>
                           {/* <div className="form-group">

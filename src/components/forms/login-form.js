@@ -51,6 +51,8 @@ const LoginForm = () => {
           router.push("/organization-dashboard");
         } else if (accountType?.toLowerCase() === "collectionsite") {
           router.push("/collectionsite-dashboard");
+        } else if (accountType?.toLowerCase() === "registrationadmin") {
+          router.push("/registrationadmin-dashboard");
         } else {
           router.push("/default-dashboard");
         }      

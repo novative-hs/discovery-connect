@@ -6,16 +6,41 @@ const mysqlConnection = require('./config/db');  // Updated import
 const multer = require('multer');
 const path = require('path');
 const moment = require('moment');
-
 const app = express();
 const port = process.env.PORT || 5000;
 
+
+const productRoutes = require('./routes/productRoutes');
+const wishlistRoutes = require('./routes/wishlistRoutes');
+
+
+const { fetchProducts } = require('./controller/productController');
+// const { fetchProducts } = require('./controller/productController');
+require('dotenv').config();
+
+
 // Enable CORS for all routes and origins
 app.use(cors());
-// Middleware setup
-app.use(cors());
+// Middleware setup 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+
+
+
+
+
+
+// Routes
+app.use('/api', productRoutes);
+app.use('/wishlist', wishlistRoutes);
+app.get('/api/products/show', fetchProducts);
+
+
+
+
+
+
 
 
 // Fetch User Profile
@@ -75,8 +100,9 @@ app.get('/api/user-dashboard/profile/:id', (req, res) => {
 });
 
 
-// User Sign Up
+// User Sign Up (User Account)
 app.post('/api/user/signup', (req, res) => {
+  console.log(req.body);
   const {
     accountType, username, email, password, confirmPassword, ResearcherName, OrganizationName, CollectionSiteName, phoneNumber, fullAddress, city,district, country, nameofOrganization, type, HECPMDCRegistrationNo, ntnNumber
   } = req.body;
@@ -89,27 +115,35 @@ VALUES (?, ?, ?, ?, ?)`;
 const userAccountValues = [username, password, confirmPassword, email, accountType];
 
 mysqlConnection.query(userAccountQuery, userAccountValues, (err, userAccountResults) => {
-if (err) {
-  console.error('Database Query Error:', err);
-  return res.status(500).json({ error: 'Database query failed' });
-}
+  if (err) {
+    console.error('Database Query Error:', err);
+    return res.status(500).json({ error: 'Database query failed' });
+  }
+
+  // Capture the insertId of the user_account to use as user_account_id in related tables
+  const userAccountId = userAccountResults.insertId;
 
   let query, values;
 
   switch (accountType) {
     case 'Researcher':
-      query = 'INSERT INTO researcher (username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      values = [username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization];
+      query = 'INSERT INTO researcher (user_account_id, username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      values = [userAccountId, username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization];
       break;
     case 'Organization':
-      query = 'INSERT INTO organization (username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      values = [username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country];
+      query = 'INSERT INTO organization (user_account_id, username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      values = [userAccountId, username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country];
       break;
     case 'CollectionSites':
-      query = 'INSERT INTO collectionsite (username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      values = [username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country];
+      query = 'INSERT INTO collectionsite (user_account_id, username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      values = [userAccountId, username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country];
+      break;
+    case 'registrationadmin':
+      query = 'INSERT INTO user_account (username, email, password, confirmPassword, accountType) VALUES (?, ?, ?, ?, ?)';
+      values = [username, email, password, confirmPassword, accountType];
       break;
     default:
+      
       return res.status(400).json({ error: 'Invalid account type' });
   }
 
@@ -123,7 +157,43 @@ if (err) {
 });
 })
 
-// User Login Up
+// User Account delete
+app.delete('/api/user_account/:id', async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+      // Delete associated entries in researcher, organization, and collectionsite tables
+      await mysqlConnection.query('DELETE FROM researcher WHERE user_account_id = ?', [userId]);
+      await mysqlConnection.query('DELETE FROM organization WHERE user_account_id = ?', [userId]);
+      await mysqlConnection.query('DELETE FROM collectionsite WHERE user_account_id = ?', [userId]);
+
+      // Then, delete the user account
+      await mysqlConnection.query('DELETE FROM user_account WHERE id = ?', [userId]);
+
+      res.status(200).json({ message: 'User and associated entries deleted successfully' });
+  } catch (error) {
+      console.error('Error deleting user account and associated entries:', error);
+      res.status(500).json({ message: 'An error occurred while deleting user account and associated entries' });
+  }
+});
+
+
+app.delete('/api/researcher/:id', async (req, res) => {
+  const researcherId = req.params.id;
+
+  try {
+    // Delete the researcher entry (user_account entry will be automatically deleted)
+    await mysqlConnection.query('DELETE FROM researcher WHERE id = ?', [researcherId]);
+
+    res.status(200).json({ message: 'Researcher and corresponding user account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting researcher and user account:', error);
+    res.status(500).json({ message: 'An error occurred while deleting researcher and user account' });
+  }
+});
+
+
+// User Login
 app.post("/api/user/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -132,16 +202,18 @@ app.post("/api/user/login", (req, res) => {
     return res.status(400).json({ status: "fail", error: "Email and password are required" });
   }
 
-  // Query to find the user with matching email and password in any of the three tables
+  // Query to find the user with matching email and password in any of the tables, including registrationadmin in user_account table
   const query = `
       SELECT 'researcher' AS accountType, id, username, email FROM researcher WHERE email = ? AND password = ?
       UNION
       SELECT 'collectionsite' AS accountType, id, username, email FROM collectionsite WHERE email = ? AND password = ?
       UNION
       SELECT 'organization' AS accountType, id, username, email FROM organization WHERE email = ? AND password = ?
+      UNION
+      SELECT 'registrationadmin' AS accountType, id, username, email FROM user_account WHERE email = ? AND password = ? AND accountType = 'registrationadmin'
       `;
 
-  mysqlConnection.query(query, [email, password, email, password, email, password], (err, results) => {
+  mysqlConnection.query(query, [email, password, email, password, email, password, email, password], (err, results) => {
     if (err) {
       console.error("Database query error:", err.message);
       return res.status(500).json({ status: "fail", error: err.message });
@@ -537,260 +609,22 @@ app.delete('/api/researchers/delete/:id', (req, res) => {
 });
 
 
-// { Reasearcher-pending APIs}
-app.get('/api/researcherpending/get', (req, res) => {
-  const query = 'SELECT * FROM addresearcher WHERE status = "pending"';
+
+// Researcher GET (Admin Dashboard)
+app.get('/api/admin/researcher/get', (req, res) => {
+  const query = 'SELECT * FROM researcher';
   
   mysqlConnection.query(query, (err, results) => {
     if (err) {
-      console.error('Error fetching data from addresearcher table:', err);
-      return res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-    res.json(results);
-  });
-});
-
-// Get a single researcherpending by ID
-app.get('/api/researcherpending/:id', (req, res) => {
-  const { id } = req.params;
-  
-
-  if (!id || id === 'undefined') {
-    return res.status(400).json({ error: 'Invalid ID passed' });
-  }
-
-  const query = 'SELECT * FROM addresearcher WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching Researcherpending:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'Researcherpending not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-// Researcherpending PUT
-app.put('/api/researcherpending/edit/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, email, phone, requiredsample, description, organizationname, status } = req.body;
-  
-    if (!name || !email || !phone || !requiredsample || !description || !organizationname || !status) {
-      return res.status(400).json({ error: 'All required fields must be provided' });
-    }
-  
-    const query = `
-      UPDATE addresearcher
-      SET name = ?, email = ?, phone = ?, requiredsample = ?, description = ?, organizationname = ?, status = ?
-      WHERE id = ?
-    `;
-  
-    console.log('Executing query:', query);
-    console.log('With parameters:', [name, email, phone, requiredsample, description, organizationname, status, id]);
-  
-    mysqlConnection.query(query, [name, email, phone, requiredsample, description, organizationname, status, id], (err, result) => {
-      if (err) {
-        console.error('Error updating data in addresearcher table:', err);
-        return res.status(500).json({ error: 'An error occurred' });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'addresearcher not found' });
-      }
-      res.status(200).json({ message: 'addresearcher updated successfully' });
-    });
-  });
-
-
-// Researcher approved
-app.get('/api/researcherapproved/get', (req, res) => {
-  const query = 'SELECT * FROM addresearcher WHERE status = "approved"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from addresearcher table:', err);
-      return res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-    res.json(results);
-  });
-});
-
-// Get a single researcherapproved by ID
-app.get('/api/researcherapproved/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id);
-
-  if (!id || id === 'undefined') {
-    return res.status(400).json({ error: 'Invalid ID passed' });
-  }
-
-  const query = 'SELECT * FROM addresearcher WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching Add Researcher:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'AddResearcher not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// Researcherapproved PUT
-app.put('/api/researcherapproved/edit/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, email, phone, requiredsample, description, organizationname, status } = req.body;
-  
-    if (!name || !email || !phone || !requiredsample || !description || !organizationname || !status) {
-      return res.status(400).json({ error: 'All required fields must be provided' });
-    }
-  
-    const query = `
-      UPDATE addresearcher
-      SET name = ?, email = ?, phone = ?, requiredsample = ?, description = ?, organizationname = ?, status = ?
-      WHERE id = ?
-    `;
-  
-    console.log('Executing query:', query);
-    console.log('With parameters:', [name, email, phone, requiredsample, description, organizationname, status, id]);
-  
-    mysqlConnection.query(query, [name, email, phone, requiredsample, description, organizationname, status, id], (err, result) => {
-      if (err) {
-        console.error('Error updating data in addresearcher table:', err);
-        return res.status(500).json({ error: 'An error occurred' });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'addresearcher not found' });
-      }
-      res.status(200).json({ message: 'addresearcher updated successfully' });
-    });
-  });
-
-
-//  { Researcher-unpproved APIs}
-app.get('/api/researcherunapproved/get', (req, res) => {
-  const query = 'SELECT * FROM addresearcher WHERE status = "unapproved"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from addresearcher table:', err);
-      return res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-    res.json(results);
-  });
-});
-
-// Get a single researcherunapproved by ID
-app.get('/api/researcherunapproved/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id);
-
-  if (!id || id === 'undefined') {
-    return res.status(400).json({ error: 'Invalid ID passed' });
-  }
-
-  const query = 'SELECT * FROM addresearcher WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching Add Researcher:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'AddResearcher not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// Researcherunapproved PUT
-app.put('/api/researcherunapproved/edit/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, email, phone, requiredsample, description, organizationname, status } = req.body;
-  
-    if (!name || !email || !phone || !requiredsample || !description || !organizationname || !status) {
-      return res.status(400).json({ error: 'All required fields must be provided' });
-    }
-  
-    const query = `
-      UPDATE addresearcher
-      SET name = ?, email = ?, phone = ?, requiredsample = ?, description = ?, organizationname = ?, status = ?
-      WHERE id = ?
-    `;
-  
-    console.log('Executing query:', query);
-    console.log('With parameters:', [name, email, phone, requiredsample, description, organizationname, status, id]);
-  
-    mysqlConnection.query(query, [name, email, phone, requiredsample, description, organizationname, status, id], (err, result) => {
-      if (err) {
-        console.error('Error updating data in addresearcher table:', err);
-        return res.status(500).json({ error: 'An error occurred' });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'addresearcher not found' });
-      }
-      res.status(200).json({ message: 'addresearcher updated successfully' });
-    });
-  });
-
-
-
-// labpending GET
-app.get('/api/labpending/get', (req, res) => {
-  const query = 'SELECT * FROM addlab WHERE status = "pending"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from labpending table:', err);
+      console.error('Error fetching data from researcher table:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
     res.status(200).json(results);
   });
 });
 
-// Get a single labpending by ID
-app.get('/api/labpending/:id', (req, res) => {
-  console.log('Received request for labpending with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM addlab WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching labpending:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('labpending not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'labpending not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// labpending POST
-app.post('/api/labspending/post', (req, res) => {
-  const { title, email, phone, logo } = req.body;
-
-  // Validate input data
-  if (!title || !email || !phone ) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-
-  const query = `
-  INSERT INTO labpending (title, email, phone, logo)
-  VALUES (?, ?, ?, ?)
-`;
-  mysqlConnection.query(query, [title, email, phone, logo], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into labpending table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'labpending created successfully', id: result.insertId });
-  });
-});
-
-// labpending PUT
-app.put('/api/labspending/edit/:id', (req, res) => {
+// Researcher PUT
+app.put('/api/admin/researchers/edit/:id', (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -800,105 +634,38 @@ app.put('/api/labspending/edit/:id', (req, res) => {
   }
 
   // Update query to change the status based on the lab ID
-  const query = 'UPDATE addlab SET status = ? WHERE id = ?';
+  const query = 'UPDATE researcher SET status = ? WHERE id = ?';
 
   mysqlConnection.query(query, [status, id], (err, result) => {
     if (err) {
-      console.error('Error updating lab status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating lab status' });
+      console.error('Error updating researcher status:', err);
+      return res.status(500).json({ error: 'An error occurred while updating researcher status' });
     }
 
     // Check if any row was updated
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'CollectionSites not found or no changes made' });
+      return res.status(404).json({ error: 'researcher not found or no changes made' });
     }
 
-    res.status(200).json({ message: 'CollectionSites status updated successfully' });
+    res.status(200).json({ message: 'researcher status updated successfully' });
   });
 });
 
-// labpending Delete
-app.delete('/api/labspending/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id); // Debugging line
-
-  if (!id) {
-    return res.status(400).json({ error: 'labpending ID must be provided' });
-  }
-
-  const query = 'DELETE FROM labpending WHERE id = ?';
-
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data from labpending table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'labpending not found' });
-    }
-
-    res.status(200).json({ message: 'labpending deleted successfully' });
-  });
-});
-
-
-// labapproved GET
-app.get('/api/labapproved/get', (req, res) => {
-  const query = 'SELECT * FROM addlab WHERE status = "approved"';
+// Organization GET (Admin Dashboard)
+app.get('/api/admin/organization/get', (req, res) => {
+  const query = 'SELECT * FROM organization';
   
   mysqlConnection.query(query, (err, results) => {
     if (err) {
-      console.error('Error fetching data from labapproved table:', err);
+      console.error('Error fetching data from organization table:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
     res.status(200).json(results);
   });
 });
 
-// Get a single labapproved by ID
-app.get('/api/labapproved/:id', (req, res) => {
-  console.log('Received request for addlab with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM addlab WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching labapproved:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('labapproved not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'labapproved not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// labapproved POST
-app.post('/api/labsapproved/post', (req, res) => {
-  const { title, email, phone, logo } = req.body;
-
-  // Validate input data
-  if (!title || !email || !phone ) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-
-  const query = `
-  INSERT INTO labapproved (title, email, phone, logo)
-  VALUES (?, ?, ?, ?)
-`;
-  mysqlConnection.query(query, [title, email, phone, logo], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into labapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'labapproved created successfully', id: result.insertId });
-  });
-});
-
-// labsapproved PUT
-app.put('/api/labsapproved/edit/:id', (req, res) => {
+// Organization PUT
+app.put('/api/admin/organizations/edit/:id', (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -908,157 +675,24 @@ app.put('/api/labsapproved/edit/:id', (req, res) => {
   }
 
   // Update query to change the status based on the lab ID
-  const query = 'UPDATE addlab SET status = ? WHERE id = ?';
+  const query = 'UPDATE organization SET status = ? WHERE id = ?';
 
   mysqlConnection.query(query, [status, id], (err, result) => {
     if (err) {
-      console.error('Error updating lab status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating lab status' });
+      console.error('Error updating organization status:', err);
+      return res.status(500).json({ error: 'An error occurred while updating organization status' });
     }
 
     // Check if any row was updated
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'CollectionSites not found or no changes made' });
+      return res.status(404).json({ error: 'organization not found or no changes made' });
     }
 
-    res.status(200).json({ message: 'CollectionSites status updated successfully' });
+    res.status(200).json({ message: 'organization status updated successfully' });
   });
 });
 
-// labapproved Delete
-app.delete('/api/labsapproved/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id); // Debugging line
-
-  if (!id) {
-    return res.status(400).json({ error: 'labapproved ID must be provided' });
-  }
-
-  const query = 'DELETE FROM labapproved WHERE id = ?';
-
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data from labapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'labapproved not found' });
-    }
-
-    res.status(200).json({ message: 'labapproved deleted successfully' });
-  });
-});
-
-// labunapproved GET
-app.get('/api/labunapproved/get', (req, res) => {
-  const query = 'SELECT * FROM addlab WHERE status = "unapproved"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from labunapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json(results);
-  });
-});
-
-// Get a single labunapproved by ID
-app.get('/api/labunapproved/:id', (req, res) => {
-  console.log('Received request for addlab with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM addlab WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching labunapproved:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('labunapproved not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'labunapproved not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// labunapproved POST
-app.post('/api/labsunapproved/post', (req, res) => {
-  const { title, email, phone, logo } = req.body;
-
-  // Validate input data
-  if (!title || !email || !phone ) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-
-  const query = `
-  INSERT INTO labunapproved (title, email, phone, logo)
-  VALUES (?, ?, ?, ?)
-`;
-  mysqlConnection.query(query, [title, email, phone, logo], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into labunapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'labunapproved created successfully', id: result.insertId });
-  });
-});
-
-// labsunapproved PUT
-app.put('/api/labsunapproved/edit/:id', (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // Check if status is provided in the request body
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
-
-  // Update query to change the status based on the lab ID
-  const query = 'UPDATE addlab SET status = ? WHERE id = ?';
-
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    if (err) {
-      console.error('Error updating lab status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating lab status' });
-    }
-
-    // Check if any row was updated
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'CollectionSites not found or no changes made' });
-    }
-
-    res.status(200).json({ message: 'CollectionSites status updated successfully' });
-  });
-});
-
-// labunapproved Delete
-app.delete('/api/labsunapproved/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id); // Debugging line
-
-  if (!id) {
-    return res.status(400).json({ error: 'labunapproved ID must be provided' });
-  }
-
-  const query = 'DELETE FROM labunapproved WHERE id = ?';
-
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data from labunapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'labunapproved not found' });
-    }
-
-    res.status(200).json({ message: 'labunapproved deleted successfully' });
-  });
-});
-
-
-// Collectionsite GET
+// Collectionsite GET (Registration Admin Dashboard)
 app.get('/api/collectionsite/get', (req, res) => {
   const query = 'SELECT * FROM collectionsite';
   
@@ -1099,330 +733,30 @@ app.put('/api/collectionsites/edit/:id', (req, res) => {
   });
 });
 
+// Collectionsite Delete 
+app.delete('/api/collectionsite/:id', async (req, res) => {
+  const collectionSiteId = req.params.id;
 
-// Collectionsitepending GET
-app.get('/api/collectionsitepending/get', (req, res) => {
-  const query = 'SELECT * FROM collectionsite WHERE status = "pending"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from collectionsitepending table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json(results);
-  });
-});
+  try {
+      // Retrieve the user_account_id associated with the collection site
+      const [collectionSite] = await mysqlConnection.query('SELECT user_account_id FROM collectionsite WHERE id = ?', [collectionSiteId]);
 
-// Get a single collectionsitepending by ID
-app.get('/api/collectionsitepending/:id', (req, res) => {
-  console.log('Received request for collectionsitepending with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM collectionsite WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching collectionsitepending:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('collectionsitepending not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'collectionsitepending not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
+      if (!collectionSite) {
+          return res.status(404).json({ message: 'Collection site not found' });
+      }
 
-// Collectionsitepending POST
-app.post('/api/collectionsitespending/post', (req, res) => {
-  const { title, email, phone, logo } = req.body;
+      // Delete the collection site entry
+      await mysqlConnection.query('DELETE FROM collectionsite WHERE id = ?', [collectionSiteId]);
 
-  // Validate input data
-  if (!title || !email || !phone ) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
+      // Delete the associated user account
+      await mysqlConnection.query('DELETE FROM user_account WHERE id = ?', [collectionSite.user_account_id]);
+
+      res.status(200).json({ message: 'Collection site and associated user account deleted successfully' });
+  } catch (error) {
+      console.error('Error deleting collection site and user account:', error);
+      res.status(500).json({ message: 'An error occurred while deleting collection site and user account' });
   }
-
-  const query = `
-  INSERT INTO collectionsitepending (title, email, phone, logo)
-  VALUES (?, ?, ?, ?)
-`;
-  mysqlConnection.query(query, [title, email, phone, logo], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into collectionsitepending table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'collectionsitepending created successfully', id: result.insertId });
-  });
 });
-
-// Collectionsitepending PUT
-app.put('/api/collectionsitespending/edit/:id', (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // Check if status is provided in the request body
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
-
-  // Update query to change the status based on the lab ID
-  const query = 'UPDATE collectionsite SET status = ? WHERE id = ?';
-
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    if (err) {
-      console.error('Error updating collectionsite status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating collectionsite status' });
-    }
-
-    // Check if any row was updated
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'collectionsite not found or no changes made' });
-    }
-
-    res.status(200).json({ message: 'collectionsite status updated successfully' });
-  });
-});
-
-// Collectionsitepending Delete
-app.delete('/api/collectionsitespending/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id); // Debugging line
-
-  if (!id) {
-    return res.status(400).json({ error: 'collectionsitepending ID must be provided' });
-  }
-
-  const query = 'DELETE FROM collectionsitepending WHERE id = ?';
-
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data from collectionsitepending table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'collectionsitepending not found' });
-    }
-
-    res.status(200).json({ message: 'collectionsitepending deleted successfully' });
-  });
-});
-
-
-// collectionsiteapproved GET
-app.get('/api/collectionsiteapproved/get', (req, res) => {
-  const query = 'SELECT * FROM collectionsite WHERE status = "approved"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from collectionsiteapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json(results);
-  });
-});
-
-// Get a single collectionsiteapproved by ID
-app.get('/api/collectionsiteapproved/:id', (req, res) => {
-  console.log('Received request for collectionsite with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM collectionsite WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching collectionsiteapproved:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('collectionsiteapproved not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'collectionsiteapproved not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// collectionsiteapproved POST
-app.post('/api/collectionsitesapproved/post', (req, res) => {
-  const { title, email, phone, logo } = req.body;
-
-  // Validate input data
-  if (!title || !email || !phone ) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-
-  const query = `
-  INSERT INTO collectionsiteapproved (title, email, phone, logo)
-  VALUES (?, ?, ?, ?)
-`;
-  mysqlConnection.query(query, [title, email, phone, logo], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into collectionsiteapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'collectionsiteapproved created successfully', id: result.insertId });
-  });
-});
-
-// collectionsitesapproved PUT
-app.put('/api/collectionsitesapproved/edit/:id', (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // Check if status is provided in the request body
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
-
-  // Update query to change the status based on the lab ID
-  const query = 'UPDATE collectionsite SET status = ? WHERE id = ?';
-
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    if (err) {
-      console.error('Error updating collectionsite status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating collectionsite status' });
-    }
-
-    // Check if any row was updated
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'collectionsite not found or no changes made' });
-    }
-
-    res.status(200).json({ message: 'collectionsite status updated successfully' });
-  });
-});
-
-// collectionsiteapproved Delete
-app.delete('/api/collectionsitesapproved/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id); // Debugging line
-
-  if (!id) {
-    return res.status(400).json({ error: 'collectionsiteapproved ID must be provided' });
-  }
-
-  const query = 'DELETE FROM collectionsiteapproved WHERE id = ?';
-
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data from collectionsiteapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'collectionsiteapproved not found' });
-    }
-
-    res.status(200).json({ message: 'collectionsiteapproved deleted successfully' });
-  });
-});
-
-// collectionsiteunapproved GET
-app.get('/api/collectionsiteunapproved/get', (req, res) => {
-  const query = 'SELECT * FROM collectionsite WHERE status = "unapproved"';
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from collectionsiteunapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json(results);
-  });
-});
-
-// Get a single collectionsiteunapproved by ID
-app.get('/api/collectionsiteunapproved/:id', (req, res) => {
-  console.log('Received request for collectionsite with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM collectionsite WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching collectionsiteunapproved:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('collectionsiteunapproved not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'collectionsiteunapproved not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// collectionsiteunapproved POST
-app.post('/api/collectionsitesunapproved/post', (req, res) => {
-  const { title, email, phone, logo } = req.body;
-
-  // Validate input data
-  if (!title || !email || !phone ) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-
-  const query = `
-  INSERT INTO collectionsiteunapproved (title, email, phone, logo)
-  VALUES (?, ?, ?, ?)
-`;
-  mysqlConnection.query(query, [title, email, phone, logo], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into collectionsiteunapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'collectionsiteunapproved created successfully', id: result.insertId });
-  });
-});
-
-// collectionsitesunapproved PUT
-app.put('/api/collectionsitesunapproved/edit/:id', (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // Check if status is provided in the request body
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
-
-  // Update query to change the status based on the lab ID
-  const query = 'UPDATE collectionsite SET status = ? WHERE id = ?';
-
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    if (err) {
-      console.error('Error updating collectionsite status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating collectionsite status' });
-    }
-
-    // Check if any row was updated
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'collectionsite not found or no changes made' });
-    }
-
-    res.status(200).json({ message: 'collectionsite status updated successfully' });
-  });
-});
-
-// collectionsiteunapproved Delete
-app.delete('/api/collectionsitesunapproved/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received ID:', id); // Debugging line
-
-  if (!id) {
-    return res.status(400).json({ error: 'collectionsiteunapproved ID must be provided' });
-  }
-
-  const query = 'DELETE FROM collectionsiteunapproved WHERE id = ?';
-
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data from collectionsiteunapproved table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'collectionsiteunapproved not found' });
-    }
-
-    res.status(200).json({ message: 'collectionsiteunapproved deleted successfully' });
-  });
-});
-
-
 
 
 // Committemember GET
@@ -1431,7 +765,7 @@ app.get('/api/committemember/get', (req, res) => {
   
   mysqlConnection.query(query, (err, results) => {
     if (err) {
-      console.error('Error fetching data from committemember table:', err);
+      console.error('Error fetching data from committe member table:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
     res.status(200).json(results);
@@ -1460,149 +794,59 @@ app.post('/api/committeemembers/post', (req, res) => {
   });
 });
 
-// Collectionsite PUT
+// Committe Members PUT
 app.put('/api/committemembers/edit/:id', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
-
-  // Check if status is provided in the request body
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
-
-  // Update query to change the status based on the lab ID
-  const query = 'UPDATE committe_member SET status = ? WHERE id = ?';
-
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    if (err) {
-      console.error('Error updating committemember status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating committemember status' });
-    }
-
-    // Check if any row was updated
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'committemember not found or no changes made' });
-    }
-
-    res.status(200).json({ message: 'committemember status updated successfully' });
-  });
-});
-
-
-// Staff GET
-app.get('/api/staff/get', (req, res) => {
-  const query = `
-    SELECT id, name, email, phone, joiningDate, role
-    FROM staff
-  `;
-  
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data from staff table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'No staff members found' });
-    }
-
-    res.status(200).json({ staff: results });
-  });
-});
-
-// Get a single staff 
-app.get('/api/staff/:id', (req, res) => {
-  console.log('Received request for staff with ID:', req.params.id); // Debugging line
-  const { id } = req.params;
-  const query = 'SELECT * FROM staff WHERE id = ?';
-  
-  mysqlConnection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error fetching staff:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (result.length === 0) {
-      console.log('Staff not found for ID:', id); // Debugging line
-      return res.status(404).json({ error: 'Staff not found' });
-    }
-    res.status(200).json(result[0]);
-  });
-});
-
-// Staff POST
-app.post('/api/staff/post', (req, res) => {
-  const { name, email, password, phone, joiningDate, role } = req.body;
+  const { CommitteMemberName, email, phoneNumber, cnic, fullAddress, city, district, country, organization, status } = req.body;
 
   // Validate input data
-  if (!name || !email || !password || !phone || !joiningDate || !role) {
+  if (!CommitteMemberName || !email || !phoneNumber || !cnic || !fullAddress || !city || !district || !country || !organization || !status) {
     return res.status(400).json({ error: 'All required fields must be provided' });
   }
 
   const query = `
-  INSERT INTO staff (name, email, password, phone, joiningDate, role)
-  VALUES (?, ?, ?, ?, ?, ?)
-  `;
-  mysqlConnection.query(query, [name, email, password, phone, joiningDate, role], (err, result) => {
-    if (err) {
-      console.error('Error inserting data into staff table:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(201).json({ message: 'Staff member created successfully', id: result.insertId });
-  });
-});
-
-// Staff PUT
-app.put('/api/staff/edit/:id', (req, res) => {
-  const { id } = req.params;
-  const { name, email, password, phone, joiningDate, role } = req.body;
-
-  // Validate input data
-  if (!name || !email || !password || !phone || !joiningDate || !role) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-
-  const query = `
-    UPDATE staff
-    SET name = ?, email = ?, password = ?, phone = ?, joiningDate = ?, role = ?
+    UPDATE committe_member
+    SET CommitteMemberName = ?, email = ?, phoneNumber = ?, cnic = ?, fullAddress = ?, city = ?, district = ?, country = ?, organization = ?, status = ?
     WHERE id = ?
   `;
 
-  mysqlConnection.query(query, [name, email, password, phone, joiningDate, role, id], (err, result) => {
+  mysqlConnection.query(query, [CommitteMemberName, email, phoneNumber, cnic, fullAddress, city, district, country, organization, status, id ], (err, result) => {
     if (err) {
-      console.error('Error updating data in staff table:', err);
+      console.error('Error updating data in committe_member table:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Staff member not found' });
+      return res.status(404).json({ error: 'Committe Members not found' });
     }
-    res.status(200).json({ message: 'Staff updated successfully' });
+    res.status(200).json({ message: 'Committe Members updated successfully' });
   });
 });
 
-// Staff DELETE
-app.delete('/api/staff/delete/:id', (req, res) => {
-  const { id } = req.params;
-  console.log('Received staff ID backend:', id);
 
-  const query = `
-    DELETE FROM staff
-    WHERE id = ?
-  `;
+// Committe Members delete
+app.delete('/api/committemembers/delete/:id', (req, res) => {
+  const { id } = req.params;
+  console.log('Received ID:', id); // Debugging line
+
+  if (!id) {
+    return res.status(400).json({ error: 'committe member ID must be provided' });
+  }
+
+  const query = 'DELETE FROM committe_member WHERE id = ?';
 
   mysqlConnection.query(query, [id], (err, result) => {
     if (err) {
-      console.error('Error deleting data from staff table:', err);
-      return res.status(500).json({ error: 'An error occurred while deleting the staff member' });
+      console.error('Error deleting data from committe member table:', err);
+      return res.status(500).json({ error: 'An error occurred' });
     }
+
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Staff member not found' });
+      return res.status(404).json({ error: 'committe member not found' });
     }
-    res.status(200).json({ message: 'Staff member deleted successfully' });
+
+    res.status(200).json({ message: 'committe member deleted successfully' });
   });
 });
-
-
-
 
 
 

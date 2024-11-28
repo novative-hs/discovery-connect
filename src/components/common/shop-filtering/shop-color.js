@@ -4,8 +4,10 @@ import React, { useState } from "react";
 const ShopColor = ({ all_products }) => {
   const [isChecked, setIsChecked] = useState("");
   const router = useRouter();
-  const all_colors = all_products.map((prd) => prd.colors.map((c) => c));
-  const colors = [...new Set(all_colors.flat())];
+  const all_colors = all_products 
+  ? all_products.flatMap((prd) => prd.colors ? prd.colors : [])
+  : [];
+const colors = [...new Set(all_colors)];
 
   // handle brand
   const handleColors = (value) => {

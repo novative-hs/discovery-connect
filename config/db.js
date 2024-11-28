@@ -17,7 +17,7 @@
 //     console.log('mongodb connection failed!', err.message);
 //   }
 // };
-
+            
 // module.exports = connectDB;
 
 
@@ -32,6 +32,7 @@ var mysqlConnection = mysql.createConnection({
     password: "discoveryconnect321",
     database: "discoveryconnect",
 });
+
 
 // check wether the connection is successfull or not !!
 mysqlConnection.connect((err) => {

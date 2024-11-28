@@ -9,18 +9,20 @@ import ChangePassword from './change-password';
 import UpdateOrganization from './update-organization';
 import CollectionsiteArea from './collectionsite';
 import CommitteMemberArea from './committe-members';
+import ResearcherArea from "./researcher";
+import OrganizationArea from "./organization";
 
 
-const DashboardArea = ({orderData}) => {
+const DashboardArea = ({ orderData }) => {
   return (
     <>
       <section className="profile__area pt-180 pb-120">
         <div className="container" style={{ marginTop: '-90px' }}>
           <div className="profile__inner p-relative">
-            <ProfileShapes/>
+            <ProfileShapes />
             <div className="row">
               <div className="col-xxl-4 col-lg-4">
-                <ProfileNav/>
+                <ProfileNav />
               </div>
               <div className="col-xxl-8 col-lg-8">
                 <div className="profile__tab-content">
@@ -32,7 +34,7 @@ const DashboardArea = ({orderData}) => {
                       role="tabpanel"
                       aria-labelledby="nav-profile-tab"
                     >
-                      <OrderInfo orderData={orderData}/>
+                      <OrderInfo orderData={orderData} />
                     </div>
                     {/* my order tab */}
                     <div
@@ -44,25 +46,45 @@ const DashboardArea = ({orderData}) => {
                       <MyOrders orderData={orderData} />
                     </div>
 
-                     {/* CollectionSite List */}
-                     <div
+                    {/* Researcher List */}
+                    <div
+                      className="tab-pane fade"
+                      id="nav-researcher"
+                      role="tabpanel"
+                      aria-labelledby="nav-researcher-tab"
+                    >
+                      <ResearcherArea />
+                    </div>
+
+                    {/* Organization List */}
+                    <div
+                      className="tab-pane fade"
+                      id="nav-organization"
+                      role="tabpanel"
+                      aria-labelledby="nav-organization-tab"
+                    >
+                      <OrganizationArea />
+                    </div>
+
+                    {/* CollectionSite List */}
+                    <div
                       className="tab-pane fade"
                       id="nav-collectionsite"
                       role="tabpanel"
                       aria-labelledby="nav-collectionsite-tab"
                     >
-                      <CollectionsiteArea/>
+                      <CollectionsiteArea />
                     </div>
 
 
-                     {/* CommitteMember List */}
-                     <div
+                    {/* CommitteMember List */}
+                    <div
                       className="tab-pane fade"
                       id="nav-committemember"
                       role="tabpanel"
                       aria-labelledby="nav-committemember-tab"
                     >
-                      <CommitteMemberArea/>
+                      <CommitteMemberArea />
                     </div>
 
                     {/* profile__info */}
@@ -72,7 +94,7 @@ const DashboardArea = ({orderData}) => {
                       role="tabpanel"
                       aria-labelledby="nav-information-tab"
                     >
-                      <UpdateOrganization/>
+                      <UpdateOrganization />
                     </div>
                     {/* change password */}
                     <div
@@ -81,7 +103,7 @@ const DashboardArea = ({orderData}) => {
                       role="tabpanel"
                       aria-labelledby="nav-password-tab"
                     >
-                      <ChangePassword/>
+                      <ChangePassword />
                     </div>
                     {/*  */}
                   </div>

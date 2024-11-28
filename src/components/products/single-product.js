@@ -15,23 +15,38 @@ import { add_to_wishlist } from "src/redux/features/wishlist-slice";
 import { setProduct } from "src/redux/features/productSlice";
 
 const SingleProduct = ({ product, discountPrd = false }) => {
-  const { _id, image, title, price, discount, originalPrice } = product || {};
+  const { _id, image_url, title, price, discount, originalPrice } = product || {};
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
   const { wishlist } = useSelector((state) => state.wishlist);
+  
+  // Check if the product is already added to the wishlist
   const isWishlistAdded = wishlist.some(item => item._id === _id);
+  
+  // Check if the current product is in the cart
   const isAddedToCart = cart_products.some((prd) => prd._id === _id);
 
-  // handle add product
+  // Handle adding the product to the cart
   const handleAddProduct = (prd) => {
     dispatch(add_cart_product(prd));
   };
-  // handle add wishlist
+
+  // // Handle adding the product to the wishlist
+  // const handleAddWishlist = (prd) => {
+  //   dispatch(add_to_wishlist(prd));
+  // };
+
   const handleAddWishlist = (prd) => {
-    dispatch(add_to_wishlist(prd));
+    console.log("Product before dispatch:", prd);
+  
+    dispatch(add_to_wishlist({
+      _id: prd.id,  
+      title: prd.name,
+    }));
   };
 
-  // handle quick view
+
+  // Handle quick view
   const handleQuickView = (prd) => {
     dispatch(initialOrderQuantity())
     dispatch(setProduct(prd))
@@ -43,20 +58,18 @@ const SingleProduct = ({ product, discountPrd = false }) => {
         <div className="product__thumb w-img p-relative fix">
           <Link href={`/product-details/${_id}`}>
             <Image
-              src={image}
+              src={product.image_url}
               alt="product image"
               width={960}
               height={1125}
-              style={{ width: "100%", height: "100%" }}
+              style={{ width: '100%', height: '100%' }}
             />
           </Link>
 
           {discount > 0 && (
             <div className="product__badge d-flex flex-column flex-wrap">
               <span
-                className={`product__badge-item ${
-                  discountPrd ? "has-offer" : "has-new"
-                }`}
+                className={`product__badge-item ${discountPrd ? "has-offer" : "has-new"}`}
               >
                 {discountPrd ? `-${discount}%` : "sale"}
               </span>
@@ -71,7 +84,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
           <div className="product__action d-flex flex-column flex-wrap">
             <button
               type="button"
-              className={`product-action-btn ${isWishlistAdded?"active":""}`}
+              className={`product-action-btn ${isWishlistAdded ? "active" : ""}`}
               onClick={() => handleAddWishlist(product)}
             >
               <HeartTwo />
@@ -86,10 +99,10 @@ const SingleProduct = ({ product, discountPrd = false }) => {
               <span className="product-action-tooltip">Quick view</span>
             </button>
             <Link href={`/product-details/${_id}`}>
-            <button type="button" className="product-action-btn">
-               <i className="fa-solid fa-link"></i>
-              <span className="product-action-tooltip">Product Details</span>
-            </button>
+              <button type="button" className="product-action-btn">
+                <i className="fa-solid fa-link"></i>
+                <span className="product-action-tooltip">Product Details</span>
+              </button>
             </Link>
           </div>
           <div className="product__add transition-3">

@@ -19,6 +19,7 @@ function createTables() {
     const researcherTable = `
     CREATE TABLE IF NOT EXISTS researcher (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        user_account_id INT,
         username VARCHAR(100),
         email VARCHAR(100),
         password VARCHAR(100),
@@ -32,15 +33,17 @@ function createTables() {
         country VARCHAR(50),
         nameofOrganization VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
         logo VARCHAR(255),
         age VARCHAR(100),
-        gender VARCHAR(100)
+        gender VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'pending',
+        FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE 
     )`;
 
     const organizationTable = `
     CREATE TABLE IF NOT EXISTS organization (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        user_account_id INT,
         username VARCHAR(100),
         email VARCHAR(100),
         password VARCHAR(100),
@@ -55,12 +58,15 @@ function createTables() {
         district VARCHAR(50),
         country VARCHAR(50),
         phoneNumber VARCHAR(15),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
     )`;
 
     const collectionsiteTable = `
     CREATE TABLE IF NOT EXISTS collectionsite (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        user_account_id INT,
         username VARCHAR(100),
         email VARCHAR(100),
         password VARCHAR(100),
@@ -74,7 +80,8 @@ function createTables() {
         country VARCHAR(50),
         status VARCHAR(50) DEFAULT 'Pending',
         phoneNumber VARCHAR(15),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
     )`;
 
     const committememberTable = `
@@ -116,92 +123,32 @@ function createTables() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )`;
 
-   
-
-    // const createlabpendingTable = `
-    // CREATE TABLE IF NOT EXISTS labpending (
-    //   id INT AUTO_INCREMENT PRIMARY KEY,
-    //   title VARCHAR(255) NOT NULL,
-    //   email VARCHAR(255) NOT NULL,
-    //   phone VARCHAR(255) NOT NULL,
-    //   logo VARCHAR(255),
-    //   status VARCHAR(255) DEFAULT 'pending',
-    //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    // )`;
-
-    // const createlabapprovedTable = `
-    // CREATE TABLE IF NOT EXISTS labapproved (
-    //   id INT AUTO_INCREMENT PRIMARY KEY,
-    //   title VARCHAR(255) NOT NULL,
-    //   email VARCHAR(255) NOT NULL,
-    //   phone VARCHAR(255) NOT NULL,
-    //   status VARCHAR(255) NOT NULL,
-    //   logo VARCHAR(255),
-    //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    // )`;
-
-    // const createlabunapprovedTable = `
-    // CREATE TABLE IF NOT EXISTS labunapproved (
-    //   id INT AUTO_INCREMENT PRIMARY KEY,
-    //   title VARCHAR(255) NOT NULL,
-    //   email VARCHAR(255) NOT NULL,
-    //   phone VARCHAR(255) NOT NULL,
-    //   logo VARCHAR(255),
-    //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    // )`;
-
-    
-
-    // const createcorporatependingTable = `
-    // CREATE TABLE IF NOT EXISTS corporatepending (
-    //   id INT AUTO_INCREMENT PRIMARY KEY,
-    //   title VARCHAR(255) NOT NULL,
-    //   email VARCHAR(255) NOT NULL,
-    //   phone VARCHAR(255) NOT NULL,
-    //   logo VARCHAR(255),
-    //   status VARCHAR(255) DEFAULT 'pending',
-    //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    // )`;
-
-    // const createcorporateapprovedTable = `
-    // CREATE TABLE IF NOT EXISTS corporateapproved (
-    //   id INT AUTO_INCREMENT PRIMARY KEY,
-    //   title VARCHAR(255) NOT NULL,
-    //   email VARCHAR(255) NOT NULL,
-    //   phone VARCHAR(255) NOT NULL,
-    //   status VARCHAR(255) NOT NULL,
-    //   logo VARCHAR(255),
-    //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    // )`;
-
-    // const createcorporateunapprovedTable = `
-    // CREATE TABLE IF NOT EXISTS corporateunapproved (
-    //   id INT AUTO_INCREMENT PRIMARY KEY,
-    //   title VARCHAR(255) NOT NULL,
-    //   email VARCHAR(255) NOT NULL,
-    //   phone VARCHAR(255) NOT NULL,
-    //   logo VARCHAR(255),
-    //   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    // )`;
-
-    const createstaffTable = `
-    CREATE TABLE IF NOT EXISTS staff (
-      id INT PRIMARY KEY AUTO_INCREMENT,
-      name VARCHAR(100) NOT NULL,
-      email VARCHAR(100) UNIQUE NOT NULL,
-      password VARCHAR(255),
-      phone VARCHAR(20),
-      joiningDate DATE NOT NULL,
-      role VARCHAR(50) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    const createproductsTable = `
+    CREATE TABLE IF NOT EXISTS products (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      parent_category VARCHAR(255) NOT NULL,
+      child_category VARCHAR(255) NOT NULL,
+      brand VARCHAR(255) NOT NULL,
+      price DECIMAL(10, 2) NOT NULL,
+      color VARCHAR(255) NOT NULL,
+      image_url VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )`;
 
+    const createwishlistTable = `
+    CREATE TABLE IF NOT EXISTS wishlist (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      product_id INT NOT NULL,
+      productname VARCHAR(255) NOT NULL,
+      unitprice VARCHAR(255) NOT NULL,
+      quantity DECIMAL (65) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES user_account(id),
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    )`;
 
     // Query
 
@@ -246,64 +193,24 @@ function createTables() {
         }
       });
 
-  
-
-    // mysqlConnection.query(createlabpendingTable, (err, result) => {
-    //     if (err) {
-    //       console.error("Error creating labpending table:", err);
-    //     } else {
-    //       console.log("labpending table created or already exists.");
-    //     }
-    //   });
-
-    // mysqlConnection.query(createlabapprovedTable, (err, result) => {
-    //     if (err) {
-    //       console.error("Error creating labapproved table:", err);
-    //     } else {
-    //       console.log("labapproved table created or already exists.");
-    //     }
-    //   });
-
-    // mysqlConnection.query(createlabunapprovedTable, (err, result) => {
-    //     if (err) {
-    //       console.error("Error creating labunapproved table:", err);
-    //     } else {
-    //       console.log("labunapproved table created or already exists.");
-    //     }
-    //   });
-
-
-    // mysqlConnection.query(createcorporatependingTable, (err, result) => {
-    //     if (err) {
-    //       console.error("Error creating corporatepending table:", err);
-    //     } else {
-    //       console.log("corporatepending table created or already exists.");
-    //     }
-    //   });
-
-    // mysqlConnection.query(createcorporateapprovedTable, (err, result) => {
-    //     if (err) {
-    //       console.error("Error creating corporateapproved table:", err);
-    //     } else {
-    //       console.log("corporateapproved table created or already exists.");
-    //     }
-    //   });
-
-    // mysqlConnection.query(createcorporateunapprovedTable, (err, result) => {
-    //     if (err) {
-    //       console.error("Error creating corporateunapproved table:", err);
-    //     } else {
-    //       console.log("corporateunapproved table created or already exists.");
-    //     }
-    //   });
-
-    mysqlConnection.query(createstaffTable, (err, result) => {
+    mysqlConnection.query(createproductsTable, (err, result) => {
         if (err) {
-          console.error("Error creating staff table:", err);
+          console.error("Error creating sample table:", err);
         } else {
-          console.log("Staff table created or already exists.");
+          console.log("Sample table created or already exists.");
         }
       });
+
+    mysqlConnection.query(createwishlistTable, (err, result) => {
+        if (err) {
+          console.error("Error creating wishlist table:", err);
+        } else {
+          console.log("Wishlist table created or already exists.");
+        }
+      });
+
+
+       
 }
 
 createTables();
