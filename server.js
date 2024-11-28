@@ -1,4 +1,5 @@
 // server.js
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors'); // Import CORS
@@ -10,11 +11,12 @@ const moment = require('moment');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Enable CORS for all routes and origins
+// Enable CORS for specific origins
 app.use(cors());
-// Middleware setup
-app.use(bodyParser.urlencoded({ extended: true }));
 
+// Middleware setup
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Fetch User Profile
 app.get('/api/user-dashboard/profile/:id', (req, res) => {
@@ -76,50 +78,63 @@ app.get('/api/user-dashboard/profile/:id', (req, res) => {
 // User Sign Up
 app.post('/api/user/signup', (req, res) => {
   const {
-    accountType, username, email, password, confirmPassword, ResearcherName, OrganizationName, CollectionSiteName, phoneNumber, fullAddress, city,district, country, nameofOrganization, type, HECPMDCRegistrationNo, ntnNumber
+    accountType, username, email, password, confirmPassword, ResearcherName, OrganizationName, CollectionSiteName, phoneNumber, fullAddress, city, district, country, nameofOrganization, type, HECPMDCRegistrationNo, ntnNumber
   } = req.body;
 
-// Insert into user_account table
-const userAccountQuery = `
-INSERT INTO user_account (username, password, confirmPassword, email, accountType)
-VALUES (?, ?, ?, ?, ?)`;
-
-const userAccountValues = [username, password, confirmPassword, email, accountType];
-
-mysqlConnection.query(userAccountQuery, userAccountValues, (err, userAccountResults) => {
-if (err) {
-  console.error('Database Query Error:', err);
-  return res.status(500).json({ error: 'Database query failed' });
-}
-
-  let query, values;
-
-  switch (accountType) {
-    case 'Researcher':
-      query = 'INSERT INTO researcher (username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      values = [username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization];
-      break;
-    case 'Organization':
-      query = 'INSERT INTO organization (username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      values = [username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country];
-      break;
-    case 'CollectionSites':
-      query = 'INSERT INTO collectionsite (username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      values = [username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country];
-      break;
-    default:
-      return res.status(400).json({ error: 'Invalid account type' });
-  }
-
-  mysqlConnection.query(query, values, (err, results) => {
+  // Step 1: Check if the email already exists in the user_account table
+  const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
+  mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
     if (err) {
-      console.error('Database Query Error:', err); // Log the full error
+      console.error('Database Query Error (Check Email):', err);
       return res.status(500).json({ error: 'Database query failed' });
     }
-    res.status(201).json({ message: 'User registered successfully', userId: results.insertId });
+    if (results.length > 0) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+
+    // Step 2: Insert into user_account table if email is unique
+    const userAccountQuery = `
+      INSERT INTO user_account (username, password, confirmPassword, email, accountType)
+      VALUES (?, ?, ?, ?, ?)`;
+
+    const userAccountValues = [username, password, confirmPassword, email, accountType];
+
+    mysqlConnection.query(userAccountQuery, userAccountValues, (err, userAccountResults) => {
+      if (err) {
+        console.error('Database Query Error (Insert User Account):', err);
+        return res.status(500).json({ error: 'Database query failed' });
+      }
+
+      // Step 3: Insert into respective table based on account type
+      let query, values;
+
+      switch (accountType) {
+        case 'Researcher':
+          query = 'INSERT INTO researcher (username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+          values = [username, email, password, confirmPassword, accountType, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization];
+          break;
+        case 'Organization':
+          query = 'INSERT INTO organization (username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+          values = [username, email, password, confirmPassword, accountType, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country];
+          break;
+        case 'CollectionSites':
+          query = 'INSERT INTO collectionsite (username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+          values = [username, email, password, confirmPassword, accountType, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country];
+          break;
+        default:
+          return res.status(400).json({ error: 'Invalid account type' });
+      }
+
+      mysqlConnection.query(query, values, (err, results) => {
+        if (err) {
+          console.error('Database Query Error (Insert Account Type):', err);
+          return res.status(500).json({ error: 'Database query failed' });
+        }
+        res.status(201).json({ message: 'User registered successfully', userId: results.insertId });
+      });
+    });
   });
 });
-})
 
 // User Login Up
 app.post("/api/user/login", (req, res) => {
@@ -1629,6 +1644,6 @@ app.post('/api/upload-image', upload.single('image'), (req, res) => {
 
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
 });
