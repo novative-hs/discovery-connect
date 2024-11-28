@@ -53,6 +53,37 @@ const ProfileNav = () => {
 
           <button
             className="nav-link"
+            id="nav-researcher-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-researcher"
+            type="button"
+            role="tab"
+            aria-controls="nav-researcher"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            Researchers List
+          </button>
+          <button
+            className="nav-link"
+            id="nav-organization-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-organization"
+            type="button"
+            role="tab"
+            aria-controls="nav-organization"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            Organizations List
+          </button>
+
+          <button
+            className="nav-link"
             id="nav-collectionsite-tab"
             data-bs-toggle="tab"
             data-bs-target="#nav-collectionsite"

@@ -75,22 +75,19 @@ const ProductModal = () => {
                 <div className="product__details-thumb-nav tp-tab">
                   <nav>
                     <div className="nav nav-tabs justify-content-sm-between">
-                      {relatedImages.map((img, i) => (
-                        <button
-                          key={i}
-                          className={`nav-link ${img === activeImg ? "active" : ""
-                            }`}
-                          onClick={() => setActiveImg(img)}
-                        >
-                          <Image
-                            src={img}
-                            alt="image"
-                            width={90}
-                            height={90}
-                            style={{ width: "100%", height: "100%" }}
-                          />
-                        </button>
-                      ))}
+                      {relatedImages && relatedImages.length > 0 ? (
+                        relatedImages.map((img, i) => (
+                          <button
+                            key={i}
+                            className={`nav-link ${img === activeImg ? "active" : ""}`}
+                            onClick={() => setActiveImg(img)}
+                          >
+                            <img src={img} alt={`related-${i}`} />
+                          </button>
+                        ))
+                      ) : (
+                        <p>No related images available.</p>
+                      )}
                     </div>
                   </nav>
                 </div>
@@ -102,7 +99,7 @@ const ProductModal = () => {
               <h3 className="product__details-title">{title}</h3>
               <p className="mt-20">
                 Shop Harry.com for every day low prices. Free shipping on
-                orders $35+ or Pickup In-store and get
+                orders $35+ or Pickup In-store and gett
               </p>
               {/* Price */}
               <OldNewPrice

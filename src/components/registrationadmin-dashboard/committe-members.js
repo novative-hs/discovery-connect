@@ -7,7 +7,7 @@ const CommitteMemberArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null); // Store ID of committemember to delete
+  const [selectedCommittememberId, setSelectedCommittememberId] = useState(null); // Store ID of Committe Members to delete
   const [formData, setFormData] = useState({
     CommitteMemberName: "",
     email: "",
@@ -21,23 +21,23 @@ const CommitteMemberArea = () => {
     created_at: "",  
     status: "",
   });
-  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected committemember to edit
-  const [committemembers, setCollectionsites] = useState([]); // State to hold fetched committemembers
+  const [editCommittemember, setEditCommittemember] = useState(null); // State for selected Committe Members to edit
+  const [committemembers, setCommittemembers] = useState([]); // State to hold fetched Committe Members
   const [successMessage, setSuccessMessage] = useState('');
 
 
-  // Fetch committemembers from backend when component loads
+  // Fetch Committe Members from backend when component loads
   useEffect(() => {
-    const fetchCollectionsites = async () => {
+    const fetchCommittemembers = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/committemember/get');
-        setCollectionsites(response.data); // Store fetched committemembers in state
+        setCommittemembers(response.data); // Store fetched Committe Members in state
       } catch (error) {
-        console.error("Error fetching committemembers:", error);
+        console.error("Error fetching Committe Members:", error);
       }
     };
 
-    fetchCollectionsites(); // Call the function when the component mounts
+    fetchCommittemembers(); // Call the function when the component mounts
   }, []);
 
   const handleInputChange = (e) => {
@@ -53,11 +53,11 @@ const CommitteMemberArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post('http://localhost:5000/api/committeemembers/post', formData);
-      console.log("Committemember added successfully:", response.data);
+      console.log("Committe Member added successfully:", response.data);
 
       // Refresh the committemember list after successful submission
       const newResponse = await axios.get('http://localhost:5000/api/committemember/get');
-      setCollectionsites(newResponse.data); // Update state with the new list
+      setCommittemembers(newResponse.data); // Update state with the new list
 
       // Clear form after submission
       setFormData({
@@ -76,7 +76,7 @@ const CommitteMemberArea = () => {
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding committemember:", error);
+      console.error("Error adding Committe Member:", error);
     }
   };
 
@@ -84,8 +84,8 @@ const CommitteMemberArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/committemembers/delete/${selectedCollectionsiteId}`);
-      console.log(`Committemember with ID ${selectedCollectionsiteId} deleted successfully.`);
+      await axios.delete(`http://localhost:5000/api/committemembers/delete/${selectedCommittememberId}`);
+      console.log(`Committemember with ID ${selectedCommittememberId} deleted successfully.`);
 
       // Set success message
       setSuccessMessage('Committemember deleted successfully.');
@@ -97,18 +97,18 @@ const CommitteMemberArea = () => {
 
       // Refresh the committemember list after deletion
       const newResponse = await axios.get('http://localhost:5000/api/committemember/get');
-      setCollectionsites(newResponse.data);
+      setCommittemembers(newResponse.data);
 
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedCollectionsiteId(null);
+      setSelectedCommittememberId(null);
     } catch (error) {
-      console.error(`Error deleting committemember with ID ${selectedCollectionsiteId}:`, error);
+      console.error(`Error deleting Committe Member with ID ${selectedCommittememberId}:`, error);
     }
   };
   const handleEditClick = (committemember) => {
-    setSelectedCollectionsiteId(committemember.id);
-    setEditCollectionsite(committemember); // Store the committemember data to edit
+    setSelectedCommittememberId(committemember.id);
+    setEditCommittemember(committemember); // Store the Committe Members data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
       CommitteMemberName: committemember.CommitteMemberName,
@@ -130,7 +130,7 @@ const CommitteMemberArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/committemembers/edit/${selectedCollectionsiteId}`,
+        `http://localhost:5000/api/committemembers/edit/${selectedCommittememberId}`,
         formData
       );
       console.log("Committemember updated successfully:", response.data);
@@ -138,7 +138,7 @@ const CommitteMemberArea = () => {
       const newResponse = await axios.get(
         "http://localhost:5000/api/committemember/get"
       );
-      setCollectionsites(newResponse.data);
+      setCommittemembers(newResponse.data);
 
       setShowEditModal(false);
       setSuccessMessage("Committemember updated successfully.");
@@ -147,7 +147,7 @@ const CommitteMemberArea = () => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating committemember with ID ${selectedCollectionsiteId}:`, error);
+      console.error(`Error updating committemember with ID ${selectedCommittememberId}:`, error);
     }
   };
 
@@ -164,7 +164,7 @@ const CommitteMemberArea = () => {
                   {successMessage}
                 </div>
               )}
-              {/* Add Committemembers Button */}
+              {/* Add Committe Members Button */}
               <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
                 <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                   Add committe members
@@ -216,7 +216,7 @@ const CommitteMemberArea = () => {
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedCollectionsiteId(committemember.id);
+                                setSelectedCommittememberId(committemember.id);
                                 setShowDeleteModal(true);
                               }}
                             >
@@ -228,7 +228,7 @@ const CommitteMemberArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">
-                          No committemembers available
+                          No Committe Members Available
                         </td>
                       </tr>
                     )}
@@ -360,17 +360,6 @@ const CommitteMemberArea = () => {
                               required
                             />
                           </div>
-                          {/* <div className="form-group">
-                            <label>Registered_at</label>
-                            <input
-                              type="datetime-local"
-                              className="form-control"
-                              name="created_at"
-                              value={formData.created_at}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div> */}
                         </div>
                         <div className="modal-footer">
                           <button type="submit" className="btn btn-primary">
@@ -509,17 +498,7 @@ const CommitteMemberArea = () => {
                               required
                             />
                           </div>
-                          {/* <div className="form-group">
-                            <label>Registered_at</label>
-                            <input
-                              type="datetime-local"
-                              className="form-control"
-                              name="created_at"
-                              value={formData.created_at}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div> */}
+                          
                           <div className="form-group">
                             <label>Status</label>
                             <select

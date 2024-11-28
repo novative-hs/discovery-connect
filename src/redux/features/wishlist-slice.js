@@ -11,18 +11,19 @@ export const wishlistSlice = createSlice({
   initialState,
   reducers: {
     add_to_wishlist: (state, { payload }) => {
-        const isExist = state.wishlist.some(item => item._id === payload._id);
-        if(!isExist){
-            state.wishlist.push(payload);
-            notifySuccess(`${payload.title} added to wishlist`)
-        }
-        else {
-            state.wishlist = state.wishlist.filter(item => item._id !== payload._id);
-            notifyError(`${payload.title} removed from wishlist`);
-        }
+      const isExist = state.wishlist.some(item => item._id === payload._id);
+      if (!isExist) {
+        state.wishlist.push(payload);
+        console.log("Payload in add_to_wishlist:", payload);
+        notifySuccess(`${payload.title} added to wishlist`); // Access the product title here
+      } else {
+        state.wishlist = state.wishlist.filter(item => item._id !== payload._id);
+        notifyError(`${payload.title} removed from wishlist`); // Access the product title here
+      }
       setLocalStorage("wishlist_items", state.wishlist);
     },
     remove_wishlist_product: (state, { payload }) => {
+
       state.wishlist = state.wishlist.filter((item) => item._id !== payload._id);
       notifyError(`${payload.title} removed from wishlist`);
       setLocalStorage("wishlist_items", state.wishlist);

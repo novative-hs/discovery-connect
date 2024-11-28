@@ -95,8 +95,8 @@ const ShopModel = ({ all_products }) => {
                     type="checkbox"
                     id={brand}
                     checked={
-                      router.query.brand ===
-                      brand.toLowerCase().replace("&", "").split(" ").join("-")
+                      router.query.brand &&
+                      router.query.brand.toLowerCase().replace("&", "").split(" ").join("-") === brand.toLowerCase().replace("&", "").split(" ").join("-")
                         ? "checked"
                         : false
                     }

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from 'next/router';
 import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from "yup";
@@ -79,6 +80,7 @@ const RegisterForm = () => {
   const [showPass, setShowPass] = useState(false);
   const [showConPass, setShowConPass] = useState(false);
   const [registerUser, { }] = useRegisterUserMutation();
+  const router = useRouter();
   // react hook form
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
     resolver: yupResolver(schema)
@@ -136,6 +138,8 @@ const RegisterForm = () => {
       }
       else {
         notifySuccess(result?.data?.message);
+        // navigate('/login');
+        router.push('/login');
       }
     })
     reset();
@@ -152,6 +156,7 @@ const RegisterForm = () => {
               type="text"
               placeholder="Enter username"
               id="username"
+              
             />
             <span>
               <UserTwo />

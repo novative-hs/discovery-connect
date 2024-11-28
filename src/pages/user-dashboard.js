@@ -68,8 +68,8 @@ import SEO from "@components/seo";
 import Header from "@layout/researcherheader";
 import Wrapper from "@layout/wrapper";
 import Footer from "@layout/footer";
-import DashboardArea from "@components/user-dashboard/dashboard-area"; // You can keep this if there's static content
-import Loader from "@components/loader/loader"; // Only needed if you're showing a loading state
+import DashboardArea from "@components/user-dashboard/dashboard-area";
+import Loader from "@components/loader/loader";
 
 const UserOrdersPage = () => {
   const router = useRouter();
