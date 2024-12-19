@@ -8,7 +8,7 @@ import MyOrders from './my-orders';
 import ChangePassword from './change-password';
 import UpdateOrganization from './update-organization';
 import CollectionsiteArea from './collectionsite';
-import CommitteMemberArea from './committe-members';
+import CommitteMemberArea from './committee-members';
 import ResearcherArea from "./researcher";
 import OrganizationArea from "./organization";
 

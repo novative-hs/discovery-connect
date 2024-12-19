@@ -6,14 +6,14 @@ import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 const ResearcherArea = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    // const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
     const [formData, setFormData] = useState({
         ResearcherName: "",
         email: "",
         phoneNumber: "",
         nameofOrganization: "",
-        created_at: "",
+        // created_at: "",
         status: "",
         // logo: ""
     });
@@ -68,7 +68,7 @@ const ResearcherArea = () => {
                 email: "",
                 phoneNumber: "",
                 nameofOrganization: "",
-                created_at: "",
+                // created_at: "",
                 status: "",
 
             });
@@ -79,31 +79,32 @@ const ResearcherArea = () => {
     };
 
 
-    const handleDelete = async () => {
-        try {
-            // Send delete request to backend
-            await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedResearcherId}`);
-            console.log(`Researcher with ID ${selectedResearcherId} deleted successfully.`);
+    // const handleDelete = async () => {
+    //     try {
+    //         // Send delete request to backend
+    //         await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedResearcherId}`);
+    //         console.log(`Researcher with ID ${selectedResearcherId} deleted successfully.`);
 
-            // Set success message
-            setSuccessMessage('Researcher deleted successfully.');
+    //         // Set success message
+    //         setSuccessMessage('Researcher deleted successfully.');
 
-            // Clear success message after 3 seconds
-            setTimeout(() => {
-                setSuccessMessage('');
-            }, 3000);
+    //         // Clear success message after 3 seconds
+    //         setTimeout(() => {
+    //             setSuccessMessage('');
+    //         }, 3000);
 
-            // Refresh the researcher list after deletion
-            const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
-            setResearchers(newResponse.data);
+    //         // Refresh the researcher list after deletion
+    //         const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
+    //         setResearchers(newResponse.data);
 
-            // Close modal after deletion
-            setShowDeleteModal(false);
-            setSelectedResearcherId(null);
-        } catch (error) {
-            console.error(`Error deleting researcher with ID ${selectedResearcherId}:`, error);
-        }
-    };
+    //         // Close modal after deletion
+    //         setShowDeleteModal(false);
+    //         setSelectedResearcherId(null);
+    //     } catch (error) {
+    //         console.error(`Error deleting researcher with ID ${selectedResearcherId}:`, error);
+    //     }
+    // };
+
     const handleEditClick = (researcher) => {
         setSelectedResearcherId(researcher.id);
         setEditResearcher(researcher); // Store the researcher data to edit
@@ -113,7 +114,7 @@ const ResearcherArea = () => {
             email: researcher.email,
             phoneNumber: researcher.phoneNumber,
             nameofOrganization: researcher.nameofOrganization,
-            created_at: researcher.created_at,
+            // created_at: researcher.created_at,
             status: researcher.status,
         });
     };
@@ -193,11 +194,11 @@ const ResearcherArea = () => {
                                     <thead className="thead-dark">
                                         <tr>
                                             <th>ID</th>
-                                            <th>Researcher name</th>
+                                            <th>Name</th>
                                             <th>Email</th>
-                                            <th>Phone Number</th>
-                                            <th>Name of Organization</th>
-                                            <th>Registered_at</th>
+                                            <th>Contact</th>
+                                            <th>Organization</th>
+                                            {/* <th>Registered_at</th> */}
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
@@ -211,7 +212,7 @@ const ResearcherArea = () => {
                                                     <td>{researcher.email}</td>
                                                     <td>{researcher.phoneNumber}</td>
                                                     <td>{researcher.nameofOrganization}</td>
-                                                    <td>{researcher.created_at}</td>
+                                                    {/* <td>{researcher.created_at}</td> */}
                                                     <td>{researcher.status}</td>
                                                     <td>
                                                         <button
@@ -219,7 +220,7 @@ const ResearcherArea = () => {
                                                             onClick={() => handleEditClick(researcher)}>
                                                             <FontAwesomeIcon icon={faEdit} size="sm" />
                                                         </button>{" "}
-                                                        <button
+                                                        {/* <button
                                                             className="btn btn-danger btn-sm"
                                                             onClick={() => {
                                                                 setSelectedResearcherId(researcher.id);
@@ -227,7 +228,7 @@ const ResearcherArea = () => {
                                                             }}
                                                         >
                                                             <FontAwesomeIcon icon={faTrash} size="sm" />
-                                                        </button>
+                                                        </button> */}
                                                     </td>
                                                 </tr>
                                             ))
@@ -272,8 +273,8 @@ const ResearcherArea = () => {
                             <input
                               type="text"
                               className="form-control"
-                              name="ResearcherName"
-                              value={formData.ResearcherName}
+                              name="name"
+                              value={formData.name}
                               onChange={handleInputChange}
                               required
                             />
@@ -410,7 +411,7 @@ const ResearcherArea = () => {
                             )}
 
                             {/* Modal for Deleting Researchers */}
-                            {showDeleteModal && (
+                            {/* {showDeleteModal && (
                                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                                     <div className="modal-dialog" role="document">
                                         <div className="modal-content">
@@ -444,7 +445,7 @@ const ResearcherArea = () => {
                                         </div>
                                     </div>
                                 </div>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>

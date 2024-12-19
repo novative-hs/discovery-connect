@@ -6,13 +6,13 @@ import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 const OrganizationArea = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    // const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedOrganizationId, setSelectedOrganizationId] = useState(null); // Store ID of organization to delete
     const [formData, setFormData] = useState({
         OrganizationName: "",
         email: "",
         phoneNumber: "",
-        created_at: "",
+        // created_at: "",
         status: "",
         // logo: ""
     });
@@ -66,7 +66,7 @@ const OrganizationArea = () => {
                 OrganizationName: "",
                 email: "",
                 phoneNumber: "",
-                created_at: "",
+                // created_at: "",
                 status: "",
 
             });
@@ -77,31 +77,33 @@ const OrganizationArea = () => {
     };
 
 
-    const handleDelete = async () => {
-        try {
-            // Send delete request to backend
-            await axios.delete(`http://localhost:5000/api/organizations/delete/${selectedOrganizationId}`);
-            console.log(`Organization with ID ${selectedOrganizationId} deleted successfully.`);
+    // const handleDelete = async () => {
+    //     try {
+    //         // Send delete request to backend
+    //         await axios.delete(`http://localhost:5000/api/organizations/delete/${selectedOrganizationId}`);
+    //         console.log(`Organization with ID ${selectedOrganizationId} deleted successfully.`);
 
-            // Set success message
-            setSuccessMessage('Organization deleted successfully.');
+    //         // Set success message
+    //         setSuccessMessage('Organization deleted successfully.');
 
-            // Clear success message after 3 seconds
-            setTimeout(() => {
-                setSuccessMessage('');
-            }, 3000);
+    //         // Clear success message after 3 seconds
+    //         setTimeout(() => {
+    //             setSuccessMessage('');
+    //         }, 3000);
 
-            // Refresh the organization list after deletion
-            const newResponse = await axios.get('http://localhost:5000/api/admin/organization/get');
-            setOrganizations(newResponse.data);
+    //         // Refresh the organization list after deletion
+    //         const newResponse = await axios.get('http://localhost:5000/api/admin/organization/get');
+    //         setOrganizations(newResponse.data);
 
-            // Close modal after deletion
-            setShowDeleteModal(false);
-            setSelectedOrganizationId(null);
-        } catch (error) {
-            console.error(`Error deleting organization with ID ${selectedOrganizationId}:`, error);
-        }
-    };
+    //         // Close modal after deletion
+    //         setShowDeleteModal(false);
+    //         setSelectedOrganizationId(null);
+    //     } catch (error) {
+    //         console.error(`Error deleting organization with ID ${selectedOrganizationId}:`, error);
+    //     }
+    // };
+
+
     const handleEditClick = (organization) => {
         setSelectedOrganizationId(organization.id);
         setEditOrganization(organization); // Store the organization data to edit
@@ -110,7 +112,7 @@ const OrganizationArea = () => {
             OrganizationName: organization.OrganizationName,
             email: organization.email,
             phoneNumber: organization.phoneNumber,
-            created_at: organization.created_at,
+            // created_at: organization.created_at,
             status: organization.status,
         });
     };
@@ -120,7 +122,7 @@ const OrganizationArea = () => {
 
         try {
             const response = await axios.put(
-                `http://localhost:5000/api/admin/organizations/edit/${selectedOrganizationId}`,
+                `http://localhost:5000/api/admin/organization/edit/${selectedOrganizationId}`,
                 formData
             );
             console.log("Organization updated successfully:", response.data);
@@ -190,10 +192,10 @@ const OrganizationArea = () => {
                                     <thead className="thead-dark">
                                         <tr>
                                             <th>ID</th>
-                                            <th>Organization name</th>
+                                            <th>Name</th>
                                             <th>Email</th>
-                                            <th>Phone Number</th>
-                                            <th>Registered_at</th>
+                                            <th>Contact</th>
+                                            {/* <th>Registered_at</th> */}
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
@@ -206,7 +208,7 @@ const OrganizationArea = () => {
                                                     <td>{organization.OrganizationName}</td>
                                                     <td>{organization.email}</td>
                                                     <td>{organization.phoneNumber}</td>
-                                                    <td>{organization.created_at}</td>
+                                                    {/* <td>{organization.created_at}</td> */}
                                                     <td>{organization.status}</td>
                                                     <td>
                                                         <button
@@ -214,7 +216,7 @@ const OrganizationArea = () => {
                                                             onClick={() => handleEditClick(organization)}>
                                                             <FontAwesomeIcon icon={faEdit} size="sm" />
                                                         </button>{" "}
-                                                        <button
+                                                        {/* <button
                                                             className="btn btn-danger btn-sm"
                                                             onClick={() => {
                                                                 setSelectedOrganizationId(organization.id);
@@ -222,7 +224,7 @@ const OrganizationArea = () => {
                                                             }}
                                                         >
                                                             <FontAwesomeIcon icon={faTrash} size="sm" />
-                                                        </button>
+                                                        </button> */}
                                                     </td>
                                                 </tr>
                                             ))
@@ -394,7 +396,7 @@ const OrganizationArea = () => {
                             )}
 
                             {/* Modal for Deleting Organizations */}
-                            {showDeleteModal && (
+                            {/* {showDeleteModal && (
                                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                                     <div className="modal-dialog" role="document">
                                         <div className="modal-content">
@@ -428,7 +430,7 @@ const OrganizationArea = () => {
                                         </div>
                                     </div>
                                 </div>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>

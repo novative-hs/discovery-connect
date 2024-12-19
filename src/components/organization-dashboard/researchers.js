@@ -9,10 +9,11 @@ const ResearcherArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of researcher to delete
   const [formData, setFormData] = useState({
-    username: "",
+    ResearcherName: "",
     email: "",
     gender: "",
     phoneNumber: "",
+    nameofOrganization: "",
     fullAddress: "",
     country: "",
     // logo: ""
@@ -57,10 +58,11 @@ const ResearcherArea = () => {
 
       // Clear form after submission
       setFormData({
-        username: "",
+        ResearcherName: "",
         email: "",
         gender: "",
         phoneNumber: "",
+        nameofOrganization: "",
         fullAddress: "",
         country: "",
       });
@@ -101,10 +103,11 @@ const ResearcherArea = () => {
     setEditSample(researcher); // Store the researcher data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
-      username: researcher.username,
+      ResearcherName: researcher.ResearcherName,
       email: researcher.email,
       gender: researcher.gender,
       phoneNumber: researcher.phoneNumber,
+      nameofOrganization: researcher.nameofOrganization,
       fullAddress: researcher.fullAddress,
       country: researcher.country,
     });
@@ -162,10 +165,11 @@ const ResearcherArea = () => {
                   <thead className="thead-dark">
                     <tr>
                       <th>ID</th>
-                      <th>username</th>
+                      <th>Name</th>
                       <th>Email</th>
                       <th>Gender</th>
                       <th>Phone Number</th>
+                      <th>Organization</th>
                       <th>Full Address</th>
                       <th>Country</th>
                       <th>Action</th>
@@ -176,10 +180,11 @@ const ResearcherArea = () => {
                       researchers.map((researcher) => (
                         <tr key={researcher.id}>
                           <td>{researcher.id}</td>
-                          <td>{researcher.username}</td>
+                          <td>{researcher.ResearcherName}</td>
                           <td>{researcher.email}</td>
                           <td>{researcher.gender}</td>
                           <td>{researcher.phoneNumber}</td>
+                          <td>{researcher.nameofOrganization}</td>
                           <td>{researcher.fullAddress}</td>
                           <td>{researcher.country}</td>
                           <td>
@@ -237,12 +242,12 @@ const ResearcherArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>username</label>
+                            <label>Name</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="username"
-                              value={formData.username}
+                              name="ResearcherName"
+                              value={formData.ResearcherName}
                               onChange={handleInputChange}
                               required
                             />
@@ -280,6 +285,17 @@ const ResearcherArea = () => {
                               className="form-control"
                               name="phoneNumber"
                               value={formData.phoneNumber}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Organization</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="nameofOrganization"
+                              value={formData.nameofOrganization}
                               onChange={handleInputChange}
                               required
                             />
@@ -346,12 +362,12 @@ const ResearcherArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>Username</label>
+                            <label>Name</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="username"
-                              value={formData.username}
+                              name="ResearcherName"
+                              value={formData.ResearcherName}
                               onChange={handleInputChange}
                               required
                             />
@@ -388,6 +404,17 @@ const ResearcherArea = () => {
                               className="form-control"
                               name="phoneNumber"
                               value={formData.phoneNumber}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Organization</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="nameofOrganization"
+                              value={formData.nameofOrganization}
                               onChange={handleInputChange}
                               required
                             />

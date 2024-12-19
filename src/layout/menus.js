@@ -19,22 +19,6 @@ const Menus = ({ currentRoute }) => {
         </li>
       </ul>
     );
-  } else if (currentRoute === '/collectionsite-dashboard') {
-    return (
-      <ul>
-        <li>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              document.getElementById('nav-sample-tab')?.click();
-            }}
-          >
-            Samples List
-          </a>
-        </li>
-      </ul>
-    );
   } else if (currentRoute === '/registrationadmin-dashboard') {
     return (
       <ul>

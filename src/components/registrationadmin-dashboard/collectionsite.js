@@ -6,13 +6,13 @@ import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 const CollectionsiteArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null); // Store ID of collectionsite to delete
   const [formData, setFormData] = useState({
     CollectionSiteName: "",
     email: "",
     phoneNumber: "",
-    created_at: "",
+    // created_at: "",
     status: "",
     // logo: ""
   });
@@ -54,7 +54,7 @@ const CollectionsiteArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/collectionsites/post', formData);
+      const response = await axios.post('http://localhost:5000/api/collectionsite/post', formData);
       console.log("Collectionsite added successfully:", response.data);
 
       // Refresh the collectionsite list after successful submission
@@ -66,7 +66,7 @@ const CollectionsiteArea = () => {
         CollectionSiteName: "",
         email: "",
         phoneNumber: "",
-        created_at: "",
+        // created_at: "",
         status: "",
 
       });
@@ -77,31 +77,32 @@ const CollectionsiteArea = () => {
   };
 
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/collectionsites/delete/${selectedCollectionsiteId}`);
-      console.log(`Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`);
+  // const handleDelete = async () => {
+  //   try {
+  //     // Send delete request to backend
+  //     await axios.delete(`http://localhost:5000/api/collectionsite/delete/${selectedCollectionsiteId}`);
+  //     console.log(`Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`);
 
-      // Set success message
-      setSuccessMessage('Collectionsite deleted successfully.');
+  //     // Set success message
+  //     setSuccessMessage('Collectionsite deleted successfully.');
 
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
+  //     // Clear success message after 3 seconds
+  //     setTimeout(() => {
+  //       setSuccessMessage('');
+  //     }, 3000);
 
-      // Refresh the collectionsite list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
-      setCollectionsites(newResponse.data);
+  //     // Refresh the collectionsite list after deletion
+  //     const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
+  //     setCollectionsites(newResponse.data);
 
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedCollectionsiteId(null);
-    } catch (error) {
-      console.error(`Error deleting collectionsite with ID ${selectedCollectionsiteId}:`, error);
-    }
-  };
+  //     // Close modal after deletion
+  //     setShowDeleteModal(false);
+  //     setSelectedCollectionsiteId(null);
+  //   } catch (error) {
+  //     console.error(`Error deleting collectionsite with ID ${selectedCollectionsiteId}:`, error);
+  //   }
+  // };
+
   const handleEditClick = (collectionsite) => {
     setSelectedCollectionsiteId(collectionsite.id);
     setEditCollectionsite(collectionsite); // Store the collectionsite data to edit
@@ -110,7 +111,7 @@ const CollectionsiteArea = () => {
       CollectionSiteName: collectionsite.CollectionSiteName,
       email: collectionsite.email,
       phoneNumber: collectionsite.phoneNumber,
-      created_at: collectionsite.created_at,
+      // created_at: collectionsite.created_at,
       status: collectionsite.status,
     });
   };
@@ -120,7 +121,7 @@ const CollectionsiteArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/collectionsites/edit/${selectedCollectionsiteId}`,
+        `http://localhost:5000/api/collectionsite/edit/${selectedCollectionsiteId}`,
         formData
       );
       console.log("Collectionsite updated successfully:", response.data);
@@ -190,10 +191,10 @@ const CollectionsiteArea = () => {
                   <thead className="thead-dark">
                     <tr>
                       <th>ID</th>
-                      <th>Collection Site name</th>
+                      <th>Name</th>
                       <th>Email</th>
-                      <th>Phone Number</th>
-                      <th>Registered_at</th>
+                      <th>Contact</th>
+                      {/* <th>Registered_at</th> */}
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -206,7 +207,7 @@ const CollectionsiteArea = () => {
                           <td>{collectionsite.CollectionSiteName}</td>
                           <td>{collectionsite.email}</td>
                           <td>{collectionsite.phoneNumber}</td>
-                          <td>{collectionsite.created_at}</td>
+                          {/* <td>{collectionsite.created_at}</td> */}
                           <td>{collectionsite.status}</td>
                           <td>
                             <button
@@ -214,7 +215,7 @@ const CollectionsiteArea = () => {
                               onClick={() => handleEditClick(collectionsite)}>
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
-                            <button
+                            {/* <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
                                 setSelectedCollectionsiteId(collectionsite.id);
@@ -222,7 +223,7 @@ const CollectionsiteArea = () => {
                               }}
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
+                            </button> */}
                           </td>
                         </tr>
                       ))
@@ -405,7 +406,7 @@ const CollectionsiteArea = () => {
               )}
 
               {/* Modal for Deleting Collectionsites */}
-              {showDeleteModal && (
+              {/* {showDeleteModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
@@ -439,7 +440,7 @@ const CollectionsiteArea = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
