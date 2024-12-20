@@ -11,7 +11,6 @@ import { notifyError, notifySuccess } from "@utils/toast";
 
 
 const schema = Yup.object().shape({
-  // username: Yup.string().required().label("User Name"),
   email: Yup.string().required().email().label("Email"),
   password: Yup.string().required().min(6).label("Password"),
   confirmPassword: Yup.string()
@@ -92,7 +91,6 @@ const RegisterForm = () => {
   // on submit
   const onSubmit = (data) => {
     registerUser({
-      // username: data.username,
       email: data.email,
       password: data.password,
       confirmPassword: data.confirmPassword,
@@ -148,23 +146,6 @@ const RegisterForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="login__input-wrapper">
-        {/* <div className="login__input-item">
-          <div className="login__input">
-            <input
-              {...register("username", { required: `Username is required!` })}
-              name="username"
-              type="text"
-              placeholder="Enter username"
-              id="username"
-              
-            />
-            <span>
-              <UserTwo />
-            </span>
-          </div>
-          <ErrorMessage message={errors.username?.message} />
-        </div> */}
-
         <div className="login__input-item">
           <div className="login__input">
             <input

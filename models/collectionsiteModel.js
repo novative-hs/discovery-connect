@@ -6,7 +6,6 @@ const createCollectionSiteTable = () => {
     CREATE TABLE IF NOT EXISTS collectionsite (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_account_id INT,
-        username VARCHAR(100),
         email VARCHAR(100),
         password VARCHAR(100),
         accountType VARCHAR(255) NOT NULL,

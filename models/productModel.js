@@ -1,4 +1,30 @@
-const db = require('../config/db');
+const mysqlConnection = require('../config/db');
+
+// Create the 'products' table if it doesn't already exist
+const createProductsTable = () => {
+const productsTable = `
+  CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    parent_category VARCHAR(255) NOT NULL,
+    child_category VARCHAR(255) NOT NULL,
+    brand VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    color VARCHAR(255) NOT NULL,
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+`;
+
+mysqlConnection.query(productsTable, (err, result) => {
+  if (err) {
+    console.error("Error creating products table:", err);
+  } else {
+    console.log("Products table created or already exists.");
+  }
+});
+}
 
 // Fetch products based on query filters
 const getProducts = (filters, callback) => {
@@ -37,7 +63,7 @@ const getProducts = (filters, callback) => {
     'created_at DESC'
   }`;
 
-  db.query(query, queryParams, callback);
+  mysqlConnection.query(query, queryParams, callback);
 };
 
-module.exports = { getProducts };
+module.exports = { getProducts, createProductsTable };

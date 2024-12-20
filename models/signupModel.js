@@ -1,5 +1,19 @@
 const mysqlConnection = require("../config/db");
 
+function createUserAccountTable(callback) {
+  const query = `
+    CREATE TABLE IF NOT EXISTS user_account (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      confirmPassword VARCHAR(255) NOT NULL,
+      accountType ENUM('Researcher', 'Organization', 'CollectionSites') NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  mysqlConnection.query(query, callback );
+}
+
 // Insert into `user_account` table
 function createUserAccount(data, callback) {
   const query = `
@@ -88,6 +102,7 @@ function createAccountDetails(accountType, userAccountId, data, callback) {
 }
 
 module.exports = {
+  createUserAccountTable,
   createUserAccount,
   createAccountDetails,
 };

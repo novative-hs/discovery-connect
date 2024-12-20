@@ -49,4 +49,4 @@ const getProductById = (req, res) => {
   });
 };
 
-module.exports = { fetchProducts,  getProductById, };
+module.exports = { fetchProducts,  getProductById };

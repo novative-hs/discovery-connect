@@ -6,7 +6,6 @@ const createOrganizationTable = () => {
     CREATE TABLE IF NOT EXISTS organization (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_account_id INT,
-        username VARCHAR(100),
         email VARCHAR(100),
         password VARCHAR(100),
         confirmPassword VARCHAR(100),
