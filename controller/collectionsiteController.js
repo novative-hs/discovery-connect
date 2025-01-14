@@ -1,12 +1,6 @@
 const collectionsiteModel = require('../models/collectionsiteModel');
 
 
-// Controller for creating the collectionsite table
-const createCollectionSiteTable = (req, res) => {
-  collectionsiteModel.createCollectionSiteTable();
-  res.status(200).json({ message: "Collection site table creation process started" });
-};
-
 // Controller to get all collection sites
 const getAllCollectionSites = (req, res) => {
   collectionsiteModel.getAllCollectionSites((err, results) => {
@@ -19,19 +13,19 @@ const getAllCollectionSites = (req, res) => {
 };
 
 // Controller to get a collection site by ID
-const getCollectionSiteById = (req, res) => {
-  const { id } = req.params;
-  collectionsiteModel.getCollectionSiteById(id, (err, results) => {
-    if (err) {
-      console.error('Error fetching collection site:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Collection site not found' });
-    }
-    res.status(200).json(results[0]);
-  });
-};
+// const getCollectionSiteById = (req, res) => {
+//   const { id } = req.params;
+//   collectionsiteModel.getCollectionSiteById(id, (err, results) => {
+//     if (err) {
+//       console.error('Error fetching collection site:', err);
+//       return res.status(500).json({ error: 'An error occurred' });
+//     }
+//     if (results.length === 0) {
+//       return res.status(404).json({ error: 'Collection site not found' });
+//     }
+//     res.status(200).json(results[0]);
+//   });
+// };
 
 // Controller to update collection site status
 const updateCollectionSiteStatus = (req, res) => {
@@ -55,34 +49,45 @@ const updateCollectionSiteStatus = (req, res) => {
     res.status(200).json({ message: 'Collection site status updated successfully' });
   });
 };
+//Controller to delete a collection site
+const deleteCollectionSite = (req, res) => {
+  const { id } = req.params;  // Get the id from request parameters
 
-// Controller to delete a collection site
-// const deleteCollectionSite = async (req, res) => {
-//     const { id } = req.params;
-  
-//     try {
-//       // Retrieve the associated user_account_id
-//       const [collectionSite] = await mysqlConnection.query('SELECT user_account_id FROM collectionsite WHERE id = ?', [id]);
-  
-//       if (!collectionSite.length) {
-//         return res.status(404).json({ message: 'Collection site not found' });
-//       }
-  
-//       // Delete the collection site and user account
-//       await collectionsiteModel.deleteCollectionSite(id);
-//       await collectionsiteModel.deleteUserAccount(collectionSite[0].user_account_id);
-  
-//       res.status(200).json({ message: 'Collection site and associated user account deleted successfully' });
-//     } catch (error) {
-//       console.error('Error deleting collection site and user account:', error);
-//       res.status(500).json({ message: 'An error occurred while deleting collection site and user account' });
-//     }
-//   };
+  // Pass the id to the model function
+  collectionsiteModel.deleteCollectionSite(id, (err, results) => {
+    if (err) {
+      console.error('Error in deleting collection site:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    res.status(200).json({ message: 'Collection site status updated to unapproved' });
+  });
+};
+
+
+// Controller to fetch collection site names
+const getAllCollectionSiteNames = (req, res) => {
+  collectionsiteModel.getAllCollectionSiteNames((err, results) => {
+    if (err) {
+      console.error('Error fetching collection site names:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    console.log('Controller Results:', results); 
+    const siteNames = results?.map(row => ({
+      CollectionSiteName: row?.CollectionSiteName,
+      user_account_id: row?.user_account_id
+    })).filter(site => site.CollectionSiteName); // Extract Names and user_account_id
+    // if (siteNames.length === 0) {
+    //   return res.status(404).json({ error: 'No collection sitessss found' });
+    // }
+    res.status(200).json({ data: siteNames });
+  });
+};
+
 
 module.exports = {
-  createCollectionSiteTable,
   getAllCollectionSites,
-  getCollectionSiteById,
+  // getCollectionSiteById,
   updateCollectionSiteStatus,
-//   deleteCollectionSite
+  deleteCollectionSite,
+  getAllCollectionSiteNames
 };

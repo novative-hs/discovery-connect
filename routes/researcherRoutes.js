@@ -2,9 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const researcherController = require('../controller/researcherController');
-
-
-router.post('/researchers/post', researcherController.createResearcher);
+router.post('/researcher/post', researcherController.createResearcher);
+router.get('/researcher/get/:id', researcherController.getResearchersByOrganization);
 router.get('/researcher/get', researcherController.getAllResearchers);
 router.get('/researchers/:id', researcherController.getResearcherById);
 router.put('/researchers/edit/:id', researcherController.updateResearcher);

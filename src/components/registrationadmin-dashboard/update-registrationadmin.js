@@ -18,7 +18,7 @@ const schema = Yup.object().shape({
   bio: Yup.string().required().min(20).label("Bio"),
 });
 
-const UpdateOrganization = () => {
+const UpdateRegistrationAdmin = () => {
   const [bioText, setBioText] = useState("Hi there, this is my bio...");
   const { user } = useSelector((state) => state.auth);
 
@@ -156,4 +156,4 @@ const UpdateOrganization = () => {
   );
 };
 
-export default UpdateOrganization;
+export default UpdateRegistrationAdmin;

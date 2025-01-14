@@ -1,13 +1,59 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-// internal
 import shape from "@assets/img/shape/offcanvas-shape-1.png";
 import logo from "@assets/img/logo/logo-black.svg";
 import MobileMenus from "./mobile-menus";
 import SocialLinks from "@components/social";
 
-const OffCanvas = ({ isOffCanvasOpen, setIsOffCanvasOpen }) => {
+const OffCanvas = ({
+  isOffCanvasOpen,
+  setIsOffCanvasOpen,
+  setActiveTab,
+  dashboardType, 
+}) => {
+  // Define role-specific menu items
+  const getMenuItems = () => {
+    switch (dashboardType) {
+      case "registeradmin":
+        return [
+          { label: "Profile", tab: "order-info" },
+          { label: "City", tab: "city" },
+          { label: "Country", tab: "country" },
+          { label: "District", tab: "diistrict" },
+          { label: "Researcher List", tab: "researcher" },
+          { label: "Organization List", tab: "organization" },
+          { label: "Collection Siite List", tab: "collectionsite" },
+          { label: "Committee Members", tab: "committee-members" },
+        ];
+      case "collectionSite":
+        return [
+          { label: "Sample List", tab: "samples" },
+          { label: "Sample Dispatch", tab: "sample-dispatch" },
+        ];
+      case "biobank":
+        return [
+          { label: "Sample List", tab: "samples" },
+          { label: "Sample Dispatch", tab: "sample-dispatch" },
+        ];
+
+      case "organization":
+        return [
+          { label: "Profile", tab: "order-info" },
+          { label: "Researcher List", tab: "researchers" },
+        ];
+      case "researcher":
+        return [
+          { label: "Profile", tab: "order-info" },
+          { label: "Sample List", tab: "samples" },
+        ];
+      default:
+        return []; // Default or no menu items
+    }
+  };
+
+  const menuItems = getMenuItems();
+  
   return (
     <React.Fragment>
       <div
@@ -37,11 +83,40 @@ const OffCanvas = ({ isOffCanvasOpen, setIsOffCanvasOpen }) => {
             </div>
             <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
               <div className="mean-bar">
-                {/* MobileMenus start*/}
-                <MobileMenus />
-                {/* MobileMenus end*/}
+                <MobileMenus setActiveTab={setActiveTab} />
               </div>
             </div>
+            <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
+              <ul style={{ listStyleType: "none", padding: 0 }}>
+            
+                {menuItems.map((item, index) => (
+                  <li
+                    key={index}
+                    className="menu-item"
+                    style={{
+                      borderBottom: "1px solid #ccc",
+                      paddingBottom: "10px",
+                    }}
+                  >
+                    <Link
+                      href="#"
+                      onClick={() => {
+                        setActiveTab(item.tab); // Set the active tab
+                        setIsOffCanvasOpen(false); // Close the OffCanvas
+                      }}
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "bold",
+                        color: "black",
+                      }}
+                    >
+                      {item.label.toUpperCase()}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <div className="offcanvas__btn">
               <a href="#" className="tp-btn-offcanvas">
                 Getting Started <i className="fa-regular fa-chevron-right"></i>
@@ -62,12 +137,11 @@ const OffCanvas = ({ isOffCanvasOpen, setIsOffCanvasOpen }) => {
           </div>
         </div>
       </div>
-      {/* overlay */}
+      
       <div
         onClick={() => setIsOffCanvasOpen(false)}
         className={`body-overlay ${isOffCanvasOpen ? "opened" : ""}`}
       ></div>
-      {/* overlay */}
     </React.Fragment>
   );
 };

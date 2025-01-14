@@ -1,70 +1,149 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
 
 const ResearcherArea = () => {
+  const id = localStorage.getItem("userID");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of researcher to delete
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedResearcherStatus, setSelectedResearcherStatus] =
+    useState(null);
+  const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
   const [formData, setFormData] = useState({
+    userID: "",
     ResearcherName: "",
-    email: "",
-    gender: "",
     phoneNumber: "",
     nameofOrganization: "",
     fullAddress: "",
+    city: "",
+    district: "",
     country: "",
+    email: "",
+    password: "",
+    accountType: "Researcher",
     // logo: ""
   });
-  const [editSample, setEditSample] = useState(null); // State for selected researcher to edit
-  const [researchers, setSamples] = useState([]); // State to hold fetched researchers
-  const [successMessage, setSuccessMessage] = useState('');
-
+  const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
+  const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
+  const [successMessage, setSuccessMessage] = useState("");
+  const [cityname, setcityname] = useState([]);
+  const [districtname, setdistrictname] = useState([]);
+  const [countryname, setCountryname] = useState([]);
+  const [organization, setOrganization] = useState();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const[orgid,setorgId]=useState();
+  // Calculate total pages
+  const totalPages = Math.ceil(researchers.length / itemsPerPage);
 
   // Fetch researchers from backend when component loads
   useEffect(() => {
-    const fetchSamples = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/researcher/get');
-        setSamples(response.data); // Store fetched researchers in state
-      } catch (error) {
-        console.error("Error fetching researchers:", error);
-      }
-    };
-
-    fetchSamples(); // Call the function when the component mounts
+    if (id === null) {
+      return <div>Loading...</div>; // Or redirect to login
+    } else {
+      fetchcityname();
+      fetchdistrictname();
+      fetchcountryname();
+      fetchOrganization();
+      console.log("account_id on city page is:", id);
+    }
   }, []);
+  const fetchResearcher = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/researcher/get/${orgid}`
+      );
+      setResearchers(response.data); // Store fetched researchers in state
+    } catch (error) {
+      console.error("Error fetching researchers:", error);
+    }
+  };
+  const fetchOrganization = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/admin/organization/get/${id}`
+      );
+      setOrganization(response.data[0]);
+      setorgId(response.data[0].id) // Store fetched researchers in state
+    } catch (error) {
+      console.error("Error fetching researchers:", error);
+    }
+  };
+  const fetchcityname = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/city/get-city"
+      );
+      setcityname(response.data); // Store fetched City in state
+    } catch (error) {
+      console.error("Error fetching City:", error);
+    }
+  };
+  const fetchdistrictname = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/district/get-district"
+      );
+      setdistrictname(response.data); // Store fetched District in state
+    } catch (error) {
+      console.error("Error fetching District:", error);
+    }
+  };
+  const fetchcountryname = async () => {
+    fetchOrganization();
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/country/get-country"
+      );
+      setCountryname(response.data); // Store fetched Country in state
+    } catch (error) {
+      console.error("Error fetching Country:", error);
+    }
+  };
+  useEffect(() => {
+    if (orgid !== null) {
+      fetchResearcher(); // Fetch researchers only after `orgId` is set
+    }
+  }, [orgid]); // Runs when `orgId` changes
+
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
+    formData.nameofOrganization = organization.id;
+    console.log(formData)
     e.preventDefault();
-
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/researchers/post', formData);
+      const response = await axios.post(
+        "http://localhost:5000/api/user/signup",
+        formData
+      );
       console.log("Researcher added successfully:", response.data);
 
       // Refresh the researcher list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/researcher/get');
-      setSamples(newResponse.data); // Update state with the new list
-
+      fetchResearcher()
       // Clear form after submission
       setFormData({
+        userID: "",
         ResearcherName: "",
-        email: "",
-        gender: "",
         phoneNumber: "",
         nameofOrganization: "",
         fullAddress: "",
+        city: "",
+        district: "",
         country: "",
+        email:"",
+        password:"",
+        accountType:"Researcher"
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
@@ -72,62 +151,69 @@ const ResearcherArea = () => {
     }
   };
 
+  // const handleHistory = async () => {
+  //   setSelectedResearcherStatus('pending')
+  //   try {
+  //     // Send delete request to backend
+  //     await axios.get(
+  //       `http://localhost:5000/api/researchers/edit/${selectedSampleId}/${selectedResearcherStatus}`
+  //     );
+  //     console.log(
+  //       `Researcher with ID ${selectedSampleId} edit successfully.`
+  //     );
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedSampleId}`);
-      console.log(`Researcher with ID ${selectedSampleId} deleted successfully.`);
+  //     // Set success message
+  //     setSuccessMessage("Researcher deleted successfully.");
 
-      // Set success message
-      setSuccessMessage('Researcher deleted successfully.');
+  //     // Clear success message after 3 seconds
+  //     setTimeout(() => {
+  //       setSuccessMessage("");
+  //     }, 3000);
 
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
+  //     // Refresh the researcher list after deletion
+  //     const newResponse = await axios.get(
+  //       "http://localhost:5000/api/researcher/get"
+  //     );
+  //     setResearchers(newResponse.data);
 
-      // Refresh the researcher list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/researcher/get');
-      setSamples(newResponse.data);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(`Error deleting researcher with ID ${selectedSampleId}:`, error);
-    }
-  };
+  //     // Close modal after deletion
+  //     setShowHistoryModal(false);
+  //     setSelectedResearcherId(null);
+  //   } catch (error) {
+  //     console.error(
+  //       `Error deleting researcher with ID ${selectedResearcherId}:`,
+  //       error
+  //     );
+  //   }
+  // };
   const handleEditClick = (researcher) => {
-    setSelectedSampleId(researcher.id);
-    setEditSample(researcher); // Store the researcher data to edit
+    setSelectedResearcherId(researcher.id);
+    setEditResearcher(researcher); // Store the researcher data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
+      userID: id,
       ResearcherName: researcher.ResearcherName,
-      email: researcher.email,
-      gender: researcher.gender,
       phoneNumber: researcher.phoneNumber,
-      nameofOrganization: researcher.nameofOrganization,
+      nameofOrganization: organization.OrganizationName,
       fullAddress: researcher.fullAddress,
+      city: researcher.city,
+      district: researcher.district,
       country: researcher.country,
     });
   };
 
   const handleUpdate = async (e) => {
+    formData.nameofOrganization = organization.id;
+    formData.userID = id;
     e.preventDefault();
-
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/researchers/edit/${selectedSampleId}`,
+        `http://localhost:5000/api/researchers/edit/${selectedResearcherId}`,
         formData
       );
       console.log("Researcher updated successfully:", response.data);
 
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/researcher/get"
-      );
-      setSamples(newResponse.data);
-
+      fetchResearcher();
       setShowEditModal(false);
       setSuccessMessage("Researcher updated successfully.");
 
@@ -135,15 +221,46 @@ const ResearcherArea = () => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating researcher with ID ${selectedSampleId}:`, error);
+      console.error(
+        `Error updating researcher with ID ${selectedResearcherId}:`,
+        error
+      );
+    }
+  };
+
+  // Get the current data for the table
+  const currentData = researchers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Filter the researchers list
+  const handleFilterChange = (field, value) => {
+    if (value === "") {
+      fetchResearcher();
+    } else {
+      // Filter the researchers array based on the field and value
+      const filtered = researchers.filter((researcher) =>
+        researcher[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
+      );
+      setResearchers(filtered);
     }
   };
 
   return (
     <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-
-        <div className="row justify-content-center" style={{ marginTop: '290px' }}>
+      <div className="container" style={{ marginTop: "-20px", width: "auto" }}>
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        >
           <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
@@ -153,61 +270,321 @@ const ResearcherArea = () => {
                 </div>
               )}
               {/* Add Researchers Button */}
-              <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+              <div
+                className="d-flex justify-content-end mb-3"
+                style={{
+                  marginBottom: "20px", // Adjust spacing between button and table
+                }}
+              >
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    alignSelf: "flex-end", // Align the button to the bottom right
+                  }}
+                >
                   Add Researchers
                 </button>
               </div>
 
               {/* Table */}
-              <div className="table-responsive" style={{ marginLeft: '-20px', width: '110%' }}>
+              <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                     <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Gender</th>
-                      <th>Phone Number</th>
-                      <th>Organization</th>
-                      <th>Full Address</th>
-                      <th>Country</th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search ID"
+                          onChange={(e) =>
+                            handleFilterChange("id", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Name"
+                          onChange={(e) =>
+                            handleFilterChange("ResearcherName", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Name
+                      </th>
+
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Phone Number"
+                          onChange={(e) =>
+                            handleFilterChange("phoneNumber", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Phone Number
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Organization"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "nameofOrganization",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Organization
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Full Address"
+                          onChange={(e) =>
+                            handleFilterChange("fullAddress", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Full Address
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search City"
+                          onChange={(e) =>
+                            handleFilterChange("city", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        City
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search District"
+                          onChange={(e) =>
+                            handleFilterChange("district", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        district
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Country"
+                          onChange={(e) =>
+                            handleFilterChange("country", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Country
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search status"
+                          onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Status
+                      </th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {researchers.length > 0 ? (
-                      researchers.map((researcher) => (
+                    {currentData.length > 0 ? (
+                      currentData.map((researcher) => (
                         <tr key={researcher.id}>
                           <td>{researcher.id}</td>
                           <td>{researcher.ResearcherName}</td>
-                          <td>{researcher.email}</td>
-                          <td>{researcher.gender}</td>
                           <td>{researcher.phoneNumber}</td>
-                          <td>{researcher.nameofOrganization}</td>
+                          <td>{researcher.organization_name}</td>
                           <td>{researcher.fullAddress}</td>
-                          <td>{researcher.country}</td>
+                          <td>{researcher.city_name}</td>
+                          <td>{researcher.district_name}</td>
+                          <td>{researcher.country_name}</td>
+                          <td>{researcher.status}</td>
                           <td>
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(researcher)}>
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedSampleId(researcher.id);
-                                setShowDeleteModal(true);
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                gap: "5px",
                               }}
                             >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleEditClick(researcher)}
+                              >
+                                <FontAwesomeIcon icon={faEdit} size="sm" />
+                              </button>
+                              {/* <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => {
+                                  // setSelectedResearcherId(researcher.id);
+                                  setShowHistoryModal(true);
+                                  console.log("Done");
+                                }}
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button> */}
+
+                              {/*<button
+                className="btn btn-danger btn-sm"
+                onClick={() => {
+                  setSelectedResearcherId(researcher.id);
+                  setShowDeleteModal(true);
+                }}
+              >
+                <FontAwesomeIcon icon={faTrash} size="sm" />
+              </button>*/}
+                            </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="text-center">
+                        <td colSpan="9" className="text-center">
                           No researchers available
                         </td>
                       </tr>
@@ -216,9 +593,102 @@ const ResearcherArea = () => {
                 </table>
               </div>
 
+              {/* Pagination Controls */}
+              <div
+                className="pagination d-flex justify-content-center align-items-center mt-3"
+                style={{
+                  gap: "10px",
+                }}
+              >
+                {/* Previous Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
+
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null; // Skip the page number
+                })}
+
+                {/* Next Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
               {/* Modal for Adding Researchers */}
               {showAddModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "100%",
+                    maxWidth: "500px",
+                    zIndex: 1050, // Ensure it appears above other content                  
+                    overflowY: "auto",
+                    height: "auto" /* Allow it to expand dynamically */,
+                    minheight: "100vh",
+                  }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -228,11 +698,11 @@ const ResearcherArea = () => {
                           className="close"
                           onClick={() => setShowAddModal(false)}
                           style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
                           <span>&times;</span>
@@ -240,45 +710,70 @@ const ResearcherArea = () => {
                       </div>
                       <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ResearcherName"
-                              value={formData.ResearcherName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Gender</label>
-                            <select
-                              className="form-control"
-                              name="gender"
-                              value={formData.gender}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>Select Gender</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                            </select>
-                          </div>
+                          {/* Step 1 Fields */}
+                          {currentStep === 1 && (
+                            <>
+                              <div className="form-group">
+                                <label>Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ResearcherName"
+                                  value={formData.ResearcherName}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                  type="email"
+                                  className="form-control"
+                                  name="email"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Password</label>
+                                <input
+                                  type="password"
+                                  className="form-control"
+                                  name="password"
+                                  value={formData.password}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Account Type</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="accountType"
+                                  value={formData.accountType}
+                                  onChange={handleInputChange}
+                                  readOnly
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Organization</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="nameofOrganization"
+                                  value={organization.OrganizationName}
+                                  readOnly
+                                />
+                              </div>
+                            </>
+                          )}
 
-                          <div className="form-group">
+                          {/* Step 2 Fields */}
+                          {currentStep === 2 && (
+                            <>
+                            <div className="form-group">
                             <label>Phone Number</label>
                             <input
                               type="text"
@@ -289,44 +784,105 @@ const ResearcherArea = () => {
                               required
                             />
                           </div>
-                          <div className="form-group">
-                            <label>Organization</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="nameofOrganization"
-                              value={formData.nameofOrganization}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Full Address</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="fullAddress"
-                              value={formData.fullAddress}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Country</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="country"
-                              value={formData.country}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
+                              <div className="form-group">
+                                <label>Full Address</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="fullAddress"
+                                  value={formData.fullAddress}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>City</label>
+                                <select
+                                  className="form-control"
+                                  name="city"
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select City
+                                  </option>
+                                  {cityname.map((city) => (
+                                    <option key={city.id} value={city.id}>
+                                      {city.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group">
+                                <label>District</label>
+                                <select
+                                  className="form-control"
+                                  name="district"
+                                  value={formData.district}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select District
+                                  </option>
+                                  {districtname.map((district) => (
+                                    <option
+                                      key={district.id}
+                                      value={district.id}
+                                    >
+                                      {district.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group">
+                                <label>Country</label>
+                                <select
+                                  className="form-control"
+                                  name="country"
+                                  value={formData.country}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select Country
+                                  </option>
+                                  {countryname.map((country) => (
+                                    <option key={country.id} value={country.id}>
+                                      {country.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </>
+                          )}
                         </div>
+
+                        {/* Modal Footer */}
                         <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
-                          </button>
+                          {currentStep > 1 && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => setCurrentStep(currentStep - 1)}
+                            >
+                              Previous
+                            </button>
+                          )}
+                          {currentStep < 2 ? (
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              onClick={() => setCurrentStep(currentStep + 1)}
+                            >
+                              Next
+                            </button>
+                          ) : (
+                            <button type="submit" className="btn btn-primary">
+                              Submit
+                            </button>
+                          )}
                         </div>
                       </form>
                     </div>
@@ -336,7 +892,23 @@ const ResearcherArea = () => {
 
               {/* Edit Researcher Modal */}
               {showEditModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "100%",
+                    maxWidth: "500px",
+                    zIndex: 1050, // Ensure it appears above other content                  
+                    overflowY: "auto",
+                    height: "auto" /* Allow it to expand dynamically */,
+                    minheight: "100vh",
+                  }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -348,11 +920,11 @@ const ResearcherArea = () => {
                           style={{
                             // background: 'none',
                             // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
                           <span>&times;</span>
@@ -372,31 +944,7 @@ const ResearcherArea = () => {
                               required
                             />
                           </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Gender</label>
-                            <select
-                              className="form-control"
-                              name="gender"
-                              value={formData.gender}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="">Select Gender</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                            </select>
-                          </div>
+
                           <div className="form-group">
                             <label>Phone Number</label>
                             <input
@@ -416,9 +964,10 @@ const ResearcherArea = () => {
                               name="nameofOrganization"
                               value={formData.nameofOrganization}
                               onChange={handleInputChange}
-                              required
+                              readOnly // Prevent user from editing the organization name
                             />
                           </div>
+
                           <div className="form-group">
                             <label>Full Address</label>
                             <input
@@ -431,19 +980,60 @@ const ResearcherArea = () => {
                             />
                           </div>
                           <div className="form-group">
+                            <label>City</label>
+                            <select
+                              className="form-control"
+                              name="city"
+                              value={formData.city}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="">Select a city</option>
+                              {cityname.map((city) => (
+                                <option key={city.id} value={city.id}>
+                                  {city.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="form-group">
+                            <label>District</label>
+                            <select
+                              className="form-control"
+                              name="district"
+                              value={formData.district}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="">Select a district</option>
+                              {districtname.map((district) => (
+                                <option key={district.id} value={district.id}>
+                                  {district.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="form-group">
                             <label>Country</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="country"
                               value={formData.country}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select a country</option>
+                              {countryname.map((country) => (
+                                <option key={country.id} value={country.id}>
+                                  {country.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                         <div className="modal-footer">
-
                           <button type="submit" className="btn btn-primary">
                             Update Researcher
                           </button>
@@ -455,36 +1045,23 @@ const ResearcherArea = () => {
               )}
 
               {/* Modal for Deleting Researchers */}
-              {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+              {showHistoryModal && (
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050, // Ensure it's above the header
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
                         <h5 className="modal-title">Delete Researcher</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this researcher?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
                       </div>
                     </div>
                   </div>

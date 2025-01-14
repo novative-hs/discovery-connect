@@ -20,6 +20,22 @@ const ProfileNav = () => {
           role="tablist"
         >
           <button
+            className="nav-link active"
+            id="nav-profile-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-profile"
+            type="button"
+            role="tab"
+            aria-controls="nav-profile"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-user-pen"></i>
+            </span>
+            Profile
+          </button>
+
+          <button
             className="nav-link"
             id="nav-sample-tab"
             data-bs-toggle="tab"
@@ -81,6 +97,22 @@ const ProfileNav = () => {
               <i className="fa-regular fa-lock"></i>
             </span>{" "}
             Change Password
+          </button>
+
+          <button
+            className="nav-link"
+            id="nav-feedback-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-feedback"
+            type="button"
+            role="tab"
+            aria-controls="nav-feedback"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-lock"></i>
+            </span>{" "}
+            Feedback
           </button>
 
           <button onClick={handleLogout} className="nav-link" type="button">
