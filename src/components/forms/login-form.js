@@ -28,7 +28,7 @@ const LoginForm = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  // onSubmit
+
   const onSubmit = async (data) => {
     try {
       const result = await loginUser({
@@ -36,35 +36,41 @@ const LoginForm = () => {
         password: data.password,
       });
   
+      console.log("Login result:", result); // Debug log for result
+  
       if (result?.error) {
         notifyError(result?.error?.data?.error);
       } else {
-        // Assuming the backend response contains user data with a field `role` or `accountType` that indicates the user type
-        const { accountType } = result?.data?.user; // `accountType` should be provided by backend response
+        const { id, accountType, authToken } = result?.data?.user || {}; // Use 'id' instead of 'userID'
+        if (!id) {
+          console.error("id is undefined in the API response.");
+          return notifyError("Unexpected error: User ID is missing.");
+        }
   
+        localStorage.setItem("userID", id); // Store 'id' as userID
         notifySuccess("Login successfully");
+        document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
   
-        // Redirect based on user email type
-        if (accountType?.toLowerCase() === "researcher") {
+        // Redirect based on account type
+        if (accountType?.toLowerCase() === "registrationadmin") {
+          router.push("/registrationadmin-dashboard");
+        } else if (accountType?.toLowerCase() === "researcher") {
           router.push("/user-dashboard");
         } else if (accountType?.toLowerCase() === "organization") {
           router.push("/organization-dashboard");
-        } else if (accountType?.toLowerCase() === "collectionsite") {
+        } else if (accountType?.toLowerCase() === "collectionsites") {
           router.push("/collectionsite-dashboard");
-        } else if (accountType?.toLowerCase() === "registrationadmin") {
-          router.push("/registrationadmin-dashboard");
+        }else if (accountType?.toLowerCase() === "biobank") {
+          router.push("/biobank-dashboard");
         } else {
           router.push("/default-dashboard");
-        }      
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
       notifyError("An unexpected error occurred.");
     }
-  
-    reset();
   };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="login__input-wrapper">

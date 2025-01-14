@@ -15,6 +15,7 @@ import { add_to_wishlist } from "src/redux/features/wishlist-slice";
 import { setProduct } from "src/redux/features/productSlice";
 
 const SingleProduct = ({ product, discountPrd = false }) => {
+  console.log("Product data:", product);
   const { _id, image_url, title, price, discount, originalPrice } = product || {};
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
@@ -27,8 +28,24 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   const isAddedToCart = cart_products.some((prd) => prd._id === _id);
 
   // Handle adding the product to the cart
+  // const handleAddProduct = (prd) => {
+  //   dispatch(add_cart_product(prd));
+  // };
+
   const handleAddProduct = (prd) => {
-    dispatch(add_cart_product(prd));
+    console.log("Product before dispatch:", prd);
+  
+    dispatch(add_cart_product({
+      _id: prd.id,  
+      title: prd.name,
+    }));
+  };
+
+
+
+   // Handle removing the product from the cart
+   const handleRemoveProduct = (prd) => {
+    dispatch(remove_product(prd._id));  // Assuming your action takes the product ID
   };
 
   // // Handle adding the product to the wishlist
@@ -56,7 +73,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
     <React.Fragment>
       <div className="product__item p-relative transition-3 mb-50">
         <div className="product__thumb w-img p-relative fix">
-          <Link href={`/product-details/${_id}`}>
+        <Link href={_id ? `/product-details/${_id}` : "/product-not-found"}>
             <Image
               src={product.image_url}
               alt="product image"

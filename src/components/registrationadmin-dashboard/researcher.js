@@ -8,12 +8,13 @@ const ResearcherArea = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
+    const [allresearchers, setAllResearchers] = useState([]); // State to hold fetched researchers
     const [formData, setFormData] = useState({
         ResearcherName: "",
         email: "",
         phoneNumber: "",
         nameofOrganization: "",
-        created_at: "",
+        // created_at: "",
         status: "",
         // logo: ""
     });
@@ -21,22 +22,28 @@ const ResearcherArea = () => {
     const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
     const [successMessage, setSuccessMessage] = useState('');
     const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    // Calculate total pages
+    const totalPages = Math.ceil(researchers.length / itemsPerPage);
+  
 
     // Fetch researchers from backend when component loads
     useEffect(() => {
-        const fetchResearchers = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/admin/researcher/get');
-                setResearchers(response.data); // Store fetched researchers in state
-            } catch (error) {
-                console.error("Error fetching researchers:", error);
-            }
-        };
 
         fetchResearchers(); // Call the function when the component mounts
     }, []);
-
+    const fetchResearchers = async () => {
+        try {
+          const response = await axios.get(
+            "http://localhost:5000/api/admin/researcher/get"
+          );
+          setResearchers(response.data);
+          setAllResearchers(response.data) // Store fetched researchers in state
+        } catch (error) {
+          console.error("Error fetching researchers:", error);
+        }
+      };
     const handleInputChange = (e) => {
         setFormData({
             ...formData,
@@ -68,7 +75,7 @@ const ResearcherArea = () => {
                 email: "",
                 phoneNumber: "",
                 nameofOrganization: "",
-                created_at: "",
+                // created_at: "",
                 status: "",
 
             });
@@ -112,8 +119,8 @@ const ResearcherArea = () => {
             ResearcherName: researcher.ResearcherName,
             email: researcher.email,
             phoneNumber: researcher.phoneNumber,
-            nameofOrganization: researcher.nameofOrganization,
-            created_at: researcher.created_at,
+            OrganizationName: researcher.OrganizationName,
+            // created_at: researcher.created_at,
             status: researcher.status,
         });
     };
@@ -143,18 +150,37 @@ const ResearcherArea = () => {
             console.error(`Error updating researcher with ID ${selectedResearcherId}:`, error);
         }
     };
-
-
-    // Handle filter change
-    const handleFilterChange = (e) => {
-        setStatusFilter(e.target.value);
-    };
-
-    // Filter samples based on the selected status
-    const filteredResearchers = researchers.filter(researcher => {
-        if (!statusFilter) return true; // If no filter is selected, show all
+    
+    const handleFilterChange = (field, value) => {
+        if (value === "") {
+          fetchResearchers();
+        } else {
+          // Perform exact match for "status" field
+          const filtered = allresearchers.filter((researcher) =>
+            field === "status"
+              ? researcher[field]?.toString().toLowerCase() === value.toLowerCase()
+              : researcher[field]
+                  ?.toString()
+                  .toLowerCase()
+                  .includes(value.toLowerCase())
+          );
+          setResearchers(filtered);
+        }
+      };
+      // Filter samples based on the selected status
+      const filteredResearchers = researchers.filter((researcher) => {
+        if (!statusFilter) return true;
         return researcher.status === statusFilter;
-    });
+      });
+
+  const currentData = filteredResearchers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
     return (
         <section className="policy__area pb-120">
@@ -173,47 +199,198 @@ const ResearcherArea = () => {
                                 <div className="d-flex align-items-center">
                                     <label htmlFor="statusFilter" className="mr-2" style={{ marginLeft: "60px", marginRight: "10px", fontSize: "16px", fontWeight: "bold" }}>Status:</label>
                                     <select
-                                        id="statusFilter"
-                                        className="form-control"
-                                        style={{ width: "100px" }}
-                                        onChange={handleFilterChange}
-                                    >
+                    id="statusFilter"
+                    className="form-control"
+                    style={{ width: "100px" }}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    } // Pass "status" as the field
+                  >
                                         <option value="">All</option>
                                         <option value="pending">pending</option>
                                         <option value="approved">approved</option>
-                                        <option value="unapproved">unapproved</option>
+                                        {/* <option value="unapproved">unapproved</option> */}
                                     </select>
                                 </div>
 
                             </div>
 
                             {/* Table */}
-                            <div className="table-responsive" style={{ marginLeft: '-20px', width: '110%' }}>
+                            <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                                 <table className="table table-bordered table-hover">
                                     <thead className="thead-dark">
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Researcher name</th>
-                                            <th>Email</th>
-                                            <th>Phone Number</th>
-                                            <th>Name of Organization</th>
-                                            <th>Registered_at</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
-                                        </tr>
+                                    <tr>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search ID"
+                          onChange={(e) =>
+                            handleFilterChange("id", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Name"
+                          onChange={(e) =>
+                            handleFilterChange("ResearcherName", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Name
+                      </th>
+                      <th>
+                       
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Email"
+                          onChange={(e) =>
+                            handleFilterChange("email", e.target.value)
+                          }
+                        />
+                      Email
+                      </th>
+
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Phone Number"
+                          onChange={(e) =>
+                            handleFilterChange("phoneNumber", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Contact
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Organization"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "nameofOrganization",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Organization
+                      </th>
+                      {/* <th>Registered_at</th> */}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search status"
+                          onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Status
+                      </th>
+                      <th>Action</th>
+                    </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredResearchers.length > 0 ? (
-                                            filteredResearchers.map((researcher) => (
+                                        {currentData.length > 0 ? (
+                                            currentData.map((researcher) => (
                                                 <tr key={researcher.id}>
                                                     <td>{researcher.id}</td>
                                                     <td>{researcher.ResearcherName}</td>
                                                     <td>{researcher.email}</td>
                                                     <td>{researcher.phoneNumber}</td>
-                                                    <td>{researcher.nameofOrganization}</td>
-                                                    <td>{researcher.created_at}</td>
+                                                    <td>{researcher.OrganizationName}</td>
+                                                    {/* <td>{researcher.created_at}</td> */}
                                                     <td>{researcher.status}</td>
                                                     <td>
+                                                    <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                gap: "5px",
+                              }}
+                            >
                                                         <button
                                                             className="btn btn-success btn-sm"
                                                             onClick={() => handleEditClick(researcher)}>
@@ -228,6 +405,8 @@ const ResearcherArea = () => {
                                                         >
                                                             <FontAwesomeIcon icon={faTrash} size="sm" />
                                                         </button>
+                                                    
+                                                    </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -241,7 +420,81 @@ const ResearcherArea = () => {
                                     </tbody>
                                 </table>
                             </div>
+                            <div
+                className="pagination d-flex justify-content-center align-items-center mt-3"
+                style={{
+                  gap: "10px",
+                }}
+              >
+                {/* Previous Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
 
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
+
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null; // Skip the page number
+                })}
+
+                {/* Next Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
                             {/* Modal for Adding Researchers */}
                             {/* {showAddModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
@@ -314,7 +567,21 @@ const ResearcherArea = () => {
 
                             {/* Edit Researcher Modal */}
                             {showEditModal && (
-                                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                                <div className="modal show d-block" tabIndex="-1" role="dialog"
+                                style={{
+                                    position: "absolute",
+                                    top: "50%", // Center the modal vertically
+                                    left: "50%", // Center the modal horizontally
+                                    transform: "translate(-50%, -50%)", // Adjust for centering
+                                    width: "100%",
+                                    maxWidth: "500px",
+                                    zIndex: 1050, // Ensure it appears above other content
+                                    
+                                    
+                                    overflowY: "auto",
+                                    height: 'auto',/* Allow it to expand dynamically */
+                                    minheight: '100vh',
+                                  }}>
                                     <div className="modal-dialog" role="document">
                                         <div className="modal-content">
                                             <div className="modal-header">
@@ -377,8 +644,8 @@ const ResearcherArea = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="nameofOrganization"
-                                                            value={formData.nameofOrganization}
+                                                            name="OrganizationName"
+                                                            value={formData.OrganizationName}
                                                             onChange={handleInputChange}
                                                             disabled
                                                         />
@@ -394,7 +661,7 @@ const ResearcherArea = () => {
                                                         >
                                                             <option value="pending">pending</option>
                                                             <option value="approved">approved</option>
-                                                            <option value="unapproved">unapproved</option>
+                                                            {/* <option value="unapproved">unapproved</option> */}
                                                         </select>
                                                     </div>
                                                 </div>
@@ -411,40 +678,65 @@ const ResearcherArea = () => {
 
                             {/* Modal for Deleting Researchers */}
                             {showDeleteModal && (
-                                <div className="modal show d-block" tabIndex="-1" role="dialog">
-                                    <div className="modal-dialog" role="document">
-                                        <div className="modal-content">
-                                            <div className="modal-header">
-                                                <h5 className="modal-title">Delete Researcher</h5>
-                                                <button
-                                                    type="button"
-                                                    className="close"
-                                                    onClick={() => setShowDeleteModal(false)}
-                                                >
-                                                    <span>&times;</span>
-                                                </button>
-                                            </div>
-                                            <div className="modal-body">
-                                                <p>Are you sure you want to delete this researcher?</p>
-                                            </div>
-                                            <div className="modal-footer">
-                                                <button
-                                                    className="btn btn-danger"
-                                                    onClick={handleDelete}
-                                                >
-                                                    Delete
-                                                </button>
-                                                <button
-                                                    className="btn btn-secondary"
-                                                    onClick={() => setShowDeleteModal(false)}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "100%",
+                    maxWidth: "500px",
+                    zIndex: 1050, // Ensure it appears above other content
+                    overflowY: "auto",
+                    height: 'auto',/* Allow it to expand dynamically */
+                    minheight: '100vh',
+                  }}
+                >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">Delete Researcher</h5>
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => setShowDeleteModal(false)}
+                          style={{
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span>&times;</span>
+                        </button>
+                      </div>
+                      <div className="modal-body">
+                        <p>Are you sure you want to delete this researcher?</p>
+                      </div>
+                      <div className="modal-footer">
+                        <button
+                          className="btn btn-danger"
+                          onClick={handleDelete}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => setShowDeleteModal(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
                         </div>
                     </div>
                 </div>

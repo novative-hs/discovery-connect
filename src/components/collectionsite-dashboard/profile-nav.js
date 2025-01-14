@@ -37,22 +37,6 @@ const ProfileNav = () => {
 
           <button
             className="nav-link"
-            id="nav-order-tab"
-            data-bs-toggle="tab"
-            data-bs-target="#nav-order"
-            type="button"
-            role="tab"
-            aria-controls="nav-order"
-            aria-selected="false"
-          >
-            <span>
-              <i className="fa-light fa-clipboard-list-check"></i>
-            </span>
-            My Orders
-          </button>
-
-          <button
-            className="nav-link"
             id="nav-sample-tab"
             data-bs-toggle="tab"
             data-bs-target="#nav-sample"
@@ -65,6 +49,22 @@ const ProfileNav = () => {
               <i className="fa-regular fa-circle-info"></i>
             </span>{" "}
             Samples List
+          </button>
+
+          <button
+            className="nav-link"
+            id="nav-sampledispatch-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-sampledispatch"
+            type="button"
+            role="tab"
+            aria-controls="nav-sampledispatch"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            Samples Dispatch
           </button>
 
           <button

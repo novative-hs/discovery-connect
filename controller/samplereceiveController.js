@@ -1,0 +1,74 @@
+const mysqlConnection = require("../config/db");
+const sampleReceiveModel = require('../models/samplereceiveModel');
+
+// Controller for creating the sample receive table
+const createSampleReceiveTable = (req, res) => {
+  sampleReceiveModel.createSampleReceiveTable();
+  res.status(200).json({ message: "Sample receive table creation process started" });
+};
+
+// Controller to get all sample receivees in "In Transit" status
+const getSampleReceiveInTransit = (req, res) => {
+  const id = req.params.id;
+
+  if (!id) {
+    return res.status(400).json({ error: "ID parameter is missing" });
+  }
+  const query = `
+    SELECT s.*
+    FROM samplereceive sd
+    JOIN sample s ON sd.sampleID = s.id
+    WHERE sd.TransferTo = ? AND s.status = "In Transit";
+  `;
+  mysqlConnection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching sample receive:", err);
+      return res.status(500).json({ error: "Error fetching sample receive" });
+    }
+    res.status(200).json(results);
+  });
+};
+
+// Controller to create a new sample receive
+const createSampleReceive = (req, res) => {
+  const { id } = req.params; // ID of the sample being received
+  console.log("Sample receive id is:", id);
+
+  const { receiverName, ReceivedByCollectionSite } = req.body;  // Receiving both receiverName and ReceivedByCollectionSite from the payload
+
+  // Validate input data
+  if (!receiverName || !ReceivedByCollectionSite) {
+    return res.status(400).json({ error: 'All required fields must be provided' });
+  }
+
+  // Create the sample receive record with the received `ReceivedByCollectionSite` value from the payload
+  sampleReceiveModel.createSampleReceive({ receiverName, ReceivedByCollectionSite }, id, (err, result) => {
+    if (err) {
+      console.error('Database error during INSERT:', err);
+      return res.status(500).json({ error: 'An error occurred while creating the receive' });
+    }
+
+    // Update the sample's status to "In Stock"
+    const updateQuery = `
+      UPDATE sample
+      SET status = 'In Stock'
+      WHERE id = ?
+    `;
+
+    mysqlConnection.query(updateQuery, [id], (updateErr) => {
+      if (updateErr) {
+        console.error('Database error during UPDATE:', updateErr);
+        return res.status(500).json({ error: 'An error occurred while updating the sample status' });
+      }
+
+      res.status(201).json({ message: 'Sample Receive created successfully', id: result.insertId });
+    });
+  });
+};
+
+
+module.exports = {
+  createSampleReceiveTable,
+  getSampleReceiveInTransit,
+  createSampleReceive,
+};

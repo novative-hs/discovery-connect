@@ -6,35 +6,41 @@ import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 const CollectionsiteArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null); // Store ID of collectionsite to delete
   const [formData, setFormData] = useState({
     CollectionSiteName: "",
     email: "",
     phoneNumber: "",
-    created_at: "",
+    // created_at: "",
     status: "",
     // logo: ""
   });
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
   const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
+  const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [successMessage, setSuccessMessage] = useState('');
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  // Calculate total pages
+  const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
+
 
 
   // Fetch collectionsites from backend when component loads
   useEffect(() => {
-    const fetchCollectionsites = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/collectionsite/get');
-        setCollectionsites(response.data); // Store fetched collectionsites in state
-      } catch (error) {
-        console.error("Error fetching collectionsites:", error);
-      }
-    };
-
     fetchCollectionsites(); // Call the function when the component mounts
   }, []);
+  const fetchCollectionsites = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/collectionsite/get');
+      setAllCollectionsites(response.data)
+      setCollectionsites(response.data); // Store fetched collectionsites in state
+    } catch (error) {
+      console.error("Error fetching collectionsites:", error);
+    }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
@@ -54,7 +60,7 @@ const CollectionsiteArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/collectionsites/post', formData);
+      const response = await axios.post('http://localhost:5000/api/collectionsite/post', formData);
       console.log("Collectionsite added successfully:", response.data);
 
       // Refresh the collectionsite list after successful submission
@@ -66,7 +72,7 @@ const CollectionsiteArea = () => {
         CollectionSiteName: "",
         email: "",
         phoneNumber: "",
-        created_at: "",
+        // created_at: "",
         status: "",
 
       });
@@ -80,7 +86,7 @@ const CollectionsiteArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/collectionsites/delete/${selectedCollectionsiteId}`);
+      await axios.delete(`http://localhost:5000/api/collectionsite/delete/${selectedCollectionsiteId}`);
       console.log(`Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`);
 
       // Set success message
@@ -102,6 +108,7 @@ const CollectionsiteArea = () => {
       console.error(`Error deleting collectionsite with ID ${selectedCollectionsiteId}:`, error);
     }
   };
+
   const handleEditClick = (collectionsite) => {
     setSelectedCollectionsiteId(collectionsite.id);
     setEditCollectionsite(collectionsite); // Store the collectionsite data to edit
@@ -110,7 +117,7 @@ const CollectionsiteArea = () => {
       CollectionSiteName: collectionsite.CollectionSiteName,
       email: collectionsite.email,
       phoneNumber: collectionsite.phoneNumber,
-      created_at: collectionsite.created_at,
+      // created_at: collectionsite.created_at,
       status: collectionsite.status,
     });
   };
@@ -120,7 +127,7 @@ const CollectionsiteArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/collectionsites/edit/${selectedCollectionsiteId}`,
+        `http://localhost:5000/api/collectionsite/edit/${selectedCollectionsiteId}`,
         formData
       );
       console.log("Collectionsite updated successfully:", response.data);
@@ -141,24 +148,43 @@ const CollectionsiteArea = () => {
     }
   };
 
+  const currentData = collectionsites.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  // Handle filter change
-  const handleFilterChange = (e) => {
-    setStatusFilter(e.target.value);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
-  // Filter samples based on the selected status
-  const filteredCollectionSites = collectionsites.filter(collectionsite => {
-    if (!statusFilter) return true; // If no filter is selected, show all
-    return collectionsite.status === statusFilter;
-  });
+  // Filter the researchers list
+  const handleFilterChange = (field, value) => {
+    if (value === "") {
+      fetchCollectionsites();
+    } else {
+      // Filter the researchers array based on the field and value
+      const filtered = allcollectionsites.filter((collectionsite) =>
+        collectionsite[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
+      );
+      setCollectionsites(filtered);
+    }
+  };
+
 
   return (
     <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-
-        <div className="row justify-content-center" style={{ marginTop: '290px' }}>
-          <div className="col-xl-10">
+       <div
+        className="container"
+        style={{ marginTop: "-20px", width: "auto",}}
+      >
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        >
+            <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
               {successMessage && (
@@ -166,49 +192,194 @@ const CollectionsiteArea = () => {
                   {successMessage}
                 </div>
               )}
-              <div className="d-flex justify-content-between align-items-center mb-3" style={{ marginTop: "-20px", width: "120%", marginLeft: "-80px" }}>
+             <div
+                className="d-flex justify-content-between align-items-center mb-3"
+                style={{
+                  marginTop: "-20px",
+                  width: "120%",
+                  marginLeft: "-80px",
+                }}
+              >
                 <div className="d-flex align-items-center">
-                <label htmlFor="statusFilter" className="mr-2" style={{ marginLeft: "60px", marginRight: "10px", fontSize: "16px", fontWeight: "bold" }}>Status:</label>
+                  <label
+                    htmlFor="statusFilter"
+                    className="mr-2"
+                    style={{
+                      marginLeft: "60px",
+                      marginRight: "10px",
+                      fontSize: "16px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Status:
+                  </label>
                   <select
                     id="statusFilter"
                     className="form-control"
                     style={{ width: "100px" }}
-                    onChange={handleFilterChange}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    } 
                   >
                     <option value="">All</option>
                     <option value="pending">pending</option>
                     <option value="approved">approved</option>
-                    <option value="unapproved">unapproved</option>
+                    {/* <option value="unapproved">unapproved</option> */}
                   </select>
                 </div>
-
               </div>
 
               {/* Table */}
-              <div className="table-responsive" style={{ marginLeft: '-20px', width: '110%' }}>
+              <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                     <tr>
-                      <th>ID</th>
-                      <th>Collection Site name</th>
-                      <th>Email</th>
-                      <th>Phone Number</th>
-                      <th>Registered_at</th>
-                      <th>Status</th>
+                    <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search ID"
+                          onChange={(e) =>
+                            handleFilterChange("id", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Name"
+                          onChange={(e) =>
+                            handleFilterChange("CollectionSiteName", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Name
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                      <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Email"
+                          onChange={(e) =>
+                            handleFilterChange("email", e.target.value)
+                          }
+                        />
+                        Email</th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Phone Number"
+                          onChange={(e) =>
+                            handleFilterChange("phoneNumber", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Contact
+                      </th>
+                      {/* <th>Registered_at</th> */}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search status"
+                          onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Status
+                      </th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCollectionSites.length > 0 ? (
-                      filteredCollectionSites.map((collectionsite) => (
+                    {currentData.length > 0 ? (
+                      currentData.map((collectionsite) => (
                         <tr key={collectionsite.id}>
                           <td>{collectionsite.id}</td>
                           <td>{collectionsite.CollectionSiteName}</td>
                           <td>{collectionsite.email}</td>
                           <td>{collectionsite.phoneNumber}</td>
-                          <td>{collectionsite.created_at}</td>
+                          {/* <td>{collectionsite.created_at}</td> */}
                           <td>{collectionsite.status}</td>
                           <td>
+                          <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                gap: "5px",
+                              }}
+                            >
                             <button
                               className="btn btn-success btn-sm"
                               onClick={() => handleEditClick(collectionsite)}>
@@ -223,6 +394,7 @@ const CollectionsiteArea = () => {
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
+                         </div>
                           </td>
                         </tr>
                       ))
@@ -236,6 +408,84 @@ const CollectionsiteArea = () => {
                   </tbody>
                 </table>
               </div>
+              {/* Pagination */}
+
+              <div
+                className="pagination d-flex justify-content-center align-items-center mt-3"
+                style={{
+                  gap: "10px",
+                }}
+              >
+                {/* Previous Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
+
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null; // Skip the page number
+                })}
+
+                {/* Next Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
 
               {/* Modal for Adding Collectionsites */}
               {/* {showAddModal && (
@@ -309,7 +559,25 @@ const CollectionsiteArea = () => {
 
               {/* Edit Collectionsite Modal */}
               {showEditModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+               <div
+               className="modal show d-block"
+               tabIndex="-1"
+               role="dialog"
+               style={{
+                 position: "absolute",
+                 top: "50%", // Center the modal vertically
+                 left: "50%", // Center the modal horizontally
+                 transform: "translate(-50%, -50%)", // Adjust for centering
+                 width: "100%",
+                 maxWidth: "500px",
+                 zIndex: 1050, // Ensure it appears above other content
+                 backgroundColor: "#fff", // Modal background
+                 
+                 overflowY: "auto",
+                 height: 'auto',/* Allow it to expand dynamically */
+                 minheight: '100vh',
+               }}
+             >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -389,7 +657,7 @@ const CollectionsiteArea = () => {
                             >
                               <option value="pending">pending</option>
                               <option value="approved">approved</option>
-                              <option value="unapproved">unapproved</option>
+                              {/* <option value="unapproved">unapproved</option> */}
                             </select>
                           </div>
                         </div>
@@ -403,7 +671,6 @@ const CollectionsiteArea = () => {
                   </div>
                 </div>
               )}
-
               {/* Modal for Deleting Collectionsites */}
               {showDeleteModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
