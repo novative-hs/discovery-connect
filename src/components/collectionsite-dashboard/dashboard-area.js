@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
+import { useRouter } from "next/router";  // Importing useRouter for redirect
 // internal
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
@@ -7,11 +8,37 @@ import UpdateCollectionsite from './update-collectionsite';
 import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/collectionsiteheader';
-
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
-
-  const renderContent = () => {
+   const router = useRouter();
+   const [id, setUserID] = useState(null);
+   
+   useEffect(() => {
+     const token = document.cookie
+       .split("; ")
+       .find((row) => row.startsWith("authToken="))
+       ?.split("=")[1];
+ 
+     if (!token) {
+       router.push("/login"); // Redirect to login if token is missing
+     }
+   }, [router]);
+ 
+     useEffect(() => {
+       const storedUserID = localStorage.getItem("userID");
+       if (storedUserID) {
+         setUserID(storedUserID);
+         console.log("Collection site  ID:", storedUserID); // Verify storedUserID
+       } else {
+         console.error("No userID found in localStorage");
+         router.push("/login");
+       }
+     }, [router]);
+ 
+   if (!id) {
+     return <div>Loading...</div>; // Or redirect to login
+   } 
+ const renderContent = () => {
     switch (activeTab) {
       case "samples":
         return <SampleArea />;

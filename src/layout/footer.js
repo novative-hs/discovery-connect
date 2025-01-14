@@ -6,7 +6,7 @@ import logo from '@assets/img/logo/faviconnn.png';
 import payment from '@assets/img/footer/footer-payment.png';
 import SocialLinks from "@components/social";
 import CopyrightText from "./copyright-text";
-
+import useSticky from "@hooks/use-sticky";
 // single widget
 function SingleWidget({ col, col_2, col_3, title, contents }) {
   return (
@@ -29,16 +29,21 @@ function SingleWidget({ col, col_2, col_3, title, contents }) {
   );
 }
 
-const Footer = () => {
+const Footer = ({ style_2 = false}) => {
+  const { sticky } = useSticky();
   return (
     <>
       <footer>
         <div
-          className="footer__area footer__style-4"
+        className={`footer__area ${style_2 ? "" : "footer__transparent"}`}
           data-bg-color="footer-bg-white"
         >
-          <div className="footer__top">
-            <div className="container">
+           <div
+            className={`footer-13 footer-7 footer-3 footer__bottom-border-4 footer__sticky ${sticky ? "footer-sticky" : ""}`}
+            id="footer-sticky"
+            style={{ height: "300px" }}
+          >
+          <div className="container-fluid">
               <div className="row">
                 <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-5 col-sm-6">
                   <div className="footer__widget footer__widget-11 mb-50 footer-col-11-1">

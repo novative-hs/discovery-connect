@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+/.next
+/config
+/README
 /.pnp
 .pnp.js
 

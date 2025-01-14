@@ -1,24 +1,28 @@
 const mysqlConnection = require("../config/db");
-const collectionsiteModel = require("../models/collectionsiteModel");
 const committememberModel = require("../models/committeememberModel");
-const organizationModel = require("../models/organizationModel");
-const researcherModel = require("../models/researcherModel");
 const sampledispatchModel = require("../models/sampledispatchModel");
+const samplereceiveModel=require("../models/samplereceiveModel")
 const sampleModel = require("../models/sampleModel");
-const signupModel = require("../models/signupModel");
+const signupModel = require("../models/registrationModel");
 const productModel = require("../models/productModel");
 const wishlistModel = require("../models/wishlistModel");
 const cartModel = require("../models/cartModel");
-
+const cityModel = require("../models/cityModel");
+const countryModel = require("../models/countryModel");
+const districtModel = require("../models/districtModel");
 
 // Function to initialize all tables
 function Database() {
-  signupModel.createUserAccountTable();
-  collectionsiteModel.createCollectionSiteTable();
+  cityModel.createCityTable();
+  countryModel.createCountryTable();
+  districtModel.createDistrictTable();
+  signupModel.create_collectionsiteTable();
+  signupModel.create_organizationTable();
+  signupModel.create_researcherTable();
+  signupModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
-  organizationModel.createOrganizationTable();
-  researcherModel.createResearcherTable();
   sampledispatchModel.createSampleDispatchTable();
+  samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
   productModel.createProductsTable();
   wishlistModel.createWishlistTable();

@@ -7,7 +7,7 @@ const sampleDispatchController = require('../controller/sampledispatchController
 router.post('/create', sampleDispatchController.createSampleDispatchTable);
 
 // Route to get all sample dispatches that are "In Transit"
-router.get('/get', sampleDispatchController.getSampleDispatchesInTransit);
+router.get('/get/:id', sampleDispatchController.getSampleDispatchesInTransit);
 
 // Route to create a new sample dispatch
 router.post('/post/:id', sampleDispatchController.createSampleDispatch);

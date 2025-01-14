@@ -206,9 +206,11 @@ const Header = ({ style_2 = false, setActiveTab }) => {
 
       <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />
       <OffCanvas
-        isOffCanvasOpen={isOffCanvasOpen}
-        setIsOffCanvasOpen={setIsOffCanvasOpen}
-      />
+  isOffCanvasOpen={isOffCanvasOpen}
+  setIsOffCanvasOpen={setIsOffCanvasOpen}
+  setActiveTab={setActiveTab}
+  dashboardType="collectionSite" 
+/>
     </>
   );
 };
