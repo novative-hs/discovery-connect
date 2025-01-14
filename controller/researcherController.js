@@ -1,20 +1,20 @@
 // controllers/researcherController.js
 const researcherModel = require('../models/researcherModel');
 
-// Controller to handle creating a researcher
-function createResearcher(req, res) {
-  const { ResearcherName, email, gender, phoneNumber, nameofOrganization, fullAddress, country, logo } = req.body;
+function getResearchersByOrganization(req, res) {
+  const organizationId = req.params.id;  // Get the ID from the route parameter
   
-  if (!ResearcherName || !email || !gender || !phoneNumber || !nameofOrganization || !fullAddress || !country) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
+  // Ensure that the 'organizationId' is of type number or string
+  if (!organizationId) {
+    return res.status(400).json({ error: 'Organization ID is required' });
   }
 
-  const data = { ResearcherName, email, gender, phoneNumber, nameofOrganization, fullAddress, country, logo };
-  researcherModel.createResearcher(data, (err, result) => {
+  researcherModel.getResearchersByOrganization(organizationId, (err, results) => {
     if (err) {
-      return res.status(500).json({ error: 'Error creating researcher' });
+      console.log("error is", err);
+      return res.status(500).json({ error: 'Error fetching researchers' });
     }
-    res.status(201).json({ message: 'Researcher created successfully', id: result.insertId });
+    res.status(200).json(results);
   });
 }
 
@@ -42,16 +42,34 @@ function getResearcherById(req, res) {
   });
 }
 
-// Controller to handle updating a researcher's details
-function updateResearcher(req, res) {
-  const { id } = req.params;
-  const { ResearcherName, email, gender, phoneNumber, nameofOrganization, fullAddress, country, logo } = req.body;
+// Controller to handle create a researcher
+function createResearcher(req, res) {
+  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country } = req.body;
   
-  if (!ResearcherName || !email || !gender || !phoneNumber || !nameofOrganization || !fullAddress || !country) {
+  if (!userID || !ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {
     return res.status(400).json({ error: 'All required fields must be provided' });
   }
 
-  const data = { ResearcherName, email, gender, phoneNumber, nameofOrganization, fullAddress, country, logo };
+  const data = { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country };
+  researcherModel.createResearcher(data, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error creating researcher ${err}', });
+    }
+    res.status(201).json({ message: 'Researcher created successfully', id: result.insertId });
+  });
+}
+
+// Controller to handle updating a researcher's details
+function updateResearcher(req, res) {
+  const { id } = req.params;
+  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country } = req.body;
+  
+  if (!userID || !ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {
+    return res.status(400).json({ error: 'All required fields must be provided' });
+  }
+
+
+  const data = { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country };
   researcherModel.updateResearcher(id, data, (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Error updating researcher' });
@@ -111,9 +129,10 @@ function updateResearcherStatus(req, res) {
 
 
 module.exports = {
-  createResearcher,
+  getResearchersByOrganization,
   getAllResearchers,
   getResearcherById,
+  createResearcher,
   updateResearcher,
   deleteResearcher,
   getResearchersAdmin,

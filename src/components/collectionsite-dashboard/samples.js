@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEdit,
+  faTrash,
+  faExchangeAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import { getLocalStorage } from "@utils/localstorage";
 
 const SampleArea = () => {
+  const id = localStorage.getItem("userID");
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  }
+  else{
+    console.log("Collection site Id on sample page is:", id);
+  }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
+
   const [formData, setFormData] = useState({
     masterID: "",
     donorID: "",
@@ -29,24 +42,43 @@ const SampleArea = () => {
     SampleTypeMatrix: "",
     TypeMatrixSubtype: "",
     ProcurementType: "",
-    endTime: "",
     SmokingStatus: "",
     TestMethod: "",
     TestResult: "",
     TestResultUnit: "",
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
-    // CutOffRange: "",
-    // CutOffRangeunit: "",
-    status: "",
-    // logo: ""
+    status: "In Stock",
+    CutOffRange: "",
+    CutOffRangeUnit: "",
+    FreezeThawCycles: "",
+    DateOfCollection: "",
+    ConcurrentMedicalConditions: "",
+    ConcurrentMedications: "",
+    AlcoholOrDrugAbuse: "",
+    DiagnosisTestParameter: "",
+    ResultRemarks: "",
+    TestKit: "",
+    TestKitManufacturer: "",
+    TestSystem: "",
+    TestSystemManufacturer: "",
+    endTime: "",
+    user_account_id: id,
   });
+
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [collectionSiteNames, setCollectionSiteNames] = useState([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  // Calculate total pages
+  const totalPages = Math.ceil(samples.length / itemsPerPage);
 
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
+    TransferTo: id,
     dispatchVia: "",
     dispatcherName: "",
     dispatchReceiptNumber: "",
@@ -60,17 +92,61 @@ const SampleArea = () => {
 
   // Fetch samples from backend when component loads
   useEffect(() => {
-    const fetchSamples = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/sample/get');
-        setSamples(response.data); // Store fetched samples in state
-      } catch (error) {
-        console.error("Error fetching samples:", error);
-      }
-    };
-
+    const storedUser = getLocalStorage("user");
+    console.log("Logged-in user:", storedUser);
     fetchSamples(); // Call the function when the component mounts
   }, []);
+
+  const fetchSamples = async () => {
+    try {
+      console.log('Fetching samples...'); // Log before sending request
+      const response = await axios.get(`http://localhost:5000/api/sample/get/${id}`);
+      console.log('Response received:', response.data); // Log response
+      setSamples(response.data); // Store fetched samples in state
+    } catch (error) {
+      console.error('Error fetching samples:', error); // Log any error
+    }
+  };
+
+  useEffect(() => {
+    const fetchCollectionSiteNames = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/collectionsite/collectionsitenames');
+        if (!response.ok) {
+          throw new Error('Failed to fetch collection site names');
+        }
+        const data = await response.json();
+        console.log('Fetched Site Names:', data); // Debugging
+        // Assuming 'data' contains a key 'data' with the site names
+        setCollectionSiteNames(data.data); // Use data.data to get the collection site names
+      } catch (error) {
+        console.error('Error fetching site names:', error);
+      }
+    };
+ 
+    fetchCollectionSiteNames();
+  }, []);
+
+  const currentData = samples.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleFilterChange = (field, value) => {
+    if (value === "") {
+      fetchSamples(); // Reset to fetch original data
+    } else {
+      // Filter the sample array based on the field and value
+      const filtered = samples.filter((sample) =>
+        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      );
+      setSamples(filtered); // Update the state with filtered results
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -90,12 +166,24 @@ const SampleArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/samples/post', formData);
+      const response = await axios.post(
+        "http://localhost:5000/api/samples/post",
+        formData
+      );
       console.log("Sample added successfully:", response.data);
 
       // Refresh the sample list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
+      const newResponse = await axios.get(
+        `http://localhost:5000/api/sample/get/${id}`
+      );
       setSamples(newResponse.data); // Update state with the new list
+
+      setSuccessMessage("Sample added successfully.");
+
+      // Clear the success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
 
       // Clear form after submission
       setFormData({
@@ -118,45 +206,67 @@ const SampleArea = () => {
         SampleTypeMatrix: "",
         TypeMatrixSubtype: "",
         ProcurementType: "",
-        endTime: "",
         SmokingStatus: "",
         TestMethod: "",
         TestResult: "",
         TestResultUnit: "",
         InfectiousDiseaseTesting: "",
         InfectiousDiseaseResult: "",
-        // CutOffRange: "",
-        // CutOffRangeunit: "",
+        CutOffRange: "",
+        CutOffRangeUnit: "",
+        FreezeThawCycles: "",
+        DateOfCollection: "",
+        ConcurrentMedicalConditions: "",
+        ConcurrentMedications: "",
+        AlcoholOrDrugAbuse: "",
+        DiagnosisTestParameter: "",
+        ResultRemarks: "",
+        TestKit: "",
+        TestKitManufacturer: "",
+        TestSystem: "",
+        TestSystemManufacturer: "",
+        endTime: "",
+        user_account_id: id,
         status: "",
       });
+
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding sample:", error);
     }
   };
 
-
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
 
-    const { dispatchVia, dispatcherName, dispatchReceiptNumber } = transferDetails;
+    const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber } =
+      transferDetails;
 
     // Validate input before making the API call
-    if (!dispatchVia || !dispatcherName || !dispatchReceiptNumber) {
-      alert('All fields are required.');
+    if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber) {
+      alert("All fields are required.");
       return;
     }
 
     try {
       // POST request to your backend API
-      const response = await axios.post(`http://localhost:5000/api/sampledispatch/post/${selectedSampleId}`, {
-        dispatchVia,
-        dispatcherName,
-        dispatchReceiptNumber,
-      });
+      const response = await axios.post(
+        `http://localhost:5000/api/sampledispatch/post/${selectedSampleId}`,
+        {
+          TransferTo,
+          dispatchVia,
+          dispatcherName,
+          dispatchReceiptNumber,
+        }
+      );
       console.log("Sample dispatched successfully:", response.data);
 
-      alert('Sample dispatched successfully!');
+      alert("Sample dispatched successfully!");
+      const newResponse = await axios.get(
+        `http://localhost:5000/api/sample/get/${id}`
+      );
+      setSamples(newResponse.data); // Update state with the new list
+
       setShowTransferModal(false); // Close the modal after submission
     } catch (error) {
       if (error.response) {
@@ -175,7 +285,6 @@ const SampleArea = () => {
     }
   };
 
-
   const handleModalClose = () => {
     setShowTransferModal(false); // Close the modal
   };
@@ -183,32 +292,39 @@ const SampleArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/samples/delete/${selectedSampleId}`);
+      await axios.delete(
+        `http://localhost:5000/api/samples/delete/${selectedSampleId}`
+      );
       console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
 
       // Set success message
-      setSuccessMessage('Sample deleted successfully.');
+      setSuccessMessage("Sample deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
-        setSuccessMessage('');
+        setSuccessMessage("");
       }, 3000);
 
       // Refresh the sample list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
+      const newResponse = await axios.get(
+        `http://localhost:5000/api/sample/get/${id}`
+      );
       setSamples(newResponse.data);
 
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedSampleId(null);
     } catch (error) {
-      console.error(`Error deleting sample with ID ${selectedSampleId}:`, error);
+      console.error(
+        `Error deleting sample with ID ${selectedSampleId}:`,
+        error
+      );
     }
   };
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
-    setEditSample(sample); // Store the sample data to edit
-    setShowEditModal(true); // Show the edit modal
+    setEditSample(sample);
+    setShowEditModal(true);
     setFormData({
       masterID: sample.masterID,
       donorID: sample.donorID,
@@ -229,15 +345,31 @@ const SampleArea = () => {
       SampleTypeMatrix: sample.SampleTypeMatrix,
       TypeMatrixSubtype: sample.TypeMatrixSubtype,
       ProcurementType: sample.ProcurementType,
-      endTime: sample.endTime,
       SmokingStatus: sample.SmokingStatus,
       TestMethod: sample.TestMethod,
       TestResult: sample.TestResult,
       TestResultUnit: sample.TestResultUnit,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
       InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-      status: sample.status
+      status: sample.status,
+      CutOffRange: sample.CutOffRange,
+      CutOffRangeUnit: sample.CutOffRangeUnit,
+      FreezeThawCycles: sample.FreezeThawCycles,
+      DateOfCollection: sample.DateOfCollection,
+      ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
+      ConcurrentMedications: sample.ConcurrentMedications,
+      AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
+      DiagnosisTestParameter: sample.DiagnosisTestParameter,
+      ResultRemarks: sample.ResultRemarks,
+      TestKit: sample.TestKit,
+      TestKitManufacturer: sample.TestKitManufacturer,
+      TestSystem: sample.TestSystem,
+      TestSystemManufacturer: sample.TestSystemManufacturer,
+      endTime: sample.endTime,
+      user_account_id: sample.user_account_id
     });
+
+
   };
 
   const handleUpdate = async (e) => {
@@ -251,26 +383,79 @@ const SampleArea = () => {
       console.log("Sample updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/sample/get"
+        `http://localhost:5000/api/sample/get/${id}`
       );
       setSamples(newResponse.data);
 
       setShowEditModal(false);
       setSuccessMessage("Sample updated successfully.");
 
+      // Reset formData after update
+    setFormData({
+      masterID: "",
+      donorID: "",
+      samplename: "",
+      age: "",
+      gender: "",
+      ethnicity: "",
+      samplecondition: "",
+      storagetemp: "",
+      storagetempUnit: "",
+      ContainerType: "",
+      CountryOfCollection: "",
+      price: "",
+      SamplePriceCurrency: "",
+      quantity: "",
+      QuantityUnit: "",
+      labname: "",
+      SampleTypeMatrix: "",
+      TypeMatrixSubtype: "",
+      ProcurementType: "",
+      SmokingStatus: "",
+      TestMethod: "",
+      TestResult: "",
+      TestResultUnit: "",
+      InfectiousDiseaseTesting: "",
+      InfectiousDiseaseResult: "",
+      status: "In Stock",
+      CutOffRange: "",
+      CutOffRangeUnit: "",
+      FreezeThawCycles: "",
+      DateOfCollection: "",
+      ConcurrentMedicalConditions: "",
+      ConcurrentMedications: "",
+      AlcoholOrDrugAbuse: "",
+      DiagnosisTestParameter: "",
+      ResultRemarks: "",
+      TestKit: "",
+      TestKitManufacturer: "",
+      TestSystem: "",
+      TestSystemManufacturer: "",
+      endTime: "",
+      user_account_id: id,
+    });
+
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+      console.error(
+        `Error updating sample with ID ${selectedSampleId}:`,
+        error
+      );
     }
   };
 
   return (
     <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-90px' }}>
-
-        <div className="row justify-content-center" style={{ marginTop: '290px', width: '110%' }}>
+      <div
+        className="container"
+        style={{ marginTop: "-20px", width: "auto",}}
+      >
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        >
           <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
@@ -280,51 +465,1195 @@ const SampleArea = () => {
                 </div>
               )}
               {/* Add Samples Button */}
-              <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-150px' }}>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+              <div
+                className="d-flex justify-content-end mb-3"
+                style={{
+                  marginBottom: "20px", // Adjust spacing between button and table
+                  
+                }}
+              >
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowAddModal(true)}
+                >
                   Add Samples
                 </button>
               </div>
 
               {/* Table */}
-              <div className="table-responsive" style={{ marginLeft: '-50px', width: '110%' }}>
+              <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr>
-                      <th>ID</th>
-                      <th>Master ID</th>
-                      <th>Donor ID</th>
-                      <th>Sample Name</th>
-                      <th>Age</th>
-                      <th>Gender</th>
-                      <th>Ethnicity</th>
-                      <th>Sample Condition</th>
-                      <th>Storage Temperature</th>
-                      <th>Storage Temperature Unit</th>
-                      <th>Container Type</th>
-                      <th>Country Of Collection</th>
-                      <th>Price</th>
-                      <th>Sample Price Currency</th>
-                      <th>Quantity</th>
-                      <th>Quantity Unit</th>
-                      <th>Lab Name</th>
-                      <th>Sample Type Matrix</th>
-                      <th>Type Matrix Subtype</th>
-                      <th>Procurement Type</th>
-                      <th>End Time</th>
-                      <th>Smoking Status</th>
-                      <th>Test Method</th>
-                      <th>Test Result</th>
-                      <th>Test Result Unit</th>
-                      <th>Infectious Disease Testing</th>
-                      <th>Infectious Disease Result</th>
-                      <th>Status</th>
+                  <tr style={{ textAlign: "center" }}>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search ID"
+                            onChange={(e) =>
+                              handleFilterChange("id", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          ID
+                        </div>
+                      </th>
+
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                         <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Master ID"
+                          onChange={(e) =>
+                            handleFilterChange("masterID", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Master ID
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Donor ID"
+                          onChange={(e) =>
+                            handleFilterChange("donorID", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Donor ID
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Name"
+                          onChange={(e) =>
+                            handleFilterChange("samplename", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Sample Name
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Age"
+                          onChange={(e) =>
+                            handleFilterChange("age", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Age
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Gender"
+                          onChange={(e) =>
+                            handleFilterChange("gender", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Gender
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Ethnicity"
+                          onChange={(e) =>
+                            handleFilterChange("ethnicity", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Ethnicity
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Condition"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "samplecondition",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Sample Condition
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Storage Temperature"
+                          onChange={(e) =>
+                            handleFilterChange("storagetemp", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Storage Temperature
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Storage Temp Unit"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "storagetempUnit",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Storage Temperature Unit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Container Type"
+                          onChange={(e) =>
+                            handleFilterChange("ContainerType", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Container Type
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Country"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "CountryOfCollection",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Country Of Collection
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Price"
+                          onChange={(e) =>
+                            handleFilterChange("price", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Price
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Price Currency"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "SamplePriceCurrency",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Sample Price Currency
+                        </div>
+                      </th>
+                      <th className="px-3">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Quantity"
+                          onChange={(e) =>
+                            handleFilterChange("quantity", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Quantity
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Quantity Unit"
+                          onChange={(e) =>
+                            handleFilterChange("QuantityUnit", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Quantity Unit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Lab Name"
+                          onChange={(e) =>
+                            handleFilterChange("labname", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Lab Name
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Type Matrix"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "SampleTypeMatrix",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Sample Type Matrix
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Type Matrix Subtype"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "TypeMatrixSubtype",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Type Matrix Subtype
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Procurement Type"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "ProcurementType",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Procurement Type
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search End Time"
+                          onChange={(e) =>
+                            handleFilterChange("endTime", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        End Time
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Smoking Status"
+                          onChange={(e) =>
+                            handleFilterChange("SmokingStatus", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Smoking Status
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Method"
+                          onChange={(e) =>
+                            handleFilterChange("TestMethod", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test Method
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Result"
+                          onChange={(e) =>
+                            handleFilterChange("TestResult", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test Result
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Result Unit"
+                          onChange={(e) =>
+                            handleFilterChange("TestResultUnit", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test Result Unit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Infectious Disease Testing"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "InfectiousDiseaseTesting",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Infectious Disease Testing
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Infectious Disease Result"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "InfectiousDiseaseResult",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Infectious Disease Result
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Cut Off Range"
+                          onChange={(e) =>
+                            handleFilterChange("CutOffRange", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Cut Off Range
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Cut Off Range Unit"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "CutOffRangeUnit",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Cut Off Range Unit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Freeze Thaw Cycles"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "FreezeThawCycles",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Freeze Thaw Cycles
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Date Of Collection"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "DateOfCollection",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Date Of Collection
+                      </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Concurrent Medical Conditions"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "ConcurrentMedicalConditions",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Concurrent Medical Conditions
+                      </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Concurrent Medications"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "ConcurrentMedications",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Concurrent Medications
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Alcohol Or Drug Abuse"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "AlcoholOrDrugAbuse",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Alcohol Or Drug Abuse
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Diagnosis Test Parameter"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "DiagnosisTestParameter",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Diagnosis Test Parameter
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Result Remarks"
+                          onChange={(e) =>
+                            handleFilterChange("ResultRemarks", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Result Remarks
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Kit"
+                          onChange={(e) =>
+                            handleFilterChange("TestKit", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test Kit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Kit Manufacturer"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "TestKitManufacturer",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test Kit Manufacturer
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test System"
+                          onChange={(e) =>
+                            handleFilterChange("TestSystem", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test System
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                        
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test System Manufacturer"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "TestSystemManufacturer",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test System Manufacturer
+                        </div>
+                      </th>
+                      {/*<th>User ID</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Status"
+                          onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Status
+                        </div>
+                      </th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {samples.length > 0 ? (
-                      samples.map((sample) => (
+                    {currentData.length > 0 ? (
+                      currentData.map((sample) => (
                         <tr key={sample.id}>
                           <td>{sample.id}</td>
                           <td>{sample.masterID}</td>
@@ -346,18 +1675,41 @@ const SampleArea = () => {
                           <td>{sample.SampleTypeMatrix}</td>
                           <td>{sample.TypeMatrixSubtype}</td>
                           <td>{sample.ProcurementType}</td>
-                          <td>{sample.endTime}</td>
                           <td>{sample.SmokingStatus}</td>
                           <td>{sample.TestMethod}</td>
                           <td>{sample.TestResult}</td>
                           <td>{sample.TestResultUnit}</td>
                           <td>{sample.InfectiousDiseaseTesting}</td>
                           <td>{sample.InfectiousDiseaseResult}</td>
+                          <td>{sample.CutOffRange}</td>
+                          <td>{sample.CutOffRangeUnit}</td>
+                          <td>{sample.FreezeThawCycles}</td>
+                          <td>{sample.DateOfCollection}</td>
+                          <td>{sample.ConcurrentMedicalConditions}</td>
+                          <td>{sample.ConcurrentMedications}</td>
+                          <td>{sample.AlcoholOrDrugAbuse}</td>
+                          <td>{sample.DiagnosisTestParameter}</td>
+                          <td>{sample.ResultRemarks}</td>
+                          <td>{sample.TestKit}</td>
+                          <td>{sample.TestKitManufacturer}</td>
+                          <td>{sample.TestSystem}</td>
+                          <td>{sample.TestSystemManufacturer}</td>
+                          <td>{sample.endTime}</td>
+                          {/*<td>{sample.user_account_id}</td>*/}
                           <td>{sample.status}</td>
+
                           <td>
+                          <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                gap: "5px",
+                              }}
+                            >
                             <button
                               className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}>
+                              onClick={() => handleEditClick(sample)}
+                            >
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
                             <button
@@ -375,6 +1727,7 @@ const SampleArea = () => {
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>
+                          </div>
                           </td>
                         </tr>
                       ))
@@ -388,18 +1741,107 @@ const SampleArea = () => {
                   </tbody>
                 </table>
               </div>
+              <div
+                className="pagination d-flex justify-content-center align-items-center mt-3"
+                style={{
+                  gap: "10px",
+                }}
+              >
+                {/* Previous Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
+
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null; // Skip the page number
+                })}
+
+                {/* Next Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
 
               {/* Modal for Adding Samples */}
               {showAddModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog" style={{
-                  zIndex: 1050, // Ensure it's above the header
-                  position: 'fixed',
-                  top: '120px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 'auto', // Optional: Customize if needed
-                }}>
-                  <div className="modal-dialog" role="document" style={{ maxWidth: '100%', width: '90vw' }}>
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "auto", 
+                    zIndex: 1050, // Ensure it appears above other content
+                    backgroundColor: "#fff", // Modal background
+                    
+                    overflowY: "auto",
+                    height: 'auto', // Allow it to expand dynamically 
+                    minheight: '100vh',
+                  }}
+                >
+                  <div
+                    className="modal-dialog"
+                    role="document"
+                    style={{ maxWidth: "100%", width: "90vw" }}
+                  >
                     <div className="modal-content">
                       <div className="modal-header">
                         <h5 className="modal-title">Add Sample</h5>
@@ -482,9 +1924,6 @@ const SampleArea = () => {
                                   <option value="Female">Female</option>
                                 </select>
                               </div>
-                            </div>
-                            {/* Column 2 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Ethnicity</label>
                                 <input
@@ -507,6 +1946,10 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                            </div>
+
+                            {/* Column 2 */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Storage Temperature</label>
                                 <input
@@ -540,9 +1983,6 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
-                            </div>
-                            {/* Column 3 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Country Of Collection</label>
                                 <input
@@ -587,6 +2027,9 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                            </div>
+                            {/* {Column 3} */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Quantity Unit</label>
                                 <input
@@ -598,9 +2041,6 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Lab Name</label>
                                 <input
@@ -646,20 +2086,6 @@ const SampleArea = () => {
                                 />
                               </div>
                               <div className="form-group">
-                                <label>End Time</label>
-                                <input
-                                  type="datetime-local"
-                                  className="form-control"
-                                  name="endTime"
-                                  value={formData.endTime}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 5 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
                                 <label>Smoking Status</label>
                                 <input
                                   type="text"
@@ -681,6 +2107,9 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Test Result</label>
                                 <input
@@ -714,9 +2143,6 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
-                            </div>
-                             {/* Column 6 */}
-                             <div className="col-md-2">
                               <div className="form-group">
                                 <label>Infectious Disease Result</label>
                                 <input
@@ -724,6 +2150,168 @@ const SampleArea = () => {
                                   className="form-control"
                                   name="InfectiousDiseaseResult"
                                   value={formData.InfectiousDiseaseResult}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Cut Off Range</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="CutOffRange"
+                                  value={formData.CutOffRange}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Cut Off Range Unit</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="CutOffRangeUnit"
+                                  value={formData.CutOffRangeUnit}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Freeze Thaw Cycles</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="FreezeThawCycles"
+                                  value={formData.FreezeThawCycles}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* {Column 5} */}
+                            <div className="col-md-2">
+                              <div className="form-group">
+                                <label>Date Of Collection</label>
+                                <input
+                                  type="date"
+                                  className="form-control"
+                                  name="DateOfCollection"
+                                  value={formData.DateOfCollection}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Concurrent Medical Conditions</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ConcurrentMedicalConditions"
+                                  value={formData.ConcurrentMedicalConditions}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Concurrent Medications</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ConcurrentMedications"
+                                  value={formData.ConcurrentMedications}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Alcohol Or Drug Abuse</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="AlcoholOrDrugAbuse"
+                                  value={formData.AlcoholOrDrugAbuse}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label>Diagnosis Test Parameter</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="DiagnosisTestParameter"
+                                  value={formData.DiagnosisTestParameter}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Result Remarks</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ResultRemarks"
+                                  value={formData.ResultRemarks}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Test Kit</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestKit"
+                                  value={formData.TestKit}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            {/* Column 6 */}
+                            <div className="col-md-2">
+                              <div className="form-group">
+                                <label>Test Kit Manufacturer</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestKitManufacturer"
+                                  value={formData.TestKitManufacturer}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Test System</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestSystem"
+                                  value={formData.TestSystem}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Test System Manufacturer</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestSystemManufacturer"
+                                  value={formData.TestSystemManufacturer}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>End Time</label>
+                                <input
+                                  type="datetime-local"
+                                  className="form-control"
+                                  name="endTime"
+                                  value={formData.endTime}
                                   onChange={handleInputChange}
                                   required
                                 />
@@ -744,15 +2332,29 @@ const SampleArea = () => {
 
               {/* Edit Sample Modal */}
               {showEditModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog" style={{
-                  zIndex: 1050, // Ensure it's above the header
-                  position: 'fixed',
-                  top: '120px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 'auto', // Optional: Customize if needed
-                }}>
-                  <div className="modal-dialog" role="document" style={{ maxWidth: '100%', width: '70vw' }}>
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "auto", 
+                    zIndex: 1050, // Ensure it appears above other content
+                    backgroundColor: "#fff", // Modal background
+                    
+                    overflowY: "auto",
+                    height: 'auto', // Allow it to expand dynamically 
+                    minheight: '100vh',
+                  }}
+                >
+                  <div
+                    className="modal-dialog"
+                    role="document"
+                    style={{ maxWidth: "100%", width: "70vw" }}
+                  >
                     <div className="modal-content">
                       <div className="modal-header">
                         <h5 className="modal-title">Edit Sample</h5>
@@ -761,11 +2363,11 @@ const SampleArea = () => {
                           className="close"
                           onClick={() => setShowEditModal(false)}
                           style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
                           <span>&times;</span>
@@ -800,7 +2402,7 @@ const SampleArea = () => {
                                 />
                               </div>
                               <div className="form-group">
-                                <label>Name</label>
+                                <label>Sample Name</label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -835,10 +2437,6 @@ const SampleArea = () => {
                                   <option value="Female">Female</option>
                                 </select>
                               </div>
-                            </div>
-
-                            {/* Column 2 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Ethnicity</label>
                                 <input
@@ -861,6 +2459,9 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                            </div>
+                            {/* Column 2 */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Storage Temperature</label>
                                 <input
@@ -894,10 +2495,6 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
-                            </div>
-
-                            {/* Column 3 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Country Of Collection</label>
                                 <input
@@ -942,6 +2539,9 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                            </div>
+                            {/* {Column 3} */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Quantity Unit</label>
                                 <input
@@ -953,10 +2553,6 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
-                            </div>
-
-                            {/* Column 4 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Lab Name</label>
                                 <input
@@ -1002,21 +2598,6 @@ const SampleArea = () => {
                                 />
                               </div>
                               <div className="form-group">
-                                <label>End Time</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="endTime"
-                                  value={formData.endTime}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* Column 5 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
                                 <label>Smoking Status</label>
                                 <input
                                   type="text"
@@ -1038,6 +2619,9 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Test Result</label>
                                 <input
@@ -1071,10 +2655,6 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
-                            </div>
-
-                            {/* Column 6 */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Infectious Disease Result</label>
                                 <input
@@ -1086,8 +2666,169 @@ const SampleArea = () => {
                                   required
                                 />
                               </div>
+                              <div className="form-group">
+                                <label>Cut Off Range</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="CutOffRange"
+                                  value={formData.CutOffRange}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Cut Off Range Unit</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="CutOffRangeUnit"
+                                  value={formData.CutOffRangeUnit}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Freeze Thaw Cycles</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="FreezeThawCycles"
+                                  value={formData.FreezeThawCycles}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
                             </div>
 
+                            {/* {Column 5} */}
+                            <div className="col-md-2">
+                              <div className="form-group">
+                                <label>Date of Collection</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="DateOfCollection"
+                                  value={formData.DateOfCollection}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Concurrent Medical Conditions</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ConcurrentMedicalConditions"
+                                  value={formData.ConcurrentMedicalConditions}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Concurrent Medications</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ConcurrentMedications"
+                                  value={formData.ConcurrentMedications}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Alcohol Or Drug Abuse</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="AlcoholOrDrugAbuse"
+                                  value={formData.AlcoholOrDrugAbuse}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label>Diagnosis Test Parameter</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="DiagnosisTestParameter"
+                                  value={formData.DiagnosisTestParameter}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Result Remarks</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="ResultRemarks"
+                                  value={formData.ResultRemarks}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Test Kit</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestKit"
+                                  value={formData.TestKit}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            {/* Column 6 */}
+                            <div className="col-md-2">
+                              <div className="form-group">
+                                <label>Test Kit Manufacturer</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestKitManufacturer"
+                                  value={formData.TestKitManufacturer}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Test System</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestSystem"
+                                  value={formData.TestSystem}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Test System Manufacturer</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="TestSystemManufacturer"
+                                  value={formData.TestSystemManufacturer}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>End Time</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="endTime"
+                                  value={formData.endTime}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <div className="modal-footer">
@@ -1100,7 +2841,6 @@ const SampleArea = () => {
                   </div>
                 </div>
               )}
-
 
               {/* Modal for transfreing Samples */}
               {showTransferModal && (
@@ -1129,10 +2869,58 @@ const SampleArea = () => {
                       zIndex: 1100,
                     }}
                   >
-                    <h5 style={{ marginBottom: "20px", textAlign: "center" }}>Transfer to Collection Site</h5>
+                    <h5 style={{ marginBottom: "20px", textAlign: "center" }}>
+                      Stock Transfer
+                    </h5>
                     <form>
+                    {/* <div style={{ marginBottom: "15px" }}>
+                        <label style={{ display: "block", marginBottom: "5px" }}>Transfer From</label>
+                        <select
+                          name="TransferFrom"
+                          value={transferDetails.TransferFrom}
+                          onChange={handleInputChange}
+                          style={{
+                            width: "100%",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                          }}
+                        >
+                          <option value="">Select</option>
+                          {collectionSiteNames.map((site, index) => (
+                             <option key={site.user_account_id} value={site.user_account_id}>
+                             {site.CollectionSiteName}
+                           </option>
+                          ))}
+                        </select>
+                      </div> */}
                       <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Dispatch Via</label>
+                        <label style={{ display: "block", marginBottom: "5px" }}>Transfer to Collection Site</label>
+                        <select
+                          name="TransferTo"
+                          value={transferDetails.TransferTo}
+                          onChange={handleInputChange}
+                          style={{
+                            width: "100%",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                          }}
+                        >
+                          <option value="">Select</option>
+                          {collectionSiteNames.map((site, index) => (
+                             <option key={site.user_account_id} value={site.user_account_id}>
+                             {site.CollectionSiteName}
+                           </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ marginBottom: "15px" }}>
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
+                          Dispatch Via
+                        </label>
                         <select
                           name="dispatchVia"
                           value={transferDetails.dispatchVia}
@@ -1150,7 +2938,11 @@ const SampleArea = () => {
                         </select>
                       </div>
                       <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Dispatcher Name</label>
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
+                          Dispatcher Name
+                        </label>
                         <input
                           type="text"
                           name="dispatcherName"
@@ -1166,7 +2958,11 @@ const SampleArea = () => {
                         />
                       </div>
                       <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Dispatch Receipt Number</label>
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
+                          Dispatch Receipt Number
+                        </label>
                         <input
                           type="text"
                           name="dispatchReceiptNumber"
@@ -1181,7 +2977,13 @@ const SampleArea = () => {
                           }}
                         />
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginTop: "20px",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={handleModalClose}
@@ -1211,10 +3013,23 @@ const SampleArea = () => {
                 </div>
               )}
 
-
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div className="modal show d-block" tabIndex="-1" role="dialog"
+                style={{
+                  position: "absolute",
+                  top: "50%", // Center the modal vertically
+                  left: "50%", // Center the modal horizontally
+                  transform: "translate(-50%, -50%)", // Adjust for centering
+                  width: "auto", 
+                  zIndex: 1050, // Ensure it appears above other content
+                  backgroundColor: "#fff", // Modal background
+                  
+                  overflowY: "auto",
+                  height: 'auto', // Allow it to expand dynamically 
+                  minheight: '100vh',
+                }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -1223,6 +3038,15 @@ const SampleArea = () => {
                           type="button"
                           className="close"
                           onClick={() => setShowDeleteModal(false)}
+                          style={{
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: '1.5rem',
+                            position: 'absolute',
+                            right: '10px',
+                            top: '10px',
+                            cursor: 'pointer'
+                          }}
                         >
                           <span>&times;</span>
                         </button>

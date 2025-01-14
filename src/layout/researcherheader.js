@@ -13,7 +13,7 @@ import OffCanvas from "@components/common/off-canvas";
 import useCartInfo from "@hooks/use-cart-info";
 import SearchForm from "@components/forms/search-form";
 
-const Header = ({ style_2 = false }) => {
+const Header = ({ style_2 = false ,setActiveTab}) => {
   const { sticky } = useSticky();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOffCanvasOpen, setIsOffCanvasOpen] = useState(false);
@@ -137,9 +137,11 @@ const Header = ({ style_2 = false }) => {
 
       {/* off canvas start */}
       <OffCanvas
-        isOffCanvasOpen={isOffCanvasOpen}
-        setIsOffCanvasOpen={setIsOffCanvasOpen}
-      />
+  isOffCanvasOpen={isOffCanvasOpen}
+  setIsOffCanvasOpen={setIsOffCanvasOpen}
+  setActiveTab={setActiveTab}
+  dashboardType="researcher" 
+/>
       {/* off canvas end */}
     </>
   );

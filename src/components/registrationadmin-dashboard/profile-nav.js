@@ -34,7 +34,51 @@ const ProfileNav = () => {
             </span>
             Profile
           </button>
-
+          <button
+            className="nav-link"
+            id="nav-country-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-country"
+            type="button"
+            role="tab"
+            aria-controls="nav-country"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-light fa-clipboard-list-check"></i>
+            </span>
+            Country
+          </button>
+          <button
+            className="nav-link"
+            id="nav-city-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-city"
+            type="button"
+            role="tab"
+            aria-controls="nav-city"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-light fa-clipboard-list-check"></i>
+            </span>
+            City
+          </button>
+          <button
+            className="nav-link"
+            id="nav-district-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-district"
+            type="button"
+            role="tab"
+            aria-controls="nav-district"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-light fa-clipboard-list-check"></i>
+            </span>
+            District
+          </button>
           <button
             className="nav-link"
             id="nav-order-tab"

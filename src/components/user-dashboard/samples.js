@@ -1,146 +1,107 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const SampleArea = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [formData, setFormData] = useState({
-    title: "",
+    masterID: "",
+    donorID: "",
+    samplename: "",
     age: "",
     gender: "",
+    ethnicity: "",
+    samplecondition: "",
+    storagetemp: "",
+    storagetempUnit: "",
+    ContainerType: "",
+    CountryOfCollection: "",
     price: "",
+    SamplePriceCurrency: "",
     quantity: "",
+    QuantityUnit: "",
+    labname: "",
+    SampleTypeMatrix: "",
+    TypeMatrixSubtype: "",
+    ProcurementType: "",
     endTime: "",
-    // logo: ""
+    SmokingStatus: "",
+    TestMethod: "",
+    TestResult: "",
+    TestResultUnit: "",
+    InfectiousDiseaseTesting: "",
+    InfectiousDiseaseResult: "",
+    status: "In Stock",
+    CutOffRange: "",
+    CutOffRangeUnit: "",
+    FreezeThawCycles: "",
+    DateOfCollection: "",
+    ConcurrentMedicalConditions: "",
+    ConcurrentMedications: "",
+    AlcoholOrDrugAbuse: "",
+    DiagnosisTestParameter: "",
+    ResultRemarks: "",
+    TestKit: "",
+    TestKitManufacturer: "",
+    TestSystem: "",
+    TestSystemManufacturer: "",
+    user_id: "",
   });
-  const [editSample, setEditSample] = useState(null); // State for selected sample to edit
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [successMessage, setSuccessMessage] = useState('');
 
+  const [samples, setSamples] = useState([]); // State to hold fetched samples
+  const [successMessage, setSuccessMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  // Calculate total pages
+  const totalPages = Math.ceil(samples.length / itemsPerPage);
+
+  const fetchSamples = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/sample/getAll"
+      );
+      setSamples(response.data); // Store fetched samples in state
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
 
   // Fetch samples from backend when component loads
   useEffect(() => {
-    const fetchSamples = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/sample/get');
-        setSamples(response.data); // Store fetched samples in state
-      } catch (error) {
-        console.error("Error fetching samples:", error);
-      }
-    };
-
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const currentData = samples.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/samples/post', formData);
-      console.log("Sample added successfully:", response.data);
-
-      // Refresh the sample list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
-      setSamples(newResponse.data); // Update state with the new list
-
-      // Clear form after submission
-      setFormData({
-        title: "",
-        age: "",
-        gender: "",
-        price: "",
-        quantity: "",
-        endTime: "",
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding sample:", error);
-    }
-  };
-
-
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/samples/delete/${selectedSampleId}`);
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
-
-      // Set success message
-      setSuccessMessage('Sample deleted successfully.');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-
-      // Refresh the sample list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/sample/get');
-      setSamples(newResponse.data);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(`Error deleting sample with ID ${selectedSampleId}:`, error);
-    }
-  };
-  const handleEditClick = (sample) => {
-    setSelectedSampleId(sample.id);
-    setEditSample(sample); // Store the sample data to edit
-    setShowEditModal(true); // Show the edit modal
-    setFormData({
-      title: sample.title,
-      age: sample.age,
-      gender: sample.gender,
-      price: sample.price,
-      quantity: sample.quantity,
-      endTime: sample.endTime,
-    });
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/samples/edit/${selectedSampleId}`,
-        formData
+  const handleFilterChange = (field, value) => {
+    if (value === "") {
+      fetchSamples(); // Reset to fetch original data
+    } else {
+      // Filter the sample array based on the field and value
+      const filtered = samples.filter((sample) =>
+        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      console.log("Sample updated successfully:", response.data);
-
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/sample/get"
-      );
-      setSamples(newResponse.data);
-
-      setShowEditModal(false);
-      setSuccessMessage("Sample updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+      setSamples(filtered); // Update the state with filtered results
     }
   };
 
   return (
     <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-
-        <div className="row justify-content-center" style={{ marginTop: '290px' }}>
+     <div
+        className="container"
+        style={{ marginTop: "-20px", width: "auto",}}
+      >
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        >
           <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
@@ -149,55 +110,1149 @@ const SampleArea = () => {
                   {successMessage}
                 </div>
               )}
-              {/* Add Samples Button */}
-              <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                  Add Samples
-                </button>
-              </div>
 
               {/* Table */}
-              <div className="table-responsive" style={{ marginLeft: '-20px', width: '110%' }}>
+              <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Age</th>
-                      <th>Gender</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>End Time</th>
-                      <th>Action</th>
+                  <tr style={{textAlign:'center',}}>
+                  <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search ID"
+                          onChange={(e) =>
+                            handleFilterChange("id", e.target.value)
+                          }
+                          style={{
+                            width: "80%", 
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Master ID"
+                          onChange={(e) =>
+                            handleFilterChange("masterID", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", 
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Master ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                       
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Donor ID"
+                          onChange={(e) =>
+                            handleFilterChange("donorID", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Donor ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Name"
+                          onChange={(e) =>
+                            handleFilterChange("samplename", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Sample Name
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Age"
+                          onChange={(e) =>
+                            handleFilterChange("age", e.target.value)
+                          }
+                          style={{
+                            width: "80%", 
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", 
+                            maxWidth: "180px", 
+                          }}
+                        />
+                        Age
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Gender"
+                          onChange={(e) =>
+                            handleFilterChange("gender", e.target.value)
+                          }
+                          style={{
+                            width: "80%", 
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", 
+                            maxWidth: "180px", 
+                          }}
+                        />
+                        Gender
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Ethnicity"
+                          onChange={(e) =>
+                            handleFilterChange("ethnicity", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", 
+                            maxWidth: "180px", 
+                          }}
+                        />
+                        Ethnicity
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Condition"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "samplecondition",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", 
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Sample Condition
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Storage Temperature"
+                          onChange={(e) =>
+                            handleFilterChange("storagetemp", e.target.value)
+                          }
+                          style={{
+                            width: "80%", 
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", 
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Storage Temperature
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Storage Temp Unit"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "storagetempUnit",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", 
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Storage Temperature Unit
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Container Type"
+                          onChange={(e) =>
+                            handleFilterChange("ContainerType", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Container Type
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Country"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "CountryOfCollection",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Country Of Collection
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Price"
+                          onChange={(e) =>
+                            handleFilterChange("price", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Price
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Price Currency"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "SamplePriceCurrency",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Sample Price Currency
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Quantity"
+                          onChange={(e) =>
+                            handleFilterChange("quantity", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Quantity
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Quantity Unit"
+                          onChange={(e) =>
+                            handleFilterChange("QuantityUnit", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Quantity Unit
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Lab Name"
+                          onChange={(e) =>
+                            handleFilterChange("labname", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Lab Name
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Sample Type Matrix"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "SampleTypeMatrix",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Sample Type Matrix
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Type Matrix Subtype"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "TypeMatrixSubtype",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Type Matrix Subtype
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Procurement Type"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "ProcurementType",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Procurement Type
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search End Time"
+                          onChange={(e) =>
+                            handleFilterChange("endTime", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        End Time
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Smoking Status"
+                          onChange={(e) =>
+                            handleFilterChange("SmokingStatus", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Smoking Status
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Method"
+                          onChange={(e) =>
+                            handleFilterChange("TestMethod", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test Method
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Result"
+                          onChange={(e) =>
+                            handleFilterChange("TestResult", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test Result
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Result Unit"
+                          onChange={(e) =>
+                            handleFilterChange("TestResultUnit", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test Result Unit
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Infectious Disease Testing"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "InfectiousDiseaseTesting",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Infectious Disease Testing
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Infectious Disease Result"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "InfectiousDiseaseResult",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Infectious Disease Result
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Cut Off Range"
+                          onChange={(e) =>
+                            handleFilterChange("CutOffRange", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Cut Off Range
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Cut Off Range Unit"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "CutOffRangeUnit",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Cut Off Range Unit
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Freeze Thaw Cycles"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "FreezeThawCycles",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Freeze Thaw Cycles
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Date Of Collection"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "DateOfCollection",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Date Of Collection
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Concurrent Medical Conditions"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "ConcurrentMedicalConditions",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Concurrent Medical Conditions
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Concurrent Medications"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "ConcurrentMedications",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Concurrent Medications
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Alcohol Or Drug Abuse"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "AlcoholOrDrugAbuse",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Alcohol Or Drug Abuse
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Diagnosis Test Parameter"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "DiagnosisTestParameter",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Diagnosis Test Parameter
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Result Remarks"
+                          onChange={(e) =>
+                            handleFilterChange("ResultRemarks", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Result Remarks
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Kit"
+                          onChange={(e) =>
+                            handleFilterChange("TestKit", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test Kit
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Kit Manufacturer"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "TestKitManufacturer",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test Kit Manufacturer
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test System"
+                          onChange={(e) =>
+                            handleFilterChange("TestSystem", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test System
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test System Manufacturer"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "TestSystemManufacturer",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test System Manufacturer
+                      </th>
+                      {/*<th>User ID</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Status"
+                          onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Status
+                      </th>
+                      {/*<th>Action</th>*/}
                     </tr>
                   </thead>
                   <tbody>
-                    {samples.length > 0 ? (
-                      samples.map((sample) => (
+                  {currentData.length > 0 ? (
+                      currentData.map((sample) => (
                         <tr key={sample.id}>
                           <td>{sample.id}</td>
-                          <td>{sample.title}</td>
+                          <td>{sample.masterID}</td>
+                          <td>{sample.donorID}</td>
+                          <td>{sample.samplename}</td>
                           <td>{sample.age}</td>
                           <td>{sample.gender}</td>
+                          <td>{sample.ethnicity}</td>
+                          <td>{sample.samplecondition}</td>
+                          <td>{sample.storagetemp}</td>
+                          <td>{sample.storagetempUnit}</td>
+                          <td>{sample.ContainerType}</td>
+                          <td>{sample.CountryOfCollection}</td>
                           <td>{sample.price}</td>
+                          <td>{sample.SamplePriceCurrency}</td>
                           <td>{sample.quantity}</td>
+                          <td>{sample.QuantityUnit}</td>
+                          <td>{sample.labname}</td>
+                          <td>{sample.SampleTypeMatrix}</td>
+                          <td>{sample.TypeMatrixSubtype}</td>
+                          <td>{sample.ProcurementType}</td>
                           <td>{sample.endTime}</td>
-                          <td>
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}>
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedSampleId(sample.id);
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                          </td>
+                          <td>{sample.SmokingStatus}</td>
+                          <td>{sample.TestMethod}</td>
+                          <td>{sample.TestResult}</td>
+                          <td>{sample.TestResultUnit}</td>
+                          <td>{sample.InfectiousDiseaseTesting}</td>
+                          <td>{sample.InfectiousDiseaseResult}</td>
+                          <td>{sample.CutOffRange}</td>
+                          <td>{sample.CutOffRangeUnit}</td>
+                          <td>{sample.FreezeThawCycles}</td>
+                          <td>{sample.DateOfCollection}</td>
+                          <td>{sample.ConcurrentMedicalConditions}</td>
+                          <td>{sample.ConcurrentMedications}</td>
+                          <td>{sample.AlcoholOrDrugAbuse}</td>
+                          <td>{sample.DiagnosisTestParameter}</td>
+                          <td>{sample.ResultRemarks}</td>
+                          <td>{sample.TestKit}</td>
+                          <td>{sample.TestKitManufacturer}</td>
+                          <td>{sample.TestSystem}</td>
+                          <td>{sample.TestSystemManufacturer}</td>
+                          {/*<td>{sample.user_id}</td>*/}
+                          <td>{sample.status}</td>
                         </tr>
                       ))
                     ) : (
@@ -210,255 +1265,82 @@ const SampleArea = () => {
                   </tbody>
                 </table>
               </div>
+              {/* Pagination Controls */}
+              <div
+                className="pagination d-flex justify-content-center align-items-center mt-3"
+                style={{
+                  gap: "10px",
+                }}
+              >
+                {/* Previous Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
 
-              {/* Modal for Adding Samples */}
-              {showAddModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="title"
-                              value={formData.title}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Age</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="age"
-                              value={formData.age}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Gender</label>
-                            <select
-                              className="form-control"
-                              name="gender"
-                              value={formData.gender}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>Select Gender</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Price</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="price"
-                              value={formData.price}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Quantity</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>End Time</label>
-                            <input
-                              type="datetime-local"
-                              className="form-control"
-                              name="endTime"
-                              value={formData.endTime}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              )}
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
 
-              {/* Edit Sample Modal */}
-              {showEditModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Title</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="title"
-                              value={formData.title}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Age</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="age"
-                              value={formData.age}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Gender</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="gender"
-                              value={formData.gender}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Price</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="price"
-                              value={formData.price}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Quantity</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>End Time</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="endTime"
-                              value={formData.endTime}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
 
-                          <button type="submit" className="btn btn-primary">
-                            Update Sample
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  return null; // Skip the page number
+                })}
 
-              {/* Modal for Deleting Samples */}
-              {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this sample?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                {/* Next Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>

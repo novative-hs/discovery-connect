@@ -1,13 +1,30 @@
 const SampleModel = require('../models/sampleModel');
+
 const moment = require('moment');
 
 // Controller for creating the sample table
 const createSampleTable = (req, res) => {
   SampleModel.createSampleTable();
+  
   res.status(200).json({ message: "Sample table creation process started" });
 };
 
+
 // Controller to get all samples
+const getSamples = (req, res) => {
+  const id = req.params.id;
+  if (!id) {
+    return res.status(400).json({ error: "ID parameter is missing" });
+  }
+  SampleModel.getSamples(id, (err, results) => {
+    if (err) {
+      console.error('Error in model:', err);
+      return res.status(500).json({ error: "Error fetching samples" });
+    }
+    res.status(200).json(results);
+  });
+};
+
 const getAllSamples = (req, res) => {
   SampleModel.getAllSamples((err, results) => {
     if (err) {
@@ -35,16 +52,21 @@ const getSampleById = (req, res) => {
 // Controller to create a sample
 const createSample = (req, res) => {
   const sampleData = req.body;
-
+  console.log("Controller Received data:", sampleData);
+  
   // Required fields validation
-  const requiredFields = [
+ const requiredFields = [
     'masterID', 'donorID', 'samplename', 'age', 'gender', 'ethnicity',
     'samplecondition', 'storagetemp', 'storagetempUnit', 'ContainerType',
     'CountryOfCollection', 'price', 'SamplePriceCurrency', 'quantity',
     'QuantityUnit', 'labname', 'SampleTypeMatrix', 'TypeMatrixSubtype',
     'ProcurementType', 'endTime', 'SmokingStatus', 'TestMethod',
     'TestResult', 'TestResultUnit', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult',
-  ];
+    'CutOffRange', 'CutOffRangeUnit', 'FreezeThawCycles', 'DateOfCollection',
+    'ConcurrentMedicalConditions', 'ConcurrentMedications', 'AlcoholOrDrugAbuse',
+    'DiagnosisTestParameter', 'ResultRemarks', 'TestKit', 'TestKitManufacturer',
+    'TestSystem', 'TestSystemManufacturer'
+];
 
   for (const field of requiredFields) {
     if (!sampleData[field]) {
@@ -52,10 +74,14 @@ const createSample = (req, res) => {
     }
   }
 
+  console.log("Fields validated, executing insert...");
+
   SampleModel.createSample(sampleData, (err, result) => {
     if (err) {
+      console.error('Error creating sample:', err);
       return res.status(500).json({ error: "Error creating sample" });
     }
+    console.log("Sample created, result:", result); 
     res.status(201).json({ message: "Sample created successfully", id: result.insertId });
   });
 };
@@ -68,6 +94,10 @@ const updateSample = (req, res) => {
   // Format endTime if provided
   if (sampleData.endTime) {
     sampleData.endTime = moment(sampleData.endTime).format('YYYY-MM-DD HH:mm:ss');
+  
+  }
+  if (sampleData.DateOfCollection) {
+    sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
   }
 
   SampleModel.updateSample(id, sampleData, (err, result) => {
@@ -98,6 +128,7 @@ const deleteSample = (req, res) => {
 
 module.exports = {
   createSampleTable,
+  getSamples,
   getAllSamples,
   getSampleById,
   createSample,

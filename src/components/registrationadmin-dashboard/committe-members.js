@@ -1,49 +1,123 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEdit,
+  faTrash,
+  faQuestionCircle,
+  faPlus,
+  faHistory,
+} from "@fortawesome/free-solid-svg-icons";
 
-const CommitteMemberArea = () => {
+const CommitteeMemberArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  // const [showCommitteTypeOptions, setshowCommitteeTypeOptions] = useState(false);
+  const [showCommitteeTypeOptions, setShowCommitteeTypeOptions] = useState({});
+  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedCommittememberId, setSelectedCommittememberId] = useState(null); // Store ID of Committe Members to delete
-  const [formData, setFormData] = useState({
-    CommitteMemberName: "",
-    email: "",
-    phoneNumber: "",
-    cnic: "",
-    fullAddress: "",
-    city: "",
-    district: "",
-    country: "",
-    organization: "",
-    created_at: "",  
-    status: "",
-  });
-  const [editCommittemember, setEditCommittemember] = useState(null); // State for selected Committe Members to edit
-  const [committemembers, setCommittemembers] = useState([]); // State to hold fetched Committe Members
-  const [successMessage, setSuccessMessage] = useState('');
+  const [selectedCommitteememberId, setSelectedCommitteememberId] =
+    useState(null); // Store ID of Committee Members to delete
+    const [formData, setFormData] = useState({
+      CommitteeMemberName: "",
+      email: "",
+      password:"",
+      phoneNumber: "",
+      cnic: "",
+      fullAddress: "",
+      city: "",
+      district: "",
+      country: "",
+      organization: "",
+      committeetype: "",
+      created_at: "",
+      status: "",
+    });
+ 
+  const [editCommitteemember, setEditCommitteemember] = useState(null); // State for selected Committee Members to edit
+  const [committeemembers, setCommitteemembers] = useState([]); // State to hold fetched Committee Members
+  const [successMessage, setSuccessMessage] = useState("");
+   const [cityname, setcityname] = useState([]);
+    const [districtname, setdistrictname] = useState([]);
+    const [countryname, setCountryname] = useState([]);
+    const [organization, setOrganization] = useState();
+  const [formStep, setFormStep] = useState(1);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  // Calculate total pages
+  const totalPages = Math.ceil(committeemembers.length / itemsPerPage);
+
+const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
 
-  // Fetch Committe Members from backend when component loads
+  // Fetch Committee Members from backend when component loads
   useEffect(() => {
-    const fetchCommittemembers = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/committemember/get');
-        setCommittemembers(response.data); // Store fetched Committe Members in state
-      } catch (error) {
-        console.error("Error fetching Committe Members:", error);
-      }
-    };
 
-    fetchCommittemembers(); // Call the function when the component mounts
+    fetchCommitteemembers(); // Call the function when the component mounts
+    fetchcityname();
+    fetchdistrictname();
+    fetchcountryname();
+    fetchOrganization();
   }, []);
+  const fetchCommitteemembers = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/committeemember/get`
+      );
+      setCommitteemembers(response.data); // Store fetched Committee Members in state
+    } catch (error) {
+      console.error("Error fetching Committee Members:", error);
+    }
+  };
+  const fetchOrganization = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/admin/organization/get`
+      );
+      setOrganization(response.data); // Store fetched researchers in state
+    } catch (error) {
+      console.error("Error fetching researchers:", error);
+    }
+  };
+  const fetchcityname = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/city/get-city`
+      );
+      setcityname(response.data); // Store fetched City in state
+    } catch (error) {
+      console.error("Error fetching City:", error);
+    }
+  };
+  const fetchdistrictname = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/district/get-district`
+      );
+      setdistrictname(response.data); // Store fetched District in state
+    } catch (error) {
+      console.error("Error fetching District:", error);
+    }
+  };
+  const fetchcountryname = async () => {
+    fetchOrganization();
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/country/get-country"
+      );
+      setCountryname(response.data); // Store fetched Country in state
+    } catch (error) {
+      console.error("Error fetching Country:", error);
+    }
+  };
 
   const handleInputChange = (e) => {
+    console.log(organization)
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -52,17 +126,23 @@ const CommitteMemberArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/committeemembers/post', formData);
-      console.log("Committe Member added successfully:", response.data);
+      const response = await axios.post(
+        `${url}/committeemember/post`,
+        formData
+      );
+      console.log("Committee Member added successfully:", response.data);
 
-      // Refresh the committemember list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/committemember/get');
-      setCommittemembers(newResponse.data); // Update state with the new list
+      // Refresh the committeemember list after successful submission
+      const newResponse = await axios.get(
+        `${url}/committeemember/get`
+      );
+      setCommitteemembers(newResponse.data); // Update state with the new list
 
       // Clear form after submission
       setFormData({
-        CommitteMemberName: "",
+        CommitteeMemberName: "",
         email: "",
+        password:"",
         phoneNumber: "",
         cnic: "",
         fullAddress: "",
@@ -70,13 +150,13 @@ const CommitteMemberArea = () => {
         district: "",
         country: "",
         organization: "",
+        committeetype: "",
         created_at: "",
         status: "",
-
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Committe Member:", error);
+      console.error("Error adding Committee Member:", error);
     }
   };
 
@@ -84,78 +164,228 @@ const CommitteMemberArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/committemembers/delete/${selectedCommittememberId}`);
-      console.log(`Committemember with ID ${selectedCommittememberId} deleted successfully.`);
+      await axios.delete(
+        `${url}/committeemember/delete/${selectedCommitteememberId}`
+      );
+      console.log(
+        `Committeemember with ID ${selectedCommitteememberId} deleted successfully.`
+      );
 
       // Set success message
-      setSuccessMessage('Committemember deleted successfully.');
+      setSuccessMessage("Committeemember deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
-        setSuccessMessage('');
+        setSuccessMessage("");
       }, 3000);
 
-      // Refresh the committemember list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/committemember/get');
-      setCommittemembers(newResponse.data);
+      // Refresh the committeemember list after deletion
+      const newResponse = await axios.get(
+        `${url}/committeemember/get`
+      );
+      setCommitteemembers(newResponse.data);
 
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedCommittememberId(null);
+      setSelectedCommitteememberId(null);
     } catch (error) {
-      console.error(`Error deleting Committe Member with ID ${selectedCommittememberId}:`, error);
+      console.error(
+        `Error deleting Committee Member with ID ${selectedCommitteememberId}:`,
+        error
+      );
     }
   };
-  const handleEditClick = (committemember) => {
-    setSelectedCommittememberId(committemember.id);
-    setEditCommittemember(committemember); // Store the Committe Members data to edit
+ 
+  const handleEditClick = (committeemember) => {
+    setSelectedCommitteememberId(committeemember.id);
+    setEditCommitteemember(committeemember); // Store the Committee Members data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
-      CommitteMemberName: committemember.CommitteMemberName,
-      email: committemember.email,
-      phoneNumber: committemember.phoneNumber,
-      cnic: committemember.cnic,
-      fullAddress: committemember.fullAddress,
-      city: committemember.city,
-      district: committemember.district,
-      country: committemember.country,
-      organization: committemember.organization,
-      created_at: committemember.created_at,
-      status: committemember.status,
+      CommitteeMemberName: committeemember.CommitteeMemberName,
+      email: committeemember.email,  
+      password:committeemember.password,    
+      phoneNumber: committeemember.phoneNumber,
+      cnic: committeemember.cnic,
+      fullAddress: committeemember.fullAddress,
+      city: committeemember.city,
+      district: committeemember.district,
+      country: committeemember.country,
+      organization: committeemember.organization,
+      committetype: committeemember.committetype,
+      created_at: committeemember.created_at,
+      status: committeemember.status,
     });
   };
+
 
   const handleUpdate = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/committemembers/edit/${selectedCommittememberId}`,
+        `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
-      console.log("Committemember updated successfully:", response.data);
+      console.log("Committeemember updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/committemember/get"
+        `${url}/committeemember/get`
       );
-      setCommittemembers(newResponse.data);
+      setCommitteemembers(newResponse.data);
 
       setShowEditModal(false);
-      setSuccessMessage("Committemember updated successfully.");
-
+      setSuccessMessage("Committeemember updated successfully.");
+      setFormData({
+        CommitteeMemberName: "",
+        email: "",
+        password:"",
+        phoneNumber: "",
+        cnic: "",
+        fullAddress: "",
+        city: "",
+        district: "",
+        country: "",
+        organization: "",
+        committeetype: "",
+        created_at: "",
+        status: "",
+      });
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating committemember with ID ${selectedCommittememberId}:`, error);
+      console.error(
+        `Error updating committeemember with ID ${selectedCommitteememberId}:`,
+        error
+      );
     }
   };
 
+  const handleCommitteeTypeClick = async (committeememberId, option) => {
+    try {
+      const response = await axios.put(
+        `${url}/committeemember/committeetype/edit/${committeememberId}`,
+        { committeetype: option }, // Only send the selected `committeetype`
+        { headers: { "Content-Type": "application/json" } }
+      );
+      console.log("Update successful:", response.data.message);
+      // Update the committeemembers state to reflect the change
+      setCommitteemembers((prevMembers) =>
+        prevMembers.map((member) =>
+          member.id === committeememberId
+            ? { ...member, committeetype: option }
+            : member
+        )
+      );
+      // Hide the options after the update
+      setShowCommitteeTypeOptions((prev) => ({
+        ...prev,
+        [committeememberId]: false,
+      }));
+    } catch (error) {
+      console.error(
+        "Error updating committee member:",
+        error.response?.data?.error || error.message
+      );
+    }
+  };
+
+
+  const handleToggleCommitteeTypeOptions = (committeememberId) => {
+    setShowCommitteeTypeOptions((prev) => ({
+      ...prev,
+      [committeememberId]: !prev[committeememberId],
+    }));
+  };
+
+  const handleStatusClick = async (committeememberId, option) => {
+    try {
+      const response = await axios.put(
+        `${url}/committeemember/status/edit/${committeememberId}`,
+        { status: option }, // Only send the selected `status`
+        { headers: { "Content-Type": "application/json" } }
+      );
+      console.log("Update successful:", response.data.message);
+      // Update the committeemembers state to reflect the change
+      setCommitteemembers((prevMembers) =>
+        prevMembers.map((member) =>
+          member.id === committeememberId
+            ? { ...member, status: option }
+            : member
+        )
+      );
+      // Hide the options after the update
+      setStatusOptionsVisibility((prev) => ({
+        ...prev,
+        [committeememberId]: false,
+      }));
+    } catch (error) {
+      console.error(
+        "Error updating status:",
+        error.response?.data?.error || error.message
+      );
+    }
+  };
+
+
+  const handleToggleStatusOptions = (committeememberId) => {
+    setStatusOptionsVisibility((prev) => ({
+      ...prev,
+      [committeememberId]: !prev[committeememberId],
+    }));
+  };
+  const handleNextStep = () => {
+    console.log("Current formData:", formData); // Debugging
+
+    if (
+      !formData.CommitteeMemberName || formData.CommitteeMemberName.trim() === '' ||
+      !formData.email || formData.email.trim() === '' ||
+      !formData.password || formData.password.trim() === '' ||
+      !formData.phoneNumber || formData.phoneNumber.trim() === ''
+    ) {
+      console.log("Validation failed."); // Debugging
+      alert("Please fill out all fields");
+      return;
+    }
+
+    console.log("Validation passed. Moving to Step 2."); // Debugging
+    setFormStep(2);
+  };
+
+  const currentData = committeemembers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Filter the researchers list
+  const handleFilterChange = (field, value) => {
+    if (value === "") {
+      fetchCommitteemembers();
+    } else {
+      // Filter the researchers array based on the field and value
+      const filtered = committeemembers.filter((committeemember) =>
+        committeemember[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
+      );
+      setCommitteemembers(filtered);
+    }
+  };
   return (
     <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-
-        <div className="row justify-content-center" style={{ marginTop: '290px' }}>
+       <div
+        className="container"
+        style={{ marginTop: "-20px", width: "auto",}}
+      >
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        >
           <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
@@ -164,71 +394,538 @@ const CommitteMemberArea = () => {
                   {successMessage}
                 </div>
               )}
-              {/* Add Committe Members Button */}
-              <div className="d-flex justify-content-end mb-3" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                  Add committe members
+              {/* Add Committee Members Button */}
+              <div
+                className="d-flex justify-content-end mb-3"
+                style={{
+                  marginBottom: "20px", // Adjust spacing between button and table
+                 
+                }}
+              >
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  Add committee members
                 </button>
               </div>
 
               {/* Table */}
-              <div className="table-responsive" style={{ marginLeft: '-20px', width: '110%' }}>
+              <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                     <tr>
-                      <th>ID</th>
-                      <th>Committe Member Name</th>
-                      <th>Email</th>
-                      <th>Phone Number</th>
-                      <th>CNIC</th>
-                      <th>Full Address</th>
-                      <th>City</th>
-                      <th>District</th>
-                      <th>Country</th>
-                      <th>Organization</th>
-                      <th>Registered_at</th>
-                      <th>Status</th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search ID"
+                          onChange={(e) =>
+                            handleFilterChange("id", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        ID
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Name"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "CommitteeMemberName",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Name
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Email"
+                          onChange={(e) =>
+                            handleFilterChange("email", e.target.value)
+                          }
+                        />
+                        Email
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search password"
+                          onChange={(e) =>
+                            handleFilterChange(
+                              "password",
+                              e.target.value
+                            )
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Password
+                      </th>
+                     
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Contact"
+                          onChange={(e) =>
+                            handleFilterChange("phoneNumber", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Contact
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search CNIC"
+                          onChange={(e) =>
+                            handleFilterChange("cnic", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        CNIC
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Full Address"
+                          onChange={(e) =>
+                            handleFilterChange("fullAddress", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Full Address
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search City"
+                          onChange={(e) =>
+                            handleFilterChange("city", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        City
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search District"
+                          onChange={(e) =>
+                            handleFilterChange("district", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        District
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Country"
+                          onChange={(e) =>
+                            handleFilterChange("country", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Country
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Organization"
+                          onChange={(e) =>
+                            handleFilterChange("organization", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Organization
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Committee Type"
+                          onChange={(e) =>
+                            handleFilterChange("committeetype", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Committee Type
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Created At"
+                          onChange={(e) =>
+                            handleFilterChange("created_at", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Registered_at
+                      </th>
+
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search status"
+                          onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Status
+                      </th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {committemembers.length > 0 ? (
-                      committemembers.map((committemember) => (
-                        <tr key={committemember.id}>
-                          <td>{committemember.id}</td>
-                          <td>{committemember.CommitteMemberName}</td>
-                          <td>{committemember.email}</td>
-                          <td>{committemember.phoneNumber}</td>
-                          <td>{committemember.cnic}</td>
-                          <td>{committemember.fullAddress}</td>
-                          <td>{committemember.city}</td>
-                          <td>{committemember.district}</td>
-                          <td>{committemember.country}</td>
-                          <td>{committemember.organization}</td>
-                          <td>{committemember.created_at}</td>
-                          <td>{committemember.status}</td>
+                    {currentData.length > 0 ? (
+                      currentData.map((committeemember) => (
+                        <tr key={committeemember.id}>
+                          <td>{committeemember.id}</td>
+                          <td>{committeemember.CommitteeMemberName}</td>
+                          <td>{committeemember.email}</td>
+                          <td>{committeemember.password}</td>
+                          <td>{committeemember.phoneNumber}</td>
+                          <td>{committeemember.cnic}</td>
+                          <td>{committeemember.fullAddress}</td>
+                          <td>{committeemember.city_name}</td>
+                          <td>{committeemember.district_name}</td>
+                          <td>{committeemember.country_name}</td>
+                          <td>{committeemember.organization_name}</td>
+                          <td>{committeemember.committeetype}</td>
+                          <td>{committeemember.created_at}</td>
+                          <td>{committeemember.status}</td>
                           <td>
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(committemember)}>
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedCommittememberId(committemember.id);
-                                setShowDeleteModal(true);
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                gap: "5px",
                               }}
                             >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
+                              <button
+                                className="btn btn-success btn-sm py-0 px-1"
+                                onClick={() => handleEditClick(committeemember)}
+                                title="Edit Committee Member" // This is the text that will appear on hover
+                              >
+                                <FontAwesomeIcon icon={faEdit} size="xs" />
+                              </button>{" "}
+                              <div className="btn-group">
+                                <button
+                                  className="btn btn-warning btn-sm py-0 px-1"
+                                  onClick={() =>
+                                    handleToggleCommitteeTypeOptions(
+                                      committeemember.id
+                                    )
+                                  }
+                                  title="Edit Committee Member Action (Scientific/Ethical)" // This is the text that will appear on hover
+                                >
+                                  <FontAwesomeIcon icon={faPlus} size="xs" />
+                                </button>
+                                {showCommitteeTypeOptions[
+                                  committeemember.id
+                                ] && (
+                                  <div className="dropdown-menu show">
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() => {
+                                        handleCommitteeTypeClick(
+                                          committeemember.id,
+                                          "Scientific"
+                                        );
+                                      }}
+                                    >
+                                      Scientific
+                                    </button>
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() => {
+                                        handleCommitteeTypeClick(
+                                          committeemember.id,
+                                          "Ethical"
+                                        );
+                                      }}
+                                    >
+                                      Ethical
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {""}
+                              <div className="btn-group">
+                                <button
+                                  className="btn btn-primary btn-sm py-0 px-1"
+                                  onClick={() =>
+                                    handleToggleStatusOptions(
+                                      committeemember.id
+                                    )
+                                  }
+                                  title="Edit Committee Member Action (Active/inActive)" // This is the text that will appear on hover
+                                >
+                                  <FontAwesomeIcon
+                                    icon={faQuestionCircle}
+                                    size="xs"
+                                  />
+                                </button>
+                                {statusOptionsVisibility[
+                                  committeemember.id
+                                ] && (
+                                  <div className="dropdown-menu show">
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() => {
+                                        handleStatusClick(
+                                          committeemember.id,
+                                          "Active"
+                                        );
+                                      }}
+                                    >
+                                      Active
+                                    </button>
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() => {
+                                        handleStatusClick(
+                                          committeemember.id,
+                                          "Inactive"
+                                        );
+                                      }}
+                                    >
+                                      Inactive
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {""}
+                              <button
+                                className="btn btn-danger btn-sm py-0 px-1"
+                                onClick={() => {
+                                  setSelectedCommitteememberId(
+                                    committeemember.id
+                                  );
+                                  setShowDeleteModal(true);
+                                }}
+                                title="Delete Committee Member" // This is the text that will appear on hover
+                              >
+                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                              </button>
+                              <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => {
+                                  setShowHistoryModal(true);
+                                  console.log("Done");
+                                }}
+                                title="Committee Member History" // This is the text that will appear on hover
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">
-                          No Committe Members Available
+                          No Committee Members Available
                         </td>
                       </tr>
                     )}
@@ -236,23 +933,119 @@ const CommitteMemberArea = () => {
                 </table>
               </div>
 
-              {/* Modal for Adding Committe members */}
+              {/* Pagination */}
+              <div
+                className="pagination d-flex justify-content-center align-items-center mt-3"
+                style={{
+                  gap: "10px",
+                }}
+              >
+                {/* Previous Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
+
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null; // Skip the page number
+                })}
+
+                {/* Next Button */}
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+
+              {/* Modal for Adding Committee members */}
               {showAddModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "100%",
+                    maxWidth: "500px",
+                    zIndex: 1050, // Ensure it appears above other content
+                    backgroundColor: "#fff", // Modal background
+                   
+                    overflowY: "auto",
+                    height: 'auto',/* Allow it to expand dynamically */
+                    minheight: '100vh',
+                  }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Add Committe Member</h5>
+                        <h5 className="modal-title">Add Committee Member</h5>
                         <button
                           type="button"
-                          className="close"
+                          // className="close"
                           onClick={() => setShowAddModal(false)}
                           style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
                           <span>&times;</span>
@@ -260,111 +1053,185 @@ const CommitteMemberArea = () => {
                       </div>
                       <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Committe Member Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="CommitteMemberName"
-                              value={formData.CommitteMemberName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>CNIC</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="cnic"
-                              value={formData.cnic}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Full Address</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="fullAddress"
-                              value={formData.fullAddress}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
+                          {/* Form Step Logic */}
+                          {formStep === 1 ? (
+                            <>
+                              {/* Step 1: Basic Information */}
+                              <div className="form-group">
+                                <label>Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="CommitteeMemberName"
+                                  value={formData.CommitteeMemberName}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                  type="email"
+                                  className="form-control"
+                                  name="email"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Password</label>
+                                <input
+                                  type="password"
+                                  className="form-control"
+                                  name="password"
+                                  value={formData.password}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                             
+                              <div className="form-group">
+                                <label>Phone Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="modal-footer">
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  onClick={handleNextStep}
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* Step 2: Additional Information */}
+                              <div className="form-group">
+                                <label>CNIC</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="cnic"
+                                  value={formData.cnic}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Full Address</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="fullAddress"
+                                  value={formData.fullAddress}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
                             <label>City</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
+                              value={formData.city} // Store the selected city ID in formData
+                              onChange={handleInputChange} // Handle change to update formData
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select City
+                              </option>{" "}
+                              {/* Default option */}
+                              {cityname.map((city) => (
+                                <option key={city.id} value={city.id}>
+                                  {city.name} {/* Display the city name */}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>District</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="district"
                               value={formData.district}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select District
+                              </option>
+                              {districtname.map((district) => (
+                                <option key={district.id} value={district.id}>
+                                  {district.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Country</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="country"
                               value={formData.country}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select Country
+                              </option>
+                              {countryname.map((country) => (
+                                <option key={country.id} value={country.id}>
+                                  {country.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Organization</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="organization"
                               value={formData.organization}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select Organization
+                              </option>
+                              {organization.map((organization) => (
+                                <option key={organization.id} value={organization.id}>
+                                  {organization.OrganizationName}
+                                </option>
+                              ))}
+                            </select>
                           </div>
+                            </>
+                          )}
                         </div>
                         <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
-                          </button>
+                          {formStep === 2 && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => setFormStep(1)}
+                            >
+                              Back
+                            </button>
+                          )}
+                          {formStep === 2 ? (
+                            <button type="submit" className="btn btn-primary">
+                              Save
+                            </button>
+                          ) : null}
                         </div>
                       </form>
                     </div>
@@ -374,11 +1241,29 @@ const CommitteMemberArea = () => {
 
               {/* Edit Committemember Modal */}
               {showEditModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "100%",
+                    maxWidth: "500px",
+                    zIndex: 1050, // Ensure it appears above other content
+                    backgroundColor: "#fff", // Modal background
+                   
+                    overflowY: "auto",
+                    height: 'auto',/* Allow it to expand dynamically */
+                    minheight: '100vh',
+                  }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Edit Committe Member</h5>
+                        <h5 className="modal-title">Edit Committee Member</h5>
                         <button
                           type="button"
                           className="close"
@@ -386,11 +1271,11 @@ const CommitteMemberArea = () => {
                           style={{
                             // background: 'none',
                             // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
                           <span>&times;</span>
@@ -398,125 +1283,184 @@ const CommitteMemberArea = () => {
                       </div>
                       <form onSubmit={handleUpdate}>
                         <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Committe Member Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="CommitteMemberName"
-                              value={formData.CommitteMemberName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>CNIC</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="cnic"
-                              value={formData.cnic}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Full Address</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="fullAddress"
-                              value={formData.fullAddress}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
+                          {formStep === 1 ? (
+                            <>
+                              {/* Step 1: Basic Information */}
+                              <div className="form-group">
+                                <label>Committee Member Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="CommitteeMemberName"
+                                  value={formData.CommitteeMemberName}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                  type="email"
+                                  className="form-control"
+                                  name="email"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Password</label>
+                                <input
+                                  type="password"
+                                  className="form-control"
+                                  name="password"
+                                  value={formData.password}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Phone Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="modal-footer">
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  onClick={handleNextStep}
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* Step 2: Additional Information */}
+                             
+                              <div className="form-group">
+                                <label>CNIC</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="cnic"
+                                  value={formData.cnic}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Full Address</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="fullAddress"
+                                  value={formData.fullAddress}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group">
                             <label>City</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
+                              value={formData.city} // Store the selected city ID in formData
+                              onChange={handleInputChange} // Handle change to update formData
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select City
+                              </option>{" "}
+                              {/* Default option */}
+                              {cityname.map((city) => (
+                                <option key={city.id} value={city.id}>
+                                  {city.name} {/* Display the city name */}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>District</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="district"
                               value={formData.district}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select District
+                              </option>
+                              {districtname.map((district) => (
+                                <option key={district.id} value={district.id}>
+                                  {district.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Country</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="country"
                               value={formData.country}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="" disabled>
+                                Select Country
+                              </option>
+                              {countryname.map((country) => (
+                                <option key={country.id} value={country.id}>
+                                  {country.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Organization</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="organization"
                               value={formData.organization}
                               onChange={handleInputChange}
                               required
-                            />
-                          </div>
-                          
-                          <div className="form-group">
-                            <label>Status</label>
-                            <select
-                              className="form-control"
-                              name="status"
-                              value={formData.status}
-                              onChange={handleInputChange}
-                              required
                             >
-                              <option value="active">Active</option>
-                              <option value="inactive">Inactive</option>
+                              <option value="" disabled>
+                                Select Organization
+                              </option>
+                              {organization.map((organization) => (
+                                <option key={organization.id} value={organization.id}>
+                                  {organization.OrganizationName}
+                                </option>
+                              ))}
                             </select>
                           </div>
+                            </>
+                          )}
                         </div>
                         <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Committe Member
-                          </button>
+                          {formStep === 2 && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => setFormStep(1)}
+                            >
+                              Back
+                            </button>
+                          )}
+                          {formStep === 2 ? (
+                            <button type="submit" className="btn btn-primary">
+                              Update Committee Member
+                            </button>
+                          ) : null}
                         </div>
                       </form>
                     </div>
@@ -524,23 +1468,53 @@ const CommitteMemberArea = () => {
                 </div>
               )}
 
-              {/* Modal for Deleting Committemembers */}
+              {/* Modal for Deleting Committeemembers */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    position: "absolute",
+                    top: "50%", // Center the modal vertically
+                    left: "50%", // Center the modal horizontally
+                    transform: "translate(-50%, -50%)", // Adjust for centering
+                    width: "100%",
+                    maxWidth: "500px",
+                    zIndex: 1050, // Ensure it appears above other content
+                    backgroundColor: "#fff", // Modal background
+                   
+                    overflowY: "auto",
+                    height: 'auto',/* Allow it to expand dynamically */
+                    minheight: '100vh',
+                  }}
+                >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Delete Committe member</h5>
+                        <h5 className="modal-title">Delete Committee member</h5>
+
                         <button
                           type="button"
                           className="close"
                           onClick={() => setShowDeleteModal(false)}
+                          style={{
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
                         >
                           <span>&times;</span>
                         </button>
                       </div>
                       <div className="modal-body">
-                        <p>Are you sure you want to delete this committe member?</p>
+                        <p>
+                          Are you sure you want to delete this committee member?
+                        </p>
                       </div>
                       <div className="modal-footer">
                         <button
@@ -560,6 +1534,44 @@ const CommitteMemberArea = () => {
                   </div>
                 </div>
               )}
+              {showHistoryModal && (
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050, // Ensure it's above the header
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">
+                          History Committee Member
+                        </h5>
+                      </div>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowHistoryModal(false)}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -568,4 +1580,4 @@ const CommitteMemberArea = () => {
   );
 };
 
-export default CommitteMemberArea;
+export default CommitteeMemberArea;
