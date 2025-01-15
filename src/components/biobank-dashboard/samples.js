@@ -1649,6 +1649,7 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                               <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(sample)}
+                                title="Edit Sample" // This is the text that will appear on hover
                               >
                                 <FontAwesomeIcon icon={faEdit} size="sm" />
                               </button>{" "}
@@ -1658,12 +1659,14 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                                   setSelectedSampleId(sample.id);
                                   setShowDeleteModal(true);
                                 }}
+                                title="Delete Sample" // This is the text that will appear on hover
                               >
                                 <FontAwesomeIcon icon={faTrash} size="sm" />
                               </button>
                               <button
                                 className="btn btn-primary btn-sm"
                                 onClick={() => handleTransferClick(sample)}
+                                title="Transfer Sample" // This is the text that will appear on hover
                               >
                                 <FontAwesomeIcon
                                   icon={faExchangeAlt}
@@ -1676,6 +1679,7 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                                   setShowHistoryModal(true);
                                   console.log("Done");
                                 }}
+                                title="History Sample" // This is the text that will appear on hover
                               >
                                 <FontAwesomeIcon icon={faHistory} size="sm" />
                               </button>

@@ -1,59 +1,122 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  
+  faCartPlus,
 
+} from "@fortawesome/free-solid-svg-icons";
+import { notifyError, notifySuccess } from "@utils/toast";
 const SampleArea = () => {
+  const id = localStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-  const [formData, setFormData] = useState({
-    masterID: "",
-    donorID: "",
-    samplename: "",
-    age: "",
-    gender: "",
-    ethnicity: "",
-    samplecondition: "",
-    storagetemp: "",
-    storagetempUnit: "",
-    ContainerType: "",
-    CountryOfCollection: "",
-    price: "",
-    SamplePriceCurrency: "",
-    quantity: "",
-    QuantityUnit: "",
-    labname: "",
-    SampleTypeMatrix: "",
-    TypeMatrixSubtype: "",
-    ProcurementType: "",
-    endTime: "",
-    SmokingStatus: "",
-    TestMethod: "",
-    TestResult: "",
-    TestResultUnit: "",
-    InfectiousDiseaseTesting: "",
-    InfectiousDiseaseResult: "",
-    status: "In Stock",
-    CutOffRange: "",
-    CutOffRangeUnit: "",
-    FreezeThawCycles: "",
-    DateOfCollection: "",
-    ConcurrentMedicalConditions: "",
-    ConcurrentMedications: "",
-    AlcoholOrDrugAbuse: "",
-    DiagnosisTestParameter: "",
-    ResultRemarks: "",
-    TestKit: "",
-    TestKitManufacturer: "",
-    TestSystem: "",
-    TestSystemManufacturer: "",
-    user_id: "",
-  });
-
+   const [formData, setFormData] = useState({
+     masterID: "",
+     donorID: "",
+     samplename: "",
+     age: "",
+     gender: "",
+     ethnicity: "",
+     samplecondition: "",
+     storagetemp: "",
+     storagetempUnit: "",
+     ContainerType: "",
+     CountryOfCollection: "",
+     price: "",
+     SamplePriceCurrency: "",
+     quantity: "",
+     QuantityUnit: "",
+     labname: "",
+     SampleTypeMatrix: "",
+     TypeMatrixSubtype: "",
+     ProcurementType: "",
+     SmokingStatus: "",
+     TestMethod: "",
+     TestResult: "",
+     TestResultUnit: "",
+     InfectiousDiseaseTesting: "",
+     InfectiousDiseaseResult: "",
+     status: "In Stock",
+     CutOffRange: "",
+     CutOffRangeUnit: "",
+     FreezeThawCycles: "",
+     DateOfCollection: "",
+     ConcurrentMedicalConditions: "",
+     ConcurrentMedications: "",
+     AlcoholOrDrugAbuse: "",
+     DiagnosisTestParameter: "",
+     ResultRemarks: "",
+     TestKit: "",
+     TestKitManufacturer: "",
+     TestSystem: "",
+     TestSystemManufacturer: "",
+     endTime: "",
+     user_account_id: "",
+   });
+const[quantity,setQuantity]=useState(0);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(samples.length / itemsPerPage);
-
+  const incrementQuantity = (sample) => {
+    const updatedQuantity = quantity + 1;
+    setQuantity(updatedQuantity); // Update quantity
+  
+    // Use a callback to ensure formData is set before making the API call
+    setFormData(prevData => {
+      const newFormData = {
+        ...prevData, // Preserve any existing data in formData
+        masterID: sample.masterID,
+        donorID: sample.donorID,
+        samplename: sample.samplename,
+        age: sample.age,
+        gender: sample.gender,
+        ethnicity: sample.ethnicity,
+        samplecondition: sample.samplecondition,
+        storagetemp: sample.storagetemp,
+        storagetempUnit: sample.storagetempUnit,
+        ContainerType: sample.ContainerType,
+        CountryOfCollection: sample.CountryOfCollection,
+        price: sample.price,
+        SamplePriceCurrency: sample.SamplePriceCurrency,
+        quantity: updatedQuantity, // Incremented quantity
+        QuantityUnit: sample.QuantityUnit,
+        labname: sample.labname,
+        SampleTypeMatrix: sample.SampleTypeMatrix,
+        TypeMatrixSubtype: sample.TypeMatrixSubtype,
+        ProcurementType: sample.ProcurementType,
+        SmokingStatus: sample.SmokingStatus,
+        TestMethod: sample.TestMethod,
+        TestResult: sample.TestResult,
+        TestResultUnit: sample.TestResultUnit,
+        InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
+        InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
+        status: sample.status,
+        CutOffRange: sample.CutOffRange,
+        CutOffRangeUnit: sample.CutOffRangeUnit,
+        FreezeThawCycles: sample.FreezeThawCycles,
+        DateOfCollection: sample.DateOfCollection,
+        ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
+        ConcurrentMedications: sample.ConcurrentMedications,
+        AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
+        DiagnosisTestParameter: sample.DiagnosisTestParameter,
+        ResultRemarks: sample.ResultRemarks,
+        TestKit: sample.TestKit,
+        TestKitManufacturer: sample.TestKitManufacturer,
+        TestSystem: sample.TestSystem,
+        TestSystemManufacturer: sample.TestSystemManufacturer,
+        endTime: sample.endTime,
+        user_account_id: id
+      };
+  
+      // Make API call directly after updating the form data
+     handleAddClick(newFormData); // Pass updated formData to the API call
+    });
+  };
+  
+  
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
@@ -67,14 +130,18 @@ const SampleArea = () => {
 
   // Fetch samples from backend when component loads
   useEffect(() => {
-    fetchSamples(); // Call the function when the component mounts
+    if (id === null) {
+      return <div>Loading...</div>;
+    } else {
+      fetchSamples();
+    }
   }, []);
+  
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -91,13 +158,36 @@ const SampleArea = () => {
       setSamples(filtered); // Update the state with filtered results
     }
   };
+  const handleAddClick = async(e) => {
+    console.log(e)
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/api/cart/post`,
+        e
+      );
+    notifySuccess("Sample added to cart successfully");
+      console.log("Sample added to cart successfully:", response.data);
+
+      const newResponse = await axios.get(
+        "http://localhost:5000/api/sample/get"
+      );
+      setSamples(newResponse.data);
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } catch (error) {
+      notifyError("Error adding Sample to cart successfully");
+      console.error(
+
+        `Error to add sample cart with ID ${selectedSampleId}:`,
+        error
+      );
+    }
+  }
 
   return (
     <section className="policy__area pb-120">
-     <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
-      >
+      <div className="container" style={{ marginTop: "-20px", width: "auto" }}>
         <div
           className="row justify-content-center"
           style={{ marginTop: "290px" }}
@@ -122,8 +212,8 @@ const SampleArea = () => {
               >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                  <tr style={{textAlign:'center',}}>
-                  <th
+                    <tr style={{ textAlign: "center" }}>
+                      <th
                         className="px-3"
                         style={{
                           verticalAlign: "middle",
@@ -139,7 +229,7 @@ const SampleArea = () => {
                             handleFilterChange("id", e.target.value)
                           }
                           style={{
-                            width: "80%", 
+                            width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
                             minWidth: "120px",
@@ -167,7 +257,7 @@ const SampleArea = () => {
                             width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
-                            minWidth: "120px", 
+                            minWidth: "120px",
                             maxWidth: "180px",
                           }}
                         />
@@ -182,7 +272,6 @@ const SampleArea = () => {
                         }}
                       >
                         <input
-                       
                           type="text"
                           className="form-control"
                           placeholder="Search Donor ID"
@@ -240,11 +329,11 @@ const SampleArea = () => {
                             handleFilterChange("age", e.target.value)
                           }
                           style={{
-                            width: "80%", 
+                            width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
-                            minWidth: "120px", 
-                            maxWidth: "180px", 
+                            minWidth: "120px",
+                            maxWidth: "180px",
                           }}
                         />
                         Age
@@ -265,11 +354,11 @@ const SampleArea = () => {
                             handleFilterChange("gender", e.target.value)
                           }
                           style={{
-                            width: "80%", 
+                            width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
-                            minWidth: "120px", 
-                            maxWidth: "180px", 
+                            minWidth: "120px",
+                            maxWidth: "180px",
                           }}
                         />
                         Gender
@@ -293,8 +382,8 @@ const SampleArea = () => {
                             width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
-                            minWidth: "120px", 
-                            maxWidth: "180px", 
+                            minWidth: "120px",
+                            maxWidth: "180px",
                           }}
                         />
                         Ethnicity
@@ -318,7 +407,7 @@ const SampleArea = () => {
                             )
                           }
                           style={{
-                            width: "80%", 
+                            width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
                             minWidth: "120px",
@@ -343,10 +432,10 @@ const SampleArea = () => {
                             handleFilterChange("storagetemp", e.target.value)
                           }
                           style={{
-                            width: "80%", 
+                            width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
-                            minWidth: "120px", 
+                            minWidth: "120px",
                             maxWidth: "180px",
                           }}
                         />
@@ -374,7 +463,7 @@ const SampleArea = () => {
                             width: "80%",
                             padding: "8px",
                             boxSizing: "border-box",
-                            minWidth: "120px", 
+                            minWidth: "120px",
                             maxWidth: "180px",
                           }}
                         />
@@ -1204,11 +1293,20 @@ const SampleArea = () => {
                         />
                         Status
                       </th>
-                      {/*<th>Action</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                  {currentData.length > 0 ? (
+                    {currentData.length > 0 ? (
                       currentData.map((sample) => (
                         <tr key={sample.id}>
                           <td>{sample.id}</td>
@@ -1253,8 +1351,20 @@ const SampleArea = () => {
                           <td>{sample.TestSystemManufacturer}</td>
                           {/*<td>{sample.user_id}</td>*/}
                           <td>{sample.status}</td>
+                          <td>
+                          <button
+  className="btn btn-danger btn-sm"
+  onClick={() => incrementQuantity(sample)} // Wrap the function in an arrow function
+  title="Edit Researcher" // This is the text that will appear on hover
+>
+
+
+                            <FontAwesomeIcon icon={faCartPlus} size="sm" />
+                          </button>
+                          </td>
                         </tr>
                       ))
+
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">

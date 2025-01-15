@@ -98,7 +98,10 @@ const ChangePassword = () => {
               <h4>Email Address</h4>
               <div className="profile__input">
                 <input
-                  {...register("email", { required: `Email is required!` })}
+                  {...register("email", {
+                    required: userDetail?.email ? false : "Email is required!",
+                  })}
+              
                   type="email"
                   placeholder="Enter Email Address"
                   value={userDetail?.email || ""} // Pre-fill with user email
@@ -112,19 +115,12 @@ const ChangePassword = () => {
             <div className="profile__input-box">
               <h4>Current Password</h4>
               <div className="profile__input">
-                <input
-                  {...register("password", {
-                    required: `Password is required!`,
-                  })}
-                  type={showCurrentPass ? "text" : "password"}
-                  placeholder="Enter current password"
-                />
                 <span
                   className="login-input-eye"
                   style={{
                     position: "absolute",
                     top: "50%",
-                    left: "1150px",
+                    left: "1200px", // Position it on the left
                     transform: "translateY(-50%)",
                     cursor: "pointer",
                   }}
@@ -136,6 +132,13 @@ const ChangePassword = () => {
                     <EyeCut />
                   )}
                 </span>
+                <input
+                  {...register("password", {
+                    required: `Password is required!`,
+                  })}
+                  type={showCurrentPass ? "text" : "password"}
+                  placeholder="Enter current password"
+                />
                 <ErrorMessage message={errors.password?.message} />
               </div>
             </div>
@@ -157,7 +160,7 @@ const ChangePassword = () => {
                   style={{
                     position: "absolute",
                     top: "50%",
-                    left: "1150px",
+                    left: "1200px",
                     transform: "translateY(-50%)",
                     cursor: "pointer",
                   }}
@@ -188,7 +191,7 @@ const ChangePassword = () => {
                   style={{
                     position: "absolute",
                     top: "50%",
-                    left: "1150px",
+                    left: "1200px",
                     transform: "translateY(-50%)",
                     cursor: "pointer",
                   }}

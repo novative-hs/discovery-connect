@@ -28,6 +28,8 @@ else{
     // Calculate total pages
     const totalPages = Math.ceil(districtname.length / itemsPerPage);
   
+    const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+
   // Fetch District from backend when component loads
   useEffect(() => {
     
@@ -35,7 +37,7 @@ else{
   }, []);
   const fetchdistrictname = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/district/get-district');
+      const response = await axios.get(`${url}/district/get-district`);
       setdistrictname(response.data); // Store fetched District in state
     } catch (error) {
       console.error("Error fetching District:", error);
@@ -76,11 +78,11 @@ else{
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/district/post-district', formData);
+      const response = await axios.post(`${url}/district/post-district`, formData);
       console.log("district added successfully:", response.data);
 
       // Refresh the districtname list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/district/get-district');
+      const newResponse = await axios.get(`${url}/district/get-district`);
       setdistrictname(newResponse.data); // Update state with the new list
 
       // Clear form after submission
@@ -111,7 +113,7 @@ else{
       }, 3000);
 
       // Refresh the districtname list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/district/get-district');
+      const newResponse = await axios.get(`${url}/district/get-district`);
       setdistrictname(newResponse.data);
 
       // Close modal after deletion
@@ -137,13 +139,13 @@ else{
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/district/put-district/${selecteddistrictnameId}`,
+        `${url}/district/put-district/${selecteddistrictnameId}`,
         formData
       );
       console.log("districtname updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/district/get-district"
+        `${url}/district/get-district`
       );
       setdistrictname(newResponse.data);
 
@@ -357,8 +359,11 @@ else{
                             >
                             <button
                               className="btn btn-success btn-sm py-0 px-1"
-                              onClick={() => handleEditClick(districtname)}>
+                              onClick={() => handleEditClick(districtname)}
+                              title="Edit District" // This is the text that will appear on hover
+                              >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
+
                             </button>{" "}
                             <button
                               className="btn btn-danger btn-sm py-0 px-1"
@@ -366,6 +371,7 @@ else{
                                 setSelecteddistrictnameId(districtname.id);
                                 setShowDeleteModal(true);
                               }}
+                              title="Delete District" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>

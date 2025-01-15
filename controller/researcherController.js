@@ -62,14 +62,15 @@ function createResearcher(req, res) {
 // Controller to handle updating a researcher's details
 function updateResearcher(req, res) {
   const { id } = req.params;
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country } = req.body;
+  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,logo } = req.body;
   
-  if (!userID || !ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {
+  if ( !ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {
     return res.status(400).json({ error: 'All required fields must be provided' });
   }
 
 
-  const data = { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country };
+  const data = { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,logo };
+  console.log(data)
   researcherModel.updateResearcher(id, data, (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Error updating researcher' });

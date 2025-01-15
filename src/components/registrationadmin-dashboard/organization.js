@@ -379,7 +379,9 @@ const OrganizationArea = () => {
                             >
                                                         <button
                                                             className="btn btn-success btn-sm"
-                                                            onClick={() => handleEditClick(organization)}>
+                                                            onClick={() => handleEditClick(organization)}
+                                                             title="Edit Organization"
+                                                            >
                                                             <FontAwesomeIcon icon={faEdit} size="sm" />
                                                         </button>{" "}
                                                         <button
@@ -388,6 +390,7 @@ const OrganizationArea = () => {
                                                                 setSelectedOrganizationId(organization.id);
                                                                 setShowDeleteModal(true);
                                                             }}
+                                                             title="Delete Organization"
                                                         >
                                                             <FontAwesomeIcon icon={faTrash} size="sm" />
                                                         </button>

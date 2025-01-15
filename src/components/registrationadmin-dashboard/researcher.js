@@ -393,7 +393,9 @@ const ResearcherArea = () => {
                             >
                                                         <button
                                                             className="btn btn-success btn-sm"
-                                                            onClick={() => handleEditClick(researcher)}>
+                                                            onClick={() => handleEditClick(researcher)}
+                                                            title="Edit Researcher" // This is the text that will appear on hover
+                                                            >
                                                             <FontAwesomeIcon icon={faEdit} size="sm" />
                                                         </button>{" "}
                                                         <button
@@ -402,6 +404,7 @@ const ResearcherArea = () => {
                                                                 setSelectedResearcherId(researcher.id);
                                                                 setShowDeleteModal(true);
                                                             }}
+                                                            title="Delete Researcher" // This is the text that will appear on hover
                                                         >
                                                             <FontAwesomeIcon icon={faTrash} size="sm" />
                                                         </button>

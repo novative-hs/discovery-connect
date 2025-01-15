@@ -1505,7 +1505,9 @@ const SampleDispatchArea = () => {
                           <td>
                             <button
                               className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}>
+                              onClick={() => handleEditClick(sample)}
+                              title="Edit Sample" // This is the text that will appear on hover
+                              >
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
                             <button
@@ -1514,12 +1516,14 @@ const SampleDispatchArea = () => {
                                 setSelectedSampleId(sample.id);
                                 setShowDeleteModal(true);
                               }}
+                              title="Delete Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
+                              title="Transfer Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>

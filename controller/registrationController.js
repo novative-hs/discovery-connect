@@ -22,6 +22,23 @@ const create_collectionsiteTable = (req, res) => {
   res.status(200).json({ message: "Collection Site table creation process started" });
 };
 
+const getAccountDetail = (req, res) => {
+  const { id } = req.params;
+
+  accountModel.getAccountDetail(id, (err, result) => {
+    if (err) {
+      console.error('Error:', err);
+      if (err.message === 'ID is required') {
+        return res.status(400).json({ status: "fail", error: err.message });
+      }
+      if (err.message === 'Invalid id') {
+        return res.status(401).json({ status: "fail", error: err.message });
+      }
+      return res.status(500).json({ status: "fail",  error: err.message });
+    }
+    res.status(200).json(result);
+  });
+};
 const createAccount = (req, res) => {
   console.log('Received Account Data:', req.body);
 
@@ -110,7 +127,19 @@ const changepassword = (req, res) => {
     res.status(200).json(result);
   });
 };
+const updateAccount = (req, res) => {
+  console.log('Received Account Data:', req.body);
 
+  accountModel.updateAccount(req, (err, result) => {
+    if (err) {
+      console.error('Error:', err);
+      return res.status(500).json({ error: 'Error creating account' });
+    }
+
+    console.log('Insert Result:', result);
+    res.status(201).json(result);
+  });
+};
 
 module.exports = {
   changepassword,
@@ -121,4 +150,7 @@ module.exports = {
   create_researcherTable,
   createuser_accountTable,
   createAccount,
+  getAccountDetail,
+updateAccount
+
 };
