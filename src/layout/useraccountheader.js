@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
@@ -37,6 +37,24 @@ const Header = ({ style_2 = false, setActiveTab }) => {
     cursor: "pointer",
     fontSize: "14px",
   };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+  
+    if (showDropdown) {
+      document.addEventListener("click", handleClickOutside);
+    } else {
+      document.removeEventListener("click", handleClickOutside);
+    }
+  
+    // Cleanup function to remove the listener when the component unmounts
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);
@@ -50,14 +68,11 @@ const Header = ({ style_2 = false, setActiveTab }) => {
 
   const handleLogout = () => {
     setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };
-
-  // const handleNavigation = (tabId) => {
-  //   document.getElementById(tabId)?.click();
-  // };
-
+  const dropdownRef = useRef(null);
   return (
     <>
       <header>
@@ -148,10 +163,7 @@ const Header = ({ style_2 = false, setActiveTab }) => {
                               </Link>
                             </li>
                           ) : (
-                            <li
-                              className="user-menu"
-                              style={{ position: "relative" }}
-                            >
+                            <li className="user-menu" style={{ position: "relative" }} ref={dropdownRef}>
                               <Link
                                 href="#"
                                 onClick={(e) => {

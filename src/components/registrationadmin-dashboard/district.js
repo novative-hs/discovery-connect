@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faQuestionCircle, faPlus } from '@fortawesome/free-solid-svg-icons';
-
+import * as XLSX from "xlsx";
 const DistrictArea = () => {
   const id = localStorage.getItem("userID");
 if (id === null) {
@@ -168,6 +168,57 @@ else{
   
     return `${day}-${formattedMonth}-${year}`;
   };
+      useEffect(() => {
+        if (showDeleteModal || showAddModal || showEditModal) {
+          // Prevent background scroll when modal is open
+          document.body.style.overflow = "hidden";
+          document.body.classList.add("modal-open");
+        } else {
+          // Allow scrolling again when modal is closed
+          document.body.style.overflow = "auto";
+          document.body.classList.remove("modal-open");
+        }
+      }, [showDeleteModal, showAddModal, showEditModal]);
+
+      const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+      
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const binaryStr = event.target.result;
+          const workbook = XLSX.read(binaryStr, { type: "binary" });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
+      
+          // Add 'added_by' field from state (assumes 'id' is available in state)
+          const dataWithAddedBy = data.map((row) => ({
+            name: row.name,
+            added_by: id, // Make sure `id` is defined
+          }));
+      
+          try {
+            // POST data to your existing API
+            const response = await axios.post(
+              "http://localhost:5000/api/district/post-district",
+              { bulkData: dataWithAddedBy }
+            );
+            console.log("Countries added successfully:", response.data);
+      
+            // Refresh the city list
+            const newResponse = await axios.get(
+              "http://localhost:5000/api/district/get-district"
+            );
+            setdistrictname(newResponse.data);
+          } catch (error) {
+            console.error("Error uploading file:", error);
+          }
+        };
+      
+        reader.readAsBinaryString(file);
+      };
+
   return (
     <section className="policy__area pb-120">
        <div
@@ -187,17 +238,28 @@ else{
                 </div>
               )}
               {/* Add District Button */}
-              <div
-                className="d-flex justify-content-end mb-3"
-                style={{
-                  marginBottom: "20px", // Adjust spacing between button and table
-                  
-                }}
-              >
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                  Add District
-                </button>
-              </div>
+              <div className="d-flex justify-content-end align-items-center mb-3">
+  {/* Upload City List Button */}
+
+
+  {/* Add City Button */}
+  <button
+    className="btn btn-primary me-3"
+    onClick={() => setShowAddModal(true)}
+  >
+      Add District
+  </button>
+  <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
+    Upload District List
+    <input
+      type="file"
+      accept=".xlsx, .xls" // Accept only Excel files
+      style={{ display: "none" }}
+      onChange={handleFileUpload}
+    />
+  </label>
+</div>
+          
 
               {/* Table */}
               <div
@@ -461,19 +523,23 @@ else{
               </div>
               {/* Modal for Adding Committe members */}
               {showAddModal && (
-              <div className="modal show d-block" tabIndex="-1" role="dialog" 
-              style={{
-                position: "absolute",
-                top: "50%", // Center the modal vertically
-                left: "50%", // Center the modal horizontally
-                transform: "translate(-50%, -50%)", // Adjust for centering
-                width: "100%",
-                maxWidth: "500px",
-                zIndex: 1050, // Ensure it appears above other content
-                overflowY: "auto",
-                height: 'auto',/* Allow it to expand dynamically */
-                minheight: '100vh',
-              }}>
+             <>
+             {/* Bootstrap Backdrop with Blur */}
+             <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+         
+             {/* Modal Content */}
+             <div
+               className="modal show d-block"
+               tabIndex="-1"
+               role="dialog"
+               style={{
+                 zIndex: 1050, 
+                 position: "fixed",
+                 top: "120px",
+                 left: "50%",
+                 transform: "translateX(-50%)",
+               }}
+             >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -517,23 +583,28 @@ else{
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Edit districtname Modal */}
               {showEditModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog" 
-                style={{
-                  position: "absolute",
-                  top: "50%", // Center the modal vertically
-                  left: "50%", // Center the modal horizontally
-                  transform: "translate(-50%, -50%)", // Adjust for centering
-                  width: "100%",
-                  maxWidth: "500px",
-                  zIndex: 1050, // Ensure it appears above other content
-                  overflowY: "auto",
-                  height: 'auto',/* Allow it to expand dynamically */
-                  minheight: '100vh',
-                }}>
+          <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+      
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050, 
+              position: "fixed",
+              top: "120px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -579,27 +650,28 @@ else{
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Modal for Deleting districtname */}
               {showDeleteModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "100%",
-                    maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content
-                    overflowY: "auto",
-                    height: 'auto',/* Allow it to expand dynamically */
-                    minheight: '100vh',
-                  }}
-                >
+          <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+      
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050, 
+              position: "fixed",
+              top: "120px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -641,6 +713,7 @@ else{
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>

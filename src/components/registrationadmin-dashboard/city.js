@@ -7,7 +7,7 @@ import {
   faQuestionCircle,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-
+import * as XLSX from "xlsx";
 const CityArea = () => {
     const id = localStorage.getItem("userID");
   if (id === null) {
@@ -28,7 +28,7 @@ const CityArea = () => {
   const [cityname, setcityname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   // Calculate total pages
   const totalPages = Math.ceil(cityname.length / itemsPerPage);
 
@@ -111,21 +111,21 @@ const CityArea = () => {
       console.log(
         `cityname with ID ${selectedcitynameId} deleted successfully.`
       );
-
+  
       // Set success message
       setSuccessMessage("cityname deleted successfully.");
-
+  
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-
+  
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
         "http://localhost:5000/api/city/get-city"
       );
       setcityname(newResponse.data);
-
+  
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedcitynameId(null);
@@ -136,6 +136,19 @@ const CityArea = () => {
       );
     }
   };
+  
+  useEffect(() => {
+    if (showDeleteModal || showAddModal || showEditModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showDeleteModal, showAddModal, showEditModal]);
+
   const handleEditClick = (cityname) => {
     console.log("data in case of update is", cityname);
     setSelectedcitynameId(cityname.id);
@@ -187,6 +200,45 @@ const CityArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
+  
+      // Add 'added_by' field from state (assumes 'id' is available in state)
+      const dataWithAddedBy = data.map((row) => ({
+        name: row.name,
+        added_by: id, // Make sure `id` is defined
+      }));
+  
+      try {
+        // POST data to your existing API
+        const response = await axios.post(
+          "http://localhost:5000/api/city/post-city",
+          { bulkData: dataWithAddedBy }
+        );
+        console.log("Cities added successfully:", response.data);
+  
+        // Refresh the city list
+        const newResponse = await axios.get(
+          "http://localhost:5000/api/city/get-city"
+        );
+        setcityname(newResponse.data);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      }
+    };
+  
+    reader.readAsBinaryString(file);
+  };
+  
   return (
     <section className="policy__area pb-120">
        <div
@@ -205,22 +257,27 @@ const CityArea = () => {
                   {successMessage}
                 </div>
               )}
-              {/* Add City Button */}
-              <div
-                className="d-flex justify-content-end mb-3"
-                style={{
-                  marginBottom: "20px", // Adjust spacing between button and table
-                  
-                }}
-              >
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add City
-                </button>
-              </div>
+     <div className="d-flex justify-content-end align-items-center mb-3">
+  {/* Upload City List Button */}
 
+
+  {/* Add City Button */}
+  <button
+    className="btn btn-primary me-3"
+    onClick={() => setShowAddModal(true)}
+  >
+    Add City
+  </button>
+  <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
+    Upload City List
+    <input
+      type="file"
+      accept=".xlsx, .xls" // Accept only Excel files
+      style={{ display: "none" }}
+      onChange={handleFileUpload}
+    />
+  </label>
+</div>
               {/* Table */}
               <div
                 className="table-responsive"
@@ -303,7 +360,7 @@ const CityArea = () => {
                             padding: "8px",
                             boxSizing: "border-box",
                             minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
+                            maxWidth: "180px", 
                           }}
                         />
                        Added By</th>
@@ -487,25 +544,23 @@ const CityArea = () => {
 
               {/* Modal for Adding Committe members */}
               {showAddModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "100%",
-                    maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
-                    overflowY: "auto",
-                    height: 'auto',/* Allow it to expand dynamically */
-                    minheight: '100vh',
-                  }}
-                >
+  <>
+  {/* Bootstrap Backdrop with Blur */}
+  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+  {/* Modal Content */}
+  <div
+    className="modal show d-block"
+    tabIndex="-1"
+    role="dialog"
+    style={{
+      zIndex: 1050, 
+      position: "fixed",
+      top: "120px",
+      left: "50%",
+      transform: "translateX(-50%)",
+    }}
+  >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -549,29 +604,28 @@ const CityArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Edit cityname Modal */}
               {showEditModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "100%",
-                    maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
-                    overflowY: "auto",
-                    height: 'auto',/* Allow it to expand dynamically */
-                    minheight: '100vh',
-                  }}
-                >
+             <>
+             {/* Bootstrap Backdrop with Blur */}
+             <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+           
+             {/* Modal Content */}
+             <div
+               className="modal show d-block"
+               tabIndex="-1"
+               role="dialog"
+               style={{
+                 zIndex: 1050, 
+                 position: "fixed",
+                 top: "120px",
+                 left: "50%",
+                 transform: "translateX(-50%)",
+               }}
+             >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -617,64 +671,60 @@ const CityArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Modal for Deleting cityname */}
               {showDeleteModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050, // Ensure it's above the header
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete City</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this city?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+  <>
+    {/* Bootstrap Backdrop with Blur */}
+    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+    {/* Modal Content */}
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{
+        zIndex: 1050, 
+        position: "fixed",
+        top: "120px",
+        left: "50%",
+        transform: "translateX(-50%)",
+      }}
+    >
+      <div className="modal-dialog" role="document">
+        <div className="modal-content">
+          <div className="modal-header" style={{ backgroundColor: "transparent" }}>
+            <h5 className="modal-title">Delete City</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowDeleteModal(false)}
+            ></button>
+          </div>
+          <div className="modal-body">
+            <p>Are you sure you want to delete this city?</p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-danger"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
             </div>
           </div>
         </div>

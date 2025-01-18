@@ -45,7 +45,7 @@ const CommitteeMemberArea = () => {
   const [formStep, setFormStep] = useState(1);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   // Calculate total pages
   const totalPages = Math.ceil(committeemembers.length / itemsPerPage);
 
@@ -376,6 +376,20 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
       setCommitteemembers(filtered);
     }
   };
+
+      useEffect(() => {
+        if (showDeleteModal || showAddModal || showEditModal) {
+          // Prevent background scroll when modal is open
+          document.body.style.overflow = "hidden";
+          document.body.classList.add("modal-open");
+        } else {
+          // Allow scrolling again when modal is closed
+          document.body.style.overflow = "auto";
+          document.body.classList.remove("modal-open");
+        }
+      }, [showDeleteModal, showAddModal, showEditModal]);
+      
+
   return (
     <section className="policy__area pb-120">
        <div
@@ -1013,25 +1027,22 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
               {/* Modal for Adding Committee members */}
               {showAddModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "100%",
-                    maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                   
-                    overflowY: "auto",
-                    height: 'auto',/* Allow it to expand dynamically */
-                    minheight: '100vh',
-                  }}
-                >
+          <>
+              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+{/* Modal Content */}
+<div
+  className="modal show d-block"
+  tabIndex="-1"
+  role="dialog"
+  style={{
+    zIndex: 1050, 
+    position: "fixed",
+    top: "120px",
+    left: "50%",
+    transform: "translateX(-50%)",
+  }}
+>
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -1237,29 +1248,27 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Edit Committemember Modal */}
               {showEditModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "100%",
-                    maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                   
-                    overflowY: "auto",
-                    height: 'auto',/* Allow it to expand dynamically */
-                    minheight: '100vh',
-                  }}
-                >
+                <>
+         <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+    {/* Modal Content */}
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{
+        zIndex: 1050, 
+        position: "fixed",
+        top: "120px",
+        left: "50%",
+        transform: "translateX(-50%)",
+      }}
+    >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -1466,29 +1475,27 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Modal for Deleting Committeemembers */}
               {showDeleteModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "100%",
-                    maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                   
-                    overflowY: "auto",
-                    height: 'auto',/* Allow it to expand dynamically */
-                    minheight: '100vh',
-                  }}
-                >
+                <>
+              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050, 
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -1533,6 +1540,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                     </div>
                   </div>
                 </div>
+                </>
               )}
               {showHistoryModal && (
                 <div

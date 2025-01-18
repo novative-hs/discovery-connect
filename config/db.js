@@ -1,23 +1,19 @@
 const mysql = require("mysql2");
-console.log("Connecting to DB at:", process.env.DB_HOST, process.env.DB_USER);
-
-// Create a connection pool
-const pool = mysql.createPool({
-    host: "discovery-database.c1e2goekmu67.ap-south-1.rds.amazonaws.com",
-    user: "discoveryadmin",
-    password: "discoverylive123",
-    database: "DiscoveryConnect",
-    waitForConnections: true,
-    connectionLimit: 10,  // Adjust based on application load
-    queueLimit: 0
+// databse connection
+var mysqlConnection = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "123456789",
+    database: "discovery_connect123",
 });
 
-// Check the pool connection status
-pool.getConnection((err, connection) => {
+
+// check wether the connection is successfull or not !!
+mysqlConnection.connect((err) => {
     if (err) {
         console.log(
             "Database Connection Error" + JSON.stringify(err, undefined, 2)
         );
     } else console.log("Connection Successful");
 });
-module.exports = mysqlConnection;
+module.exports = mysqlConnection; 

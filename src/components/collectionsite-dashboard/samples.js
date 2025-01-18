@@ -160,6 +160,17 @@ const SampleArea = () => {
       [name]: value,
     }));
   };
+   useEffect(() => {
+      if (showDeleteModal || showAddModal || showEditModal || showTransferModal) {
+        // Prevent background scroll when modal is open
+        document.body.style.overflow = "hidden";
+        document.body.classList.add("modal-open");
+      } else {
+        // Allow scrolling again when modal is closed
+        document.body.style.overflow = "auto";
+        document.body.classList.remove("modal-open");
+      }
+    }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1819,24 +1830,23 @@ const SampleArea = () => {
 
               {/* Modal for Adding Samples */}
               {showAddModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "auto", 
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
-                    overflowY: "auto",
-                    height: 'auto', // Allow it to expand dynamically 
-                    minheight: '100vh',
-                  }}
-                >
+                  <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+              
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050, 
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
                   <div
                     className="modal-dialog"
                     role="document"
@@ -2328,28 +2338,28 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Edit Sample Modal */}
               {showEditModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "auto", 
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
-                    overflowY: "auto",
-                    height: 'auto', // Allow it to expand dynamically 
-                    minheight: '100vh',
-                  }}
-                >
+                   <>
+                   {/* Bootstrap Backdrop with Blur */}
+                   <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+               
+                   {/* Modal Content */}
+                   <div
+                     className="modal show d-block"
+                     tabIndex="-1"
+                     role="dialog"
+                     style={{
+                       zIndex: 1050, 
+                       position: "fixed",
+                       top: "120px",
+                       left: "50%",
+                       transform: "translateX(-50%)",
+                     }}
+                   >
                   <div
                     className="modal-dialog"
                     role="document"
@@ -2840,6 +2850,7 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Modal for transfreing Samples */}
@@ -2909,11 +2920,12 @@ const SampleArea = () => {
                         >
                           <option value="">Select</option>
                           {collectionSiteNames.map((site, index) => (
-                             <option key={site.user_account_id} value={site.user_account_id}>
-                             {site.CollectionSiteName}
-                           </option>
+                            <option key={index} value={site}>
+                              {site}
+                            </option>
                           ))}
                         </select>
+                  
                       </div>
                       <div style={{ marginBottom: "15px" }}>
                         <label
@@ -3015,21 +3027,23 @@ const SampleArea = () => {
 
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog"
-                style={{
-                  position: "absolute",
-                  top: "50%", // Center the modal vertically
-                  left: "50%", // Center the modal horizontally
-                  transform: "translate(-50%, -50%)", // Adjust for centering
-                  width: "auto", 
-                  zIndex: 1050, // Ensure it appears above other content
-                  backgroundColor: "#fff", // Modal background
-                  
-                  overflowY: "auto",
-                  height: 'auto', // Allow it to expand dynamically 
-                  minheight: '100vh',
-                }}
-                >
+                     <>
+                     {/* Bootstrap Backdrop with Blur */}
+                     <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                 
+                     {/* Modal Content */}
+                     <div
+                       className="modal show d-block"
+                       tabIndex="-1"
+                       role="dialog"
+                       style={{
+                         zIndex: 1050, 
+                         position: "fixed",
+                         top: "120px",
+                         left: "50%",
+                         transform: "translateX(-50%)",
+                       }}
+                     >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -3071,6 +3085,7 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>

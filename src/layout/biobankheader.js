@@ -44,10 +44,10 @@ const Header = ({ style_2 = false, setActiveTab }) => {
 
   const handleLogout = () => {
     setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
-    localStorage.removeItem("user");
-    router.push('/')
-  }
+    router.push("/");
+  };
 
   // const handleNavigation = (tabId) => {
   //   document.getElementById(tabId)?.click();

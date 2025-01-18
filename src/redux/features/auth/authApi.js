@@ -7,7 +7,7 @@ export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     registerUser: builder.mutation({
       query: (data) => ({
-        url: "https://discovery-connect.com/api/user/signup",
+        url: "api/user/signup",
         method: "POST",
         body: data,
       }),
@@ -16,7 +16,7 @@ export const authApi = apiSlice.injectEndpoints({
     // login
     loginUser: builder.mutation({
       query: (data) => ({
-        url: "https://discovery-connect.com/api/user/login",
+        url: "api/user/login",
         method: "POST",
         body: data,
       }),

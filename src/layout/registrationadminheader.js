@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
@@ -22,12 +22,10 @@ const Header = ({ style_2 = false, setActiveTab }) => {
   const { user: userInfo } = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();
-
+  const dropdownRef = useRef(null);
   const handleToggleDropdown = () => {
-    console.log("Dropdown toggled");
     setShowDropdown(!showDropdown);
   };
-
   const DropdownStyle = {
     background: "none",
     border: "none",
@@ -38,10 +36,26 @@ const Header = ({ style_2 = false, setActiveTab }) => {
     fontSize: "14px",
   };
 
-  const handleUpdateProfile = () => {
-    setShowDropdown(false);
-    setActiveTab("update-user");
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+  
+    if (showDropdown) {
+      document.addEventListener("click", handleClickOutside);
+    } else {
+      document.removeEventListener("click", handleClickOutside);
+    }
+  
+    // Cleanup function to remove the listener when the component unmounts
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showDropdown]);
+
+
 
   const handleChangePassword = () => {
     setShowDropdown(false);
@@ -50,6 +64,7 @@ const Header = ({ style_2 = false, setActiveTab }) => {
 
   const handleLogout = () => {
     setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };
@@ -183,62 +198,45 @@ const Header = ({ style_2 = false, setActiveTab }) => {
                               </Link>
                             </li>
                           ) : (
-                            <li
-                              className="user-menu"
-                              style={{ position: "relative" }}
-                            >
-                              <Link
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleToggleDropdown();
-                                }}
-                              >
-                                <User />
-                              </Link>
-                              {showDropdown && (
-                                <ul
-                                  style={{
-                                    position: "absolute",
-                                    top: "100%",
-                                    right: "0",
-                                    backgroundColor: "white",
-                                    border: "1px solid #ccc",
-                                    padding: "10px",
-                                    margin: "0",
-                                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                                    zIndex: 9999,
-                                    listStyleType: "none",
-                                    width: "190px",
-                                  }}
-                                >
-                                  <li>
-                                    <button
-                                      onClick={handleUpdateProfile}
-                                      style={DropdownStyle}
-                                    >
-                                      Update Profile
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button
-                                      onClick={handleChangePassword}
-                                      style={DropdownStyle}
-                                    >
-                                      Change Password
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button
-                                      onClick={handleLogout}
-                                      style={DropdownStyle}
-                                    >
-                                      Logout
-                                    </button>
-                                  </li>
-                                </ul>
-                              )}
-                            </li>
+                           <li className="user-menu" style={{ position: "relative" }} ref={dropdownRef}>
+  <Link
+    href="#"
+    onClick={(e) => {
+      e.preventDefault();
+      handleToggleDropdown();
+    }}
+  >
+    <User />
+  </Link>
+  {showDropdown && (
+    <ul
+      style={{
+        position: "absolute",
+        top: "100%",
+        right: "0",
+        backgroundColor: "white",
+        border: "1px solid #ccc",
+        padding: "10px",
+        margin: "0",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        zIndex: 9999,
+        listStyleType: "none",
+        width: "190px",
+      }}
+    >
+      <li>
+        <button onClick={handleChangePassword} style={DropdownStyle}>
+          Change Password
+        </button>
+      </li>
+      <li>
+        <button onClick={handleLogout} style={DropdownStyle}>
+          Logout
+        </button>
+      </li>
+    </ul>
+  )}
+</li>
                           )}
                           <li>
                             <Link href="/wishlist">
