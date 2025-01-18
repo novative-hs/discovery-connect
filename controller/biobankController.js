@@ -17,7 +17,6 @@ const getAllBioBank = (req, res) => {
 // Controller to get a BioBank by ID
 const getBioBankById = (req, res) => {
   const { id } = req.params;
-
   BioBankModal.getBioBankById(id, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching Bio Bank" });
@@ -43,7 +42,7 @@ const createBioBank = (req, res) => {
     'CutOffRange', 'CutOffRangeUnit', 'FreezeThawCycles', 'DateOfCollection',
     'ConcurrentMedicalConditions', 'ConcurrentMedications', 'AlcoholOrDrugAbuse',
     'DiagnosisTestParameter', 'ResultRemarks', 'TestKit', 'TestKitManufacturer',
-    'TestSystem', 'TestSystemManufacturer'
+    'TestSystem', 'TestSystemManufacturer','user_account_id'
 ];
 
   for (const field of requiredFields) {

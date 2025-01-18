@@ -1,24 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as Yup from "yup";
+import axios from "axios";
 // internal
 import { useChangePasswordMutation } from "src/redux/features/auth/authApi";
 import ErrorMessage from "@components/error-message/error";
 import { notifyError, notifySuccess } from "@utils/toast";
+import { EyeCut } from "@svg/index"; // Adjust the import according to your setup
 
 const schema = Yup.object().shape({
   email: Yup.string().required().email().label("Email"),
   password: Yup.string().required().min(6).label("Password"),
   newPassword: Yup.string().required().min(6).label("New Password"),
-  confirmPassword: Yup.string()
-     .oneOf([Yup.ref('newPassword'), null], 'Passwords must match')
+  confirmPassword: Yup.string().oneOf(
+    [Yup.ref("newPassword"), null],
+    "Passwords must match"
+  ),
 });
 
 const ChangePassword = () => {
+  const id = localStorage.getItem("userID");
+
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const { user } = useSelector((state) => state.auth);
-  const [changePassword, {}] = useChangePasswordMutation();
+  const [userDetail, setUserDetail] = useState();
+  const [changePassword] = useChangePasswordMutation();
   // react hook form
   const {
     register,
@@ -29,94 +39,164 @@ const ChangePassword = () => {
     resolver: yupResolver(schema),
   });
 
-  // on submit
-const onSubmit = (data) => {
-  changePassword({
-    email: data.email,  // Capture email from form data
-    password: data.password,
-    newPassword: data.newPassword,
-  }).then((result) => {
-    console.log(result);
-    if (result?.error) {
-      notifyError(result?.error?.data?.message);
+  useEffect(() => {
+    if (id === null) {
+      return <div>Loading...</div>; // Or redirect to login
     } else {
-      notifySuccess(result?.data?.message);
+      fetchUser(); // Call the function when the component mounts
+      console.log("account_id on city page is:", id);
     }
-  });
-  reset();
-};
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/user/${id}`);
+      const userEmail = response.data?.data[0]; // Extract email from the response
+      setUserDetail(userEmail); // Set only the email in state
+    } catch (error) {
+      console.error("Error fetching user detail:", error);
+    }
+  };
+
+  // on submit
+  const onSubmit = async (data) => {
+    try {
+      // Prepare request data
+      const formData = {
+        email: data.email,
+        password: data.password,
+        newPassword: data.newPassword,
+      };
+      // Send the change password request
+      const response = await axios.put(
+        "http://localhost:5000/api/user/changepassword",
+        formData
+      );
+
+      // Handle successful response
+      console.log("Password changed successfully:", response.data);
+      notifySuccess(response?.data?.message);
+
+      // Optional: Reset form after success
+      reset();
+    } catch (error) {
+      // Handle errors
+      console.error("Error changing password:", error);
+      notifyError(
+        error?.response?.data?.message || "An unexpected error occurred."
+      );
+    }
+  };
 
   return (
     <div className="profile__password">
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="row">
-          <div className="col-xxl-12">
-            <div className="profile__input-box">
-              <h4>Email Address</h4>
-              <div className="profile__input">
-                <input
-                  {...register("email", { required: `Email is required!` })}
-                  type="email"
-                  placeholder="Enter Email Address"
-                />
-                <ErrorMessage message={errors.email?.message} />
-              </div>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="row g-3"> {/* Use g-3 for consistent spacing between rows */}
+        <div className="col-12">
+          <div className="profile__input-box">
+            <h4>Email Address</h4>
+            <div className="profile__input">
+              <input
+                {...register("email", {
+                  required: userDetail?.email ? false : "Email is required!",
+                })}
+                type="email"
+                placeholder="Enter Email Address"
+                value={userDetail?.email || ""} // Pre-fill with user email
+                readOnly // Make the field non-editable
+                className="form-control"
+              />
+              <ErrorMessage message={errors.email?.message} />
             </div>
           </div>
-          <div className="col-xxl-12">
-            <div className="profile__input-box">
-              <h4>Current Password</h4>
-              <div className="profile__input">
-                <input
-                  {...register("password", {
-                    required: `Password is required!`,
-                  })}
-                  type="password"
-                  placeholder="Enter current password"
-                />
-                <ErrorMessage message={errors.password?.message} />
-              </div>
+        </div>
+  
+        <div className="col-12">
+          <div className="profile__input-box">
+            <h4>Current Password</h4>
+            <div className="position-relative">
+              <input
+                {...register("password", { required: `Password is required!` })}
+                type={showCurrentPass ? "text" : "password"}
+                className="form-control"
+                placeholder="Enter your password"
+              />
+              <span
+                className="position-absolute top-50 end-0 translate-middle-y me-2"
+                onClick={() => setShowCurrentPass(!showCurrentPass)}
+                style={{ cursor: "pointer" }}
+              >
+                {showCurrentPass ? (
+                  <i className="fa-regular fa-eye"></i>
+                ) : (
+                  <i className="fa-regular fa-eye-slash"></i>
+                )}
+              </span>
             </div>
           </div>
-          <div className="col-xxl-6 col-md-6">
-            <div className="profile__input-box">
-              <h4>New Password</h4>
-              <div className="profile__input">
-                <input
-                  {...register("newPassword", {
-                    required: `New Password is required!`,
-                  })}
-                  type="password"
-                  placeholder="Enter new password"
-                />
-                <ErrorMessage message={errors.password?.newPassword} />
-              </div>
+        </div>
+  
+        <div className="col-12">
+          <div className="profile__input-box">
+            <h4>New Password</h4>
+            <div className="position-relative">
+              <input
+                {...register("newPassword", { required: `New Password is required!` })}
+                type={showNewPass ? "text" : "password"}
+                className="form-control"
+                placeholder="Enter your new password"
+              />
+              <span
+                className="position-absolute top-50 end-0 translate-middle-y me-2"
+                onClick={() => setShowNewPass(!showNewPass)}
+                style={{ cursor: "pointer" }}
+              >
+                {showNewPass ? (
+                  <i className="fa-regular fa-eye"></i>
+                ) : (
+                  <i className="fa-regular fa-eye-slash"></i>
+                )}
+              </span>
             </div>
           </div>
-          {/* confirm password */}
-          <div className="col-xxl-6 col-md-6">
-            <div className="profile__input-box">
-              <h4>Confirm Password</h4>
-              <div className="profile__input">
-                <input
-                  {...register("confirmPassword")}
-                  type="text"
-                  placeholder="Confirm Password"
-                />
-                <ErrorMessage message={errors.confirmPassword?.message} />
-              </div>
+        </div>
+  
+        <div className="col-12">
+          <div className="profile__input-box">
+            <h4>Confirm Password</h4>
+            <div className="position-relative">
+              <input
+                {...register("confirmPassword")}
+                type={showConfirmPass ? "text" : "password"}
+                className="form-control"
+                placeholder="Confirm your new password"
+              />
+              <span
+                className="position-absolute top-50 end-0 translate-middle-y me-2"
+                onClick={() => setShowConfirmPass(!showConfirmPass)}
+                style={{ cursor: "pointer" }}
+              >
+                {showConfirmPass ? (
+                  <i className="fa-regular fa-eye"></i>
+                ) : (
+                  <i className="fa-regular fa-eye-slash"></i>
+                )}
+              </span>
             </div>
           </div>
-          <div className="col-xxl-6 col-md-6">
+        </div>
+  
+        <div className="col-xxl-6 col-md-6">
             <div className="profile__btn">
               <button type="submit" className="tp-btn-3">
                 Update
               </button>
             </div>
           </div>
-        </div>
-      </form>
-    </div>
+      </div>
+    </form>
+  </div>
+  
   );
 };
 

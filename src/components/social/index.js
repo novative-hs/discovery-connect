@@ -29,17 +29,18 @@ const social_links = [
 
 const SocialLinks = () => {
   return (
-    <>
+    <div className="d-flex gap-3"> {/* Bootstrap utility class for spacing */}
       {social_links.map((l, i) => (
-        <a key={i} href={l.link} target={l.target}>
+        <a key={i} href={l.link} target={l.target} className="text-dark fs-4">
           <i className={l.icon}></i>
         </a>
       ))}
-    </>
+    </div>
   );
 };
 
 export default SocialLinks;
+
 
 
 export function SocialShare() {

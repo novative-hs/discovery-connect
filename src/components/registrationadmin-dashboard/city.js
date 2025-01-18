@@ -31,7 +31,7 @@ const CityArea = () => {
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(cityname.length / itemsPerPage);
-
+const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   // Fetch City from backend when component loads
   useEffect(() => {
     fetchcityname(); // Call the function when the component mounts
@@ -39,7 +39,7 @@ const CityArea = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/city/get-city"
+        `${url}/city/get-city`
       );
       setcityname(response.data); // Store fetched City in state
     } catch (error) {
@@ -80,17 +80,12 @@ const CityArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        "http://localhost:5000/api/city/post-city",
+        `${url}/city/post-city`,
         formData
       );
       console.log("City added successfully:", response.data);
 
-      // Refresh the cityname list after successful submission
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/city/get-city"
-      );
-      setcityname(newResponse.data); // Update state with the new list
-
+      fetchcityname();
       // Clear form after submission
       setFormData({
         cityname: "",
@@ -106,7 +101,7 @@ const CityArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `http://localhost:5000/api/city/delete-city/${selectedcitynameId}`
+        `${url}/city/delete-city/${selectedcitynameId}`
       );
       console.log(
         `cityname with ID ${selectedcitynameId} deleted successfully.`
@@ -120,12 +115,7 @@ const CityArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/city/get-city"
-      );
-      setcityname(newResponse.data);
-
+    fetchcityname();
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedcitynameId(null);
@@ -152,15 +142,12 @@ const CityArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/city/put-city/${selectedcitynameId}`,
+        `${url}/city/put-city/${selectedcitynameId}`,
         formData
       );
       console.log("cityname updated successfully:", response.data);
 
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/city/get-city"
-      );
-      setcityname(newResponse.data);
+      fetchcityname();
 
       setShowEditModal(false);
       setSuccessMessage("City updated successfully.");
@@ -381,6 +368,7 @@ const CityArea = () => {
                             <button
                               className="btn btn-success btn-sm py-0 px-1"
                               onClick={() => handleEditClick(cityname)}
+                              title="Edit City" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>{" "}
@@ -390,6 +378,7 @@ const CityArea = () => {
                                 setSelectedcitynameId(cityname.id);
                                 setShowDeleteModal(true);
                               }}
+                              title="Delete City" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
@@ -499,8 +488,6 @@ const CityArea = () => {
                     width: "100%",
                     maxWidth: "500px",
                     zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
                     overflowY: "auto",
                     height: 'auto',/* Allow it to expand dynamically */
                     minheight: '100vh',

@@ -1526,6 +1526,7 @@ const SampleDispatchArea = () => {
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
+                              title="Transfer Sample dispatch" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>

@@ -28,6 +28,7 @@ const CountryRoutes = require('./routes/countryRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const { fetchProducts, getProductById, } = require('./controller/productController');
 const biobankRoutes=require("./routes/biobankRoutes");
+const biobanksampledispacthRoutes=require("./routes/biobanksampledispatchRoutes");
 // Routes
 app.use('/api/user', registrationRoutes); 
 app.use('/api/district', DistrictRoutes); 
@@ -40,13 +41,14 @@ app.get('/api/products/:id', getProductById);
 app.use('/api', researcherRoutes);
 app.use('/api/committeemember', committeememberRoutes);
 app.use('/api', sampleRoutes);
+
 app.use('/api/sampledispatch', sampleDispatchRoutes);
 app.use('/api/samplereceive', sampleReceiveRoutes);
 app.use('/api/collectionsite', collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', biobankRoutes);
-
+app.use('/api/biobanksampledispatch',biobanksampledispacthRoutes)
 
 
 // Start the server

@@ -10,7 +10,7 @@ const getAllBioBank = (callback) => {
 
 // Function to get a sample by its ID
 const getBioBankById = (id, callback) => {
-  const query = 'SELECT * FROM sample WHERE id = ?';
+  const query = 'SELECT * FROM sample WHERE user_account_id = ? and status = "In Stock"';
   mysqlConnection.query(query, [id], (err, results) => {
     callback(err, results);
   });
@@ -30,8 +30,8 @@ const createBioBank = (data, callback) => {
     CutOffRange, CutOffRangeUnit, FreezeThawCycles, DateOfCollection,
     ConcurrentMedicalConditions, ConcurrentMedications, AlcoholOrDrugAbuse,
     DiagnosisTestParameter, ResultRemarks, TestKit, TestKitManufacturer,
-    TestSystem, TestSystemManufacturer, status
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    TestSystem, TestSystemManufacturer, status,user_account_id
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
 
 const values = [
   data.masterID, data.donorID, data.samplename, data.age, data.gender,
@@ -44,7 +44,7 @@ const values = [
   data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, 
   data.ConcurrentMedications, data.AlcoholOrDrugAbuse, data.DiagnosisTestParameter, 
   data.ResultRemarks, data.TestKit, data.TestKitManufacturer, data.TestSystem,
-  data.TestSystemManufacturer, data.status
+  data.TestSystemManufacturer, data.status,data.user_account_id
 ];
 
   mysqlConnection.query(query, values, (err, result) => {

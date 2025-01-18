@@ -110,6 +110,319 @@ const create_collectionsiteTable = () => {
     }
   });
 };
+
+const getAccountDetail = (id, callback) => {
+  console.log("ID", id);
+  // Query to verify email and password for any account type
+  const query = `SELECT id, email, accountType 
+     FROM user_account 
+     WHERE id=?`;
+
+  mysqlConnection.query(query, [id], (err, results) => {
+    if (err) {
+      return callback(err, null); // Pass error to the controller
+    }
+
+    if (results.length > 0) {
+      const user = results[0];
+
+      // If account type is Researcher, check the status in researcher table
+      if (user.accountType === "Researcher") {
+        const researcherQuery = `SELECT 
+      researcher.*,
+      city.id AS cityid,
+      city.name AS cityname,
+      district.id AS districtid,
+      district.name AS districtname,
+      country.id AS countryid,
+      country.name AS countryname,
+      organization.id AS organization_id,
+      organization.OrganizationName AS OrganizationName,
+      user_account.email AS useraccount_email,
+      user_account.accountType 
+  FROM 
+      researcher
+  LEFT JOIN city ON researcher.city = city.id
+  LEFT JOIN district ON researcher.district = district.id
+  LEFT JOIN country ON researcher.country = country.id
+  LEFT JOIN organization ON researcher.nameofOrganization = organization.id
+  LEFT JOIN user_account ON researcher.user_account_id = user_account.id
+  WHERE 
+      researcher.user_account_id = ?`;
+
+        mysqlConnection.query(
+          researcherQuery,
+          [user.id],
+          (err, researcherResults) => {
+            if (err) {
+              return callback(err, null); // Pass error to the controller
+            }
+            return callback(err, researcherResults); // Pass data to the controller
+          }
+        );
+      } else if (user.accountType === "Organization") {
+        const OrganizationQuery = `
+        SELECT o.*,  c.id AS cityid,
+        c.name AS cityname, 
+        cnt.id AS countryid, 
+        cnt.name AS countryname, 
+        d.id AS districtid, d.name AS districtname, 
+        ua.accountType as accountType ,
+        ua.email AS useraccount_email FROM organization o 
+        JOIN city c ON o.city = c.id 
+        JOIN country cnt ON o.country = cnt.id 
+        JOIN district d ON o.district = d.id 
+        JOIN user_account ua ON o.user_account_id = ua.id
+         WHERE o.user_account_id = ?
+        
+        `;
+
+        mysqlConnection.query(
+          OrganizationQuery,
+          [user.id],
+          (err, OrganizationResults) => {
+            if (err) {
+              return callback(err, null); // Pass error to the controller
+            }
+            return callback(null, OrganizationResults); // Return organization info
+          }
+        );
+      } else if (user.accountType === "CollectionSites") {
+        const collectionsiteQuery = `
+         SELECT 
+      collectionsite.*, 
+      city.id AS cityid, 
+      city.name AS cityname, 
+      district.id AS districtid, 
+      district.name AS districtname, 
+      country.id AS countryid, 
+      country.name AS countryname, 
+      user_account.email AS useraccount_email,
+      user_account.accountType
+    FROM 
+      collectionsite
+    LEFT JOIN city ON collectionsite.city = city.id
+    LEFT JOIN district ON collectionsite.district = district.id
+    LEFT JOIN country ON collectionsite.country = country.id
+    LEFT JOIN user_account ON collectionsite.user_account_id = user_account.id
+    WHERE 
+      collectionsite.user_account_id = ?
+        `;
+
+        mysqlConnection.query(
+          collectionsiteQuery,
+          [user.id],
+          (err, collectionsiteResults) => {
+            if (err) {
+              return callback(err, null); // Pass error to the controller
+            }
+ 
+              return callback(null, collectionsiteResults); // Return collectiosite info 
+            
+          }
+        );
+      } else {
+        // For non-researcher accounts, return the user info
+        callback(null, user);
+      }
+    } else {
+      callback({ status: "fail", message: "Invalid ID" }, null);
+    }
+  });
+};
+
+const updateAccount = (req, callback) => {
+ 
+  const {
+    user_account_id,
+    useraccount_email,
+    accountType,
+    ResearcherName,
+    OrganizationName,
+    CollectionSiteName,
+    phoneNumber,
+    fullAddress,
+    city,
+    district,
+    country,
+    nameofOrganization,
+    type,
+    HECPMDCRegistrationNo,
+    ntnNumber,
+  } = req.body;
+  
+  // Handle the logo file (if provided)
+  let logo = null;
+  if (req.file) {
+    // If a file was uploaded, convert it to a buffer
+    logo = req.file.buffer;
+  }
+  //Start MySQL transaction
+  mysqlConnection.beginTransaction((err) => {
+    if (err) {
+      console.error("Error starting transaction:", err);
+      return callback(err, null);
+    }
+
+    // Check if user account exists
+    const checkAccountQuery = "SELECT * FROM user_account WHERE id = ?";
+    mysqlConnection.query(
+      checkAccountQuery,
+      [user_account_id],
+      (err, results) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            console.error("Database Query Error:", err);
+            callback(err, null);
+          });
+        }
+
+        if (results.length === 0) {
+          // If account does not exist, return an error
+          return mysqlConnection.rollback(() => {
+            callback(new Error("Account not found"), null);
+          });
+        }
+
+        // Update user account table
+        const updateUserAccountQuery = `
+        UPDATE user_account SET email = ? WHERE id = ?
+      `;
+        const updateUserAccountValues = [useraccount_email, user_account_id];
+
+        mysqlConnection.query(
+          updateUserAccountQuery,
+          updateUserAccountValues,
+          (err, userAccountResults) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                console.error("Error updating user_account:", err);
+                callback(err, null);
+              });
+            }
+
+            let query, values;
+
+            // Prepare the query and values based on account type
+            switch (accountType) {
+              case "Researcher":
+                query = `
+                UPDATE researcher SET 
+                  ResearcherName = ?, 
+                  phoneNumber = ?, 
+                  fullAddress = ?, 
+                  city = ?, 
+                  district = ?, 
+                  country = ?, 
+                  nameofOrganization = ?, 
+                  logo = ?
+                WHERE user_account_id = ?
+              `;
+                values = [
+                  ResearcherName,
+                  phoneNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+                  nameofOrganization,
+                  logo,
+                  user_account_id,
+                ];
+                break;
+
+              case "Organization":
+                query = `
+                UPDATE organization SET 
+                  OrganizationName = ?, 
+                  type = ?, 
+                  HECPMDCRegistrationNo = ?, 
+                  ntnNumber = ?, 
+                  phoneNumber = ?, 
+                  fullAddress = ?, 
+                  city = ?, 
+                  district = ?, 
+                  country = ?, 
+                  logo = ?
+                WHERE user_account_id = ?
+              `;
+                values = [
+                  OrganizationName,
+                  type,
+                  HECPMDCRegistrationNo,
+                  ntnNumber,
+                  phoneNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+                  logo,
+                  user_account_id,
+                ];
+                break;
+
+              case "CollectionSites":
+                query = `
+                UPDATE collectionsite SET 
+                  CollectionSiteName = ?, 
+                  phoneNumber = ?, 
+                  ntnNumber = ?, 
+                  fullAddress = ?, 
+                  city = ?, 
+                  district = ?, 
+                  country = ?, 
+                  logo = ?
+                WHERE user_account_id = ?
+              `;
+                values = [
+                  CollectionSiteName,
+                  phoneNumber,
+                  ntnNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+                  logo,
+                  user_account_id,
+                ];
+                break;
+
+              default:
+                return mysqlConnection.rollback(() => {
+                  callback(new Error("Invalid account type"), null);
+                });
+            }
+
+            // Execute the query for the secondary table
+            mysqlConnection.query(query, values, (err, results) => {
+              if (err) {
+                return mysqlConnection.rollback(() => {
+                  console.error("Error updating secondary table:", err);
+                  callback(err, null);
+                });
+              }
+
+              // If everything is successful, commit the transaction
+              mysqlConnection.commit((err) => {
+                if (err) {
+                  return mysqlConnection.rollback(() => {
+                    console.error("Error committing transaction:", err);
+                    callback(err, null);
+                  });
+                }
+
+                callback(null, {
+                  message: "Account updated successfully",
+                  userId: user_account_id,
+                });
+              });
+            });
+          }
+        );
+      }
+    );
+  });
+};
 // Function to insert a new City member
 const createAccount = (req, callback) => {
   const {
@@ -131,7 +444,7 @@ const createAccount = (req, callback) => {
   } = req.body;
 
   // Handle the logo file (if provided)
-  const logo = req.file && accountType === 'CollectionSites' || accountType === "Organization" || accountType === "Researcher" ?  req.file.buffer : null;
+  const logo = req.file ? req.file.buffer : null && accountType === 'CollectionSites' || accountType === "Organization" || accountType === "Researcher"
   console.log('Logo Buffer:', logo);
   console.log('Received File:', req.file);
 
@@ -414,10 +727,12 @@ function changepassword(data, callback) {
 module.exports = {
   changepassword,
   loginAccount,
+  getAccountDetail,
   getUserEmail,
   create_collectionsiteTable,
   create_organizationTable,
   create_researcherTable,
   createuser_accountTable,
   createAccount,
+  updateAccount
 };

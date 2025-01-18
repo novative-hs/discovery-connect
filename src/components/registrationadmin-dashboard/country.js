@@ -32,7 +32,9 @@ const CountryArea = () => {
     const itemsPerPage = 10;
     // Calculate total pages
     const totalPages = Math.ceil(countryname.length / itemsPerPage);
-  
+
+  const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+
   // Fetch Country from backend when component loads
   useEffect(() => {
     fetchcountryname(); // Call the function when the component mounts
@@ -40,7 +42,7 @@ const CountryArea = () => {
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${url}/country/get-country`
       );
       setCountryname(response.data); // Store fetched Country in state
     } catch (error) {
@@ -82,14 +84,14 @@ const CountryArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        "http://localhost:5000/api/country/post-country",
+        `${url}/country/post-country`,
         formData
       );
       console.log("Country added successfully:", response.data);
 
       // Refresh the countryname list after successful submission
       const newResponse = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${url}/country/get-country`
       );
       setCountryname(newResponse.data); // Update state with the new list
 
@@ -124,7 +126,7 @@ const CountryArea = () => {
 
       // Refresh the countryname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${url}/country/get-country`
       );
       setCountryname(newResponse.data);
 
@@ -154,13 +156,13 @@ const CountryArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/country/put-country/${selectedcountrynameId}`,
+        `${url}/country/put-country/${selectedcountrynameId}`,
         formData
       );
       console.log("countryname updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${url}/country/get-country`
       );
       setCountryname(newResponse.data);
 
@@ -382,6 +384,7 @@ const CountryArea = () => {
                             <button
                               className="btn btn-success btn-sm py-0 px-1"
                               onClick={() => handleEditClick(countryname)}
+                              title="Edit Country" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>{" "}
@@ -391,6 +394,7 @@ const CountryArea = () => {
                                 setselectedcountrynameId(countryname.id);
                                 setShowDeleteModal(true);
                               }}
+                              title="Delete Country" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>

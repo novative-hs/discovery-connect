@@ -8,6 +8,8 @@ const ResearcherArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [preview, setPreview] = useState(null);
+
   const [selectedResearcherStatus, setSelectedResearcherStatus] =
     useState(null);
   const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
@@ -23,8 +25,9 @@ const ResearcherArea = () => {
     email: "",
     password: "",
     accountType: "Researcher",
-    // logo: ""
+    logo: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
   const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
   const [successMessage, setSuccessMessage] = useState("");
@@ -35,10 +38,10 @@ const ResearcherArea = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const[orgid,setorgId]=useState();
+  const [orgid, setorgId] = useState();
   // Calculate total pages
   const totalPages = Math.ceil(researchers.length / itemsPerPage);
-
+  const [logoFile, setLogoFile] = useState(null);
   // Fetch researchers from backend when component loads
   useEffect(() => {
     if (id === null) {
@@ -67,7 +70,7 @@ const ResearcherArea = () => {
         `http://localhost:5000/api/admin/organization/get/${id}`
       );
       setOrganization(response.data[0]);
-      setorgId(response.data[0].id) // Store fetched researchers in state
+      setorgId(response.data[0].id); // Store fetched researchers in state
     } catch (error) {
       console.error("Error fetching researchers:", error);
     }
@@ -109,8 +112,13 @@ const ResearcherArea = () => {
     }
   }, [orgid]); // Runs when `orgId` changes
 
-
   const handleInputChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setLogoFile(file);
+      setPreview(URL.createObjectURL(file)); // Generate preview URL
+    }
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -118,19 +126,47 @@ const ResearcherArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    formData.nameofOrganization = organization.id;
-    console.log(formData)
     e.preventDefault();
+  
+    // Create a new FormData instance
+    const formDataToSubmit = new FormData();
+  
+    // Append all fields to the FormData instance
+    formDataToSubmit.append("userID", formData.userID);
+    formDataToSubmit.append("ResearcherName", formData.ResearcherName);
+    formDataToSubmit.append("phoneNumber", formData.phoneNumber);
+    formDataToSubmit.append("nameofOrganization", organization.id); // Use organization ID
+    formDataToSubmit.append("fullAddress", formData.fullAddress);
+    formDataToSubmit.append("city", formData.city);
+    formDataToSubmit.append("district", formData.district);
+    formDataToSubmit.append("country", formData.country);
+    formDataToSubmit.append("email", formData.email);
+    formDataToSubmit.append("password", formData.password);
+    formDataToSubmit.append("accountType", "Researcher");
+  
+    // Append the logo file
+    if (logoFile) {
+      formDataToSubmit.append("logo", logoFile);
+    }
+  
+    console.log("FormData to submit:", formDataToSubmit);
+  
     try {
       // POST request to your backend API
       const response = await axios.post(
         "http://localhost:5000/api/user/signup",
-        formData
+        formDataToSubmit,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       console.log("Researcher added successfully:", response.data);
-
+  
       // Refresh the researcher list after successful submission
-      fetchResearcher()
+      fetchResearcher();
+  
       // Clear form after submission
       setFormData({
         userID: "",
@@ -141,16 +177,18 @@ const ResearcherArea = () => {
         city: "",
         district: "",
         country: "",
-        email:"",
-        password:"",
-        accountType:"Researcher"
+        email: "",
+        password: "",
+        accountType: "Researcher",
+        logo: "",
       });
+  
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding researcher:", error);
+      console.error("Error adding researcher:", error.response?.data || error.message);
     }
   };
-
+  
   // const handleHistory = async () => {
   //   setSelectedResearcherStatus('pending')
   //   try {
@@ -199,12 +237,12 @@ const ResearcherArea = () => {
       city: researcher.city,
       district: researcher.district,
       country: researcher.country,
+      logo: researcher.logo,
     });
   };
 
   const handleUpdate = async (e) => {
     formData.nameofOrganization = organization.id;
-    formData.userID = id;
     e.preventDefault();
     try {
       const response = await axios.put(
@@ -226,6 +264,7 @@ const ResearcherArea = () => {
         error
       );
     }
+    console.log(formData);
   };
 
   // Get the current data for the table
@@ -683,7 +722,7 @@ const ResearcherArea = () => {
                     transform: "translate(-50%, -50%)", // Adjust for centering
                     width: "100%",
                     maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content                  
+                    zIndex: 1050, // Ensure it appears above other content
                     overflowY: "auto",
                     height: "auto" /* Allow it to expand dynamically */,
                     minheight: "100vh",
@@ -713,6 +752,64 @@ const ResearcherArea = () => {
                           {/* Step 1 Fields */}
                           {currentStep === 1 && (
                             <>
+                              <div
+                                className="login__input-item"
+                                style={{ textAlign: "center" }}
+                              >
+                                {/* Image Preview Section */}
+                                <div style={{ marginBottom: "10px" }}>
+                                  {preview ? (
+                                    <img
+                                      src={preview}
+                                      alt="Preview"
+                                      style={{
+                                        width: "70px",
+                                        height: "70px",
+                                        borderRadius: "50%",
+                                        objectFit: "cover",
+                                        display: "inline-block",
+                                      }}
+                                    />
+                                  ) : (
+                                    <span
+                                      style={{
+                                        width: "70px",
+                                        height: "70px",
+                                        display: "inline-block",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#eaeaea",
+                                        color: "#aaa",
+                                        fontSize: "30px",
+                                        lineHeight: "70px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-user"></i>
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* File Input Section */}
+                                <div className="login__input">
+                                  <input
+                                    name="logo"
+                                    type="file"
+                                    id="logo"
+                                    className="form-control form-control-sm"
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      display: "block",
+                                      margin: "0 auto",
+                                    }}
+                                    accept="image/*"
+                                  />
+                                  <span>
+                                    <i className="fa-solid fa-image"></i>
+                                  </span>
+                                </div>
+                              </div>
+
                               <div className="form-group">
                                 <label>Name</label>
                                 <input
@@ -735,17 +832,38 @@ const ResearcherArea = () => {
                                   required
                                 />
                               </div>
-                              <div className="form-group">
+                              <div
+                                className="form-group"
+                                style={{ position: "relative" }}
+                              >
                                 <label>Password</label>
                                 <input
-                                  type="password"
+                                  type={showPassword ? "text" : "password"}
                                   className="form-control"
                                   name="password"
                                   value={formData.password}
                                   onChange={handleInputChange}
                                   required
                                 />
+                                <span
+                                  className="login-input-eye"
+                                  style={{
+                                    position: "absolute",
+                                    top: "65%",
+                                    right: "10px", // Position it on the right
+                                    transform: "translateY(-50%)",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() => setShowPassword(!showPassword)} // Toggle password visibility
+                                >
+                                  {showPassword ? (
+                                    <i className="fa-regular fa-eye"></i> // Eye icon when password is visible
+                                  ) : (
+                                    <i className="fa-regular fa-eye-slash"></i> // Eye slash icon when password is hidden
+                                  )}
+                                </span>
                               </div>
+
                               <div className="form-group">
                                 <label>Account Type</label>
                                 <input
@@ -773,17 +891,20 @@ const ResearcherArea = () => {
                           {/* Step 2 Fields */}
                           {currentStep === 2 && (
                             <>
-                            <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
+                              <div className="form-group">
+                                <label>Phone Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  required
+                                  pattern="^\d{11}$"
+                                  title="Phone number must be exactly 11 digits"
+                                />
+                              </div>
+
                               <div className="form-group">
                                 <label>Full Address</label>
                                 <input
@@ -898,12 +1019,12 @@ const ResearcherArea = () => {
                   role="dialog"
                   style={{
                     position: "absolute",
-                    top: "50%", // Center the modal vertically
+                    top: "70%", // Center the modal vertically
                     left: "50%", // Center the modal horizontally
                     transform: "translate(-50%, -50%)", // Adjust for centering
                     width: "100%",
                     maxWidth: "500px",
-                    zIndex: 1050, // Ensure it appears above other content                  
+                    zIndex: 1050, // Ensure it appears above other content
                     overflowY: "auto",
                     height: "auto" /* Allow it to expand dynamically */,
                     minheight: "100vh",
@@ -932,6 +1053,62 @@ const ResearcherArea = () => {
                       </div>
                       <form onSubmit={handleUpdate}>
                         <div className="modal-body">
+                          <div
+                            className="login__input-item"
+                            style={{ textAlign: "center" }}
+                          >
+                            {/* Image Preview Section */}
+                            <div style={{ marginBottom: "10px" }}>
+                              {preview ? (
+                                <img
+                                  src={preview}
+                                  alt="Preview"
+                                  style={{
+                                    width: "70px",
+                                    height: "70px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    display: "inline-block",
+                                  }}
+                                />
+                              ) : (
+                                <span
+                                  style={{
+                                    width: "70px",
+                                    height: "70px",
+                                    display: "inline-block",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#eaeaea",
+                                    color: "#aaa",
+                                    fontSize: "30px",
+                                    lineHeight: "70px",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-user"></i>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* File Input Section */}
+                            <div className="login__input">
+                              <input
+                                name="logo"
+                                type="file"
+                                id="logo"
+                                className="form-control form-control-sm"
+                                onChange={handleInputChange}
+                                required
+                                style={{
+                                  display: "block",
+                                  margin: "0 auto",
+                                }}
+                              />
+                              <span>
+                                <i className="fa-solid fa-image"></i>
+                              </span>
+                            </div>
+                          </div>
                           {/* Form Fields */}
                           <div className="form-group">
                             <label>Name</label>

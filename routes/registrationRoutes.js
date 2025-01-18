@@ -12,7 +12,8 @@ router.post('/create-collectionsite-table', registrationController.create_collec
 router.post('/signup', upload.single('logo'), registrationController.createAccount);
 router.post('/login', registrationController.loginAccount);
 router.get('/:id', registrationController.getUserEmail);
-
+router.get('/getAccountDetail/:id', registrationController.getAccountDetail);
+router.put('/updateProfile/:id', upload.single('logo'), registrationController.updateAccount);
 router.put('/changepassword',registrationController.changepassword);
 router.put('/changepassword', (req, res) => {
     console.log('Request received at /user/changepassword:', req.body);

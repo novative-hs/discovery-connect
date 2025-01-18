@@ -1,18 +1,13 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-// internal
-import logo from '@assets/img/logo/faviconnn.png';
-import payment from '@assets/img/footer/footer-payment.png';
+import logo from "@assets/img/logo/faviconnn.png";
 import SocialLinks from "@components/social";
-import CopyrightText from "./copyright-text";
 import useSticky from "@hooks/use-sticky";
-// single widget
+
 function SingleWidget({ col, col_2, col_3, title, contents }) {
   return (
-    <div
-      className={`col-xxl-${col} col-xl-${col} col-lg-3 col-md-${col_2} col-sm-6"`}
-    >
+    <div className={`col-12 col-md-${col_2} col-lg-${col} col-sm-6`}>
       <div className={`footer__widget mb-50 footer-col-11-${col_3}`}>
         <h3 className="footer__widget-title">{title}</h3>
         <div className="footer__widget-content">
@@ -29,133 +24,136 @@ function SingleWidget({ col, col_2, col_3, title, contents }) {
   );
 }
 
-const Footer = ({ style_2 = false}) => {
+const Footer = () => {
   const { sticky } = useSticky();
+
   return (
-    <>
-      <footer>
-        <div
-        className={`footer__area ${style_2 ? "" : "footer__transparent"}`}
-          data-bg-color="footer-bg-white"
-        >
-           <div
-            className={`footer-13 footer-7 footer-3 footer__bottom-border-4 footer__sticky ${sticky ? "footer-sticky" : ""}`}
-            id="footer-sticky"
-            style={{ height: "300px" }}
-          >
-          <div className="container-fluid">
-              <div className="row">
-                <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-5 col-sm-6">
-                  <div className="footer__widget footer__widget-11 mb-50 footer-col-11-1">
-                    <div className="footer__logo">
-                      <Link href="/">
-                        <Image src={logo} alt="logo" style={{ width: '120px', height: 'auto' }} />
-                      </Link>
-                    </div>
-
-                    <div className="footer__widget-content">
-                      <div className="footer__info">
-                        <p>
-                          The home and elements needed to create beautiful
-                          products.
-                        </p>
-                        <div className="footer__social footer__social-11">
-                          <SocialLinks/>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <SingleWidget
-                  col="2"
-                  col_2="4"
-                  col_3="2"
-                  title="Company"
-                  contents={[
-                    { url: "/about", title: "About us" },
-                    { url: "#", title: "Careers" },
-                    { url: "#", title: "Store Locations" },
-                    { url: "#", title: "Our Blog" },
-                    { url: "#", title: "Reviews" },
-                  ]}
-                />
-                {/* <SingleWidget
-                  col="3"
-                  col_2="3"
-                  col_3="3"
-                  title="Shop"
-                  contents={[
-                    { url: "#", title: "Game & Video" },
-                    { url: "#", title: "Phone &Tablets" },
-                    { url: "#", title: "Computers & Laptop" },
-                    { url: "#", title: "Sport Watches" },
-                    { url: "#", title: "Discounts" },
-                  ]}
-                /> */}
-                <SingleWidget
-                  col="1"
-                  col_2="3"
-                  col_3="4"
-                  title="Support"
-                  contents={[
-                    { url: "", title: "Reviews" },
-                    { url: "/contact", title: "Contact Us" },
-                    { url: "", title: "Shipping" },
-                    { url: "", title: "Returns" },
-                  ]}
-                />
-
-                <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-5 col-sm-6">
-                  <div className="footer__widget mb-50 footer-col-11-5">
-                    <h3 className="footer__widget-title">Talk To Us</h3>
-
-                    <div className="footer__widget-content">
-                      <p className="footer__text">
-                        Find a location nearest you. See{" "}
-                        <a href="#">Our Stores</a>
-                      </p>
-                      <div className="footer__contact">
-                        <div className="footer__contact-call">
-                          <span>
-                            <a href="tel:624-423-26-72">+624 423 26 72</a>
-                          </span>
-                        </div>
-                        <div className="footer__contact-mail">
-                          <span>
-                            <a href="mailto:support@harry.com">
-                            info@discoveryconnect.com
-                            </a>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    <footer className="footer">
+      {/* Widgets Section */}
+      <section className="py-4 py-md-5 py-xl-8">
+        <div className="container overflow-hidden">
+          <div className="row gy-4 gy-lg-0 justify-content-xl-between">
+            <div className="col-12 col-md-4 col-lg-3 col-xl-2">
+              <div className="widget">
+                <Link href="/">
+                  <Image src={logo} alt="Discovery Connect Logo" width="120" height="120" />
+                </Link>
               </div>
             </div>
-          </div>
-          <div className="footer__bottom">
-            <div className="container">
-              <div className="footer__bottom-inner">
-                <div className="row">
-                  <div className="col-sm-6">
-                    <div className="footer__copyright">
-                      <CopyrightText />
+            <div className="col-12 col-md-4 col-lg-3 col-xl-2">
+              <div className="widget">
+                <h4 className="widget-title mb-4">Get in Touch</h4>
+                <address className="mb-4">
+                  8014 Edith Blvd NE, Albuquerque, New York, United States
+                </address>
+                <p className="mb-1">
+                  <a className="link-secondary text-decoration-none" href="tel:+15057922430">
+                    (505) 792-2430
+                  </a>
+                </p>
+                <p className="mb-0">
+                  <a className="link-secondary text-decoration-none" href="mailto:demo@yourdomain.com">
+                    demo@yourdomain.com
+                  </a>
+                </p>
+              </div>
+            </div>
+            <div className="col-12 col-md-4 col-lg-3 col-xl-2">
+              <div className="widget">
+                <h4 className="widget-title mb-4">Learn More</h4>
+                <ul className="list-unstyled">
+                  <li className="mb-2">
+                    <Link href="/about" className="link-secondary text-decoration-none">
+                      About
+                    </Link>
+                  </li>
+                  <li className="mb-2">
+                    <Link href="/contact" className="link-secondary text-decoration-none">
+                      Contact
+                    </Link>
+                  </li>
+                  <li className="mb-2">
+                    <Link href="/advertise" className="link-secondary text-decoration-none">
+                      Advertise
+                    </Link>
+                  </li>
+                  <li className="mb-2">
+                    <Link href="/terms" className="link-secondary text-decoration-none">
+                      Terms of Service
+                    </Link>
+                  </li>
+                  <li className="mb-0">
+                    <Link href="/privacy" className="link-secondary text-decoration-none">
+                      Privacy Policy
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div className="col-12 col-lg-3 col-xl-4">
+              <div className="widget">
+                <h4 className="widget-title mb-4">Our Newsletter</h4>
+                <p className="mb-4">
+                  Subscribe to our newsletter to get our news & discounts delivered to you.
+                </p>
+                <form action="#!" method="post">
+                  <div className="row gy-4">
+                    <div className="col-12">
+                      <div className="input-group">
+                        <span className="input-group-text" id="email-newsletter-addon">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            className="bi bi-envelope"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z" />
+                          </svg>
+                        </span>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="email-newsletter"
+                          placeholder="Email Address"
+                          aria-label="email-newsletter"
+                          aria-describedby="email-newsletter-addon"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <div className="d-grid">
+                        <button className="btn btn-primary" type="submit">
+                          Subscribe
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="col-sm-6">
-                    <div className="footer__payment text-sm-end">
-                      <Image src={payment} alt="payment" />
-                    </div>
-                  </div>
-                </div>
+                </form>
               </div>
             </div>
           </div>
         </div>
-      </footer>
-    </>
+      </section>
+
+      {/* Copyright Section */}
+      <div className="bg-light py-4 py-md-5 py-xl-8">
+        <div className="container overflow-hidden">
+          <div className="row gy-4 gy-md-0 align-items-md-center">
+            <div className="col-xs-12 col-md-7 order-1 order-md-0">
+              <div className="copyright text-center text-md-start">
+                &copy; {new Date().getFullYear()}. All Rights Reserved.
+              </div>
+            </div>
+            <div className="col-xs-12 col-md-5 order-0 order-md-1 d-flex justify-content-md-end">
+              <SocialLinks />
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 

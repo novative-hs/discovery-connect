@@ -376,6 +376,16 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
       setCommitteemembers(filtered);
     }
   };
+  const formatDate = (date) => {
+    const options = { year: '2-digit', month: 'short', day: '2-digit' };
+    const formattedDate = new Date(date).toLocaleDateString('en-GB', options);
+    const [day, month, year] = formattedDate.split(' ');
+  
+    // Capitalize the first letter of the month and keep the rest lowercase
+    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  
+    return `${day}-${formattedMonth}-${year}`;
+  };
   return (
     <section className="policy__area pb-120">
        <div
@@ -792,7 +802,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                           <td>{committeemember.country_name}</td>
                           <td>{committeemember.organization_name}</td>
                           <td>{committeemember.committeetype}</td>
-                          <td>{committeemember.created_at}</td>
+                          <td>{formatDate(committeemember.created_at)}</td>
                           <td>{committeemember.status}</td>
                           <td>
                             <div
@@ -1025,7 +1035,6 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                     width: "100%",
                     maxWidth: "500px",
                     zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
                    
                     overflowY: "auto",
                     height: 'auto',/* Allow it to expand dynamically */
