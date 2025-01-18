@@ -161,17 +161,6 @@ const SampleArea = () => {
       [name]: value,
     }));
   };
-   useEffect(() => {
-      if (showDeleteModal || showAddModal || showEditModal || showTransferModal) {
-        // Prevent background scroll when modal is open
-        document.body.style.overflow = "hidden";
-        document.body.classList.add("modal-open");
-      } else {
-        // Allow scrolling again when modal is closed
-        document.body.style.overflow = "auto";
-        document.body.classList.remove("modal-open");
-      }
-    }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -457,7 +446,17 @@ const SampleArea = () => {
       );
     }
   };
-
+  useEffect(() => {
+    if (showDeleteModal || showAddModal || showEditModal || showTransferModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
   return (
     <section className="policy__area pb-120">
       <div
@@ -1718,7 +1717,6 @@ const SampleArea = () => {
                             <button
                               className="btn btn-success btn-sm"
                               onClick={() => handleEditClick(sample)}
-                              title="Edit Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
@@ -1728,14 +1726,12 @@ const SampleArea = () => {
                                 setSelectedSampleId(sample.id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
-                              title="Transfer Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>
@@ -1831,23 +1827,23 @@ const SampleArea = () => {
 
               {/* Modal for Adding Samples */}
               {showAddModal && (
-                  <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-              
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050, 
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
+                <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+            
+                {/* Modal Content */}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050, 
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
                   <div
                     className="modal-dialog"
                     role="document"
@@ -2346,23 +2342,23 @@ const SampleArea = () => {
 
               {/* Edit Sample Modal */}
               {showEditModal && (
-                   <>
-                   {/* Bootstrap Backdrop with Blur */}
-                   <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-               
-                   {/* Modal Content */}
-                   <div
-                     className="modal show d-block"
-                     tabIndex="-1"
-                     role="dialog"
-                     style={{
-                       zIndex: 1050, 
-                       position: "fixed",
-                       top: "120px",
-                       left: "50%",
-                       transform: "translateX(-50%)",
-                     }}
-                   >
+            <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+        
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050, 
+                position: "fixed",
+                top: "120px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
                   <div
                     className="modal-dialog"
                     role="document"
@@ -2925,12 +2921,11 @@ const SampleArea = () => {
                         >
                           <option value="">Select</option>
                           {collectionSiteNames.map((site, index) => (
-                            <option key={index} value={site}>
-                              {site}
-                            </option>
+                             <option key={site.user_account_id} value={site.user_account_id}>
+                             {site.CollectionSiteName}
+                           </option>
                           ))}
                         </select>
-                  
                       </div>
                       <div style={{ marginBottom: "15px" }}>
                         <label
@@ -3032,23 +3027,23 @@ const SampleArea = () => {
 
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-                     <>
-                     {/* Bootstrap Backdrop with Blur */}
-                     <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-                 
-                     {/* Modal Content */}
-                     <div
-                       className="modal show d-block"
-                       tabIndex="-1"
-                       role="dialog"
-                       style={{
-                         zIndex: 1050, 
-                         position: "fixed",
-                         top: "120px",
-                         left: "50%",
-                         transform: "translateX(-50%)",
-                       }}
-                     >
+               <>
+               {/* Bootstrap Backdrop with Blur */}
+               <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+           
+               {/* Modal Content */}
+               <div
+                 className="modal show d-block"
+                 tabIndex="-1"
+                 role="dialog"
+                 style={{
+                   zIndex: 1050, 
+                   position: "fixed",
+                   top: "120px",
+                   left: "50%",
+                   transform: "translateX(-50%)",
+                 }}
+               >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">

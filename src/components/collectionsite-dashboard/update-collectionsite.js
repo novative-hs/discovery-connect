@@ -135,7 +135,7 @@ const UpdateCollectionSite = () => {
   
     // If a new logo is provided, append it to the FormData
     if (logo) {
-      formData.append("logo", logo); // Assuming `logo` is a File object (binary)
+      formData.append("logo", logo); // Assuming logo is a File object (binary)
     } else {
       // If no new logo is uploaded, append the existing logo's binary data
       const binaryLogo = data.logo.data; // This is the existing logo buffer (e.g., Buffer or array)

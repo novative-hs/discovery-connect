@@ -118,6 +118,7 @@ const updateCollectionSiteDetail = (req, res) => {
     res.status(200).json({ message: 'Collection site updated successfully' });
   });
 };
+
 const getCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
   collectionsiteModel.getCollectionSiteDetail(id, (err, results) => {
