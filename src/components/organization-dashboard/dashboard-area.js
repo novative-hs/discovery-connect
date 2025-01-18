@@ -55,7 +55,7 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} />
+      <Header setActiveTab={setActiveTab} accountType="organization" />
       <section className="profile__area pt-180 pb-120">
         <div className="container" style={{ marginTop: '-90px', width: '100%' }}>
           <div className="profile__inner p-relative">

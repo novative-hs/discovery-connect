@@ -112,12 +112,12 @@ const [hovered, setHovered] = useState(false);
                        
                       ].map(({ label, tab }, index) => (
                         <li key={tab} className="nav-item">
-                          <button
-                            className={`nav-link text-black ${
+                           <button
+                            className={`nav-link border-0 ${
                               activeTab === tab
-                                ? "active text-white bg-dark"
-                                : ""
-                            } ${hovered === index ? "bg-dark text-white" : ""}`}
+                                ? "text-primary border-primary"
+                                : "text-dark"
+                            }${hovered === index ? "bg-dark text-red" : ""}`}
                             onClick={() => handleSetActiveTab(tab)}
                             onMouseEnter={() => setHovered(index)}
                             onMouseLeave={() => setHovered(null)}
