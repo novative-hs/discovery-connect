@@ -12,6 +12,7 @@ import { useGetShowingProductsQuery } from "src/redux/features/productApi";
 import ShopLoader from "@components/loader/shop-loader";
 
 export default function Shop({ query }) {
+  
   const { data: products, isError, isLoading, error } = useGetShowingProductsQuery();
   const [shortValue, setShortValue] = useState("");
 

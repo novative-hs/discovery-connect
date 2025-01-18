@@ -52,6 +52,7 @@ const [hovered, setHovered] = useState(false);
 
   const handleLogout = () => {
     setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };

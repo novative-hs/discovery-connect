@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
@@ -22,13 +22,29 @@ const Header = ({ style_2 = false, setActiveTab }) => {
   const { user: userInfo } = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();
-  const [activeTab, setActiveTabState] = useState("order-info");
-  const [screenWidth, setScreenWidth] = useState(0); // state to track screen size
-const [hovered, setHovered] = useState(false);
+  const dropdownRef = useRef(null);
   const handleToggleDropdown = () => {
-    console.log("Dropdown toggled");
     setShowDropdown(!showDropdown);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+  
+    if (showDropdown) {
+      document.addEventListener("click", handleClickOutside);
+    } else {
+      document.removeEventListener("click", handleClickOutside);
+    }
+  
+    // Cleanup function to remove the listener when the component unmounts
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const DropdownStyle = {
     background: "none",
@@ -52,15 +68,20 @@ const [hovered, setHovered] = useState(false);
 
   const handleLogout = () => {
     setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };
 
+  // Handle screen size change (responsive behavior)
+  const [isDesktop, setIsDesktop] = useState(true);
+
   useEffect(() => {
     const updateScreenSize = () => {
-      setScreenWidth(window.innerWidth);
       if (window.innerWidth >= 992) {
-        setIsOffCanvasOpen(false); // Close off-canvas on larger screens
+        setIsDesktop(true); // Larger screens, show items normally
+      } else {
+        setIsDesktop(false); // Smaller screens, use off-canvas
       }
     };
 
@@ -72,11 +93,6 @@ const [hovered, setHovered] = useState(false);
     };
   }, []);
 
-  const handleSetActiveTab = (tab) => {
-    setActiveTab(tab);
-    setActiveTabState(tab);
-  };
-
   return (
     <>
       <header>
@@ -85,139 +101,179 @@ const [hovered, setHovered] = useState(false);
             className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
               style_2 ? "header__bottom-13-white" : "grey-bg-17"
             } header__sticky ${sticky ? "header-sticky" : ""}`}
-            style={{ height: "150px" }}
+            id="header-sticky"
+            style={{ height: "120px" }}
           >
             <div className="container-fluid">
-              <div className="row align-items-center">
-                {/* Logo */}
-                <div className="col-6 col-md-4 col-lg-2">
-                  <div className="logo">
-                    <Link href="/">
-                      <Image
-                        src={logo}
-                        alt="logo"
-                        style={{ width: "150px", height: "auto" }}
-                      />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Navigation Menu */}
-                <div className="col-12 col-md-8 col-lg-7 d-none d-lg-flex justify-content-between">
-                <nav className="d-flex flex-nowrap">
-                    <ul className="nav">
-                      {[
-                        { label: "Profile", tab: "order-info" },
-                        { label: "Researcher List", tab: "researchers" },
-                       
-                      ].map(({ label, tab }, index) => (
-                        <li key={tab} className="nav-item">
-                          <button
-                            className={`nav-link text-black ${
-                              activeTab === tab
-                                ? "active text-white bg-dark"
-                                : ""
-                            } ${hovered === index ? "bg-dark text-white" : ""}`}
-                            onClick={() => handleSetActiveTab(tab)}
-                            onMouseEnter={() => setHovered(index)}
-                            onMouseLeave={() => setHovered(null)}
-                          >
-                            {label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </nav>
-                </div>
-
-                {/* Action Icons */}
-                <div className="col-6 col-md-4 col-lg-3 d-flex justify-content-end">
-                  <div className="d-flex align-items-center gap-3">
-                    {/* Search */}
-                    <div className="header__search-13">
-                      <SearchForm />
-                    </div>
-
-                    {/* User Profile */}
-                    {userInfo?.imageURL ? (
-                      <Link href="/user-dashboard">
+              <div className="mega-menu-wrapper p-relative">
+                <div className="row align-items-center">
+                  <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
+                    <div className="logo" style={{ marginLeft: "-30px" }}>
+                      <Link href="/">
                         <Image
-                          src={userInfo.imageURL}
-                          alt="user img"
-                          width={35}
-                          height={35}
-                          className="rounded-circle"
+                          src={logo}
+                          alt="logo"
+                          style={{ width: "150px", height: "auto" }}
                         />
                       </Link>
-                    ) : userInfo?.name ? (
-                      <Link href="/user-dashboard">
-                        <h2 className="text-uppercase">{userInfo.name[0]}</h2>
-                      </Link>
-                    ) : (
-                      <div className="dropdown">
-                        <button
-                          className="btn dropdown-toggle"
-                          type="button"
-                          id="dropdownMenuButton"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                        >
-                          <User />
-                        </button>
+                    </div>
+                  </div>
+
+                  {/* Main Menu for Larger Screens */}
+                  <div
+                    className={`col-xxl-8 col-xl-7 ${
+                      isDesktop ? "d-block" : "d-none"
+                    }`}
+                  >
+                    <div className="main-menu main-menu-13 pl-45 main-menu-ff-space">
+                      <nav id="mobile-menu-3">
+                        <ul className="header__nav">
+                          {isDesktop ? (
+                            <>
+                              {/* Main Menu for Larger Screens */}
+                              <li>
+                                <button onClick={() => setActiveTab("order-info")}>
+                                  Profile
+                                </button>
+                              </li>
+                              <li>
+                                <button onClick={() => setActiveTab("researchers")}>
+                                  Researchers List
+                                </button>
+                              </li>
+                            </>
+                          ) : null}
+                        </ul>
+                      </nav>
+                    </div>
+                  </div>
+
+                  {/* Header Right Area (Search, Wishlist, Cart, User) */}
+                  <div className="col-xxl-3 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
+                    <div className="header__bottom-right-13 d-flex justify-content-end align-items-center pl-30">
+                      <div className="header__search-13">
+                        <SearchForm />
+                      </div>
+                      <div className="header__action-13 d-none d-md-block">
                         <ul
-                          className="dropdown-menu"
-                          aria-labelledby="dropdownMenuButton"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1px",
+                            padding: 0,
+                            margin: 0,
+                            listStyleType: "none",
+                          }}
                         >
+                          <li className="d-xxl-none">
+                            <a href="#">
+                              <Search />
+                            </a>
+                          </li>
+
+                          {/* User Profile */}
+                          {userInfo?.imageURL ? (
+                            <li>
+                              <Link href="/user-dashboard">
+                                <Image
+                                  src={userInfo.imageURL}
+                                  alt="user img"
+                                  width={35}
+                                  height={35}
+                                  style={{
+                                    objectFit: "cover",
+                                    borderRadius: "50%",
+                                  }}
+                                />
+                              </Link>
+                            </li>
+                          ) : userInfo?.name ? (
+                            <li>
+                              <Link href="/user-dashboard">
+                                <h2 className="text-uppercase tp-user-login-avater">
+                                  {userInfo.name[0]}
+                                </h2>
+                              </Link>
+                            </li>
+                          ) : (
+                            <li className="user-menu" style={{ position: "relative" }} ref={dropdownRef}>
+                              <Link
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleToggleDropdown();
+                                }}
+                              >
+                                <User />
+                              </Link>
+                              {showDropdown && (
+                                <ul
+                                  style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    right: "0",
+                                    backgroundColor: "white",
+                                    border: "1px solid #ccc",
+                                    padding: "10px",
+                                    margin: "0",
+                                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                                    zIndex: 9999,
+                                    listStyleType: "none",
+                                    width: "190px",
+                                  }}
+                                >
+                                  <li>
+                                    <button
+                                      onClick={handleUpdateProfile}
+                                      style={DropdownStyle}
+                                    >
+                                      Update Profile
+                                    </button>
+                                  </li>
+                                  <li>
+                                    <button
+                                      onClick={handleChangePassword}
+                                      style={DropdownStyle}
+                                    >
+                                      Change Password
+                                    </button>
+                                  </li>
+                                  <li>
+                                    <button
+                                      onClick={handleLogout}
+                                      style={DropdownStyle}
+                                    >
+                                      Logout
+                                    </button>
+                                  </li>
+                                </ul>
+                              )}
+                            </li>
+                          )}
+
+                          {/* Wishlist and Cart */}
                           <li>
-                            <button
-                              className="dropdown-item"
-                              onClick={handleUpdateProfile}
-                            >
-                              Update Profile
-                            </button>
+                            <Link href="/wishlist">
+                              <Heart />
+                              <span className="tp-item-count">
+                                {wishlist.length}
+                              </span>
+                            </Link>
                           </li>
                           <li>
                             <button
-                              className="dropdown-item"
-                              onClick={handleChangePassword}
+                              className="cartmini-open-btn"
+                              onClick={() => setIsCartOpen(!isCartOpen)}
                             >
-                              Change Password
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              className="dropdown-item"
-                              onClick={handleLogout}
-                            >
-                              Logout
+                              <Cart />
+                              <span className="tp-item-count">{quantity}</span>
                             </button>
                           </li>
                         </ul>
                       </div>
-                    )}
 
-                    {/* Wishlist */}
-                    <Link href="/wishlist" className="position-relative">
-                      <Heart />
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                        {wishlist.length}
-                      </span>
-                    </Link>
-
-                    {/* Cart */}
-                    <button
-                      className="btn position-relative"
-                      onClick={() => setIsCartOpen(!isCartOpen)}
-                    >
-                      <Cart />
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                        {quantity}
-                      </span>
-                    </button>
-
-                    {/* offCanva */}     
-                    {screenWidth < 992 && (               
-                    <div className="header__hamburger ml-30 d-xl-none">
+                      {/* Hamburger Menu for Mobile */}
+                      <div className="header__hamburger ml-30 d-xl-none">
                         <button
                           onClick={() => setIsOffCanvasOpen(true)}
                           type="button"
@@ -228,7 +284,7 @@ const [hovered, setHovered] = useState(false);
                           <span></span>
                         </button>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -237,15 +293,17 @@ const [hovered, setHovered] = useState(false);
         </div>
       </header>
 
-      {/* OffCanvas button, shows only for smaller screens */}
-
+      {/* Cart Sidebar */}
       <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />
-      <OffCanvas
-        isOffCanvasOpen={isOffCanvasOpen}
-        setIsOffCanvasOpen={setIsOffCanvasOpen}
-        setActiveTab={setActiveTab}
-        dashboardType="organization"
-      />
+
+      {/* OffCanvas Menu */}
+     <OffCanvas
+  isOffCanvasOpen={isOffCanvasOpen}
+  setIsOffCanvasOpen={setIsOffCanvasOpen}
+  setActiveTab={setActiveTab}
+  dashboardType="organization" // Change to "admin", "collectionSite", etc.
+/>
+
     </>
   );
 };

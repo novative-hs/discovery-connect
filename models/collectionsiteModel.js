@@ -6,8 +6,8 @@ const getAllCollectionSites = (callback) => {
     SELECT collectionsite.*, user_account.email
     FROM collectionsite
     JOIN user_account ON collectionsite.user_account_id = user_account.id
+    WHERE collectionsite.status IN ('approved', 'pending')
   `;
-
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);
@@ -54,11 +54,10 @@ const updateCollectionSiteStatus = (id, status, callback) => {
     callback(err, result);
   });
 };
-
-// function getCollectionSiteById(id, callback) {
-//   const query = 'SELECT * FROM researcher WHERE id = ?';
-//   mysqlConnection.query(query, [id], callback);
-// }  
+function getCollectionSiteById(id, callback) {
+  const query = 'SELECT * FROM researcher WHERE id = ?';
+  mysqlConnection.query(query, [id], callback);
+}  
 
 // Function to delete a collection site
 const deleteCollectionSite = (id, callback) => {
@@ -84,14 +83,108 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
   });
 };
 
+function updateCollectionSiteDetail(id, data, callback) {
+  const { 
+    useraccount_email, 
+    CollectionSiteName, 
+    phoneNumber, 
+    ntnNumber, 
+    fullAddress, 
+    cityid, 
+    districtid, 
+    countryid, 
+    type, 
+    logo
+  } = data;
+    const updateEmailQuery = `
+      UPDATE user_account
+      SET email = ?
+      WHERE id = ?
+    `;
 
+    mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
+      if (err) {
+        return mysqlConnection.rollback(() => {
+          console.error('Error updating email:', err);
+          return callback(err);
+        });
+      }
 
+      const updateCollectionSiteQuery = `
+        UPDATE collectionsite
+        SET
+          CollectionSiteName = ?,
+          phoneNumber = ?,
+          ntnNumber = ?,
+          fullAddress = ?,
+          city = ?,
+          district = ?,
+          country = ?,
+          type = ?,
+          logo = ?  
+        WHERE user_account_id = ?
+      `;
+
+      mysqlConnection.query(
+        updateCollectionSiteQuery, 
+        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, logo, id], 
+        (err, result) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              console.error('Error updating collectionsite:', err);
+              return callback(err);
+            });
+          }
+
+          // Commit the transaction if both queries succeed
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                console.error('Error committing transaction:', err);
+                return callback(err);
+              });
+            }
+
+            console.log('Both email and collectionsite updated successfully');
+            return callback(null, 'Both updates were successful');
+          });
+        }
+      );
+    });
+  
+}
+
+function getCollectionSiteDetail(id, callback) {
+  const query = `
+    SELECT 
+      collectionsite.*, 
+      city.id AS cityid, 
+      city.name AS cityname, 
+      district.id AS districtid, 
+      district.name AS districtname, 
+      country.id AS countryid, 
+      country.name AS countryname, 
+      user_account.email AS useraccount_email
+    FROM 
+      collectionsite
+    LEFT JOIN city ON collectionsite.city = city.id
+    LEFT JOIN district ON collectionsite.district = district.id
+    LEFT JOIN country ON collectionsite.country = country.id
+    LEFT JOIN user_account ON collectionsite.user_account_id = user_account.id
+    WHERE 
+      collectionsite.user_account_id = ?
+  `;
+  
+  mysqlConnection.query(query, [id], callback);
+}  
 module.exports = {
-  // getCollectionSiteById,
+  getCollectionSiteDetail,
+  updateCollectionSiteDetail,
+  getAllCollectionSiteNames,
+  getCollectionSiteById,
   getAllCollectionSites,
   createCollectionSite,
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,
-  getAllCollectionSiteNames
 };

@@ -10,9 +10,6 @@ import axios from "axios";
 // Validation schema
 const schema = Yup.object().shape({
   useraccount_email: Yup.string().required("Email is required").label("Email"),
-  CollectionSiteName: Yup.string()
-    .required("CollectionSiteName is required")
-    .label("CollectionSiteName"),
   cityid: Yup.string().required("City is required").label("City"),
   districtid: Yup.string().required("District is required").label("District"),
   countryid: Yup.string().required("Country is required").label("Country"),
@@ -35,10 +32,31 @@ const UpdateCollectionSite = () => {
   const [cityname, setcityname] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setcountryname] = useState([]);
-  const [collectionsite, setCollectionSite] = useState({});
-  const [preview, setPreview] = useState(null);
-  const [logoFile, setLogoFile] = useState(null);
-  // React Hook Form
+  const [collectionsite, setCollectionSite] = useState([]);
+  const [logo, setLogo] = useState("");
+  const logoHandler = (file) => {
+    if (file) {
+      const validTypes = ["image/png", "image/jpeg"]; // Allowed file formats
+  
+      // Check file type
+      if (!validTypes.includes(file.type)) {
+        alert("Invalid file type! Please upload a .png or .jpeg file.");
+        document.getElementById("logo").value = ""; // Reset file input
+        return;
+      }
+  
+      // Optional: Check file size (e.g., max 2MB)
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        alert("File size exceeds the limit of 2MB.");
+        document.getElementById("logo").value = ""; // Reset file input
+        return;
+      }
+  
+      // If valid, process the file (e.g., set it in state)
+      console.log("File accepted:", file);
+    }
+  };
   const {
     register,
     handleSubmit,
@@ -59,9 +77,9 @@ const UpdateCollectionSite = () => {
   const fetchcollectionsite = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/user/getAccountDetail/${id}`
+        `http://localhost:5000/api/collectionsite/get/${id}`
       );
-      setCollectionSite(response.data[0]);
+      setCollectionSite(response.data);
     } catch (error) {
       console.error("Error fetching City:", error);
     }
@@ -79,15 +97,11 @@ const UpdateCollectionSite = () => {
   useEffect(() => {
     if (collectionsite) {
       console.log("Logo Data:", collectionsite.logo?.data);
-      console.log(
-        "Logo URL:",
-        bufferToBase64(collectionsite.logo?.data, "jpeg")
-      );
+      console.log("Logo URL:", bufferToBase64(collectionsite.logo?.data, "jpeg"));
       reset(collectionsite); // Reset form with the organization data when available
-      console.log("Collection", collectionsite);
     }
   }, [collectionsite, reset]);
-
+  
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
@@ -109,53 +123,45 @@ const UpdateCollectionSite = () => {
       console.error("Error fetching Country:", error);
     }
   };
-  const handleLogoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target.result);
-        e.target.result; // Update the preview with the Base64 string
-      };
-      reader.readAsDataURL(file); // Convert the file to a Base64 string
-    }
-  };
-
   const onSubmit = async (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    if (logoFile) {
-      formData.append("logo", logoFile);
+    let formData = new FormData();
+  
+    // Add all the regular fields to the FormData
+    for (let key in data) {
+      if (data[key]) {
+        formData.append(key, data[key]);
+      }
     }
-
-    // Debugging: log the FormData keys
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
+  
+    // If a new logo is provided, append it to the FormData
+    if (logo) {
+      formData.append("logo", logo); // Assuming `logo` is a File object (binary)
+    } else {
+      // If no new logo is uploaded, append the existing logo's binary data
+      const binaryLogo = data.logo.data; // This is the existing logo buffer (e.g., Buffer or array)
+  
+      // Convert the binary data to a Blob (binary file-like object)
+      const blob = new Blob([new Uint8Array(binaryLogo)], { type: "image/png" }); // Use the appropriate MIME type for the logo
+  
+      // Append the Blob as a file object
+      formData.append("logo", blob, "existing-logo.png"); // "existing-logo.png" can be the default name for the existing logo
     }
-
+  
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/user/updateProfile/${id}`,
-        formData,
+        `http://localhost:5000/api/collectionsite/updatedetail/${id}`,
+        formData, // Sending the FormData object with both fields and the file
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "multipart/form-data", // Make sure it's set to multipart/form-data
           },
         }
       );
-
-      notifySuccess("Collectionsite updated successfully");
-      console.log("Collectionsite updated successfully:", response.data);
+      notifySuccess("Collection site updated successfully!");
     } catch (error) {
-      console.error("Error updating Collectionsite:", error);
-      notifyError("Failed to update Collectionsite");
+      notifyError("An error occurred while updating the collection site.");
     }
   };
-
   const bufferToBase64 = (buffer, format = "jpeg") => {
     if (!buffer) return null;
     let binary = "";
@@ -165,19 +171,8 @@ const UpdateCollectionSite = () => {
     });
     return `data:image/${format};base64,${window.btoa(binary)}`;
   };
+  
 
-  useEffect(() => {
-    if (collectionsite) {
-      setPreview(
-        collectionsite?.logo?.data
-          ? `data:image/jpeg;base64,${Buffer.from(
-              collectionsite?.logo.data
-            ).toString("base64")}`
-          : null
-      );
-      reset(collectionsite); // Reset form with the organization data when available
-    }
-  }, [collectionsite, reset]);
 
   return (
     <div className="profile__info-content">
@@ -189,37 +184,20 @@ const UpdateCollectionSite = () => {
             style={{ marginBottom: "15px" }}
           >
             <div className="profile__logo" style={{ textAlign: "center" }}>
-              {preview ? (
-                <img
-                  src={preview}
-                  alt="Collection Site Logo"
-                  style={{
-                    maxWidth: "150px",
-                    maxHeight: "150px",
-                    objectFit: "contain",
-                    marginBottom: "20px",
-                    borderColor: "black",
-                    borderWidth: "2px",
-                    borderStyle: "solid",
-                  }}
-                />
-              ) : (
-                <span
-                  style={{
-                    width: "70px",
-                    height: "70px",
-                    display: "inline-block",
-                    borderRadius: "50%",
-                    backgroundColor: "#eaeaea",
-                    color: "#aaa",
-                    fontSize: "30px",
-                    lineHeight: "70px",
-                    textAlign: "center",
-                  }}
-                >
-                  <i className="fa-solid fa-user"></i>
-                </span>
-              )}
+            <img
+                src={logo ? URL.createObjectURL(logo) : 
+                  collectionsite?.logo?.data ? bufferToBase64(collectionsite.logo.data, "jpeg") : 
+                  "/default-logo.png"
+                }
+                alt="Collection Site Logo"
+                style={{
+                  maxWidth: "150px",
+                  maxHeight: "150px",
+                  objectFit: "contain",
+                  marginBottom: "20px",
+                  borderRadius: 10,
+                }}
+              />
             </div>
           </div>
           {/* Upload New Logo */}
@@ -238,19 +216,20 @@ const UpdateCollectionSite = () => {
                 width: "150px",
                 marginRight: "20px",
                 display: "inline-block", // Ensures label is inline
+               
               }}
             >
               Upload New Logo
             </label>
             <div className="profile__input" style={{ flexGrow: 1 }}>
-              <input
+            <input
                 {...register("logo")}
                 name="logo"
                 type="file"
                 id="logo"
-                onChange={handleLogoUpload}
+                accept="image/png, image/jpeg" 
+                onChange={(e) => logoHandler(e.target.files[0])}
                 className="form-control form-control-sm"
-                accept="image/*"
               />
 
               <ErrorMessage message={errors.logo?.message} />
@@ -295,45 +274,6 @@ const UpdateCollectionSite = () => {
                 }}
               />
               <ErrorMessage message={errors.useraccount_email?.message} />
-            </div>
-          </div>
-
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="CollectionSiteName"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-                fontSize: "15px",
-                color: "black",
-                marginBottom: 30,
-              }}
-            >
-              Collectionsite Name
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <input
-                id="CollectionSiteName"
-                {...register("CollectionSiteName")}
-                type="text"
-                placeholder="Enter Email"
-                style={{
-                  width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              />
-              <ErrorMessage message={errors.CollectionSiteName?.message} />
             </div>
           </div>
 
