@@ -23,13 +23,14 @@ const schema = Yup.object().shape({
     .required("Phone Number is required")
     .min(11, "Phone Number must be at least 11 characters")
     .label("Phone Number"),
-  ntnNumber: Yup.string().required("NTN Number is required").label("NTN Number"),
+  ntnNumber: Yup.string()
+    .required("NTN Number is required")
+    .label("NTN Number"),
   fullAddress: Yup.string()
     .required("Full Address is required")
     .label("Full Address"),
   type: Yup.string().required("Type is required").label("Type"),
 });
-
 
 const UpdateOrganization = () => {
   const id = localStorage.getItem("userID");
@@ -49,8 +50,7 @@ const UpdateOrganization = () => {
     resolver: yupResolver(schema),
     defaultValues: organization || {}, // Wait until organization is available
   });
-  const [preview, setPreview] = useState(null)
-  
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     fetchcityname();
@@ -61,12 +61,16 @@ const UpdateOrganization = () => {
 
   useEffect(() => {
     if (organization) {
-      setPreview(organization?.logo?.data
-        ? `data:image/jpeg;base64,${Buffer.from(organization?.logo.data).toString("base64")}`
-        : null)
+      setPreview(
+        organization?.logo?.data
+          ? `data:image/jpeg;base64,${Buffer.from(
+              organization?.logo.data
+            ).toString("base64")}`
+          : null
+      );
       reset(organization); // Reset form with the organization data when available
     }
-    console.log("org",organization)
+    console.log("org", organization);
   }, [organization, reset]);
 
   const fetchcityname = async () => {
@@ -85,7 +89,7 @@ const UpdateOrganization = () => {
       const response = await axios.get(
         `http://localhost:5000/api/user/getAccountDetail/${id}`
       );
-      
+
       setOrganization(response.data[0]); // Store fetched organization data
     } catch (error) {
       console.error("Error fetching Organization:", error);
@@ -118,16 +122,16 @@ const UpdateOrganization = () => {
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, value);
     });
-  
+
     if (logoFile) {
       formData.append("logo", logoFile);
     }
-  
+
     // Debugging: log the FormData keys
     for (let [key, value] of formData.entries()) {
       console.log(key, value);
     }
-  
+
     try {
       const response = await axios.put(
         `http://localhost:5000/api/user/updateProfile/${id}`,
@@ -138,7 +142,7 @@ const UpdateOrganization = () => {
           },
         }
       );
-  
+
       notifySuccess("Organization updated successfully");
       console.log("Organization updated successfully:", response.data);
     } catch (error) {
@@ -146,22 +150,20 @@ const UpdateOrganization = () => {
       notifyError("Failed to update organization");
     }
   };
-  
-  
+
   const handleLogoUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setLogoFile(file)
+      setLogoFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreview(e.target.result);
-        e.target.result // Update the preview with the Base64 string
+        e.target.result; // Update the preview with the Base64 string
       };
       reader.readAsDataURL(file); // Convert the file to a Base64 string
     }
   };
-  
-  
+
   const bufferToBase64 = (buffer, format = "jpeg") => {
     if (!buffer) return null;
     let binary = "";
@@ -174,47 +176,75 @@ const UpdateOrganization = () => {
   return (
     <div className="profile__info-content">
       <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
-        <div className="profile__logo" style={{ textAlign: "center" }}>
-          <img
-            src={preview}
-            alt="Organization Logo"
-            style={{
-              maxWidth: "150px",
-              maxHeight: "150px",
-              objectFit: "contain",
-              marginBottom: "20px",
-              borderColor: "black",
-              borderWidth: "2px",
-              borderStyle: "solid",
-            }}
-          />
-          <div style={{ marginTop: "10px" }}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
+        <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
+          <div className="profile__logo" style={{ textAlign: "center" }}>
+            {preview ? (
+              <img
+                src={preview}
+                alt="Organization Logo"
+                style={{
+                  maxWidth: "150px",
+                  maxHeight: "150px",
+                  objectFit: "contain",
+                  marginBottom: "20px",
+                  borderColor: "black",
+                  borderWidth: "2px",
+                  borderStyle: "solid",
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: "70px",
+                  height: "70px",
+                  display: "inline-block",
+                  borderRadius: "50%",
+                  backgroundColor: "#eaeaea",
+                  color: "#aaa",
+                  fontSize: "30px",
+                  lineHeight: "70px",
+                  textAlign: "center",
+                }}
+              >
+                <i className="fa-solid fa-user"></i>
+              </span>
+            )}
+
+            <div
+              className="col-xxl-12 col-md-12"
               style={{
-                display: "none",
-              }}
-              id="logoUpload"
-            />
-            <label
-              htmlFor="logoUpload"
-              style={{
-                cursor: "pointer",
-                background: "#007bff",
-                color: "#fff",
-                padding: "10px 15px",
-                borderRadius: "5px",
-                display: "inline-block",
+                marginBottom: "15px",
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              Upload Logo
-            </label>
+              <label
+                htmlFor="logo"
+                style={{
+                  fontWeight: "bold",
+                  width: "150px",
+                  marginRight: "20px",
+                  display: "inline-block", // Ensures label is inline
+                }}
+              >
+                Upload New Logo
+              </label>
+              <div className="profile__input" style={{ flexGrow: 1 }}>
+                <input
+                  {...register("logo")}
+                  name="logo"
+                  type="file"
+                  id="logo"
+                  onChange={handleLogoUpload}
+                  className="form-control form-control-sm"
+                  accept="image/*"
+                />
+
+                <ErrorMessage message={errors.logo?.message} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
         <div className="row">
           {/* Email */}
           <div
@@ -231,9 +261,9 @@ const UpdateOrganization = () => {
                 fontWeight: "bold",
                 width: "150px",
                 marginRight: "20px",
-                fontSize:'15px',
-                color:'black',
-                marginBottom:30
+                fontSize: "15px",
+                color: "black",
+                marginBottom: 30,
               }}
             >
               Email
@@ -250,7 +280,6 @@ const UpdateOrganization = () => {
                   border: "1px solid #ccc",
                   borderRadius: "4px",
                   height: "50px",
-
                 }}
               />
               <ErrorMessage message={errors.useraccount_email?.message} />
@@ -527,10 +556,10 @@ const UpdateOrganization = () => {
               placeholder="Enter Phone Number"
               style={{
                 width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
+                padding: "20px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                height: "50px",
               }}
             />
             <ErrorMessage message={errors.phoneNumber?.message} />

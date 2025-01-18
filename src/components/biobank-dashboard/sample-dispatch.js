@@ -74,7 +74,7 @@ const SampleDispatchArea = () => {
 
   const fetchSamples = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/sampledispatch/get');
+      const response = await axios.get(`http://localhost:5000/api/sampledispatch/get/${id}`);
       setSamples(response.data); // Store fetched samples in state
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -281,9 +281,14 @@ const SampleDispatchArea = () => {
 
   return (
     <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-
-        <div className="row justify-content-center" style={{ marginTop: '290px' }}>
+      <div
+        className="container"
+        style={{ marginTop: "-20px", width: "auto",}}
+      >
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        >
           <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
@@ -294,7 +299,14 @@ const SampleDispatchArea = () => {
               )}
 
               {/* Table */}
-              <div className="table-responsive" style={{ marginLeft: '-20px', width: '110%' }}>
+              <div
+                className="table-responsive"
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                   <tr style={{ textAlign: "center" }}>
@@ -1540,14 +1552,10 @@ const SampleDispatchArea = () => {
                   </tbody>
                 </table>
               </div>
-
               <div
-                className="pagination"
+                className="pagination d-flex justify-content-center align-items-center mt-3"
                 style={{
-                  marginLeft: 700,
-                  display: "flex",
-                  overflowX: "auto",
-                  whiteSpace: "nowrap",
+                  gap: "10px",
                 }}
               >
                 {/* Previous Button */}
@@ -1555,39 +1563,66 @@ const SampleDispatchArea = () => {
                   className="btn btn-sm btn-secondary"
                   disabled={currentPage === 1}
                   onClick={() => handlePageChange(currentPage - 1)}
-                  style={{
-                    margin: 10,
-                  }}
                 >
                   <i className="fas fa-chevron-left"></i>
                 </button>
 
-                {/* Page Numbers */}
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    className={`btn btn-sm ${
-                      currentPage === index + 1
-                        ? "btn-primary"
-                        : "btn-secondary"
-                    }`}
-                    onClick={() => handlePageChange(index + 1)}
-                    style={{
-                      margin: 10,
-                    }}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+                {/* Page Numbers with Ellipsis */}
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show page number if it's the first, last, current, or adjacent to current
+                  if (
+                    pageNumber === 1 || // Always show the first page
+                    pageNumber === totalPages || // Always show the last page
+                    pageNumber === currentPage || // Show current page
+                    pageNumber === currentPage - 1 || // Show previous page
+                    pageNumber === currentPage + 1 // Show next page
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
+                            ? "btn-primary"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          minWidth: "40px",
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  }
+
+                  // Add ellipsis if previous number wasn't shown
+                  if (
+                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
+                    (pageNumber === totalPages - 1 &&
+                      currentPage < totalPages - 2) // Ellipsis before the last page
+                  ) {
+                    return (
+                      <span
+                        key={`ellipsis-${pageNumber}`}
+                        style={{
+                          minWidth: "40px",
+                          textAlign: "center",
+                        }}
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null; // Skip the page number
+                })}
 
                 {/* Next Button */}
                 <button
                   className="btn btn-sm btn-secondary"
                   disabled={currentPage === totalPages}
                   onClick={() => handlePageChange(currentPage + 1)}
-                  style={{
-                    margin: 10,
-                  }}
                 >
                   <i className="fas fa-chevron-right"></i>
                 </button>

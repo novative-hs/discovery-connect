@@ -12,8 +12,7 @@ const SampleArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  }
-  else{
+  } else {
     console.log("Collection site Id on sample page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
@@ -22,7 +21,7 @@ const SampleArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-const [collectionSiteNames, setCollectionSiteNames] = useState([]);
+  const [collectionSiteNames, setCollectionSiteNames] = useState([]);
   const [formData, setFormData] = useState({
     masterID: "",
     donorID: "",
@@ -72,10 +71,11 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 2;
   // Calculate total pages
   const totalPages = Math.ceil(samples.length / itemsPerPage);
-
+  const [filteredSamples, setFilteredSamples] = useState([]);
+  const [filterOption, setFilterOption] = useState("All");
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: "",
@@ -102,22 +102,34 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
   useEffect(() => {
     fetchSamples(); // Call the function when the component mounts
   }, []);
+
+  useEffect(() => {
+    console.log("Sample",samples)
+    if (filterOption === "All") {
+      setFilteredSamples(samples);
+    } else {
+      setFilteredSamples(samples.filter((sample) => sample.user_account_id == id));
+    }
+  }, [filterOption, samples]);
+
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/collectionsite/collectionsitenames');
+        const response = await fetch(
+          "http://localhost:5000/api/collectionsite/collectionsitenames"
+        );
         if (!response.ok) {
-          throw new Error('Failed to fetch collection site names');
+          throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-        console.log('Fetched Site Names:', data); // Debugging
+        console.log("Fetched Site Names:", data); // Debugging
         // Assuming 'data' contains a key 'data' with the site names
         setCollectionSiteNames(data.data); // Use data.data to get the collection site names
       } catch (error) {
-        console.error('Error fetching site names:', error);
+        console.error("Error fetching site names:", error);
       }
     };
- 
+
     fetchCollectionSiteNames();
   }, []);
   const currentData = samples.slice(
@@ -234,7 +246,12 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
       transferDetails;
 
     // Validate input before making the API call
-    if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber) {
+    if (
+      !TransferTo ||
+      !dispatchVia ||
+      !dispatcherName ||
+      !dispatchReceiptNumber
+    ) {
       alert("All fields are required.");
       return;
     }
@@ -392,13 +409,10 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
 
   return (
     <section className="policy__area pb-120">
-      <div
-        className="container"
-        style={{ marginTop: "-20px", width: "120%", marginLeft: "-90px" }}
-      >
+      <div className="container" style={{ marginTop: "-20px", width: "auto" }}>
         <div
           className="row justify-content-center"
-          style={{ marginTop: "290px", width: "110%" }}
+          style={{ marginTop: "290px" }}
         >
           <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
@@ -410,15 +424,23 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
               )}
               {/* Add Samples Button */}
               <div
-                className="d-flex justify-content-end mb-3"
+                className="d-flex justify-content-between mb-3"
                 style={{
-                  marginTop: "-20px",
-                  width: "120%",
-                  marginLeft: "-150px",
+                  marginBottom: "20px", // Adjust spacing between button and table
                 }}
               >
+                <select
+                  className="form-select justify-content-start"
+                  style={{ width: "200px" }}
+                  value={filterOption}
+                  onChange={(e) => setFilterOption(e.target.value)}
+                >
+                  <option value="All">All Samples</option>
+                  <option value="UserOnly">My Samples</option>
+                </select>
+
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary justify-content-end"
                   onClick={() => setShowAddModal(true)}
                 >
                   Add Samples
@@ -428,7 +450,11 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
               {/* Table */}
               <div
                 className="table-responsive"
-                style={{ marginLeft: "-50px", width: "110%" }}
+                style={{
+                  margin: "0 auto", // Center-align the table horizontally
+                  width: "100%",
+                  textAlign: "center",
+                }}
               >
                 <table className="table table-bordered table-hover table-spaced">
                   <thead className="thead-dark">
@@ -469,23 +495,23 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                           width: "200px",
                         }}
                       >
-                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Master ID"
-                          onChange={(e) =>
-                            handleFilterChange("masterID", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Master ID
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Master ID"
+                            onChange={(e) =>
+                              handleFilterChange("masterID", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Master ID
                         </div>
                       </th>
                       <th
@@ -497,22 +523,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Donor ID"
-                          onChange={(e) =>
-                            handleFilterChange("donorID", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Donor ID
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Donor ID"
+                            onChange={(e) =>
+                              handleFilterChange("donorID", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Donor ID
                         </div>
                       </th>
                       <th
@@ -524,22 +550,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Name"
-                          onChange={(e) =>
-                            handleFilterChange("samplename", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Name
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Name"
+                            onChange={(e) =>
+                              handleFilterChange("samplename", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Name
                         </div>
                       </th>
                       <th
@@ -551,22 +577,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Age"
-                          onChange={(e) =>
-                            handleFilterChange("age", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Age
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Age"
+                            onChange={(e) =>
+                              handleFilterChange("age", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Age
                         </div>
                       </th>
                       <th
@@ -578,22 +604,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Gender"
-                          onChange={(e) =>
-                            handleFilterChange("gender", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Gender
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Gender"
+                            onChange={(e) =>
+                              handleFilterChange("gender", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Gender
                         </div>
                       </th>
                       <th
@@ -605,22 +631,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Ethnicity"
-                          onChange={(e) =>
-                            handleFilterChange("ethnicity", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Ethnicity
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Ethnicity"
+                            onChange={(e) =>
+                              handleFilterChange("ethnicity", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Ethnicity
                         </div>
                       </th>
                       <th
@@ -632,25 +658,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Condition"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "samplecondition",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Condition
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Condition"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "samplecondition",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Condition
                         </div>
                       </th>
                       <th
@@ -662,22 +688,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Storage Temperature"
-                          onChange={(e) =>
-                            handleFilterChange("storagetemp", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Storage Temperature
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Storage Temperature"
+                            onChange={(e) =>
+                              handleFilterChange("storagetemp", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Storage Temperature
                         </div>
                       </th>
                       <th
@@ -689,25 +715,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Storage Temp Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "storagetempUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Storage Temperature Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Storage Temp Unit"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "storagetempUnit",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Storage Temperature Unit
                         </div>
                       </th>
                       <th
@@ -719,22 +745,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Container Type"
-                          onChange={(e) =>
-                            handleFilterChange("ContainerType", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Container Type
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Container Type"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ContainerType",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Container Type
                         </div>
                       </th>
                       <th
@@ -746,25 +775,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Country"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CountryOfCollection",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Country Of Collection
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Country"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "CountryOfCollection",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Country Of Collection
                         </div>
                       </th>
                       <th
@@ -776,22 +805,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Price"
-                          onChange={(e) =>
-                            handleFilterChange("price", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Price
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Price"
+                            onChange={(e) =>
+                              handleFilterChange("price", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Price
                         </div>
                       </th>
                       <th
@@ -803,25 +832,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Price Currency"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SamplePriceCurrency",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Price Currency
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Price Currency"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "SamplePriceCurrency",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Price Currency
                         </div>
                       </th>
                       <th className="px-3">
@@ -851,22 +880,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Quantity Unit"
-                          onChange={(e) =>
-                            handleFilterChange("QuantityUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Quantity Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Quantity Unit"
+                            onChange={(e) =>
+                              handleFilterChange("QuantityUnit", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Quantity Unit
                         </div>
                       </th>
                       <th
@@ -878,22 +907,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Lab Name"
-                          onChange={(e) =>
-                            handleFilterChange("labname", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Lab Name
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Lab Name"
+                            onChange={(e) =>
+                              handleFilterChange("labname", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Lab Name
                         </div>
                       </th>
                       <th
@@ -905,25 +934,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Type Matrix"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SampleTypeMatrix",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Type Matrix
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Type Matrix"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "SampleTypeMatrix",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Type Matrix
                         </div>
                       </th>
                       <th
@@ -935,25 +964,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Type Matrix Subtype"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TypeMatrixSubtype",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Type Matrix Subtype
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Type Matrix Subtype"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TypeMatrixSubtype",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Type Matrix Subtype
                         </div>
                       </th>
                       <th
@@ -965,25 +994,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Procurement Type"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ProcurementType",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Procurement Type
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Procurement Type"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ProcurementType",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Procurement Type
                         </div>
                       </th>
                       <th
@@ -995,22 +1024,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search End Time"
+                            onChange={(e) =>
+                              handleFilterChange("endTime", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          End Time
                         </div>
                       </th>
                       <th
@@ -1022,22 +1051,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Smoking Status"
-                          onChange={(e) =>
-                            handleFilterChange("SmokingStatus", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Smoking Status
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Smoking Status"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "SmokingStatus",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Smoking Status
                         </div>
                       </th>
                       <th
@@ -1049,22 +1081,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Method"
-                          onChange={(e) =>
-                            handleFilterChange("TestMethod", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Method
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Method"
+                            onChange={(e) =>
+                              handleFilterChange("TestMethod", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Method
                         </div>
                       </th>
                       <th
@@ -1076,22 +1108,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result"
-                          onChange={(e) =>
-                            handleFilterChange("TestResult", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Result
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Result"
+                            onChange={(e) =>
+                              handleFilterChange("TestResult", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Result
                         </div>
                       </th>
                       <th
@@ -1103,22 +1135,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result Unit"
-                          onChange={(e) =>
-                            handleFilterChange("TestResultUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Result Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Result Unit"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TestResultUnit",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Result Unit
                         </div>
                       </th>
                       <th
@@ -1130,25 +1165,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Infectious Disease Testing"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "InfectiousDiseaseTesting",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Infectious Disease Testing
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Infectious Disease Testing"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "InfectiousDiseaseTesting",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Infectious Disease Testing
                         </div>
                       </th>
                       <th
@@ -1160,25 +1195,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Infectious Disease Result"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "InfectiousDiseaseResult",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Infectious Disease Result
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Infectious Disease Result"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "InfectiousDiseaseResult",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Infectious Disease Result
                         </div>
                       </th>
                       <th
@@ -1190,22 +1225,22 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range"
-                          onChange={(e) =>
-                            handleFilterChange("CutOffRange", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Cut Off Range
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Cut Off Range"
+                            onChange={(e) =>
+                              handleFilterChange("CutOffRange", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Cut Off Range
                         </div>
                       </th>
                       <th
@@ -1217,25 +1252,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CutOffRangeUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Cut Off Range Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Cut Off Range Unit"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "CutOffRangeUnit",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Cut Off Range Unit
                         </div>
                       </th>
                       <th
@@ -1247,25 +1282,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Freeze Thaw Cycles"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "FreezeThawCycles",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Freeze Thaw Cycles
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Freeze Thaw Cycles"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "FreezeThawCycles",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Freeze Thaw Cycles
                         </div>
                       </th>
                       <th
@@ -1277,85 +1312,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Date Of Collection"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "DateOfCollection",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Date Of Collection
-                      </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Concurrent Medical Conditions"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ConcurrentMedicalConditions",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Concurrent Medical Conditions
-                      </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Concurrent Medications"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ConcurrentMedications",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Concurrent Medications
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Date Of Collection"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "DateOfCollection",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Date Of Collection
                         </div>
                       </th>
                       <th
@@ -1367,25 +1342,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Alcohol Or Drug Abuse"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "AlcoholOrDrugAbuse",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Alcohol Or Drug Abuse
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Concurrent Medical Conditions"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ConcurrentMedicalConditions",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Concurrent Medical Conditions
                         </div>
                       </th>
                       <th
@@ -1397,25 +1372,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Diagnosis Test Parameter"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "DiagnosisTestParameter",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Diagnosis Test Parameter
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Concurrent Medications"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ConcurrentMedications",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Concurrent Medications
                         </div>
                       </th>
                       <th
@@ -1427,22 +1402,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Result Remarks"
-                          onChange={(e) =>
-                            handleFilterChange("ResultRemarks", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Result Remarks
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Alcohol Or Drug Abuse"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "AlcoholOrDrugAbuse",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Alcohol Or Drug Abuse
                         </div>
                       </th>
                       <th
@@ -1454,53 +1432,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Kit"
-                          onChange={(e) =>
-                            handleFilterChange("TestKit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Kit
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Kit Manufacturer"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TestKitManufacturer",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Kit Manufacturer
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Diagnosis Test Parameter"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "DiagnosisTestParameter",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Diagnosis Test Parameter
                         </div>
                       </th>
                       <th
@@ -1512,22 +1462,25 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test System"
-                          onChange={(e) =>
-                            handleFilterChange("TestSystem", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test System
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Result Remarks"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ResultRemarks",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Result Remarks
                         </div>
                       </th>
                       <th
@@ -1537,28 +1490,111 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                           textAlign: "center",
                           width: "200px",
                         }}
-                       
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test System Manufacturer"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TestSystemManufacturer",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test System Manufacturer
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Kit"
+                            onChange={(e) =>
+                              handleFilterChange("TestKit", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Kit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Kit Manufacturer"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TestKitManufacturer",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Kit Manufacturer
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test System"
+                            onChange={(e) =>
+                              handleFilterChange("TestSystem", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test System
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test System Manufacturer"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TestSystemManufacturer",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test System Manufacturer
                         </div>
                       </th>
                       {/*<th>User ID</th>*/}
@@ -1571,30 +1607,30 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Status
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Status"
+                            onChange={(e) =>
+                              handleFilterChange("status", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Status
                         </div>
                       </th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((sample) => (
+                    {filteredSamples.length > 0 ? (
+                      filteredSamples.map((sample) => (
                         <tr key={sample.id}>
                           <td>{sample.id}</td>
                           <td>{sample.masterID}</td>
@@ -2820,8 +2856,12 @@ const [collectionSiteNames, setCollectionSiteNames] = useState([]);
                       Transfer to Collection Site
                     </h5>
                     <form>
-                    <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Transfer to Collection Site</label>
+                      <div style={{ marginBottom: "15px" }}>
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
+                          Transfer to Collection Site
+                        </label>
                         <select
                           name="TransferTo"
                           value={transferDetails.TransferTo}

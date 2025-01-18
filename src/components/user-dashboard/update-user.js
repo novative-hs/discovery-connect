@@ -37,8 +37,8 @@ const UpdateUser = () => {
   const [organization, setOrganization] = useState(null); // Set initial state as null
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setcountryname] = useState([]);
-const [logoFile, setLogoFile] = useState(null);
-const [preview, setPreview] = useState(null)
+  const [logoFile, setLogoFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   // React Hook Form
   const {
     register,
@@ -60,6 +60,13 @@ const [preview, setPreview] = useState(null)
 
   useEffect(() => {
     if (researcher) {
+      setPreview(
+        researcher?.logo?.data
+          ? `data:image/jpeg;base64,${Buffer.from(
+              researcher?.logo.data
+            ).toString("base64")}`
+          : null
+      );
       reset({
         ...researcher,
         OrganizationName: researcher.nameofOrganization, // Ensure correct mapping
@@ -83,11 +90,18 @@ const [preview, setPreview] = useState(null)
       const response = await axios.get(
         `http://localhost:5000/api/admin/organization/get`
       );
-      setOrganization(response.data); // Store fetched organization data
+
+      // Filter organizations where status is "approved"
+      const approvedOrganizations = response.data.filter(
+        (organization) => organization.status === "approved"
+      );
+
+      setOrganization(approvedOrganizations); // Store only approved organizations
     } catch (error) {
       console.error("Error fetching Organization:", error);
     }
   };
+
   const fetchResearcher = async () => {
     try {
       const response = await axios.get(
@@ -120,96 +134,127 @@ const [preview, setPreview] = useState(null)
       console.error("Error fetching Country:", error);
     }
   };
-   
+
   const handleLogoUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setLogoFile(file)
+      setLogoFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreview(e.target.result);
-        e.target.result // Update the preview with the Base64 string
+        e.target.result; // Update the preview with the Base64 string
       };
       reader.readAsDataURL(file); // Convert the file to a Base64 string
     }
   };
-  
+
   const onSubmit = async (data) => {
-    if (!data) {
-      console.log("Form submission failed: no data");
-      return;
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    if (logoFile) {
+      formData.append("logo", logoFile);
     }
-    console.log("Form submitted with data:", data);
+
+    // Debugging: log the FormData keys
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
 
     try {
-      // POST request to your backend API with the form data
       const response = await axios.put(
         `http://localhost:5000/api/user/updateProfile/${id}`,
-        data // Use the 'data' directly here
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      notifySuccess("Researcher updated successfully")
+
+      notifySuccess("Researcher updated successfully");
       console.log("Researcher updated successfully:", response.data);
     } catch (error) {
       console.error("Error updating Researcher:", error);
+      notifyError("Failed to update Researcher");
     }
   };
-  const bufferToBase64 = (buffer, format = "jpeg") => {
-    if (!buffer) return null;
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    bytes.forEach((byte) => {
-      binary += String.fromCharCode(byte);
-    });
-    return `data:image/${format};base64,${window.btoa(binary)}`;
-  };
-  
 
   return (
     <div className="profile__info-content">
       <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
-        <div className="profile__logo" style={{ textAlign: "center" }}>
-          <img
-            src={preview}
-            alt="Organization Logo"
-            style={{
-              maxWidth: "150px",
-              maxHeight: "150px",
-              objectFit: "contain",
-              marginBottom: "20px",
-              borderColor: "black",
-              borderWidth: "2px",
-              borderStyle: "solid",
-            }}
-          />
-          <div style={{ marginTop: "10px" }}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
+        <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
+          <div className="profile__logo" style={{ textAlign: "center" }}>
+            {preview ? (
+              <img
+                src={preview}
+                alt="Researcher Logo"
+                style={{
+                  maxWidth: "150px",
+                  maxHeight: "150px",
+                  objectFit: "contain",
+                  marginBottom: "20px",
+                  borderColor: "black",
+                  borderWidth: "2px",
+                  borderStyle: "solid",
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: "70px",
+                  height: "70px",
+                  display: "inline-block",
+                  borderRadius: "50%",
+                  backgroundColor: "#eaeaea",
+                  color: "#aaa",
+                  fontSize: "30px",
+                  lineHeight: "70px",
+                  textAlign: "center",
+                }}
+              >
+                <i className="fa-solid fa-user"></i>
+              </span>
+            )}
+
+            <div
+              className="col-xxl-12 col-md-12"
               style={{
-                display: "none",
-              }}
-              id="logoUpload"
-            />
-            <label
-              htmlFor="logoUpload"
-              style={{
-                cursor: "pointer",
-                background: "#007bff",
-                color: "#fff",
-                padding: "10px 15px",
-                borderRadius: "5px",
-                display: "inline-block",
+                marginBottom: "15px",
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              Upload Logo
-            </label>
+              <label
+                htmlFor="logo"
+                style={{
+                  fontWeight: "bold",
+                  width: "150px",
+                  marginRight: "20px",
+                  display: "inline-block", // Ensures label is inline
+                }}
+              >
+                Upload New Logo
+              </label>
+              <div className="profile__input" style={{ flexGrow: 1 }}>
+                <input
+                  {...register("logo")}
+                  name="logo"
+                  type="file"
+                  id="logo"
+                  onChange={handleLogoUpload}
+                  className="form-control form-control-sm"
+                  accept="image/*"
+                />
+
+                <ErrorMessage message={errors.logo?.message} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
         <div className="row">
-
           {/* Email */}
           <div
             className="col-xxl-12 col-md-12"
@@ -249,7 +294,44 @@ const [preview, setPreview] = useState(null)
               <ErrorMessage message={errors.useraccount_email?.message} />
             </div>
           </div>
-
+          <div
+            className="col-xxl-12 col-md-12"
+            style={{
+              marginBottom: "15px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <label
+              htmlFor="ResearcherName"
+              style={{
+                fontWeight: "bold",
+                width: "150px",
+                marginRight: "20px",
+                fontSize: "15px",
+                color: "black",
+                marginBottom: 30,
+              }}
+            >
+              Researcher Name
+            </label>
+            <div className="profile__input" style={{ flexGrow: 1 }}>
+              <input
+                id="ResearcherName"
+                {...register("ResearcherName")}
+                type="text"
+                placeholder="Enter Email"
+                style={{
+                  width: "100%",
+                  padding: "20px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  height: "50px",
+                }}
+              />
+              <ErrorMessage message={errors.ResearcherName?.message} />
+            </div>
+          </div>
           {/* Organization Name */}
           <div
             className="col-xxl-12 col-md-12"

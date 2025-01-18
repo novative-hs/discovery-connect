@@ -252,14 +252,11 @@ const updateAccount = (req, callback) => {
   } = req.body;
   
   // Handle the logo file (if provided)
-  const logo =
-    req.body.logo &&
-    req.body.logo.data &&
-    (accountType === "CollectionSites" ||
-      accountType === "Organization" ||
-      accountType === "Researcher")
-      ? Buffer.from(req.body.logo.data)
-      : null;
+  let logo = null;
+  if (req.file) {
+    // If a file was uploaded, convert it to a buffer
+    logo = req.file.buffer;
+  }
   //Start MySQL transaction
   mysqlConnection.beginTransaction((err) => {
     if (err) {
@@ -318,7 +315,7 @@ const updateAccount = (req, callback) => {
                   district = ?, 
                   country = ?, 
                   nameofOrganization = ?, 
-                  logo = COALESCE(?, logo)
+                  logo = ?
                 WHERE user_account_id = ?
               `;
                 values = [
@@ -346,7 +343,7 @@ const updateAccount = (req, callback) => {
                   city = ?, 
                   district = ?, 
                   country = ?, 
-                  logo = COALESCE(?, logo)
+                  logo = ?
                 WHERE user_account_id = ?
               `;
                 values = [
@@ -374,7 +371,7 @@ const updateAccount = (req, callback) => {
                   city = ?, 
                   district = ?, 
                   country = ?, 
-                  logo = COALESCE(?, logo)
+                  logo = ?
                 WHERE user_account_id = ?
               `;
                 values = [

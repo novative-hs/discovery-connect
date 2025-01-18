@@ -110,7 +110,10 @@ const RegisterForm = () => {
     const fetchOrganizationname = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/admin/organization/get');
-        setOrganizationname(response.data); // Store fetched City in state
+        const approvedOrganizations = response.data.filter(
+          (organization) => organization.status === "approved"
+        );
+        setOrganizationname(approvedOrganizations); // Store fetched City in state
       } catch (error) {
         console.error("Error fetching Organization:", error);
       }

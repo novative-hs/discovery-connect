@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
@@ -22,7 +22,9 @@ const Header = ({ style_2 = false, setActiveTab }) => {
   const { user: userInfo } = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();
-
+  const [activeTab, setActiveTabState] = useState("order-info");
+  const [screenWidth, setScreenWidth] = useState(0); // state to track screen size
+const [hovered, setHovered] = useState(false);
   const handleToggleDropdown = () => {
     console.log("Dropdown toggled");
     setShowDropdown(!showDropdown);
@@ -54,9 +56,26 @@ const Header = ({ style_2 = false, setActiveTab }) => {
     router.push("/");
   };
 
-  // const handleNavigation = (tabId) => {
-  //   document.getElementById(tabId)?.click();
-  // };
+  useEffect(() => {
+    const updateScreenSize = () => {
+      setScreenWidth(window.innerWidth);
+      if (window.innerWidth >= 992) {
+        setIsOffCanvasOpen(false); // Close off-canvas on larger screens
+      }
+    };
+
+    updateScreenSize();
+    window.addEventListener("resize", updateScreenSize);
+
+    return () => {
+      window.removeEventListener("resize", updateScreenSize);
+    };
+  }, []);
+
+  const handleSetActiveTab = (tab) => {
+    setActiveTab(tab);
+    setActiveTabState(tab);
+  };
 
   return (
     <>
@@ -66,165 +85,139 @@ const Header = ({ style_2 = false, setActiveTab }) => {
             className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
               style_2 ? "header__bottom-13-white" : "grey-bg-17"
             } header__sticky ${sticky ? "header-sticky" : ""}`}
-            id="header-sticky"
-            style={{ height: "120px" }}
+            style={{ height: "150px" }}
           >
             <div className="container-fluid">
-              <div className="mega-menu-wrapper p-relative">
-                <div className="row align-items-center">
-                  <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: "-30px" }}>
-                      <Link href="/">
+              <div className="row align-items-center">
+                {/* Logo */}
+                <div className="col-6 col-md-4 col-lg-2">
+                  <div className="logo">
+                    <Link href="/">
+                      <Image
+                        src={logo}
+                        alt="logo"
+                        style={{ width: "150px", height: "auto" }}
+                      />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Navigation Menu */}
+                <div className="col-12 col-md-8 col-lg-7 d-none d-lg-flex justify-content-between">
+                <nav className="d-flex flex-nowrap">
+                    <ul className="nav">
+                      {[
+                        { label: "Profile", tab: "order-info" },
+                        { label: "Sample List", tab: "samples" },
+                       
+                      ].map(({ label, tab }, index) => (
+                        <li key={tab} className="nav-item">
+                          <button
+                            className={`nav-link text-black ${
+                              activeTab === tab
+                                ? "active text-white bg-dark"
+                                : ""
+                            } ${hovered === index ? "bg-dark text-white" : ""}`}
+                            onClick={() => handleSetActiveTab(tab)}
+                            onMouseEnter={() => setHovered(index)}
+                            onMouseLeave={() => setHovered(null)}
+                          >
+                            {label}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                </div>
+
+                {/* Action Icons */}
+                <div className="col-6 col-md-4 col-lg-3 d-flex justify-content-end">
+                  <div className="d-flex align-items-center gap-3">
+                    {/* Search */}
+                    <div className="header__search-13">
+                      <SearchForm />
+                    </div>
+
+                    {/* User Profile */}
+                    {userInfo?.imageURL ? (
+                      <Link href="/user-dashboard">
                         <Image
-                          src={logo}
-                          alt="logo"
-                          style={{ width: "150px", height: "auto" }}
+                          src={userInfo.imageURL}
+                          alt="user img"
+                          width={35}
+                          height={35}
+                          className="rounded-circle"
                         />
                       </Link>
-                    </div>
-                  </div>
-                  <div className="col-xxl-8 col-xl-7 d-none d-xl-block">
-                    <div className="main-menu main-menu-13 pl-45 main-menu-ff-space">
-                      <nav id="mobile-menu-3">
-                        <ul className="header__nav">
-                          <li>
-                            <button onClick={() => setActiveTab("order-info")}>
-                              Profile
-                            </button>
-                          </li>
-                         
-                          <li>
-                            <button onClick={() => setActiveTab("samples")}>
-                              Samples List
-                            </button>
-                          </li>
-                        
-                        </ul>
-                      </nav>
-                    </div>
-                  </div>
-                  <div className="col-xxl-3 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
-                    <div className="header__bottom-right-13 d-flex justify-content-end align-items-center pl-30">
-                      <div className="header__search-13">
-                        <SearchForm />
-                      </div>
-                      <div className="header__action-13 d-none d-md-block">
-                        <ul
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "1px",
-                            padding: 0,
-                            margin: 0,
-                            listStyleType: "none",
-                          }}
+                    ) : userInfo?.name ? (
+                      <Link href="/user-dashboard">
+                        <h2 className="text-uppercase">{userInfo.name[0]}</h2>
+                      </Link>
+                    ) : (
+                      <div className="dropdown">
+                        <button
+                          className="btn dropdown-toggle"
+                          type="button"
+                          id="dropdownMenuButton"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
                         >
-                          <li className="d-xxl-none">
-                            <a href="#">
-                              <Search />
-                            </a>
-                          </li>
-                          {userInfo?.imageURL ? (
-                            <li>
-                              <Link href="/user-dashboard">
-                                <Image
-                                  src={userInfo.imageURL}
-                                  alt="user img"
-                                  width={35}
-                                  height={35}
-                                  style={{
-                                    objectFit: "cover",
-                                    borderRadius: "50%",
-                                  }}
-                                />
-                              </Link>
-                            </li>
-                          ) : userInfo?.name ? (
-                            <li>
-                              <Link href="/user-dashboard">
-                                <h2 className="text-uppercase tp-user-login-avater">
-                                  {userInfo.name[0]}
-                                </h2>
-                              </Link>
-                            </li>
-                          ) : (
-                            <li
-                              className="user-menu"
-                              style={{ position: "relative" }}
-                            >
-                              <Link
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleToggleDropdown();
-                                }}
-                              >
-                                <User />
-                              </Link>
-                              {showDropdown && (
-                                <ul
-                                  style={{
-                                    position: "absolute",
-                                    top: "100%",
-                                    right: "0",
-                                    backgroundColor: "white",
-                                    border: "1px solid #ccc",
-                                    padding: "10px",
-                                    margin: "0",
-                                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                                    zIndex: 9999,
-                                    listStyleType: "none",
-                                    width: "190px",
-                                  }}
-                                >
-                                  <li>
-                                    <button
-                                      onClick={handleUpdateProfile}
-                                      style={DropdownStyle}
-                                    >
-                                      Update Profile
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button
-                                      onClick={handleChangePassword}
-                                      style={DropdownStyle}
-                                    >
-                                      Change Password
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button
-                                      onClick={handleLogout}
-                                      style={DropdownStyle}
-                                    >
-                                      Logout
-                                    </button>
-                                  </li>
-                                </ul>
-                              )}
-                            </li>
-                          )}
+                          <User />
+                        </button>
+                        <ul
+                          className="dropdown-menu"
+                          aria-labelledby="dropdownMenuButton"
+                        >
                           <li>
-                            <Link href="/wishlist">
-                              <Heart />
-                              <span className="tp-item-count">
-                                {wishlist.length}
-                              </span>
-                            </Link>
+                            <button
+                              className="dropdown-item"
+                              onClick={handleUpdateProfile}
+                            >
+                              Update Profile
+                            </button>
                           </li>
                           <li>
                             <button
-                              className="cartmini-open-btn"
-                              onClick={() => setIsCartOpen(!isCartOpen)}
+                              className="dropdown-item"
+                              onClick={handleChangePassword}
                             >
-                              <Cart />
-                              <span className="tp-item-count">{quantity}</span>
+                              Change Password
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              className="dropdown-item"
+                              onClick={handleLogout}
+                            >
+                              Logout
                             </button>
                           </li>
                         </ul>
                       </div>
-                      <div className="header__hamburger ml-30 d-xl-none">
+                    )}
+
+                    {/* Wishlist */}
+                    <Link href="/wishlist" className="position-relative">
+                      <Heart />
+                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                        {wishlist.length}
+                      </span>
+                    </Link>
+
+                    {/* Cart */}
+                    <button
+                      className="btn position-relative"
+                      onClick={() => setIsCartOpen(!isCartOpen)}
+                    >
+                      <Cart />
+                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                        {quantity}
+                      </span>
+                    </button>
+
+                    {/* offCanva */}     
+                    {screenWidth < 992 && (               
+                    <div className="header__hamburger ml-30 d-xl-none">
                         <button
                           onClick={() => setIsOffCanvasOpen(true)}
                           type="button"
@@ -235,7 +228,7 @@ const Header = ({ style_2 = false, setActiveTab }) => {
                           <span></span>
                         </button>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -244,13 +237,15 @@ const Header = ({ style_2 = false, setActiveTab }) => {
         </div>
       </header>
 
+      {/* OffCanvas button, shows only for smaller screens */}
+
       <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />
       <OffCanvas
-  isOffCanvasOpen={isOffCanvasOpen}
-  setIsOffCanvasOpen={setIsOffCanvasOpen}
-  setActiveTab={setActiveTab}
-  dashboardType="researcher" 
-/>
+        isOffCanvasOpen={isOffCanvasOpen}
+        setIsOffCanvasOpen={setIsOffCanvasOpen}
+        setActiveTab={setActiveTab}
+        dashboardType="researcher"
+      />
     </>
   );
 };

@@ -184,10 +184,14 @@ const ResearcherArea = () => {
 
     return (
         <section className="policy__area pb-120">
-            <div className="container" style={{ marginTop: '-20px', width: '120%', marginLeft: '-80px' }}>
-
-                <div className="row justify-content-center" style={{ marginTop: '290px' }}>
-                    <div className="col-xl-10">
+             <div
+        className="container"
+        style={{ marginTop: "-20px", width: "auto",}}
+      >
+        <div
+          className="row justify-content-center"
+          style={{ marginTop: "290px" }}
+        ><div className="col-xl-10">
                         <div className="policy__wrapper policy__translate p-relative z-index-1">
                             {/* Success Message */}
                             {successMessage && (

@@ -41,7 +41,7 @@ const ResearcherArea = () => {
   const [orgid, setorgId] = useState();
   // Calculate total pages
   const totalPages = Math.ceil(researchers.length / itemsPerPage);
-
+  const [logoFile, setLogoFile] = useState(null);
   // Fetch researchers from backend when component loads
   useEffect(() => {
     if (id === null) {
@@ -115,8 +115,10 @@ const ResearcherArea = () => {
   const handleInputChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      setLogoFile(file);
       setPreview(URL.createObjectURL(file)); // Generate preview URL
     }
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -125,20 +127,46 @@ const ResearcherArea = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    formData.nameofOrganization = organization.id;
-   
-    console.log(formData);
-    
+  
+    // Create a new FormData instance
+    const formDataToSubmit = new FormData();
+  
+    // Append all fields to the FormData instance
+    formDataToSubmit.append("userID", formData.userID);
+    formDataToSubmit.append("ResearcherName", formData.ResearcherName);
+    formDataToSubmit.append("phoneNumber", formData.phoneNumber);
+    formDataToSubmit.append("nameofOrganization", organization.id); // Use organization ID
+    formDataToSubmit.append("fullAddress", formData.fullAddress);
+    formDataToSubmit.append("city", formData.city);
+    formDataToSubmit.append("district", formData.district);
+    formDataToSubmit.append("country", formData.country);
+    formDataToSubmit.append("email", formData.email);
+    formDataToSubmit.append("password", formData.password);
+    formDataToSubmit.append("accountType", "Researcher");
+  
+    // Append the logo file
+    if (logoFile) {
+      formDataToSubmit.append("logo", logoFile);
+    }
+  
+    console.log("FormData to submit:", formDataToSubmit);
+  
     try {
       // POST request to your backend API
       const response = await axios.post(
         "http://localhost:5000/api/user/signup",
-        formData
+        formDataToSubmit,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       console.log("Researcher added successfully:", response.data);
-
+  
       // Refresh the researcher list after successful submission
       fetchResearcher();
+  
       // Clear form after submission
       setFormData({
         userID: "",
@@ -152,13 +180,15 @@ const ResearcherArea = () => {
         email: "",
         password: "",
         accountType: "Researcher",
+        logo: "",
       });
+  
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding researcher:", error);
+      console.error("Error adding researcher:", error.response?.data || error.message);
     }
   };
-
+  
   // const handleHistory = async () => {
   //   setSelectedResearcherStatus('pending')
   //   try {
@@ -207,7 +237,7 @@ const ResearcherArea = () => {
       city: researcher.city,
       district: researcher.district,
       country: researcher.country,
-      logo:researcher.logo
+      logo: researcher.logo,
     });
   };
 
@@ -217,7 +247,7 @@ const ResearcherArea = () => {
     try {
       const response = await axios.put(
         `http://localhost:5000/api/researchers/edit/${selectedResearcherId}`,
-        formData,
+        formData
       );
       console.log("Researcher updated successfully:", response.data);
 
@@ -234,7 +264,7 @@ const ResearcherArea = () => {
         error
       );
     }
-    console.log(formData)
+    console.log(formData);
   };
 
   // Get the current data for the table
@@ -772,6 +802,7 @@ const ResearcherArea = () => {
                                       display: "block",
                                       margin: "0 auto",
                                     }}
+                                    accept="image/*"
                                   />
                                   <span>
                                     <i className="fa-solid fa-image"></i>
@@ -1022,63 +1053,62 @@ const ResearcherArea = () => {
                       </div>
                       <form onSubmit={handleUpdate}>
                         <div className="modal-body">
+                          <div
+                            className="login__input-item"
+                            style={{ textAlign: "center" }}
+                          >
+                            {/* Image Preview Section */}
+                            <div style={{ marginBottom: "10px" }}>
+                              {preview ? (
+                                <img
+                                  src={preview}
+                                  alt="Preview"
+                                  style={{
+                                    width: "70px",
+                                    height: "70px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    display: "inline-block",
+                                  }}
+                                />
+                              ) : (
+                                <span
+                                  style={{
+                                    width: "70px",
+                                    height: "70px",
+                                    display: "inline-block",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#eaeaea",
+                                    color: "#aaa",
+                                    fontSize: "30px",
+                                    lineHeight: "70px",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-user"></i>
+                                </span>
+                              )}
+                            </div>
 
-                        <div
-                                className="login__input-item"
-                                style={{ textAlign: "center" }}
-                              >
-                                {/* Image Preview Section */}
-                                <div style={{ marginBottom: "10px" }}>
-                                  {preview ? (
-                                    <img
-                                      src={preview}
-                                      alt="Preview"
-                                      style={{
-                                        width: "70px",
-                                        height: "70px",
-                                        borderRadius: "50%",
-                                        objectFit: "cover",
-                                        display: "inline-block",
-                                      }}
-                                    />
-                                  ) : (
-                                    <span
-                                      style={{
-                                        width: "70px",
-                                        height: "70px",
-                                        display: "inline-block",
-                                        borderRadius: "50%",
-                                        backgroundColor: "#eaeaea",
-                                        color: "#aaa",
-                                        fontSize: "30px",
-                                        lineHeight: "70px",
-                                        textAlign: "center",
-                                      }}
-                                    >
-                                      <i className="fa-solid fa-user"></i>
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* File Input Section */}
-                                <div className="login__input">
-                                  <input
-                                    name="logo"
-                                    type="file"
-                                    id="logo"
-                                    className="form-control form-control-sm"
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      display: "block",
-                                      margin: "0 auto",
-                                    }}
-                                  />
-                                  <span>
-                                    <i className="fa-solid fa-image"></i>
-                                  </span>
-                                </div>
-                              </div>
+                            {/* File Input Section */}
+                            <div className="login__input">
+                              <input
+                                name="logo"
+                                type="file"
+                                id="logo"
+                                className="form-control form-control-sm"
+                                onChange={handleInputChange}
+                                required
+                                style={{
+                                  display: "block",
+                                  margin: "0 auto",
+                                }}
+                              />
+                              <span>
+                                <i className="fa-solid fa-image"></i>
+                              </span>
+                            </div>
+                          </div>
                           {/* Form Fields */}
                           <div className="form-group">
                             <label>Name</label>

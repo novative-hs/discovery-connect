@@ -10,6 +10,9 @@ import axios from "axios";
 // Validation schema
 const schema = Yup.object().shape({
   useraccount_email: Yup.string().required("Email is required").label("Email"),
+  CollectionSiteName: Yup.string()
+    .required("CollectionSiteName is required")
+    .label("CollectionSiteName"),
   cityid: Yup.string().required("City is required").label("City"),
   districtid: Yup.string().required("District is required").label("District"),
   countryid: Yup.string().required("Country is required").label("Country"),
@@ -33,8 +36,8 @@ const UpdateCollectionSite = () => {
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setcountryname] = useState([]);
   const [collectionsite, setCollectionSite] = useState({});
-  const [logo, setLogo] = useState(null); // State to store the selected logo
-
+  const [preview, setPreview] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
   // React Hook Form
   const {
     register,
@@ -76,13 +79,15 @@ const UpdateCollectionSite = () => {
   useEffect(() => {
     if (collectionsite) {
       console.log("Logo Data:", collectionsite.logo?.data);
-      console.log("Logo URL:", bufferToBase64(collectionsite.logo?.data, "jpeg"));
+      console.log(
+        "Logo URL:",
+        bufferToBase64(collectionsite.logo?.data, "jpeg")
+      );
       reset(collectionsite); // Reset form with the organization data when available
-      console.log("Collection",collectionsite); 
-   
+      console.log("Collection", collectionsite);
     }
   }, [collectionsite, reset]);
-  
+
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
@@ -104,45 +109,50 @@ const UpdateCollectionSite = () => {
       console.error("Error fetching Country:", error);
     }
   };
-  const handleLogoChange = async (e) => {
-    setLogo(e.target.files[0]);
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target.result);
+        e.target.result; // Update the preview with the Base64 string
+      };
+      reader.readAsDataURL(file); // Convert the file to a Base64 string
+    }
   };
+
   const onSubmit = async (data) => {
-    console.log("data before formData", data);
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
-    // Create a new FormData instance
-    let formData = new FormData();
-
-    // Add all the regular fields to the FormData
-    for (let key in data) {
-      if (data[key]) {
-        formData.append(key, data[key]);
-      }
+    if (logoFile) {
+      formData.append("logo", logoFile);
     }
 
-    // If a logo is provided, append it to the FormData
-    if (logo) {
-      formData.append("logo", logo);
+    // Debugging: log the FormData keys
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
     }
-
-    console.log("data after formData", formData);
 
     try {
-      // Send the form data with the file included in the request
       const response = await axios.put(
         `http://localhost:5000/api/user/updateProfile/${id}`,
-        formData, // Sending the FormData object with both fields and the file
+        formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Make sure it's set to multipart/form-data
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-      console.log("Collection site updated successfully:", response.data);
-      notifySuccess("Collection site updated successfully!");
+
+      notifySuccess("Collectionsite updated successfully");
+      console.log("Collectionsite updated successfully:", response.data);
     } catch (error) {
-      console.error("Error updating collection site:", error);
-      notifyError("An error occurred while updating the collection site.");
+      console.error("Error updating Collectionsite:", error);
+      notifyError("Failed to update Collectionsite");
     }
   };
 
@@ -155,10 +165,16 @@ const UpdateCollectionSite = () => {
     });
     return `data:image/${format};base64,${window.btoa(binary)}`;
   };
-  
 
   useEffect(() => {
     if (collectionsite) {
+      setPreview(
+        collectionsite?.logo?.data
+          ? `data:image/jpeg;base64,${Buffer.from(
+              collectionsite?.logo.data
+            ).toString("base64")}`
+          : null
+      );
       reset(collectionsite); // Reset form with the organization data when available
     }
   }, [collectionsite, reset]);
@@ -173,21 +189,37 @@ const UpdateCollectionSite = () => {
             style={{ marginBottom: "15px" }}
           >
             <div className="profile__logo" style={{ textAlign: "center" }}>
-              <img
-                src={
-                  collectionsite?.logo?.data
-                    ? bufferToBase64(collectionsite.logo.data, "jpeg")
-                    : "/default-logo.png"
-                }
-                alt="Collection Site Logo"
-                style={{
-                  maxWidth: "150px",
-                  maxHeight: "150px",
-                  objectFit: "contain",
-                  marginBottom: "20px",
-                  borderRadius: 10,
-                }}
-              />
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Collection Site Logo"
+                  style={{
+                    maxWidth: "150px",
+                    maxHeight: "150px",
+                    objectFit: "contain",
+                    marginBottom: "20px",
+                    borderColor: "black",
+                    borderWidth: "2px",
+                    borderStyle: "solid",
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    width: "70px",
+                    height: "70px",
+                    display: "inline-block",
+                    borderRadius: "50%",
+                    backgroundColor: "#eaeaea",
+                    color: "#aaa",
+                    fontSize: "30px",
+                    lineHeight: "70px",
+                    textAlign: "center",
+                  }}
+                >
+                  <i className="fa-solid fa-user"></i>
+                </span>
+              )}
             </div>
           </div>
           {/* Upload New Logo */}
@@ -216,8 +248,9 @@ const UpdateCollectionSite = () => {
                 name="logo"
                 type="file"
                 id="logo"
-                onChange={handleLogoChange}
+                onChange={handleLogoUpload}
                 className="form-control form-control-sm"
+                accept="image/*"
               />
 
               <ErrorMessage message={errors.logo?.message} />
@@ -262,6 +295,45 @@ const UpdateCollectionSite = () => {
                 }}
               />
               <ErrorMessage message={errors.useraccount_email?.message} />
+            </div>
+          </div>
+
+          <div
+            className="col-xxl-12 col-md-12"
+            style={{
+              marginBottom: "15px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <label
+              htmlFor="CollectionSiteName"
+              style={{
+                fontWeight: "bold",
+                width: "150px",
+                marginRight: "20px",
+                fontSize: "15px",
+                color: "black",
+                marginBottom: 30,
+              }}
+            >
+              Collectionsite Name
+            </label>
+            <div className="profile__input" style={{ flexGrow: 1 }}>
+              <input
+                id="CollectionSiteName"
+                {...register("CollectionSiteName")}
+                type="text"
+                placeholder="Enter Email"
+                style={{
+                  width: "100%",
+                  padding: "20px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  height: "50px",
+                }}
+              />
+              <ErrorMessage message={errors.CollectionSiteName?.message} />
             </div>
           </div>
 
