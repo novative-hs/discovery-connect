@@ -34,14 +34,14 @@ const createSampleReceive = (req, res) => {
   const { id } = req.params; // ID of the sample being received
   console.log("Sample receive id is:", id);
 
-  const { receiverName, ReceivedByCollectionSite } = req.body;  // Receiving both receiverName and ReceivedByCollectionSite from the payload
+  const { receiverName, ReceivedByCollectionSite } = req.body; // Receiving both receiverName and ReceivedByCollectionSite from the payload
 
   // Validate input data
   if (!receiverName || !ReceivedByCollectionSite) {
     return res.status(400).json({ error: 'All required fields must be provided' });
   }
 
-  // Create the sample receive record with the received `ReceivedByCollectionSite` value from the payload
+  // Create the sample receive record
   sampleReceiveModel.createSampleReceive({ receiverName, ReceivedByCollectionSite }, id, (err, result) => {
     if (err) {
       console.error('Database error during INSERT:', err);
@@ -49,22 +49,37 @@ const createSampleReceive = (req, res) => {
     }
 
     // Update the sample's status to "In Stock"
-    const updateQuery = `
+    const updateStatusQuery = `
       UPDATE sample
       SET status = 'In Stock'
       WHERE id = ?
     `;
 
-    mysqlConnection.query(updateQuery, [id], (updateErr) => {
-      if (updateErr) {
-        console.error('Database error during UPDATE:', updateErr);
+    mysqlConnection.query(updateStatusQuery, [id], (updateStatusErr) => {
+      if (updateStatusErr) {
+        console.error('Database error during UPDATE status:', updateStatusErr);
         return res.status(500).json({ error: 'An error occurred while updating the sample status' });
       }
 
-      res.status(201).json({ message: 'Sample Receive created successfully', id: result.insertId });
+      // Update the user_account_id in the sample table with ReceivedByCollectionSite
+      const updateUserAccountQuery = `
+        UPDATE sample
+        SET user_account_id = ?
+        WHERE id = ?
+      `;
+
+      mysqlConnection.query(updateUserAccountQuery, [ReceivedByCollectionSite, id], (updateUserAccountErr) => {
+        if (updateUserAccountErr) {
+          console.error('Database error during UPDATE user_account_id:', updateUserAccountErr);
+          return res.status(500).json({ error: 'An error occurred while updating the user account ID' });
+        }
+
+        res.status(201).json({ message: 'Sample Receive created and user_account_id updated successfully', id: result.insertId });
+      });
     });
   });
 };
+
 
 
 module.exports = {

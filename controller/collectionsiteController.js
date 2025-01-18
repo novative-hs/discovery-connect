@@ -66,22 +66,23 @@ const deleteCollectionSite = (req, res) => {
 
 // Controller to fetch collection site names
 const getAllCollectionSiteNames = (req, res) => {
-  collectionsiteModel.getAllCollectionSiteNames((err, results) => {
+  const { user_account_id } = req.params; // Extract logged-in user's ID from request parameters
+  collectionsiteModel.getAllCollectionSiteNames(user_account_id, (err, results) => {
     if (err) {
       console.error('Error fetching collection site names:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
-    console.log('Controller Results:', results); 
-    const siteNames = results?.map(row => ({
-      CollectionSiteName: row?.CollectionSiteName,
-      user_account_id: row?.user_account_id
-    })).filter(site => site.CollectionSiteName); // Extract Names and user_account_id
-    // if (siteNames.length === 0) {
-    //   return res.status(404).json({ error: 'No collection sitessss found' });
-    // }
+    console.log('Controller Results:', results);
+    const siteNames = results
+      ?.map(row => ({
+        CollectionSiteName: row?.CollectionSiteName,
+        user_account_id: row?.user_account_id,
+      }))
+      .filter(site => site.CollectionSiteName); // Filter valid names
     res.status(200).json({ data: siteNames });
   });
 };
+
 
 
 module.exports = {

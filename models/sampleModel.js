@@ -24,7 +24,6 @@ const createSampleTable = () => {
         SampleTypeMatrix VARCHAR(100),
         TypeMatrixSubtype VARCHAR(100),
         ProcurementType VARCHAR(50),
-        endTime DATETIME,
         SmokingStatus VARCHAR(50),
         TestMethod VARCHAR(100),
         TestResult VARCHAR(100),
@@ -44,9 +43,10 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        logo VARCHAR(255),
+        endTime VARCHAR(50),
         status VARCHAR(20) DEFAULT 'In Stock',
         user_account_id INT,
+        logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -113,13 +113,13 @@ const createSample = (data, callback) => {
       masterID, donorID, samplename, age, gender, ethnicity, samplecondition,
       storagetemp, storagetempUnit, ContainerType, CountryOfCollection,
       price, SamplePriceCurrency, quantity, QuantityUnit, labname,
-      SampleTypeMatrix, TypeMatrixSubtype, ProcurementType, endTime,
+      SampleTypeMatrix, TypeMatrixSubtype, ProcurementType,
       SmokingStatus, TestMethod, TestResult, TestResultUnit,
       InfectiousDiseaseTesting, InfectiousDiseaseResult, 
       CutOffRange, CutOffRangeUnit, FreezeThawCycles, DateOfCollection,
       ConcurrentMedicalConditions, ConcurrentMedications, AlcoholOrDrugAbuse,
       DiagnosisTestParameter, ResultRemarks, TestKit, TestKitManufacturer,
-      TestSystem, TestSystemManufacturer, user_account_id, status
+      TestSystem, TestSystemManufacturer, endTime, status, user_account_id
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     mysqlConnection.query(query, [
@@ -127,11 +127,11 @@ const createSample = (data, callback) => {
       data.samplecondition, data.storagetemp, data.storagetempUnit, data.ContainerType,
       data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit,
       data.labname, data.SampleTypeMatrix, data.TypeMatrixSubtype, data.ProcurementType,
-      data.endTime, data.SmokingStatus, data.TestMethod, data.TestResult, data.TestResultUnit,
+      data.SmokingStatus, data.TestMethod, data.TestResult, data.TestResultUnit,
       data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.CutOffRange, data.CutOffRangeUnit,
       data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
       data.ConcurrentMedications, data.AlcoholOrDrugAbuse, data.DiagnosisTestParameter, data.ResultRemarks,
-      data.TestKit, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.user_account_id, 'In Stock'
+      data.TestKit, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.endTime,  'In Stock', data.user_account_id
     ], (err, results) => {
       if (err) {
         console.error('Error in MySQL query:', err);  // Log the MySQL query error
@@ -153,12 +153,12 @@ const updateSample = (id, data, callback) => {
     SET masterID = ?, donorID = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
         storagetemp = ?, storagetempUnit = ?, ContainerType = ?, CountryOfCollection = ?, price = ?,
         SamplePriceCurrency = ?, quantity = ?, QuantityUnit = ?, labname = ?, SampleTypeMatrix = ?,
-        TypeMatrixSubtype = ?, ProcurementType = ?, endTime = ?, SmokingStatus = ?, TestMethod = ?,
+        TypeMatrixSubtype = ?, ProcurementType = ?, SmokingStatus = ?, TestMethod = ?,
         TestResult = ?, TestResultUnit = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?,
         CutOffRange = ?, CutOffRangeUnit = ?, FreezeThawCycles = ?, DateOfCollection = ?,
         ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, AlcoholOrDrugAbuse = ?,
         DiagnosisTestParameter = ?, ResultRemarks = ?, TestKit = ?, TestKitManufacturer = ?,
-        TestSystem = ?, TestSystemManufacturer=?,status = ?
+        TestSystem = ?, TestSystemManufacturer=?, endTime = ?, status = ?
     WHERE id = ?`;
 
   const values = [
@@ -166,12 +166,12 @@ const updateSample = (id, data, callback) => {
     data.ethnicity, data.samplecondition, data.storagetemp, data.storagetempUnit,
     data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
     data.quantity, data.QuantityUnit, data.labname, data.SampleTypeMatrix,
-    data.TypeMatrixSubtype, data.ProcurementType, data.endTime, data.SmokingStatus,
+    data.TypeMatrixSubtype, data.ProcurementType, data.SmokingStatus,
     data.TestMethod, data.TestResult, data.TestResultUnit, data.InfectiousDiseaseTesting,
     data.InfectiousDiseaseResult, data.CutOffRange, data.CutOffRangeUnit,
     data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
     data.ConcurrentMedications, data.AlcoholOrDrugAbuse, data.DiagnosisTestParameter,
-    data.ResultRemarks, data.TestKit, data.TestKitManufacturer, data.TestSystem,data.TestSystemManufacturer,
+    data.ResultRemarks, data.TestKit, data.TestKitManufacturer, data.TestSystem,data.TestSystemManufacturer, data.endTime,
     data.status, id
   ];
 

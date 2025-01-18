@@ -68,15 +68,17 @@ const deleteCollectionSite = (id, callback) => {
   });
 };
 
-// Function to get all CollectionSiteName values
-const getAllCollectionSiteNames = (callback) => {
-  const query = 'SELECT CollectionSiteName, user_account_id FROM collectionsite';
-  mysqlConnection.query(query, (err, results) => {
+const getAllCollectionSiteNames = (user_account_id, callback) => {
+  const query = `
+    SELECT CollectionSiteName, user_account_id 
+    FROM collectionsite 
+    WHERE user_account_id != ?`;
+  mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
       console.error('SQL Error:', err);
       callback(err, null);
     } else {
-      console.log('SQL Results:', results);  // Debugging line
+      console.log('SQL Results:', results);
       callback(null, results);
     }
   });

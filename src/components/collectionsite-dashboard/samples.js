@@ -48,7 +48,6 @@ const SampleArea = () => {
     TestResultUnit: "",
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
-    status: "In Stock",
     CutOffRange: "",
     CutOffRangeUnit: "",
     FreezeThawCycles: "",
@@ -63,6 +62,7 @@ const SampleArea = () => {
     TestSystem: "",
     TestSystemManufacturer: "",
     endTime: "",
+    status: "In Stock",
     user_account_id: id,
   });
 
@@ -108,24 +108,25 @@ const SampleArea = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchCollectionSiteNames = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/collectionsite/collectionsitenames');
-        if (!response.ok) {
-          throw new Error('Failed to fetch collection site names');
-        }
-        const data = await response.json();
-        console.log('Fetched Site Names:', data); // Debugging
-        // Assuming 'data' contains a key 'data' with the site names
-        setCollectionSiteNames(data.data); // Use data.data to get the collection site names
-      } catch (error) {
-        console.error('Error fetching site names:', error);
+ useEffect(() => {
+  const fetchCollectionSiteNames = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/collectionsite/collectionsitenames/${id}`
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch collection site names');
       }
-    };
- 
-    fetchCollectionSiteNames();
-  }, []);
+      const data = await response.json();
+      console.log('Fetched Site Names:', data);
+      setCollectionSiteNames(data.data);
+    } catch (error) {
+      console.error('Error fetching site names:', error);
+    }
+  };
+
+  fetchCollectionSiteNames();
+}, [id]);
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
@@ -226,8 +227,8 @@ const SampleArea = () => {
         TestSystem: "",
         TestSystemManufacturer: "",
         endTime: "",
-        user_account_id: id,
         status: "",
+        user_account_id: id,
       });
 
       setShowAddModal(false); // Close modal after submission
@@ -351,7 +352,6 @@ const SampleArea = () => {
       TestResultUnit: sample.TestResultUnit,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
       InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-      status: sample.status,
       CutOffRange: sample.CutOffRange,
       CutOffRangeUnit: sample.CutOffRangeUnit,
       FreezeThawCycles: sample.FreezeThawCycles,
@@ -366,7 +366,8 @@ const SampleArea = () => {
       TestSystem: sample.TestSystem,
       TestSystemManufacturer: sample.TestSystemManufacturer,
       endTime: sample.endTime,
-      user_account_id: sample.user_account_id
+      status: sample.status,
+      user_account_id: sample.user_account_id,
     });
 
 
@@ -417,7 +418,6 @@ const SampleArea = () => {
       TestResultUnit: "",
       InfectiousDiseaseTesting: "",
       InfectiousDiseaseResult: "",
-      status: "In Stock",
       CutOffRange: "",
       CutOffRangeUnit: "",
       FreezeThawCycles: "",
@@ -432,6 +432,7 @@ const SampleArea = () => {
       TestSystem: "",
       TestSystemManufacturer: "",
       endTime: "",
+      status: "In Stock",
       user_account_id: id,
     });
 
@@ -450,7 +451,7 @@ const SampleArea = () => {
     <section className="policy__area pb-120">
       <div
         className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
+        style={{ marginTop: "-20px", width: "180%", marginLeft: "-40px"}}
       >
         <div
           className="row justify-content-center"
@@ -1057,33 +1058,6 @@ const SampleArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Smoking Status"
                           onChange={(e) =>
                             handleFilterChange("SmokingStatus", e.target.value)
@@ -1620,7 +1594,33 @@ const SampleArea = () => {
                         Test System Manufacturer
                         </div>
                       </th>
-                      {/*<th>User ID</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search End Time"
+                          onChange={(e) =>
+                            handleFilterChange("endTime", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        End Time
+                        </div>
+                      </th>
                       <th
                         className="px-3"
                         style={{
@@ -1695,9 +1695,7 @@ const SampleArea = () => {
                           <td>{sample.TestSystem}</td>
                           <td>{sample.TestSystemManufacturer}</td>
                           <td>{sample.endTime}</td>
-                          {/*<td>{sample.user_account_id}</td>*/}
                           <td>{sample.status}</td>
-
                           <td>
                           <div
                               style={{
@@ -1825,8 +1823,8 @@ const SampleArea = () => {
                   role="dialog"
                   style={{
                     position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
+                    top: "30%", // Top Margin
+                    left: "50%", // Left Margin
                     transform: "translate(-50%, -50%)", // Adjust for centering
                     width: "auto", 
                     zIndex: 1050, // Ensure it appears above other content
@@ -2199,6 +2197,7 @@ const SampleArea = () => {
                                   name="DateOfCollection"
                                   value={formData.DateOfCollection}
                                   onChange={handleInputChange}
+                                  max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                                   required
                                 />
                               </div>
@@ -2308,11 +2307,12 @@ const SampleArea = () => {
                               <div className="form-group">
                                 <label>End Time</label>
                                 <input
-                                  type="datetime-local"
+                                  type="date"
                                   className="form-control"
                                   name="endTime"
                                   value={formData.endTime}
                                   onChange={handleInputChange}
+                                  min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
                                   required
                                 />
                               </div>
@@ -2706,11 +2706,12 @@ const SampleArea = () => {
                               <div className="form-group">
                                 <label>Date of Collection</label>
                                 <input
-                                  type="text"
+                                  type="date"
                                   className="form-control"
                                   name="DateOfCollection"
                                   value={formData.DateOfCollection}
                                   onChange={handleInputChange}
+                                  max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                                   required
                                 />
                               </div>
@@ -2820,11 +2821,12 @@ const SampleArea = () => {
                               <div className="form-group">
                                 <label>End Time</label>
                                 <input
-                                  type="text"
+                                  type="date"
                                   className="form-control"
                                   name="endTime"
                                   value={formData.endTime}
                                   onChange={handleInputChange}
+                                  min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
                                   required
                                 />
                               </div>

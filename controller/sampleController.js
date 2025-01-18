@@ -5,7 +5,7 @@ const moment = require('moment');
 // Controller for creating the sample table
 const createSampleTable = (req, res) => {
   SampleModel.createSampleTable();
-  
+
   res.status(200).json({ message: "Sample table creation process started" });
 };
 
@@ -53,25 +53,39 @@ const getSampleById = (req, res) => {
 const createSample = (req, res) => {
   const sampleData = req.body;
   console.log("Controller Received data:", sampleData);
-  
+
   // Required fields validation
- const requiredFields = [
+  const requiredFields = [
     'masterID', 'donorID', 'samplename', 'age', 'gender', 'ethnicity',
     'samplecondition', 'storagetemp', 'storagetempUnit', 'ContainerType',
     'CountryOfCollection', 'price', 'SamplePriceCurrency', 'quantity',
     'QuantityUnit', 'labname', 'SampleTypeMatrix', 'TypeMatrixSubtype',
-    'ProcurementType', 'endTime', 'SmokingStatus', 'TestMethod',
+    'ProcurementType', 'SmokingStatus', 'TestMethod',
     'TestResult', 'TestResultUnit', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult',
     'CutOffRange', 'CutOffRangeUnit', 'FreezeThawCycles', 'DateOfCollection',
     'ConcurrentMedicalConditions', 'ConcurrentMedications', 'AlcoholOrDrugAbuse',
     'DiagnosisTestParameter', 'ResultRemarks', 'TestKit', 'TestKitManufacturer',
-    'TestSystem', 'TestSystemManufacturer'
-];
+    'TestSystem', 'TestSystemManufacturer', 'endTime'
+  ];
 
   for (const field of requiredFields) {
     if (!sampleData[field]) {
       return res.status(400).json({ error: `Field "${field}" is required` });
     }
+  }
+
+  // DateOfCollection will show data only before today
+  const today = new Date();
+  const dateOfCollection = new Date(sampleData.DateOfCollection);
+
+  if (dateOfCollection >= today) {
+    return res.status(400).json({ error: "DateOfCollection must be before today" });
+  }
+
+  // endTime will show data only after today
+  const endTime = new Date(sampleData.endTime);
+  if (endTime <= today) {
+    return res.status(400).json({ error: "endTime must be after today" });
   }
 
   console.log("Fields validated, executing insert...");
@@ -81,7 +95,7 @@ const createSample = (req, res) => {
       console.error('Error creating sample:', err);
       return res.status(500).json({ error: "Error creating sample" });
     }
-    console.log("Sample created, result:", result); 
+    console.log("Sample created, result:", result);
     res.status(201).json({ message: "Sample created successfully", id: result.insertId });
   });
 };
@@ -93,8 +107,8 @@ const updateSample = (req, res) => {
 
   // Format endTime if provided
   if (sampleData.endTime) {
-    sampleData.endTime = moment(sampleData.endTime).format('YYYY-MM-DD HH:mm:ss');
-  
+    sampleData.endTime = moment(sampleData.endTime).format('YYYY-MM-DD');
+
   }
   if (sampleData.DateOfCollection) {
     sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
