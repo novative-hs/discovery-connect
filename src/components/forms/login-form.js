@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
+import axios from "axios";
 // internal
 import { EyeCut, Lock, UserTwo } from "@svg/index";
 import ErrorMessage from "@components/error-message/error";
@@ -28,7 +29,7 @@ const LoginForm = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  
   const onSubmit = async (data) => {
     try {
       const result = await loginUser({
@@ -48,21 +49,14 @@ const LoginForm = () => {
         }
   
         localStorage.setItem("userID", id); // Store 'id' as userID
+        localStorage.setItem("accountType",accountType)
         notifySuccess("Login successfully");
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
   
         // Redirect based on account type
-        if (accountType?.toLowerCase() === "registrationadmin") {
-          router.push("/registrationadmin-dashboard");
-        } else if (accountType?.toLowerCase() === "researcher") {
-          router.push("/user-dashboard");
-        } else if (accountType?.toLowerCase() === "organization") {
+        if (accountType) {
           router.push("/organization-dashboard");
-        } else if (accountType?.toLowerCase() === "collectionsites") {
-          router.push("/collectionsite-dashboard");
-        }else if (accountType?.toLowerCase() === "biobank") {
-          router.push("/biobank-dashboard");
-        } else {
+        }  else {
           router.push("/default-dashboard");
         }
       }

@@ -278,7 +278,17 @@ const SampleDispatchArea = () => {
       console.error(`Error updating biobank with ID ${selectedSampleId}:`, error);
     }
   };
-
+   useEffect(() => {
+      if (showDeleteModal ||  showEditModal || showTransferModal) {
+        // Prevent background scroll when modal is open
+        document.body.style.overflow = "hidden";
+        document.body.classList.add("modal-open");
+      } else {
+        // Allow scrolling again when modal is closed
+        document.body.style.overflow = "auto";
+        document.body.classList.remove("modal-open");
+      }
+    }, [showDeleteModal, showEditModal, showTransferModal]);
   return (
     <section className="policy__area pb-120">
       <div
@@ -1630,19 +1640,23 @@ const SampleDispatchArea = () => {
 
               {/* Edit Sample Modal */}
               {showEditModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050, // Ensure it's above the header
-                    position: "fixed",
-                    top: '120px',
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "auto", // Optional: Customize if needed
-                  }}
-                >
+                    <>
+                    {/* Bootstrap Backdrop with Blur */}
+                    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                
+                    {/* Modal Content */}
+                    <div
+                      className="modal show d-block"
+                      tabIndex="-1"
+                      role="dialog"
+                      style={{
+                        zIndex: 1050, 
+                        position: "fixed",
+                        top: "120px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                      }}
+                    >
                   <div
                     className="modal-dialog"
                     role="document"
@@ -2134,6 +2148,7 @@ const SampleDispatchArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Modal for transfreing Samples */}
@@ -2247,16 +2262,23 @@ const SampleDispatchArea = () => {
 
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog"
-                style={{
-                  zIndex: 1050, // Ensure it's above the header
-                  position: "fixed",
-                  top: '120px',
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                
-                }}
-                >
+                   <>
+                   {/* Bootstrap Backdrop with Blur */}
+                   <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+               
+                   {/* Modal Content */}
+                   <div
+                     className="modal show d-block"
+                     tabIndex="-1"
+                     role="dialog"
+                     style={{
+                       zIndex: 1050, 
+                       position: "fixed",
+                       top: "120px",
+                       left: "50%",
+                       transform: "translateX(-50%)",
+                     }}
+                   >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -2298,6 +2320,7 @@ const SampleDispatchArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>

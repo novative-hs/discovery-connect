@@ -6,7 +6,7 @@ import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateUser from "./update-user";
 import SampleArea from './samples';
-import Header from '../../layout/useraccountheader';
+import Header from '../../layout/organizationheader';
 import OrderInfo from "./order-info";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"

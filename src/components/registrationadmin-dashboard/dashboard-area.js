@@ -10,7 +10,7 @@ import ResearcherArea from "./researcher";
 import Country from "./country";
 import City from "./city";
 import District from "./district";
-import Header from "../../layout/registrationadminheader";
+import Header from "../../layout/organizationheader";
 import Organization from "./organization";
 import CollectionsiteArea from "./collectionsite";
 

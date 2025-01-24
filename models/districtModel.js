@@ -4,7 +4,7 @@ const createDistrictTable = () => {
   const createDistrictTable = `
   CREATE TABLE IF NOT EXISTS district (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     added_by INT,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -33,18 +33,48 @@ const getAllDistricts = (callback) => {
   });
 };
 
-// Function to insert a new City member
-const createDistrict = (data, callback) => {
-  const { districtname, added_by } = data;  // Destructure districtname
-  const query = `
-    INSERT INTO district (name, added_by)
-    VALUES (?, ?)
-  `;
-  mysqlConnection.query(query, [districtname, added_by], (err, result) => {  // Use districtname here
-    callback(err, result);
-  });
-};
+const createDistrict = (data, callback, res) => {
+  console.log('Received Request Body:', data); // Debugging
 
+  const { bulkData, districtname, added_by } = data || {}; // Handle undefined gracefully
+
+  if (bulkData) {
+    const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+    const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+
+    // Use ON DUPLICATE KEY UPDATE to prevent duplicate insertions
+    const query = `
+      INSERT INTO district (name, added_by)
+      VALUES ?
+      ON DUPLICATE KEY UPDATE name = name;
+    `;
+
+    mysqlConnection.query(query, [values], (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        console.log("Insert Result:", result); // Debugging result
+        callback(null, result);
+      }
+    });
+  } else if (districtname && added_by) {
+    const query = `
+      INSERT INTO district (name, added_by)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE name = name;
+    `;
+
+    mysqlConnection.query(query, [districtname, added_by], (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, result);
+      }
+    });
+  } else {
+    callback(new Error('Invalid data'), null);
+  }
+};
 // Function to update a City member
 const updateDistrict = (id, data, callback) => {
   const { districtname, added_by } = data;

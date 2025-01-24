@@ -4,7 +4,7 @@ const createCountryTable = () => {
   const createCountryTable = `
     CREATE TABLE IF NOT EXISTS country (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
+      name VARCHAR(255) NOT NULL UNIQUE,
       added_by INT,
       status ENUM('active', 'inactive') DEFAULT 'active',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -34,18 +34,50 @@ const getAllCountries = (callback) => {
   });
 };
 
-// Function to insert a new Country member
-const createCountry = (data, callback) => {
-  const { countryname, added_by } = data;  // Destructure Countryname
-  const query = `
-    INSERT INTO country (name, added_by)
-    VALUES (?, ?)
-  `;
-  mysqlConnection.query(query, [countryname, added_by], (err, result) => {  // Use Countryname here
-    callback(err, result);
-  });
-};
 
+
+const createCountry = (data, callback, res) => {
+  console.log('Received Request Body:', data); // Debugging
+
+  const { bulkData, countryname, added_by } = data || {}; // Handle undefined gracefully
+
+  if (bulkData) {
+    const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+    const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+
+    // Use ON DUPLICATE KEY UPDATE to prevent duplicate insertions
+    const query = `
+      INSERT INTO country (name, added_by)
+      VALUES ?
+      ON DUPLICATE KEY UPDATE name = name;
+    `;
+
+    mysqlConnection.query(query, [values], (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        console.log("Insert Result:", result); // Debugging result
+        callback(null, result);
+      }
+    });
+  } else if (countryname && added_by) {
+    const query = `
+      INSERT INTO country (name, added_by)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE name = name;
+    `;
+
+    mysqlConnection.query(query, [countryname, added_by], (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, result);
+      }
+    });
+  } else {
+    callback(new Error('Invalid data'), null);
+  }
+};
 // Function to update a Country member
 const updateCountry = (id, data, callback) => {
   const { countryname, added_by } = data;

@@ -63,5 +63,5 @@ function changepassword(data, callback) {
 }
 
 module.exports = {
-  changepassword,F
+  changepassword,
 };

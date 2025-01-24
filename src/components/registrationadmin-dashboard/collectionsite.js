@@ -172,6 +172,18 @@ const [currentPage, setCurrentPage] = useState(1);
       setCollectionsites(filtered);
     }
   };
+      useEffect(() => {
+        if (showDeleteModal || showAddModal || showEditModal) {
+          // Prevent background scroll when modal is open
+          document.body.style.overflow = "hidden";
+          document.body.classList.add("modal-open");
+        } else {
+          // Allow scrolling again when modal is closed
+          document.body.style.overflow = "auto";
+          document.body.classList.remove("modal-open");
+        }
+      }, [showDeleteModal, showAddModal, showEditModal]);
+      
 
 
   return (
@@ -559,25 +571,23 @@ const [currentPage, setCurrentPage] = useState(1);
 
               {/* Edit Collectionsite Modal */}
               {showEditModal && (
-               <div
-               className="modal show d-block"
-               tabIndex="-1"
-               role="dialog"
-               style={{
-                 position: "absolute",
-                 top: "50%", // Center the modal vertically
-                 left: "50%", // Center the modal horizontally
-                 transform: "translate(-50%, -50%)", // Adjust for centering
-                 width: "100%",
-                 maxWidth: "500px",
-                 zIndex: 1050, // Ensure it appears above other content
-                 backgroundColor: "#fff", // Modal background
-                 
-                 overflowY: "auto",
-                 height: 'auto',/* Allow it to expand dynamically */
-                 minheight: '100vh',
-               }}
-             >
+       <>
+       {/* Bootstrap Backdrop with Blur */}
+       <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+   
+       {/* Modal Content */}
+       <div
+         className="modal show d-block"
+         tabIndex="-1"
+         role="dialog"
+         style={{
+           zIndex: 1050, 
+           position: "fixed",
+           top: "120px",
+           left: "50%",
+           transform: "translateX(-50%)",
+         }}
+       >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -670,10 +680,27 @@ const [currentPage, setCurrentPage] = useState(1);
                     </div>
                   </div>
                 </div>
+                </>
               )}
               {/* Modal for Deleting Collectionsites */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
+                  <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+              
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050, 
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -706,6 +733,7 @@ const [currentPage, setCurrentPage] = useState(1);
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>

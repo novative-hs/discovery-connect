@@ -9,7 +9,10 @@ router.post('/create-city-table', cityController.createCityTable);
 router.get('/get-city', cityController.getAllCities);
 
 // Route to create a new committee member
-router.post('/post-city', cityController.createCity);
+router.post('/post-city', (req, res, next) => {
+    console.log('Middleware Log - Received Body:', req.body); // Debugging
+    next();
+  }, cityController.createCity);
 
 // Route to update an existing committee member
 router.put('/put-city/:id', cityController.updateCity);

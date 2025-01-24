@@ -11,7 +11,6 @@ const SampleDispatchArea = () => {
   else {
     console.log("Collection site Id on sample page is:", id);
   }
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -35,14 +34,12 @@ const SampleDispatchArea = () => {
     SampleTypeMatrix: "",
     TypeMatrixSubtype: "",
     ProcurementType: "",
-    endTime: "",
     SmokingStatus: "",
     TestMethod: "",
     TestResult: "",
     TestResultUnit: "",
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
-    status: "In Transit",
     CutOffRange: "",
     CutOffRangeUnit: "",
     FreezeThawCycles: "",
@@ -56,6 +53,7 @@ const SampleDispatchArea = () => {
     TestKitManufacturer: "",
     TestSystem: "",
     TestSystemManufacturer: "",
+    endTime: "",
     // logo: ""
   });
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
@@ -161,13 +159,26 @@ const SampleDispatchArea = () => {
         SampleTypeMatrix: "",
         TypeMatrixSubtype: "",
         ProcurementType: "",
-        endTime: "",
         SmokingStatus: "",
         TestMethod: "",
         TestResult: "",
         TestResultUnit: "",
         InfectiousDiseaseTesting: "",
         InfectiousDiseaseResult: "",
+        CutOffRange: "",
+        CutOffRangeUnit: "",
+        FreezeThawCycles: "",
+        DateOfCollection: "",
+        ConcurrentMedicalConditions: "",
+        ConcurrentMedications: "",
+        AlcoholOrDrugAbuse: "",
+        DiagnosisTestParameter: "",
+        ResultRemarks: "",
+        TestKit: "",
+        TestKitManufacturer: "",
+        TestSystem: "",
+        TestSystemManufacturer: "",
+        endTime: "",
         status: "",
       });
     } catch (error) {
@@ -262,86 +273,24 @@ const SampleDispatchArea = () => {
       console.error(`Error deleting sample with ID ${selectedSampleId}:`, error);
     }
   };
+
+    useEffect(() => {
+      if ( showReceiveModal) {
+        // Prevent background scroll when modal is open
+        document.body.style.overflow = "hidden";
+        document.body.classList.add("modal-open");
+      } else {
+        // Allow scrolling again when modal is closed
+        document.body.style.overflow = "auto";
+        document.body.classList.remove("modal-open");
+      }
+    }, [showReceiveModal]);
   
-  const handleEditClick = (sample) => {
-    setSelectedSampleId(sample.id);
-    setEditSample(sample); // Store the sample data to edit
-    setShowEditModal(true); // Show the edit modal
-    setFormData({
-      masterID: sample.masterID,
-      donorID: sample.donorID,
-      samplename: sample.samplename,
-      age: sample.age,
-      gender: sample.gender,
-      ethnicity: sample.ethnicity,
-      samplecondition: sample.samplecondition,
-      storagetemp: sample.storagetemp,
-      storagetempUnit: sample.storagetempUnit,
-      ContainerType: sample.ContainerType,
-      CountryOfCollection: sample.CountryOfCollection,
-      price: sample.price,
-      SamplePriceCurrency: sample.SamplePriceCurrency,
-      quantity: sample.quantity,
-      QuantityUnit: sample.QuantityUnit,
-      labname: sample.labname,
-      SampleTypeMatrix: sample.SampleTypeMatrix,
-      TypeMatrixSubtype: sample.TypeMatrixSubtype,
-      ProcurementType: sample.ProcurementType,
-      endTime: sample.endTime,
-      SmokingStatus: sample.SmokingStatus,
-      TestMethod: sample.TestMethod,
-      TestResult: sample.TestResult,
-      TestResultUnit: sample.TestResultUnit,
-      InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
-      InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-      status: sample.status,
-      CutOffRange: sample.CutOffRange,
-      CutOffRangeUnit: sample.CutOffRangeUnit,
-      FreezeThawCycles: sample.FreezeThawCycles,
-      DateOfCollection: sample.DateOfCollection,
-      ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
-      ConcurrentMedications: sample.ConcurrentMedications,
-      AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
-      DiagnosisTestParameter: sample.DiagnosisTestParameter,
-      ResultRemarks: sample.ResultRemarks,
-      TestKit: sample.TestKit,
-      TestKitManufacturer: sample.TestKitManufacturer,
-      TestSystem: sample.TestSystem,
-      TestSystemManufacturer: sample.TestSystemManufacturer,
-    });
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/samples/edit/${selectedSampleId}`,
-        formData
-      );
-      console.log("Sample updated successfully:", response.data);
-
-      const newResponse = await axios.get(
-        `http://localhost:5000/api/sampledispatch/get/${id}`
-      );
-      setSamples(newResponse.data);
-
-      setShowEditModal(false);
-      setSuccessMessage("Sample updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
-    }
-  };
-
   return (
     <section className="policy__area pb-120">
        <div
         className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
+        style={{ marginTop: "-20px", width: "180%", marginLeft: "-40px"}}
       >
         <div
           className="row justify-content-center"
@@ -933,33 +882,6 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Smoking Status"
                           onChange={(e) =>
                             handleFilterChange("SmokingStatus", e.target.value)
@@ -1496,7 +1418,33 @@ const SampleDispatchArea = () => {
                         Test System Manufacturer
                         </div>
                       </th>
-                      {/*<th>User ID</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search End Time"
+                          onChange={(e) =>
+                            handleFilterChange("endTime", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        End Time
+                        </div>
+                      </th>
                       <th
                         className="px-3"
                         style={{
@@ -1590,7 +1538,6 @@ const SampleDispatchArea = () => {
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
-                              title="Transfer Sample dispatch" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>
@@ -1684,514 +1631,6 @@ const SampleDispatchArea = () => {
                 </button>
               </div>
 
-              {/* Edit Sample Modal */}
-              {showEditModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050, // Ensure it's above the header
-                    position: "fixed",
-                    top: '120px',
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "auto", // Optional: Customize if needed
-                  }}
-                >
-                  <div
-                    className="modal-dialog"
-                    role="document"
-                    style={{ maxWidth: "100%", width: "70vw" }}
-                  >
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Parallel Columns - 4 columns */}
-                          <div className="row">
-                            {/* Column 1 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Master ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="masterID"
-                                  value={formData.masterID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Donor ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="donorID"
-                                  value={formData.donorID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Age</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="age"
-                                  value={formData.age}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Gender</label>
-                                <select
-                                  className="form-control"
-                                  name="gender"
-                                  value={formData.gender}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="">Select Gender</option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                </select>
-                              </div>
-                              <div className="form-group">
-                                <label>Ethnicity</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ethnicity"
-                                  value={formData.ethnicity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Condition</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplecondition"
-                                  value={formData.samplecondition}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* Column 2 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Storage Temperature</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetemp"
-                                  value={formData.storagetemp}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Storage Temperature Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetempUnit"
-                                  value={formData.storagetempUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Container Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ContainerType"
-                                  value={formData.ContainerType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Country Of Collection</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CountryOfCollection"
-                                  value={formData.CountryOfCollection}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Price</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="price"
-                                  value={formData.price}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Price Currency</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SamplePriceCurrency"
-                                  value={formData.SamplePriceCurrency}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Quantity</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="quantity"
-                                  value={formData.quantity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Quantity Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="QuantityUnit"
-                                  value={formData.QuantityUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Lab Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="labname"
-                                  value={formData.labname}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Type Matrix</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Type Matrix Subtype</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TypeMatrixSubtype"
-                                  value={formData.TypeMatrixSubtype}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Procurement Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ProcurementType"
-                                  value={formData.ProcurementType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>End Time</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="endTime"
-                                  value={formData.endTime}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Smoking Status</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SmokingStatus"
-                                  value={formData.SmokingStatus}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Method</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestMethod"
-                                  value={formData.TestMethod}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResult"
-                                  value={formData.TestResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResultUnit"
-                                  value={formData.TestResultUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Testing</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseTesting"
-                                  value={formData.InfectiousDiseaseTesting}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseResult"
-                                  value={formData.InfectiousDiseaseResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="CutOffRange"
-                                  value={formData.CutOffRange}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CutOffRangeUnit"
-                                  value={formData.CutOffRangeUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* {Column 5} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Freeze Thaw Cycles</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="FreezeThawCycles"
-                                  value={formData.FreezeThawCycles}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Date of Collection</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DateOfCollection"
-                                  value={formData.DateOfCollection}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medical Conditions</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedicalConditions"
-                                  value={formData.ConcurrentMedicalConditions}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medications</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedications"
-                                  value={formData.ConcurrentMedications}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Alcohol Or Drug Abuse</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="AlcoholOrDrugAbuse"
-                                  value={formData.AlcoholOrDrugAbuse}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-
-                              <div className="form-group">
-                                <label>Diagnosis Test Parameter</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Result Remarks</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ResultRemarks"
-                                  value={formData.ResultRemarks}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 6 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Kit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKit"
-                                  value={formData.TestKit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Kit Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKitManufacturer"
-                                  value={formData.TestKitManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystem"
-                                  value={formData.TestSystem}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystemManufacturer"
-                                  value={formData.TestSystemManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Sample
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Modal for receiving Samples */}
               {showReceiveModal && (
                 <div
@@ -2269,16 +1708,23 @@ const SampleDispatchArea = () => {
 
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog"
-                  style={{
-                    zIndex: 1050, // Ensure it's above the header
-                    position: "fixed",
-                    top: '120px',
-                    left: "50%",
-                    transform: "translateX(-50%)",
-
-                  }}
-                >
+              <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+          
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050, 
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -2320,6 +1766,7 @@ const SampleDispatchArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>

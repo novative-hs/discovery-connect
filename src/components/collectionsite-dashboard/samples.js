@@ -48,7 +48,6 @@ const SampleArea = () => {
     TestResultUnit: "",
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
-    status: "In Stock",
     CutOffRange: "",
     CutOffRangeUnit: "",
     FreezeThawCycles: "",
@@ -63,6 +62,7 @@ const SampleArea = () => {
     TestSystem: "",
     TestSystemManufacturer: "",
     endTime: "",
+    status: "In Stock",
     user_account_id: id,
   });
 
@@ -108,24 +108,25 @@ const SampleArea = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchCollectionSiteNames = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/collectionsite/collectionsitenames');
-        if (!response.ok) {
-          throw new Error('Failed to fetch collection site names');
-        }
-        const data = await response.json();
-        console.log('Fetched Site Names:', data); // Debugging
-        // Assuming 'data' contains a key 'data' with the site names
-        setCollectionSiteNames(data.data); // Use data.data to get the collection site names
-      } catch (error) {
-        console.error('Error fetching site names:', error);
+ useEffect(() => {
+  const fetchCollectionSiteNames = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/collectionsite/collectionsitenames/${id}`
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch collection site names');
       }
-    };
- 
-    fetchCollectionSiteNames();
-  }, []);
+      const data = await response.json();
+      console.log('Fetched Site Names:', data);
+      setCollectionSiteNames(data.data);
+    } catch (error) {
+      console.error('Error fetching site names:', error);
+    }
+  };
+
+  fetchCollectionSiteNames();
+}, [id]);
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
@@ -226,8 +227,8 @@ const SampleArea = () => {
         TestSystem: "",
         TestSystemManufacturer: "",
         endTime: "",
-        user_account_id: id,
         status: "",
+        user_account_id: id,
       });
 
       setShowAddModal(false); // Close modal after submission
@@ -351,7 +352,6 @@ const SampleArea = () => {
       TestResultUnit: sample.TestResultUnit,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
       InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-      status: sample.status,
       CutOffRange: sample.CutOffRange,
       CutOffRangeUnit: sample.CutOffRangeUnit,
       FreezeThawCycles: sample.FreezeThawCycles,
@@ -366,7 +366,8 @@ const SampleArea = () => {
       TestSystem: sample.TestSystem,
       TestSystemManufacturer: sample.TestSystemManufacturer,
       endTime: sample.endTime,
-      user_account_id: sample.user_account_id
+      status: sample.status,
+      user_account_id: sample.user_account_id,
     });
 
 
@@ -417,7 +418,6 @@ const SampleArea = () => {
       TestResultUnit: "",
       InfectiousDiseaseTesting: "",
       InfectiousDiseaseResult: "",
-      status: "In Stock",
       CutOffRange: "",
       CutOffRangeUnit: "",
       FreezeThawCycles: "",
@@ -432,6 +432,7 @@ const SampleArea = () => {
       TestSystem: "",
       TestSystemManufacturer: "",
       endTime: "",
+      status: "In Stock",
       user_account_id: id,
     });
 
@@ -445,12 +446,22 @@ const SampleArea = () => {
       );
     }
   };
-
+  useEffect(() => {
+    if (showDeleteModal || showAddModal || showEditModal || showTransferModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
   return (
     <section className="policy__area pb-120">
       <div
         className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
+        style={{ marginTop: "-20px", width: "180%", marginLeft: "-40px"}}
       >
         <div
           className="row justify-content-center"
@@ -1057,33 +1068,6 @@ const SampleArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Smoking Status"
                           onChange={(e) =>
                             handleFilterChange("SmokingStatus", e.target.value)
@@ -1620,7 +1604,33 @@ const SampleArea = () => {
                         Test System Manufacturer
                         </div>
                       </th>
-                      {/*<th>User ID</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search End Time"
+                          onChange={(e) =>
+                            handleFilterChange("endTime", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        End Time
+                        </div>
+                      </th>
                       <th
                         className="px-3"
                         style={{
@@ -1695,9 +1705,7 @@ const SampleArea = () => {
                           <td>{sample.TestSystem}</td>
                           <td>{sample.TestSystemManufacturer}</td>
                           <td>{sample.endTime}</td>
-                          {/*<td>{sample.user_account_id}</td>*/}
                           <td>{sample.status}</td>
-
                           <td>
                           <div
                               style={{
@@ -1709,7 +1717,6 @@ const SampleArea = () => {
                             <button
                               className="btn btn-success btn-sm"
                               onClick={() => handleEditClick(sample)}
-                              title="Edit Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faEdit} size="sm" />
                             </button>{" "}
@@ -1719,14 +1726,12 @@ const SampleArea = () => {
                                 setSelectedSampleId(sample.id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
-                              title="Transfer Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>
@@ -1822,22 +1827,21 @@ const SampleArea = () => {
 
               {/* Modal for Adding Samples */}
               {showAddModal && (
+                <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+            
+                {/* Modal Content */}
                 <div
                   className="modal show d-block"
                   tabIndex="-1"
                   role="dialog"
                   style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "auto", 
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
-                    overflowY: "auto",
-                    height: 'auto', // Allow it to expand dynamically 
-                    minheight: '100vh',
+                    zIndex: 1050, 
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
                   }}
                 >
                   <div
@@ -2202,6 +2206,7 @@ const SampleArea = () => {
                                   name="DateOfCollection"
                                   value={formData.DateOfCollection}
                                   onChange={handleInputChange}
+                                  max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                                   required
                                 />
                               </div>
@@ -2311,11 +2316,12 @@ const SampleArea = () => {
                               <div className="form-group">
                                 <label>End Time</label>
                                 <input
-                                  type="datetime-local"
+                                  type="date"
                                   className="form-control"
                                   name="endTime"
                                   value={formData.endTime}
                                   onChange={handleInputChange}
+                                  min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
                                   required
                                 />
                               </div>
@@ -2331,28 +2337,28 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Edit Sample Modal */}
               {showEditModal && (
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    position: "absolute",
-                    top: "50%", // Center the modal vertically
-                    left: "50%", // Center the modal horizontally
-                    transform: "translate(-50%, -50%)", // Adjust for centering
-                    width: "auto", 
-                    zIndex: 1050, // Ensure it appears above other content
-                    backgroundColor: "#fff", // Modal background
-                    
-                    overflowY: "auto",
-                    height: 'auto', // Allow it to expand dynamically 
-                    minheight: '100vh',
-                  }}
-                >
+            <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+        
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050, 
+                position: "fixed",
+                top: "120px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
                   <div
                     className="modal-dialog"
                     role="document"
@@ -2709,11 +2715,12 @@ const SampleArea = () => {
                               <div className="form-group">
                                 <label>Date of Collection</label>
                                 <input
-                                  type="text"
+                                  type="date"
                                   className="form-control"
                                   name="DateOfCollection"
                                   value={formData.DateOfCollection}
                                   onChange={handleInputChange}
+                                  max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                                   required
                                 />
                               </div>
@@ -2823,11 +2830,12 @@ const SampleArea = () => {
                               <div className="form-group">
                                 <label>End Time</label>
                                 <input
-                                  type="text"
+                                  type="date"
                                   className="form-control"
                                   name="endTime"
                                   value={formData.endTime}
                                   onChange={handleInputChange}
+                                  min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
                                   required
                                 />
                               </div>
@@ -2843,6 +2851,7 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
 
               {/* Modal for transfreing Samples */}
@@ -3018,21 +3027,23 @@ const SampleArea = () => {
 
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog"
-                style={{
-                  position: "absolute",
-                  top: "50%", // Center the modal vertically
-                  left: "50%", // Center the modal horizontally
-                  transform: "translate(-50%, -50%)", // Adjust for centering
-                  width: "auto", 
-                  zIndex: 1050, // Ensure it appears above other content
-                  backgroundColor: "#fff", // Modal background
-                  
-                  overflowY: "auto",
-                  height: 'auto', // Allow it to expand dynamically 
-                  minheight: '100vh',
-                }}
-                >
+               <>
+               {/* Bootstrap Backdrop with Blur */}
+               <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+           
+               {/* Modal Content */}
+               <div
+                 className="modal show d-block"
+                 tabIndex="-1"
+                 role="dialog"
+                 style={{
+                   zIndex: 1050, 
+                   position: "fixed",
+                   top: "120px",
+                   left: "50%",
+                   transform: "translateX(-50%)",
+                 }}
+               >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
@@ -3074,6 +3085,7 @@ const SampleArea = () => {
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>

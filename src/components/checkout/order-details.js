@@ -3,26 +3,43 @@ import { useSelector } from "react-redux";
 // internal
 import useCartInfo from "@hooks/use-cart-info";
 import ErrorMessage from "@components/error-message/error";
-
-const OrderDetails = ({
-  register,
-  errors,
-  handleShippingCost,
-  cartTotal,
-  shippingCost,
-  discountAmount,
-}) => {
-  const { total } = useCartInfo();
-
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
+import axios from "axios";
+const OrderDetails = ({cart}) => {
+  const schema = Yup.object().shape({
+    email: Yup.string().required().email().label("Email"),
+    city: Yup.string().required().label("City"),
+    country: Yup.string().required().label("Country"),
+    district: Yup.string().required().label("District"),
+  });
+const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
   return (
     <React.Fragment>
       <tr className="cart-subtotal">
-        <th>Cart Subtotal</th>
-        <td className="text-end">
-          <span className="amount text-end">${total}</span>
-        </td>
-      </tr>
-      <tr className="shipping">
+  <th>Cart Subtotal</th>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td className="text-end">
+    <span className="amount text-end">
+      <strong className="product-quantity">
+        ${cart.reduce((acc, item) => acc + (item.samplequantity * item.price), 0).toFixed(2)}
+      </strong>
+    </span>
+  </td>
+</tr>
+
+      {/* <tr className="shipping">
         <th>Shipping</th>
         <td className="text-end">
           <ul>
@@ -36,7 +53,8 @@ const OrderDetails = ({
                 name="shippingOption"
               />
               <label
-                onClick={() => handleShippingCost(60)}
+              onClick={() => console.log("done")}
+                // onClick={() => handleShippingCost(60)}
                 htmlFor="flat_shipping"
               >
                 <span className="amount">Delivery: Today Cost : $60.00</span>
@@ -54,7 +72,7 @@ const OrderDetails = ({
                 name="shippingOption"
               />
               <label
-                onClick={() => handleShippingCost(20)}
+                onClick={() => console.log("done")}
                 htmlFor="free_shipping"
               >
                 Delivery: 7 Days Cost : $20.00
@@ -63,43 +81,46 @@ const OrderDetails = ({
             </li>
           </ul>
         </td>
-      </tr>
+      </tr> */}
 
-      <tr className="shipping">
-        <th>Sub Total</th>
-        <td className="text-end">
-          <strong>
-            <span className="amount">${total}</span>
-          </strong>
-        </td>
-      </tr>
-
-      <tr className="shipping">
+      {/* <tr className="shipping">
         <th>Shipping Cost</th>
         <td className="text-end">
           <strong>
-            <span className="amount">${shippingCost}</span>
+            <span className="amount">$12</span>
           </strong>
         </td>
-      </tr>
+      </tr> */}
 
-      <tr className="shipping">
-        <th>Discount</th>
-        <td className="text-end">
-          <strong>
-            <span className="amount">${discountAmount.toFixed(2)}</span>
-          </strong>
-        </td>
-      </tr>
+<tr className="shipping">
+  <th>Discount</th>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td className="text-end">
+    <strong>
+      <span className="amount">
+        {cart.reduce((acc, item) => acc + item.discount, 0).toFixed(2)}%
+      </span>
+    </strong>
+  </td>
+</tr>
 
-      <tr className="order-total">
-        <th>Total Order</th>
-        <td className="text-end">
-          <strong>
-            <span className="amount">${cartTotal}</span>
-          </strong>
-        </td>
-      </tr>
+
+<tr className="order-total">
+  <th>Total Order</th>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td className="text-end">
+    <strong>
+      <span className="amount">
+        ${cart.reduce((acc, item) => acc + parseFloat(item.totalpayment), 0).toFixed(2)}
+      </span>
+    </strong>
+  </td>
+</tr>
+
     </React.Fragment>
   );
 };

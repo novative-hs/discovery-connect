@@ -1,122 +1,70 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  
-  faCartPlus,
-
-} from "@fortawesome/free-solid-svg-icons";
+import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
 import { notifyError, notifySuccess } from "@utils/toast";
+import CartSidebar from "@components/common/sidebar/cart-sidebar";
+import { Cart } from "@svg/index"; 
+
 const SampleArea = () => {
   const id = localStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-   const [formData, setFormData] = useState({
-     masterID: "",
-     donorID: "",
-     samplename: "",
-     age: "",
-     gender: "",
-     ethnicity: "",
-     samplecondition: "",
-     storagetemp: "",
-     storagetempUnit: "",
-     ContainerType: "",
-     CountryOfCollection: "",
-     price: "",
-     SamplePriceCurrency: "",
-     quantity: "",
-     QuantityUnit: "",
-     labname: "",
-     SampleTypeMatrix: "",
-     TypeMatrixSubtype: "",
-     ProcurementType: "",
-     SmokingStatus: "",
-     TestMethod: "",
-     TestResult: "",
-     TestResultUnit: "",
-     InfectiousDiseaseTesting: "",
-     InfectiousDiseaseResult: "",
-     status: "In Stock",
-     CutOffRange: "",
-     CutOffRangeUnit: "",
-     FreezeThawCycles: "",
-     DateOfCollection: "",
-     ConcurrentMedicalConditions: "",
-     ConcurrentMedications: "",
-     AlcoholOrDrugAbuse: "",
-     DiagnosisTestParameter: "",
-     ResultRemarks: "",
-     TestKit: "",
-     TestKitManufacturer: "",
-     TestSystem: "",
-     TestSystemManufacturer: "",
-     endTime: "",
-     user_account_id: "",
-   });
-const[quantity,setQuantity]=useState(0);
+  const [formData, setFormData] = useState({
+    
+    masterID: "",
+    donorID: "",
+    samplename: "",
+    age: "",
+    gender: "",
+    ethnicity: "",
+    samplecondition: "",
+    storagetemp: "",
+    storagetempUnit: "",
+    ContainerType: "",
+    CountryOfCollection: "",
+    price: "",
+    SamplePriceCurrency: "",
+    quantity: "",
+    QuantityUnit: "",
+    labname: "",
+    SampleTypeMatrix: "",
+    TypeMatrixSubtype: "",
+    ProcurementType: "",
+    SmokingStatus: "",
+    TestMethod: "",
+    TestResult: "",
+    TestResultUnit: "",
+    InfectiousDiseaseTesting: "",
+    InfectiousDiseaseResult: "",
+    status: "In Stock",
+    CutOffRange: "",
+    CutOffRangeUnit: "",
+    FreezeThawCycles: "",
+    DateOfCollection: "",
+    ConcurrentMedicalConditions: "",
+    ConcurrentMedications: "",
+    AlcoholOrDrugAbuse: "",
+    DiagnosisTestParameter: "",
+    ResultRemarks: "",
+    TestKit: "",
+    TestKitManufacturer: "",
+    TestSystem: "",
+    TestSystemManufacturer: "",
+    endTime: "",
+    user_account_id: "",
+    researcher_id: id,
+    discount:""
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [quantity, setQuantity] = useState(0);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(samples.length / itemsPerPage);
-  const incrementQuantity = (sample) => {
-    const updatedQuantity = quantity + 1;
-    setQuantity(updatedQuantity); // Update quantity
-  
-    // Use a callback to ensure formData is set before making the API call
-    setFormData(prevData => {
-      const newFormData = {
-        ...prevData, // Preserve any existing data in formData
-        masterID: sample.masterID,
-        donorID: sample.donorID,
-        samplename: sample.samplename,
-        age: sample.age,
-        gender: sample.gender,
-        ethnicity: sample.ethnicity,
-        samplecondition: sample.samplecondition,
-        storagetemp: sample.storagetemp,
-        storagetempUnit: sample.storagetempUnit,
-        ContainerType: sample.ContainerType,
-        CountryOfCollection: sample.CountryOfCollection,
-        price: sample.price,
-        SamplePriceCurrency: sample.SamplePriceCurrency,
-        quantity: updatedQuantity, // Incremented quantity
-        QuantityUnit: sample.QuantityUnit,
-        labname: sample.labname,
-        SampleTypeMatrix: sample.SampleTypeMatrix,
-        TypeMatrixSubtype: sample.TypeMatrixSubtype,
-        ProcurementType: sample.ProcurementType,
-        SmokingStatus: sample.SmokingStatus,
-        TestMethod: sample.TestMethod,
-        TestResult: sample.TestResult,
-        TestResultUnit: sample.TestResultUnit,
-        InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
-        InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-        status: sample.status,
-        CutOffRange: sample.CutOffRange,
-        CutOffRangeUnit: sample.CutOffRangeUnit,
-        FreezeThawCycles: sample.FreezeThawCycles,
-        DateOfCollection: sample.DateOfCollection,
-        ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
-        ConcurrentMedications: sample.ConcurrentMedications,
-        AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
-        DiagnosisTestParameter: sample.DiagnosisTestParameter,
-        ResultRemarks: sample.ResultRemarks,
-        TestKit: sample.TestKit,
-        TestKitManufacturer: sample.TestKitManufacturer,
-        TestSystem: sample.TestSystem,
-        TestSystemManufacturer: sample.TestSystemManufacturer,
-        endTime: sample.endTime,
-        user_account_id: id
-      };
-  
-      // Make API call directly after updating the form data
-     handleAddClick(newFormData); // Pass updated formData to the API call
-    });
-  };
-  
-  
+ 
+
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
@@ -136,7 +84,6 @@ const[quantity,setQuantity]=useState(0);
       fetchSamples();
     }
   }, []);
-  
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
@@ -158,33 +105,63 @@ const[quantity,setQuantity]=useState(0);
       setSamples(filtered); // Update the state with filtered results
     }
   };
-  const handleAddClick = async(e) => {
-    console.log(e)
-    try {
-      const response = await axios.post(
-        `http://localhost:5000/api/cart/post`,
-        e
-      );
-    notifySuccess("Sample added to cart successfully");
-      console.log("Sample added to cart successfully:", response.data);
 
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/sample/get"
-      );
-      setSamples(newResponse.data);
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      notifyError("Error adding Sample to cart successfully");
-      console.error(
-
-        `Error to add sample cart with ID ${selectedSampleId}:`,
-        error
-      );
+  const handleUpdate = (sample) => {
+    
+    // Use a callback to ensure formData is set before making the API call
+    setFormData({
+      masterID: sample.masterID,
+      donorID: sample.donorID,
+      samplename: sample.samplename,
+      age: sample.age,
+      gender: sample.gender,
+      ethnicity: sample.ethnicity,
+      samplecondition: sample.samplecondition,
+      storagetemp: sample.storagetemp,
+      storagetempUnit: sample.storagetempUnit,
+      ContainerType: sample.ContainerType,
+      CountryOfCollection: sample.CountryOfCollection,
+      price: sample.price,
+      SamplePriceCurrency: sample.SamplePriceCurrency,
+      quantity: sample.quantity,
+      QuantityUnit: sample.QuantityUnit,
+      labname: sample.labname,
+      SampleTypeMatrix: sample.SampleTypeMatrix,
+      TypeMatrixSubtype: sample.TypeMatrixSubtype,
+      ProcurementType: sample.ProcurementType,
+      SmokingStatus: sample.SmokingStatus,
+      TestMethod: sample.TestMethod,
+      TestResult: sample.TestResult,
+      TestResultUnit: sample.TestResultUnit,
+      InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
+      InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
+      CutOffRange: sample.CutOffRange,
+      CutOffRangeUnit: sample.CutOffRangeUnit,
+      FreezeThawCycles: sample.FreezeThawCycles,
+      DateOfCollection: sample.DateOfCollection,
+      ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
+      ConcurrentMedications: sample.ConcurrentMedications,
+      AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
+      DiagnosisTestParameter: sample.DiagnosisTestParameter,
+      ResultRemarks: sample.ResultRemarks,
+      TestKit: sample.TestKit,
+      TestKitManufacturer: sample.TestKitManufacturer,
+      TestSystem: sample.TestSystem,
+      TestSystemManufacturer: sample.TestSystemManufacturer,
+      endTime: sample.endTime,
+      status: sample.status,
+      user_account_id: sample.user_account_id,
+      id:sample.id,
+      discount:sample.discount,
+      researcher_id:id
+    });
+    if (formData) {
+      setIsCartOpen(!isCartOpen)
     }
-  }
-
+    
+  };
+  
+ 
   return (
     <section className="policy__area pb-120">
       <div className="container" style={{ marginTop: "-20px", width: "auto" }}>
@@ -236,7 +213,7 @@ const[quantity,setQuantity]=useState(0);
                             maxWidth: "180px",
                           }}
                         />
-                        ID
+                        ID 
                       </th>
                       <th
                         className="px-3"
@@ -1281,6 +1258,31 @@ const[quantity,setQuantity]=useState(0);
                           className="form-control"
                           placeholder="Search Status"
                           onChange={(e) =>
+                            handleFilterChange("discount", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Discount
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Status"
+                          onChange={(e) =>
                             handleFilterChange("status", e.target.value)
                           }
                           style={{
@@ -1293,6 +1295,7 @@ const[quantity,setQuantity]=useState(0);
                         />
                         Status
                       </th>
+                     
                       <th
                         className="px-3"
                         style={{
@@ -1349,22 +1352,20 @@ const[quantity,setQuantity]=useState(0);
                           <td>{sample.TestKitManufacturer}</td>
                           <td>{sample.TestSystem}</td>
                           <td>{sample.TestSystemManufacturer}</td>
+                          <td>{sample.discount}%</td>
                           {/*<td>{sample.user_id}</td>*/}
                           <td>{sample.status}</td>
                           <td>
-                          <button
-  className="btn btn-danger btn-sm"
-  onClick={() => incrementQuantity(sample)} // Wrap the function in an arrow function
-  title="Edit Researcher" // This is the text that will appear on hover
->
-
-
-                            <FontAwesomeIcon icon={faCartPlus} size="sm" />
-                          </button>
+                            <button
+                              className="btn d-flex align-items-center"
+                              onClick={() => handleUpdate(sample)}
+                              title="add to cart"
+                            >
+                              <Cart className="me-2" />
+                            </button>
                           </td>
                         </tr>
                       ))
-
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">
@@ -1455,7 +1456,10 @@ const[quantity,setQuantity]=useState(0);
           </div>
         </div>
       </div>
+      <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} sample={formData} />
+
     </section>
+    
   );
 };
 

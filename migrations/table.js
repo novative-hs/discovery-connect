@@ -10,7 +10,7 @@ const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
-
+const sample_approvalModel=require("../models/sampleapprovalModel")
 // Function to initialize all tables
 function Database() {
   cityModel.createCityTable();
@@ -27,6 +27,7 @@ function Database() {
   productModel.createProductsTable();
   wishlistModel.createWishlistTable();
   cartModel.createCartTable();
+  sample_approvalModel.createSampleApprovalTable();
  
 }
 Database();

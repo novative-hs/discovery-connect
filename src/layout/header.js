@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSelector } from "react-redux";
+
 // internal
 import Menus from "./menus";
 import logo from "@assets/img/logo/faviconnn.png";
@@ -13,29 +14,37 @@ import useCartInfo from "@hooks/use-cart-info";
 import SearchForm from "@components/forms/search-form";
 
 const Header = ({ style_2 = false }) => {
+  
   const { sticky } = useSticky();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOffCanvasOpen, setIsOffCanvasOpen] = useState(false);
-  const { quantity } = useCartInfo();
-  const { wishlist } = useSelector((state) => state.wishlist);
-  const { user: userInfo } = useSelector((state) => state.auth);
+  //const { quantity } = useCartInfo();
+  //const { wishlist } = useSelector((state) => state.wishlist);
+  const { user: userInfo } = useSelector((state) => state.auth);  
+
+  
   return (
     <>
       <header>
         <div className={`header__area ${style_2 ? "" : "header__transparent"}`}>
           <div
-            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"
-              } header__sticky ${sticky ? "header-sticky" : ""}`}
+            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
+              style_2 ? "header__bottom-13-white" : "grey-bg-17"
+            } header__sticky ${sticky ? "header-sticky" : ""}`}
             id="header-sticky"
-            style={{ height: '120px' }}
+            style={{ height: "120px" }}
           >
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
                   <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: '-30px' }}>
+                    <div className="logo" style={{ marginLeft: "-30px" }}>
                       <Link href="/">
-                        <Image src={logo} alt="logo" style={{ width: '150px', height: 'auto' }} />
+                        <Image
+                          src={logo}
+                          alt="logo"
+                          style={{ width: "150px", height: "auto" }}
+                        />
                       </Link>
                     </div>
                   </div>
@@ -88,22 +97,18 @@ const Header = ({ style_2 = false }) => {
                               </Link>
                             </li>
                           )}
-                          <li>
+                          {/* <li>
                             <Link href="/wishlist">
                               <Heart />
                               <span className="tp-item-count">
                                 {wishlist.length}
                               </span>
                             </Link>
-                          </li>
+                          </li> */}
                           <li>
-                            <button
-                              className="cartmini-open-btn"
-                              onClick={() => setIsCartOpen(!isCartOpen)}
-                            >
-                              <Cart />
-                              <span className="tp-item-count">{quantity}</span>
-                            </button>
+                            <Link href="/cart" className="position-relative">
+                            <Cart className="me-2"/>
+                            </Link>
                           </li>
                         </ul>
                       </div>

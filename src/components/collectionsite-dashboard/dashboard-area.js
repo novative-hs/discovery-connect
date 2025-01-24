@@ -7,7 +7,7 @@ import ChangePassword from './change-password';
 import UpdateCollectionsite from './update-collectionsite';
 import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
-import Header from '../../layout/collectionsiteheader';
+import Header from '../../layout/organizationheader';
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
    const router = useRouter();
