@@ -77,7 +77,7 @@ const UpdateUser = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/city/get-city"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
       );
       setcityname(response.data);
     } catch (error) {
@@ -88,7 +88,7 @@ const UpdateUser = () => {
   const fetchOrganization = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/admin/organization/get`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
 
       // Filter organizations where status is "approved"
@@ -105,7 +105,7 @@ const UpdateUser = () => {
   const fetchResearcher = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/user/getAccountDetail/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
       setResearcher(response.data[0]); // Store fetched researcher data in state
     } catch (error) {
@@ -116,7 +116,7 @@ const UpdateUser = () => {
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/district/get-district"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
       );
       setdistrictname(response.data);
     } catch (error) {
@@ -127,7 +127,7 @@ const UpdateUser = () => {
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
       );
       setcountryname(response.data);
     } catch (error) {
@@ -165,7 +165,7 @@ const UpdateUser = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/user/updateProfile/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/updateProfile/${id}`,
         formData,
         {
           headers: {

@@ -101,7 +101,7 @@ else{
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/district/delete-district/${selecteddistrictnameId}`);
+       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/delete-district/${selecteddistrictnameId}`
       console.log(`districtname with ID ${selecteddistrictnameId} deleted successfully.`);
 
       // Set success message
@@ -203,14 +203,14 @@ else{
           try {
             // POST data to your existing API
             const response = await axios.post(
-              "http://localhost:5000/api/district/post-district",
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
               { bulkData: dataWithAddedBy }
             );
             console.log("Countries added successfully:", response.data);
       
             // Refresh the city list
             const newResponse = await axios.get(
-              "http://localhost:5000/api/district/get-district"
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
             );
             setdistrictname(newResponse.data);
           } catch (error) {

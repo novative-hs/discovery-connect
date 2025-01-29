@@ -5,9 +5,9 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateBioBank from './update-biobank';
-import SampleArea from './samples';
-import SampleDispatchArea from './sample-dispatch';
-import Header from '../../layout/collectionsiteheader';
+import BioBankSampleArea from './samples';
+import BioBankSampleDispatchArea from './sample-dispatch';
+import Header from '../../layout/biobankheader';
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
   const router = useRouter(); // For redirection
@@ -45,15 +45,15 @@ const DashboardArea = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "samples":
-        return <SampleArea />;
+        return <BioBankSampleArea />;
       case "sample-dispatch":
-        return <SampleDispatchArea />;
+        return <BioBankSampleDispatchArea />;
       case "change-password":
         return <ChangePassword />;
       case "update-collectionsite":
         return <UpdateBioBank />;
       default:
-        return <SampleArea />;
+        return <BioBankSampleArea />;
     }
   };
 

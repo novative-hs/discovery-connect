@@ -17,6 +17,7 @@ function Database() {
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
   signupModel.create_collectionsiteTable();
+  signupModel.create_biobankTable();
   signupModel.create_organizationTable();
   signupModel.create_researcherTable();
   signupModel.createuser_accountTable();

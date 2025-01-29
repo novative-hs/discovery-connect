@@ -3,10 +3,16 @@ import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 
-const SampleDispatchArea = () => {
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+const BioBankSampleDispatchArea = () => {
+  const id = localStorage.getItem("userID");
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  }
+  else {
+    console.log("Collection site Id on sample page is:", id);
+  }
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [formData, setFormData] = useState({
     masterID: "",
@@ -22,20 +28,18 @@ const SampleDispatchArea = () => {
     CountryOfCollection: "",
     price: "",
     SamplePriceCurrency: "",
-    quantity: "",
+    Quantity: "",
     QuantityUnit: "",
     labname: "",
     SampleTypeMatrix: "",
     TypeMatrixSubtype: "",
     ProcurementType: "",
-    endTime: "",
     SmokingStatus: "",
     TestMethod: "",
     TestResult: "",
     TestResultUnit: "",
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
-    status: "In Transit",
     CutOffRange: "",
     CutOffRangeUnit: "",
     FreezeThawCycles: "",
@@ -49,12 +53,11 @@ const SampleDispatchArea = () => {
     TestKitManufacturer: "",
     TestSystem: "",
     TestSystemManufacturer: "",
+    endTime: "",
     // logo: ""
   });
-  const [editSample, setEditSample] = useState(null); // State for selected sample to edit
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [successMessage, setSuccessMessage] = useState('');
 
+  const [successMessage, setSuccessMessage] = useState('');
    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     // Calculate total pages
@@ -62,26 +65,37 @@ const SampleDispatchArea = () => {
 
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
-    dispatchVia: "",
-    dispatcherName: "",
-    dispatchReceiptNumber: "",
+    receiverName: "",
   });
 
   const handleTransferClick = (sample) => {
-    console.log("Transfer action for:", sample);
-    setShowTransferModal(true); // Show the modal
+    console.log("Transfer action for sample:", sample);
+    setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
+    setShowReceiveModal(true); // Show the modal
   };
 
   const fetchSamples = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/sampledispatch/get/${id}`);
-      setSamples(response.data); // Store fetched samples in state
+      // will fetch sample to correct dedicated collectionsite with correct ID
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`); 
+      const apiData = response.data;
+      
+      // Directly set the data array from the response
+      if (apiData.data && Array.isArray(apiData.data)) {
+        setSamples(apiData.data);
+      } else {
+        console.warn("Invalid response structure:", apiData);
+        setSamples([]); // Default to an empty array
+      }
     } catch (error) {
       console.error("Error fetching samples:", error);
+      setSamples([]); // Default to an empty array on error
     }
   };
+
   // Fetch samples from backend when component loads
   useEffect(() => {
+    
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
@@ -106,180 +120,85 @@ const SampleDispatchArea = () => {
     }
   };
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-  
+
     // Update both formData and transferDetails state if applicable
     setFormData((prevFormData) => ({
       ...prevFormData,
       [name]: value,
     }));
-  
+
     setTransferDetails((prevDetails) => ({
       ...prevDetails,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleTransferSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/biobank/post', formData);
-      console.log("biobank added successfully:", response.data);
+    const { receiverName } = transferDetails;
+    const userID = localStorage.getItem("userID"); // Retrieve user ID from localStorage
 
-      // Refresh the sample list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/sampledispatch/get');
+    // Log transfer details and selected sample ID
+    console.log("Transfer Details:", transferDetails);
+    console.log("Receiver Name:", receiverName);
+    console.log("Selected Sample ID:", selectedSampleId);
+
+    // Validate input before making the API call
+    if (!receiverName) {
+      alert("All fields are required.");
+      return;
+    }
+    if (!userID) {
+      alert("User ID is missing.");
+      return;
+    }
+
+    try {
+      console.log("Sending POST request to API...");
+      // POST request to your backend API
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/post/${selectedSampleId}`,
+        {
+          receiverName,
+          ReceivedByCollectionSite: userID // Pass user ID along with receiverName
+        }
+      );
+      console.log("Sample received successfully:", response.data);
+
+      alert("Sample received successfully!");
+      console.log(`Fetching updated samples for ID: ${id}`);
+      const newResponse = await axios.get(
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
+      );
       setSamples(newResponse.data); // Update state with the new list
 
-      // Clear form after submission
-      setFormData({
-        masterID: "",
-        donorID: "",
-        samplename: "",
-        age: "",
-        gender: "",
-        ethnicity: "",
-        samplecondition: "",
-        storagetemp: "",
-        storagetempUnit: "",
-        ContainerType: "",
-        CountryOfCollection: "",
-        price: "",
-        SamplePriceCurrency: "",
-        quantity: "",
-        QuantityUnit: "",
-        labname: "",
-        SampleTypeMatrix: "",
-        TypeMatrixSubtype: "",
-        ProcurementType: "",
-        endTime: "",
-        SmokingStatus: "",
-        TestMethod: "",
-        TestResult: "",
-        TestResultUnit: "",
-        InfectiousDiseaseTesting: "",
-        InfectiousDiseaseResult: "",
-        status: "",
-      });
+      setShowReceiveModal(false); // Close the modal after submission
     } catch (error) {
-      console.error("Error adding sample:", error);
+      if (error.response) {
+        // Server responded with a status other than 200
+        console.error("Error response:", error.response.data);
+        alert(`Error: ${error.response.data.error}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        console.error("No response received:", error.request);
+        alert("No response received from server.");
+      } else {
+        // Something else happened
+        console.error("Error receiving sample:", error.message);
+        alert("An unexpected error occurred.");
+      }
     }
-  };
-
-
-  const handleTransferSubmit = () => {
-    console.log("Transfer Details Submitted:", transferDetails);
-    setShowTransferModal(false); // Close the modal
-    // Add logic to process transfer details here
   };
 
   const handleModalClose = () => {
-    setShowTransferModal(false); // Close the modal
+    setShowReceiveModal(false); // Close the modal
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/biobank/delete/${selectedSampleId}`);
-      console.log(`biobank with ID ${selectedSampleId} deleted successfully.`);
-
-      // Set success message
-      setSuccessMessage('biobank deleted successfully.');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-
-      // Refresh the sample list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/sampledispatch/get');
-      setSamples(newResponse.data);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(`Error deleting biobank with ID ${selectedSampleId}:`, error);
-    }
-  };
-  const handleEditClick = (sample) => {
-    setSelectedSampleId(sample.id);
-    setEditSample(sample); // Store the sample data to edit
-    setShowEditModal(true); // Show the edit modal
-    setFormData({
-      masterID: sample.masterID,
-      donorID: sample.donorID,
-      samplename: sample.samplename,
-      age: sample.age,
-      gender: sample.gender,
-      ethnicity: sample.ethnicity,
-      samplecondition: sample.samplecondition,
-      storagetemp: sample.storagetemp,
-      storagetempUnit: sample.storagetempUnit,
-      ContainerType: sample.ContainerType,
-      CountryOfCollection: sample.CountryOfCollection,
-      price: sample.price,
-      SamplePriceCurrency: sample.SamplePriceCurrency,
-      quantity: sample.quantity,
-      QuantityUnit: sample.QuantityUnit,
-      labname: sample.labname,
-      SampleTypeMatrix: sample.SampleTypeMatrix,
-      TypeMatrixSubtype: sample.TypeMatrixSubtype,
-      ProcurementType: sample.ProcurementType,
-      endTime: sample.endTime,
-      SmokingStatus: sample.SmokingStatus,
-      TestMethod: sample.TestMethod,
-      TestResult: sample.TestResult,
-      TestResultUnit: sample.TestResultUnit,
-      InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
-      InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-      status: sample.status,
-      CutOffRange: sample.CutOffRange,
-      CutOffRangeUnit: sample.CutOffRangeUnit,
-      FreezeThawCycles: sample.FreezeThawCycles,
-      DateOfCollection: sample.DateOfCollection,
-      ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
-      ConcurrentMedications: sample.ConcurrentMedications,
-      AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
-      DiagnosisTestParameter: sample.DiagnosisTestParameter,
-      ResultRemarks: sample.ResultRemarks,
-      TestKit: sample.TestKit,
-      TestKitManufacturer: sample.TestKitManufacturer,
-      TestSystem: sample.TestSystem,
-      TestSystemManufacturer: sample.TestSystemManufacturer,
-    });
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/biobank/edit/${selectedSampleId}`,
-        formData
-      );
-      console.log("biobank updated successfully:", response.data);
-
-      const newResponse = await axios.get(
-        "http://localhost:5000/api/sampledispatch/get"
-      );
-      setSamples(newResponse.data);
-
-      setShowEditModal(false);
-      setSuccessMessage("biobank updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(`Error updating biobank with ID ${selectedSampleId}:`, error);
-    }
-  };
-   useEffect(() => {
-      if (showDeleteModal ||  showEditModal || showTransferModal) {
+    useEffect(() => {
+      if ( showReceiveModal) {
         // Prevent background scroll when modal is open
         document.body.style.overflow = "hidden";
         document.body.classList.add("modal-open");
@@ -288,12 +207,13 @@ const SampleDispatchArea = () => {
         document.body.style.overflow = "auto";
         document.body.classList.remove("modal-open");
       }
-    }, [showDeleteModal, showEditModal, showTransferModal]);
+    }, [showReceiveModal]);
+  
   return (
     <section className="policy__area pb-120">
-      <div
+       <div
         className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
+        style={{ marginTop: "-20px", width: "180%", marginLeft: "-40px"}}
       >
         <div
           className="row justify-content-center"
@@ -717,7 +637,7 @@ const SampleDispatchArea = () => {
                           className="form-control"
                           placeholder="Search Quantity"
                           onChange={(e) =>
-                            handleFilterChange("quantity", e.target.value)
+                            handleFilterChange("Quantity", e.target.value)
                           }
                           style={{
                             width: "80%", // Adjusted width for better responsiveness
@@ -871,33 +791,6 @@ const SampleDispatchArea = () => {
                           }}
                         />
                         Procurement Type
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
                         </div>
                       </th>
                       <th
@@ -1448,7 +1341,33 @@ const SampleDispatchArea = () => {
                         Test System Manufacturer
                         </div>
                       </th>
-                      {/*<th>User ID</th>*/}
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search End Time"
+                          onChange={(e) =>
+                            handleFilterChange("endTime", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        End Time
+                        </div>
+                      </th>
                       <th
                         className="px-3"
                         style={{
@@ -1495,9 +1414,9 @@ const SampleDispatchArea = () => {
                           <td>{sample.storagetempUnit}</td>
                           <td>{sample.ContainerType}</td>
                           <td>{sample.CountryOfCollection}</td>
-                          <td>{sample.price}</td>
+                          <td className="text-end">{sample.price}</td>
                           <td>{sample.SamplePriceCurrency}</td>
-                          <td>{sample.quantity}</td>
+                          <td>{sample.Quantity}</td>
                           <td>{sample.QuantityUnit}</td>
                           <td>{sample.labname}</td>
                           <td>{sample.SampleTypeMatrix}</td>
@@ -1526,26 +1445,8 @@ const SampleDispatchArea = () => {
                           <td>{sample.status}</td>
                           <td>
                             <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}
-                              title="Edit Sample" // This is the text that will appear on hover
-                              >
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedSampleId(sample.id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete Sample" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                            <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
-                              title="Transfer Sample" // This is the text that will appear on hover
                             >
                               <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                             </button>
@@ -1562,6 +1463,7 @@ const SampleDispatchArea = () => {
                   </tbody>
                 </table>
               </div>
+
               <div
                 className="pagination d-flex justify-content-center align-items-center mt-3"
                 style={{
@@ -1638,521 +1540,8 @@ const SampleDispatchArea = () => {
                 </button>
               </div>
 
-              {/* Edit Sample Modal */}
-              {showEditModal && (
-                    <>
-                    {/* Bootstrap Backdrop with Blur */}
-                    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-                
-                    {/* Modal Content */}
-                    <div
-                      className="modal show d-block"
-                      tabIndex="-1"
-                      role="dialog"
-                      style={{
-                        zIndex: 1050, 
-                        position: "fixed",
-                        top: "120px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                      }}
-                    >
-                  <div
-                    className="modal-dialog"
-                    role="document"
-                    style={{ maxWidth: "100%", width: "70vw" }}
-                  >
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Parallel Columns - 4 columns */}
-                          <div className="row">
-                            {/* Column 1 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Master ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="masterID"
-                                  value={formData.masterID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Donor ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="donorID"
-                                  value={formData.donorID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Age</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="age"
-                                  value={formData.age}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Gender</label>
-                                <select
-                                  className="form-control"
-                                  name="gender"
-                                  value={formData.gender}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="">Select Gender</option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                </select>
-                              </div>
-                              <div className="form-group">
-                                <label>Ethnicity</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ethnicity"
-                                  value={formData.ethnicity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Condition</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplecondition"
-                                  value={formData.samplecondition}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* Column 2 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Storage Temperature</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetemp"
-                                  value={formData.storagetemp}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Storage Temperature Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetempUnit"
-                                  value={formData.storagetempUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Container Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ContainerType"
-                                  value={formData.ContainerType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Country Of Collection</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CountryOfCollection"
-                                  value={formData.CountryOfCollection}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Price</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="price"
-                                  value={formData.price}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Price Currency</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SamplePriceCurrency"
-                                  value={formData.SamplePriceCurrency}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Quantity</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="quantity"
-                                  value={formData.quantity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Quantity Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="QuantityUnit"
-                                  value={formData.QuantityUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Lab Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="labname"
-                                  value={formData.labname}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Type Matrix</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Type Matrix Subtype</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TypeMatrixSubtype"
-                                  value={formData.TypeMatrixSubtype}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Procurement Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ProcurementType"
-                                  value={formData.ProcurementType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>End Time</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="endTime"
-                                  value={formData.endTime}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Smoking Status</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SmokingStatus"
-                                  value={formData.SmokingStatus}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Method</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestMethod"
-                                  value={formData.TestMethod}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResult"
-                                  value={formData.TestResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResultUnit"
-                                  value={formData.TestResultUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Testing</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseTesting"
-                                  value={formData.InfectiousDiseaseTesting}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseResult"
-                                  value={formData.InfectiousDiseaseResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="CutOffRange"
-                                  value={formData.CutOffRange}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CutOffRangeUnit"
-                                  value={formData.CutOffRangeUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* {Column 5} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Freeze Thaw Cycles</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="FreezeThawCycles"
-                                  value={formData.FreezeThawCycles}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Date of Collection</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DateOfCollection"
-                                  value={formData.DateOfCollection}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medical Conditions</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedicalConditions"
-                                  value={formData.ConcurrentMedicalConditions}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medications</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedications"
-                                  value={formData.ConcurrentMedications}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Alcohol Or Drug Abuse</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="AlcoholOrDrugAbuse"
-                                  value={formData.AlcoholOrDrugAbuse}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-
-                              <div className="form-group">
-                                <label>Diagnosis Test Parameter</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Result Remarks</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ResultRemarks"
-                                  value={formData.ResultRemarks}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 6 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Kit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKit"
-                                  value={formData.TestKit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Kit Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKitManufacturer"
-                                  value={formData.TestKitManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystem"
-                                  value={formData.TestSystem}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystemManufacturer"
-                                  value={formData.TestSystemManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Sample
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
-
-              {/* Modal for transfreing Samples */}
-              {showTransferModal && (
+              {/* Modal for receiving Samples */}
+              {showReceiveModal && (
                 <div
                   style={{
                     position: "fixed",
@@ -2178,50 +1567,16 @@ const SampleDispatchArea = () => {
                       zIndex: 1100,
                     }}
                   >
-                    <h5 style={{ marginBottom: "20px", textAlign: "center" }}>Transfer to Collection Site</h5>
+                    <h5 style={{ marginBottom: "20px", textAlign: "center" }}>Receive Stock</h5>
                     <form>
                       <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Dispatch Via</label>
-                        <select
-                          name="dispatchVia"
-                          value={transferDetails.dispatchVia}
-                          onChange={handleInputChange}
-                          style={{
-                            width: "100%",
-                            padding: "8px",
-                            borderRadius: "4px",
-                            border: "1px solid #ccc",
-                          }}
-                        >
-                          <option value="">Select</option>
-                          <option value="Courier">Courier</option>
-                          <option value="By Hand">By Hand</option>
-                        </select>
-                      </div>
-                      <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Dispatcher Name</label>
+                        <label style={{ display: "block", marginBottom: "5px" }}>Receiver Name</label>
                         <input
                           type="text"
-                          name="dispatcherName"
-                          value={transferDetails.dispatcherName}
+                          name="receiverName"
+                          value={transferDetails.receiverName}
                           onChange={handleInputChange}
-                          placeholder="Enter Dispatcher Name"
-                          style={{
-                            width: "100%",
-                            padding: "8px",
-                            borderRadius: "4px",
-                            border: "1px solid #ccc",
-                          }}
-                        />
-                      </div>
-                      <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Dispatch Receipt Number</label>
-                        <input
-                          type="text"
-                          name="dispatchReceiptNumber"
-                          value={transferDetails.dispatchReceiptNumber}
-                          onChange={handleInputChange}
-                          placeholder="Enter Receipt Number"
+                          placeholder="Enter Receiver Name"
                           style={{
                             width: "100%",
                             padding: "8px",
@@ -2259,69 +1614,6 @@ const SampleDispatchArea = () => {
                   </div>
                 </div>
               )}
-
-              {/* Modal for Deleting Samples */}
-              {showDeleteModal && (
-                   <>
-                   {/* Bootstrap Backdrop with Blur */}
-                   <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-               
-                   {/* Modal Content */}
-                   <div
-                     className="modal show d-block"
-                     tabIndex="-1"
-                     role="dialog"
-                     style={{
-                       zIndex: 1050, 
-                       position: "fixed",
-                       top: "120px",
-                       left: "50%",
-                       transform: "translateX(-50%)",
-                     }}
-                   >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this sample?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
             </div>
           </div>
         </div>
@@ -2330,4 +1622,4 @@ const SampleDispatchArea = () => {
   );
 };
 
-export default SampleDispatchArea;
+export default BioBankSampleDispatchArea;

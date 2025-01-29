@@ -9,7 +9,7 @@ router.post('/create', sampleReceiveController.createSampleReceiveTable);
 // Route to get all sample receive that are "In Transit"
 router.get('/get/:id', sampleReceiveController.getSampleReceiveInTransit);
 
-// Route to create a new sample receive
+// When sample receive form is filled this API will be called
 router.post('/post/:id', sampleReceiveController.createSampleReceive);
 
 module.exports = router;

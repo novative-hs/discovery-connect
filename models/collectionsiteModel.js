@@ -67,21 +67,45 @@ const deleteCollectionSite = (id, callback) => {
   });
 };
 
+// Function to GET collectionsite names
 const getAllCollectionSiteNames = (user_account_id, callback) => {
-  const query = `
+  // Query to fetch collectionsite data
+  const collectionSiteQuery = `
     SELECT CollectionSiteName, user_account_id 
     FROM collectionsite 
-    WHERE user_account_id != ?`;
-  mysqlConnection.query(query, [user_account_id], (err, results) => {
+    WHERE user_account_id != ?;
+  `;
+  // Query to fetch biobank name
+  const biobankQuery = `
+    SELECT Name, user_account_id 
+    FROM biobank
+    WHERE user_account_id != ?;
+  `;
+
+  // Execute both queries
+  mysqlConnection.query(collectionSiteQuery, [user_account_id], (err, collectionSiteResults) => {
     if (err) {
-      console.error('SQL Error:', err);
+      console.error('SQL Error (CollectionSite):', err);
       callback(err, null);
-    } else {
-      console.log('SQL Results:', results);
-      callback(null, results);
+      return;
     }
+
+    mysqlConnection.query(biobankQuery, [user_account_id], (err, biobankResults) => {
+      if (err) {
+        console.error('SQL Error (Biobank):', err);
+        callback(err, null);
+        return;
+      }
+
+      // Combine results
+      callback(null, {
+        collectionSites: collectionSiteResults,
+        biobank: biobankResults,
+      });
+    });
   });
 };
+
 
 function updateCollectionSiteDetail(id, data, callback) {
   const { 

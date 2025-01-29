@@ -96,7 +96,7 @@ const RegisterForm = () => {
   useEffect(() => {
     const fetchcityname = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/city/get-city');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`);
         setcityname(response.data); // Store fetched City in state
       } catch (error) {
         console.error("Error fetching City:", error);
@@ -109,7 +109,7 @@ const RegisterForm = () => {
   useEffect(() => {
     const fetchOrganizationname = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/admin/organization/get');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`);
         const approvedOrganizations = response.data.filter(
           (organization) => organization.status === "approved"
         );
@@ -124,7 +124,7 @@ const RegisterForm = () => {
   useEffect(() => {
     const fetchdistrictname = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/district/get-district');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`);
         setdistrictname(response.data); // Store fetched City in state
       } catch (error) {
         console.error("Error fetching City:", error);
@@ -137,7 +137,7 @@ const RegisterForm = () => {
   useEffect(() => {
     const fetchcountryname = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/country/get-country');
+        const response = await axios.get( `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`);
         setcountryname(response.data); // Store fetched City in state
       } catch (error) {
         console.error("Error fetching City:", error);

@@ -110,7 +110,7 @@ const CountryArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `http://localhost:5000/api/country/delete-country/${selectedcountrynameId}`
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
       );
       console.log(
         `countryname with ID ${selectedcountrynameId} deleted successfully.`
@@ -224,14 +224,14 @@ const CountryArea = () => {
       try {
         // POST data to your existing API
         const response = await axios.post(
-          "http://localhost:5000/api/country/post-country",
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/post-country`,
           { bulkData: dataWithAddedBy }
         );
         console.log("Countries added successfully:", response.data);
   
         // Refresh the city list
         const newResponse = await axios.get(
-          "http://localhost:5000/api/country/get-country"
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
         );
         setCountryname(newResponse.data);
       } catch (error) {

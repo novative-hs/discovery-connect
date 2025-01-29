@@ -9,6 +9,8 @@ const createSampleDispatchTable = () => {
       dispatchVia VARCHAR(255) NOT NULL,
       dispatcherName VARCHAR(255) NOT NULL,
       dispatchReceiptNumber VARCHAR(255) NOT NULL,
+      Quantity VARCHAR(255) NOT NULL,
+      status VARCHAR(255) DEFAULT 'In Transit',
       TransferTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       sampleID INT NOT NULL,
       FOREIGN KEY (sampleID) REFERENCES sample(id),
@@ -27,44 +29,126 @@ const createSampleDispatchTable = () => {
 };
 
 // Function to get all samples with 'In Stock' status
-const getSampleDispatchesInTransit = (id, callback) => {
-  // Validate and parse `id`
+// const getSampleDispatchesInTransit = (id, callback) => {
+//   // Validate and parse `id`
+//   const user_account_id = parseInt(id);
+//   if (isNaN(user_account_id)) {
+//     console.error("Invalid user_account_id:", id);
+//     return callback(new Error("Invalid user_account_id"), null);
+//   }
+
+//   const query = `
+//     SELECT s.*
+//     FROM sample s
+//     JOIN user_account ua ON s.user_account_id = ua.id
+//     WHERE s.status = "In Transit" 
+//       AND ua.accountType = "CollectionSites"
+//       AND s.user_account_id = ?;
+//   `;
+//   mysqlConnection.query(query, [user_account_id], (err, results) => {
+//     if (err) {
+//       console.error('Database error:', err);
+//       return callback(err, null);
+//     }
+//     callback(null, results);
+//     console.log("data fetched:", results)
+//   });
+// };
+
+
+
+// Function to fetch dispatched samples with 'In Transit' status
+const getDispatchedwithInTransitStatus = (req, res) => {
   const user_account_id = parseInt(id);
   if (isNaN(user_account_id)) {
     console.error("Invalid user_account_id:", id);
     return callback(new Error("Invalid user_account_id"), null);
   }
 
+  // SQL query to fetch samples where the logged-in user is the recipient (TransferTo)
   const query = `
-    SELECT s.*
-    FROM sample s
-    JOIN user_account ua ON s.user_account_id = ua.id
-    WHERE s.status = "In Transit" 
-      AND ua.accountType = "CollectionSites"
-      AND s.user_account_id = ?;
+    SELECT 
+      s.id,
+      s.masterID,
+      s.donorID,
+      s.samplename,
+      s.age,
+      s.gender,
+      s.ethnicity,
+      s.samplecondition,
+      s.storagetemp,
+      s.storagetempUnit,
+      s.ContainerType,
+      s.CountryOfCollection,
+      s.price,
+      s.SamplePriceCurrency,
+      s.QuantityUnit,
+      s.labname,
+      s.SampleTypeMatrix,
+      s.TypeMatrixSubtype,
+      s.ProcurementType,
+      s.SmokingStatus,
+      s.TestMethod,
+      s.TestResult,
+      s.TestResultUnit,
+      s.InfectiousDiseaseTesting,
+      s.InfectiousDiseaseResult,
+      s.CutOffRange,
+      s.CutOffRangeUnit,
+      s.FreezeThawCycles,
+      s.DateOfCollection,
+      s.ConcurrentMedicalConditions,
+      s.ConcurrentMedications,
+      s.AlcoholOrDrugAbuse,
+      s.DiagnosisTestParameter,
+      s.ResultRemarks,
+      s.TestKit,
+      s.TestKitManufacturer,
+      s.TestSystem,
+      s.TestSystemManufacturer,
+      s.endTime,
+      s.user_account_id AS TransferFrom,
+      sd.TransferTo,
+      sd.Quantity AS Quantity,
+      sd.status AS status
+    FROM sampledispatch sd
+    INNER JOIN sample s ON sd.sampleID = s.id
+    WHERE sd.TransferTo = ? AND sd.status = 'In Transit'
   `;
+
+  // Execute the query using the logged-in user's `user_account_id`
   mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
-      console.error('Database error:', err);
-      return callback(err, null);
+      console.error("Database error fetching samples:", err.message);
+      return res.status(500).json({ error: "An error occurred while fetching samples" });
     }
-    callback(null, results);
-    console.log("data fetched:", results)
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No samples found for this user" });
+    }
+
+    // Return the results (samples received by the user)
+    res.status(200).json({ data: results });
   });
 };
 
+
+
+
+
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
-  const { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber } = dispatchData;
+  const { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = dispatchData;
   const query = `
-    INSERT INTO sampledispatch (TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, sampleID)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO sampledispatch (TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
   
-  mysqlConnection.query(query, [TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, sampleID], callback);
+  mysqlConnection.query(query, [TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID], callback);
 };
 
 module.exports = {
   createSampleDispatchTable,
-  getSampleDispatchesInTransit,
+  // getSampleDispatchesInTransit,
   createSampleDispatch,
+  getDispatchedwithInTransitStatus
 };

@@ -57,7 +57,7 @@ const ResearcherArea = () => {
   const fetchResearcher = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/researcher/get/${orgid}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${orgid}`
       );
       setResearchers(response.data); // Store fetched researchers in state
     } catch (error) {
@@ -67,7 +67,7 @@ const ResearcherArea = () => {
   const fetchOrganization = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/admin/organization/get/${id}`
+       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get/${id}`
       );
       setOrganization(response.data[0]);
       setorgId(response.data[0].id); // Store fetched researchers in state
@@ -78,7 +78,7 @@ const ResearcherArea = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/city/get-city"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
       );
       setcityname(response.data); // Store fetched City in state
     } catch (error) {
@@ -88,7 +88,7 @@ const ResearcherArea = () => {
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/district/get-district"
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
       );
       setdistrictname(response.data); // Store fetched District in state
     } catch (error) {
@@ -99,7 +99,7 @@ const ResearcherArea = () => {
     fetchOrganization();
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
       );
       setCountryname(response.data); // Store fetched Country in state
     } catch (error) {
@@ -154,7 +154,7 @@ const ResearcherArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        "http://localhost:5000/api/user/signup",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/signup`,
         formDataToSubmit,
         {
           headers: {
@@ -246,7 +246,7 @@ const ResearcherArea = () => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/researchers/edit/${selectedResearcherId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/edit/${selectedResearcherId}`,
         formData
       );
       console.log("Researcher updated successfully:", response.data);

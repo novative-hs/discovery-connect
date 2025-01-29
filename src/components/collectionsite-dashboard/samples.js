@@ -13,7 +13,7 @@ const SampleArea = () => {
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   }
-  else{
+  else {
     console.log("Collection site Id on sample page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
@@ -82,6 +82,7 @@ const SampleArea = () => {
     dispatchVia: "",
     dispatcherName: "",
     dispatchReceiptNumber: "",
+    Quantity: "",
   });
 
   const handleTransferClick = (sample) => {
@@ -99,34 +100,58 @@ const SampleArea = () => {
 
   const fetchSamples = async () => {
     try {
-      console.log('Fetching samples...'); // Log before sending request
-      const response = await axios.get(`http://localhost:5000/api/sample/get/${id}`);
-      console.log('Response received:', response.data); // Log response
-      setSamples(response.data); // Store fetched samples in state
-    } catch (error) {
-      console.error('Error fetching samples:', error); // Log any error
-    }
-  };
-
- useEffect(() => {
-  const fetchCollectionSiteNames = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/collectionsite/collectionsitenames/${id}`
+      console.log("Fetching samples...");
+      
+      // Fetch samples added by this collection site
+      const ownSamplesResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
-      if (!response.ok) {
-        throw new Error('Failed to fetch collection site names');
-      }
-      const data = await response.json();
-      console.log('Fetched Site Names:', data);
-      setCollectionSiteNames(data.data);
+      console.log("Own samples:", ownSamplesResponse.data);
+      const ownSamples = ownSamplesResponse.data.map(sample => ({
+        ...sample,
+        quantity: sample.quantity, // Use 'quantity' as is
+      }));
+  
+      // Fetch samples received by this collection site
+      const receivedSamplesResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
+      );
+      console.log("Received samples:", receivedSamplesResponse.data);
+      const receivedSamples = receivedSamplesResponse.data.map(sample => ({
+        ...sample,
+        quantity: sample.Quantity, // Map 'Quantity' to 'quantity'
+      }));
+  
+      // Combine both responses
+      const combinedSamples = [...ownSamples, ...receivedSamples];
+  
+      // Update state with the combined list
+      setSamples(combinedSamples);
     } catch (error) {
-      console.error('Error fetching site names:', error);
+      console.error("Error fetching samples:", error);
     }
   };
+  
 
-  fetchCollectionSiteNames();
-}, [id]);
+  useEffect(() => {
+    const fetchCollectionSiteNames = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/collectionsitenames/${id}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch collection site names');
+        }
+        const data = await response.json();
+        console.log('Fetched Site Names:', data);
+        setCollectionSiteNames(data.data);
+      } catch (error) {
+        console.error('Error fetching site names:', error);
+      }
+    };
+
+    fetchCollectionSiteNames();
+  }, [id]);
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
@@ -168,14 +193,14 @@ const SampleArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        "http://localhost:5000/api/samples/post",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
         formData
       );
       console.log("Sample added successfully:", response.data);
 
       // Refresh the sample list after successful submission
       const newResponse = await axios.get(
-        `http://localhost:5000/api/sample/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
       setSamples(newResponse.data); // Update state with the new list
 
@@ -240,11 +265,11 @@ const SampleArea = () => {
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
 
-    const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber } =
+    const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } =
       transferDetails;
 
     // Validate input before making the API call
-    if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber) {
+    if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber || !Quantity) {
       alert("All fields are required.");
       return;
     }
@@ -252,19 +277,20 @@ const SampleArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `http://localhost:5000/api/sampledispatch/post/${selectedSampleId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
         {
           TransferTo,
           dispatchVia,
           dispatcherName,
           dispatchReceiptNumber,
+          Quantity,
         }
       );
       console.log("Sample dispatched successfully:", response.data);
 
       alert("Sample dispatched successfully!");
       const newResponse = await axios.get(
-        `http://localhost:5000/api/sample/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
       setSamples(newResponse.data); // Update state with the new list
 
@@ -294,7 +320,7 @@ const SampleArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `http://localhost:5000/api/samples/delete/${selectedSampleId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
       );
       console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
 
@@ -308,7 +334,7 @@ const SampleArea = () => {
 
       // Refresh the sample list after deletion
       const newResponse = await axios.get(
-        `http://localhost:5000/api/sample/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
       setSamples(newResponse.data);
 
@@ -378,13 +404,13 @@ const SampleArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/samples/edit/${selectedSampleId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
         formData
       );
       console.log("Sample updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        `http://localhost:5000/api/sample/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
       setSamples(newResponse.data);
 
@@ -392,49 +418,49 @@ const SampleArea = () => {
       setSuccessMessage("Sample updated successfully.");
 
       // Reset formData after update
-    setFormData({
-      masterID: "",
-      donorID: "",
-      samplename: "",
-      age: "",
-      gender: "",
-      ethnicity: "",
-      samplecondition: "",
-      storagetemp: "",
-      storagetempUnit: "",
-      ContainerType: "",
-      CountryOfCollection: "",
-      price: "",
-      SamplePriceCurrency: "",
-      quantity: "",
-      QuantityUnit: "",
-      labname: "",
-      SampleTypeMatrix: "",
-      TypeMatrixSubtype: "",
-      ProcurementType: "",
-      SmokingStatus: "",
-      TestMethod: "",
-      TestResult: "",
-      TestResultUnit: "",
-      InfectiousDiseaseTesting: "",
-      InfectiousDiseaseResult: "",
-      CutOffRange: "",
-      CutOffRangeUnit: "",
-      FreezeThawCycles: "",
-      DateOfCollection: "",
-      ConcurrentMedicalConditions: "",
-      ConcurrentMedications: "",
-      AlcoholOrDrugAbuse: "",
-      DiagnosisTestParameter: "",
-      ResultRemarks: "",
-      TestKit: "",
-      TestKitManufacturer: "",
-      TestSystem: "",
-      TestSystemManufacturer: "",
-      endTime: "",
-      status: "In Stock",
-      user_account_id: id,
-    });
+      setFormData({
+        masterID: "",
+        donorID: "",
+        samplename: "",
+        age: "",
+        gender: "",
+        ethnicity: "",
+        samplecondition: "",
+        storagetemp: "",
+        storagetempUnit: "",
+        ContainerType: "",
+        CountryOfCollection: "",
+        price: "",
+        SamplePriceCurrency: "",
+        quantity: "",
+        QuantityUnit: "",
+        labname: "",
+        SampleTypeMatrix: "",
+        TypeMatrixSubtype: "",
+        ProcurementType: "",
+        SmokingStatus: "",
+        TestMethod: "",
+        TestResult: "",
+        TestResultUnit: "",
+        InfectiousDiseaseTesting: "",
+        InfectiousDiseaseResult: "",
+        CutOffRange: "",
+        CutOffRangeUnit: "",
+        FreezeThawCycles: "",
+        DateOfCollection: "",
+        ConcurrentMedicalConditions: "",
+        ConcurrentMedications: "",
+        AlcoholOrDrugAbuse: "",
+        DiagnosisTestParameter: "",
+        ResultRemarks: "",
+        TestKit: "",
+        TestKitManufacturer: "",
+        TestSystem: "",
+        TestSystemManufacturer: "",
+        endTime: "",
+        status: "In Stock",
+        user_account_id: id,
+      });
 
       setTimeout(() => {
         setSuccessMessage("");
@@ -457,11 +483,12 @@ const SampleArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
+
   return (
     <section className="policy__area pb-120">
       <div
         className="container"
-        style={{ marginTop: "-20px", width: "180%", marginLeft: "-40px"}}
+        style={{ marginTop: "-20px", width: "180%", marginLeft: "-40px" }}
       >
         <div
           className="row justify-content-center"
@@ -480,7 +507,7 @@ const SampleArea = () => {
                 className="d-flex justify-content-end mb-3"
                 style={{
                   marginBottom: "20px", // Adjust spacing between button and table
-                  
+
                 }}
               >
                 <button
@@ -502,7 +529,7 @@ const SampleArea = () => {
               >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                  <tr style={{ textAlign: "center" }}>
+                    <tr style={{ textAlign: "center" }}>
                       <th
                         className="px-3"
                         style={{
@@ -539,23 +566,23 @@ const SampleArea = () => {
                           width: "200px",
                         }}
                       >
-                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Master ID"
-                          onChange={(e) =>
-                            handleFilterChange("masterID", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Master ID
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Master ID"
+                            onChange={(e) =>
+                              handleFilterChange("masterID", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Master ID
                         </div>
                       </th>
                       <th
@@ -567,22 +594,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Donor ID"
-                          onChange={(e) =>
-                            handleFilterChange("donorID", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Donor ID
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Donor ID"
+                            onChange={(e) =>
+                              handleFilterChange("donorID", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Donor ID
                         </div>
                       </th>
                       <th
@@ -594,22 +621,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Name"
-                          onChange={(e) =>
-                            handleFilterChange("samplename", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Name
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Name"
+                            onChange={(e) =>
+                              handleFilterChange("samplename", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Name
                         </div>
                       </th>
                       <th
@@ -621,22 +648,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Age"
-                          onChange={(e) =>
-                            handleFilterChange("age", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Age
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Age"
+                            onChange={(e) =>
+                              handleFilterChange("age", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Age
                         </div>
                       </th>
                       <th
@@ -648,22 +675,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Gender"
-                          onChange={(e) =>
-                            handleFilterChange("gender", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Gender
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Gender"
+                            onChange={(e) =>
+                              handleFilterChange("gender", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Gender
                         </div>
                       </th>
                       <th
@@ -675,22 +702,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Ethnicity"
-                          onChange={(e) =>
-                            handleFilterChange("ethnicity", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Ethnicity
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Ethnicity"
+                            onChange={(e) =>
+                              handleFilterChange("ethnicity", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Ethnicity
                         </div>
                       </th>
                       <th
@@ -702,25 +729,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Condition"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "samplecondition",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Condition
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Condition"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "samplecondition",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Condition
                         </div>
                       </th>
                       <th
@@ -732,22 +759,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Storage Temperature"
-                          onChange={(e) =>
-                            handleFilterChange("storagetemp", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Storage Temperature
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Storage Temperature"
+                            onChange={(e) =>
+                              handleFilterChange("storagetemp", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Storage Temperature
                         </div>
                       </th>
                       <th
@@ -759,25 +786,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Storage Temp Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "storagetempUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Storage Temperature Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Storage Temp Unit"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "storagetempUnit",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Storage Temperature Unit
                         </div>
                       </th>
                       <th
@@ -789,22 +816,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Container Type"
-                          onChange={(e) =>
-                            handleFilterChange("ContainerType", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Container Type
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Container Type"
+                            onChange={(e) =>
+                              handleFilterChange("ContainerType", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Container Type
                         </div>
                       </th>
                       <th
@@ -816,25 +843,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Country"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CountryOfCollection",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Country Of Collection
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Country"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "CountryOfCollection",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Country Of Collection
                         </div>
                       </th>
                       <th
@@ -846,22 +873,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Price"
-                          onChange={(e) =>
-                            handleFilterChange("price", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Price
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Price"
+                            onChange={(e) =>
+                              handleFilterChange("price", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Price
                         </div>
                       </th>
                       <th
@@ -873,25 +900,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Price Currency"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SamplePriceCurrency",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Price Currency
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Price Currency"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "SamplePriceCurrency",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Price Currency
                         </div>
                       </th>
                       <th className="px-3">
@@ -921,22 +948,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Quantity Unit"
-                          onChange={(e) =>
-                            handleFilterChange("QuantityUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Quantity Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Quantity Unit"
+                            onChange={(e) =>
+                              handleFilterChange("QuantityUnit", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Quantity Unit
                         </div>
                       </th>
                       <th
@@ -948,22 +975,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Lab Name"
-                          onChange={(e) =>
-                            handleFilterChange("labname", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Lab Name
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Lab Name"
+                            onChange={(e) =>
+                              handleFilterChange("labname", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Lab Name
                         </div>
                       </th>
                       <th
@@ -975,25 +1002,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Type Matrix"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SampleTypeMatrix",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Type Matrix
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Sample Type Matrix"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "SampleTypeMatrix",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Sample Type Matrix
                         </div>
                       </th>
                       <th
@@ -1005,25 +1032,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Type Matrix Subtype"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TypeMatrixSubtype",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Type Matrix Subtype
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Type Matrix Subtype"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TypeMatrixSubtype",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Type Matrix Subtype
                         </div>
                       </th>
                       <th
@@ -1035,25 +1062,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Procurement Type"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ProcurementType",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Procurement Type
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Procurement Type"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ProcurementType",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Procurement Type
                         </div>
                       </th>
                       <th
@@ -1065,22 +1092,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Smoking Status"
-                          onChange={(e) =>
-                            handleFilterChange("SmokingStatus", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Smoking Status
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Smoking Status"
+                            onChange={(e) =>
+                              handleFilterChange("SmokingStatus", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Smoking Status
                         </div>
                       </th>
                       <th
@@ -1092,22 +1119,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Method"
-                          onChange={(e) =>
-                            handleFilterChange("TestMethod", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Method
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Method"
+                            onChange={(e) =>
+                              handleFilterChange("TestMethod", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Method
                         </div>
                       </th>
                       <th
@@ -1119,22 +1146,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result"
-                          onChange={(e) =>
-                            handleFilterChange("TestResult", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Result
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Result"
+                            onChange={(e) =>
+                              handleFilterChange("TestResult", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Result
                         </div>
                       </th>
                       <th
@@ -1146,22 +1173,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result Unit"
-                          onChange={(e) =>
-                            handleFilterChange("TestResultUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Result Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Result Unit"
+                            onChange={(e) =>
+                              handleFilterChange("TestResultUnit", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Result Unit
                         </div>
                       </th>
                       <th
@@ -1173,25 +1200,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Infectious Disease Testing"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "InfectiousDiseaseTesting",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Infectious Disease Testing
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Infectious Disease Testing"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "InfectiousDiseaseTesting",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Infectious Disease Testing
                         </div>
                       </th>
                       <th
@@ -1203,25 +1230,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Infectious Disease Result"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "InfectiousDiseaseResult",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Infectious Disease Result
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Infectious Disease Result"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "InfectiousDiseaseResult",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Infectious Disease Result
                         </div>
                       </th>
                       <th
@@ -1233,22 +1260,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range"
-                          onChange={(e) =>
-                            handleFilterChange("CutOffRange", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Cut Off Range
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Cut Off Range"
+                            onChange={(e) =>
+                              handleFilterChange("CutOffRange", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Cut Off Range
                         </div>
                       </th>
                       <th
@@ -1260,25 +1287,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CutOffRangeUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Cut Off Range Unit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Cut Off Range Unit"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "CutOffRangeUnit",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Cut Off Range Unit
                         </div>
                       </th>
                       <th
@@ -1290,25 +1317,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Freeze Thaw Cycles"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "FreezeThawCycles",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Freeze Thaw Cycles
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Freeze Thaw Cycles"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "FreezeThawCycles",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Freeze Thaw Cycles
                         </div>
                       </th>
                       <th
@@ -1320,85 +1347,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Date Of Collection"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "DateOfCollection",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Date Of Collection
-                      </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Concurrent Medical Conditions"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ConcurrentMedicalConditions",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Concurrent Medical Conditions
-                      </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Concurrent Medications"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ConcurrentMedications",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Concurrent Medications
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Date Of Collection"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "DateOfCollection",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Date Of Collection
                         </div>
                       </th>
                       <th
@@ -1410,25 +1377,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Alcohol Or Drug Abuse"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "AlcoholOrDrugAbuse",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Alcohol Or Drug Abuse
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Concurrent Medical Conditions"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ConcurrentMedicalConditions",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Concurrent Medical Conditions
                         </div>
                       </th>
                       <th
@@ -1440,25 +1407,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Diagnosis Test Parameter"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "DiagnosisTestParameter",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Diagnosis Test Parameter
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Concurrent Medications"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "ConcurrentMedications",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Concurrent Medications
                         </div>
                       </th>
                       <th
@@ -1470,22 +1437,25 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Result Remarks"
-                          onChange={(e) =>
-                            handleFilterChange("ResultRemarks", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Result Remarks
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Alcohol Or Drug Abuse"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "AlcoholOrDrugAbuse",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Alcohol Or Drug Abuse
                         </div>
                       </th>
                       <th
@@ -1497,22 +1467,79 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Kit"
-                          onChange={(e) =>
-                            handleFilterChange("TestKit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Kit
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Diagnosis Test Parameter"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "DiagnosisTestParameter",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Diagnosis Test Parameter
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Result Remarks"
+                            onChange={(e) =>
+                              handleFilterChange("ResultRemarks", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Result Remarks
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Kit"
+                            onChange={(e) =>
+                              handleFilterChange("TestKit", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Kit
                         </div>
                       </th>
                       <th
@@ -1525,25 +1552,25 @@ const SampleArea = () => {
 
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Kit Manufacturer"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TestKitManufacturer",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Kit Manufacturer
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test Kit Manufacturer"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TestKitManufacturer",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test Kit Manufacturer
                         </div>
                       </th>
                       <th
@@ -1555,22 +1582,22 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test System"
-                          onChange={(e) =>
-                            handleFilterChange("TestSystem", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test System
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test System"
+                            onChange={(e) =>
+                              handleFilterChange("TestSystem", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test System
                         </div>
                       </th>
                       <th
@@ -1580,55 +1607,28 @@ const SampleArea = () => {
                           textAlign: "center",
                           width: "200px",
                         }}
-                        
+
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test System Manufacturer"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TestSystemManufacturer",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test System Manufacturer
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Test System Manufacturer"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                "TestSystemManufacturer",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Test System Manufacturer
                         </div>
                       </th>
                       <th
@@ -1640,22 +1640,49 @@ const SampleArea = () => {
                         }}
                       >
                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Status
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search End Time"
+                            onChange={(e) =>
+                              handleFilterChange("endTime", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          End Time
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search Status"
+                            onChange={(e) =>
+                              handleFilterChange("status", e.target.value)
+                            }
+                            style={{
+                              width: "80%", // Adjusted width for better responsiveness
+                              padding: "8px",
+                              boxSizing: "border-box",
+                              minWidth: "120px", // Minimum width to prevent shrinking too much
+                              maxWidth: "180px", // Maximum width for better control
+                            }}
+                          />
+                          Status
                         </div>
                       </th>
                       <th>Action</th>
@@ -1677,7 +1704,7 @@ const SampleArea = () => {
                           <td>{sample.storagetempUnit}</td>
                           <td>{sample.ContainerType}</td>
                           <td>{sample.CountryOfCollection}</td>
-                          <td>{sample.price}</td>
+                          <td className="text-end">{sample.price}</td>
                           <td>{sample.SamplePriceCurrency}</td>
                           <td>{sample.quantity}</td>
                           <td>{sample.QuantityUnit}</td>
@@ -1707,35 +1734,35 @@ const SampleArea = () => {
                           <td>{sample.endTime}</td>
                           <td>{sample.status}</td>
                           <td>
-                          <div
+                            <div
                               style={{
                                 display: "flex",
                                 justifyContent: "space-around",
                                 gap: "5px",
                               }}
                             >
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedSampleId(sample.id);
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleTransferClick(sample)}
-                            >
-                              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                            </button>
-                          </div>
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleEditClick(sample)}
+                              >
+                                <FontAwesomeIcon icon={faEdit} size="sm" />
+                              </button>{" "}
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => {
+                                  setSelectedSampleId(sample.id);
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                              </button>
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => handleTransferClick(sample)}
+                              >
+                                <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1778,11 +1805,10 @@ const SampleArea = () => {
                     return (
                       <button
                         key={pageNumber}
-                        className={`btn btn-sm ${
-                          currentPage === pageNumber
+                        className={`btn btn-sm ${currentPage === pageNumber
                             ? "btn-primary"
                             : "btn-outline-secondary"
-                        }`}
+                          }`}
                         onClick={() => handlePageChange(pageNumber)}
                         style={{
                           minWidth: "40px",
@@ -1828,1029 +1854,1029 @@ const SampleArea = () => {
               {/* Modal for Adding Samples */}
               {showAddModal && (
                 <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-            
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050, 
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+                  {/* Modal Content */}
                   <div
-                    className="modal-dialog"
-                    role="document"
-                    style={{ maxWidth: "100%", width: "90vw" }}
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
                   >
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Parallel Columns - 4 columns */}
-                          <div className="row">
-                            {/* Column 1 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Master ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="masterID"
-                                  value={formData.masterID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Donor ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="donorID"
-                                  value={formData.donorID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Age</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="age"
-                                  value={formData.age}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Gender</label>
-                                <select
-                                  className="form-control"
-                                  name="gender"
-                                  value={formData.gender}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="">Select Gender</option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                </select>
-                              </div>
-                              <div className="form-group">
-                                <label>Ethnicity</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ethnicity"
-                                  value={formData.ethnicity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Condition</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplecondition"
-                                  value={formData.samplecondition}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* Column 2 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Storage Temperature</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetemp"
-                                  value={formData.storagetemp}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Storage Temperature Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetempUnit"
-                                  value={formData.storagetempUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Container Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ContainerType"
-                                  value={formData.ContainerType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Country Of Collection</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CountryOfCollection"
-                                  value={formData.CountryOfCollection}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Price</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="price"
-                                  value={formData.price}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Price Currency</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SamplePriceCurrency"
-                                  value={formData.SamplePriceCurrency}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Quantity</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="quantity"
-                                  value={formData.quantity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Quantity Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="QuantityUnit"
-                                  value={formData.QuantityUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Lab Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="labname"
-                                  value={formData.labname}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Type Matrix</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Type Matrix Subtype</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TypeMatrixSubtype"
-                                  value={formData.TypeMatrixSubtype}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Procurement Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ProcurementType"
-                                  value={formData.ProcurementType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Smoking Status</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SmokingStatus"
-                                  value={formData.SmokingStatus}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Method</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestMethod"
-                                  value={formData.TestMethod}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResult"
-                                  value={formData.TestResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResultUnit"
-                                  value={formData.TestResultUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Testing</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseTesting"
-                                  value={formData.InfectiousDiseaseTesting}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseResult"
-                                  value={formData.InfectiousDiseaseResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CutOffRange"
-                                  value={formData.CutOffRange}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CutOffRangeUnit"
-                                  value={formData.CutOffRangeUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Freeze Thaw Cycles</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="FreezeThawCycles"
-                                  value={formData.FreezeThawCycles}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* {Column 5} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Date Of Collection</label>
-                                <input
-                                  type="date"
-                                  className="form-control"
-                                  name="DateOfCollection"
-                                  value={formData.DateOfCollection}
-                                  onChange={handleInputChange}
-                                  max={new Date().toISOString().split("T")[0]} // Set max to today’s date
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medical Conditions</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedicalConditions"
-                                  value={formData.ConcurrentMedicalConditions}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medications</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedications"
-                                  value={formData.ConcurrentMedications}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Alcohol Or Drug Abuse</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="AlcoholOrDrugAbuse"
-                                  value={formData.AlcoholOrDrugAbuse}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                    <div
+                      className="modal-dialog"
+                      role="document"
+                      style={{ maxWidth: "100%", width: "90vw" }}
+                    >
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Add Sample</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowAddModal(false)}
+                            style={{
+                              fontSize: '1.5rem',
+                              position: 'absolute',
+                              right: '10px',
+                              top: '10px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <form onSubmit={handleSubmit}>
+                          <div className="modal-body">
+                            {/* Parallel Columns - 4 columns */}
+                            <div className="row">
+                              {/* Column 1 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Master ID</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="masterID"
+                                    value={formData.masterID}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Donor ID</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="donorID"
+                                    value={formData.donorID}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Name</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="samplename"
+                                    value={formData.samplename}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Age</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="age"
+                                    value={formData.age}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Gender</label>
+                                  <select
+                                    className="form-control"
+                                    name="gender"
+                                    value={formData.gender}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>Ethnicity</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ethnicity"
+                                    value={formData.ethnicity}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Condition</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="samplecondition"
+                                    value={formData.samplecondition}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
 
-                              <div className="form-group">
-                                <label>Diagnosis Test Parameter</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* Column 2 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Storage Temperature</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="storagetemp"
+                                    value={formData.storagetemp}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Storage Temperature Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="storagetempUnit"
+                                    value={formData.storagetempUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Container Type</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ContainerType"
+                                    value={formData.ContainerType}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Country Of Collection</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CountryOfCollection"
+                                    value={formData.CountryOfCollection}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Price</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="price"
+                                    value={formData.price}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Price Currency</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="SamplePriceCurrency"
+                                    value={formData.SamplePriceCurrency}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Quantity</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="quantity"
+                                    value={formData.quantity}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Result Remarks</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ResultRemarks"
-                                  value={formData.ResultRemarks}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* {Column 3} */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Quantity Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="QuantityUnit"
+                                    value={formData.QuantityUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Lab Name</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="labname"
+                                    value={formData.labname}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Type Matrix</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="SampleTypeMatrix"
+                                    value={formData.SampleTypeMatrix}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Type Matrix Subtype</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TypeMatrixSubtype"
+                                    value={formData.TypeMatrixSubtype}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Procurement Type</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ProcurementType"
+                                    value={formData.ProcurementType}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Smoking Status</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="SmokingStatus"
+                                    value={formData.SmokingStatus}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test Method</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestMethod"
+                                    value={formData.TestMethod}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Test Kit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKit"
-                                  value={formData.TestKit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* Column 4 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Test Result</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestResult"
+                                    value={formData.TestResult}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test Result Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestResultUnit"
+                                    value={formData.TestResultUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Infectious Disease Testing</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="InfectiousDiseaseTesting"
+                                    value={formData.InfectiousDiseaseTesting}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Infectious Disease Result</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="InfectiousDiseaseResult"
+                                    value={formData.InfectiousDiseaseResult}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Cut Off Range</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CutOffRange"
+                                    value={formData.CutOffRange}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Cut Off Range Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CutOffRangeUnit"
+                                    value={formData.CutOffRangeUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Freeze Thaw Cycles</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="FreezeThawCycles"
+                                    value={formData.FreezeThawCycles}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                            </div>
-                            {/* Column 6 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Kit Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKitManufacturer"
-                                  value={formData.TestKitManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+
+                              {/* {Column 5} */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Date Of Collection</label>
+                                  <input
+                                    type="date"
+                                    className="form-control"
+                                    name="DateOfCollection"
+                                    value={formData.DateOfCollection}
+                                    onChange={handleInputChange}
+                                    max={new Date().toISOString().split("T")[0]} // Set max to today’s date
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Concurrent Medical Conditions</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ConcurrentMedicalConditions"
+                                    value={formData.ConcurrentMedicalConditions}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Concurrent Medications</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ConcurrentMedications"
+                                    value={formData.ConcurrentMedications}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Alcohol Or Drug Abuse</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="AlcoholOrDrugAbuse"
+                                    value={formData.AlcoholOrDrugAbuse}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+
+                                <div className="form-group">
+                                  <label>Diagnosis Test Parameter</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="DiagnosisTestParameter"
+                                    value={formData.DiagnosisTestParameter}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Result Remarks</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ResultRemarks"
+                                    value={formData.ResultRemarks}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test Kit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestKit"
+                                    value={formData.TestKit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Test System</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystem"
-                                  value={formData.TestSystem}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystemManufacturer"
-                                  value={formData.TestSystemManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>End Time</label>
-                                <input
-                                  type="date"
-                                  className="form-control"
-                                  name="endTime"
-                                  value={formData.endTime}
-                                  onChange={handleInputChange}
-                                  min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
-                                  required
-                                />
+                              {/* Column 6 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Test Kit Manufacturer</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestKitManufacturer"
+                                    value={formData.TestKitManufacturer}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test System</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestSystem"
+                                    value={formData.TestSystem}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test System Manufacturer</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestSystemManufacturer"
+                                    value={formData.TestSystemManufacturer}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>End Time</label>
+                                  <input
+                                    type="date"
+                                    className="form-control"
+                                    name="endTime"
+                                    value={formData.endTime}
+                                    onChange={handleInputChange}
+                                    min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
-                          </button>
-                        </div>
-                      </form>
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              Save
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
 
               {/* Edit Sample Modal */}
               {showEditModal && (
-            <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-        
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050, 
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+                  {/* Modal Content */}
                   <div
-                    className="modal-dialog"
-                    role="document"
-                    style={{ maxWidth: "100%", width: "70vw" }}
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
                   >
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Parallel Columns - 4 columns */}
-                          <div className="row">
-                            {/* Column 1 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Master ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="masterID"
-                                  value={formData.masterID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                    <div
+                      className="modal-dialog"
+                      role="document"
+                      style={{ maxWidth: "100%", width: "70vw" }}
+                    >
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Edit Sample</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowEditModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <form onSubmit={handleUpdate}>
+                          <div className="modal-body">
+                            {/* Parallel Columns - 4 columns */}
+                            <div className="row">
+                              {/* Column 1 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Master ID</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="masterID"
+                                    value={formData.masterID}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Donor ID</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="donorID"
+                                    value={formData.donorID}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Name</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="samplename"
+                                    value={formData.samplename}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Age</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="age"
+                                    value={formData.age}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Gender</label>
+                                  <select
+                                    className="form-control"
+                                    name="gender"
+                                    value={formData.gender}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>Ethnicity</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ethnicity"
+                                    value={formData.ethnicity}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Condition</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="samplecondition"
+                                    value={formData.samplecondition}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Donor ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="donorID"
-                                  value={formData.donorID}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* Column 2 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Storage Temperature</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="storagetemp"
+                                    value={formData.storagetemp}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Storage Temperature Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="storagetempUnit"
+                                    value={formData.storagetempUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Container Type</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ContainerType"
+                                    value={formData.ContainerType}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Country Of Collection</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CountryOfCollection"
+                                    value={formData.CountryOfCollection}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Price</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="price"
+                                    value={formData.price}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Price Currency</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="SamplePriceCurrency"
+                                    value={formData.SamplePriceCurrency}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Quantity</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="quantity"
+                                    value={formData.quantity}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Sample Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* {Column 3} */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Quantity Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="QuantityUnit"
+                                    value={formData.QuantityUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Lab Name</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="labname"
+                                    value={formData.labname}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Sample Type Matrix</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="SampleTypeMatrix"
+                                    value={formData.SampleTypeMatrix}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Type Matrix Subtype</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TypeMatrixSubtype"
+                                    value={formData.TypeMatrixSubtype}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Procurement Type</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ProcurementType"
+                                    value={formData.ProcurementType}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Smoking Status</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="SmokingStatus"
+                                    value={formData.SmokingStatus}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test Method</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestMethod"
+                                    value={formData.TestMethod}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Age</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="age"
-                                  value={formData.age}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Gender</label>
-                                <select
-                                  className="form-control"
-                                  name="gender"
-                                  value={formData.gender}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="">Select Gender</option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                </select>
-                              </div>
-                              <div className="form-group">
-                                <label>Ethnicity</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ethnicity"
-                                  value={formData.ethnicity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Condition</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="samplecondition"
-                                  value={formData.samplecondition}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 2 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Storage Temperature</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetemp"
-                                  value={formData.storagetemp}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Storage Temperature Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="storagetempUnit"
-                                  value={formData.storagetempUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Container Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ContainerType"
-                                  value={formData.ContainerType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Country Of Collection</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CountryOfCollection"
-                                  value={formData.CountryOfCollection}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Price</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="price"
-                                  value={formData.price}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Price Currency</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SamplePriceCurrency"
-                                  value={formData.SamplePriceCurrency}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Quantity</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="quantity"
-                                  value={formData.quantity}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Quantity Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="QuantityUnit"
-                                  value={formData.QuantityUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Lab Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="labname"
-                                  value={formData.labname}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Type Matrix</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Type Matrix Subtype</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TypeMatrixSubtype"
-                                  value={formData.TypeMatrixSubtype}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Procurement Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ProcurementType"
-                                  value={formData.ProcurementType}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Smoking Status</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="SmokingStatus"
-                                  value={formData.SmokingStatus}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Method</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestMethod"
-                                  value={formData.TestMethod}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResult"
-                                  value={formData.TestResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestResultUnit"
-                                  value={formData.TestResultUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Testing</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseTesting"
-                                  value={formData.InfectiousDiseaseTesting}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Infectious Disease Result</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="InfectiousDiseaseResult"
-                                  value={formData.InfectiousDiseaseResult}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CutOffRange"
-                                  value={formData.CutOffRange}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Cut Off Range Unit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CutOffRangeUnit"
-                                  value={formData.CutOffRangeUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Freeze Thaw Cycles</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="FreezeThawCycles"
-                                  value={formData.FreezeThawCycles}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* {Column 5} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Date of Collection</label>
-                                <input
-                                  type="date"
-                                  className="form-control"
-                                  name="DateOfCollection"
-                                  value={formData.DateOfCollection}
-                                  onChange={handleInputChange}
-                                  max={new Date().toISOString().split("T")[0]} // Set max to today’s date
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medical Conditions</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedicalConditions"
-                                  value={formData.ConcurrentMedicalConditions}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Concurrent Medications</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ConcurrentMedications"
-                                  value={formData.ConcurrentMedications}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Alcohol Or Drug Abuse</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="AlcoholOrDrugAbuse"
-                                  value={formData.AlcoholOrDrugAbuse}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* Column 4 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Test Result</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestResult"
+                                    value={formData.TestResult}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test Result Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestResultUnit"
+                                    value={formData.TestResultUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Infectious Disease Testing</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="InfectiousDiseaseTesting"
+                                    value={formData.InfectiousDiseaseTesting}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Infectious Disease Result</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="InfectiousDiseaseResult"
+                                    value={formData.InfectiousDiseaseResult}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Cut Off Range</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CutOffRange"
+                                    value={formData.CutOffRange}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Cut Off Range Unit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CutOffRangeUnit"
+                                    value={formData.CutOffRangeUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Freeze Thaw Cycles</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="FreezeThawCycles"
+                                    value={formData.FreezeThawCycles}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
 
-                              <div className="form-group">
-                                <label>Diagnosis Test Parameter</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                />
+                              {/* {Column 5} */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Date of Collection</label>
+                                  <input
+                                    type="date"
+                                    className="form-control"
+                                    name="DateOfCollection"
+                                    value={formData.DateOfCollection}
+                                    onChange={handleInputChange}
+                                    max={new Date().toISOString().split("T")[0]} // Set max to today’s date
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Concurrent Medical Conditions</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ConcurrentMedicalConditions"
+                                    value={formData.ConcurrentMedicalConditions}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Concurrent Medications</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ConcurrentMedications"
+                                    value={formData.ConcurrentMedications}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Alcohol Or Drug Abuse</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="AlcoholOrDrugAbuse"
+                                    value={formData.AlcoholOrDrugAbuse}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+
+                                <div className="form-group">
+                                  <label>Diagnosis Test Parameter</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="DiagnosisTestParameter"
+                                    value={formData.DiagnosisTestParameter}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Result Remarks</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ResultRemarks"
+                                    value={formData.ResultRemarks}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test Kit</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestKit"
+                                    value={formData.TestKit}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Result Remarks</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ResultRemarks"
-                                  value={formData.ResultRemarks}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test Kit</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKit"
-                                  value={formData.TestKit}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            {/* Column 6 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Test Kit Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestKitManufacturer"
-                                  value={formData.TestKitManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystem"
-                                  value={formData.TestSystem}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Test System Manufacturer</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="TestSystemManufacturer"
-                                  value={formData.TestSystemManufacturer}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>End Time</label>
-                                <input
-                                  type="date"
-                                  className="form-control"
-                                  name="endTime"
-                                  value={formData.endTime}
-                                  onChange={handleInputChange}
-                                  min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
-                                  required
-                                />
+                              {/* Column 6 */}
+                              <div className="col-md-2">
+                                <div className="form-group">
+                                  <label>Test Kit Manufacturer</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestKitManufacturer"
+                                    value={formData.TestKitManufacturer}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test System</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestSystem"
+                                    value={formData.TestSystem}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Test System Manufacturer</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="TestSystemManufacturer"
+                                    value={formData.TestSystemManufacturer}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>End Time</label>
+                                  <input
+                                    type="date"
+                                    className="form-control"
+                                    name="endTime"
+                                    value={formData.endTime}
+                                    onChange={handleInputChange}
+                                    min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]} // Set min to tomorrow's date
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Sample
-                          </button>
-                        </div>
-                      </form>
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              Update Sample
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
 
@@ -2885,7 +2911,7 @@ const SampleArea = () => {
                       Stock Transfer
                     </h5>
                     <form>
-                    {/* <div style={{ marginBottom: "15px" }}>
+                      {/* <div style={{ marginBottom: "15px" }}>
                         <label style={{ display: "block", marginBottom: "5px" }}>Transfer From</label>
                         <select
                           name="TransferFrom"
@@ -2921,9 +2947,9 @@ const SampleArea = () => {
                         >
                           <option value="">Select</option>
                           {collectionSiteNames.map((site, index) => (
-                             <option key={site.user_account_id} value={site.user_account_id}>
-                             {site.CollectionSiteName}
-                           </option>
+                            <option key={site.user_account_id} value={site.user_account_id}>
+                              {site.CollectionSiteName}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -2989,6 +3015,26 @@ const SampleArea = () => {
                           }}
                         />
                       </div>
+                      <div style={{ marginBottom: "15px" }}>
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
+                          Quantity
+                        </label>
+                        <input
+                          type="number"
+                          name="Quantity"
+                          value={transferDetails.Quantity}
+                          onChange={handleInputChange}
+                          placeholder="Enter Quantity"
+                          style={{
+                            width: "100%",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                          }}
+                        />
+                      </div>
                       <div
                         style={{
                           display: "flex",
@@ -3027,64 +3073,64 @@ const SampleArea = () => {
 
               {/* Modal for Deleting Samples */}
               {showDeleteModal && (
-               <>
-               {/* Bootstrap Backdrop with Blur */}
-               <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-           
-               {/* Modal Content */}
-               <div
-                 className="modal show d-block"
-                 tabIndex="-1"
-                 role="dialog"
-                 style={{
-                   zIndex: 1050, 
-                   position: "fixed",
-                   top: "120px",
-                   left: "50%",
-                   transform: "translateX(-50%)",
-                 }}
-               >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this sample?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Delete Sample</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowDeleteModal(false)}
+                            style={{
+                              // background: 'none',
+                              // border: 'none',
+                              fontSize: '1.5rem',
+                              position: 'absolute',
+                              right: '10px',
+                              top: '10px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <div className="modal-body">
+                          <p>Are you sure you want to delete this sample?</p>
+                        </div>
+                        <div className="modal-footer">
+                          <button
+                            className="btn btn-danger"
+                            onClick={handleDelete}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
             </div>

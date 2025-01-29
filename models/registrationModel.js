@@ -111,6 +111,26 @@ const create_collectionsiteTable = () => {
   });
 };
 
+const create_biobankTable = () => {
+  const create_biobankTable = `
+  CREATE TABLE IF NOT EXISTS biobank (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_account_id INT,
+    Name VARCHAR(100),
+    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+)`;
+
+mysqlConnection.query(create_biobankTable, (err, results) => {
+  if (err) {
+    console.error("Error biobank table: ", err);
+  } else {
+    console.log("Biobank table created Successfully");
+  }
+});
+};
+
+
+
 const getAccountDetail = (id, callback) => {
   console.log("ID", id);
   // Query to verify email and password for any account type
@@ -730,6 +750,7 @@ module.exports = {
   getAccountDetail,
   getUserEmail,
   create_collectionsiteTable,
+  create_biobankTable,
   create_organizationTable,
   create_researcherTable,
   createuser_accountTable,

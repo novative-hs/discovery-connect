@@ -50,7 +50,7 @@ const ChangePassword = () => {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/user/${id}`);
+      const response = await axios.get( `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${id}`);
       const userEmail = response.data?.data[0]; // Extract email from the response
       setUserDetail(userEmail); // Set only the email in state
     } catch (error) {
@@ -69,7 +69,7 @@ const ChangePassword = () => {
       };
       // Send the change password request
       const response = await axios.put(
-        "http://localhost:5000/api/user/changepassword",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/changepassword`,
         formData
       );
 

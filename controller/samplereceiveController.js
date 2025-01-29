@@ -14,12 +14,58 @@ const getSampleReceiveInTransit = (req, res) => {
   if (!id) {
     return res.status(400).json({ error: "ID parameter is missing" });
   }
+
   const query = `
-    SELECT s.*
-    FROM samplereceive sd
-    JOIN sample s ON sd.sampleID = s.id
-    WHERE sd.TransferTo = ? AND s.status = "In Transit";
+    SELECT 
+      s.id,
+      s.masterID,
+      s.donorID,
+      s.samplename,
+      s.age,
+      s.gender,
+      s.ethnicity,
+      s.samplecondition,
+      s.storagetemp,
+      s.storagetempUnit,
+      s.ContainerType,
+      s.CountryOfCollection,
+      s.price,
+      s.SamplePriceCurrency,
+      s.QuantityUnit,
+      s.labname,
+      s.SampleTypeMatrix,
+      s.TypeMatrixSubtype,
+      s.ProcurementType,
+      s.SmokingStatus,
+      s.TestMethod,
+      s.TestResult,
+      s.TestResultUnit,
+      s.InfectiousDiseaseTesting,
+      s.InfectiousDiseaseResult,
+      s.CutOffRange,
+      s.CutOffRangeUnit,
+      s.FreezeThawCycles,
+      s.DateOfCollection,
+      s.ConcurrentMedicalConditions,
+      s.ConcurrentMedications,
+      s.AlcoholOrDrugAbuse,
+      s.DiagnosisTestParameter,
+      s.ResultRemarks,
+      s.TestKit,
+      s.TestKitManufacturer,
+      s.TestSystem,
+      s.TestSystemManufacturer,
+      s.endTime,
+      sr.ReceivedByCollectionSite,
+      sr.ReceivedByCollectionSite AS user_account_id,
+      sd.Quantity,
+      s.status
+    FROM samplereceive sr
+    INNER JOIN sample s ON sr.sampleID = s.id
+    INNER JOIN sampledispatch sd ON s.id = sd.sampleID
+    WHERE sr.ReceivedByCollectionSite = ?
   `;
+
   mysqlConnection.query(query, [id], (err, results) => {
     if (err) {
       console.error("Error fetching sample receive:", err);
@@ -28,6 +74,7 @@ const getSampleReceiveInTransit = (req, res) => {
     res.status(200).json(results);
   });
 };
+
 
 // Controller to create a new sample receive
 const createSampleReceive = (req, res) => {
@@ -48,37 +95,24 @@ const createSampleReceive = (req, res) => {
       return res.status(500).json({ error: 'An error occurred while creating the receive' });
     }
 
-    // Update the sample's status to "In Stock"
-    const updateStatusQuery = `
-      UPDATE sample
-      SET status = 'In Stock'
-      WHERE id = ?
-    `;
+       // Update the sampledispatch table's status to "In Stock"
+       const updateDispatchStatusQuery = `
+       UPDATE sampledispatch
+       SET status = 'In Stock'
+       WHERE sampleID = ?
+     `;
 
-    mysqlConnection.query(updateStatusQuery, [id], (updateStatusErr) => {
-      if (updateStatusErr) {
-        console.error('Database error during UPDATE status:', updateStatusErr);
-        return res.status(500).json({ error: 'An error occurred while updating the sample status' });
-      }
+     mysqlConnection.query(updateDispatchStatusQuery, [id], (updateDispatchStatusErr) => {
+       if (updateDispatchStatusErr) {
+         console.error('Database error during UPDATE status in sampledispatch:', updateDispatchStatusErr);
+         return res.status(500).json({ error: 'An error occurred while updating the dispatch status' });
+       }
 
-      // Update the user_account_id in the sample table with ReceivedByCollectionSite
-      const updateUserAccountQuery = `
-        UPDATE sample
-        SET user_account_id = ?
-        WHERE id = ?
-      `;
-
-      mysqlConnection.query(updateUserAccountQuery, [ReceivedByCollectionSite, id], (updateUserAccountErr) => {
-        if (updateUserAccountErr) {
-          console.error('Database error during UPDATE user_account_id:', updateUserAccountErr);
-          return res.status(500).json({ error: 'An error occurred while updating the user account ID' });
-        }
-
-        res.status(201).json({ message: 'Sample Receive created and user_account_id updated successfully', id: result.insertId });
-      });
+      res.status(201).json({ message: 'Sample Receive created successfully', id: result.insertId });
     });
   });
 };
+
 
 
 

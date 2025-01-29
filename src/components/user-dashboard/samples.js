@@ -120,7 +120,7 @@ const[quantity,setQuantity]=useState(0);
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/sample/getAll"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAll`
       );
       setSamples(response.data); // Store fetched samples in state
     } catch (error) {
@@ -162,14 +162,14 @@ const[quantity,setQuantity]=useState(0);
     console.log(e)
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/cart/post`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/post`,
         e
       );
     notifySuccess("Sample added to cart successfully");
       console.log("Sample added to cart successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/sample/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get`
       );
       setSamples(newResponse.data);
       setTimeout(() => {

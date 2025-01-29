@@ -66,21 +66,31 @@ const deleteCollectionSite = (req, res) => {
 // Controller to fetch collection site names
 const getAllCollectionSiteNames = (req, res) => {
   const { user_account_id } = req.params; // Extract logged-in user's ID from request parameters
+
   collectionsiteModel.getAllCollectionSiteNames(user_account_id, (err, results) => {
     if (err) {
-      console.error('Error fetching collection site names:', err);
-      return res.status(500).json({ error: 'An error occurred' });
+      console.error('Error fetching data:', err);
+      return res.status(500).json({ error: 'An error occurred while fetching data' });
     }
-    console.log('Controller Results:', results);
-    const siteNames = results
-      ?.map(row => ({
-        CollectionSiteName: row?.CollectionSiteName,
-        user_account_id: row?.user_account_id,
-      }))
-      .filter(site => site.CollectionSiteName); // Filter valid names
-    res.status(200).json({ data: siteNames });
+
+    // Combine data into a single response
+    const collectionSites = results.collectionSites.map(row => ({
+      CollectionSiteName: row.CollectionSiteName,
+      user_account_id: row.user_account_id,
+    }));
+
+    const biobank = results.biobank.map(row => ({
+      Name: row.Name,
+      user_account_id: row.user_account_id,
+    }));
+
+    // Final response
+    res.status(200).json({
+      data: [...collectionSites, ...biobank], // Merge both datasets
+    });
   });
 };
+
 
 const updateCollectionSiteDetail = (req, res) => {
   const { id } = req.params;

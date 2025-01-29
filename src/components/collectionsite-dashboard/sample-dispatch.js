@@ -12,7 +12,7 @@ const SampleDispatchArea = () => {
     console.log("Collection site Id on sample page is:", id);
   }
   const [showReceiveModal, setShowReceiveModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [formData, setFormData] = useState({
     masterID: "",
@@ -28,7 +28,7 @@ const SampleDispatchArea = () => {
     CountryOfCollection: "",
     price: "",
     SamplePriceCurrency: "",
-    quantity: "",
+    Quantity: "",
     QuantityUnit: "",
     labname: "",
     SampleTypeMatrix: "",
@@ -56,8 +56,7 @@ const SampleDispatchArea = () => {
     endTime: "",
     // logo: ""
   });
-  const [editSample, setEditSample] = useState(null); // State for selected sample to edit
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
+
   const [successMessage, setSuccessMessage] = useState('');
    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -77,10 +76,20 @@ const SampleDispatchArea = () => {
 
   const fetchSamples = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/sampledispatch/get/${id}`);
-      setSamples(response.data); // Store fetched samples in state
+      // will fetch sample to correct dedicated collectionsite with correct ID
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`); 
+      const apiData = response.data;
+      
+      // Directly set the data array from the response
+      if (apiData.data && Array.isArray(apiData.data)) {
+        setSamples(apiData.data);
+      } else {
+        console.warn("Invalid response structure:", apiData);
+        setSamples([]); // Default to an empty array
+      }
     } catch (error) {
       console.error("Error fetching samples:", error);
+      setSamples([]); // Default to an empty array on error
     }
   };
 
@@ -126,66 +135,6 @@ const SampleDispatchArea = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/samples/post', formData);
-      console.log("Sample added successfully:", response.data);
-
-      // Refresh the sample list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/sampledispatch/get');
-      setSamples(newResponse.data); // Update state with the new list
-
-      // Clear form after submission
-      setFormData({
-        masterID: "",
-        donorID: "",
-        samplename: "",
-        age: "",
-        gender: "",
-        ethnicity: "",
-        samplecondition: "",
-        storagetemp: "",
-        storagetempUnit: "",
-        ContainerType: "",
-        CountryOfCollection: "",
-        price: "",
-        SamplePriceCurrency: "",
-        quantity: "",
-        QuantityUnit: "",
-        labname: "",
-        SampleTypeMatrix: "",
-        TypeMatrixSubtype: "",
-        ProcurementType: "",
-        SmokingStatus: "",
-        TestMethod: "",
-        TestResult: "",
-        TestResultUnit: "",
-        InfectiousDiseaseTesting: "",
-        InfectiousDiseaseResult: "",
-        CutOffRange: "",
-        CutOffRangeUnit: "",
-        FreezeThawCycles: "",
-        DateOfCollection: "",
-        ConcurrentMedicalConditions: "",
-        ConcurrentMedications: "",
-        AlcoholOrDrugAbuse: "",
-        DiagnosisTestParameter: "",
-        ResultRemarks: "",
-        TestKit: "",
-        TestKitManufacturer: "",
-        TestSystem: "",
-        TestSystemManufacturer: "",
-        endTime: "",
-        status: "",
-      });
-    } catch (error) {
-      console.error("Error adding sample:", error);
-    }
-  };
-
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
 
@@ -211,7 +160,7 @@ const SampleDispatchArea = () => {
       console.log("Sending POST request to API...");
       // POST request to your backend API
       const response = await axios.post(
-        `http://localhost:5000/api/samplereceive/post/${selectedSampleId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/post/${selectedSampleId}`,
         {
           receiverName,
           ReceivedByCollectionSite: userID // Pass user ID along with receiverName
@@ -222,7 +171,7 @@ const SampleDispatchArea = () => {
       alert("Sample received successfully!");
       console.log(`Fetching updated samples for ID: ${id}`);
       const newResponse = await axios.get(
-        `http://localhost:5000/api/sample/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
       setSamples(newResponse.data); // Update state with the new list
 
@@ -246,32 +195,6 @@ const SampleDispatchArea = () => {
 
   const handleModalClose = () => {
     setShowReceiveModal(false); // Close the modal
-  };
-
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/samples/delete/${selectedSampleId}`);
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
-
-      // Set success message
-      setSuccessMessage('Sample deleted successfully.');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-
-      // Refresh the sample list after deletion
-      const newResponse = await axios.get(`http://localhost:5000/api/sampledispatch/get/${id}`);
-      setSamples(newResponse.data);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(`Error deleting sample with ID ${selectedSampleId}:`, error);
-    }
   };
 
     useEffect(() => {
@@ -714,7 +637,7 @@ const SampleDispatchArea = () => {
                           className="form-control"
                           placeholder="Search Quantity"
                           onChange={(e) =>
-                            handleFilterChange("quantity", e.target.value)
+                            handleFilterChange("Quantity", e.target.value)
                           }
                           style={{
                             width: "80%", // Adjusted width for better responsiveness
@@ -1491,9 +1414,9 @@ const SampleDispatchArea = () => {
                           <td>{sample.storagetempUnit}</td>
                           <td>{sample.ContainerType}</td>
                           <td>{sample.CountryOfCollection}</td>
-                          <td>{sample.price}</td>
+                          <td className="text-end">{sample.price}</td>
                           <td>{sample.SamplePriceCurrency}</td>
-                          <td>{sample.quantity}</td>
+                          <td>{sample.Quantity}</td>
                           <td>{sample.QuantityUnit}</td>
                           <td>{sample.labname}</td>
                           <td>{sample.SampleTypeMatrix}</td>
@@ -1521,20 +1444,6 @@ const SampleDispatchArea = () => {
                           <td>{sample.TestSystemManufacturer}</td>
                           <td>{sample.status}</td>
                           <td>
-                            {/* <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}>
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "} */}
-                            {/* <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedSampleId(sample.id);
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button> */}
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
@@ -1704,69 +1613,6 @@ const SampleDispatchArea = () => {
                     </form>
                   </div>
                 </div>
-              )}
-
-              {/* Modal for Deleting Samples */}
-              {showDeleteModal && (
-              <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-          
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050, 
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Sample</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this sample?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                </>
               )}
             </div>
           </div>
