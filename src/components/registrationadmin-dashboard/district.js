@@ -107,8 +107,12 @@ const DistrictArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/district/delete-district/${selecteddistrictnameId}`);
-      console.log(`districtname with ID ${selecteddistrictnameId} deleted successfully.`);
+      await axios.delete(
+        `http://localhost:5000/api/district/delete-district/${selecteddistrictnameId}`
+      );
+      console.log(
+        `districtname with ID ${selecteddistrictnameId} deleted successfully.`
+      );
 
       // Set success message
       setSuccessMessage("districtname deleted successfully.");
@@ -197,44 +201,44 @@ const DistrictArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
 
-      const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-      
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const binaryStr = event.target.result;
-          const workbook = XLSX.read(binaryStr, { type: "binary" });
-          const sheetName = workbook.SheetNames[0];
-          const sheet = workbook.Sheets[sheetName];
-          const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-      
-          // Add 'added_by' field from state (assumes 'id' is available in state)
-          const dataWithAddedBy = data.map((row) => ({
-            name: row.name,
-            added_by: id, // Make sure `id` is defined
-          }));
-      
-          try {
-            // POST data to your existing API
-            const response = await axios.post(
-              "http://localhost:5000/api/district/post-district",
-              { bulkData: dataWithAddedBy }
-            );
-            console.log("Countries added successfully:", response.data);
-      
-            // Refresh the city list
-            const newResponse = await axios.get(
-              "http://localhost:5000/api/district/get-district"
-            );
-            setdistrictname(newResponse.data);
-          } catch (error) {
-            console.error("Error uploading file:", error);
-          }
-        };
-      
-        reader.readAsBinaryString(file);
-      };
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
+
+      // Add 'added_by' field from state (assumes 'id' is available in state)
+      const dataWithAddedBy = data.map((row) => ({
+        name: row.name,
+        added_by: id, // Make sure `id` is defined
+      }));
+
+      try {
+        // POST data to your existing API
+        const response = await axios.post(
+          "http://localhost:5000/api/district/post-district",
+          { bulkData: dataWithAddedBy }
+        );
+        console.log("Countries added successfully:", response.data);
+
+        // Refresh the District list
+        const newResponse = await axios.get(
+          "http://localhost:5000/api/district/get-district"
+        );
+        setdistrictname(newResponse.data);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      }
+    };
+
+    reader.readAsBinaryString(file);
+  };
 
   return (
     <section className="policy__area pb-120 overflow-hidden">
