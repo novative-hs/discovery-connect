@@ -842,8 +842,8 @@ const CommitteeMemberArea = () => {
                                   value={formData.phoneNumber}
                                   onChange={handleInputChange}
                                   required
-                                  pattern="^\d{11}$"
-                                  title="Phone number must be exactly 11 digits"
+                                  pattern="/^\d{4}-\d{6}$/"
+                                  title="Phone number must be in the format 0123-4567890 and numeric"
                                 />
                               </>
                             ) : (

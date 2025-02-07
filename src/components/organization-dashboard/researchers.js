@@ -741,8 +741,8 @@ const ResearcherArea = () => {
                                     value={formData.phoneNumber}
                                     onChange={handleInputChange}
                                     required
-                                    pattern="^\d{4}-\d{3}-\d{4}$"
-                                    title="Phone number must be in the format 0304-586-1729"
+                                    pattern="/^\d{4}-\d{6}$/"
+                                    title="Phone number must be in the format 0123-4567890"
                                   />
                                 </div>
 

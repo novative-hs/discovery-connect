@@ -24,12 +24,13 @@ const schema = Yup.object().shape({
     .required("Confirm Password is required!"),
   accountType: Yup.string().required("Account Type is required"),
   phoneNumber: Yup.string()
-    .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric"
-    )
+  .matches(
+    /^\d{4}-\d{6}$/,
+    "Phone number must be in the format 0123-4567890 and numeric"
+  )
+  .required("Phone number is required")
+  .label("Phone number is required"),
 
-    .required("Phone number is required"),
   logo: Yup.mixed().required("Logo is required"),
   fullAddress: Yup.string().required("Full Address is required"),
   city: Yup.string().required("City is required"),
@@ -520,7 +521,7 @@ const RegisterForm = () => {
                   {...register("phoneNumber")}
                   type="tel"
                   className="form-control"
-                  placeholder="XXXX-XXX-XXXX"
+                  placeholder="XXXX-XXXXXXX"
                 />
                 <span>
                   <i className="fa-solid fa-phone"></i>

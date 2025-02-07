@@ -14,12 +14,13 @@ const schema = Yup.object().shape({
   districtid: Yup.string().required("District is required").label("District"),
   countryid: Yup.string().required("Country is required").label("Country"),
   phoneNumber: Yup.string()
-  .required("Phone Number is required")
-    .label("Phone Number")
-      .matches(
-        /^\d{4}-\d{3}-\d{4}$/,
-        "Phone number must be in the format 0123-456-7890 and numeric",
-      ),
+  .matches(
+    /^\d{4}-\d{6}$/,
+    "Phone number must be in the format 0123-4567890 and numeric"
+  )
+  .required("Phone number is required")
+  .label("Phone number is required"),
+
   ntnNumber: Yup.string()
     .required("NTN Number is required")
     .label("NTN Number"),
@@ -473,7 +474,7 @@ const UpdateBioBank = () => {
               id="phoneNumber"
               {...register("phoneNumber")}
               type="text"
-              placeholder="Enter Phone Number"
+              placeholder="XXXX-XXXXXXX"
               style={{
                 width: "100%",
                 padding: "20px",

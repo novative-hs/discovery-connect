@@ -1,55 +1,83 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faTrash,
+  faCheckCircle,
+  faTimesCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 const ResearcherArea = () => {
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
-    const [allresearchers, setAllResearchers] = useState([]); // State to hold fetched researchers
-    const [formData, setFormData] = useState({
-        ResearcherName: "",
-        email: "",
-        phoneNumber: "",
-        nameofOrganization: "",
-        // created_at: "",
-        status: "",
-        // logo: ""
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
+  const [allresearchers, setAllResearchers] = useState([]); // State to hold fetched researchers
+  const [formData, setFormData] = useState({
+    ResearcherName: "",
+    email: "",
+    phoneNumber: "",
+    nameofOrganization: "",
+    // created_at: "",
+    status: "",
+    // logo: ""
+  });
+  const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
+  const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
+  const [successMessage, setSuccessMessage] = useState("");
+  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+  const itemsPerPage = 10;
+
+  const [recordsPerPage, setRecordsPerPage] = useState(5); // Default: 5 per page
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalRecords = researchers.length; // Total records count
+  const totalPages = Math.ceil(totalRecords / recordsPerPage);
+
+  // Calculate pagination indices
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const paginatedData = researchers.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  );
+
+  const resetFormData = () => {
+    setFormData({
+      ResearcherName: "",
+      email: "",
+      phoneNumber: "",
+      nameofOrganization: "",
+      // created_at: "",
+      status: "",
+      // logo: ""
     });
-    const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
-    const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
-    const [successMessage, setSuccessMessage] = useState('');
-    const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-    // Calculate total pages
-    const totalPages = Math.ceil(researchers.length / itemsPerPage);
-  
-
-    // Fetch researchers from backend when component loads
-    useEffect(() => {
-
-        fetchResearchers(); // Call the function when the component mounts
-    }, []);
-    const fetchResearchers = async () => {
-        try {
-          const response = await axios.get(
-            "http://localhost:5000/api/admin/researcher/get"
-          );
-          setResearchers(response.data);
-          setAllResearchers(response.data) // Store fetched researchers in state
-        } catch (error) {
-          console.error("Error fetching researchers:", error);
-        }
-      };
-    const handleInputChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+  };
+  const handleRecordsPerPageChange = (e) => {
+    setRecordsPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing records per page
+  };
+  // Fetch researchers from backend when component loads
+  useEffect(() => {
+    fetchResearchers(); // Call the function when the component mounts
+  }, []);
+  const fetchResearchers = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/admin/researcher/get"
+      );
+      setResearchers(response.data);
+      setAllResearchers(response.data); // Store fetched researchers in state
+    } catch (error) {
+      console.error("Error fetching researchers:", error);
+    }
+  };
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
     // const formatDateTime = (dateTime) => {
     //   const date = new Date(dateTime);
@@ -116,18 +144,21 @@ const ResearcherArea = () => {
   };
   const sendApprovalEmail = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/user/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          name: formData.ResearcherName,
-          status:formData.status
-        }),
-      });
-  
+      const response = await fetch(
+        "http://localhost:5000/api/user/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            name: formData.ResearcherName,
+            status: formData.status,
+          }),
+        }
+      );
+
       const data = await response.json();
       if (response.ok) {
         console.log("Email sent successfully:", data.message);
@@ -246,31 +277,51 @@ const ResearcherArea = () => {
                 )}
 
                 {/* Status Filter */}
-                <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
-                  <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
-                    Status:
-                  </label>
+                <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-2">
+                  {/* Left-aligned Status Filter */}
+                  <div className="d-flex align-items-center gap-2">
+                    <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                      Status:
+                    </label>
+                    <select
+                      id="statusFilter"
+                      className="form-control mb-2"
+                      style={{ width: "auto" }}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
+                    >
+                      <option value="">All</option>
+                      <option value="pending">pending</option>
+                      <option value="approved">approved</option>
+                    </select>
+                  </div>
 
-                  <select
-                    id="statusFilter"
-                    className="form-control mb-2"
-                    style={{ width: "auto" }}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    } // Pass "status" as the field
-                  >
-                    <option value="">All</option>
-                    <option value="pending">pending</option>
-                    <option value="approved">approved</option>
-                  </select>
+                  {/* Right-aligned Show Filter */}
+                  <div className="d-flex justify-content-end align-items-center">
+                    <label className="mb-0 d-flex align-items-center">
+                      Show:
+                      <select
+                        id="recordsPerPage"
+                        className="form-select ms-2 w-auto"
+                        value={recordsPerPage}
+                        onChange={handleRecordsPerPageChange}
+                      >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value={totalRecords}>All</option>
+                      </select>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-
               {/* Table with responsive scroll */}
-              <div className="table-responsive w-100">
+              <div className="table-responsive w-100 ">
                 <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
+                  <thead className="thead-dark ">
                     <tr className="text-center">
                       {[
                         { label: "ID", placeholder: "Search ID", field: "id" },
@@ -317,16 +368,27 @@ const ResearcherArea = () => {
                   </thead>
 
                   <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((researcher) => (
-                        <tr key={researcher.id}>
+                    {paginatedData.length > 0 ? (
+                      paginatedData.map((researcher) => (
+                        <tr
+                          key={researcher.id}
+                          className={
+                            researcher.status === "pending"
+                              ? "table-warning"
+                              : researcher.status === "unapproved"
+                              ? "table-danger"
+                              : researcher.status === "approved"
+                              ? "table-success"
+                              : ""
+                          }
+                        >
                           <td>{researcher.id}</td>
                           <td>{researcher.ResearcherName}</td>
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>
                           <td>{researcher.OrganizationName}</td>
-                          {/* <td>{researcher.created_at}</td> */}
                           <td>{researcher.status}</td>
+
                           <td>
                             <div className="d-flex justify-content-around gap-2">
                               <button
@@ -343,7 +405,7 @@ const ResearcherArea = () => {
                                   setSelectedResearcherId(researcher.id);
                                   setShowDeleteModal(true);
                                 }}
-                                title="Delete Researcher" // This is the text that will appear on hover
+                                title="Delete Researcher"
                               >
                                 <FontAwesomeIcon icon={faTrash} size="sm" />
                               </button>
@@ -353,7 +415,7 @@ const ResearcherArea = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">
+                        <td colSpan="7" className="text-center">
                           No Researcher Available
                         </td>
                       </tr>
@@ -361,68 +423,80 @@ const ResearcherArea = () => {
                   </tbody>
                 </table>
               </div>
+              <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-2">
+              <p style={{ marginTop: "10px" }}>
+                Showing {Math.min(indexOfLastRecord, totalRecords)} out of{" "}
+                {totalRecords} entries
+              </p>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
+              <ul className="pagination justify-content-end">
+                <li
+                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                >
+                  <a
+                    className="page-link"
+                    href="#"
+                    onClick={() =>
+                      currentPage > 1 && setCurrentPage(currentPage - 1)
+                    }
+                  >
+                    &laquo;
+                  </a>
+                </li>
+                {Array.from(
+                  { length: totalPages },
+                  (_, index) => index + 1
+                ).map((page) => (
+                  <li
+                    key={page}
+                    className={`page-item ${
+                      currentPage === page ? "active" : ""
+                    }`}
+                  >
+                    <a
+                      className="page-link"
+                      href="#"
+                      onClick={() => setCurrentPage(page)}
                     >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
+                      {page}
+                    </a>
+                  </li>
+                ))}
+                <li
+                  className={`page-item ${
+                    currentPage === totalPages ? "disabled" : ""
+                  }`}
+                >
+                  <a
+                    className="page-link"
+                    href="#"
+                    onClick={() =>
+                      currentPage < totalPages &&
+                      setCurrentPage(currentPage + 1)
+                    }
+                  >
+                    &raquo;
+                  </a>
+                </li>
+              </ul>
               </div>
+
+              {/* <div>
+        <button 
+          disabled={currentPage === 1} 
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Previous
+        </button>
+        <span> Page {currentPage} </span>
+        <button 
+          disabled={indexOfLastRecord >= totalRecords} 
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </button>
+      </div> */}
               {/* Modal for Adding Committe members */}
               {showEditModal && (
                 <>
