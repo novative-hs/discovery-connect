@@ -15,7 +15,14 @@ const getAllCities = (req, res) => {
     res.status(200).json(results);
   });
 };
-
+const getCount=(req,res)=>{
+  cityModel.getCount((err,result)=>{
+    if(err){
+      return res.status(500).json({error:"Error Geting All Counts"})
+    }
+    res.status(200).json(result);
+  })
+}
 // Controller to create a committee member
 const createCity = (req, res) => {
     const newCityData = req.body;
@@ -60,5 +67,6 @@ module.exports = {
   getAllCities,
   createCity,
   updateCity,
-  deleteCity
+  deleteCity,
+  getCount
 };

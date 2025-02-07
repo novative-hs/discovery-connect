@@ -13,7 +13,7 @@ const CityArea = () => {
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   }
-  else {
+  else{
     console.log("account_id on city page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
@@ -28,19 +28,17 @@ const CityArea = () => {
   const [cityname, setcityname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(cityname.length / itemsPerPage);
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   // Fetch City from backend when component loads
   useEffect(() => {
     fetchcityname(); // Call the function when the component mounts
   }, []);
   const fetchcityname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/city/get-city`
-      );
+      const response = await axios.get(`${url}/city/get-city`);
       setcityname(response.data); // Store fetched City in state
     } catch (error) {
       console.error("Error fetching City:", error);
@@ -79,10 +77,7 @@ const CityArea = () => {
     e.preventDefault();
     try {
       // POST request to your backend API
-      const response = await axios.post(
-        `${url}/city/post-city`,
-        formData
-      );
+      const response = await axios.post(`${url}/city/post-city`, formData);
       console.log("City added successfully:", response.data);
 
       fetchcityname();
@@ -100,9 +95,7 @@ const CityArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(
-        `${url}/city/delete-city/${selectedcitynameId}`
-      );
+      await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
       console.log(
         `cityname with ID ${selectedcitynameId} deleted successfully.`
       );
@@ -146,13 +139,16 @@ const CityArea = () => {
 
   const handleEditClick = (cityname) => {
     console.log("data in case of update is", cityname);
+
     setSelectedcitynameId(cityname.id);
-    setEditcityname(cityname); // Store the City data to edit
-    setShowEditModal(true); // Show the edit modal
+    setEditcityname(cityname);
+
     setFormData({
-      cityname: cityname.name, // Ensure it's 'cityname' and not 'name'
-      added_by: id
+      cityname: cityname.name,
+      added_by: id,
     });
+
+    setShowEditModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -230,12 +226,12 @@ const CityArea = () => {
 
     reader.readAsBinaryString(file);
   };
-
+  
   return (
     <section className="policy__area pb-120">
-      <div
+       <div
         className="container"
-        style={{ marginTop: "-20px", width: "auto", }}
+        style={{ marginTop: "-20px", width: "auto",}}
       >
         <div
           className="row justify-content-center"
@@ -249,27 +245,27 @@ const CityArea = () => {
                   {successMessage}
                 </div>
               )}
-              <div className="d-flex justify-content-end align-items-center mb-3">
-                {/* Upload City List Button */}
+     <div className="d-flex justify-content-end align-items-center mb-3">
+  {/* Upload City List Button */}
 
 
-                {/* Add City Button */}
-                <button
-                  className="btn btn-primary me-3"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add City
-                </button>
-                <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
-                  Upload City List
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls" // Accept only Excel files
-                    style={{ display: "none" }}
-                    onChange={handleFileUpload}
-                  />
-                </label>
-              </div>
+  {/* Add City Button */}
+  <button
+    className="btn btn-primary me-3"
+    onClick={() => setShowAddModal(true)}
+  >
+    Add City
+  </button>
+  <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
+    Upload City List
+    <input
+      type="file"
+      accept=".xlsx, .xls" // Accept only Excel files
+      style={{ display: "none" }}
+      onChange={handleFileUpload}
+    />
+  </label>
+</div>
               {/* Table */}
               <div
                 className="table-responsive"
@@ -281,8 +277,8 @@ const CityArea = () => {
               >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr style={{ textAlign: 'center', }}>
-                      <th
+                  <tr style={{textAlign:'center',}}>
+                  <th
                         className="px-3"
                         style={{
                           verticalAlign: "middle",
@@ -352,11 +348,11 @@ const CityArea = () => {
                             padding: "8px",
                             boxSizing: "border-box",
                             minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px",
+                            maxWidth: "180px", 
                           }}
                         />
-                        Added By</th>
-                      <th
+                       Added By</th>
+                       <th
                         className="px-3"
                         style={{
                           verticalAlign: "middle",
@@ -406,10 +402,11 @@ const CityArea = () => {
                         />
                         Updated At
                       </th>
-
+                      
                       <th>Action</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {currentData.length > 0 ? (
                       currentData.map((cityname) => (
@@ -420,37 +417,37 @@ const CityArea = () => {
                           <td>{formatDate(cityname.created_at)}</td>
                           <td>{formatDate(cityname.updated_at)}</td>
                           <td>
-                            <div
+                          <div
                               style={{
                                 display: "flex",
                                 justifyContent: "space-around",
                                 gap: "5px",
                               }}
                             >
-                              <button
-                                className="btn btn-success btn-sm py-0 px-1"
-                                onClick={() => handleEditClick(cityname)}
-                                title="Edit City" // This is the text that will appear on hover
-                              >
-                                <FontAwesomeIcon icon={faEdit} size="xs" />
-                              </button>{" "}
-                              <button
-                                className="btn btn-danger btn-sm py-0 px-1"
-                                onClick={() => {
-                                  setSelectedcitynameId(cityname.id);
-                                  setShowDeleteModal(true);
-                                }}
-                                title="Delete City" // This is the text that will appear on hover
-                              >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
-                              </button>
-                            </div>
+                            <button
+                              className="btn btn-success btn-sm py-0 px-1"
+                              onClick={() => handleEditClick(cityname)}
+                              title="Edit City" // This is the text that will appear on hover
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>{" "}
+                            <button
+                              className="btn btn-danger btn-sm py-0 px-1"
+                              onClick={() => {
+                                setSelectedcitynameId(cityname.id);
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete City" // This is the text that will appear on hover
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+                         </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="text-center">
+                        <td colSpan="6" className="text-center">
                           No City Available
                         </td>
                       </tr>
@@ -489,10 +486,11 @@ const CityArea = () => {
                     return (
                       <button
                         key={pageNumber}
-                        className={`btn btn-sm ${currentPage === pageNumber
+                        className={`btn btn-sm ${
+                          currentPage === pageNumber
                             ? "btn-primary"
                             : "btn-outline-secondary"
-                          }`}
+                        }`}
                         onClick={() => handlePageChange(pageNumber)}
                         style={{
                           minWidth: "40px",
@@ -537,187 +535,187 @@ const CityArea = () => {
 
               {/* Modal for Adding Committe members */}
               {showAddModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+  <>
+  {/* Bootstrap Backdrop with Blur */}
+  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Add City</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowAddModal(false)}
-                            style={{
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
+  {/* Modal Content */}
+  <div
+    className="modal show d-block"
+    tabIndex="-1"
+    role="dialog"
+    style={{
+      zIndex: 1050, 
+      position: "fixed",
+      top: "120px",
+      left: "50%",
+      transform: "translateX(-50%)",
+    }}
+  >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">Add City</h5>
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => setShowAddModal(false)}
+                          style={{
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span>&times;</span>
+                        </button>
+                      </div>
+                      <form onSubmit={handleSubmit}>
+                        <div className="modal-body">
+                          {/* Form Fields */}
+                          <div className="form-group">
+                            <label>City Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="cityname"
+                              value={formData.cityname} // Use 'cityname' here instead of 'name'
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="modal-footer">
+                          <button type="submit" className="btn btn-primary">
+                            Save
                           </button>
                         </div>
-                        <form onSubmit={handleSubmit}>
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>City Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="cityname"
-                                value={formData.cityname} // Use 'cityname' here instead of 'name'
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              Save
-                            </button>
-                          </div>
-                        </form>
-                      </div>
+                      </form>
                     </div>
                   </div>
+                </div>
                 </>
               )}
 
               {/* Edit cityname Modal */}
               {showEditModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Edit City</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowEditModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
+             <>
+             {/* Bootstrap Backdrop with Blur */}
+             <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+           
+             {/* Modal Content */}
+             <div
+               className="modal show d-block"
+               tabIndex="-1"
+               role="dialog"
+               style={{
+                 zIndex: 1050, 
+                 position: "fixed",
+                 top: "120px",
+                 left: "50%",
+                 transform: "translateX(-50%)",
+               }}
+             >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">Edit City</h5>
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => setShowEditModal(false)}
+                          style={{
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span>&times;</span>
+                        </button>
+                      </div>
+                      <form onSubmit={handleUpdate}>
+                        <div className="modal-body">
+                          {/* Form Fields */}
+                          <div className="form-group">
+                            <label>City Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="cityname"
+                              value={formData.cityname}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="modal-footer">
+                          <button type="submit" className="btn btn-primary">
+                            Update City
                           </button>
                         </div>
-                        <form onSubmit={handleUpdate}>
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>City Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="cityname"
-                                value={formData.cityname}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              Update City
-                            </button>
-                          </div>
-                        </form>
-                      </div>
+                      </form>
                     </div>
                   </div>
+                </div>
                 </>
               )}
 
               {/* Modal for Deleting cityname */}
               {showDeleteModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+  <>
+    {/* Bootstrap Backdrop with Blur */}
+    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header" style={{ backgroundColor: "transparent" }}>
-                          <h5 className="modal-title">Delete City</h5>
-                          <button
-                            type="button"
-                            className="btn-close"
-                            onClick={() => setShowDeleteModal(false)}
-                          ></button>
-                        </div>
-                        <div className="modal-body">
-                          <p>Are you sure you want to delete this city?</p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
+    {/* Modal Content */}
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{
+        zIndex: 1050, 
+        position: "fixed",
+        top: "120px",
+        left: "50%",
+        transform: "translateX(-50%)",
+      }}
+    >
+      <div className="modal-dialog" role="document">
+        <div className="modal-content">
+          <div className="modal-header" style={{ backgroundColor: "transparent" }}>
+            <h5 className="modal-title">Delete City</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowDeleteModal(false)}
+            ></button>
+          </div>
+          <div className="modal-body">
+            <p>Are you sure you want to delete this city?</p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-danger"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import ChangePassword from './change-password';
 import UpdateCollectionsite from './update-collectionsite';
 import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
-import Header from '../../layout/collectionsiteheader';
+import Header from '../../layout/dashboardheader';
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
    const router = useRouter();
@@ -55,7 +55,7 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} />
+         <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area pt-180 pb-120">
         <div className="container" style={{ marginTop: '-90px', width: '100%' }}>
           <div className="profile__inner p-relative">

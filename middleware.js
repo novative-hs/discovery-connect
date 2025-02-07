@@ -20,5 +20,6 @@ export const config = {
     "/user-dashboard", 
     "/organization-dashboard", 
     "/collectionsite-dashboard",
+    "/dashboardheader"
   ],
 };

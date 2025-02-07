@@ -10,37 +10,40 @@ import BioBankSampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/biobankheader';
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
+    const [loading, setLoading] = useState(true); // To handle the loading state
   const router = useRouter(); // For redirection
 
- 
-     const [id, setUserID] = useState(null);
-     
-     useEffect(() => {
-       const token = document.cookie
-         .split("; ")
-         .find((row) => row.startsWith("authToken="))
-         ?.split("=")[1];
-   
-       if (!token) {
-         router.push("/login"); // Redirect to login if token is missing
-       }
-     }, [router]);
-   
-       useEffect(() => {
-         const storedUserID = localStorage.getItem("userID");
-         if (storedUserID) {
-           setUserID(storedUserID);
-           console.log("Collection site  ID:", storedUserID); // Verify storedUserID
-         } else {
-           console.error("No userID found in localStorage");
-           router.push("/login");
-         }
-       }, [router]);
-   
-     if (!id) {
-       return <div>Loading...</div>; // Or redirect to login
-     } 
+  // Check if user is authenticated by checking for "auth" in localStorage
+  const isAuthenticated = typeof window !== "undefined" && getLocalStorage("auth");
 
+  
+//  useEffect(() => {
+     
+//      const isAuthenticated = getLocalStorage("auth");
+     
+//      if (!isAuthenticated) {
+//        // If not authenticated, redirect to login page
+//        router.push("/login");
+//        return;
+//      }
+     
+//      // Check if the user role matches the expected role for this page
+//      const userData = isAuthenticated;
+//      console.log(userData)
+//      if (userData?.user?.accountType !== "admin") {
+     
+//        router.push("/unauthorized");
+//        return;
+//      }
+ 
+//      // Set loading state to false after authentication checks are complete
+//      setLoading(false);
+//    }, [router]);
+ 
+//    // If still loading (during the authentication check), you can display a loading spinner
+//    if (loading) {
+//      return <div>Loading...</div>; // Replace with your loader component
+//    }
   // Function to render content based on the active tab
   const renderContent = () => {
     switch (activeTab) {
@@ -50,7 +53,7 @@ const DashboardArea = () => {
         return <BioBankSampleDispatchArea />;
       case "change-password":
         return <ChangePassword />;
-      case "update-collectionsite":
+      case "update-biobank":
         return <UpdateBioBank />;
       default:
         return <BioBankSampleArea />;
@@ -59,7 +62,7 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} />
+         <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area pt-180 pb-120">
         <div className="container" style={{ marginTop: '-90px', width: '100%' }}>
           <div className="profile__inner p-relative">

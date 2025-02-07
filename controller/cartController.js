@@ -1,66 +1,97 @@
-const { Cart, Product } = require("../models/cartModel");
+const cartModel = require("../models/cartModel");
 
-// Add a product to the cart
-const addToCart = async (req, res) => {
-  const { user_id, product_id, productname, price, quantity } = req.body;
-  try {
-    const cartItem = await Cart.create({
-      user_id,
-      product_id,
-      productname,
-      price,
-      quantity,
-    });
-    res.status(201).json({ status: 'success', data: cartItem });
-  } catch (error) {
-    res.status(500).json({ status: 'fail', message: error.message });
-  }
+// Controller for creating the cart table
+const createCartTable = (req, res) => {
+  cartModel.createCartTable();
+  res.status(200).json({ message: "Cart table creation process started" });
 };
 
-// Get all items in the cart for a specific user
-const getCartItems = async (req, res) => {
-  const { user_id } = req.params;
-  try {
-    const cartItems = await Cart.findAll({
-      where: { user_id },
-      include: [{ model: Product, as: 'product' }],
-    });
-    res.status(200).json({ status: 'success', data: cartItems });
-  } catch (error) {
-    res.status(500).json({ status: 'fail', message: error.message });
-  }
-};
-
-// Update quantity of a product in the cart
-const updateCartItem = async (req, res) => {
+// Controller to get all cart members
+const getAllCart = (req, res) => {
   const { id } = req.params;
-  const { quantity } = req.body;
-  try {
-    const cartItem = await Cart.findByPk(id);
-    if (!cartItem) {
-      return res.status(404).json({ status: 'fail', message: 'Cart item not found' });
+ cartModel.getAllCart(id,(err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching cart list" });
     }
-    cartItem.quantity = quantity;
-    await cartItem.save();
-    res.status(200).json({ status: 'success', data: cartItem });
-  } catch (error) {
-    res.status(500).json({ status: 'fail', message: error.message });
-  }
+    res.status(200).json(results);
+  });
 };
 
-// Delete a product from the cart
-const deleteCartItem = async (req, res) => {
+const getCartCount = (req, res) => {
   const { id } = req.params;
-  try {
-    const cartItem = await Cart.findByPk(id);
-    if (!cartItem) {
-      return res.status(404).json({ status: 'fail', message: 'Cart item not found' });
+ cartModel.getCartCount(id,(err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching cart list" });
     }
-    await cartItem.destroy();
-    res.status(200).json({ status: 'success', message: 'Cart item removed' });
-  } catch (error) {
-    res.status(500).json({ status: 'fail', message: error.message });
-  }
+    res.status(200).json(results);
+  });
+};
+// Controller to create a cart member
+const createCart = (req, res) => {
+    const newCartData = req.body;
+  
+    // Pass the newCartData directly to the model
+    cartModel.createCart(newCartData, (err, result) => {
+      if (err) {
+        console.log('Error:', err); // Log the error for more insights
+        return res.status(500).json({ error: "Error creating Cart" });
+      }
+      res.status(200).json({
+        message: "Cart Item deleted successfully",
+        cartCount: result.cartCount,  
+      });
+    
+});
 };
 
-module.exports = { addToCart, getCartItems, updateCartItem, deleteCartItem };
+
+const updateCard = (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+  console.log(updatedData)
+  cartModel.updateCart(id, updatedData, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Error in updating cart" });
+    }
+    res.status(200).json({ message: "Cart updated successfully" });
+  });
+};
+
+
+// Controller to delete a cart member
+const deleteCart = (req, res) => {
+  const { id } = req.params;
+  cartModel.deleteCart(id, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Error deleting Cart" });
+    }
+    res.status(200).json({
+      message: "Cart Item deleted successfully",
+      cartCount: result.cartCount,  // Ensure cart count is returned
+    });
+  });
+};
+
+const deleteSingleCartItem = (req, res) => {
+  const { id } = req.params;
+  cartModel.deleteSingleCartItem(id, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Error deleting Cart" });
+    }
+    res.status(200).json({
+      message: "Cart Item deleted successfully",
+      cartCount: result.cartCount,  // Ensure cart count is returned
+    });
+  });
+};
+
+
+module.exports = {
+  createCartTable,
+  getAllCart,
+  getCartCount,
+  createCart,
+  updateCard,
+  deleteCart,
+  deleteSingleCartItem
+};

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
+import { notifyError } from "@utils/toast";
 
 const ResearcherArea = () => {
   const id = localStorage.getItem("userID");
@@ -9,11 +10,12 @@ const ResearcherArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [preview, setPreview] = useState(null);
-
   const [selectedResearcherStatus, setSelectedResearcherStatus] =
     useState(null);
   const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
   const [formData, setFormData] = useState({
+    user_account_id: "",
+    useraccount_email: "",
     userID: "",
     ResearcherName: "",
     phoneNumber: "",
@@ -42,6 +44,7 @@ const ResearcherArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(researchers.length / itemsPerPage);
   const [logoFile, setLogoFile] = useState(null);
+
   // Fetch researchers from backend when component loads
   useEffect(() => {
     if (id === null) {
@@ -111,7 +114,26 @@ const ResearcherArea = () => {
       fetchResearcher(); // Fetch researchers only after `orgId` is set
     }
   }, [orgid]); // Runs when `orgId` changes
-
+  const resetFormData = () => {
+    setFormData({
+      userID: "",
+      useraccount_email: "",
+      ResearcherName: "",
+      phoneNumber: "",
+      nameofOrganization: "",
+      fullAddress: "",
+      city: "",
+      district: "",
+      country: "",
+      email: "",
+      password: "",
+      accountType: "Researcher",
+      logo: "",
+      user_account_id: "",
+    });
+    setCurrentStep(1);
+    setPreview(null);
+  };
   const handleInputChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -127,10 +149,10 @@ const ResearcherArea = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Create a new FormData instance
     const formDataToSubmit = new FormData();
-  
+
     // Append all fields to the FormData instance
     formDataToSubmit.append("userID", formData.userID);
     formDataToSubmit.append("ResearcherName", formData.ResearcherName);
@@ -143,14 +165,14 @@ const ResearcherArea = () => {
     formDataToSubmit.append("email", formData.email);
     formDataToSubmit.append("password", formData.password);
     formDataToSubmit.append("accountType", "Researcher");
-  
+
     // Append the logo file
     if (logoFile) {
       formDataToSubmit.append("logo", logoFile);
     }
-  
+
     console.log("FormData to submit:", formDataToSubmit);
-  
+
     try {
       // POST request to your backend API
       const response = await axios.post(
@@ -163,32 +185,26 @@ const ResearcherArea = () => {
         }
       );
       console.log("Researcher added successfully:", response.data);
-  
+      setCurrentStep(1);
       // Refresh the researcher list after successful submission
       fetchResearcher();
-  
+
       // Clear form after submission
-      setFormData({
-        userID: "",
-        ResearcherName: "",
-        phoneNumber: "",
-        nameofOrganization: "",
-        fullAddress: "",
-        city: "",
-        district: "",
-        country: "",
-        email: "",
-        password: "",
-        accountType: "Researcher",
-        logo: "",
-      });
-  
+      resetFormData();
+      setSuccessMessage("Researcher added successfully.");
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding researcher:", error.response?.data || error.message);
+      console.error(
+        "Error adding researcher:",
+        error.response?.data || error.message
+      );
     }
   };
-  
+
   // const handleHistory = async () => {
   //   setSelectedResearcherStatus('pending')
   //   try {
@@ -225,28 +241,50 @@ const ResearcherArea = () => {
   //   }
   // };
   const handleEditClick = (researcher) => {
-    setSelectedResearcherId(researcher.id);
+    setSelectedResearcherId(researcher.user_account_id);
     setEditResearcher(researcher); // Store the researcher data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
+      user_account_id: researcher.user_account_id,
+      useraccount_email: researcher.email,
       userID: id,
       ResearcherName: researcher.ResearcherName,
       phoneNumber: researcher.phoneNumber,
-      nameofOrganization: organization.OrganizationName,
+      nameofOrganization: researcher.nameofOrganization,
       fullAddress: researcher.fullAddress,
+      logo: researcher.logo,
       city: researcher.city,
       district: researcher.district,
       country: researcher.country,
-      logo: researcher.logo,
+      email: researcher.email,
+      password: researcher.password,
+      accountType: "Researcher",
     });
+    setCurrentStep(1);
+    console.log("Logo", researcher.logo);
+    setPreview(
+      researcher.logo && researcher.logo.data
+        ? `data:image/jpeg;base64,${Buffer.from(researcher.logo.data).toString(
+            "base64"
+          )}`
+        : null
+    );
   };
 
   const handleUpdate = async (e) => {
-    formData.nameofOrganization = organization.id;
+    console.log("account id", selectedResearcherId);
     e.preventDefault();
+    const newformData = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      newformData.append(key, value);
+    });
+
+    if (logoFile || !preview) {
+      newformData.append("logo", logoFile);
+    }
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/edit/${selectedResearcherId}`,
+        `http://localhost:5000/api/researchers/edit/${selectedResearcherId}`,
         formData
       );
       console.log("Researcher updated successfully:", response.data);
@@ -258,13 +296,14 @@ const ResearcherArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+
+      console.log("Researcher updated successfully:", response.data);
     } catch (error) {
       console.error(
         `Error updating researcher with ID ${selectedResearcherId}:`,
         error
       );
     }
-    console.log(formData);
   };
 
   // Get the current data for the table
@@ -293,7 +332,7 @@ const ResearcherArea = () => {
     }
   };
   useEffect(() => {
-    if ( showAddModal || showEditModal) {
+    if (showAddModal || showEditModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -302,282 +341,72 @@ const ResearcherArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [ showAddModal, showEditModal]);
+  }, [showAddModal, showEditModal]);
   return (
-    <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: "-20px", width: "auto" }}>
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
-                </div>
-              )}
-              {/* Add Researchers Button */}
-              <div
-                className="d-flex justify-content-end mb-3"
-                style={{
-                  marginBottom: "20px", // Adjust spacing between button and table
-                }}
-              >
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    alignSelf: "flex-end", // Align the button to the bottom right
-                  }}
-                >
-                  Add Researchers
-                </button>
-              </div>
+    <section className="policy__area pb-120 overflow-hidden">
+      <div className="container-fluid mt-n5">
+        <div className="row justify-content-center mt-5">
+          <div className="col-12 col-md-10">
+            <div className="policy__wrapper policy__translate position-relative mt-5">
+              {/* {Button} */}
+              <div className="d-flex flex-column w-100">
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    className="alert alert-success w-100 text-start mb-2"
+                    role="alert"
+                  >
+                    {successMessage}
+                  </div>
+                )}
 
+                {/* Button Container */}
+                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+                  {/* Add Committee Member*/}
+
+                  <button
+                    className="btn btn-primary mb-2"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Add Researcher
+                  </button>
+                </div>
+              </div>
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                     <tr>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Name"
-                          onChange={(e) =>
-                            handleFilterChange("ResearcherName", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Name
-                      </th>
-
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Phone Number"
-                          onChange={(e) =>
-                            handleFilterChange("phoneNumber", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Phone Number
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Organization"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "nameofOrganization",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Organization
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Full Address"
-                          onChange={(e) =>
-                            handleFilterChange("fullAddress", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Full Address
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search City"
-                          onChange={(e) =>
-                            handleFilterChange("city", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        City
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search District"
-                          onChange={(e) =>
-                            handleFilterChange("district", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        district
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Country"
-                          onChange={(e) =>
-                            handleFilterChange("country", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Country
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Status
-                      </th>
-                      <th>Action</th>
+                      {[
+                        "ID",
+                        "Name",
+                        "Email",
+                        "Password",
+                        "logo",
+                        "Phone Number",
+                        "Organization",
+                        "Full Address",
+                        "City",
+                        "District",
+                        "Country",
+                        "Status",
+                      ].map((label, index) => (
+                        <th key={index} className="px-4">
+                          <input
+                            type="text"
+                            className="form-control w-100 px-4 py-1 mx-auto"
+                            placeholder={`Search ${label}`}
+                            onChange={(e) =>
+                              handleFilterChange(
+                                label.toLowerCase().replace(/ /g, ""),
+                                e.target.value
+                              )
+                            }
+                          />
+                          {label}
+                        </th>
+                      ))}
+                      <th className="px-3 align-middle text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -586,6 +415,24 @@ const ResearcherArea = () => {
                         <tr key={researcher.id}>
                           <td>{researcher.id}</td>
                           <td>{researcher.ResearcherName}</td>
+                          <td>{researcher.email}</td>
+                          <td>{researcher.password}</td>
+                          <td>
+                            { researcher.logo && researcher.logo.data ? (
+                              <img
+                                src={`data:image/jpeg;base64,${Buffer.from(
+                                  researcher.logo.data
+                                ).toString("base64")}`}
+                                alt="logo"
+                                style={{
+                                  maxWidth: "100px",
+                                  maxHeight: "100px",
+                                }}
+                              />
+                            ) : (
+                              <span>No Logo</span>
+                            )}
+                          </td>
                           <td>{researcher.phoneNumber}</td>
                           <td>{researcher.organization_name}</td>
                           <td>{researcher.fullAddress}</td>
@@ -594,46 +441,30 @@ const ResearcherArea = () => {
                           <td>{researcher.country_name}</td>
                           <td>{researcher.status}</td>
                           <td>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
+                            <div className="d-flex justify-content-center gap-2">
                               <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(researcher)}
                               >
-                                <FontAwesomeIcon icon={faEdit} size="sm" />
+                                <i className="fa fa-edit"></i>
                               </button>
-                              {/* <button
-                                className="btn btn-info btn-sm"
+                              <button
+                                className="btn btn-danger btn-sm"
                                 onClick={() => {
-                                  // setSelectedResearcherId(researcher.id);
+                                  setSelectedResearcherId(researcher.id);
                                   setShowHistoryModal(true);
-                                  console.log("Done");
+                                  setCurrentStep(1);
                                 }}
                               >
-                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                              </button> */}
-
-                              {/*<button
-                className="btn btn-danger btn-sm"
-                onClick={() => {
-                  setSelectedResearcherId(researcher.id);
-                  setShowDeleteModal(true);
-                }}
-              >
-                <FontAwesomeIcon icon={faTrash} size="sm" />
-              </button>*/}
+                                <i className="fa fa-trash"></i>
+                              </button>
                             </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="9" className="text-center">
+                        <td colSpan="10" className="text-center">
                           No researchers available
                         </td>
                       </tr>
@@ -643,593 +474,393 @@ const ResearcherArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${
-                          currentPage === pageNumber
-                            ? "btn-primary"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
+              <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
                       >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
+                          }`}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
                       >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
 
               {/* Modal for Adding Researchers */}
-              {showAddModal && (
+              {(showAddModal || showEditModal) && (
                 <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-            
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050, 
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Researcher</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Step 1 Fields */}
-                          {currentStep === 1 && (
-                            <>
-                              <div
-                                className="login__input-item"
-                                style={{ textAlign: "center" }}
-                              >
-                                {/* Image Preview Section */}
-                                <div style={{ marginBottom: "10px" }}>
-                                  {preview ? (
-                                    <img
-                                      src={preview}
-                                      alt="Preview"
-                                      style={{
-                                        width: "70px",
-                                        height: "70px",
-                                        borderRadius: "50%",
-                                        objectFit: "cover",
-                                        display: "inline-block",
-                                      }}
-                                    />
-                                  ) : (
-                                    <span
-                                      style={{
-                                        width: "70px",
-                                        height: "70px",
-                                        display: "inline-block",
-                                        borderRadius: "50%",
-                                        backgroundColor: "#eaeaea",
-                                        color: "#aaa",
-                                        fontSize: "30px",
-                                        lineHeight: "70px",
-                                        textAlign: "center",
-                                      }}
-                                    >
-                                      <i className="fa-solid fa-user"></i>
-                                    </span>
-                                  )}
-                                </div>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
-                                {/* File Input Section */}
-                                <div className="login__input">
-                                  <input
-                                    name="logo"
-                                    type="file"
-                                    id="logo"
-                                    className="form-control form-control-sm"
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      display: "block",
-                                      margin: "0 auto",
-                                    }}
-                                    accept="image/*"
-                                  />
-                                  <span>
-                                    <i className="fa-solid fa-image"></i>
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="form-group">
-                                <label>Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="ResearcherName"
-                                  value={formData.ResearcherName}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Email</label>
-                                <input
-                                  type="email"
-                                  className="form-control"
-                                  name="email"
-                                  value={formData.email}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div
-                                className="form-group"
-                                style={{ position: "relative" }}
-                              >
-                                <label>Password</label>
-                                <input
-                                  type={showPassword ? "text" : "password"}
-                                  className="form-control"
-                                  name="password"
-                                  value={formData.password}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                                <span
-                                  className="login-input-eye"
-                                  style={{
-                                    position: "absolute",
-                                    top: "65%",
-                                    right: "10px", // Position it on the right
-                                    transform: "translateY(-50%)",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => setShowPassword(!showPassword)} // Toggle password visibility
-                                >
-                                  {showPassword ? (
-                                    <i className="fa-regular fa-eye"></i> // Eye icon when password is visible
-                                  ) : (
-                                    <i className="fa-regular fa-eye-slash"></i> // Eye slash icon when password is hidden
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="form-group">
-                                <label>Account Type</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="accountType"
-                                  value={formData.accountType}
-                                  onChange={handleInputChange}
-                                  readOnly
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Organization</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="nameofOrganization"
-                                  value={organization.OrganizationName}
-                                  readOnly
-                                />
-                              </div>
-                            </>
-                          )}
-
-                          {/* Step 2 Fields */}
-                          {currentStep === 2 && (
-                            <>
-                              <div className="form-group">
-                                <label>Phone Number</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  required
-                                  pattern="^\d{11}$"
-                                  title="Phone number must be exactly 11 digits"
-                                />
-                              </div>
-
-                              <div className="form-group">
-                                <label>Full Address</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="fullAddress"
-                                  value={formData.fullAddress}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>City</label>
-                                <select
-                                  className="form-control"
-                                  name="city"
-                                  value={formData.city}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="" disabled>
-                                    Select City
-                                  </option>
-                                  {cityname.map((city) => (
-                                    <option key={city.id} value={city.id}>
-                                      {city.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="form-group">
-                                <label>District</label>
-                                <select
-                                  className="form-control"
-                                  name="district"
-                                  value={formData.district}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="" disabled>
-                                    Select District
-                                  </option>
-                                  {districtname.map((district) => (
-                                    <option
-                                      key={district.id}
-                                      value={district.id}
-                                    >
-                                      {district.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="form-group">
-                                <label>Country</label>
-                                <select
-                                  className="form-control"
-                                  name="country"
-                                  value={formData.country}
-                                  onChange={handleInputChange}
-                                  required
-                                >
-                                  <option value="" disabled>
-                                    Select Country
-                                  </option>
-                                  {countryname.map((country) => (
-                                    <option key={country.id} value={country.id}>
-                                      {country.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div className="modal-footer">
-                          {currentStep > 1 && (
-                            <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={() => setCurrentStep(currentStep - 1)}
-                            >
-                              Previous
-                            </button>
-                          )}
-                          {currentStep < 2 ? (
-                            <button
-                              type="button"
-                              className="btn btn-primary"
-                              onClick={() => setCurrentStep(currentStep + 1)}
-                            >
-                              Next
-                            </button>
-                          ) : (
-                            <button type="submit" className="btn btn-primary">
-                              Submit
-                            </button>
-                          )}
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
-
-              {/* Edit Researcher Modal */}
-              {showEditModal && (
-                     <>
-                     {/* Bootstrap Backdrop with Blur */}
-                     <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-                 
-                     {/* Modal Content */}
-                     <div
-                       className="modal show d-block"
-                       tabIndex="-1"
-                       role="dialog"
-                       style={{
-                         zIndex: 1050, 
-                         position: "fixed",
-                         top: "120px",
-                         left: "50%",
-                         transform: "translateX(-50%)",
-                       }}
-                     >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Researcher</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          <div
-                            className="login__input-item"
-                            style={{ textAlign: "center" }}
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "40px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">
+                            {showAddModal
+                              ? "Add Researcher"
+                              : "Edit Researcher"}
+                          </h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                              resetFormData(); // Reset form data when closing the modal
+                            }}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              cursor: "pointer",
+                            }}
                           >
-                            {/* Image Preview Section */}
-                            <div style={{ marginBottom: "10px" }}>
-                              {preview ? (
-                                <img
-                                  src={preview}
-                                  alt="Preview"
-                                  style={{
-                                    width: "70px",
-                                    height: "70px",
-                                    borderRadius: "50%",
-                                    objectFit: "cover",
-                                    display: "inline-block",
-                                  }}
-                                />
-                              ) : (
-                                <span
-                                  style={{
-                                    width: "70px",
-                                    height: "70px",
-                                    display: "inline-block",
-                                    borderRadius: "50%",
-                                    backgroundColor: "#eaeaea",
-                                    color: "#aaa",
-                                    fontSize: "30px",
-                                    lineHeight: "70px",
-                                    textAlign: "center",
-                                  }}
-                                >
-                                  <i className="fa-solid fa-user"></i>
-                                </span>
-                              )}
-                            </div>
-
-                            {/* File Input Section */}
-                            <div className="login__input">
-                              <input
-                                name="logo"
-                                type="file"
-                                id="logo"
-                                className="form-control form-control-sm"
-                                onChange={handleInputChange}
-                                required
-                                style={{
-                                  display: "block",
-                                  margin: "0 auto",
-                                }}
-                              />
-                              <span>
-                                <i className="fa-solid fa-image"></i>
-                              </span>
-                            </div>
-                          </div>
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ResearcherName"
-                              value={formData.ResearcherName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Organization</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="nameofOrganization"
-                              value={formData.nameofOrganization}
-                              onChange={handleInputChange}
-                              readOnly // Prevent user from editing the organization name
-                            />
-                          </div>
-
-                          <div className="form-group">
-                            <label>Full Address</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="fullAddress"
-                              value={formData.fullAddress}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>City</label>
-                            <select
-                              className="form-control"
-                              name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="">Select a city</option>
-                              {cityname.map((city) => (
-                                <option key={city.id} value={city.id}>
-                                  {city.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="form-group">
-                            <label>District</label>
-                            <select
-                              className="form-control"
-                              name="district"
-                              value={formData.district}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="">Select a district</option>
-                              {districtname.map((district) => (
-                                <option key={district.id} value={district.id}>
-                                  {district.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="form-group">
-                            <label>Country</label>
-                            <select
-                              className="form-control"
-                              name="country"
-                              value={formData.country}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="">Select a country</option>
-                              {countryname.map((country) => (
-                                <option key={country.id} value={country.id}>
-                                  {country.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Researcher
+                            <span>&times;</span>
                           </button>
                         </div>
-                      </form>
+
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                        >
+                          <div className="modal-body">
+                            {/* Step 1 Fields */}
+                            {currentStep === 1 && (
+                              <>
+                                <div
+                                  className="login__input-item"
+                                  style={{ textAlign: "center" }}
+                                >
+                                  {/* Image Preview Section */}
+                                  <div style={{ marginBottom: "10px" }}>
+                                    {preview ? (
+                                      <img
+                                        src={preview}
+                                        alt="Preview"
+                                        style={{
+                                          width: "70px",
+                                          height: "70px",
+                                          borderRadius: "50%",
+                                          objectFit: "cover",
+                                          display: "inline-block",
+                                        }}
+                                      />
+                                    ) : (
+                                      <span
+                                        style={{
+                                          width: "70px",
+                                          height: "70px",
+                                          display: "inline-block",
+                                          borderRadius: "50%",
+                                          backgroundColor: "#eaeaea",
+                                          color: "#aaa",
+                                          fontSize: "30px",
+                                          lineHeight: "70px",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        <i className="fa-solid fa-user"></i>
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* File Input Section */}
+                                  <div className="login__input">
+                                    <input
+                                      name="logo"
+                                      type="file"
+                                      id="logo"
+                                      className="form-control form-control-sm"
+                                      onChange={handleInputChange}
+                                      required
+                                      style={{
+                                        display: "block",
+                                        margin: "0 auto",
+                                      }}
+                                      accept="image/*"
+                                    />
+                                    <span>
+                                      <i className="fa-solid fa-image"></i>
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="form-group">
+                                  <label>Name</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="ResearcherName"
+                                    value={formData.ResearcherName}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Email</label>
+                                  <input
+                                    type="email"
+                                    className="form-control"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div
+                                  className="form-group"
+                                  style={{ position: "relative" }}
+                                >
+                                  <label>Password</label>
+                                  <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="form-control"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                  <span
+                                    className="login-input-eye"
+                                    style={{
+                                      position: "absolute",
+                                      top: "65%",
+                                      right: "10px", // Position it on the right
+                                      transform: "translateY(-50%)",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    } // Toggle password visibility
+                                  >
+                                    {showPassword ? (
+                                      <i className="fa-regular fa-eye"></i> // Eye icon when password is visible
+                                    ) : (
+                                      <i className="fa-regular fa-eye-slash"></i> // Eye slash icon when password is hidden
+                                    )}
+                                  </span>
+                                </div>
+
+                                <div className="form-group">
+                                  <label>Account Type</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="accountType"
+                                    value={formData.accountType}
+                                    onChange={handleInputChange}
+                                    readOnly
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Organization</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="nameofOrganization"
+                                    value={organization.OrganizationName}
+                                    readOnly
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {/* Step 2 Fields */}
+                            {currentStep === 2 && (
+                              <>
+                                <div className="form-group">
+                                  <label>Phone Number</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="phoneNumber"
+                                    value={formData.phoneNumber}
+                                    onChange={handleInputChange}
+                                    required
+                                    pattern="^\d{4}-\d{3}-\d{4}$"
+                                    title="Phone number must be in the format 0304-586-1729"
+                                  />
+                                </div>
+
+                                <div className="form-group">
+                                  <label>Full Address</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="fullAddress"
+                                    value={formData.fullAddress}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>City</label>
+                                  <select
+                                    className="form-control"
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select City
+                                    </option>
+                                    {cityname.map((city) => (
+                                      <option key={city.id} value={city.id}>
+                                        {city.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>District</label>
+                                  <select
+                                    className="form-control"
+                                    name="district"
+                                    value={formData.district}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select District
+                                    </option>
+                                    {districtname.map((district) => (
+                                      <option
+                                        key={district.id}
+                                        value={district.id}
+                                      >
+                                        {district.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>Country</label>
+                                  <select
+                                    className="form-control"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select Country
+                                    </option>
+                                    {countryname.map((country) => (
+                                      <option
+                                        key={country.id}
+                                        value={country.id}
+                                      >
+                                        {country.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Modal Footer */}
+                          <div className="modal-footer">
+                            {currentStep > 1 && (
+                              <button
+                                type="button" // Prevents form submission
+                                className="btn btn-secondary"
+                                onClick={() => {
+                                  console.log("Before:", currentStep);
+                                  setCurrentStep((prevStep) => prevStep - 1);
+                                  console.log("After:", currentStep); // This won't reflect immediately, but helps debug
+                                }}
+                              >
+                                Previous
+                              </button>
+                            )}
+                            {currentStep < 2 ? (
+                              <button
+                                type="button" // Prevents form submission
+                                className="btn btn-primary"
+                                onClick={() => {
+                                  console.log("Before:", currentStep);
+                                  setCurrentStep((prevStep) => prevStep + 1);
+                                  console.log("After:", currentStep); // This won't reflect immediately, but helps debug
+                                }}
+                              >
+                                Next
+                              </button>
+                            ) : (
+                              <button type="submit" className="btn btn-primary">
+                                {showAddModal ? "Save" : "Update Researcher"}
+                              </button>
+                            )}
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
 

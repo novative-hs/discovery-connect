@@ -35,7 +35,9 @@ const Footer = () => {
           <div className="row gy-4 gy-lg-0 justify-content-xl-between">
             <div className="col-12 col-md-4 col-lg-3 col-xl-2">
               <div className="widget">
-                  <Image src={logo} alt="Discovery Connect Logo" width="160" height="100" />
+                <Link href="/">
+                  <Image src={logo} alt="Discovery Connect Logo" width="120" height="120" />
+                </Link>
               </div>
             </div>
             <div className="col-12 col-md-4 col-lg-3 col-xl-2">

@@ -1,7 +1,10 @@
-import React from "react";
-
+import React ,{useState} from "react";
+import Header from "@layout/dashboardheader";
 const CartBreadcrumb = ({title,subtitle}) => {
+  const [activeTab, setActiveTab] = useState("order-info");
   return (
+    <>
+    <Header setActiveTab={setActiveTab} />
     <section className="breadcrumb__area grey-bg p-relative include-bg pt-100 pb-100">
       <div className="container">
         <div className="row justify-content-center">
@@ -22,6 +25,7 @@ const CartBreadcrumb = ({title,subtitle}) => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

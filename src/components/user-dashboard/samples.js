@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  
-  faCartPlus,
-
-} from "@fortawesome/free-solid-svg-icons";
+import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
 import { notifyError, notifySuccess } from "@utils/toast";
+import CartSidebar from "@components/common/sidebar/cart-sidebar";
+import { Cart } from "@svg/index"; 
+
 const SampleArea = () => {
   const id = localStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -116,7 +115,6 @@ const[quantity,setQuantity]=useState(0);
       fetchSamples();
     }
   }, []);
-  
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
@@ -216,7 +214,7 @@ const[quantity,setQuantity]=useState(0);
                             maxWidth: "180px",
                           }}
                         />
-                        ID
+                        ID 
                       </th>
                       <th
                         className="px-3"
@@ -999,6 +997,31 @@ const[quantity,setQuantity]=useState(0);
                           className="form-control"
                           placeholder="Search Status"
                           onChange={(e) =>
+                            handleFilterChange("discount", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Discount
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Status"
+                          onChange={(e) =>
                             handleFilterChange("status", e.target.value)
                           }
                           style={{
@@ -1011,6 +1034,7 @@ const[quantity,setQuantity]=useState(0);
                         />
                         Status
                       </th>
+                     
                       <th
                         className="px-3"
                         style={{
@@ -1057,22 +1081,20 @@ const[quantity,setQuantity]=useState(0);
                           <td>{sample.TestKitManufacturer}</td>
                           <td>{sample.TestSystem}</td>
                           <td>{sample.TestSystemManufacturer}</td>
+                          <td>{sample.discount}%</td>
                           {/*<td>{sample.user_id}</td>*/}
                           <td>{sample.status}</td>
                           <td>
-                          <button
-  className="btn btn-danger btn-sm"
-  onClick={() => incrementQuantity(sample)} // Wrap the function in an arrow function
-  title="Edit Researcher" // This is the text that will appear on hover
->
-
-
-                            <FontAwesomeIcon icon={faCartPlus} size="sm" />
-                          </button>
+                            <button
+                              className="btn d-flex align-items-center"
+                              onClick={() => handleUpdate(sample)}
+                              title="add to cart"
+                            >
+                              <Cart className="me-2" />
+                            </button>
                           </td>
                         </tr>
                       ))
-
                     ) : (
                       <tr>
                         <td colSpan="8" className="text-center">
@@ -1163,7 +1185,10 @@ const[quantity,setQuantity]=useState(0);
           </div>
         </div>
       </div>
+      <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} sample={formData} />
+
     </section>
+    
   );
 };
 

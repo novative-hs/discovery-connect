@@ -26,7 +26,16 @@ function userLogin(req, res) {
     }
   });
 }
-
+const getTableCounts = (req, res) => {
+  accountModel.getTableCounts((err, result) => {
+    if (err) {
+      console.error('Error:', err);
+      return res.status(500).json({ status: "fail", error: err.message });
+    }
+    res.status(200).json(result); // Send the counts as a JSON response
+  });
+};
 module.exports = {
   userLogin,
+  getTableCounts
 };

@@ -6,7 +6,7 @@ import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateUser from "./update-user";
 import SampleArea from './samples';
-import Header from '../../layout/useraccountheader';
+import Header from '../../layout/dashboardheader';
 import OrderInfo from "./order-info";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
@@ -59,7 +59,7 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} />
+         <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area pt-180 pb-120">
         <div className="container" style={{ marginTop: '-90px', width: '100%' }}>
           <div className="profile__inner p-relative">

@@ -37,6 +37,8 @@ function getResearchersByOrganization(organizationId, callback) {
     country.id AS country_id,
     country.name AS country_name,
     organization.id AS organization_id,
+    user_account.email,
+    user_account.password,
     organization.OrganizationName AS organization_name
 FROM 
     researcher
@@ -44,6 +46,7 @@ LEFT JOIN city ON researcher.city = city.id
 LEFT JOIN district ON researcher.district = district.id
 LEFT JOIN country ON researcher.country = country.id
 LEFT JOIN organization ON researcher.nameofOrganization = organization.id
+LEFT JOIN user_account ON researcher.user_account_id = user_account.id
 WHERE 
     researcher.nameofOrganization = ?;
   `;
@@ -89,82 +92,82 @@ mysqlConnection.query(query, [ResearcherName, phoneNumber, nameofOrganization, f
 }
 
 
-// function updateResearcherDetail(id, data, callback) {
-//   const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
+function updateResearcherDetail(id, data, callback) {
+  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
   
   
   
   
-//   mysqlConnection.beginTransaction((err) => {
-//     if (err) {
-//       console.error('Error starting transaction:', err);
-//       return callback(err);
-//     }
+  mysqlConnection.beginTransaction((err) => {
+    if (err) {
+      console.error('Error starting transaction:', err);
+      return callback(err);
+    }
 
-//     // Update user_account email
-//     const updateEmailQuery = `
-//       UPDATE user_account
-//       SET email = ?
-//       WHERE id = ?
-//     `;
+    // Update user_account email
+    const updateEmailQuery = `
+      UPDATE user_account
+      SET email = ?
+      WHERE id = ?
+    `;
 
-//     mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
-//       if (err) {
-//         return mysqlConnection.rollback(() => {
-//           console.error('Error updating email:', err);
-//           return callback(err);
-//         });
-//       }
+    mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
+      if (err) {
+        return mysqlConnection.rollback(() => {
+          console.error('Error updating email:', err);
+          return callback(err);
+        });
+      }
 
-//       // Now update the collectionsite table, passing file path for logo
-//       const updateCollectionSiteQuery = `
-//         UPDATE collectionsite
-//         SET
-//           CollectionSiteName = ?,
-//           phoneNumber = ?,
-//           ntnNumber = ?,
-//           fullAddress = ?,
-//           city = ?,
-//           district = ?,
-//           country = ?,
-//           type = ?,
-//           logo = ?  
-//         WHERE user_account_id = ?
-//       `;
+      // Now update the collectionsite table, passing file path for logo
+      const updateCollectionSiteQuery = `
+        UPDATE collectionsite
+        SET
+          CollectionSiteName = ?,
+          phoneNumber = ?,
+          ntnNumber = ?,
+          fullAddress = ?,
+          city = ?,
+          district = ?,
+          country = ?,
+          type = ?,
+          logo = ?  
+        WHERE user_account_id = ?
+      `;
 
-//       mysqlConnection.query(
-//         updateCollectionSiteQuery, 
-//         [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id], 
-//         (err, result) => {
-//           if (err) {
-//             return mysqlConnection.rollback(() => {
-//               console.error('Error updating collectionsite:', err);
-//               return callback(err);
-//             });
-//           }
+      mysqlConnection.query(
+        updateCollectionSiteQuery, 
+        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id], 
+        (err, result) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              console.error('Error updating collectionsite:', err);
+              return callback(err);
+            });
+          }
 
-//           // Commit the transaction if both queries succeed
-//           mysqlConnection.commit((err) => {
-//             if (err) {
-//               return mysqlConnection.rollback(() => {
-//                 console.error('Error committing transaction:', err);
-//                 return callback(err);
-//               });
-//             }
+          // Commit the transaction if both queries succeed
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                console.error('Error committing transaction:', err);
+                return callback(err);
+              });
+            }
 
-//             console.log('Both email and collectionsite updated successfully');
-//             return callback(null, 'Both updates were successful');
-//           });
-//         }
-//       );
-//     });
-//   });
-
-
+            console.log('Both email and collectionsite updated successfully');
+            return callback(null, 'Both updates were successful');
+          });
+        }
+      );
+    });
+  });
 
 
-// }
-// Function to delete a collection site
+
+
+}
+
 const deleteResearcher = (id, callback) => {
   const query = 'UPDATE researcher SET status = ? WHERE id = ?';
   mysqlConnection.query(query, ['unapproved', id], (err, result) => {
@@ -181,7 +184,7 @@ function updateResearcherStatus(id, status, callback) {
 
 module.exports = {
   createResearcher,
-  //updateResearcherDetail,
+  updateResearcherDetail,
   getResearchersByOrganization,
   getAllResearchers,
   getResearcherById,

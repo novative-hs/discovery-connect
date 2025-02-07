@@ -21,7 +21,10 @@ const schema = Yup.object().shape({
   countryid: Yup.string().required("Country is required").label("Country"),
   phoneNumber: Yup.string()
     .required("Phone Number is required")
-    .min(11, "Phone Number must be at least 11 characters")
+    .matches(
+      /^\d{4}-\d{3}-\d{4}$/,
+      "Phone number must be in the format 0123-456-7890 and numeric",
+    )
     .label("Phone Number"),
   ntnNumber: Yup.string()
     .required("NTN Number is required")
@@ -553,7 +556,7 @@ const UpdateOrganization = () => {
               id="phoneNumber"
               {...register("phoneNumber")}
               type="text"
-              placeholder="Enter Phone Number"
+              placeholder="Enter Phone Number (0123-456-7890)"
               style={{
                 width: "100%",
                 padding: "20px",
