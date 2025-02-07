@@ -42,6 +42,7 @@ const SampleArea = () => {
      TestSystemManufacturer: "",
      user_account_id: "",
    });
+   const [isCartOpen,setIsCartOpen]=useState(false);
 const[quantity,setQuantity]=useState(0);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");

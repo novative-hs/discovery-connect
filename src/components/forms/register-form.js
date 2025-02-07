@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
@@ -64,9 +65,9 @@ const schema = Yup.object().shape({
     is: "Organization",
     then: Yup.string().required("HEC / PMDC Registration No is required!"),
   }),
-  ntnNumber: Yup.string().when('accountType', {
-    is: ['Organization', 'CollectionSites'],
-    then: Yup.string().required('NTN Number is required!'),
+  ntnNumber: Yup.string().when("accountType", {
+    is: ["Organization", "CollectionSites"],
+    then: Yup.string().required("NTN Number is required!"),
   }),
   // CollectionSites-specific fields (conditional validation)
   CollectionSiteName: Yup.string().when("accountType", {
@@ -102,26 +103,20 @@ const RegisterForm = () => {
   const selectedAccountType = watch("accountType");
   // Dynamically change the "Choose Logo" label based on account type
   useEffect(() => {
-    const fetchcityname = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/city/get-city');
-        setcityname(response.data); // Store fetched City in state
-      } catch (error) {
-        console.error("Error fetching City:", error);
-      }
+    const labels = {
+      Researcher: "Choose Researcher Logo",
+      Organization: "Choose Organization Logo",
+      CollectionSites: "Choose Collection Site Logo",
     };
+    setAccountTypeLabel(labels[accountType] || "Choose Logo");
+  }, [accountType]);
 
-    fetchcityname(); // Call the function when the component mounts
-  }, []);
-
+  // Fetch cities, districts, and countries from backend
   useEffect(() => {
     const fetchData = async (url, setState, label) => {
       try {
-        const response = await axios.get('http://localhost:5000/api/admin/organization/get');
-        const approvedOrganizations = response.data.filter(
-          (organization) => organization.status === "approved"
-        );
-        setOrganizationname(approvedOrganizations); // Store fetched City in state
+        const response = await axios.get(url);
+        setState(response.data);
       } catch (error) {
         console.error(`Error fetching ${label}:`, error);
       }
@@ -149,26 +144,55 @@ const RegisterForm = () => {
       "Organization"
     );
   }, []);
-  useEffect(() => {
-    const fetchdistrictname = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/district/get-district');
-        setdistrictname(response.data); // Store fetched City in state
-      } catch (error) {
-        console.error("Error fetching City:", error);
+
+  const handleLogoChange = (event) => {
+    if (event.target.type === "file") {
+      // Handle file selection
+      const file = event.target.files[0];
+      if (file) {
+        setValue(file.name);
+        setLogo(file.name); // Update the input field with the file name
       }
-    };
-
-    fetchdistrictname(); // Call the function when the component mounts
-  }, []);
-
-  useEffect(() => {
-    const fetchcountryname = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/country/get-country');
-        setcountryname(response.data); // Store fetched City in state
-      } catch (error) {
-        console.error("Error fetching City:", error);
+    } else {
+      // Handle button click (to trigger file input)
+      document.getElementById("fileInput").click(); // Trigger file input click
+    }
+  };
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click(); // Trigger file input
+    }
+  };
+  const sendApprovalEmail = async (data) => {
+    let name = ""; 
+    
+    // Assign the correct name based on accountType
+    if (data.accountType === "Researcher") {
+      name = data.ResearcherName;
+    } else if (data.accountType === "Collectionsite") {
+      name = data.CollectionSiteName;
+    } else if (data.accountType === "Organization") {
+      name = data.OrganizationName;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/user/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          name: name,
+          status:"pending",
+        }),
+      });
+  
+      const result = await response.json(); // Rename 'data' to 'result' to avoid shadowing
+      if (response.ok) {
+        console.log("Email sent successfully:", result.message);
+      } else {
+        console.error("Error sending email:", result.error);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -210,6 +234,7 @@ const RegisterForm = () => {
     // Append CollectionSite-specific fields
     if (data.accountType === "CollectionSites") {
       formData.append("CollectionSiteName", data.CollectionSiteName);
+      formData.append("ntnNumber", data.ntnNumber);
       formData.append("fullAddress", data.fullAddress);
       formData.append("city", data.city);
       formData.append("district", data.district);
@@ -229,7 +254,7 @@ const RegisterForm = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-          sendApprovalEmail(data);
+         // sendApprovalEmail(data);
           notifySuccess(result?.data?.message || "Registered Successfully");
           router.push("/login");
         }
@@ -512,25 +537,15 @@ const RegisterForm = () => {
                   onChange={handleLogoChange}
                 />
               </div>
-              <ErrorMessage message={errors.logo?.message} />
-            </div>
-            {/* Common CollectionSites and Organization */}
-            <div className="login__input-item">
-              <div className="login__input">
-                <input
-                  {...register("ntnNumber")}
-                  name="ntnNumber"
-                  type="text"
-                  placeholder="NTN Number"
-                  id="ntnNumber"
-                />
-                <span>
-                  <i className="fa-solid fa-id-card"></i>
-                </span>
-              </div>
-              <ErrorMessage message={errors.ntnNumber?.message} />
+              {/* Show error message only when validation fails */}
+              <ErrorMessage
+                name="logo"
+                component="div"
+                className="error-message"
+              />
             </div>
 
+            {/* City Fields */}
             <div className="login__input-item">
               <div className="login__input d-flex align-items-center w-100">
                 <select
@@ -639,3 +654,4 @@ const RegisterForm = () => {
 };
 
 export default RegisterForm;
+

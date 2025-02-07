@@ -549,7 +549,7 @@ const CommitteeMemberArea = () => {
                           <td>{committeemember.country_name}</td>
                           <td>{committeemember.organization_name}</td>
                           <td>{committeemember.committeetype}</td>
-                          {/* <td>{formatDate(committeemember.created_at)}</td> */}
+                          <td>{formatDate(committeemember.created_at)}</td>
                           <td>{committeemember.status}</td>
                           <td>
                             <div className="d-flex justify-content-around gap-2">
