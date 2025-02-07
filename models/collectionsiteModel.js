@@ -20,25 +20,25 @@ const getAllCollectionSites = (callback) => {
 
 // Function to insert a new collection site
 const createCollectionSite = (data, callback) => {
-  const { user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, ntnNumber, fullAddress, city, district, country, phoneNumber } = data;
+  const { user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
   const query = `
-    INSERT INTO collectionsite (user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, ntnNumber, fullAddress, city, district, country, phoneNumber)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO collectionsite (user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, ntnNumber, fullAddress, city, district, country, phoneNumber], (err, result) => {
+  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber], (err, result) => {
     callback(err, result);
   });
 };
 
 // Function to update a collection site
 const updateCollectionSite = (id, data, callback) => {
-  const { user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, ntnNumber, fullAddress, city, district, country, phoneNumber } = data;
+  const { user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
   const query = `
     UPDATE collectionsite
-    SET user_account_id = ?, username = ?, email = ?, password = ?, accountType = ?, CollectionSiteName = ?, confirmPassword = ?, ntnNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, phoneNumber = ?
+    SET user_account_id = ?, username = ?, email = ?, password = ?, accountType = ?, CollectionSiteName = ?, confirmPassword = ?, fullAddress = ?, city = ?, district = ?, country = ?, phoneNumber = ?
     WHERE id = ?
   `;
-  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, ntnNumber, fullAddress, city, district, country, phoneNumber, id], (err, result) => {
+  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber, id], (err, result) => {
     callback(err, result);
   });
 };
@@ -75,35 +75,14 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
     FROM collectionsite 
     WHERE user_account_id != ?;
   `;
-  // Query to fetch biobank name
-  const biobankQuery = `
-    SELECT Name, user_account_id 
-    FROM biobank
-    WHERE user_account_id != ?;
-  `;
-
-  // Execute both queries
-  mysqlConnection.query(collectionSiteQuery, [user_account_id], (err, collectionSiteResults) => {
+  mysqlConnection.query(collectionSiteQuery, [user_account_id], (err, results) => {
     if (err) {
       console.error('SQL Error (CollectionSite):', err);
       callback(err, null);
       return;
     }
-
-    mysqlConnection.query(biobankQuery, [user_account_id], (err, biobankResults) => {
-      if (err) {
-        console.error('SQL Error (Biobank):', err);
-        callback(err, null);
-        return;
-      }
-
-      // Combine results
-      callback(null, {
-        collectionSites: collectionSiteResults,
-        biobank: biobankResults,
+      callback(null, results);
       });
-    });
-  });
 };
 
 
@@ -111,8 +90,7 @@ function updateCollectionSiteDetail(id, data, callback) {
   const { 
     useraccount_email, 
     CollectionSiteName, 
-    phoneNumber, 
-    ntnNumber, 
+    phoneNumber,  
     fullAddress, 
     cityid, 
     districtid, 
@@ -139,7 +117,6 @@ function updateCollectionSiteDetail(id, data, callback) {
         SET
           CollectionSiteName = ?,
           phoneNumber = ?,
-          ntnNumber = ?,
           fullAddress = ?,
           city = ?,
           district = ?,
@@ -151,7 +128,7 @@ function updateCollectionSiteDetail(id, data, callback) {
 
       mysqlConnection.query(
         updateCollectionSiteQuery, 
-        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, logo, id], 
+        [CollectionSiteName, phoneNumber, fullAddress, cityid, districtid, countryid, type, logo, id], 
         (err, result) => {
           if (err) {
             return mysqlConnection.rollback(() => {

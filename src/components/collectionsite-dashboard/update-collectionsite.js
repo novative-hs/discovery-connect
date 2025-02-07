@@ -17,9 +17,6 @@ const schema = Yup.object().shape({
     .required("Phone Number is required")
     .min(11, "Phone Number must be at least 11 characters")
     .label("Phone Number"),
-  ntnNumber: Yup.string()
-    .required("NTN Number is required")
-    .label("NTN Number"),
   fullAddress: Yup.string()
     .required("Full Address is required")
     .label("Full Address"),
@@ -480,43 +477,6 @@ const UpdateCollectionSite = () => {
               }}
             />
             <ErrorMessage message={errors.phoneNumber?.message} />
-          </div>
-        </div>
-
-        {/* NTN Number */}
-        <div
-          className="col-xxl-12 col-md-12"
-          style={{
-            marginBottom: "15px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <label
-            htmlFor="ntnNumber"
-            style={{
-              fontWeight: "bold",
-              width: "150px",
-              marginRight: "20px",
-            }}
-          >
-            NTN Number
-          </label>
-          <div className="profile__input" style={{ flexGrow: 1 }}>
-            <input
-              id="ntnNumber"
-              {...register("ntnNumber")}
-              type="text"
-              placeholder="Enter NTN Number"
-              style={{
-                width: "100%",
-                padding: "20px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                height: "50px",
-              }}
-            />
-            <ErrorMessage message={errors.ntnNumber?.message} />
           </div>
         </div>
 

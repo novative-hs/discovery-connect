@@ -15,7 +15,6 @@ const SampleDispatchArea = () => {
   const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [formData, setFormData] = useState({
-    masterID: "",
     donorID: "",
     samplename: "",
     age: "",
@@ -23,37 +22,26 @@ const SampleDispatchArea = () => {
     ethnicity: "",
     samplecondition: "",
     storagetemp: "",
-    storagetempUnit: "",
     ContainerType: "",
     CountryOfCollection: "",
-    price: "",
-    SamplePriceCurrency: "",
     Quantity: "",
     QuantityUnit: "",
-    labname: "",
     SampleTypeMatrix: "",
-    TypeMatrixSubtype: "",
-    ProcurementType: "",
     SmokingStatus: "",
-    TestMethod: "",
-    TestResult: "",
-    TestResultUnit: "",
+    AlcoholOrDrugAbuse: "",
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
-    CutOffRange: "",
-    CutOffRangeUnit: "",
     FreezeThawCycles: "",
     DateOfCollection: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
-    AlcoholOrDrugAbuse: "",
     DiagnosisTestParameter: "",
-    ResultRemarks: "",
-    TestKit: "",
+    TestResult: "",
+    TestResultUnit: "",
+    TestMethod: "",
     TestKitManufacturer: "",
     TestSystem: "",
     TestSystemManufacturer: "",
-    endTime: "",
     // logo: ""
   });
 
@@ -267,34 +255,6 @@ const SampleDispatchArea = () => {
                           ID
                         </div>
                       </th>
-
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                         <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Master ID"
-                          onChange={(e) =>
-                            handleFilterChange("masterID", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Master ID
-                        </div>
-                      </th>
                       <th
                         className="px-3"
                         style={{
@@ -499,36 +459,6 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Storage Temp Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "storagetempUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Storage Temperature Unit
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Container Type"
                           onChange={(e) =>
                             handleFilterChange("ContainerType", e.target.value)
@@ -572,63 +502,6 @@ const SampleDispatchArea = () => {
                           }}
                         />
                         Country Of Collection
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Price"
-                          onChange={(e) =>
-                            handleFilterChange("price", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Price
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Price Currency"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SamplePriceCurrency",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Sample Price Currency
                         </div>
                       </th>
                       <th className="px-3">
@@ -688,33 +561,6 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Lab Name"
-                          onChange={(e) =>
-                            handleFilterChange("labname", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Lab Name
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Sample Type Matrix"
                           onChange={(e) =>
                             handleFilterChange(
@@ -731,66 +577,6 @@ const SampleDispatchArea = () => {
                           }}
                         />
                         Sample Type Matrix
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Type Matrix Subtype"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TypeMatrixSubtype",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Type Matrix Subtype
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Procurement Type"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ProcurementType",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Procurement Type
                         </div>
                       </th>
                       <th
@@ -832,9 +618,12 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Test Method"
+                          placeholder="Search Alcohol Or Drug Abuse"
                           onChange={(e) =>
-                            handleFilterChange("TestMethod", e.target.value)
+                            handleFilterChange(
+                              "AlcoholOrDrugAbuse",
+                              e.target.value
+                            )
                           }
                           style={{
                             width: "80%", // Adjusted width for better responsiveness
@@ -844,61 +633,7 @@ const SampleDispatchArea = () => {
                             maxWidth: "180px", // Maximum width for better control
                           }}
                         />
-                        Test Method
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result"
-                          onChange={(e) =>
-                            handleFilterChange("TestResult", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Result
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result Unit"
-                          onChange={(e) =>
-                            handleFilterChange("TestResultUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Test Result Unit
+                        Alcohol Or Drug Abuse
                         </div>
                       </th>
                       <th
@@ -959,63 +694,6 @@ const SampleDispatchArea = () => {
                           }}
                         />
                         Infectious Disease Result
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range"
-                          onChange={(e) =>
-                            handleFilterChange("CutOffRange", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Cut Off Range
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CutOffRangeUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Cut Off Range Unit
                         </div>
                       </th>
                       <th
@@ -1150,36 +828,6 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Alcohol Or Drug Abuse"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "AlcoholOrDrugAbuse",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Alcohol Or Drug Abuse
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Diagnosis Test Parameter"
                           onChange={(e) =>
                             handleFilterChange(
@@ -1210,9 +858,9 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Result Remarks"
+                          placeholder="Search Test Result"
                           onChange={(e) =>
-                            handleFilterChange("ResultRemarks", e.target.value)
+                            handleFilterChange("TestResult", e.target.value)
                           }
                           style={{
                             width: "80%", // Adjusted width for better responsiveness
@@ -1222,7 +870,7 @@ const SampleDispatchArea = () => {
                             maxWidth: "180px", // Maximum width for better control
                           }}
                         />
-                        Result Remarks
+                        Test Result
                         </div>
                       </th>
                       <th
@@ -1237,9 +885,9 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Test Kit"
+                          placeholder="Search Test Result Unit"
                           onChange={(e) =>
-                            handleFilterChange("TestKit", e.target.value)
+                            handleFilterChange("TestResultUnit", e.target.value)
                           }
                           style={{
                             width: "80%", // Adjusted width for better responsiveness
@@ -1249,7 +897,34 @@ const SampleDispatchArea = () => {
                             maxWidth: "180px", // Maximum width for better control
                           }}
                         />
-                        Test Kit
+                        Test Result Unit
+                        </div>
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <div className="d-flex flex-column align-items-center w-100">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Method"
+                          onChange={(e) =>
+                            handleFilterChange("TestMethod", e.target.value)
+                          }
+                          style={{
+                            width: "80%", // Adjusted width for better responsiveness
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px", // Minimum width to prevent shrinking too much
+                            maxWidth: "180px", // Maximum width for better control
+                          }}
+                        />
+                        Test Method
                         </div>
                       </th>
                       <th
@@ -1353,33 +1028,6 @@ const SampleDispatchArea = () => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        End Time
-                        </div>
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <div className="d-flex flex-column align-items-center w-100">
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Status"
                           onChange={(e) =>
                             handleFilterChange("status", e.target.value)
@@ -1403,7 +1051,6 @@ const SampleDispatchArea = () => {
                       currentData.map((sample) => (
                         <tr key={sample.id}>
                           <td>{sample.id}</td>
-                          <td>{sample.masterID}</td>
                           <td>{sample.donorID}</td>
                           <td>{sample.samplename}</td>
                           <td>{sample.age}</td>
@@ -1411,34 +1058,23 @@ const SampleDispatchArea = () => {
                           <td>{sample.ethnicity}</td>
                           <td>{sample.samplecondition}</td>
                           <td>{sample.storagetemp}</td>
-                          <td>{sample.storagetempUnit}</td>
                           <td>{sample.ContainerType}</td>
                           <td>{sample.CountryOfCollection}</td>
-                          <td className="text-end">{sample.price}</td>
-                          <td>{sample.SamplePriceCurrency}</td>
                           <td>{sample.Quantity}</td>
                           <td>{sample.QuantityUnit}</td>
-                          <td>{sample.labname}</td>
                           <td>{sample.SampleTypeMatrix}</td>
-                          <td>{sample.TypeMatrixSubtype}</td>
-                          <td>{sample.ProcurementType}</td>
-                          <td>{sample.endTime}</td>
                           <td>{sample.SmokingStatus}</td>
-                          <td>{sample.TestMethod}</td>
-                          <td>{sample.TestResult}</td>
-                          <td>{sample.TestResultUnit}</td>
+                          <td>{sample.AlcoholOrDrugAbuse}</td>
                           <td>{sample.InfectiousDiseaseTesting}</td>
                           <td>{sample.InfectiousDiseaseResult}</td>
-                          <td>{sample.CutOffRange}</td>
-                          <td>{sample.CutOffRangeUnit}</td>
                           <td>{sample.FreezeThawCycles}</td>
                           <td>{sample.DateOfCollection}</td>
                           <td>{sample.ConcurrentMedicalConditions}</td>
                           <td>{sample.ConcurrentMedications}</td>
-                          <td>{sample.AlcoholOrDrugAbuse}</td>
                           <td>{sample.DiagnosisTestParameter}</td>
-                          <td>{sample.ResultRemarks}</td>
-                          <td>{sample.TestKit}</td>
+                          <td>{sample.TestResult}</td>
+                          <td>{sample.TestResultUnit}</td>
+                          <td>{sample.TestMethod}</td>
                           <td>{sample.TestKitManufacturer}</td>
                           <td>{sample.TestSystem}</td>
                           <td>{sample.TestSystemManufacturer}</td>

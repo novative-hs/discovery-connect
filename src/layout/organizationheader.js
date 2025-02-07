@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/router";
-import logo from "@assets/img/logo/faviconnn.png";
+import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import { Cart, Heart, Search, User } from "@svg/index";
 import useSticky from "@hooks/use-sticky";
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
@@ -108,14 +108,12 @@ const Header = ({ style_2 = false, setActiveTab }) => {
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
                   <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: "-30px" }}>
-                      <Link href="/">
+                  <div className="logo" style={{ marginLeft: "-60px", marginTop: "19px" }}>
                         <Image
                           src={logo}
                           alt="logo"
-                          style={{ width: "150px", height: "auto" }}
+                          style={{ width: "180px", height: "auto" }}
                         />
-                      </Link>
                     </div>
                   </div>
 

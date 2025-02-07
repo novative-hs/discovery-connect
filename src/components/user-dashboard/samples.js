@@ -11,7 +11,6 @@ const SampleArea = () => {
   const id = localStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
    const [formData, setFormData] = useState({
-     masterID: "",
      donorID: "",
      samplename: "",
      age: "",
@@ -19,38 +18,29 @@ const SampleArea = () => {
      ethnicity: "",
      samplecondition: "",
      storagetemp: "",
-     storagetempUnit: "",
      ContainerType: "",
      CountryOfCollection: "",
      price: "",
      SamplePriceCurrency: "",
      quantity: "",
      QuantityUnit: "",
-     labname: "",
      SampleTypeMatrix: "",
-     TypeMatrixSubtype: "",
-     ProcurementType: "",
      SmokingStatus: "",
-     TestMethod: "",
-     TestResult: "",
-     TestResultUnit: "",
+     AlcoholOrDrugAbuse: "",
      InfectiousDiseaseTesting: "",
      InfectiousDiseaseResult: "",
      status: "In Stock",
-     CutOffRange: "",
-     CutOffRangeUnit: "",
      FreezeThawCycles: "",
      DateOfCollection: "",
      ConcurrentMedicalConditions: "",
      ConcurrentMedications: "",
-     AlcoholOrDrugAbuse: "",
      DiagnosisTestParameter: "",
-     ResultRemarks: "",
-     TestKit: "",
+     TestResult: "",
+     TestResultUnit: "",
+     TestMethod: "",
      TestKitManufacturer: "",
      TestSystem: "",
      TestSystemManufacturer: "",
-     endTime: "",
      user_account_id: "",
    });
 const[quantity,setQuantity]=useState(0);
@@ -68,7 +58,6 @@ const[quantity,setQuantity]=useState(0);
     setFormData(prevData => {
       const newFormData = {
         ...prevData, // Preserve any existing data in formData
-        masterID: sample.masterID,
         donorID: sample.donorID,
         samplename: sample.samplename,
         age: sample.age,
@@ -76,38 +65,29 @@ const[quantity,setQuantity]=useState(0);
         ethnicity: sample.ethnicity,
         samplecondition: sample.samplecondition,
         storagetemp: sample.storagetemp,
-        storagetempUnit: sample.storagetempUnit,
         ContainerType: sample.ContainerType,
         CountryOfCollection: sample.CountryOfCollection,
         price: sample.price,
         SamplePriceCurrency: sample.SamplePriceCurrency,
         quantity: updatedQuantity, // Incremented quantity
         QuantityUnit: sample.QuantityUnit,
-        labname: sample.labname,
         SampleTypeMatrix: sample.SampleTypeMatrix,
-        TypeMatrixSubtype: sample.TypeMatrixSubtype,
-        ProcurementType: sample.ProcurementType,
         SmokingStatus: sample.SmokingStatus,
-        TestMethod: sample.TestMethod,
-        TestResult: sample.TestResult,
-        TestResultUnit: sample.TestResultUnit,
+        AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
         InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
         InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
         status: sample.status,
-        CutOffRange: sample.CutOffRange,
-        CutOffRangeUnit: sample.CutOffRangeUnit,
         FreezeThawCycles: sample.FreezeThawCycles,
         DateOfCollection: sample.DateOfCollection,
         ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
         ConcurrentMedications: sample.ConcurrentMedications,
-        AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
         DiagnosisTestParameter: sample.DiagnosisTestParameter,
-        ResultRemarks: sample.ResultRemarks,
-        TestKit: sample.TestKit,
+        TestResult: sample.TestResult,
+        TestResultUnit: sample.TestResultUnit,
+        TestMethod: sample.TestMethod,
         TestKitManufacturer: sample.TestKitManufacturer,
         TestSystem: sample.TestSystem,
         TestSystemManufacturer: sample.TestSystemManufacturer,
-        endTime: sample.endTime,
         user_account_id: id
       };
   
@@ -237,31 +217,6 @@ const[quantity,setQuantity]=useState(0);
                           }}
                         />
                         ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Master ID"
-                          onChange={(e) =>
-                            handleFilterChange("masterID", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Master ID
                       </th>
                       <th
                         className="px-3"
@@ -452,34 +407,6 @@ const[quantity,setQuantity]=useState(0);
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Storage Temp Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "storagetempUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Storage Temperature Unit
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Container Type"
                           onChange={(e) =>
                             handleFilterChange("ContainerType", e.target.value)
@@ -636,31 +563,6 @@ const[quantity,setQuantity]=useState(0);
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Lab Name"
-                          onChange={(e) =>
-                            handleFilterChange("labname", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Lab Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Sample Type Matrix"
                           onChange={(e) =>
                             handleFilterChange(
@@ -677,87 +579,6 @@ const[quantity,setQuantity]=useState(0);
                           }}
                         />
                         Sample Type Matrix
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Type Matrix Subtype"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TypeMatrixSubtype",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Type Matrix Subtype
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Procurement Type"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ProcurementType",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Procurement Type
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search End Time"
-                          onChange={(e) =>
-                            handleFilterChange("endTime", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        End Time
                       </th>
                       <th
                         className="px-3"
@@ -795,9 +616,12 @@ const[quantity,setQuantity]=useState(0);
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Test Method"
+                          placeholder="Search Alcohol Or Drug Abuse"
                           onChange={(e) =>
-                            handleFilterChange("TestMethod", e.target.value)
+                            handleFilterChange(
+                              "AlcoholOrDrugAbuse",
+                              e.target.value
+                            )
                           }
                           style={{
                             width: "80%",
@@ -807,57 +631,7 @@ const[quantity,setQuantity]=useState(0);
                             maxWidth: "180px",
                           }}
                         />
-                        Test Method
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result"
-                          onChange={(e) =>
-                            handleFilterChange("TestResult", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test Result
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result Unit"
-                          onChange={(e) =>
-                            handleFilterChange("TestResultUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test Result Unit
+                        Alcohol Or Drug Abuse
                       </th>
                       <th
                         className="px-3"
@@ -914,59 +688,6 @@ const[quantity,setQuantity]=useState(0);
                           }}
                         />
                         Infectious Disease Result
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range"
-                          onChange={(e) =>
-                            handleFilterChange("CutOffRange", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Cut Off Range
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Cut Off Range Unit"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CutOffRangeUnit",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Cut Off Range Unit
                       </th>
                       <th
                         className="px-3"
@@ -1091,34 +812,6 @@ const[quantity,setQuantity]=useState(0);
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Alcohol Or Drug Abuse"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "AlcoholOrDrugAbuse",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Alcohol Or Drug Abuse
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
                           placeholder="Search Diagnosis Test Parameter"
                           onChange={(e) =>
                             handleFilterChange(
@@ -1147,9 +840,9 @@ const[quantity,setQuantity]=useState(0);
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Result Remarks"
+                          placeholder="Search Test Result"
                           onChange={(e) =>
-                            handleFilterChange("ResultRemarks", e.target.value)
+                            handleFilterChange("TestResult", e.target.value)
                           }
                           style={{
                             width: "80%",
@@ -1159,7 +852,7 @@ const[quantity,setQuantity]=useState(0);
                             maxWidth: "180px",
                           }}
                         />
-                        Result Remarks
+                        Test Result
                       </th>
                       <th
                         className="px-3"
@@ -1172,9 +865,9 @@ const[quantity,setQuantity]=useState(0);
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Search Test Kit"
+                          placeholder="Search Test Result Unit"
                           onChange={(e) =>
-                            handleFilterChange("TestKit", e.target.value)
+                            handleFilterChange("TestResultUnit", e.target.value)
                           }
                           style={{
                             width: "80%",
@@ -1184,7 +877,32 @@ const[quantity,setQuantity]=useState(0);
                             maxWidth: "180px",
                           }}
                         />
-                        Test Kit
+                        Test Result Unit
+                      </th>
+                      <th
+                        className="px-3"
+                        style={{
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          width: "200px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search Test Method"
+                          onChange={(e) =>
+                            handleFilterChange("TestMethod", e.target.value)
+                          }
+                          style={{
+                            width: "80%",
+                            padding: "8px",
+                            boxSizing: "border-box",
+                            minWidth: "120px",
+                            maxWidth: "180px",
+                          }}
+                        />
+                        Test Method
                       </th>
                       <th
                         className="px-3"
@@ -1310,7 +1028,6 @@ const[quantity,setQuantity]=useState(0);
                       currentData.map((sample) => (
                         <tr key={sample.id}>
                           <td>{sample.id}</td>
-                          <td>{sample.masterID}</td>
                           <td>{sample.donorID}</td>
                           <td>{sample.samplename}</td>
                           <td>{sample.age}</td>
@@ -1318,34 +1035,25 @@ const[quantity,setQuantity]=useState(0);
                           <td>{sample.ethnicity}</td>
                           <td>{sample.samplecondition}</td>
                           <td>{sample.storagetemp}</td>
-                          <td>{sample.storagetempUnit}</td>
                           <td>{sample.ContainerType}</td>
                           <td>{sample.CountryOfCollection}</td>
                           <td>{sample.price}</td>
                           <td>{sample.SamplePriceCurrency}</td>
                           <td>{sample.quantity}</td>
                           <td>{sample.QuantityUnit}</td>
-                          <td>{sample.labname}</td>
                           <td>{sample.SampleTypeMatrix}</td>
-                          <td>{sample.TypeMatrixSubtype}</td>
-                          <td>{sample.ProcurementType}</td>
-                          <td>{sample.endTime}</td>
                           <td>{sample.SmokingStatus}</td>
-                          <td>{sample.TestMethod}</td>
-                          <td>{sample.TestResult}</td>
-                          <td>{sample.TestResultUnit}</td>
+                          <td>{sample.AlcoholOrDrugAbuse}</td>
                           <td>{sample.InfectiousDiseaseTesting}</td>
                           <td>{sample.InfectiousDiseaseResult}</td>
-                          <td>{sample.CutOffRange}</td>
-                          <td>{sample.CutOffRangeUnit}</td>
                           <td>{sample.FreezeThawCycles}</td>
                           <td>{sample.DateOfCollection}</td>
                           <td>{sample.ConcurrentMedicalConditions}</td>
                           <td>{sample.ConcurrentMedications}</td>
-                          <td>{sample.AlcoholOrDrugAbuse}</td>
                           <td>{sample.DiagnosisTestParameter}</td>
-                          <td>{sample.ResultRemarks}</td>
-                          <td>{sample.TestKit}</td>
+                          <td>{sample.TestResult}</td>
+                          <td>{sample.TestResultUnit}</td>
+                          <td>{sample.TestMethod}</td>
                           <td>{sample.TestKitManufacturer}</td>
                           <td>{sample.TestSystem}</td>
                           <td>{sample.TestSystemManufacturer}</td>

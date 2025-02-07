@@ -64,7 +64,7 @@ const schema = Yup.object().shape({
     then: Yup.string().required('HEC / PMDC Registration No is required!'),
   }),
   ntnNumber: Yup.string().when('accountType', {
-    is: ['Organization', 'CollectionSites'],
+    is: ['Organization'],
     then: Yup.string().required('NTN Number is required!'),
   }),
   // CollectionSites-specific fields (conditional validation)
@@ -182,7 +182,6 @@ const RegisterForm = () => {
     // Append CollectionSite-specific fields
     if (data.accountType === 'CollectionSites') {
       formData.append("CollectionSiteName", data.CollectionSiteName);
-      formData.append("ntnNumber", data.ntnNumber);
       formData.append("fullAddress", data.fullAddress);
       formData.append("city", data.city);
       formData.append("district", data.district);
@@ -292,7 +291,7 @@ const RegisterForm = () => {
               <option value="">Select Account Type</option>
               <option value="Researcher">Researcher</option>
               <option value="Organization">Organization</option>
-              <option value="CollectionSites">CollectionSites</option>
+              <option value="CollectionSites">Collection Site</option>
             </select>
             <span>
               <i className="fa-regular fa-user"></i>
@@ -663,23 +662,7 @@ const RegisterForm = () => {
               </div>
               <ErrorMessage message={errors.logo?.message} />
             </div>
-            {/* Common CollectionSites and Organization */}
-            <div className="login__input-item">
-              <div className="login__input">
-                <input
-                  {...register("ntnNumber")}
-                  name="ntnNumber"
-                  type="text"
-                  placeholder="NTN Number"
-                  id="ntnNumber"
-                />
-                <span>
-                  <i className="fa-solid fa-id-card"></i>
-                </span>
-              </div>
-              <ErrorMessage message={errors.ntnNumber?.message} />
-            </div>
-
+            {/* CollectionSites */}
             <div className="login__input-item">
               <div className="login__input">
                 <input

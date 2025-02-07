@@ -74,27 +74,17 @@ const getAllCollectionSiteNames = (req, res) => {
     }
 
     // Combine data into a single response
-    const collectionSites = results.collectionSites.map(row => ({
+    const collectionSites = results.map(row => ({
       CollectionSiteName: row.CollectionSiteName,
       user_account_id: row.user_account_id,
     }));
-
-    const biobank = results.biobank.map(row => ({
-      Name: row.Name,
-      user_account_id: row.user_account_id,
-    }));
-
-    // Final response
-    res.status(200).json({
-      data: [...collectionSites, ...biobank], // Merge both datasets
+    res.status(200).json({ data: collectionSites });
     });
-  });
 };
-
 
 const updateCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
-  const { useraccount_email, type, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid } = req.body;
+  const { useraccount_email, type, CollectionSiteName, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
   const file = req.file;
 
   if (!file) {
@@ -107,7 +97,6 @@ const updateCollectionSiteDetail = (req, res) => {
     CollectionSiteName,
     phoneNumber,
     type,
-    ntnNumber,
     fullAddress,
     cityid,
     districtid,

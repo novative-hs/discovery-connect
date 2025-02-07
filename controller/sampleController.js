@@ -56,16 +56,7 @@ const createSample = (req, res) => {
 
   // Required fields validation
   const requiredFields = [
-    'masterID', 'donorID', 'samplename', 'age', 'gender', 'ethnicity',
-    'samplecondition', 'storagetemp', 'storagetempUnit', 'ContainerType',
-    'CountryOfCollection', 'price', 'SamplePriceCurrency', 'quantity',
-    'QuantityUnit', 'labname', 'SampleTypeMatrix', 'TypeMatrixSubtype',
-    'ProcurementType', 'SmokingStatus', 'TestMethod',
-    'TestResult', 'TestResultUnit', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult',
-    'CutOffRange', 'CutOffRangeUnit', 'FreezeThawCycles', 'DateOfCollection',
-    'ConcurrentMedicalConditions', 'ConcurrentMedications', 'AlcoholOrDrugAbuse',
-    'DiagnosisTestParameter', 'ResultRemarks', 'TestKit', 'TestKitManufacturer',
-    'TestSystem', 'TestSystemManufacturer', 'endTime'
+    'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer'
   ];
 
   for (const field of requiredFields) {
@@ -80,12 +71,6 @@ const createSample = (req, res) => {
 
   if (dateOfCollection >= today) {
     return res.status(400).json({ error: "DateOfCollection must be before today" });
-  }
-
-  // endTime will show data only after today
-  const endTime = new Date(sampleData.endTime);
-  if (endTime <= today) {
-    return res.status(400).json({ error: "endTime must be after today" });
   }
 
   console.log("Fields validated, executing insert...");
@@ -105,11 +90,6 @@ const updateSample = (req, res) => {
   const { id } = req.params;
   const sampleData = req.body;
 
-  // Format endTime if provided
-  if (sampleData.endTime) {
-    sampleData.endTime = moment(sampleData.endTime).format('YYYY-MM-DD');
-
-  }
   if (sampleData.DateOfCollection) {
     sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
   }

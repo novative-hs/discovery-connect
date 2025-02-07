@@ -4,48 +4,39 @@ const mysqlConnection = require("../config/db");
 const createSampleTable = () => {
   const sampleTable = `
     CREATE TABLE IF NOT EXISTS sample (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        masterID VARCHAR(50),
+        id BIGINT PRIMARY KEY,
         donorID VARCHAR(50),
+        masterID BIGINT,
+        user_account_id INT,
         samplename VARCHAR(100),
         age INT,
         gender VARCHAR(10),
         ethnicity VARCHAR(50),
         samplecondition VARCHAR(100),
         storagetemp VARCHAR(255),
-        storagetempUnit VARCHAR(255),
         ContainerType VARCHAR(50),
         CountryOfCollection VARCHAR(50),
         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
         QuantityUnit VARCHAR(20),
-        labname VARCHAR(100),
         SampleTypeMatrix VARCHAR(100),
-        TypeMatrixSubtype VARCHAR(100),
-        ProcurementType VARCHAR(50),
         SmokingStatus VARCHAR(50),
-        TestMethod VARCHAR(100),
-        TestResult VARCHAR(100),
-        TestResultUnit VARCHAR(20),
+        AlcoholOrDrugAbuse VARCHAR(50),
         InfectiousDiseaseTesting VARCHAR(100),
         InfectiousDiseaseResult VARCHAR(100),
-        CutOffRange VARCHAR(50), 
-        CutOffRangeUnit VARCHAR(50), 
         FreezeThawCycles VARCHAR(50), 
         DateOfCollection VARCHAR(50),
         ConcurrentMedicalConditions VARCHAR(50), 
-        ConcurrentMedications VARCHAR(50), 
-        AlcoholOrDrugAbuse VARCHAR(50),
-        DiagnosisTestParameter VARCHAR(50), 
-        ResultRemarks VARCHAR(50), 
-        TestKit VARCHAR(50),
+        ConcurrentMedications VARCHAR(50),
+        DiagnosisTestParameter VARCHAR(50),
+        TestResult VARCHAR(100),
+        TestResultUnit VARCHAR(20),
+        TestMethod VARCHAR(100),
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        endTime VARCHAR(50),
         status VARCHAR(20) DEFAULT 'In Stock',
-        user_account_id INT,
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE,
@@ -104,75 +95,56 @@ const getSampleById = (id, callback) => {
   });
 };
 
-// Function to create a new sample
+// Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
   console.log("Inserting data into database:", data);
   console.log(data);
+
+  // Generate ID using formula
+  const id = parseInt(data.donorID) + parseInt(data.user_account_id);
+  const masterID = id - 2; 
+
   const query = `
     INSERT INTO sample (
-      masterID, donorID, samplename, age, gender, ethnicity, samplecondition,
-      storagetemp, storagetempUnit, ContainerType, CountryOfCollection,
-      price, SamplePriceCurrency, quantity, QuantityUnit, labname,
-      SampleTypeMatrix, TypeMatrixSubtype, ProcurementType,
-      SmokingStatus, TestMethod, TestResult, TestResultUnit,
-      InfectiousDiseaseTesting, InfectiousDiseaseResult, 
-      CutOffRange, CutOffRangeUnit, FreezeThawCycles, DateOfCollection,
-      ConcurrentMedicalConditions, ConcurrentMedications, AlcoholOrDrugAbuse,
-      DiagnosisTestParameter, ResultRemarks, TestKit, TestKitManufacturer,
-      TestSystem, TestSystemManufacturer, endTime, status, user_account_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      id, donorID, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     mysqlConnection.query(query, [
-      data.masterID, data.donorID, data.samplename, data.age, data.gender, data.ethnicity,
-      data.samplecondition, data.storagetemp, data.storagetempUnit, data.ContainerType,
-      data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit,
-      data.labname, data.SampleTypeMatrix, data.TypeMatrixSubtype, data.ProcurementType,
-      data.SmokingStatus, data.TestMethod, data.TestResult, data.TestResultUnit,
-      data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.CutOffRange, data.CutOffRangeUnit,
-      data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
-      data.ConcurrentMedications, data.AlcoholOrDrugAbuse, data.DiagnosisTestParameter, data.ResultRemarks,
-      data.TestKit, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.endTime,  'In Stock', data.user_account_id
+      id, data.donorID, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock'
     ], (err, results) => {
+    if (err) {
+      console.error('Error in MySQL query:', err);
+      return callback(err, null);
+    }
+
+    console.log('Insert result:', results);
+
+    // Now update masterID
+    const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
+    mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
       if (err) {
-        console.error('Error in MySQL query:', err);  // Log the MySQL query error
-        callback(err, null);
-      } else {
-        console.log('Insert result:', results);  // Log the results of the query
-        callback(null, results);
+        console.error('Error updating masterID:', err);
+        return callback(err, null);
       }
+      console.log('Sample inserted successfully with masterID:', masterID);
+      callback(null, { insertId: id, masterID: masterID });
     });
-  };
+  });
+};
 
-
-
-// Function to update a sample by its ID
+// Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
   console.log(data.status);
   const query = `
     UPDATE sample
-    SET masterID = ?, donorID = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, storagetempUnit = ?, ContainerType = ?, CountryOfCollection = ?, price = ?,
-        SamplePriceCurrency = ?, quantity = ?, QuantityUnit = ?, labname = ?, SampleTypeMatrix = ?,
-        TypeMatrixSubtype = ?, ProcurementType = ?, SmokingStatus = ?, TestMethod = ?,
-        TestResult = ?, TestResultUnit = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?,
-        CutOffRange = ?, CutOffRangeUnit = ?, FreezeThawCycles = ?, DateOfCollection = ?,
-        ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, AlcoholOrDrugAbuse = ?,
-        DiagnosisTestParameter = ?, ResultRemarks = ?, TestKit = ?, TestKitManufacturer = ?,
-        TestSystem = ?, TestSystemManufacturer=?, endTime = ?, status = ?
+    SET donorID = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer=?, status = ?
     WHERE id = ?`;
 
   const values = [
-    data.masterID, data.donorID, data.samplename, data.age, data.gender,
-    data.ethnicity, data.samplecondition, data.storagetemp, data.storagetempUnit,
-    data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
-    data.quantity, data.QuantityUnit, data.labname, data.SampleTypeMatrix,
-    data.TypeMatrixSubtype, data.ProcurementType, data.SmokingStatus,
-    data.TestMethod, data.TestResult, data.TestResultUnit, data.InfectiousDiseaseTesting,
-    data.InfectiousDiseaseResult, data.CutOffRange, data.CutOffRangeUnit,
-    data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
-    data.ConcurrentMedications, data.AlcoholOrDrugAbuse, data.DiagnosisTestParameter,
-    data.ResultRemarks, data.TestKit, data.TestKitManufacturer, data.TestSystem,data.TestSystemManufacturer, data.endTime,
-    data.status, id
+    data.donorID, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting,
+    data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
+    data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem,data.TestSystemManufacturer, data.status, id
   ];
 
   mysqlConnection.query(query, values, (err, result) => {

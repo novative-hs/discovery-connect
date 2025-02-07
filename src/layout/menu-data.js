@@ -11,7 +11,7 @@ const menu_data = [
   // },
   {
     id: 3,
-    title: 'Shop',
+    title: 'Discover',
     link: '/shop'
   },
   {

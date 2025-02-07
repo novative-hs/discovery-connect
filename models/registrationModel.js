@@ -88,7 +88,6 @@ const create_collectionsiteTable = () => {
       user_account_id INT,
       type VARCHAR(50),
       CollectionSiteName VARCHAR(100),
-      ntnNumber VARCHAR(50),
       fullAddress TEXT,
       city INT,
       district INT,
@@ -386,7 +385,6 @@ const updateAccount = (req, callback) => {
                 UPDATE collectionsite SET 
                   CollectionSiteName = ?, 
                   phoneNumber = ?, 
-                  ntnNumber = ?, 
                   fullAddress = ?, 
                   city = ?, 
                   district = ?, 
@@ -397,7 +395,6 @@ const updateAccount = (req, callback) => {
                 values = [
                   CollectionSiteName,
                   phoneNumber,
-                  ntnNumber,
                   fullAddress,
                   city,
                   district,
@@ -545,12 +542,11 @@ const createAccount = (req, callback) => {
             break;
 
           case 'CollectionSites':
-            query = 'INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, ntnNumber, fullAddress, city, district, country, logo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            query = 'INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
             values = [
               userAccountId,
               CollectionSiteName,
               phoneNumber,
-              ntnNumber,
               fullAddress,
               city,
               district,

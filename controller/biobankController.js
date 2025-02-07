@@ -1,5 +1,4 @@
 const BioBankModel = require('../models/biobankModel');
-
 const moment = require('moment');
 
 // Controller to create a sample
@@ -17,7 +16,65 @@ const getBiobankSamples = (req, res) => {
   });
 };
 
+// Controller to create a sample
+const createBiobankSample = (req, res) => {
+  const sampleData = req.body;
+  console.log("Controller Received data:", sampleData);
+
+  // Required fields validation
+  const requiredFields = [
+    'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'price', 'SamplePriceCurrency', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer'
+  ];
+
+  for (const field of requiredFields) {
+    if (!sampleData[field]) {
+      return res.status(400).json({ error: `Field "${field}" is required` });
+    }
+  }
+
+  // DateOfCollection will show data only before today
+  const today = new Date();
+  const dateOfCollection = new Date(sampleData.DateOfCollection);
+
+  if (dateOfCollection >= today) {
+    return res.status(400).json({ error: "DateOfCollection must be before today" });
+  }
+
+  console.log("Fields validated, executing insert...");
+
+  BioBankModel.createBiobankSample(sampleData, (err, result) => {
+    if (err) {
+      console.error('Error creating sample:', err);
+      return res.status(500).json({ error: "Error creating sample" });
+    }
+    console.log("Sample created, result:", result);
+    res.status(201).json({ message: "Sample created successfully", id: result.insertId });
+  });
+};
+
+// Controller to update a sample
+const updateBiobankSample = (req, res) => {
+  const { id } = req.params;
+  const sampleData = req.body;
+
+  if (sampleData.DateOfCollection) {
+    sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
+  }
+
+  BioBankModel.updateBiobankSample(id, sampleData, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Error updating sample" });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Sample not found" });
+    }
+    res.status(200).json({ message: "Sample updated successfully" });
+  });
+};
+
 module.exports = {
   getBiobankSamples,
+  createBiobankSample,
+  updateBiobankSample
   
 };

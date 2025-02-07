@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "@assets/img/logo/faviconnn.png";
+import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import SocialLinks from "@components/social";
 import useSticky from "@hooks/use-sticky";
 
@@ -35,9 +35,7 @@ const Footer = () => {
           <div className="row gy-4 gy-lg-0 justify-content-xl-between">
             <div className="col-12 col-md-4 col-lg-3 col-xl-2">
               <div className="widget">
-                <Link href="/">
-                  <Image src={logo} alt="Discovery Connect Logo" width="120" height="120" />
-                </Link>
+                  <Image src={logo} alt="Discovery Connect Logo" width="160" height="100" />
               </div>
             </div>
             <div className="col-12 col-md-4 col-lg-3 col-xl-2">
