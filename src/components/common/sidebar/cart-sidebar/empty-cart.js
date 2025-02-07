@@ -14,7 +14,7 @@ const EmptyCart = ({ search_prd = false }) => {
       {!search_prd && (
           <button
           onClick={() =>
-            router.push("/organization-dashboard")}
+            router.push("/dashboardheader")}
           type="button"
           className="tp-btn mb-10 w-100"
         >

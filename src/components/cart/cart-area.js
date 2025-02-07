@@ -4,7 +4,7 @@ import axios from "axios";
 import SingleCartItem from "./single-cart";
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
 import SampleArea from "@components/user-dashboard/samples";
-import Header from "@layout/organizationheader";
+import Header from "@layout/dashboardheader";
 import { notifySuccess, notifyError } from "@utils/toast";
 import { useRouter } from "next/router";
 const CartArea = () => {

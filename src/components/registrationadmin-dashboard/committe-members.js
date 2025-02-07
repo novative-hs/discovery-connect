@@ -19,29 +19,29 @@ const CommitteeMemberArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCommitteememberId, setSelectedCommitteememberId] =
     useState(null); // Store ID of Committee Members to delete
-    const [formData, setFormData] = useState({
-      CommitteeMemberName: "",
-      email: "",
-      password:"",
-      phoneNumber: "",
-      cnic: "",
-      fullAddress: "",
-      city: "",
-      district: "",
-      country: "",
-      organization: "",
-      committeetype: "",
-      created_at: "",
-      status: "",
-    });
- 
+  const [formData, setFormData] = useState({
+    CommitteeMemberName: "",
+    email: "",
+    password: "",
+    phoneNumber: "",
+    cnic: "",
+    fullAddress: "",
+    city: "",
+    district: "",
+    country: "",
+    organization: "",
+    committeetype: "",
+    created_at: "",
+    status: "",
+  });
+
   const [editCommitteemember, setEditCommitteemember] = useState(null); // State for selected Committee Members to edit
   const [committeemembers, setCommitteemembers] = useState([]); // State to hold fetched Committee Members
   const [successMessage, setSuccessMessage] = useState("");
-   const [cityname, setcityname] = useState([]);
-    const [districtname, setdistrictname] = useState([]);
-    const [countryname, setCountryname] = useState([]);
-    const [organization, setOrganization] = useState();
+  const [cityname, setcityname] = useState([]);
+  const [districtname, setdistrictname] = useState([]);
+  const [countryname, setCountryname] = useState([]);
+  const [organization, setOrganization] = useState();
   const [formStep, setFormStep] = useState(1);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,12 +49,10 @@ const CommitteeMemberArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(committeemembers.length / itemsPerPage);
 
-const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
-
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch Committee Members from backend when component loads
   useEffect(() => {
-
     fetchCommitteemembers(); // Call the function when the component mounts
     fetchcityname();
     fetchdistrictname();
@@ -63,9 +61,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   }, []);
   const fetchCommitteemembers = async () => {
     try {
-      const response = await axios.get(
-        `${url}/committeemember/get`
-      );
+      const response = await axios.get(`${url}/committeemember/get`);
       setCommitteemembers(response.data); // Store fetched Committee Members in state
     } catch (error) {
       console.error("Error fetching Committee Members:", error);
@@ -73,9 +69,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   };
   const fetchOrganization = async () => {
     try {
-      const response = await axios.get(
-        `${url}/admin/organization/get`
-      );
+      const response = await axios.get(`${url}/admin/organization/get`);
       setOrganization(response.data); // Store fetched researchers in state
     } catch (error) {
       console.error("Error fetching researchers:", error);
@@ -83,9 +77,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   };
   const fetchcityname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/city/get-city`
-      );
+      const response = await axios.get(`${url}/city/get-city`);
       setcityname(response.data); // Store fetched City in state
     } catch (error) {
       console.error("Error fetching City:", error);
@@ -93,9 +85,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   };
   const fetchdistrictname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/district/get-district`
-      );
+      const response = await axios.get(`${url}/district/get-district`);
       setdistrictname(response.data); // Store fetched District in state
     } catch (error) {
       console.error("Error fetching District:", error);
@@ -112,9 +102,35 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
       console.error("Error fetching Country:", error);
     }
   };
+  const sendApprovalEmail = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/user/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            name: formData.CommitteeMemberName,
+            status: formData.status,
+          }),
+        }
+      );
 
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Email sent successfully:", data.message);
+      } else {
+        console.error("Error sending email:", data.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
   const handleInputChange = (e) => {
-    console.log(organization)
+    console.log(organization);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -131,35 +147,21 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
         formData
       );
       console.log("Committee Member added successfully:", response.data);
-
+      sendApprovalEmail();
       // Refresh the committeemember list after successful submission
-      const newResponse = await axios.get(
-        `${url}/committeemember/get`
-      );
+      const newResponse = await axios.get(`${url}/committeemember/get`);
       setCommitteemembers(newResponse.data); // Update state with the new list
 
-      // Clear form after submission
-      setFormData({
-        CommitteeMemberName: "",
-        email: "",
-        password:"",
-        phoneNumber: "",
-        cnic: "",
-        fullAddress: "",
-        city: "",
-        district: "",
-        country: "",
-        organization: "",
-        committeetype: "",
-        created_at: "",
-        status: "",
-      });
+      setSuccessMessage("Researcher updated successfully.");
+      resetFormData();
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding Committee Member:", error);
     }
   };
-
 
   const handleDelete = async () => {
     try {
@@ -180,9 +182,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
       }, 3000);
 
       // Refresh the committeemember list after deletion
-      const newResponse = await axios.get(
-        `${url}/committeemember/get`
-      );
+      const newResponse = await axios.get(`${url}/committeemember/get`);
       setCommitteemembers(newResponse.data);
 
       // Close modal after deletion
@@ -195,15 +195,15 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
       );
     }
   };
- 
+
   const handleEditClick = (committeemember) => {
     setSelectedCommitteememberId(committeemember.id);
     setEditCommitteemember(committeemember); // Store the Committee Members data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
       CommitteeMemberName: committeemember.CommitteeMemberName,
-      email: committeemember.email,  
-      password:committeemember.password,    
+      email: committeemember.email,
+      password: committeemember.password,
       phoneNumber: committeemember.phoneNumber,
       cnic: committeemember.cnic,
       fullAddress: committeemember.fullAddress,
@@ -217,7 +217,6 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
     });
   };
 
-
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -228,17 +227,16 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
       );
       console.log("Committeemember updated successfully:", response.data);
 
-      const newResponse = await axios.get(
-        `${url}/committeemember/get`
-      );
+      const newResponse = await axios.get(`${url}/committeemember/get`);
       setCommitteemembers(newResponse.data);
-
+      sendApprovalEmail();
       setShowEditModal(false);
       setSuccessMessage("Committeemember updated successfully.");
+
       setFormData({
         CommitteeMemberName: "",
         email: "",
-        password:"",
+        password: "",
         phoneNumber: "",
         cnic: "",
         fullAddress: "",
@@ -300,14 +298,30 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
     }
   };
 
-
   const handleToggleCommitteeTypeOptions = (committeememberId) => {
     setShowCommitteeTypeOptions((prev) => ({
       ...prev,
       [committeememberId]: !prev[committeememberId],
     }));
   };
-
+  const resetFormData = () => {
+    setFormData({
+      CommitteeMemberName: "",
+      email: "",
+      password: "",
+      phoneNumber: "",
+      cnic: "",
+      fullAddress: "",
+      city: "",
+      district: "",
+      country: "",
+      organization: "",
+      committeetype: "",
+      created_at: "",
+      status: "",
+    });
+    setFormStep(1);
+  };
   const handleStatusClick = async (committeememberId, option) => {
     try {
       const response = await axios.put(
@@ -337,7 +351,6 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
     }
   };
 
-
   const handleToggleStatusOptions = (committeememberId) => {
     setStatusOptionsVisibility((prev) => ({
       ...prev,
@@ -348,10 +361,14 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
     console.log("Current formData:", formData); // Debugging
 
     if (
-      !formData.CommitteeMemberName || formData.CommitteeMemberName.trim() === '' ||
-      !formData.email || formData.email.trim() === '' ||
-      !formData.password || formData.password.trim() === '' ||
-      !formData.phoneNumber || formData.phoneNumber.trim() === ''
+      !formData.CommitteeMemberName ||
+      formData.CommitteeMemberName.trim() === "" ||
+      !formData.email ||
+      formData.email.trim() === "" ||
+      !formData.password ||
+      formData.password.trim() === "" ||
+      !formData.phoneNumber ||
+      formData.phoneNumber.trim() === ""
     ) {
       console.log("Validation failed."); // Debugging
       alert("Please fill out all fields");
@@ -370,7 +387,6 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
     if (value === "") {
@@ -387,417 +403,134 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
     }
   };
 
-      useEffect(() => {
-        if (showDeleteModal || showAddModal || showEditModal) {
-          // Prevent background scroll when modal is open
-          document.body.style.overflow = "hidden";
-          document.body.classList.add("modal-open");
-        } else {
-          // Allow scrolling again when modal is closed
-          document.body.style.overflow = "auto";
-          document.body.classList.remove("modal-open");
-        }
-      }, [showDeleteModal, showAddModal, showEditModal]);
-      
+  useEffect(() => {
+    if (showDeleteModal || showAddModal || showEditModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showDeleteModal, showAddModal, showEditModal]);
 
   return (
-    <section className="policy__area pb-120">
-       <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
-      >
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
-                </div>
-              )}
-              {/* Add Committee Members Button */}
-              <div
-                className="d-flex justify-content-end mb-3"
-                style={{
-                  marginBottom: "20px", // Adjust spacing between button and table
-                 
-                }}
-              >
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add committee members
-                </button>
-              </div>
+    <section className="policy__area pb-120 overflow-hidden">
+      <div className="container-fluid mt-n5">
+        <div className="row justify-content-center mt-5">
+          <div className="col-12 col-md-10">
+            <div className="policy__wrapper policy__translate position-relative mt-5">
+              {/* {Button} */}
+              <div className="d-flex flex-column w-100">
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    className="alert alert-success w-100 text-start mb-2"
+                    role="alert"
+                  >
+                    {successMessage}
+                  </div>
+                )}
 
+                {/* Button Container */}
+                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+                  {/* Add Committee Member*/}
+
+                  <button
+                    className="btn btn-primary mb-2"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Add Committee Member
+                  </button>
+                </div>
+              </div>
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Name"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CommitteeMemberName",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Email"
-                          onChange={(e) =>
-                            handleFilterChange("email", e.target.value)
-                          }
-                        />
-                        Email
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search password"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "password",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Password
-                      </th>
-                     
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Contact"
-                          onChange={(e) =>
-                            handleFilterChange("phoneNumber", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Contact
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search CNIC"
-                          onChange={(e) =>
-                            handleFilterChange("cnic", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        CNIC
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Full Address"
-                          onChange={(e) =>
-                            handleFilterChange("fullAddress", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Full Address
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search City"
-                          onChange={(e) =>
-                            handleFilterChange("city", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        City
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search District"
-                          onChange={(e) =>
-                            handleFilterChange("district", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        District
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Country"
-                          onChange={(e) =>
-                            handleFilterChange("country", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Country
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Organization"
-                          onChange={(e) =>
-                            handleFilterChange("organization", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Organization
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Committee Type"
-                          onChange={(e) =>
-                            handleFilterChange("committeetype", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Committee Type
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Created At"
-                          onChange={(e) =>
-                            handleFilterChange("created_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Registered_at
-                      </th>
-
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Status
-                      </th>
-                      <th>Action</th>
+                    <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "Name",
+                          placeholder: "Search Name",
+                          field: "CommitteeMemberName",
+                        },
+                        {
+                          label: "Email",
+                          placeholder: "Search Email",
+                          field: "email",
+                        },
+                        {
+                          label: "Password",
+                          placeholder: "Search Password",
+                          field: "password",
+                        },
+                        {
+                          label: "Contact",
+                          placeholder: "Search Contact",
+                          field: "phoneNumber",
+                        },
+                        {
+                          label: "CNIC",
+                          placeholder: "Search CNIC",
+                          field: "cnic",
+                        },
+                        {
+                          label: "Full Address",
+                          placeholder: "Search full Address",
+                          field: "fullAddress",
+                        },
+                        {
+                          label: "City",
+                          placeholder: "Search City",
+                          field: "city",
+                        },
+                        {
+                          label: "District",
+                          placeholder: "Search District",
+                          field: "district",
+                        },
+                        {
+                          label: "Country",
+                          placeholder: "Search Country",
+                          field: "country",
+                        },
+                        {
+                          label: "Organization",
+                          placeholder: "Search Organization",
+                          field: "organization",
+                        },
+                        {
+                          label: "Committee Type",
+                          placeholder: "Search Committee Type",
+                          field: "committeetype",
+                        },
+                        {
+                          label: "Registered_at",
+                          placeholder: "Search Created_at",
+                          field: "created_at",
+                        },
+                        {
+                          label: "Status",
+                          placeholder: "Search Status",
+                          field: "status",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th key={field} className="px-4">
+                          <input
+                            type="text"
+                            className="form-control w-100 px-4 py-1 mx-auto"
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                          />
+                          {label}
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -819,17 +552,11 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                           <td>{formatDate(committeemember.created_at)}</td>
                           <td>{committeemember.status}</td>
                           <td>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
+                            <div className="d-flex justify-content-around gap-2">
                               <button
                                 className="btn btn-success btn-sm py-0 px-1"
                                 onClick={() => handleEditClick(committeemember)}
-                                title="Edit Committee Member" // This is the text that will appear on hover
+                                title="Edit Committee Member"
                               >
                                 <FontAwesomeIcon icon={faEdit} size="xs" />
                               </button>{" "}
@@ -958,388 +685,156 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
               </div>
 
               {/* Pagination */}
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${
-                          currentPage === pageNumber
-                            ? "btn-primary"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
+              <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
                       >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
+                          }`}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
                       >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
+              {/* Modal for Adding/Editing Committee members */}
 
-
-              {/* Modal for Adding Committee members */}
-              {showAddModal && (
-          <>
-              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-{/* Modal Content */}
-<div
-  className="modal show d-block"
-  tabIndex="-1"
-  role="dialog"
-  style={{
-    zIndex: 1050, 
-    position: "fixed",
-    top: "120px",
-    left: "50%",
-    transform: "translateX(-50%)",
-  }}
->
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Committee Member</h5>
-                        <button
-                          type="button"
-                          // className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Form Step Logic */}
-                          {formStep === 1 ? (
-                            <>
-                              {/* Step 1: Basic Information */}
-                              <div className="form-group">
-                                <label>Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CommitteeMemberName"
-                                  value={formData.CommitteeMemberName}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Email</label>
-                                <input
-                                  type="email"
-                                  className="form-control"
-                                  name="email"
-                                  value={formData.email}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Password</label>
-                                <input
-                                  type="password"
-                                  className="form-control"
-                                  name="password"
-                                  value={formData.password}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                             
-                              <div className="form-group">
-                                <label>Phone Number</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="modal-footer">
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  onClick={handleNextStep}
-                                >
-                                  Next
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {/* Step 2: Additional Information */}
-                              <div className="form-group">
-                                <label>CNIC</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="cnic"
-                                  value={formData.cnic}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Full Address</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="fullAddress"
-                                  value={formData.fullAddress}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                            <label>City</label>
-                            <select
-                              className="form-control"
-                              name="city"
-                              value={formData.city} // Store the selected city ID in formData
-                              onChange={handleInputChange} // Handle change to update formData
-                              required
-                            >
-                              <option value="" disabled>
-                                Select City
-                              </option>{" "}
-                              {/* Default option */}
-                              {cityname.map((city) => (
-                                <option key={city.id} value={city.id}>
-                                  {city.name} {/* Display the city name */}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>District</label>
-                            <select
-                              className="form-control"
-                              name="district"
-                              value={formData.district}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>
-                                Select District
-                              </option>
-                              {districtname.map((district) => (
-                                <option key={district.id} value={district.id}>
-                                  {district.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Country</label>
-                            <select
-                              className="form-control"
-                              name="country"
-                              value={formData.country}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>
-                                Select Country
-                              </option>
-                              {countryname.map((country) => (
-                                <option key={country.id} value={country.id}>
-                                  {country.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Organization</label>
-                            <select
-                              className="form-control"
-                              name="organization"
-                              value={formData.organization}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>
-                                Select Organization
-                              </option>
-                              {organization.map((organization) => (
-                                <option key={organization.id} value={organization.id}>
-                                  {organization.OrganizationName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                            </>
-                          )}
-                        </div>
-                        <div className="modal-footer">
-                          {formStep === 2 && (
-                            <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={() => setFormStep(1)}
-                            >
-                              Back
-                            </button>
-                          )}
-                          {formStep === 2 ? (
-                            <button type="submit" className="btn btn-primary">
-                              Save
-                            </button>
-                          ) : null}
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
-
-              {/* Edit Committemember Modal */}
-              {showEditModal && (
+              {(showAddModal || showEditModal) && (
                 <>
-         <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
-    {/* Modal Content */}
-    <div
-      className="modal show d-block"
-      tabIndex="-1"
-      role="dialog"
-      style={{
-        zIndex: 1050, 
-        position: "fixed",
-        top: "120px",
-        left: "50%",
-        transform: "translateX(-50%)",
-      }}
-    >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Committee Member</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">
+                            {showAddModal ? "Add District" : "Edit District"}
+                          </h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                              resetFormData();
+                            }}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate}
                         >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {formStep === 1 ? (
-                            <>
-                              {/* Step 1: Basic Information */}
-                              <div className="form-group">
-                                <label>Committee Member Name</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="CommitteeMemberName"
-                                  value={formData.CommitteeMemberName}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Email</label>
-                                <input
-                                  type="email"
-                                  className="form-control"
-                                  name="email"
-                                  value={formData.email}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Password</label>
-                                <input
-                                  type="password"
-                                  className="form-control"
-                                  name="password"
-                                  value={formData.password}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Phone Number</label>
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            {formStep === 1 ? (
+                              <>
+                                {/* Step 1: Basic Information */}
+                                <div className="form-group">
+                                  <label>Name</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="CommitteeMemberName"
+                                    value={formData.CommitteeMemberName}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Email</label>
+                                  <input
+                                    type="email"
+                                    className="form-control"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Password</label>
+                                  <input
+                                    type="password"
+                                    className="form-control"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -1347,209 +842,216 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
                                   value={formData.phoneNumber}
                                   onChange={handleInputChange}
                                   required
+                                  pattern="^\d{11}$"
+                                  title="Phone number must be exactly 11 digits"
                                 />
-                              </div>
-                              <div className="modal-footer">
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  onClick={handleNextStep}
-                                >
-                                  Next
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {/* Step 2: Additional Information */}
-                             
-                              <div className="form-group">
-                                <label>CNIC</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="cnic"
-                                  value={formData.cnic}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Full Address</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="fullAddress"
-                                  value={formData.fullAddress}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group">
-                            <label>City</label>
-                            <select
-                              className="form-control"
-                              name="city"
-                              value={formData.city} // Store the selected city ID in formData
-                              onChange={handleInputChange} // Handle change to update formData
-                              required
-                            >
-                              <option value="" disabled>
-                                Select City
-                              </option>{" "}
-                              {/* Default option */}
-                              {cityname.map((city) => (
-                                <option key={city.id} value={city.id}>
-                                  {city.name} {/* Display the city name */}
-                                </option>
-                              ))}
-                            </select>
+                              </>
+                            ) : (
+                              <>
+                                {/* Step 2: Additional Information */}
+                                <div className="form-group">
+                                  <label>CNIC</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="cnic"
+                                    value={formData.cnic}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Full Address</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="fullAddress"
+                                    value={formData.fullAddress}
+                                    onChange={handleInputChange}
+                                    required
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>City</label>
+                                  <select
+                                    className="form-control"
+                                    name="city"
+                                    value={formData.city} // Store the selected city ID in formData
+                                    onChange={handleInputChange} // Handle change to update formData
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select City
+                                    </option>
+                                    {cityname.map((city) => (
+                                      <option key={city.id} value={city.id}>
+                                        {city.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>District</label>
+                                  <select
+                                    className="form-control"
+                                    name="district"
+                                    value={formData.district}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select District
+                                    </option>
+                                    {districtname.map((district) => (
+                                      <option
+                                        key={district.id}
+                                        value={district.id}
+                                      >
+                                        {district.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>Country</label>
+                                  <select
+                                    className="form-control"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select Country
+                                    </option>
+                                    {countryname.map((country) => (
+                                      <option
+                                        key={country.id}
+                                        value={country.id}
+                                      >
+                                        {country.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>Organization</label>
+                                  <select
+                                    className="form-control"
+                                    name="organization"
+                                    value={formData.organization}
+                                    onChange={handleInputChange}
+                                    required
+                                  >
+                                    <option value="" disabled>
+                                      Select Organization
+                                    </option>
+                                    {organization.map((organization) => (
+                                      <option
+                                        key={organization.id}
+                                        value={organization.id}
+                                      >
+                                        {organization.OrganizationName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </>
+                            )}
                           </div>
-                          <div className="form-group">
-                            <label>District</label>
-                            <select
-                              className="form-control"
-                              name="district"
-                              value={formData.district}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>
-                                Select District
-                              </option>
-                              {districtname.map((district) => (
-                                <option key={district.id} value={district.id}>
-                                  {district.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Country</label>
-                            <select
-                              className="form-control"
-                              name="country"
-                              value={formData.country}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>
-                                Select Country
-                              </option>
-                              {countryname.map((country) => (
-                                <option key={country.id} value={country.id}>
-                                  {country.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Organization</label>
-                            <select
-                              className="form-control"
-                              name="organization"
-                              value={formData.organization}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="" disabled>
-                                Select Organization
-                              </option>
-                              {organization.map((organization) => (
-                                <option key={organization.id} value={organization.id}>
-                                  {organization.OrganizationName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                            </>
-                          )}
-                        </div>
-                        <div className="modal-footer">
-                          {formStep === 2 && (
+
+                          <div className="modal-footer">
+                            {formStep === 2 && (
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => setFormStep(1)}
+                              >
+                                Back
+                              </button>
+                            )}
                             <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={() => setFormStep(1)}
+                              type="submit"
+                              className="btn btn-primary"
+                              onClick={formStep === 1 ? handleNextStep : null} // Use handleNextStep only in Step 1
                             >
-                              Back
+                              {formStep === 1 ? "Next" : "Save"}
                             </button>
-                          )}
-                          {formStep === 2 ? (
-                            <button type="submit" className="btn btn-primary">
-                              Update Committee Member
-                            </button>
-                          ) : null}
-                        </div>
-                      </form>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
-
               {/* Modal for Deleting Committeemembers */}
               {showDeleteModal && (
                 <>
-              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050, 
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Committee member</h5>
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">
+                            Delete Committee member
+                          </h5>
 
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>
-                          Are you sure you want to delete this committee member?
-                        </p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowDeleteModal(false)}
+                            style={{
+                              // background: 'none',
+                              // border: 'none',
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <div className="modal-body">
+                          <p>
+                            Are you sure you want to delete this committee
+                            member?
+                          </p>
+                        </div>
+                        <div className="modal-footer">
+                          <button
+                            className="btn btn-danger"
+                            onClick={handleDelete}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
               {showHistoryModal && (

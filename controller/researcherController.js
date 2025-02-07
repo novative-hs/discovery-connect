@@ -62,6 +62,7 @@ function createResearcher(req, res) {
 // Controller to handle updating a researcher's details
 function updateResearcher(req, res) {
   const { id } = req.params;
+  console.log("Request",id)
   const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,logo } = req.body;
   
   if ( !ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {

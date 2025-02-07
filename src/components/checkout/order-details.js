@@ -29,7 +29,7 @@ const {
   <th>Cart Subtotal</th>
   <td></td>
   <td></td>
-  <td></td>
+ 
   <td className="text-end">
     <span className="amount text-end">
       <strong className="product-quantity">
@@ -94,7 +94,7 @@ const {
 
 <tr className="shipping">
   <th>Discount</th>
-  <td></td>
+  
   <td></td>
   <td></td>
   <td className="text-end">
@@ -109,7 +109,7 @@ const {
 
 <tr className="order-total">
   <th>Total Order</th>
-  <td></td>
+  
   <td></td>
   <td></td>
   <td className="text-end">

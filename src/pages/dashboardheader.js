@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 // internal
 import SEO from "@components/seo";
-import Header from "@layout/organizationheader";
+
 import Wrapper from "@layout/wrapper";
 import Footer from "@layout/footer";
 import OrganizationDashboard from "@components/organization-dashboard/dashboard-area";

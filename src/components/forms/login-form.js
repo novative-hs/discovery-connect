@@ -55,7 +55,7 @@ const LoginForm = () => {
   
         // Redirect based on account type
         if (accountType) {
-          router.push("/organization-dashboard");
+          router.push("/dashboardheader");
         }  else {
           router.push("/default-dashboard");
         }

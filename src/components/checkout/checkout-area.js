@@ -17,9 +17,6 @@ const CheckoutArea = () => {
                   <BillingDetails />
                 </div>
                 {/* billing details end */}
-
-                <h3>Sample Copy</h3>
-                {/* Sample copy details end */}
               </div>
             </div>
             <div className="col-lg-6">

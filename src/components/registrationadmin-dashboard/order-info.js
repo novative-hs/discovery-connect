@@ -1,61 +1,63 @@
-import React from "react";
-import {Box, Delivery, Processing, Truck} from "@svg/index";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useRouter } from "next/router"; // Import useRouter from next/router
 
-function SingleOrderInfo({ icon, info, title }) {
-  return (
-    <div className="col-md-3 col-sm-6">
-      <div className="profile__main-info-item">
-        <div className="profile__main-info-icon">
-          <span className="total-order">
-            <span className="profile-icon-count profile-download">{info}</span>
-            {icon}
-          </span>
-        </div>
-        <h4 className="profile__main-info-title">{title}</h4>
-      </div>
-    </div>
-  );
-}
+const OrderInfo = ({ setActiveTab }) => {
+  const [userCount, setUserCount] = useState(null); // State to store fetched data
 
-const OrderInfo = ({ orderData }) => {
-  const {user} = useSelector(state => state.auth);
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchUserCount(); // Call the function when the component mounts
+  }, []);
+
+  // Function to fetch user count data
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/city/getAll`);
+      setUserCount(response.data); // Set the fetched counts in the state
+    } catch (error) {
+      console.error("Error fetching user count:", error);
+    }
+  };
+
+  // If data is still loading or not fetched yet
+  if (!userCount) {
+    return <div>Loading...</div>;
+  }
+
+  const stats = [
+    { label: "Total City", count: userCount.totalCities, icon: "fa-solid fa-city", bg: "bg-primary", tab: "city" },
+    { label: "Total District", count: userCount.totalDistricts, icon: "fa-solid fa-flag", bg: "bg-info", tab: "district" },
+    { label: "Total Country", count: userCount.totalCountries, icon: "fa-solid fa-globe", bg: "bg-success", tab: "country" },
+    { label: "Total Researcher", count: userCount.totalResearchers, icon: "fa-solid fa-user", bg: "bg-warning", tab: "researcher" },
+    { label: "Total Organization", count: userCount.totalOrganizations, icon: "fa-solid fa-building", bg: "bg-danger", tab: "organization" },
+    { label: "Total Collection Site", count: userCount.totalCollectionSites, icon: "fa-solid fa-map-marker-alt", bg: "bg-dark", tab: "collectionsite" },
+    { label: "Total Committee Member", count: userCount.totalCommitteeMembers, icon: "fa-solid fa-users", bg: "bg-secondary", tab: "committee-members" },
+    { label: "Total Cart Items", count: userCount.totalOrders, icon: "fa-solid fa-shopping-cart", bg: "bg-success", tab: "order-info" },
+  ];
+
+  // Handle stat div click and set active tab
+  const handleTabClick = (tab) => {
+    setActiveTab(tab); // Change the active tab when a stat div is clicked
+  };
+
   return (
-    <div className="profile__main">
-      <div className="profile__main-top pb-80">
-        <div className="row align-items-center">
-          <div className="col-md-6">
-            <div className="profile__main-inner d-flex flex-wrap align-items-center">
-              <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">Welcome {user?.name}</h4>
+    <div className="container mt-4">
+      <div className="row g-4">
+        {stats.map((stat, index) => (
+          <div key={index} className="col-md-3">
+            <div
+              className={`card text-white ${stat.bg} shadow-lg rounded-lg text-center p-3`}
+              onClick={() => handleTabClick(stat.tab)}  // Change tab when clicked
+            >
+              <div className="card-body">
+                <i className={`${stat.icon} fa-2x mb-2`}></i>
+                <h5 className="card-title">{stat.label}</h5>
+                <p className="card-text text-white fs-4 fw-bold">{stat.count}</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="profile__main-info">
-        <div className="row gx-3">
-          <SingleOrderInfo
-            info={orderData?.totalDoc}
-            icon={<Box/>}
-            title="Total Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.pending}
-            icon={<Processing/>}
-            title="Pending Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.processing}
-            icon={<Truck/>}
-            title="Processing Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.delivered}
-            icon={<Delivery/>}
-            title="Complete Order"
-          />
-        </div>
+        ))}
       </div>
     </div>
   );

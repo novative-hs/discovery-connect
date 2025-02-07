@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 // internal
 import SEO from "@components/seo";
-import Header from "@layout/organizationheader";
+import Header from "@layout/dashboardheader";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import Wrapper from "@layout/wrapper";
 import CouponArea from "@components/checkout/coupon-area";

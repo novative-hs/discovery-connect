@@ -4,7 +4,7 @@ import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateOrganization from './update-organization';
 import ResearcherArea from './researchers';
-import Header from '../../layout/organizationheader';
+import Header from '../../layout/dashboardheader';
 import { useRouter } from "next/router";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
@@ -55,7 +55,7 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} />
+         <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area pt-180 pb-120">
         <div className="container" style={{ marginTop: '-90px', width: '100%' }}>
           <div className="profile__inner p-relative">

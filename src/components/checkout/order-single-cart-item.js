@@ -28,9 +28,7 @@ const OrderSingleCartItem = ({ title, price,quantity,total,discount,Currency }) 
       <td className="product-name text-center">
         <strong className="product-quantity">{quantity}</strong>
       </td>
-      <td className="product-total text-center">
-      <strong className="product-quantity "> {discount}%</strong>
-      </td>
+    
       <td className="product-total text-end">
   <span className="amount"> {getCurrencySymbol(Currency)}{parseFloat(price * quantity).toFixed(2)}</span>
 </td>

@@ -38,7 +38,6 @@ const OrderArea = ({
               <th className="product-name">Product</th>
               <th className="product-name text-center">Price</th>
               <th className="product-name text-center">Quantity</th>
-              <th className="product-name text-center">Discount</th>
               <th className="product-total text-end">Total</th>
             </tr>
           </thead>

@@ -232,7 +232,6 @@ const getAccountDetail = (id, callback) => {
 };
 
 const updateAccount = (req, callback) => {
- 
   const {
     user_account_id,
     useraccount_email,
@@ -444,9 +443,13 @@ const createAccount = (req, callback) => {
   } = req.body;
 
   // Handle the logo file (if provided)
-  const logo = req.file ? req.file.buffer : null && accountType === 'CollectionSites' || accountType === "Organization" || accountType === "Researcher"
+  // const logo = req.file ? req.file.buffer : null && accountType === 'CollectionSites' || accountType === "Organization" || accountType === "Researcher"
+  let logo = null;
+  if (req.file) {
+    // If a file was uploaded, convert it to a buffer
+    logo = req.file.buffer;
+  }
   console.log('Logo Buffer:', logo);
-  console.log('Received File:', req.file);
 
   // Start MySQL transaction
   mysqlConnection.beginTransaction((err) => {
@@ -664,7 +667,6 @@ const getUserEmail = (id, callback) => {
   });
 };
 
-
 function changepassword(data, callback) {
   const tables = [
     "user_account",
@@ -734,5 +736,6 @@ module.exports = {
   create_researcherTable,
   createuser_accountTable,
   createAccount,
-  updateAccount
+  updateAccount,
+  
 };

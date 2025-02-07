@@ -14,9 +14,12 @@ const schema = Yup.object().shape({
   districtid: Yup.string().required("District is required").label("District"),
   countryid: Yup.string().required("Country is required").label("Country"),
   phoneNumber: Yup.string()
-    .required("Phone Number is required")
-    .min(11, "Phone Number must be at least 11 characters")
-    .label("Phone Number"),
+  .required("Phone Number is required")
+    .label("Phone Number")
+      .matches(
+        /^\d{4}-\d{3}-\d{4}$/,
+        "Phone number must be in the format 0123-456-7890 and numeric",
+      ),
   ntnNumber: Yup.string()
     .required("NTN Number is required")
     .label("NTN Number"),

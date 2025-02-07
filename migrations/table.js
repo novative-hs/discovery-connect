@@ -11,8 +11,22 @@ const cityModel = require("../models/cityModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
 const sample_approvalModel=require("../models/sampleapprovalModel")
+const paymentModel=require('../models/paymentModals')
+const ethnicityModel=require('../models/ethnicityModel')
+const sampleconditionModel=require('../models/sampleconditionModel')
+const storagetemperatureModel=require('../models/storagetemperatureModel')
+const containertypeModel=require('../models/containertypeModel')
+const quantityunitModel=require('../models/quantityunitModel')
+const sampletypematrixModel=require('../models/sampletypematrixModel')
+const testmethodModel=require('../models/testmethodModel')
+const testresultunitModel=require('../models/testresultunitModel')
+const testsystemModel=require('../models/testsystemModel')
+const testsystemmanufacturerModel=require('../models/testsystemmanufacturerModel')
+const testkitmanufacturerModel=require('../models/testkitmanufacturerModel')
+const concurrentmedicalconditionsModel=require('../models/concurrentmedicalconditionsModel')
 // Function to initialize all tables
 function Database() {
+  ethnicityModel.createEthnicityTable();
   cityModel.createCityTable();
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
@@ -22,12 +36,23 @@ function Database() {
   signupModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
-  samplereceiveModel.createSampleReceiveTable();
+  //samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
   productModel.createProductsTable();
   wishlistModel.createWishlistTable();
   cartModel.createCartTable();
-  sample_approvalModel.createSampleApprovalTable();
- 
+  //sample_approvalModel.createSampleApprovalTable();
+ paymentModel.createPaymentTable();
+ sampleconditionModel.createSampleConditionTable();
+ storagetemperatureModel.createStorageTemperatureTable();
+ containertypeModel.createContainerTypeTable()
+ quantityunitModel.createQuantityUnitTable();
+ sampletypematrixModel.createSampleTypeMatrixTable();
+ testmethodModel.createTestMethodTable()
+testresultunitModel.createTestResultUnitTable();
+ testsystemModel.createTestSystemTable();
+ testsystemmanufacturerModel.createTestSystemManufecturerTable();
+ testkitmanufacturerModel.createTestKitManufacturerTable();
+ concurrentmedicalconditionsModel.createConcurrentMedicalConditionsTable();
 }
 Database();

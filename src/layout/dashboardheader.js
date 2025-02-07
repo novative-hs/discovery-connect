@@ -11,9 +11,10 @@ import axios from "axios";
 import useCartInfo from "@hooks/use-cart-info";
 import CartArea from "@components/cart/cart-area";
 
-const Header = ({ setActiveTab }) => {
+const Header = ({ setActiveTab, activeTab }) => {
   const id = localStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSampleDropdown, setShowSampleDropdown] = useState(false);
   const [hovered, setHovered] = useState(null);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -27,6 +28,14 @@ const Header = ({ setActiveTab }) => {
   const [userType, setUserType] = useState(null);
   const [cartCount, setCartCount] = useState();
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        !event.target.closest(".dropdown-menu") &&
+        !event.target.closest(".nav-link")
+      ) {
+        setShowSampleDropdown(null);
+      }
+    };
     const updateCartCount = () => {
       setCartCount(localStorage.getItem("cartCount") || 0);
     };
@@ -38,9 +47,13 @@ const Header = ({ setActiveTab }) => {
     };
   }, []);
 
-  const handleToggleDropdown = () => {
-    setShowDropdown(!showDropdown);
+  const handleToggleDropdown = (index) => {
+    setShowDropdown(showDropdown === index ? null : index); // Toggle only the clicked dropdown
   };
+  const handleToggleSampleDropdown = (index) => {
+    setShowSampleDropdown(showSampleDropdown === index ? null : index); // Toggle only the clicked dropdown
+  };
+
   useEffect(() => {
     const type = localStorage.getItem("accountType")?.trim().toLowerCase();
     if (type) {
@@ -56,10 +69,11 @@ const Header = ({ setActiveTab }) => {
       return <div>Loading...</div>; // Or redirect to login
     } else {
       console.log("account_id on Header page is:", id);
-      fetchCart()
+      fetchCart();
       fetchUserDetail();
     }
   }, []);
+
   const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
@@ -71,25 +85,31 @@ const Header = ({ setActiveTab }) => {
       console.error("Error fetching Organization:", error);
     }
   };
+
   const fetchCart = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/cart/getCount/${id}`);
-  
+      const response = await axios.get(
+        `http://localhost:5000/api/cart/getCount/${id}`
+      );
+
       console.log("API Response:", response.data);
-  
-      if (response.data.length > 0 && typeof response.data[0].Count === "number") {
-        setCartCount( response.data[0].Count)
+
+      if (
+        response.data.length > 0 &&
+        typeof response.data[0].Count === "number"
+      ) {
+        setCartCount(response.data[0].Count);
         localStorage.setItem("cartCount", response.data[0].Count);
         console.log("Cart count stored:", response.data[0].Count);
       } else {
         console.warn("Unexpected API response format");
         localStorage.setItem("cartCount", 0);
       }
-      
     } catch (error) {
       console.error("Error fetching cart:", error);
     }
   };
+
   useEffect(() => {
     if (user) {
       setUserLogo(
@@ -101,6 +121,7 @@ const Header = ({ setActiveTab }) => {
       );
     }
   });
+
   const handleSetActiveTab = (tab) => {
     setActiveTab(tab);
   };
@@ -152,6 +173,30 @@ const Header = ({ setActiveTab }) => {
           { label: "Organization List", tab: "organization" },
           { label: "Collection Site List", tab: "collectionsite" },
           { label: "Committee Members List", tab: "committee-members" },
+          {
+            label: "Sample",
+            tab: "sample",
+            dropdown: [
+              { label: "Ethnicity", tab: "ethnicity" },
+              { label: "Sample Condition", tab: "sample-condition" },
+              { label: "Storage Temperature", tab: "storage-temperature" },
+              { label: "Container Type", tab: "container-type" },
+              { label: "Quantity Unit", tab: "quantity-unit" },
+              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+              { label: "Test Method", tab: "test-method" },
+              { label: "Test Result Unit", tab: "test-result-unit" },
+              {
+                label: "Concurrent Medical Conditions",
+                tab: "concurrent-medical-conditions",
+              },
+              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+              { label: "Test System", tab: "test-system" },
+              {
+                label: "Test System Manufacturer",
+                tab: "test-system-manufacturer",
+              },
+            ],
+          },
         ]
       : userType == "collectionsites"
       ? [
@@ -169,10 +214,7 @@ const Header = ({ setActiveTab }) => {
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
-          <Link href="/" className="navbar-brand">
-            <Image src={logo} alt="Logo" width={180} height={150} />
-          </Link>
-
+          <Image src={logo} alt="Logo" width={240} height={150} />
           <button
             className="navbar-toggler"
             type="button"
@@ -187,27 +229,57 @@ const Header = ({ setActiveTab }) => {
 
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              {menuItems.map(({ label, tab }, index) => (
-                <li key={tab} className="nav-item">
+              {menuItems.map(({ label, tab, dropdown }, index) => (
+                <li key={tab} className="nav-item dropdown">
                   <button
                     className={`nav-link btn ${
-                      hovered === index ? "text-primary" : "text-dark"
+                      activeTab === tab ? "text-primary" : "text-dark"
                     }`}
-                    onClick={() => handleSetActiveTab(tab)}
-                    onMouseEnter={() => setHovered(index)}
-                    onMouseLeave={() => setHovered(null)}
+                    onClick={() => {
+                      if (dropdown) {
+                        handleToggleSampleDropdown(index); // Toggle only the clicked dropdown
+                      } else {
+                        setActiveTab(tab);
+                      }
+                    }}
                   >
                     {label}
                   </button>
+
+                  {/* Render dropdown items if available */}
+                  {dropdown && showSampleDropdown === index && (
+                    <ul className="dropdown-menu show">
+                      {dropdown.map(({ label, tab }) => (
+                        <li key={tab}>
+                          <button
+                            className="dropdown-item"
+                            onClick={() => {
+                              setActiveTab(tab);
+                              setShowSampleDropdown(null); // Close dropdown after clicking
+                            }}
+                          >
+                            {label}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>
+
             {/* Wrap these items in a div to conditionally move them */}
             <div
               className={`d-flex align-items-center ${
                 isProfileOpen ? "move-to-off-canvas" : ""
               }`}
             >
+              {userType === "registrationadmin" && (
+                <>
+                  <h4>Welcome Admin!</h4>
+                </>
+              )}
+
               <div className="dropdown me-3">
                 <button
                   className="btn dropdown-toggle d-flex align-items-center"
@@ -260,25 +332,29 @@ const Header = ({ setActiveTab }) => {
                 </ul>
               </div>
 
-              <Link
-                href="/wishlist"
-                className="btn d-flex align-items-center me-3 position-relative"
-              >
-                <Heart className="me-2" />
-                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                  {wishlist.length}
-                </span>
-              </Link>
+              {userType !== "registrationadmin" && (
+                <>
+                  <Link
+                    href="/wishlist"
+                    className="btn d-flex align-items-center me-3 position-relative"
+                  >
+                    <Heart className="me-2" />
+                    <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                      {wishlist.length}
+                    </span>
+                  </Link>
 
-              <Link
-                href="/cart"
-                className="btn d-flex align-items-center me-3 position-relative"
-              >
-                <Cart className="me-2" />
-                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                  {cartCount}
-                </span>
-              </Link>
+                  <Link
+                    href="/cart"
+                    className="btn d-flex align-items-center me-3 position-relative"
+                  >
+                    <Cart className="me-2" />
+                    <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                      {cartCount}
+                    </span>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

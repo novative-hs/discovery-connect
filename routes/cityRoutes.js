@@ -18,5 +18,5 @@ router.post('/post-city', (req, res, next) => {
 router.put('/put-city/:id', cityController.updateCity);
 // Route to delete a committee member
 router.delete('/delete-city/:id', cityController.deleteCity);
-
+router.get('/getAll',cityController.getCount)
 module.exports = router;

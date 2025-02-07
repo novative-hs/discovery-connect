@@ -158,7 +158,7 @@ const SingleCartItem = ({ item }) => {
         <span className="amount">{totalpayment}</span>
       </td>
 
-      <td className="product-remove d-flex gap-2">
+      <td className="product-remove d-flex align-items-center justify-content-center gap-2 ">
         {isEditing ? (
           <button
             type="button"
