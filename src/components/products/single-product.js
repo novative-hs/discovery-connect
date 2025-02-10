@@ -28,40 +28,19 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   const isAddedToCart = cart_products.some((prd) => prd._id === _id);
 
   // Handle adding the product to the cart
-  // const handleAddProduct = (prd) => {
-  //   dispatch(add_cart_product(prd));
-  // };
-
-  const handleAddProduct = (prd) => {
-    console.log("Product before dispatch:", prd);
-  
-    dispatch(add_cart_product({
-      _id: prd.id,  
-      title: prd.name,
-    }));
+  const handleAddToCart = (product) => {
+    dispatch(add_cart_product(product));
   };
 
 
-
-   // Handle removing the product from the cart
-   const handleRemoveProduct = (prd) => {
-    dispatch(remove_product(prd._id));  // Assuming your action takes the product ID
-  };
-
-  // // Handle adding the product to the wishlist
-  // const handleAddWishlist = (prd) => {
-  //   dispatch(add_to_wishlist(prd));
-  // };
-
+  // Handle adding the product to the wishlist
   const handleAddWishlist = (prd) => {
     console.log("Product before dispatch:", prd);
-  
     dispatch(add_to_wishlist({
       _id: prd.id,  
       title: prd.name,
     }));
   };
-
 
   // Handle quick view
   const handleQuickView = (prd) => {
@@ -73,22 +52,30 @@ const SingleProduct = ({ product, discountPrd = false }) => {
     <React.Fragment>
       <div className="product__item p-relative transition-3 mb-50">
         <div className="product__thumb w-img p-relative fix">
-        <Link href={_id ? `/product-details/${_id}` : "/product-not-found"}>
-            <Image
-              src={product.image_url}
-              alt="product image"
-              width={960}
-              height={1125}
-              style={{ width: '100%', height: '100%' }}
-            />
+          <Link href={_id ? `/product-details/${_id}` : "/product-not-found"}>
+            <div className="product-image-frame">
+              <Image
+                src={product.imageUrl}
+                alt="product image"
+                width={960}
+                height={1125}
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+              />
+            </div>
           </Link>
-
-          {discount > 0 && (
+          <h3 className="product__list-title">
+              <span className="product__list-ammount">{product.samplename}</span>
+                {/* <Link href={`product-details/${_id}`}>{product.samplename}</Link> */}
+              </h3>
+              {/* <div className="product__list-price">
+                <span className="product__list-ammount">{product.price}</span>
+              </div> */}
+          {/* {discount > 0 && (
             <div className="product__badge d-flex flex-column flex-wrap">
               <span
                 className={`product__badge-item ${discountPrd ? "has-offer" : "has-new"}`}
               >
-                {discountPrd ? `-${discount}%` : "sale"}
+                {${product.price}}
               </span>
               {!discountPrd && (
                 <span className={`product__badge-item has-offer`}>
@@ -96,7 +83,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
                 </span>
               )}
             </div>
-          )}
+          )} */}
 
           <div className="product__action d-flex flex-column flex-wrap">
             <button
@@ -123,7 +110,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
             </Link>
           </div>
           <div className="product__add transition-3">
-            {isAddedToCart ? (
+            {/* {isAddedToCart ? (
               <Link
                 href="/cart"
                 type="button"
@@ -132,16 +119,15 @@ const SingleProduct = ({ product, discountPrd = false }) => {
                 <CartTwo />
                 View Cart
               </Link>
-            ) : (
+            ) : ( */}
               <button
-                onClick={() => handleAddProduct(product)}
-                type="button"
-                className="product-add-cart-btn w-100"
-              >
-                <CartTwo />
-                Add to Cart
-              </button>
-            )}
+              type="button"
+              onClick={() => handleAddToCart(product)}
+              className="product-add-cart-btn w-100"
+            >
+              Add to Cart
+            </button>
+            {/* )} */}
           </div>
         </div>
         <div className="product__content">

@@ -37,14 +37,11 @@ const LoginForm = () => {
         password: data.password,
       });
   
-      console.log("Login result:", result); // Debug log for result
-  
       if (result?.error) {
         notifyError(result?.error?.data?.error);
       } else {
-        const { id, accountType, authToken } = result?.data?.user || {}; // Use 'id' instead of 'userID'
+        const { id, accountType, authToken } = result?.data?.user || {};
         if (!id) {
-          console.error("id is undefined in the API response.");
           return notifyError("Unexpected error: User ID is missing.");
         }
   

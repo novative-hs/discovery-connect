@@ -34,69 +34,178 @@ const getAllCountries = (callback) => {
   });
 };
 
-
-
-const createCountry = (data, callback, res) => {
+const createCountry = (data, callback) => {
   console.log('Received Request Body:', data); // Debugging
 
   const { bulkData, countryname, added_by } = data || {}; // Handle undefined gracefully
 
-  if (bulkData) {
-    const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
-    const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
-
-    // Use ON DUPLICATE KEY UPDATE to prevent duplicate insertions
-    const query = `
-      INSERT INTO country (name, added_by)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE name = name;
-    `;
-
-    mysqlConnection.query(query, [values], (err, result) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        console.log("Insert Result:", result); // Debugging result
-        callback(null, result);
-      }
-    });
-  } else if (countryname && added_by) {
-    const query = `
-      INSERT INTO country (name, added_by)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE name = name;
-    `;
-
-    mysqlConnection.query(query, [countryname, added_by], (err, result) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        callback(null, result);
-      }
-    });
-  } else {
-    callback(new Error('Invalid data'), null);
-  }
-};
-// Function to update a Country member
-const updateCountry = (id, data, callback) => {
-  const { countryname, added_by } = data;
-  const query = `
-    UPDATE country
-    SET name = ?, added_by = ?
-    WHERE id = ?
-  `;
-  mysqlConnection.query(query, [countryname, added_by, id], (err, result) => {
+  mysqlConnection.beginTransaction((err) => {
     if (err) {
-      console.error("Error in query:", err); // Log the error to debug
-      callback(err, result);
+      return callback(err, null);
+    }
+
+    if (bulkData) {
+      const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+      const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+
+      const cityQuery = `
+        INSERT INTO country (name, added_by)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE name = name;
+      `;
+
+      mysqlConnection.query(cityQuery, [values], (err, countryResult) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+
+        const insertedCountryIds = countryResult.insertId; // Get the first inserted country ID
+        if (!insertedCountryIds) {
+          return mysqlConnection.rollback(() => {
+            callback(new Error("Failed to retrieve country ID"), null);
+          });
+        }
+
+        // Insert into RegistrationAdmin_History
+        const historyValues = uniqueData.map(({ name, added_by }) => [
+          name, added_by, insertedCountryIds, 'active'
+        ]);
+
+        const historyQuery = `
+          INSERT INTO RegistrationAdmin_History (created_name, added_by, country_id, status)
+          VALUES ?
+        `;
+
+        mysqlConnection.query(historyQuery, [historyValues], (err, historyResult) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                callback(err, null);
+              });
+            }
+            callback(null, { countryResult, historyResult });
+          });
+        });
+      });
+
+    } else if (countryname && added_by) {
+      const cityQuery = `
+        INSERT INTO country (name, added_by)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE name = name;
+      `;
+
+      mysqlConnection.query(cityQuery, [countryname, added_by], (err, countryResult) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+
+        const countryId = countryResult.insertId;
+        if (!countryId) {
+          return mysqlConnection.rollback(() => {
+            callback(new Error("Failed to retrieve country ID"), null);
+          });
+        }
+
+        // Insert into RegistrationAdmin_History
+        const historyQuery = `
+          INSERT INTO RegistrationAdmin_History (created_name,  added_by, country_id, status)
+          VALUES (?, ?, ?, ?)
+        `;
+
+        mysqlConnection.query(historyQuery, [countryname, added_by, countryId, 'active'], (err, historyResult) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                callback(err, null);
+              });
+            }
+            callback(null, { countryResult, historyResult });
+          });
+        });
+      });
+
     } else {
-      callback(null, result);
+      callback(new Error('Invalid data'), null);
     }
   });
 };
+// Function to update a City member
+const updateCountry = (id, data, callback) => {
+  const { countryname, added_by } = data;
 
+  mysqlConnection.beginTransaction((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+    const fetchCountryQuery = `SELECT name FROM country WHERE id = ?`;
+    mysqlConnection.query(fetchCountryQuery, [id], (err, results) => {
+      if (err) {
+        return mysqlConnection.rollback(() => {
+          callback(err, null);
+        });
+      }
 
+      if (results.length === 0) {
+        return mysqlConnection.rollback(() => {
+          callback(new Error("Country not found"), null);
+        });
+      }
+
+      const oldCountryName = results[0].name; 
+      const updateCityQuery = `
+        UPDATE country
+        SET name = ?, added_by = ?
+        WHERE id = ?
+      `;
+      mysqlConnection.query(updateCityQuery, [countryname, added_by, id], (err, result) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+        const updateHistoryQuery = `
+          UPDATE RegistrationAdmin_History
+          SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE country_id = ?
+        `;
+
+        mysqlConnection.query(updateHistoryQuery, [oldCountryName, countryname, added_by, id], (err, historyResult) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                callback(err, null);
+              });
+            }
+            callback(null, { result, historyResult });
+          });
+        });
+      });
+    });
+  });
+};
 // Function to delete a Country member
 const deleteCountry = (id, callback) => {
   const query = 'UPDATE country SET status = "inactive" WHERE id = ?';

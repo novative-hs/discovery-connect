@@ -11,7 +11,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+// Middleware to parse JSON
 
+app.use(express.urlencoded({ extended: true }));
 const productRoutes = require("./routes/productRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
@@ -32,7 +34,7 @@ const {
   getProductById,
 } = require("./controller/productController");
 const biobankRoutes = require("./routes/biobankRoutes");
-const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoutes");
+const historyRoutes = require("./routes/historyRoutes");
 const ethnictiyRoutes = require("./routes/ethnicityRoutes");
 const sampleconditionRoutes = require("./routes/sampleconditionRoutes");
 const storagetemperatureRoutes = require("./routes/storagetemperatureRoutes");
@@ -47,6 +49,7 @@ const testkitmanufacturerRoutes = require("./routes/testkitmanufacturerRoutes");
 const concurrentmedicalconditionsRoutes = require("./routes/concurrentmedicalconditionsRoutes");
 
 // Routes
+app.use('/api', historyRoutes); 
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);
 app.use("/api/city", cityRoutes);
@@ -58,11 +61,14 @@ app.get("/api/products/:id", getProductById);
 app.use("/api", researcherRoutes);
 app.use("/api/committeemember", committeememberRoutes);
 app.use("/api", sampleRoutes);
-app.use("/api/payment", paymentRoutes);
-app.use("/api/sampledispatch", sampleDispatchRoutes);
+app.use("/api/payment", paymentRoutes);app.use("/api/sampledispatch", sampleDispatchRoutes);
 app.use("/api/samplereceive", sampleReceiveRoutes);
 app.use("/api/collectionsite", collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
+app.use('/api', cartRoutes);
+app.use('/api', biobankRoutes);
+
+
 app.use("/api", cartRoutes);
 app.use("/api", biobankRoutes);
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);

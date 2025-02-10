@@ -11,5 +11,4 @@ router.post('/samples/postsample', SampleController.createSample); // POST a new
 router.put('/samples/edit/:id', SampleController.updateSample); // PUT update sample
 router.delete('/samples/delete/:id', SampleController.deleteSample); // DELETE a sample
 
-
 module.exports = router;

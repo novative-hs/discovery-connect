@@ -177,9 +177,24 @@ const deleteResearcher = (id, callback) => {
 
 // (Registration Admin) Function to update researcher status
 function updateResearcherStatus(id, status, callback) {
-  const query = 'UPDATE researcher SET status = ? WHERE id = ?';
-  mysqlConnection.query(query, [status, id], callback);
+  const updateQuery = 'UPDATE researcher SET status = ? WHERE id = ?';
+
+  mysqlConnection.query(updateQuery, [status, id], (err, results) => {
+    if (err) return callback(err);
+
+    if (results.affectedRows > 0) {
+      const insertHistoryQuery = `
+        INSERT INTO RegistrationAdmin_History (resaercher_id, status, updated_at)
+        VALUES (?, ?, NOW())
+      `;
+
+      mysqlConnection.query(insertHistoryQuery, [id, status], callback);
+    } else {
+      callback(new Error('No researcher found with the given ID.'));
+    }
+  });
 }
+
 
 
 module.exports = {

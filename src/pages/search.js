@@ -37,13 +37,13 @@ export default function Search({ query }) {
     content = <ProductLoader loading={isLoading} />;
   }
 
-  if (!isLoading && isError) {
-    content = <ErrorMessage message="There was an error" />;
-  }
+  // if (!isLoading && isError) {
+  //   content = <ErrorMessage message="There was an error" />;
+  // }
 
-  if (!isLoading && !isError && products?.products?.length === 0) {
-    content = <ErrorMessage message="No products found!" />;
-  }
+  // if (!isLoading && !isError && products?.products?.length === 0) {
+  //   content = <ErrorMessage message="No products found!" />;
+  // }
 
   if (!isLoading && !isError && products?.products?.length > 0) {
     let all_products = products.products;

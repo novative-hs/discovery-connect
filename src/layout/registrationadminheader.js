@@ -88,15 +88,17 @@ const Header = ({ style_2 = false, setActiveTab }) => {
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
                   <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                  <div className="logo" style={{ marginLeft: "-60px", marginTop: "19px" }}>
+                    <div className="logo" style={{ marginLeft: "-30px" }}>
+                      {/* <Link href="/"> */}
                         <Image
                           src={logo}
                           alt="logo"
                           style={{ width: "180px", height: "auto" }}
                         />
+                      {/* </Link> */}
                     </div>
                   </div>
-                  <div className="col-xxl-8 col-xl-7 d-none d-xl-block">
+                  <div className="col-xxl-10 col-xl-7 d-none d-xl-block">
                     <div className="main-menu main-menu-13 pl-45 main-menu-ff-space">
                       <nav id="mobile-menu-3">
                         <ul className="header__nav">
@@ -151,11 +153,11 @@ const Header = ({ style_2 = false, setActiveTab }) => {
                       </nav>
                     </div>
                   </div>
-                  <div className="col-xxl-3 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
+                  <div className="col-xxl-1 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
                     <div className="header__bottom-right-13 d-flex justify-content-end align-items-center pl-30">
-                      <div className="header__search-13">
+                      {/* <div className="header__search-13">
                         <SearchForm />
-                      </div>
+                      </div> */}
                       <div className="header__action-13 d-none d-md-block">
                         <ul
                           style={{
@@ -167,11 +169,11 @@ const Header = ({ style_2 = false, setActiveTab }) => {
                             listStyleType: "none",
                           }}
                         >
-                          <li className="d-xxl-none">
+                          {/* <li className="d-xxl-none">
                             <a href="#">
                               <Search />
                             </a>
-                          </li>
+                          </li> */}
                           {userInfo?.imageURL ? (
                             <li>
                               <Link href="/user-dashboard">
@@ -236,7 +238,7 @@ const Header = ({ style_2 = false, setActiveTab }) => {
   )}
 </li>
                           )}
-                          <li>
+                          {/* <li>
                             <Link href="/wishlist">
                               <Heart />
                               <span className="tp-item-count">
@@ -252,7 +254,7 @@ const Header = ({ style_2 = false, setActiveTab }) => {
                               <Cart />
                               <span className="tp-item-count">{quantity}</span>
                             </button>
-                          </li>
+                          </li> */}
                         </ul>
                       </div>
                       <div className="header__hamburger ml-30 d-xl-none">

@@ -1,140 +1,108 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import axios from "axios";
-import SingleCartItem from "./single-cart";
+import { useDispatch, useSelector } from "react-redux";
+// internal
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
-import SampleArea from "@components/user-dashboard/samples";
-import Header from "@layout/dashboardheader";
-import { notifySuccess, notifyError } from "@utils/toast";
-import { useRouter } from "next/router";
+import { remove_product } from "src/redux/features/cartSlice";
+
 const CartArea = () => {
-  const id = localStorage.getItem("userID");
-  const [cart, setCart] = useState([]);
+  const dispatch = useDispatch();
+  const { cart_products } = useSelector((state) => state.cart);
 
-  const [loading, setLoading] = useState(true);
-
-  const router = useRouter();
-  const fetchCart = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`http://localhost:5000/api/cart/${id}`);
-      console.log("API Cart Response:", response); // Check the response data
-      setCart(response.data); // Set cart only if data exists
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-    } finally {
-      setLoading(false);
-    }
+  // Handle remove product
+  const handleRemovePrd = (prd) => {
+    dispatch(remove_product(prd));
   };
 
-  useEffect(() => {
-    if (id) {
-      fetchCart(); // Fetch cart only if userID exists and cart is empty
-    }
-  }, [id]);
+  // Calculate subtotal and total
+  const subtotal = cart_products.reduce(
+    (acc, product) => acc + product.price * product.quantity,
+    0
+  );
 
-  useEffect(() => {
-    console.log("Saving to localStorage:", cart);
-    localStorage.setItem("cart", JSON.stringify(cart)); // Store cart data in localStorage
-  });
-  useEffect(() => {
-    const handleCartUpdate = () => fetchCart();
-    window.addEventListener("cartUpdated", handleCartUpdate);
-    return () => {
-      window.removeEventListener("cartUpdated", handleCartUpdate);
-    };
-  }, []);
-
-  const handleDeleteAll = async () => {
-    try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/cart/deleteAll/${id}`
-      );
-      if (response) {
-        notifySuccess("Item deleted successfully from cart");
-        console.log(response.data);
-        console.log("Remaining Cart Count:", response.data.cartCount);
-        localStorage.setItem("cartCount", response.data.cartCount);
-        window.dispatchEvent(new Event("cartUpdated"));
-      } else {
-        notifyError("Unexpected API response format");
-        localStorage.setItem("cartCount", 0);
-        window.dispatchEvent(new Event("cartUpdated"));
-      }
-    } catch (error) {
-      console.error("Error removing item from cart:", error);
-      notifyError("Failed to remove item from cart");
-    }
-  };
   return (
-    <>
-      <section className="cart-area pt-100 pb-100">
-        <div className="container">
-          <div className="row">
-            <div className="col-12">
-              {loading ? (
-                <p>Loading...</p>
-              ) : cart.length > 0 ? (
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="table-content table-responsive">
-                    <div
-                      className="tp-continue-shopping"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <p>
-                        <button
-                          type="button"
-                          onClick={() => router.push("/organization-dashboard")}
-                        >
-                          Continue Shopping <i className="fal fa-reply"></i>
-                        </button>
-                      </p>
-                      <p>
-                        <button type="button" onClick={handleDeleteAll}>
-                          Delete All Items <i className="fal fa-trash-alt"></i>
-                        </button>
-                      </p>
-                    </div>
-
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th className="cart-product-name">Sample Name</th>
-                          <th className="product-price">Lab Name</th>
-                          <th className="product-quantity">Price</th>
-                          <th className="product-quantity">Quantity</th>
-                          <th className="product-quantity">Discount</th>
-                          <th className="product-quantity">Type</th>
-                          <th className="product-subtotal">Total</th>
-                          <th className="product-remove">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {cart.map((item, i) => (
-                          <SingleCartItem key={i} item={item} />
-                        ))}
-                      </tbody>
-                    </table>
-
-                    <Link
-                      href="/checkout"
-                      className="btn btn-primary w-10 mx-auto d-block mt-20"
-                    >
-                      <span>Checkout</span>
-                    </Link>
+    <section className="cart-area pt-100 pb-100">
+      <div className="container">
+        <div className="row">
+          <div className="col-12">
+            {cart_products.length > 0 && (
+              <form onSubmit={(e) => e.preventDefault()}>
+                <div className="table-content table-responsive">
+                  <div className="tp-continue-shopping">
+                    <p>
+                      <Link href="/shop">
+                        Continue Shopping <i className="fal fa-reply"></i>
+                      </Link>
+                    </p>
                   </div>
-                </form>
-              ) : (
-                <EmptyCart />
-              )}
-            </div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th className="product-thumbnail">Sample</th>
+                        <th className="product-price">Price</th>
+                        <th className="product-quantity">Quantity</th>
+                        <th className="product-subtotal">Total</th>
+                        <th className="product-remove">Remove</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cart_products.map((item, i) => (
+                        <tr key={i}>
+                          <td className="product-name">
+                            <Link href={`product-details/${item._id}`}>
+                              {item.samplename}
+                            </Link>
+                          </td>
+                          <td className="product-price">
+                            <span className="amount">{item.price.toFixed(2)}</span>
+                          </td>
+                          <td className="product-quantity">
+                            <span className="quantity">{item.quantity}</span>
+                          </td>
+                          <td className="product-subtotal">
+                            <span className="amount">
+                              {(item.price * item.quantity).toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="product-remove">
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePrd(item)}
+                            >
+                              <i className="fa fa-times"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="row justify-content-end">
+                  <div className="col-md-5 mr-auto">
+                    <div className="cart-page-total">
+                      <h2>Cart totals</h2>
+                      <ul className="mb-20">
+                        <li>
+                          Subtotal <span>{subtotal.toFixed(2)}</span>
+                        </li>
+                        <li>
+                          Total <span>{subtotal.toFixed(2)}</span>
+                        </li>
+                      </ul>
+                      <Link href={`/login?from=checkout`} className="tp-btn cursor-pointer">
+  Proceed to checkout
+</Link>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            )}
+            {cart_products.length === 0 && <EmptyCart />}
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 

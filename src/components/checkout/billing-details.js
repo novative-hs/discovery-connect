@@ -1,36 +1,74 @@
 import ErrorMessage from "@components/error-message/error";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
-import axios from "axios";
-
-// Validation Schema
-const schema = Yup.object().shape({
-  email: Yup.string().required().email().label("Email"),
-  city: Yup.string().required().label("City"),
-  country: Yup.string().required().label("Country"),
-  district: Yup.string().required().label("District"),
-});
 
 const BillingDetails = () => {
+  const id = localStorage.getItem("userID");
+  const [userData, setUserData] = useState(null); // State to store user data
+  const [loading, setLoading] = useState(true); // Loading state
+
+  // react-hook-form setup
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    reset,
     setValue,
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
+    reset, // To reset form values dynamically
+    formState: { errors },
+  } = useForm();
 
-  const id = localStorage.getItem("userID");
-  const [researcher, setResearcher] = useState(null);
-  const [cityname, setCityname] = useState([]);
-  const [districtname, setDistrictname] = useState([]);
-  const [countryname, setCountryname] = useState([]);
+  console.log("data on billing page is", id);
 
-  // Checkout Form List with support for dropdowns
+  // Fetch user data from API
+  useEffect(() => {
+    if (id) {
+      const fetchUserData = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/user/getAccountDetail/${id}`
+          );
+          const data = await response.json();
+          console.log("Fetched data:", data); // Log the data to verify the response
+          if (response.ok) {
+            setUserData(data); // Store the fetched data
+            if (data && data.length > 0) {
+              // Populate form with fetched data
+              reset({
+                firstName: data[0]?.ResearcherName || "",
+                lastName: "",
+                address: data[0]?.fullAddress || "",
+                cityname: data[0]?.cityname || "",
+                countryname: data[0]?.countryname || "",
+                email: data[0]?.useraccount_email || "",
+                phone: data[0]?.phoneNumber || "",
+              });
+            }
+          } else {
+            console.error("Failed to fetch user data");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        } finally {
+          setLoading(false); // Set loading to false once data is fetched
+        }
+      };
+
+      fetchUserData();
+    } else {
+      setLoading(false); // If no ID, set loading to false
+    }
+  }, [id, reset]);
+
+  // Handle loading state
+  if (loading) {
+    return <div>Loading...</div>; // Or a loading spinner
+  }
+
+  // Handle case if user data is not available
+  if (!userData) {
+    return <div>No user data found.</div>;
+  }
+
+  // Checkout form list component
   function CheckoutFormList({
     col,
     label,
@@ -38,8 +76,8 @@ const BillingDetails = () => {
     placeholder,
     isRequired = true,
     name,
-    options = [],
-    defaultValue,
+    register,
+    error,
   }) {
     return (
       <div className={`col-md-${col}`}>
@@ -49,25 +87,15 @@ const BillingDetails = () => {
               {label} {isRequired && <span className="required">*</span>}
             </label>
           )}
-          {options.length > 0 ? (
-            <select {...register(name)} defaultValue={defaultValue} className="form-select">
-              <option value="">Select {label}</option>
-              {options.map((option, index) => (
-                <option key={index} value={option.id || option}>
-                  {option.name || option}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              {...register(name)}
-              type={type}
-              className="form-control"
-              placeholder={placeholder}
-              defaultValue={defaultValue}
-            />
-          )}
-          {errors[name] && <ErrorMessage message={errors[name]?.message} />}
+          <input
+            {...register(`${name}`, {
+              required: isRequired && `${label} is required!`,
+            })}
+            type={type}
+            placeholder={placeholder}
+            defaultValue="" // Default value is controlled by `reset`
+          />
+          {error && <ErrorMessage message={error} />}
         </div>
       </div>
     );
@@ -135,67 +163,71 @@ const BillingDetails = () => {
   }, [researcher, setValue]);
 
   return (
-    <>
-      <div className="row">
+    <form className="row" onSubmit={handleSubmit((data) => console.log(data))}>
+      <CheckoutFormList
+        name="firstName"
+        col="12"
+        label="Name"
+        placeholder="Name"
+        register={register}
+        error={errors?.firstName?.message}
+      />
+      <CheckoutFormList
+        name="address"
+        col="12"
+        label="Address"
+        placeholder="Street address"
+        register={register}
+        error={errors?.address?.message}
+      />
+      <CheckoutFormList
+        col="12"
+        label="City"
+        placeholder="City"
+        name="cityname"
+        register={register}
+        error={errors?.cityname?.message}
+      />
+      <CheckoutFormList
+        col="12"
+        label="County"
+        placeholder="County"
+        name="countryname"
+        register={register}
+        error={errors?.countryname?.message}
+      />
+      <CheckoutFormList
+        col="12"
+        type="email"
+        label="Email Address"
+        placeholder="Your Email"
+        name="email"
+        register={register}
+        error={errors?.email?.message}
+      />
+      <CheckoutFormList
+        name="phone"
+        col="12"
+        label="Phone"
+        placeholder="Phone number"
+        register={register}
+        error={errors?.phone?.message}
+      />
 
-        <CheckoutFormList
-          name="ResearcherName"
-          col="12"
-          label="Researcher Name"
-          placeholder="Researcher Name"
-          defaultValue={researcher?.ResearcherName}
-        />
-         <CheckoutFormList
-          col="12"
-          type="email"
-          label="Email Address"
-          placeholder="Your Email"
-          name="email"
-          defaultValue={researcher?.useraccount_email}
-        />
-        <CheckoutFormList
-          name="contact"
-          col="12"
-          label="Phone"
-          placeholder="Phone number"
-          defaultValue={researcher?.phoneNumber}
-        />
-        <CheckoutFormList
-          name="fullAddress"
-          col="12"
-          label="Full Address"
-          placeholder="Full Address"
-          defaultValue={researcher?.fullAddress}
-        />
-        <CheckoutFormList
-          col="6"
-          label="Town / City"
-          placeholder="Select City"
-          name="city"
-          options={cityname}
-          defaultValue={researcher?.cityname}
-        />
-        <CheckoutFormList
-          col="6"
-          label="State / Country"
-          placeholder="Select Country"
-          name="country"
-          options={countryname}
-          defaultValue={researcher?.countryname}
-        />
-        <CheckoutFormList
-          col="6"
-          label="District"
-          placeholder="Select District"
-          name="district"
-          options={districtname}
-          defaultValue={researcher?.districtname}
-        />
-        
-       
-
-      </div>
-    </>
+      {/* <div className="order-notes">
+        <div className="checkout-form-list">
+          <label>Order Notes</label>
+          <textarea
+            id="checkout-mess"
+            cols="30"
+            rows="10"
+            placeholder="Notes about your order, e.g. special notes for delivery."
+          ></textarea>
+        </div>
+      </div> */}
+{/* 
+      <button type="submit">Submit</button> */}
+    </form>
   );
 };
 

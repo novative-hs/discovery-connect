@@ -117,9 +117,9 @@ const updateCollectionSiteDetail = (req, res) => {
     res.status(200).json({ message: 'Collection site updated successfully' });
   });
 };
-
 const getCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
+  console.log("id us", id)
   collectionsiteModel.getCollectionSiteDetail(id, (err, results) => {
     if (err) {
       console.error('Error fetching collection site:', err);
@@ -131,7 +131,6 @@ const getCollectionSiteDetail = (req, res) => {
     res.status(200).json(results[0]);
   });
 };
-
 
 module.exports = {
   getCollectionSiteDetail,

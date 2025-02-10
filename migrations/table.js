@@ -8,6 +8,7 @@ const productModel = require("../models/productModel");
 const wishlistModel = require("../models/wishlistModel");
 const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
+const historyModel = require("../models/historyModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
 const sample_approvalModel=require("../models/sampleapprovalModel")
@@ -28,6 +29,7 @@ const concurrentmedicalconditionsModel=require('../models/concurrentmedicalcondi
 function Database() {
   ethnicityModel.createEthnicityTable();
   cityModel.createCityTable();
+  historyModel.RegistrationAdmin_History();
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
   signupModel.create_collectionsiteTable();

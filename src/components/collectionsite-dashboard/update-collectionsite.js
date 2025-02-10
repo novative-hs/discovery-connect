@@ -35,28 +35,9 @@ const UpdateCollectionSite = () => {
   const [collectionsite, setCollectionSite] = useState([]);
   const [logo, setLogo] = useState("");
   const logoHandler = (file) => {
-    if (file) {
-      const validTypes = ["image/png", "image/jpeg"]; // Allowed file formats
-  
-      // Check file type
-      if (!validTypes.includes(file.type)) {
-        alert("Invalid file type! Please upload a .png or .jpeg file.");
-        document.getElementById("logo").value = ""; // Reset file input
-        return;
-      }
-  
-      // Optional: Check file size (e.g., max 2MB)
-      const maxSize = 2 * 1024 * 1024; // 2MB
-      if (file.size > maxSize) {
-        alert("File size exceeds the limit of 2MB.");
-        document.getElementById("logo").value = ""; // Reset file input
-        return;
-      }
-  
-      // If valid, process the file (e.g., set it in state)
-      console.log("File accepted:", file);
-    }
+    setLogo(file);
   };
+  // React Hook Form
   const {
     register,
     handleSubmit,
@@ -135,7 +116,7 @@ const UpdateCollectionSite = () => {
   
     // If a new logo is provided, append it to the FormData
     if (logo) {
-      formData.append("logo", logo); // Assuming logo is a File object (binary)
+      formData.append("logo", logo); // Assuming `logo` is a File object (binary)
     } else {
       // If no new logo is uploaded, append the existing logo's binary data
       const binaryLogo = data.logo.data; // This is the existing logo buffer (e.g., Buffer or array)
@@ -227,7 +208,6 @@ const UpdateCollectionSite = () => {
                 name="logo"
                 type="file"
                 id="logo"
-                accept="image/png, image/jpeg" 
                 onChange={(e) => logoHandler(e.target.files[0])}
                 className="form-control form-control-sm"
               />

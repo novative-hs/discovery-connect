@@ -67,24 +67,36 @@ const createProductsTable = () => {
 
 // Fetch products based on query filters
 const getProducts = (filters, callback) => {
-  let query = `SELECT * FROM products WHERE 1=1`;
+  let query = `SELECT * FROM sample WHERE is_deleted = FALSE`;
   const queryParams = [];
 
-  if (filters.Category) {
-    query += ' AND parent_category = ?';
-    queryParams.push(filters.Category);
+  if (filters.age) {
+    query += ' AND age = ?';
+    queryParams.push(filters.age);
   }
-  if (filters.category) {
-    query += ' AND child_category = ?';
-    queryParams.push(filters.category);
+  if (filters.gender) {
+    query += ' AND gender = ?';
+    queryParams.push(filters.gender);
   }
-  if (filters.brand) {
-    query += ' AND brand = ?';
-    queryParams.push(filters.brand);
+  if (filters.ethnicity) {
+    query += ' AND ethnicity = ?';
+    queryParams.push(filters.ethnicity);
   }
-  if (filters.color) {
-    query += ' AND color = ?';
-    queryParams.push(filters.color);
+  if (filters.samplecondition) {
+    query += ' AND samplecondition = ?';
+    queryParams.push(filters.samplecondition);
+  }
+  if (filters.CountryOfCollection) {
+    query += ' AND CountryOfCollection = ?';
+    queryParams.push(filters.CountryOfCollection);
+  }
+  if (filters.SampleTypeMatrix) {
+    query += ' AND SampleTypeMatrix = ?';
+    queryParams.push(filters.SampleTypeMatrix);
+  }
+  if (filters.status) {
+    query += ' AND status = ?';
+    queryParams.push(filters.status);
   }
   if (filters.priceMin || filters.priceMax) {
     if (filters.priceMin) {
@@ -96,12 +108,16 @@ const getProducts = (filters, callback) => {
       queryParams.push(filters.priceMax);
     }
   }
-  query += ` ORDER BY ${filters.sort === 'Price low to high' ? 'price ASC' :
-      filters.sort === 'Price high to low' ? 'price DESC' :
-        'created_at DESC'
-    }`;
+
+  // Sorting logic
+  query += ` ORDER BY ${
+    filters.sort === 'Price low to high' ? 'price ASC' :
+    filters.sort === 'Price high to low' ? 'price DESC' :
+    'created_at DESC'
+  }`;
 
   mysqlConnection.query(query, queryParams, callback);
 };
+
 
 module.exports = { getProducts, createProductsTable };

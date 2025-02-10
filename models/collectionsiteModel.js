@@ -6,8 +6,8 @@ const getAllCollectionSites = (callback) => {
     SELECT collectionsite.*, user_account.email
     FROM collectionsite
     JOIN user_account ON collectionsite.user_account_id = user_account.id
-    WHERE collectionsite.status IN ('approved', 'pending')
   `;
+
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);
@@ -54,10 +54,11 @@ const updateCollectionSiteStatus = (id, status, callback) => {
     callback(err, result);
   });
 };
-function getCollectionSiteById(id, callback) {
-  const query = 'SELECT * FROM researcher WHERE id = ?';
-  mysqlConnection.query(query, [id], callback);
-}  
+
+// function getCollectionSiteById(id, callback) {
+//   const query = 'SELECT * FROM researcher WHERE id = ?';
+//   mysqlConnection.query(query, [id], callback);
+// }  
 
 // Function to delete a collection site
 const deleteCollectionSite = (id, callback) => {
@@ -96,21 +97,38 @@ function updateCollectionSiteDetail(id, data, callback) {
     districtid, 
     countryid, 
     type, 
-    logo
+    logo 
   } = data;
-    const updateEmailQuery = `
-      UPDATE user_account
-      SET email = ?
-      WHERE id = ?
-    `;
 
-    mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
+  const updateEmailQuery = `
+    UPDATE user_account
+    SET email = ?
+    WHERE id = ?
+  `;
+
+  mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
+    if (err) {
+      return mysqlConnection.rollback(() => {
+        console.error('Error updating email:', err);
+        return callback(err);
+      });
+    }
+
+    // Get the current logo from the database
+    const getCurrentLogoQuery = `SELECT logo FROM collectionsite WHERE user_account_id = ?`;
+
+    mysqlConnection.query(getCurrentLogoQuery, [id], (err, results) => {
       if (err) {
         return mysqlConnection.rollback(() => {
-          console.error('Error updating email:', err);
+          console.error('Error fetching current logo:', err);
           return callback(err);
         });
       }
+
+      const currentLogo = results[0]?.logo;
+
+      // Use the provided logo or retain the existing one
+      const updatedLogo = logo || currentLogo;
 
       const updateCollectionSiteQuery = `
         UPDATE collectionsite
@@ -152,9 +170,8 @@ function updateCollectionSiteDetail(id, data, callback) {
         }
       );
     });
-  
+  });
 }
-
 function getCollectionSiteDetail(id, callback) {
   const query = `
     SELECT 
@@ -178,14 +195,15 @@ function getCollectionSiteDetail(id, callback) {
   
   mysqlConnection.query(query, [id], callback);
 }  
+
 module.exports = {
   getCollectionSiteDetail,
   updateCollectionSiteDetail,
-  getAllCollectionSiteNames,
-  getCollectionSiteById,
+  // getCollectionSiteById,
   getAllCollectionSites,
   createCollectionSite,
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,
+  getAllCollectionSiteNames
 };

@@ -3,11 +3,9 @@ import { apiSlice } from "src/redux/api/apiSlice";
 export const authApi = apiSlice.injectEndpoints({
   overrideExisting:true,
   endpoints: (builder) => ({
-    // get showing products
-    getShowingProducts: builder.query({
-      query: () => `api/products/show`,
-      providesTags: ["Products"],
-      keepUnusedDataFor: 600,
+    // get all samples
+    getAllSamples: builder.query({
+      query: () => "api/sample/getAll", // Adjust the API path as needed
     }),
     // get discount products
     getDiscountProducts: builder.query({
@@ -44,5 +42,6 @@ export const {
   useGetShowingProductsQuery,
   useGetDiscountProductsQuery,
   useGetProductQuery,
+  useGetAllSamplesQuery,
   useGetRelatedProductsQuery,
 } = authApi;

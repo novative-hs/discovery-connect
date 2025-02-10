@@ -26,29 +26,26 @@ const getCartCount = (req, res) => {
     res.status(200).json(results);
   });
 };
-// Controller to create a cart member
 const createCart = (req, res) => {
-    const newCartData = req.body;
-  
-    // Pass the newCartData directly to the model
-    cartModel.createCart(newCartData, (err, result) => {
-      if (err) {
-        console.log('Error:', err); // Log the error for more insights
-        return res.status(500).json({ error: "Error creating Cart" });
-      }
-      res.status(200).json({
-        message: "Cart Item deleted successfully",
-        cartCount: result.cartCount,  
-      });
-    
-});
-};
+  const newCartData = req.body;
 
+  console.log("Incoming request body in controller:", newCartData);
+
+  // Pass data to the model
+  cartModel.createCart(newCartData, (err, result) => {
+    if (err) {
+      console.log("Error:", err); // Log the error for debugging
+      return res.status(400).json({ error: err.message || "Error creating Cart" });
+    }
+
+    console.log("Insert Result:", result); // Log the result for debugging
+    res.status(201).json(result); // Send the success response
+  });
+};
 
 const updateCard = (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
-  console.log(updatedData)
   cartModel.updateCart(id, updatedData, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error in updating cart" });
@@ -65,10 +62,7 @@ const deleteCart = (req, res) => {
     if (err) {
       return res.status(500).json({ error: "Error deleting Cart" });
     }
-    res.status(200).json({
-      message: "Cart Item deleted successfully",
-      cartCount: result.cartCount,  // Ensure cart count is returned
-    });
+    res.status(200).json({ message: "Cart Item deleted successfully" });
   });
 };
 
@@ -78,13 +72,9 @@ const deleteSingleCartItem = (req, res) => {
     if (err) {
       return res.status(500).json({ error: "Error deleting Cart" });
     }
-    res.status(200).json({
-      message: "Cart Item deleted successfully",
-      cartCount: result.cartCount,  // Ensure cart count is returned
-    });
+    res.status(200).json({ message: "Cart Item deleted successfully" });
   });
 };
-
 
 module.exports = {
   createCartTable,

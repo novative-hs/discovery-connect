@@ -1,161 +1,61 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
-import { Minus, Plus } from "@svg/index";
-import {
-  add_cart_product,
-  quantityDecrement,
-} from "src/redux/features/cartSlice";
-import axios from "axios";
-import { notifyError, notifySuccess } from "@utils/toast";
+// internal
+import {Minus,Plus} from "@svg/index";
+import { add_cart_product, quantityDecrement, remove_product } from "src/redux/features/cartSlice";
 
-const SingleCartItem = ({ item }) => {
-  const {
-    sampleid,
-    Currency,
-    samplename,
-    CollectionSiteName,
-    price,
-    samplequantity,
-    type,
-    discount,
-    totalpayment,
-    stock,
-  } = item || {};
-  const dispatch = useDispatch();
-  const [isEditing, setIsEditing] = useState(false);
-  const [quantity, setQuantity] = useState(samplequantity);
-  const getCurrencySymbol = (Currency) => {
-    switch (Currency?.toLowerCase()) {
-      case "pkr":
-        return "Rs";
-      case "usd":
-        return "$";
-      case "eur":
-        return "€";
-      case "gbp":
-        return "£";
-      default:
-        return Currency || ""; // Default to empty if currency is unknown
-    }
-  };
+const SingleCartItem = ({item}) => {
+  const {_id,samplename,price,quantity=0} = item || {};
+  const dispatch = useDispatch()
 
-  // Increase quantity
-  const handleIncrement = () => {
-    setQuantity(quantity + 1);
-  };
+  // handle add product
+  const handleAddProduct = (prd) => {
+    dispatch(add_cart_product(prd))
+  }
 
-  // Decrease quantity
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
+  // handle decrement product
+  const handleDecrement = (prd) => {
+    dispatch(quantityDecrement(prd))
+  }
 
-  // Update quantity API call
-  const handleUpdateQuantity = async () => {
-    // Check if the updated quantity is less than or equal to available stock
-    if (quantity > stock) {
-      notifyError(`Out of stock! Only ${stock} units available.`);
-      return; // Exit if quantity exceeds available stock
-    }
+  // handle remove product
+  const handleRemovePrd = (prd) => {
+    dispatch(remove_product(prd))
+  }
 
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/cart/update/${sampleid}`,
-        {
-          price,
-          samplequantity: quantity,
-          discount
-        }
-      );
-      if (response.data) {
-        console.log("Response", response.data);
-        notifySuccess("Quantity updated successfully");
-        // localStorage.setItem("cart", JSON.stringify(response.data.cart));
-        window.dispatchEvent(new Event("cartUpdated"));
-        setIsEditing(false);
-      } else {
-        notifyError("Failed to update quantity");
-      }
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      notifyError("An error occurred while updating quantity");
-    }
-  };
-
-  // Handle remove product
-  const handleRemovePrd = async () => {
-    try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/cart/delete/${sampleid}`
-      );
-      if (response) {
-        notifySuccess("Item deleted successfully from cart");
-        console.log(response.data);
-        console.log("Remaining Cart Count:", response.data.cartCount);
-        // Update cart count in localStorage and dispatch cartUpdated event
-        localStorage.setItem("cartCount", response.data.cartCount);
-        window.dispatchEvent(new Event("cartUpdated"));
-      } else {
-        notifyError("Unexpected API response format");
-        localStorage.setItem("cartCount", 0);
-        window.dispatchEvent(new Event("cartUpdated"));
-      }
-    } catch (error) {
-      console.error("Error removing item from cart:", error);
-      notifyError("Failed to remove item from cart");
-    }
-  };
-
+  // handleChange
+  const handleChange = (e) => {}
   return (
     <tr>
+      {/* <td className="product-thumbnail"> */}
+        {/* <Link href={`product-details/${_id}`}>
+          <Image src={image} alt="cart img" width={125} height={125} />
+        </Link> */}
+      {/* </td> */}
       <td className="product-name">
-        <Link href="#">{samplename}</Link>
-      </td>
-      <td className="product-name">
-        <Link href="#">{CollectionSiteName}</Link>
+        <Link href={`product-details/${_id}`}>{samplename}</Link>
       </td>
 
       <td className="product-price">
-        <span className="amount">
-          {" "}
-          {getCurrencySymbol(Currency)}
-          {price}
-        </span>
+        <span className="amount">{price}</span>
       </td>
 
       <td className="product-quantity">
-        {isEditing ? (
-          <div className="tp-product-quantity mt-10 mb-10">
-            <span className="tp-cart-minus" onClick={handleDecrement}>
-              <Minus />
-            </span>
-            <input
-              className="tp-cart-input"
-              type="text"
-              value={quantity}
-              readOnly
-            />
-            <span className="tp-cart-plus" onClick={handleIncrement}>
-              <Plus />
-            </span>
-          </div>
-        ) : (
-          <span>{samplequantity}</span>
-        )}
-      </td>
-
-      <td className="product-name">
-        <Link href="#">{discount}</Link>
-      </td>
-
-      <td className="product-name">
-        <Link href="#">{type || "N/A"}</Link>
+      <span className="quantity">{quantity}</span>
+        {/* <div className="tp-product-quantity mt-10 mb-10"> */}
+          {/* <span className="tp-cart-minus" onClick={()=> handleDecrement(item)}>
+            <Minus/>
+          </span>
+          <input className="tp-cart-input" type="text" value={quantity} onChange={handleChange} />
+          <span className="tp-cart-plus" onClick={()=> handleAddProduct(item)}>
+            <Plus/>
+          </span> */}
+        {/* </div> */}
       </td>
 
       <td className="product-subtotal">
-        <span className="amount">{totalpayment}</span>
+        <span className="amount">{(price * quantity).toFixed(2)}</span>
       </td>
 
       <td className="product-remove d-flex align-items-center justify-content-center gap-2 ">
@@ -186,6 +86,7 @@ const SingleCartItem = ({ item }) => {
         </button>
       </td>
     </tr>
+    
   );
 };
 

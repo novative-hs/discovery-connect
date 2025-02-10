@@ -1,13 +1,13 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  quantityIncrement,
-  quantityDecrement,
-  remove_product,
-  add_cart_product,
-} from "src/redux/features/cartSlice";
+import React from "react";
+import Image from "next/image";
+import { useDispatch } from "react-redux";
+import Link from "next/link";
+import { remove_product } from "src/redux/features/cartSlice";
+import Quantity from "@components/products/quantity";
 
-const SingleCartItem = ({ sample }) => {
+const SingleCartItem = ({ item }) => {
+  const { _id, samplename, price, title, quantity, discount } =
+    item || {};
   const dispatch = useDispatch();
   const item = useSelector((state) =>
     state.cart.cart_product.find((item) => item.id === sample.id)
@@ -45,49 +45,27 @@ const SingleCartItem = ({ sample }) => {
   };
 
   return (
-    <div className="cartmini__widget-item d-flex justify-content-between align-items-center p-3 mb-4 border rounded shadow-sm bg-light">
-      <div className="cartmini__content d-flex">
-        {/* Sample details */}
-        {sample && (
-          <div className="cartmini__details">
-             <h5 className="fw-bold mb-3 fs-5">
-              <strong className="text-dark">Sample Name: </strong>
-              <span className="text-primary">{sample.samplename}</span>
-            </h5>
-            <p className="text-dark fs-5 mb-3">
-              <strong>Price:</strong>{" "}
-              {getCurrencySymbol(sample.SamplePriceCurrency)}
-              {sample.price}
-            </p>
-            <div className="d-flex align-items-center mb-3 gap-2">
-              <h6 className="fw-bold text-dark fs-5 mb-0">
-                <strong>Quantity:</strong>
-              </h6>
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                className="btn btn-outline-secondary btn-sm fw-bold"
-              >
-                -
-              </button>
-              <span className="fs-5 fw-bold">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                className="btn btn-outline-secondary btn-sm fw-bold"
-              >
-                +
-              </button>
-            </div>
-            <p className="text-dark fs-5 mb-3">
-              <strong>Lab Name:</strong> {sample.labname}
-            </p>
-            <p className="text-dark fs-5 mb-3">
-              <strong>Condition:</strong> {sample.samplecondition}
-            </p>
-            <p className="text-danger fw-bold fs-5 mb-3">
-              <strong>Discount:</strong> {sample.discount}%
-            </p>
-          </div>
-        )}
+    <div className="cartmini__widget-item">
+      <div className="cartmini__thumb">
+        <Link href={`/product-details/${_id}`}>
+   <span>{samplename}</span>
+        </Link>
+      </div>
+      <div className="cartmini__content">
+        <h5>
+          <a href={`/product-details/${_id}`}>{title}</a>
+        </h5>
+        <div className="cartmini__price-wrapper">
+          {!quantity && (
+            <span className="cartmini__price">${quantity}</span>
+          )}
+          {discount > 0 && (
+            <span className="cartmini__price">
+              ${(price - (price * discount) / 100) * quantity}
+            </span>
+          )}
+          {/* <span className="cartmini__quantity">{quantity}</span> */}
+        </div>
       </div>
     </div>
   );

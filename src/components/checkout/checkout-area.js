@@ -3,12 +3,18 @@ import BillingDetails from './billing-details';
 import OrderArea from './order-area';
 import SampleCopy from './sample-copy';
 
-const CheckoutArea = () => {
+const CheckoutArea = ({handleSubmit,submitHandler,...others}) => {
+  const id = localStorage.getItem("userID");
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  } else {
+    console.log("Researcher iD on checkout page is Id on sample page is:", id);
+  }
   return (
     <section className="checkout-area pb-85 mt-100">
       <div className="container">
         <form>
-          <div className="row">
+          <div className="row mt-3">
             <div className="col-lg-6">
               <div className="checkbox-form">
                 <h3>Billing Details</h3>
@@ -28,6 +34,7 @@ const CheckoutArea = () => {
         </form>
       </div>
     </section>
+
   );
 };
 
