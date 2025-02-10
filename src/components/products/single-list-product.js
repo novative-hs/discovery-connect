@@ -26,8 +26,15 @@ const SingleListProduct = ({ product }) => {
           <div className="col-xl-5 col-lg-5">
             <div className="product__thumb product__list-thumb p-relative fix m-img">
               <Link href={`product-details/${_id}`}>
+                 {/* <Image
+                              src={product.imageUrl}
+                              alt="product image"
+                              width={960}
+                              height={1125}
+                              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                            /> */}
                 <Image
-                  src={image}
+                  src={product.imageUrl}
                   alt="image"
                   width={335}
                   height={325}
@@ -56,14 +63,14 @@ const SingleListProduct = ({ product }) => {
               </div>
 
               <h3 className="product__list-title">
-                <Link href={`product-details/${_id}`}>{title}</Link>
+              <span className="product__list-ammount">{product.samplename}</span>
+                {/* <Link href={`product-details/${_id}`}>{product.samplename}</Link> */}
               </h3>
               <div className="product__list-price">
-                <span className="product__list-ammount">${price}</span>
+                <span className="product__list-ammount">{product.price}</span>
               </div>
               <p>
-                Shop Harry.com for every day low prices. Free shipping on orders
-                $35+ or Pickup In-store and get
+              Get high-quality blood samples for your research at Discovery Connect. Fast shipping and reliable sourcing!
               </p>
 
               <div className="product__list-action d-flex flex-wrap align-items-center">

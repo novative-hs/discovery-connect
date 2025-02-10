@@ -6,7 +6,7 @@ router.post('/researcher/post', researcherController.createResearcher);
 router.get('/researcher/get/:id', researcherController.getResearchersByOrganization);
 router.get('/researcher/get', researcherController.getAllResearchers);
 router.get('/researchers/:id', researcherController.getResearcherById);
-router.put('/researchers/edit/:id', researcherController.updateResearcher);
+// router.put('/researchers/edit/:id', researcherController.updateResearcher);
 router.delete('/researchers/delete/:id', researcherController.deleteResearcher);
 
 // Registration Admin

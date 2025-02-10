@@ -34,6 +34,7 @@ const getAllSamples = (req, res) => {
   });
 };
 
+
 // Controller to get a sample by ID
 const getSampleById = (req, res) => {
   const { id } = req.params;

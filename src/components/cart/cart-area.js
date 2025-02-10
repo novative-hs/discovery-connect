@@ -1,23 +1,32 @@
 import React from "react";
 import Link from "next/link";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 // internal
-import CartTotal from "./cart-total";
-import CouponUpdateCart from "./coupon-update";
-import SingleCartItem from "./single-cart";
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
-
-// cart items
+import { remove_product } from "src/redux/features/cartSlice";
 
 const CartArea = () => {
+  const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
+
+  // Handle remove product
+  const handleRemovePrd = (prd) => {
+    dispatch(remove_product(prd));
+  };
+
+  // Calculate subtotal and total
+  const subtotal = cart_products.reduce(
+    (acc, product) => acc + product.price * product.quantity,
+    0
+  );
+
   return (
     <section className="cart-area pt-100 pb-100">
       <div className="container">
         <div className="row">
           <div className="col-12">
             {cart_products.length > 0 && (
-              <form onSubmit={e => e.preventDefault()}>
+              <form onSubmit={(e) => e.preventDefault()}>
                 <div className="table-content table-responsive">
                   <div className="tp-continue-shopping">
                     <p>
@@ -29,9 +38,8 @@ const CartArea = () => {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th className="product-thumbnail">Images</th>
-                        <th className="cart-product-name">Product</th>
-                        <th className="product-price">Unit Price</th>
+                        <th className="product-thumbnail">Sample</th>
+                        <th className="product-price">Price</th>
                         <th className="product-quantity">Quantity</th>
                         <th className="product-subtotal">Total</th>
                         <th className="product-remove">Remove</th>
@@ -39,7 +47,32 @@ const CartArea = () => {
                     </thead>
                     <tbody>
                       {cart_products.map((item, i) => (
-                        <SingleCartItem key={i} item={item} />
+                        <tr key={i}>
+                          <td className="product-name">
+                            <Link href={`product-details/${item._id}`}>
+                              {item.samplename}
+                            </Link>
+                          </td>
+                          <td className="product-price">
+                            <span className="amount">{item.price.toFixed(2)}</span>
+                          </td>
+                          <td className="product-quantity">
+                            <span className="quantity">{item.quantity}</span>
+                          </td>
+                          <td className="product-subtotal">
+                            <span className="amount">
+                              {(item.price * item.quantity).toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="product-remove">
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePrd(item)}
+                            >
+                              <i className="fa fa-times"></i>
+                            </button>
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
@@ -47,9 +80,20 @@ const CartArea = () => {
 
                 <div className="row justify-content-end">
                   <div className="col-md-5 mr-auto">
-                    {/* cart total */}
-                    <CartTotal />
-                    {/* cart total */}
+                    <div className="cart-page-total">
+                      <h2>Cart totals</h2>
+                      <ul className="mb-20">
+                        <li>
+                          Subtotal <span>{subtotal.toFixed(2)}</span>
+                        </li>
+                        <li>
+                          Total <span>{subtotal.toFixed(2)}</span>
+                        </li>
+                      </ul>
+                      <Link href={`/login?from=checkout`} className="tp-btn cursor-pointer">
+  Proceed to checkout
+</Link>
+                    </div>
                   </div>
                 </div>
               </form>

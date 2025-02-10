@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 // internal
 import SEO from "@components/seo";
@@ -12,20 +12,26 @@ import Footer from "@layout/footer";
 import useCheckoutSubmit from "@hooks/use-checkout-submit";
 
 export default function Checkout() {
-  const checkout_data = useCheckoutSubmit();
+  const [userId, setUserId] = useState(null);
   const router = useRouter();
   useEffect(() => {
-    const isAuthenticate = localStorage.getItem("auth");
-    if(!isAuthenticate){
-      router.push("/login")
+    // Access localStorage safely on the client side
+    const id = localStorage.getItem("userID");
+    if (!id) {
+      // Redirect to login if user is not authenticated
+      router.push("/login");
+    } else {
+      setUserId(id);
+      console.log("Researcher ID on checkout page is:", id);
     }
-  },[router])
+  }, [router]);
+  const checkout_data = useCheckoutSubmit();
   return (
     <Wrapper>
       <SEO pageTitle={"Checkout"} />
       <Header style_2={true} />
       <CartBreadcrumb title="Checkout" subtitle="Checkout" />
-      <CouponArea {...checkout_data} />
+      {/* <CouponArea {...checkout_data} /> */}
       <CheckoutArea {...checkout_data} />
       {/* <ShopCta /> */}
       <Footer />

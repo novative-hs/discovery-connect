@@ -1,55 +1,19 @@
-const mysqlConnection = require('../config/db');
+const mysqlConnection = require("../config/db");
 
-// New Updated fields in Table
-const addFieldToCartTable = (tableName, fieldName, fieldType) => {
-  const checkColumnQuery = `
-    SELECT COUNT(*) AS columnExists 
-    FROM information_schema.columns 
-    WHERE table_name = '${tableName}' 
-    AND column_name = '${fieldName}'`;
-
-  // Check if the column exists
-  mysqlConnection.query(checkColumnQuery, (err, results) => {
-    if (err) {
-      console.error(`Error checking column existence for ${fieldName}:`, err);
-    } else {
-      const columnExists = results[0].columnExists;
-      if (columnExists === 0) {
-        const addFieldQuery = `
-          ALTER TABLE ${tableName} 
-          ADD COLUMN ${fieldName} ${fieldType}`;
-
-        mysqlConnection.query(addFieldQuery, (err, results) => {
-          if (err) {
-            console.error(`Error altering ${tableName} table to add ${fieldName}:`, err);
-          } else {
-            console.log(`${fieldName} added to ${tableName} table.`);
-          }
-        });
-      } else {
-        console.log(`${fieldName} column already exists in ${tableName} table.`);
-      }
-    }
-  });
-};
-
-// Add Field Names Here
-const alterCartTable = () => {
-  // addFieldToCartTable("cart", "CutOffRange", "VARCHAR(255)");
-};
 
 const createCartTable = () => {
   const cartTableQuery = `
-    CREATE TABLE IF NOT EXISTS cart (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      product_id INT NOT NULL,
-      productname VARCHAR(255) NOT NULL,
-      price VARCHAR(255) NOT NULL,
-      quantity DECIMAL (65) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES user_account(id),
-      FOREIGN KEY (product_id) REFERENCES products(id)
+  CREATE TABLE IF NOT EXISTS cart (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  sample_id INT,
+  price FLOAT,
+  quantity INT,
+  payment_method VARCHAR(255),
+  totalpayment DECIMAL(10, 2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES user_account(id),
+  FOREIGN KEY (sample_id) REFERENCES sample(id)
     )`;
 
   mysqlConnection.query(cartTableQuery, (err, result) => {
@@ -59,7 +23,158 @@ const createCartTable = () => {
       console.log("Cart table created or already exists.");
     }
   });
-  alterCartTable();
+  // alterCartTable();
+};
+// cartModel.js
+const createCart = (data, callback) => {
+  console.log("Incoming request body:", data);
+
+  const { researcher_id, cart_items, payment_method, sample_id } = data;
+
+  // Validate incoming data
+  if (!researcher_id || !cart_items || !payment_method) {
+    return callback(new Error("Missing required fields"));
+  }
+
+  // Perform database inserts for each cart item
+  cart_items.forEach((item) => {
+    const query = `
+      INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+      researcher_id,
+      item.sample_id, // Default to null if item.id is undefined
+      item.price,
+      item.samplequantity,
+      payment_method,
+      item.total,
+    ];
+
+    mysqlConnection.query(query, values, (err) => {
+      if (err) {
+        console.error("Error inserting into cart:", err);
+        return callback(err);
+      }
+    });
+  });
+
+  // After all inserts (no errors), call the callback
+  callback(null, { message: "Cart items added successfully" });
 };
 
-module.exports = { createCartTable };
+
+const getAllCart = (id, callback, res) => {
+  const sqlQuery = `
+  SELECT 
+      s.id AS sampleid, 
+      s.samplename AS samplename,
+      s.discount AS discount,
+      s. user_account_id AS user_account_id,
+      cs.CollectionSiteName,
+      c.quantity AS samplequantity, 
+      c.*
+  FROM cart c
+  JOIN sample s ON c.sample_id = s.id
+  JOIN collectionsite cs ON c.collectionsite_id = cs.user_account_id
+  WHERE c.user_id = ?
+`;
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching cart data:", err);
+      callback(null, results);
+    }
+    else{
+      callback(null, results);
+    }
+  });
+};
+const getCartCount = (id, callback, res) => {
+  const sqlQuery = `
+    
+ SELECT 
+      count(c.id) as Count
+  FROM cart c
+  WHERE c.user_id = ?
+  `;
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching cart data:", err);
+      callback(err, results);
+    }
+    else{
+      callback(null, results);
+    }
+  });
+};
+
+const deleteCart = (id, callback, res) => {
+  const sqlQuery = `
+    DELETE FROM cart 
+WHERE user_id = ?;
+    `;
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error deleting cart:", err);
+    } else {
+      console.log("Cart deleted successfully", results);
+    }
+  });
+};
+const deleteSingleCartItem = (id, callback, res) => {
+  const sqlQuery = `
+      DELETE FROM cart 
+  WHERE sample_id = ?;
+      `;
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error deleting cart item :", err);
+    } else {
+      console.log("Cart Item deleted successfully", results);
+    }
+  });
+};
+const updateCart = (id,data, callback, res) => {
+  const {
+    researcher_id,
+    user_account_id,
+    price,
+    samplequantity,
+    total,
+  } = data;
+
+  const updateQuery = `
+    UPDATE cart 
+    SET price = ?, quantity = ?, totalpayment = ?
+    WHERE user_id = ? AND sample_id = ? AND collectionsite_id = ?
+  `;
+
+  const values = [
+    price,
+    samplequantity,
+    total,
+    researcher_id,
+    id,
+    user_account_id,
+  ];
+
+  console.log(updateQuery, values);
+  mysqlConnection.query(updateQuery, values, (err, result) => {
+    if (err) {
+      callback(err, null);
+    } else {
+      console.log("Update Result:", result); // Debugging result
+      callback(null, result);
+    }
+  });
+};
+
+module.exports = {
+  createCartTable,
+  getAllCart,
+  createCart,
+  getCartCount,
+  deleteCart,
+  deleteSingleCartItem,
+  updateCart
+};

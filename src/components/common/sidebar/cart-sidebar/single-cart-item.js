@@ -3,9 +3,10 @@ import Image from "next/image";
 import { useDispatch } from "react-redux";
 import Link from "next/link";
 import { remove_product } from "src/redux/features/cartSlice";
+import Quantity from "@components/products/quantity";
 
 const SingleCartItem = ({ item }) => {
-  const { _id, image, originalPrice, title, orderQuantity, discount } =
+  const { _id, samplename, price, title, quantity, discount } =
     item || {};
   const dispatch = useDispatch();
 
@@ -17,7 +18,7 @@ const SingleCartItem = ({ item }) => {
     <div className="cartmini__widget-item">
       <div className="cartmini__thumb">
         <Link href={`/product-details/${_id}`}>
-          <Image src={image} alt="cart img" width={70} height={90} />
+   <span>{samplename}</span>
         </Link>
       </div>
       <div className="cartmini__content">
@@ -25,15 +26,15 @@ const SingleCartItem = ({ item }) => {
           <a href={`/product-details/${_id}`}>{title}</a>
         </h5>
         <div className="cartmini__price-wrapper">
-          {!discount && (
-            <span className="cartmini__price">${originalPrice}</span>
+          {!quantity && (
+            <span className="cartmini__price">${quantity}</span>
           )}
           {discount > 0 && (
             <span className="cartmini__price">
-              ${(originalPrice - (originalPrice * discount) / 100) * orderQuantity}
+              ${(price - (price * discount) / 100) * quantity}
             </span>
           )}
-          <span className="cartmini__quantity">x{orderQuantity}</span>
+          {/* <span className="cartmini__quantity">{quantity}</span> */}
         </div>
       </div>
       <button

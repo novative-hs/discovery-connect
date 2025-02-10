@@ -12,29 +12,30 @@ export const cartSlice = createSlice({
   initialState,
   reducers: {
     add_cart_product: (state, { payload }) => {
-      const isExist = state.cart_products.some((i) => i._id === payload._id);
+      console.log("Product added to cart:", payload);
+      const isExist = state.cart_products.some((item) => item.id === payload.id);
       if (!isExist) {
         const newItem = {
           ...payload,
           orderQuantity: 1,
         };
-        state.cart_products.push(newItem);
-        notifySuccess(`${payload.title} added to cart`);
+        state.cart_products = [...state.cart_products, newItem];
+        notifySuccess(`Sampel added to cart`);
       } else {
-        state.cart_products.map((item) => {
-          if (item._id === payload._id) {
+        state.cart_products = state.cart_products.map((item) => {
+          if (item.id === payload.id) {
             if (item.quantity >= item.orderQuantity + state.orderQuantity) {
               item.orderQuantity =
                 state.orderQuantity !== 1
                   ? state.orderQuantity + item.orderQuantity
                   : item.orderQuantity + 1;
-              notifySuccess(`${state.orderQuantity} ${item.title} added to cart`);
+              notifySuccess(`${state.orderQuantity} ${item.samplename} added to cart`);
             } else {
               notifyError("No more quantity available for this product!");
               state.orderQuantity = 1;
             }
           }
-          return { ...item };
+          return item;
         });
       }
       setLocalStorage("cart_products", state.cart_products);
@@ -60,9 +61,12 @@ export const cartSlice = createSlice({
       setLocalStorage("cart_products", state.cart_products);
     },
     remove_product: (state, { payload }) => {
+      console.log("Removing product with id:", payload.id);
       state.cart_products = state.cart_products.filter(
-        (item) => item._id !== payload._id
+        (item) => item.id !== payload.id
       );
+      console.log("Updated cart_products:", state.cart_products);
+    
       setLocalStorage("cart_products", state.cart_products);
     },
     get_cart_products: (state, action) => {
@@ -71,8 +75,14 @@ export const cartSlice = createSlice({
     initialOrderQuantity: (state, { payload }) => {
       state.orderQuantity = 1;
     },
+    clear_cart: (state) => {
+      state.cart_products = []; // Clear all items
+      setLocalStorage("cart_products", state.cart_products); // Update local storage
+      notifySuccess("Cart has been cleared successfully!"); // Optional notification
+    },
   },
 });
+
 
 export const {
   add_cart_product,
@@ -80,6 +90,7 @@ export const {
   decrement,
   get_cart_products,
   remove_product,
+  clear_cart,
   quantityDecrement,
   initialOrderQuantity,
 } = cartSlice.actions;

@@ -1,5 +1,6 @@
 const mysqlConnection = require("../config/db");
-
+const fs = require('fs');
+const path = require('path');
 // Function to create the sample table
 const createSampleTable = () => {
   const sampleTable = `
@@ -88,13 +89,75 @@ const getSamples = (id, callback) => {
   });
 };
 
-// All Collectionsite + Biobank samples in API
 const getAllSamples = (callback) => {
-  const query = 'SELECT * FROM sample WHERE status = "In Stock"';
+  const query = `
+    SELECT 
+      s.*,
+      cs.CollectionSiteName AS CollectionSiteName,
+      c.name AS CityName,
+      d.name AS DistrictName
+    FROM 
+      sample s
+    JOIN 
+      collectionsite cs ON s.user_account_id = cs.user_account_id
+    JOIN 
+      city c ON cs.city = c.id
+    JOIN 
+      district d ON cs.district = d.id
+    WHERE 
+      s.status = 'In Stock'
+  `;
+
+  // Log query being executed
+  console.log("Executing Query:", query);
+
   mysqlConnection.query(query, (err, results) => {
-    callback(err, results);
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null); // Will send 500 if there's an error with the query
+      return;
+    }
+
+    // Log results
+    console.log("DB Query Results:", results);
+
+    // Continue with image processing
+    const imageFolder = path.join(__dirname, '../uploads/Images');
+    fs.readdir(imageFolder, (fsErr, files) => {
+      if (fsErr) {
+        console.error("Error reading image folder:", fsErr);
+        callback(fsErr, null);
+        return;
+      }
+
+      console.log("Files in image folder:", files);
+      const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+      console.log("Filtered Image Files:", imageFiles);
+
+      const updatedResults = results.map(sample => {
+        if (imageFiles.length > 0) {
+          const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+          const imagePath = path.join(imageFolder, randomImage);
+
+          // Read the image file as binary data and convert to base64
+          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+
+          // Set the base64 encoded image in the sample object
+          sample.imageUrl = `data:image/${path.extname(randomImage).slice(1)};base64,${base64Image}`;
+        } else {
+          sample.imageUrl = null;
+        }
+        return sample;
+      });
+
+      console.log("Updated Results with Images:", updatedResults);
+
+      callback(null, updatedResults);
+    });
   });
 };
+
+
 
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {

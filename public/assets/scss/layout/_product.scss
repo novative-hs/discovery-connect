@@ -1642,7 +1642,19 @@
         }
     }
 }
-
+.product-image-frame {
+    width: 100%;
+    height: 200px;  /* Fixed height for all images */
+    position: relative;
+    overflow: hidden;  /* Ensure any excess image area is cropped */
+  }
+  
+  .product-image-frame img {
+    object-fit: cover; /* Ensures the image covers the entire container */
+    width: 100%;
+    height: 100%;
+  }
+  
 
 .product-add-cart-btn{
     font-weight: 600;

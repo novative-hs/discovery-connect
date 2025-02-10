@@ -65,19 +65,16 @@ const deleteCollectionSite = (req, res) => {
 
 // Controller to fetch collection site names
 const getAllCollectionSiteNames = (req, res) => {
-  const { user_account_id } = req.params; // Extract logged-in user's ID from request parameters
-  collectionsiteModel.getAllCollectionSiteNames(user_account_id, (err, results) => {
+  collectionsiteModel.getAllCollectionSiteNames((err, results) => {
     if (err) {
       console.error('Error fetching collection site names:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
-    console.log('Controller Results:', results);
-    const siteNames = results
-      ?.map(row => ({
-        CollectionSiteName: row?.CollectionSiteName,
-        user_account_id: row?.user_account_id,
-      }))
-      .filter(site => site.CollectionSiteName); // Filter valid names
+    console.log('Controller Results:', results); 
+    const siteNames = results?.map(row => row?.CollectionSiteName).filter(name => name); // Extract Names
+    if (siteNames.length === 0) {
+      return res.status(404).json({ error: 'No collection sitessss found' });
+    }
     res.status(200).json({ data: siteNames });
   });
 };
@@ -118,9 +115,9 @@ const updateCollectionSiteDetail = (req, res) => {
     res.status(200).json({ message: 'Collection site updated successfully' });
   });
 };
-
 const getCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
+  console.log("id us", id)
   collectionsiteModel.getCollectionSiteDetail(id, (err, results) => {
     if (err) {
       console.error('Error fetching collection site:', err);
@@ -132,7 +129,6 @@ const getCollectionSiteDetail = (req, res) => {
     res.status(200).json(results[0]);
   });
 };
-
 
 module.exports = {
   getCollectionSiteDetail,

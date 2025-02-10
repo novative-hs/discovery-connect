@@ -36,34 +36,44 @@ const LoginForm = () => {
         password: data.password,
       });
   
-      console.log("Login result:", result); // Debug log for result
-  
       if (result?.error) {
         notifyError(result?.error?.data?.error);
       } else {
-        const { id, accountType, authToken } = result?.data?.user || {}; // Use 'id' instead of 'userID'
+        const { id, accountType, authToken } = result?.data?.user || {};
         if (!id) {
-          console.error("id is undefined in the API response.");
           return notifyError("Unexpected error: User ID is missing.");
         }
   
-        localStorage.setItem("userID", id); // Store 'id' as userID
+        localStorage.setItem("userID", id); 
         notifySuccess("Login successfully");
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
   
-        // Redirect based on account type
-        if (accountType?.toLowerCase() === "registrationadmin") {
-          router.push("/registrationadmin-dashboard");
-        } else if (accountType?.toLowerCase() === "researcher") {
-          router.push("/user-dashboard");
-        } else if (accountType?.toLowerCase() === "organization") {
-          router.push("/organization-dashboard");
-        } else if (accountType?.toLowerCase() === "collectionsites") {
-          router.push("/collectionsite-dashboard");
-        }else if (accountType?.toLowerCase() === "biobank") {
-          router.push("/biobank-dashboard");
+        // Check if the user came from the checkout page
+        const fromPage = router.query.from;
+        if (fromPage === "checkout") {
+          router.push("/checkout"); // Redirect back to the checkout page
         } else {
-          router.push("/default-dashboard");
+          // Redirect based on account type
+          switch (accountType?.toLowerCase()) {
+            case "registrationadmin":
+              router.push("/registrationadmin-dashboard");
+              break;
+            case "researcher":
+              router.push("/user-dashboard");
+              break;
+            case "organization":
+              router.push("/organization-dashboard");
+              break;
+            case "collectionsites":
+              router.push("/collectionsite-dashboard");
+              break;
+            case "biobank":
+              router.push("/biobank-dashboard");
+              break;
+            default:
+              router.push("/default-dashboard");
+              break;
+          }
         }
       }
     } catch (error) {

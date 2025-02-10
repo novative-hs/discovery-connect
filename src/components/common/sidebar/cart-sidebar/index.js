@@ -43,10 +43,10 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
             )}
           </div>
           <div className="cartmini__checkout">
-            <div className="cartmini__checkout-title mb-30">
+            {/* <div className="cartmini__checkout-title mb-30">
               <h4>Subtotal:</h4>
               <span>${total.toFixed(2)}</span>
-            </div>
+            </div> */}
             <div className="cartmini__checkout-btn">
               <Link href="/cart" className="tp-btn mb-10 w-100">
                 <span></span> view cart

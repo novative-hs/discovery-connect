@@ -88,82 +88,6 @@ function updateResearcher(id, data, callback) {
 mysqlConnection.query(query, [ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo, id], callback);
 }
 
-
-// function updateResearcherDetail(id, data, callback) {
-//   const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
-  
-  
-  
-  
-//   mysqlConnection.beginTransaction((err) => {
-//     if (err) {
-//       console.error('Error starting transaction:', err);
-//       return callback(err);
-//     }
-
-//     // Update user_account email
-//     const updateEmailQuery = `
-//       UPDATE user_account
-//       SET email = ?
-//       WHERE id = ?
-//     `;
-
-//     mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
-//       if (err) {
-//         return mysqlConnection.rollback(() => {
-//           console.error('Error updating email:', err);
-//           return callback(err);
-//         });
-//       }
-
-//       // Now update the collectionsite table, passing file path for logo
-//       const updateCollectionSiteQuery = `
-//         UPDATE collectionsite
-//         SET
-//           CollectionSiteName = ?,
-//           phoneNumber = ?,
-//           ntnNumber = ?,
-//           fullAddress = ?,
-//           city = ?,
-//           district = ?,
-//           country = ?,
-//           type = ?,
-//           logo = ?  
-//         WHERE user_account_id = ?
-//       `;
-
-//       mysqlConnection.query(
-//         updateCollectionSiteQuery, 
-//         [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id], 
-//         (err, result) => {
-//           if (err) {
-//             return mysqlConnection.rollback(() => {
-//               console.error('Error updating collectionsite:', err);
-//               return callback(err);
-//             });
-//           }
-
-//           // Commit the transaction if both queries succeed
-//           mysqlConnection.commit((err) => {
-//             if (err) {
-//               return mysqlConnection.rollback(() => {
-//                 console.error('Error committing transaction:', err);
-//                 return callback(err);
-//               });
-//             }
-
-//             console.log('Both email and collectionsite updated successfully');
-//             return callback(null, 'Both updates were successful');
-//           });
-//         }
-//       );
-//     });
-//   });
-
-
-
-
-// }
 // Function to delete a collection site
 const deleteResearcher = (id, callback) => {
   const query = 'UPDATE researcher SET status = ? WHERE id = ?';
@@ -174,9 +98,24 @@ const deleteResearcher = (id, callback) => {
 
 // (Registration Admin) Function to update researcher status
 function updateResearcherStatus(id, status, callback) {
-  const query = 'UPDATE researcher SET status = ? WHERE id = ?';
-  mysqlConnection.query(query, [status, id], callback);
+  const updateQuery = 'UPDATE researcher SET status = ? WHERE id = ?';
+
+  mysqlConnection.query(updateQuery, [status, id], (err, results) => {
+    if (err) return callback(err);
+
+    if (results.affectedRows > 0) {
+      const insertHistoryQuery = `
+        INSERT INTO RegistrationAdmin_History (resaercher_id, status, updated_at)
+        VALUES (?, ?, NOW())
+      `;
+
+      mysqlConnection.query(insertHistoryQuery, [id, status], callback);
+    } else {
+      callback(new Error('No researcher found with the given ID.'));
+    }
+  });
 }
+
 
 
 module.exports = {

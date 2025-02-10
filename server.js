@@ -11,7 +11,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+// Middleware to parse JSON
 
+app.use(express.urlencoded({ extended: true }));
 const productRoutes = require('./routes/productRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const researcherRoutes = require('./routes/researcherRoutes');
@@ -28,8 +30,9 @@ const CountryRoutes = require('./routes/countryRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const { fetchProducts, getProductById, } = require('./controller/productController');
 const biobankRoutes=require("./routes/biobankRoutes");
-const biobanksampledispacthRoutes=require("./routes/biobanksampledispatchRoutes");
+const historyRoutes=require("./routes/historyRoutes");
 // Routes
+app.use('/api', historyRoutes); 
 app.use('/api/user', registrationRoutes); 
 app.use('/api/district', DistrictRoutes); 
 app.use('/api/city', cityRoutes); 
@@ -41,14 +44,13 @@ app.get('/api/products/:id', getProductById);
 app.use('/api', researcherRoutes);
 app.use('/api/committeemember', committeememberRoutes);
 app.use('/api', sampleRoutes);
-
 app.use('/api/sampledispatch', sampleDispatchRoutes);
 app.use('/api/samplereceive', sampleReceiveRoutes);
 app.use('/api/collectionsite', collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', biobankRoutes);
-app.use('/api/biobanksampledispatch',biobanksampledispacthRoutes)
+
 
 
 // Start the server

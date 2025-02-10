@@ -3,143 +3,78 @@ import { useState, useEffect } from "react";
 import Wrapper from "@layout/wrapper";
 import SEO from "@components/seo";
 import Header from "@layout/header";
-// import ShopCta from "@components/cta";
 import Footer from "@layout/footer";
 import ShopBreadcrumb from "@components/common/breadcrumb/shop-breadcrumb";
 import ShopArea from "@components/shop/shop-area";
 import ErrorMessage from "@components/error-message/error";
-import { useGetShowingProductsQuery } from "src/redux/features/productApi";
 import ShopLoader from "@components/loader/shop-loader";
+// Import API hook
+import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 
 export default function Shop({ query }) {
-  
-  const { data: products, isError, isLoading, error } = useGetShowingProductsQuery();
+  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery();
   const [shortValue, setShortValue] = useState("");
 
   useEffect(() => {
-    console.log('Product Data:', products);
-    console.log('Is Loading:', isLoading);
-    console.log('Is Error:', isError);
-    console.log('Error:', error); // Log the full error
-  }, [products, isLoading, isError, error]);
+    console.log("Sample Data:", samples);
+    console.log("Is Loading:", isLoading);
+    console.log("Is Error:", isError);
+    console.log("Error:", error); // Log any errors
+  }, [samples, isLoading, isError, error]);
 
-  // selectShortHandler
+  // Select Short Handler
   const selectShortHandler = (e) => {
     setShortValue(e.value);
   };
 
-  // decide what to render
+  // Render Logic
   let content = null;
+
   if (isLoading) {
     content = <ShopLoader loading={isLoading} />;
   }
 
   if (!isLoading && isError) {
-    console.error("Error fetching products:", error); // Log detailed error
-    content = <ErrorMessage message="There was an error" />;
+    console.error("Error fetching samples:", error);
+    content = <ErrorMessage message="There was an error loading samples." />;
   }
 
-  if (!isLoading && !isError && products?.products?.length === 0) {
-    content = <ErrorMessage message="No products found!" />;
+  if (!isLoading && !isError && samples?.length === 0) {
+    content = <ErrorMessage message="No samples found!" />;
   }
 
-  if (!isLoading && !isError && products?.products?.length > 0) {
-    let all_products = products.products;
-    console.log('All Products:', all_products);
+  if (!isLoading && !isError && samples?.length > 0) {
+    let all_samples = samples;
 
-    let product_items = all_products;
-    // parent
-    const Category = query.Category;
-    // children
-    const category = query.category;
-    // brands
-    const brand = query.brand;
-    // price
-    const { priceMin, max, priceMax } = query;
-    // color
-    const { color } = query;
+    let filtered_samples = all_samples;
 
-    if (Category) {
-      console.log('Filtering by Category:', Category);
-      product_items = product_items.filter(
-        (product) =>
-          product.parent.toLowerCase().replace("&", "").split(" ").join("-") ===
-          Category
-      );
-    }
-    if (category) {
-      console.log('Filtering by Category:', category);
-      product_items = product_items.filter(
-        (product) =>
-          product.children
-            .toLowerCase()
-            .replace("&", "")
-            .split(" ")
-            .join("-") === category
-      );
-    }
-    if (brand) {
-      console.log('Filtering by Brand:', brand);
-      product_items = product_items.filter(
-        (product) =>
-          product.brand.name.toLowerCase().replace("&", "").split(" ").join("-") ===
-          brand
-      );
-    }
-    if (color) {
-      console.log('Filtering by Color:', color);
-      product_items = product_items.filter((product) =>
-        product.colors.includes(color)
-      );
-    }
-    if (priceMin || max || priceMax) {
-      console.log('Filtering by Price:', { priceMin, max, priceMax });
-      product_items = product_items.filter((product) => {
-        const price = Number(product.originalPrice);
-        const minPrice = Number(priceMin);
-        const maxPrice = Number(max);
-        if (!priceMax && priceMin && max) {
-          return price >= minPrice && price <= maxPrice;
-        }
-        if (priceMax) {
-          return price >= priceMax;
-        }
+    // Example filtering logic (customize as needed)
+    const { priceMin, priceMax } = query;
+    if (priceMin || priceMax) {
+      filtered_samples = filtered_samples.filter((sample) => {
+        const price = Number(sample.price);
+        return (
+          (priceMin ? price >= Number(priceMin) : true) &&
+          (priceMax ? price <= Number(priceMax) : true)
+        );
       });
     }
 
-    // selectShortHandler
-    if (shortValue === "Short Filtering") {
-      product_items = all_products;
-    }
-
-    // Latest Product
-    if (shortValue === "Latest Product") {
-      product_items = all_products.filter(
-        (product) => product.itemInfo === "latest-product"
-      );
-    }
-
-    // Price low to high
+    // Sorting logic
     if (shortValue === "Price low to high") {
-      product_items = all_products
-        .slice()
-        .sort((a, b) => Number(a.originalPrice) - Number(b.originalPrice));
-    }
-
-    // Price high to low
-    if (shortValue === "Price high to low") {
-      product_items = all_products
-        .slice()
-        .sort((a, b) => Number(b.originalPrice) - Number(a.originalPrice));
+      filtered_samples = filtered_samples.sort((a, b) => a.price - b.price);
+    } else if (shortValue === "Price high to low") {
+      filtered_samples = filtered_samples.sort((a, b) => b.price - a.price);
     }
 
     content = (
       <ShopArea
-        products={product_items}
-        all_products={all_products}
+        products={filtered_samples}
+        all_products={all_samples}
         shortHandler={selectShortHandler}
       />
     );
+    console.log("sampledata on shop page is:", content)
   }
 
   return (
@@ -148,7 +83,6 @@ export default function Shop({ query }) {
       <Header style_2={true} />
       <ShopBreadcrumb />
       {content}
-      {/* <ShopCta /> */}
       <Footer />
     </Wrapper>
   );

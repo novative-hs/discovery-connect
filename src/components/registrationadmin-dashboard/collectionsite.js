@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 const CollectionsiteArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null); // Store ID of collectionsite to delete
   const [formData, setFormData] = useState({
     CollectionSiteName: "",
@@ -16,16 +16,33 @@ const CollectionsiteArea = () => {
     status: "",
     // logo: ""
   });
+  const [historyData, setHistoryData] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
   const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [successMessage, setSuccessMessage] = useState('');
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
 
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/get-reg-history/${filterType}/${id}`);
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
 
 
   // Fetch collectionsites from backend when component loads
@@ -172,31 +189,31 @@ const [currentPage, setCurrentPage] = useState(1);
       setCollectionsites(filtered);
     }
   };
-      useEffect(() => {
-        if (showDeleteModal || showAddModal || showEditModal) {
-          // Prevent background scroll when modal is open
-          document.body.style.overflow = "hidden";
-          document.body.classList.add("modal-open");
-        } else {
-          // Allow scrolling again when modal is closed
-          document.body.style.overflow = "auto";
-          document.body.classList.remove("modal-open");
-        }
-      }, [showDeleteModal, showAddModal, showEditModal]);
-      
+  useEffect(() => {
+    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
 
 
   return (
     <section className="policy__area pb-120">
-       <div
+      <div
         className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
+        style={{ marginTop: "-20px", width: "auto", }}
       >
         <div
           className="row justify-content-center"
           style={{ marginTop: "290px" }}
         >
-            <div className="col-xl-10">
+          <div className="col-xl-10">
             <div className="policy__wrapper policy__translate p-relative z-index-1">
               {/* Success Message */}
               {successMessage && (
@@ -204,7 +221,7 @@ const [currentPage, setCurrentPage] = useState(1);
                   {successMessage}
                 </div>
               )}
-             <div
+              <div
                 className="d-flex justify-content-between align-items-center mb-3"
                 style={{
                   marginTop: "-20px",
@@ -231,7 +248,7 @@ const [currentPage, setCurrentPage] = useState(1);
                     style={{ width: "100px" }}
                     onChange={(e) =>
                       handleFilterChange("status", e.target.value)
-                    } 
+                    }
                   >
                     <option value="">All</option>
                     <option value="pending">pending</option>
@@ -253,7 +270,7 @@ const [currentPage, setCurrentPage] = useState(1);
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                     <tr>
-                    <th
+                      <th
                         className="px-3"
                         style={{
                           verticalAlign: "middle",
@@ -311,7 +328,7 @@ const [currentPage, setCurrentPage] = useState(1);
                           width: "200px",
                         }}
                       >
-                      <input
+                        <input
                           type="text"
                           className="form-control"
                           placeholder="Search Email"
@@ -385,28 +402,36 @@ const [currentPage, setCurrentPage] = useState(1);
                           {/* <td>{collectionsite.created_at}</td> */}
                           <td>{collectionsite.status}</td>
                           <td>
-                          <div
+                            <div
                               style={{
                                 display: "flex",
                                 justifyContent: "space-around",
                                 gap: "5px",
                               }}
                             >
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(collectionsite)}>
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedCollectionsiteId(collectionsite.id);
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                         </div>
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleEditClick(collectionsite)}>
+                                <FontAwesomeIcon icon={faEdit} size="sm" />
+                              </button>{" "}
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => {
+                                  setSelectedCollectionsiteId(collectionsite.id);
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                              </button>
+
+                              <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => handleShowHistory("researcher", researcher.id)}
+                                title="History"
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -451,11 +476,10 @@ const [currentPage, setCurrentPage] = useState(1);
                     return (
                       <button
                         key={pageNumber}
-                        className={`btn btn-sm ${
-                          currentPage === pageNumber
+                        className={`btn btn-sm ${currentPage === pageNumber
                             ? "btn-primary"
                             : "btn-outline-secondary"
-                        }`}
+                          }`}
                         onClick={() => handlePageChange(pageNumber)}
                         style={{
                           minWidth: "40px",
@@ -568,84 +592,185 @@ const [currentPage, setCurrentPage] = useState(1);
                   </div>
                 </div>
               )} */}
+              {showHistoryModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-              {/* Edit Collectionsite Modal */}
-              {showEditModal && (
-       <>
-       {/* Bootstrap Backdrop with Blur */}
-       <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-   
-       {/* Modal Content */}
-       <div
-         className="modal show d-block"
-         tabIndex="-1"
-         role="dialog"
-         style={{
-           zIndex: 1050, 
-           position: "fixed",
-           top: "120px",
-           left: "50%",
-           transform: "translateX(-50%)",
-         }}
-       >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Collection Site</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "100px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog modal-md" role="document">
+                      <div className="modal-content">
+                        {/* Modal Header */}
+                        <div className="modal-header">
+                          <h5 className="modal-title">History</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowHistoryModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+
+                        {/* Chat-style Modal Body */}
+                        <div
+                          className="modal-body"
                           style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
+                            maxHeight: "500px",
+                            overflowY: "auto",
+                            backgroundColor: "#e5ddd5", // WhatsApp-style background
+                            padding: "15px",
+                            borderRadius: "10px",
                           }}
                         >
-                          <span>&times;</span>
-                        </button>
+                          {historyData && historyData.length > 0 ? (
+                            historyData.map((log, index) => {
+                              const { created_name, updated_name, added_by, created_at, updated_at } = log;
+
+                              return (
+                                <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
+                                  {/* Message for City Addition */}
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor: "#ffffff",
+                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                    }}
+                                  >
+                                    <b>City:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                  </div>
+
+                                  {/* Message for City Update (Only if it exists) */}
+                                  {updated_name && updated_at && (
+                                    <div
+                                      style={{
+                                        padding: "10px 15px",
+                                        borderRadius: "15px",
+                                        backgroundColor: "#dcf8c6", // Light green for updates
+                                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                        maxWidth: "75%",
+                                        fontSize: "14px",
+                                        textAlign: "left",
+                                        marginTop: "5px", // Spacing between messages
+                                      }}
+                                    >
+                                      <b>City:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-left">No history available.</p>
+                          )}
+
+
+                        </div>
                       </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Collection Site name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="CollectionSiteName"
-                              value={formData.CollectionSiteName}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          {/* <div className="form-group">
+                    </div>
+                  </div>
+                </>
+              )}
+              {/* Edit Collectionsite Modal */}
+              {showEditModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Edit Collection Site</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowEditModal(false)}
+                            style={{
+                              // background: 'none',
+                              // border: 'none',
+                              fontSize: '1.5rem',
+                              position: 'absolute',
+                              right: '10px',
+                              top: '10px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <form onSubmit={handleUpdate}>
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            <div className="form-group">
+                              <label>Collection Site name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="CollectionSiteName"
+                                value={formData.CollectionSiteName}
+                                onChange={handleInputChange}
+                                disabled
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Email</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                disabled
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Phone Number</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="phoneNumber"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                disabled
+                              />
+                            </div>
+                            {/* <div className="form-group">
                             <label>Registered_at</label>
                             <input
                               type="datetime-local"
@@ -656,83 +781,83 @@ const [currentPage, setCurrentPage] = useState(1);
                               required
                             />
                           </div> */}
-                          <div className="form-group">
-                            <label>Status</label>
-                            <select
-                              className="form-control"
-                              name="status"
-                              value={formData.status}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="pending">pending</option>
-                              <option value="approved">approved</option>
-                              {/* <option value="unapproved">unapproved</option> */}
-                            </select>
+                            <div className="form-group">
+                              <label>Status</label>
+                              <select
+                                className="form-control"
+                                name="status"
+                                value={formData.status}
+                                onChange={handleInputChange}
+                                required
+                              >
+                                <option value="pending">pending</option>
+                                <option value="approved">approved</option>
+                                {/* <option value="unapproved">unapproved</option> */}
+                              </select>
+                            </div>
                           </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Collection Site
-                          </button>
-                        </div>
-                      </form>
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              Update Collection Site
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
               {/* Modal for Deleting Collectionsites */}
               {showDeleteModal && (
-                  <>
+                <>
                   {/* Bootstrap Backdrop with Blur */}
                   <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-              
+
                   {/* Modal Content */}
                   <div
                     className="modal show d-block"
                     tabIndex="-1"
                     role="dialog"
                     style={{
-                      zIndex: 1050, 
+                      zIndex: 1050,
                       position: "fixed",
                       top: "120px",
                       left: "50%",
                       transform: "translateX(-50%)",
                     }}
                   >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Collectionsite</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this collectionsite?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Delete Collectionsite</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <div className="modal-body">
+                          <p>Are you sure you want to delete this collectionsite?</p>
+                        </div>
+                        <div className="modal-footer">
+                          <button
+                            className="btn btn-danger"
+                            onClick={handleDelete}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
             </div>

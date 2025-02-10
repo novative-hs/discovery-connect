@@ -22,6 +22,7 @@ const createCityTable = () => {
   });
 };
 
+
 // Function to get all City members
 const getAllCities = (callback) => {
   const query = 'SELECT * FROM city WHERE status = "active"';
@@ -34,75 +35,228 @@ const getAllCities = (callback) => {
   });
 };
 
-const createCity = (data, callback, res) => {
+const createCity = (data, callback) => {
   console.log('Received Request Body:', data); // Debugging
 
   const { bulkData, cityname, added_by } = data || {}; // Handle undefined gracefully
 
-  if (bulkData) {
-    const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
-    const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
-
-    // Use ON DUPLICATE KEY UPDATE to prevent duplicate insertions
-    const query = `
-      INSERT INTO city (name, added_by)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE name = name;
-    `;
-
-    mysqlConnection.query(query, [values], (err, result) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        console.log("Insert Result:", result); // Debugging result
-        callback(null, result);
-      }
-    });
-  } else if (cityname && added_by) {
-    const query = `
-      INSERT INTO city (name, added_by)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE name = name;
-    `;
-
-    mysqlConnection.query(query, [cityname, added_by], (err, result) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        callback(null, result);
-      }
-    });
-  } else {
-    callback(new Error('Invalid data'), null);
-  }
-};
-
-// Function to update a City member
-const updateCity = (id, data, callback) => {
-  const { cityname, added_by } = data;
-  const query = `
-    UPDATE city
-    SET name = ?, added_by = ?
-    WHERE id = ?
-  `;
-  mysqlConnection.query(query, [cityname, added_by, id], (err, result) => {
+  mysqlConnection.beginTransaction((err) => {
     if (err) {
-      console.error("Error in query:", err); // Log the error to debug
-      callback(err, result);
+      return callback(err, null);
+    }
+
+    if (bulkData) {
+      const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+      const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+
+      const cityQuery = `
+        INSERT INTO city (name, added_by)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE name = name;
+      `;
+
+      mysqlConnection.query(cityQuery, [values], (err, cityResult) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+
+        const insertedCityIds = cityResult.insertId; // Get the first inserted city ID
+        if (!insertedCityIds) {
+          return mysqlConnection.rollback(() => {
+            callback(new Error("Failed to retrieve city ID"), null);
+          });
+        }
+
+        // Insert into RegistrationAdmin_History
+        const historyValues = uniqueData.map(({ name, added_by }) => [
+          name, added_by, insertedCityIds, 'active'
+        ]);
+
+        const historyQuery = `
+          INSERT INTO RegistrationAdmin_History (created_name, added_by, city_id, status)
+          VALUES ?
+        `;
+
+        mysqlConnection.query(historyQuery, [historyValues], (err, historyResult) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                callback(err, null);
+              });
+            }
+            callback(null, { cityResult, historyResult });
+          });
+        });
+      });
+
+    } else if (cityname && added_by) {
+      const cityQuery = `
+        INSERT INTO city (name, added_by)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE name = name;
+      `;
+
+      mysqlConnection.query(cityQuery, [cityname, added_by], (err, cityResult) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+
+        const cityId = cityResult.insertId;
+        if (!cityId) {
+          return mysqlConnection.rollback(() => {
+            callback(new Error("Failed to retrieve city ID"), null);
+          });
+        }
+
+        // Insert into RegistrationAdmin_History
+        const historyQuery = `
+          INSERT INTO RegistrationAdmin_History (created_name,  added_by, city_id, status)
+          VALUES (?, ?, ?, ?)
+        `;
+
+        mysqlConnection.query(historyQuery, [cityname, added_by, cityId, 'active'], (err, historyResult) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                callback(err, null);
+              });
+            }
+            callback(null, { cityResult, historyResult });
+          });
+        });
+      });
+
     } else {
-      callback(null, result);
+      callback(new Error('Invalid data'), null);
     }
   });
 };
 
 
-// Function to delete a City member
-const deleteCity = (id, callback) => {
-  const query = 'UPDATE city SET status = "inactive" WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
-    callback(err, result);
+// Function to update a City member
+const updateCity = (id, data, callback) => {
+  const { cityname, added_by } = data;
+
+  mysqlConnection.beginTransaction((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+    const fetchCityQuery = `SELECT name FROM city WHERE id = ?`;
+    mysqlConnection.query(fetchCityQuery, [id], (err, results) => {
+      if (err) {
+        return mysqlConnection.rollback(() => {
+          callback(err, null);
+        });
+      }
+
+      if (results.length === 0) {
+        return mysqlConnection.rollback(() => {
+          callback(new Error("City not found"), null);
+        });
+      }
+
+      const oldCityName = results[0].name; 
+      const updateCityQuery = `
+        UPDATE city
+        SET name = ?, added_by = ?
+        WHERE id = ?
+      `;
+      mysqlConnection.query(updateCityQuery, [cityname, added_by, id], (err, result) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+        const updateHistoryQuery = `
+          UPDATE RegistrationAdmin_History
+          SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE city_id = ?
+        `;
+
+        mysqlConnection.query(updateHistoryQuery, [oldCityName, cityname, added_by, id], (err, historyResult) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+
+          mysqlConnection.commit((err) => {
+            if (err) {
+              return mysqlConnection.rollback(() => {
+                callback(err, null);
+              });
+            }
+            callback(null, { result, historyResult });
+          });
+        });
+      });
+    });
   });
 };
+
+
+
+
+
+const deleteCity = (id, callback) => {
+  mysqlConnection.beginTransaction((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+
+    // Step 1: Update the city status to 'inactive'
+    const updateCityStatusQuery = `UPDATE city SET status = 'inactive' WHERE id = ?`;
+
+    mysqlConnection.query(updateCityStatusQuery, [id], (err, result) => {
+      if (err) {
+        return mysqlConnection.rollback(() => {
+          callback(err, null);
+        });
+      }
+
+      // Step 2: Update the status in RegistrationAdmin_History
+      const updateHistoryStatusQuery = `
+        UPDATE RegistrationAdmin_History
+        SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+        WHERE city_id = ?
+      `;
+
+      mysqlConnection.query(updateHistoryStatusQuery, [id], (err, historyResult) => {
+        if (err) {
+          return mysqlConnection.rollback(() => {
+            callback(err, null);
+          });
+        }
+
+        mysqlConnection.commit((err) => {
+          if (err) {
+            return mysqlConnection.rollback(() => {
+              callback(err, null);
+            });
+          }
+          callback(null, { result, historyResult });
+        });
+      });
+    });
+  });
+};
+
 
 module.exports = {
   createCityTable,
