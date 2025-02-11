@@ -58,6 +58,20 @@ const SampleArea = () => {
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");
   const [collectionSiteNames, setCollectionSiteNames] = useState([]);
+  // Sample Dropdown Fields
+  const [ethnicityNames, setEthnicityNames] = useState([]);
+  const [sampleconditionNames, setSampleConditionNames] = useState([]);
+  const [storagetemperatureNames, setStorageTemperatureNames] = useState([]);
+  const [containertypeNames, setContainerTypeNames] = useState([]);
+  const [quantityunitNames, setQuantityUnitNames] = useState([]);
+  const [sampletypematrixNames, setSampleTypeMatrixNames] = useState([]);
+  const [testmethodNames, setTestMethodNames] = useState([]);
+  const [testresultunitNames, setTestResultUnitNames] = useState([]);
+  const [concurrentmedicalconditionsNames, setConcurrentMedicalConditionsNames] = useState([]);
+  const [testkitmanufacturerNames, setTestKitManufacturerNames] = useState([]);
+  const [testsystemNames, setTestSystemNames] = useState([]);
+  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
+
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -152,6 +166,58 @@ const SampleArea = () => {
 
     fetchCollectionSiteNames();
   }, [id]);
+
+  // Sample fields Dropdown
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ethnicity/ethnicitynames`)
+      .then(response => response.json())
+      .then(data => setEthnicityNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplecondition/sampleconditionnames`)
+      .then(response => response.json())
+      .then(data => setSampleConditionNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/storagetemperature/storagetemperaturenames`)
+      .then(response => response.json())
+      .then(data => setStorageTemperatureNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containertype/containertypenames`)
+      .then(response => response.json())
+      .then(data => setContainerTypeNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/quantityunit/quantityunitnames`)
+      .then(response => response.json())
+      .then(data => setQuantityUnitNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampletypematrix/sampletypematrixnames`)
+      .then(response => response.json())
+      .then(data => setSampleTypeMatrixNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testmethod/testmethodnames`)
+      .then(response => response.json())
+      .then(data => setTestMethodNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testresultunit/testresultunitnames`)
+      .then(response => response.json())
+      .then(data => setTestResultUnitNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/concurrentmedicalconditions/concurrentmedicalconditionsnames`)
+      .then(response => response.json())
+      .then(data => setConcurrentMedicalConditionsNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testkitmanufacturer/testkitmanufacturernames`)
+      .then(response => response.json())
+      .then(data => setTestKitManufacturerNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystem/testsystemnames`)
+      .then(response => response.json())
+      .then(data => setTestSystemNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystemmanufacturer/testsystemmanufacturernames`)
+      .then(response => response.json())
+      .then(data => setTestSystemManufacturerNames(data));
+
+  }, []);
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
@@ -328,6 +394,7 @@ const SampleArea = () => {
       );
     }
   };
+
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
     setEditSample(sample);
@@ -438,10 +505,10 @@ const SampleArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
 
   return (
-    <section className="policy__area pb-120">
+    <section className="profile__area pt-180 pb-20">       {/* Inner Container Color can be visible through this */}
       <div
         className="container"
-        style={{ marginTop: "50px", width: "160%", marginLeft: "-40px" }}>
+        style={{ marginTop: "-180px", width: "170%", marginLeft: "-135px" }}>
         {/* Success Message */}
         {successMessage && (
           <div className="alert alert-success" role="alert">
@@ -449,32 +516,36 @@ const SampleArea = () => {
           </div>
         )}
         {/* Add Samples Button */}
-        <div className="d-flex justify-content-end mb-3 position-relative" style={{ top: "-10px" }}>
+        <div
+          className="d-flex justify-content-end mb-3 position-relative"
+          style={{ top: "-2px", marginRight: "130px" }}>
           <button
-            className="btn btn-primary me-4" // margin from right
-            onClick={() => setShowAddModal(true)}>
+            className="btn"
+            onClick={() => setShowAddModal(true)}
+            style={{
+              backgroundColor: "#FFEE99", // Soft pastel yellow
+              borderColor: "#FFD700", // Gold border
+              color: "#000000", // Black text for contrast
+              marginLeft: "-10px",
+            }}
+          >
             Add Samples
           </button>
         </div>
         {/* Table */}
         <div
           className="table-responsive"
-          style={{
-            margin: "0 auto", // Center-align the table horizontally
-            width: "95%", // Increased width
-            textAlign: "center",
-          }}>
+          style={{ margin: "0 auto", width: "80%", textAlign: "center" }}>
           <table className="table table-bordered table-hover">
-            <thead className="thead-dark">
-              <tr style={{ textAlign: "center" }}>
+            <thead className="table-primary">        {/*Table Head Color*/}
+              <tr>
                 <th
                   className="px-3"
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
-                  }}
-                >
+                    width: "80px",
+                  }}>
                   <div className="d-flex flex-column align-items-center w-100">
                     <input
                       type="text"
@@ -484,13 +555,13 @@ const SampleArea = () => {
                         handleFilterChange("id", e.target.value)
                       }
                       style={{
-                        width: "80%",
-                        padding: "8px",
+                        width: "70%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px",
-                        maxWidth: "180px",
-                      }}
-                    />
+                        minWidth: "70px",
+                        maxWidth: "120px",
+                      }} />
                     ID
                   </div>
                 </th>
@@ -499,9 +570,8 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
-                  }}
-                >
+                    width: "110px",
+                  }}>
                   <div className="d-flex flex-column align-items-center w-100">
                     <input
                       type="text"
@@ -511,13 +581,13 @@ const SampleArea = () => {
                         handleFilterChange("samplename", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
-                      }}
-                    />
+                        minWidth: "90px",
+                        maxWidth: "120px",
+                      }} />
                     Sample Name
                   </div>
                 </th>
@@ -526,7 +596,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -539,10 +609,11 @@ const SampleArea = () => {
                       }
                       style={{
                         width: "80%",
-                        padding: "8px",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px",
-                        maxWidth: "180px",
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Age
@@ -553,7 +624,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "100px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -566,10 +637,11 @@ const SampleArea = () => {
                       }
                       style={{
                         width: "80%",
-                        padding: "8px",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px",
-                        maxWidth: "180px",
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Gender
@@ -580,7 +652,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -593,10 +665,11 @@ const SampleArea = () => {
                       }
                       style={{
                         width: "80%",
-                        padding: "8px",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px",
-                        maxWidth: "180px",
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Ethnicity
@@ -607,7 +680,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -623,10 +696,11 @@ const SampleArea = () => {
                       }
                       style={{
                         width: "80%",
-                        padding: "8px",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px",
-                        maxWidth: "180px",
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Sample Condition
@@ -637,7 +711,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -650,10 +724,11 @@ const SampleArea = () => {
                       }
                       style={{
                         width: "80%",
-                        padding: "8px",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px",
-                        maxWidth: "180px",
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Storage Temperature
@@ -664,7 +739,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -676,11 +751,12 @@ const SampleArea = () => {
                         handleFilterChange("ContainerType", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Container Type
@@ -691,7 +767,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -706,40 +782,51 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Country Of Collection
                   </div>
-                </th>
-                <th className="px-3">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search Quantity"
-                    onChange={(e) =>
-                      handleFilterChange("quantity", e.target.value)
-                    }
-                    style={{
-                      width: "80%", // Adjusted width for better responsiveness
-                      padding: "8px",
-                      boxSizing: "border-box",
-                      minWidth: "120px", // Minimum width to prevent shrinking too much
-                      maxWidth: "180px", // Maximum width for better control
-                    }}
-                  />
-                  Quantity
                 </th>
                 <th
                   className="px-3"
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
+                  }}
+                >
+                  <div className="d-flex flex-column align-items-center w-100">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search Quantity"
+                      onChange={(e) =>
+                        handleFilterChange("quantity", e.target.value)
+                      }
+                      style={{
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
+                        boxSizing: "border-box",
+                        minWidth: "90px",
+                        maxWidth: "120px",
+                      }}
+                    />
+                    Quantity
+                  </div>
+                </th>
+                <th
+                  className="px-3"
+                  style={{
+                    verticalAlign: "middle",
+                    textAlign: "center",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -751,11 +838,12 @@ const SampleArea = () => {
                         handleFilterChange("QuantityUnit", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Quantity Unit
@@ -766,7 +854,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -781,11 +869,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Sample Type Matrix
@@ -796,7 +885,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -808,11 +897,12 @@ const SampleArea = () => {
                         handleFilterChange("SmokingStatus", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Smoking Status
@@ -823,7 +913,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -838,11 +928,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Alcohol Or Drug Abuse
@@ -853,7 +944,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -868,11 +959,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Infectious Disease Testing
@@ -883,7 +975,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -898,11 +990,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Infectious Disease Result
@@ -913,7 +1006,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -928,11 +1021,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Freeze Thaw Cycles
@@ -943,7 +1037,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -958,11 +1052,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Date Of Collection
@@ -973,7 +1068,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -988,11 +1083,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Concurrent Medical Conditions
@@ -1003,7 +1099,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1018,11 +1114,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Concurrent Medications
@@ -1033,7 +1130,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1048,11 +1145,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Diagnosis Test Parameter
@@ -1063,7 +1161,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1075,11 +1173,12 @@ const SampleArea = () => {
                         handleFilterChange("TestResult", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Test Result
@@ -1090,7 +1189,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1102,11 +1201,12 @@ const SampleArea = () => {
                         handleFilterChange("TestResultUnit", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Test Result Unit
@@ -1117,7 +1217,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1129,11 +1229,12 @@ const SampleArea = () => {
                         handleFilterChange("TestMethod", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Test Method
@@ -1144,10 +1245,8 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
-                  }}
-
-                >
+                    width: "110px",
+                  }}>
                   <div className="d-flex flex-column align-items-center w-100">
                     <input
                       type="text"
@@ -1160,11 +1259,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Test Kit Manufacturer
@@ -1175,7 +1275,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1187,11 +1287,12 @@ const SampleArea = () => {
                         handleFilterChange("TestSystem", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Test System
@@ -1202,10 +1303,8 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
-                  }}
-
-                >
+                    width: "110px",
+                  }}>
                   <div className="d-flex flex-column align-items-center w-100">
                     <input
                       type="text"
@@ -1218,11 +1317,12 @@ const SampleArea = () => {
                         )
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Test System Manufacturer
@@ -1233,7 +1333,7 @@ const SampleArea = () => {
                   style={{
                     verticalAlign: "middle",
                     textAlign: "center",
-                    width: "200px",
+                    width: "110px",
                   }}
                 >
                   <div className="d-flex flex-column align-items-center w-100">
@@ -1245,11 +1345,12 @@ const SampleArea = () => {
                         handleFilterChange("status", e.target.value)
                       }
                       style={{
-                        width: "80%", // Adjusted width for better responsiveness
-                        padding: "8px",
+                        width: "80%",
+                        padding: "4px",
+                        height: "35px",
                         boxSizing: "border-box",
-                        minWidth: "120px", // Minimum width to prevent shrinking too much
-                        maxWidth: "180px", // Maximum width for better control
+                        minWidth: "90px",
+                        maxWidth: "120px",
                       }}
                     />
                     Status
@@ -1295,7 +1396,7 @@ const SampleArea = () => {
                         style={{
                           display: "flex",
                           justifyContent: "space-around",
-                          gap: "5px",
+                          gap: "3px",
                         }}
                       >
                         <button
@@ -1347,7 +1448,6 @@ const SampleArea = () => {
           >
             <i className="fas fa-chevron-left"></i>
           </button>
-
           {/* Page Numbers with Ellipsis */}
           {Array.from({ length: totalPages }).map((_, index) => {
             const pageNumber = index + 1;
@@ -1394,10 +1494,8 @@ const SampleArea = () => {
                 </span>
               );
             }
-
             return null; // Skip the page number
           })}
-
           {/* Next Button */}
           <button
             className="btn btn-sm btn-secondary"
@@ -1421,14 +1519,14 @@ const SampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "120px",
+                top: "40px",
                 left: "50%",
                 transform: "translateX(-50%)",
               }}>
               <div
                 className="modal-dialog"
                 role="document"
-                style={{ maxWidth: "100%", width: "80vw" }}>
+                style={{ maxWidth: "90vw", width: "95vw" }}>
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">Add Sample</h5>
@@ -1449,9 +1547,9 @@ const SampleArea = () => {
                   <form onSubmit={handleSubmit}>
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
-                      <div className="d-flex flex-wrap gap-3">
+                      <div className="row">
                         {/* Column 1 */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Donor ID</label>
                             <input
@@ -1493,6 +1591,7 @@ const SampleArea = () => {
                               value={formData.gender}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
                             >
                               <option value="">Select Gender</option>
                               <option value="Male">Male</option>
@@ -1501,50 +1600,70 @@ const SampleArea = () => {
                           </div>
                           <div className="form-group">
                             <label>Ethnicity</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="ethnicity"
                               value={formData.ethnicity}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Ethnicity</option>
+                              {ethnicityNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
-                          <div className="form-group">
+                        </div>
+                        {/* Column 2 */}
+                        <div className="col-md-2">
+                        <div className="form-group">
                             <label>Sample Condition</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="samplecondition"
                               value={formData.samplecondition}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Sample Condition</option>
+                              {sampleconditionNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
-                        </div>
-                        {/* Column 2 */}
-                        <div className="flex-fill">
                           <div className="form-group">
                             <label>Storage Temperature</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="storagetemp"
                               value={formData.storagetemp}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Storage Temperature</option>
+                              {storagetemperatureNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Container Type</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="ContainerType"
                               value={formData.ContainerType}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Container type</option>
+                              {containertypeNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Country Of Collection</label>
@@ -1570,28 +1689,38 @@ const SampleArea = () => {
                           </div>
                         </div>
                         {/* {Column 3} */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Quantity Unit</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="QuantityUnit"
                               value={formData.QuantityUnit}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Quantity Unit</option>
+                              {quantityunitNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Sample Type Matrix</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="SampleTypeMatrix"
                               value={formData.SampleTypeMatrix}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Sample Type Matrix</option>
+                              {sampletypematrixNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label className="form-label">Smoking Status</label>
@@ -1664,7 +1793,10 @@ const SampleArea = () => {
                               required
                             />
                           </div>
-                          <div className="form-group">
+                        </div>
+                        {/* Column 4 */}
+                        <div className="col-md-2">
+                        <div className="form-group">
                             <label className="form-label">Infectious Disease Result</label>
                             <div>
                               <div className="form-check form-check-inline">
@@ -1679,7 +1811,6 @@ const SampleArea = () => {
                                 />
                                 <label className="form-check-label fs-6">Positive</label>
                               </div>
-
                               <div className="form-check form-check-inline ms-3">
                                 <input
                                   className="form-check-input"
@@ -1694,10 +1825,6 @@ const SampleArea = () => {
                               </div>
                             </div>
                           </div>
-
-                        </div>
-                        {/* Column 4 */}
-                        <div className="flex-fill">
                           <div className="form-group">
                             <label>Freeze Thaw Cycles</label>
                             <input
@@ -1719,18 +1846,24 @@ const SampleArea = () => {
                               onChange={handleInputChange}
                               max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                               required
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
                             />
                           </div>
                           <div className="form-group">
                             <label>Concurrent Medical Conditions</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="ConcurrentMedicalConditions"
                               value={formData.ConcurrentMedicalConditions}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Concurrent Medical Conditions</option>
+                              {concurrentmedicalconditionsNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Concurrent Medications</label>
@@ -1743,7 +1876,10 @@ const SampleArea = () => {
                               required
                             />
                           </div>
-                          <div className="form-group">
+                        </div>
+                        {/* {Column 5} */}
+                        <div className="col-md-2">
+                        <div className="form-group">
                             <label>Diagnosis Test Parameter</label>
                             <input
                               type="text"
@@ -1765,63 +1901,53 @@ const SampleArea = () => {
                               required
                             />
                           </div>
-                        </div>
-                        {/* {Column 5} */}
-                        <div className="flex-fill">
                           <div className="form-group">
                             <label>Test Result Unit</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestResultUnit"
                               value={formData.TestResultUnit}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Test Result Unit</option>
+                              {testresultunitNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Test Method</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestMethod"
                               value={formData.TestMethod}
                               onChange={handleInputChange}
                               required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Test Method</option>
+                              {testmethodNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Test Kit Manufacturer</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestKitManufacturer"
                               value={formData.TestKitManufacturer}
                               onChange={handleInputChange}
                               required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Test System</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="TestSystem"
-                              value={formData.TestSystem}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Test System Manufacturer</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="TestSystemManufacturer"
-                              value={formData.TestSystemManufacturer}
-                              onChange={handleInputChange}
-                              required
-                            />
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Test Kit Manufacturer</option>
+                              {testkitmanufacturerNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           {/* <div className="form-group">
                                   <label>Image</label>
@@ -1834,6 +1960,41 @@ const SampleArea = () => {
                                     required
                                   />
                                 </div> */}
+                        </div>
+                         {/* {Column 6} */}
+                         <div className="col-md-2">
+                         <div className="form-group">
+                            <label>Test System</label>
+                            <select
+                              className="form-control"
+                              name="TestSystem"
+                              value={formData.TestSystem}
+                              onChange={handleInputChange}
+                              required
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Test System</option>
+                              {testsystemNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Test System Manufacturer</label>
+                            <select
+                              className="form-control"
+                              name="TestSystemManufacturer"
+                              value={formData.TestSystemManufacturer}
+                              onChange={handleInputChange}
+                              required
+                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                            >
+                              <option value="">Select Test System Manufacturer</option>
+                              {testsystemmanufacturerNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
+                          </div>                        
                         </div>
                       </div>
                     </div>
@@ -1854,7 +2015,6 @@ const SampleArea = () => {
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
             {/* Modal Content */}
             <div
               className="modal show d-block"
@@ -1863,16 +2023,14 @@ const SampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "120px",
+                top: "40px",
                 left: "50%",
                 transform: "translateX(-50%)",
-              }}
-            >
+              }}>
               <div
                 className="modal-dialog"
                 role="document"
-                style={{ maxWidth: "100%", width: "80vw" }}
-              >
+                style={{ maxWidth: "90%", width: "95vw" }}>
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">Edit Sample</h5>
@@ -1894,9 +2052,9 @@ const SampleArea = () => {
                   <form onSubmit={handleUpdate}>
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
-                      <div className="d-flex flex-wrap gap-3">
+                      <div className="row">
                         {/* Column 1 */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           {/* <div className="form-group">
                                   <label>Donor ID</label>
                                   <input
@@ -1946,50 +2104,66 @@ const SampleArea = () => {
                           </div>
                           <div className="form-group">
                             <label>Ethnicity</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="ethnicity"
                               value={formData.ethnicity}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Ethnicity</option>
+                              {ethnicityNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Sample Condition</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="samplecondition"
                               value={formData.samplecondition}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Sample Condition</option>
+                              {sampleconditionNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                         {/* Column 2 */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Storage Temperature</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="storagetemp"
                               value={formData.storagetemp}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Storage Temperature</option>
+                              {storagetemperatureNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Container Type</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="ContainerType"
                               value={formData.ContainerType}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Container type</option>
+                              {containertypeNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Country Of Collection</label>
@@ -2015,28 +2189,36 @@ const SampleArea = () => {
                           </div>
                         </div>
                         {/* {Column 3} */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Quantity Unit</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="QuantityUnit"
                               value={formData.QuantityUnit}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Quantity Unit</option>
+                              {quantityunitNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Sample Type Matrix</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="SampleTypeMatrix"
                               value={formData.SampleTypeMatrix}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Sample Type Matrix</option>
+                              {sampletypematrixNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label className="form-label">Smoking Status</label>
@@ -2147,7 +2329,7 @@ const SampleArea = () => {
                           </div>
                         </div>
                         {/* Column 4 */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Freeze Thaw Cycles</label>
                             <input
@@ -2173,14 +2355,18 @@ const SampleArea = () => {
                           </div>
                           <div className="form-group">
                             <label>Concurrent Medical Conditions</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="ConcurrentMedicalConditions"
                               value={formData.ConcurrentMedicalConditions}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Concurrent Medical Conditions</option>
+                              {concurrentmedicalconditionsNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Concurrent Medications</label>
@@ -2217,61 +2403,81 @@ const SampleArea = () => {
                           </div>
                         </div>
                         {/* {Column 5} */}
-                        <div className="flex-fill">
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test Result Unit</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestResultUnit"
                               value={formData.TestResultUnit}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Test Result Unit</option>
+                              {testresultunitNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Test Method</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestMethod"
                               value={formData.TestMethod}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Test Method</option>
+                              {testmethodNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Test Kit Manufacturer</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestKitManufacturer"
                               value={formData.TestKitManufacturer}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Test Kit Manufacturer</option>
+                              {testkitmanufacturerNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Test System</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestSystem"
                               value={formData.TestSystem}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Test System</option>
+                              {testsystemNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Test System Manufacturer</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="TestSystemManufacturer"
                               value={formData.TestSystemManufacturer}
                               onChange={handleInputChange}
                               required
-                            />
+                            >
+                              <option value="">Select Test System Manufacturer</option>
+                              {testsystemmanufacturerNames.map((name, index) => (
+                                <option key={index} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </div>

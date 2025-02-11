@@ -214,7 +214,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
-          <Image src={logo} alt="Logo" width={240} height={150} />
+          <Image src={logo} alt="Logo" width={160} height={80} />
           <button
             className="navbar-toggler"
             type="button"

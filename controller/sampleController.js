@@ -9,7 +9,6 @@ const createSampleTable = (req, res) => {
   res.status(200).json({ message: "Sample table creation process started" });
 };
 
-
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
