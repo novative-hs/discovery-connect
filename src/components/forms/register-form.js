@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
@@ -150,7 +149,7 @@ const RegisterForm = () => {
       // Handle file selection
       const file = event.target.files[0];
       if (file) {
-        setValue(file.name);
+        setValue("logo", file);
         setLogo(file.name); // Update the input field with the file name
       }
     } else {
@@ -164,8 +163,8 @@ const RegisterForm = () => {
     }
   };
   const sendApprovalEmail = async (data) => {
-    let name = ""; 
-    
+    let name = "";
+
     // Assign the correct name based on accountType
     if (data.accountType === "Researcher") {
       name = data.ResearcherName;
@@ -174,20 +173,23 @@ const RegisterForm = () => {
     } else if (data.accountType === "Organization") {
       name = data.OrganizationName;
     }
-  
+
     try {
-      const response = await fetch("http://localhost:5000/api/user/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-          name: name,
-          status:"pending",
-        }),
-      });
-  
+      const response = await fetch(
+        "http://localhost:5000/api/user/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: data.email,
+            name: name,
+            status: "pending",
+          }),
+        }
+      );
+
       const result = await response.json(); // Rename 'data' to 'result' to avoid shadowing
       if (response.ok) {
         console.log("Email sent successfully:", result.message);
@@ -198,8 +200,9 @@ const RegisterForm = () => {
       console.error("Error:", error);
     }
   };
-  
+
   const onSubmit = (data) => {
+    console.log(data)
     const formData = new FormData();
 
     // Append other form data
@@ -254,8 +257,10 @@ const RegisterForm = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-         // sendApprovalEmail(data);
-          notifySuccess(result?.data?.message || "Registered Successfully");
+         sendApprovalEmail(data);
+
+         notifySuccess(`${result?.data?.message}. Your account status is currently pending. Please wait for approval.`);
+
           router.push("/login");
         }
       })
@@ -267,6 +272,11 @@ const RegisterForm = () => {
 
     reset();
   };
+ 
+
+  useEffect(() => {
+    console.log(errors);
+  }, [errors]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -352,7 +362,7 @@ const RegisterForm = () => {
               <option value="">Select Account Type</option>
               <option value="Researcher">Researcher</option>
               <option value="Organization">Organization</option>
-              <option value="CollectionSites">Collection Site</option>
+              <option value="CollectionSites">CollectionSites</option>
             </select>
           </div>
           <ErrorMessage message={errors.accountType?.message} />
@@ -530,10 +540,12 @@ const RegisterForm = () => {
                   {accountTypeLabel}
                   <span className="form-label px-1">{logo}</span>
                 </label>
+
                 <input
                   type="file"
+                  {...register("logo", { required: "Logo is required" })}
                   className="d-none"
-                  ref={fileInputRef} // Use ref instead of ID
+                  ref={fileInputRef}
                   onChange={handleLogoChange}
                 />
               </div>
@@ -645,7 +657,7 @@ const RegisterForm = () => {
         )}
       </div>
       <div className="login__btn mt-25">
-        <button type="submit" className="tp-btn w-100">
+        <button type="submit" className="tp-btn w-100" disabled={false}>
           Sign Up
         </button>
       </div>
@@ -654,4 +666,3 @@ const RegisterForm = () => {
 };
 
 export default RegisterForm;
-

@@ -7,7 +7,7 @@ import ChangePassword from './change-password';
 import UpdateBioBank from './update-biobank';
 import BioBankSampleArea from './samples';
 import BioBankSampleDispatchArea from './sample-dispatch';
-import Header from '../../layout/biobankheader';
+import Header from '../../layout/dashboardheader';
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
     const [loading, setLoading] = useState(true); // To handle the loading state
