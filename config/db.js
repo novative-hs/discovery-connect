@@ -7,7 +7,6 @@ var mysqlConnection = mysql.createConnection({
     database: "discovery_connect123",
 });
 
-
 // check wether the connection is successfull or not !!
 mysqlConnection.connect((err) => {
     if (err) {

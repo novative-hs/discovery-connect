@@ -57,28 +57,34 @@ const OfferPopularProduct = () => {
   }
 
   return (
-    <section className="product__coupon-area porduct__offer pt-120">
-      <div className="container">
-        <div className="row align-items-end">
-          <div className="col-xl-6 col-md-6">
-            <div className="section__title-wrapper-13 mb-35">
-              <h3 className="section__title-13">Deal of The Day</h3>
-            </div>
+    <section className="product__coupon-area product__offer py-5">
+    <div className="container">
+      <div className="row align-items-end">
+        {/* Left Section - Title */}
+        <div className="col-lg-6 col-md-6">
+          <div className="mb-3">
+            <h3 className="fw-bold">Deal of The Day</h3>
           </div>
-          <div className="col-xl-6 col-md-6">
+        </div>
+  
+        {/* Right Section - Button */}
+        <div className="col-xl-6 col-md-6">
             <div className="product__offer-btn mb-30 text-md-end">
               <Link href="/shop" className="tp-btn">
                 View All Products
               </Link>
             </div>
           </div>
-        </div>
 
-        <div className="product__coupon-area pb-120">
-          <div className="container">{content}</div>
-        </div>
       </div>
-    </section>
+  
+      {/* Content Section */}
+      <div className="row py-4">
+        <div className="col-12">{content}</div>
+      </div>
+    </div>
+  </section>
+  
   );
 };
 

@@ -67,33 +67,38 @@ const OrganizationArea = () => {
     currentPage * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+    
+      const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+      };
+    
+      // Filter the researchers list
+      const handleFilterChange = (field, value) => {
+        if (!value.trim()) return fetchOrganizations(); // Reset if input is empty
+      
+        setOrganizations(
+          allorganizations.filter((organization) => {
+            const fieldValue = organization[field]?.toString().toLowerCase().trim(); // Normalize field
+            const searchValue = value.toLowerCase().trim(); // Normalize input
+      
+            if (!fieldValue) return false;
+      
+            // Exact match for "status", partial match for others
+            return field === "status"
+              ? fieldValue.startsWith(searchValue) // Ensures "i" matches "inactive" but not "active"
+              : fieldValue.includes(searchValue);
+          })
+        );
+      };
+      
+      
+    const handleInputChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
 
-  // Filter the researchers list
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchOrganizations();
-    } else {
-      // Perform exact match for "status" field
-      const filtered = allorganizations.filter((organization) =>
-        field === "status"
-          ? organization[field]?.toString().toLowerCase() === value.toLowerCase()
-          : organization[field]
-            ?.toString()
-            .toLowerCase()
-            .includes(value.toLowerCase())
-      );
-      setOrganizations(filtered);
-    }
-  };
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
 
   // const formatDateTime = (dateTime) => {
   //   const date = new Date(dateTime);
@@ -253,7 +258,8 @@ const OrganizationArea = () => {
                     <option value="approved">approved</option>
                     {/* <option value="unapproved">unapproved</option> */}
                   </select>
-                </div>
+                
+              </div>
               </div>
 
               {/* Table */}

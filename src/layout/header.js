@@ -34,32 +34,46 @@ const Header = ({ style_2 = false }) => {
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
-                  <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: '-30px' }}>
+                  {/* Logo Section - Reduced Width & Logo Size */}
+                  <div className="col-xxl-1 col-xl-2 col-lg-3 col-md-4 col-sm-5 col-6">
+                    <div className="logo">
                       <Link href="/">
-                        <Image src={logo} alt="logo" style={{ width: '150px', height: 'auto' }} />
+                        <Image
+                          src={logo}
+                          alt="logo"
+                          style={{ width: "120px", height: "auto" }}
+                        />
                       </Link>
                     </div>
                   </div>
-                  <div className="col-xxl-6 col-xl-7 d-none d-xl-block ps-3">
-                    <div className="main-menu main-menu-13 pl-45 main-menu-ff-space">
-                      <nav id="mobile-menu-3">
+
+                  {/* Menu Section - Reduced Padding */}
+                  <div className="col-xxl-6 col-xl-6 d-none d-xl-block ps-2">
+                    <div className="main-menu main-menu-13 pl-30 main-menu-ff-space fs-7 small">
+                      <nav
+                        id="mobile-menu-3"
+                        className="fs-7 small"
+                        style={{ fontSize: "0.85rem" }}
+                      >
                         <Menus />
                       </nav>
                     </div>
                   </div>
-                  <div className="col-xxl-5 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
-                    <div className="header__bottom-right-13 d-flex justify-content-end align-items-center ps-4">
+
+                  {/* Right Section - Reduced Space & Icon Sizes */}
+                  <div className="col-xxl-5 col-xl-4 col-lg-6 col-md-8 col-sm-7 col-6">
+                    <div className="header__bottom-right-13 d-flex justify-content-end align-items-center ps-2">
                       <div className="header__action-13 d-none d-md-block">
-                        <ul className="list-unstyled mb-0">
+                        <ul className="list-unstyled mb-0 d-flex align-items-center">
+                          {/* User Profile - Reduced Image/Icon Size */}
                           {userInfo?.imageURL ? (
                             <li>
                               <Link href="/user-dashboard">
                                 <Image
                                   src={userInfo.imageURL}
                                   alt="user img"
-                                  width={35}
-                                  height={35}
+                                  width={20} // Reduced size
+                                  height={20} // Reduced size
                                   className="rounded-circle"
                                 />
                               </Link>
@@ -67,7 +81,7 @@ const Header = ({ style_2 = false }) => {
                           ) : userInfo?.name ? (
                             <li>
                               <Link href="/user-dashboard">
-                                <h2 className="text-uppercase tp-user-login-avater">
+                                <h2 className="text-uppercase tp-user-login-avater fs-6">
                                   {userInfo.name[0]}
                                 </h2>
                               </Link>
@@ -75,18 +89,22 @@ const Header = ({ style_2 = false }) => {
                           ) : (
                             <li>
                               <Link href="/login">
-                                <User />
+                                <User className="fs-5" />
                               </Link>
                             </li>
                           )}
-                          <li>
+
+                          {/* Cart Icon - Reduced Size */}
+                          <li className="ms-2">
                             <Link href="/cart" className="position-relative">
-                              <Cart className="me-2" />
+                              <Cart className="me-1 fs-5" />
                             </Link>
                           </li>
                         </ul>
                       </div>
-                      <div className="header__hamburger ms-4 d-xl-none">
+
+                      {/* Hamburger Menu - Reduced Spacing */}
+                      <div className="header__hamburger ms-3 d-xl-none">
                         <button
                           onClick={() => setIsOffCanvasOpen(true)}
                           type="button"

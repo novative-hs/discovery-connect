@@ -22,7 +22,13 @@ const getHistory = (req, res) => {
   });
 };
 
+const create_historyTable = (req, res) => {
+  historyModel.create_historyTable();
+  res.status(200).json({ message: "History table creation process started" });
+};
+
 module.exports = {
   RegistrationAdmin_History,
   getHistory,
+  create_historyTable
 };

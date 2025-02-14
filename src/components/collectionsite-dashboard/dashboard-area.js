@@ -62,7 +62,7 @@ const DashboardArea = () => {
             <ProfileShapes />
 
             <div className="row">
-              <div className="col-xxl-8 col-lg-8" style={{ width: '100%' }}>
+              <div className="col-xxl-8 col-lg-8 w-100">
                 <div className="profile__tab-content">
                   {/* Dynamically render content based on activeTab */}
                   {renderContent()}
@@ -74,6 +74,8 @@ const DashboardArea = () => {
       </section>
     </>
   );
+  
+  
 };
 
 export default DashboardArea;

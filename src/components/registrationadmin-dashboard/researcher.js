@@ -412,7 +412,6 @@ const ResearcherArea = () => {
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>
                           <td>{researcher.OrganizationName}</td>
-                          {/* <td>{researcher.created_at}</td> */}
                           <td>{researcher.status}</td>
                           <td>
                             <div
@@ -435,7 +434,7 @@ const ResearcherArea = () => {
                                   setSelectedResearcherId(researcher.id);
                                   setShowDeleteModal(true);
                                 }}
-                                title="Delete Researcher" // This is the text that will appear on hover
+                                title="Delete Researcher"
                               >
                                 <FontAwesomeIcon icon={faTrash} size="sm" />
                               </button>

@@ -1,59 +1,85 @@
-import React from "react";
-import {Box, Delivery, Processing, Truck} from "@svg/index";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useRouter } from "next/router";
+import { Box } from "@svg/index"; // Ensure correct import
 
-function SingleOrderInfo({ icon, info, title }) {
+function SingleResearcherInfo({ icon, info, title, onClick }) {
   return (
-    <div className="col-md-3 col-sm-6">
-      <div className="profile__main-info-item">
-        <div className="profile__main-info-icon">
-          <span className="total-order">
-            <span className="profile-icon-count profile-download">{info}</span>
-            {icon}
-          </span>
+    <div
+      className="col-md-12 col-sm-6"
+      onClick={onClick}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="profile__main-info-item d-flex flex-column align-items-center text-center">
+        <div className="profile__main-info-icon d-flex align-items-center justify-content-center gap-2">
+          <span className="profile-icon-count profile-download">{info}</span>
+          <span className="researcher-icon">{icon}</span>
         </div>
-        <h4 className="profile__main-info-title">{title}</h4>
+        <h4 className="profile__main-info-title mt-2">{title}</h4>
       </div>
     </div>
   );
 }
 
-const OrderInfo = ({ orderData }) => {
-  const {user} = useSelector(state => state.auth);
+const OrderInfo = ({ setActiveTab }) => {
+  const [userCount, setUserCount] = useState(null);
+  const router = useRouter();
+const [id, setUserID] = useState(null);
+   useEffect(() => {
+      const storedUserID = localStorage.getItem("userID");
+      if (storedUserID) {
+        setUserID(storedUserID);
+        console.log("Organization ID:", storedUserID); // Verify storedUserID
+      }
+    }, []);
+  useEffect(() => {
+    if (id !== null) {
+    fetchUserCount();
+    }
+  }, [id]);
+
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/researcher/get`);
+  
+      if (Array.isArray(response.data)) {
+        
+        const filteredResearchers = response.data.filter(researcher => {
+          return researcher.added_by == id; 
+        });
+  
+        setUserCount(filteredResearchers.length); 
+      } else {
+        console.warn("Unexpected API response:", response.data);
+        setUserCount(0);
+      }
+    } catch (error) {
+      console.error("Error fetching researcher count:", error);
+      setUserCount(0);
+    }
+  };
+  
+  
+
+  const researcherStat = {
+    label: "Total Researchers",
+    count: userCount || 0,
+    icon: <Box />,
+    tab: "researchers",
+  };
+
   return (
-    <div className="profile__main">
-      <div className="profile__main-top pb-80">
-        <div className="row align-items-center">
-          <div className="col-md-6">
-            <div className="profile__main-inner d-flex flex-wrap align-items-center">
-              <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">Welcome {user?.name}</h4>
-              </div>
-            </div>
-          </div>
+    <div className="profile__main-info p-4 ">
+      <div className="row justify-content-start">
+        <div className="profile__main-content">
+          <h7 className="profile__main-title text-capitalize  text-start pb-4">Welcome</h7>
         </div>
-      </div>
-      <div className="profile__main-info">
-        <div className="row gx-3">
-          <SingleOrderInfo
-            info={orderData?.totalDoc}
-            icon={<Box/>}
-            title="Total Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.pending}
-            icon={<Processing/>}
-            title="Pending Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.processing}
-            icon={<Truck/>}
-            title="Processing Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.delivered}
-            icon={<Delivery/>}
-            title="Complete Order"
+        <div className="col-lg-4 col-md-6 col-sm-10">
+          <SingleResearcherInfo
+            info={researcherStat.count}
+            icon={researcherStat.icon}
+            title={researcherStat.label}
+            onClick={() => setActiveTab(researcherStat.tab)}
           />
         </div>
       </div>

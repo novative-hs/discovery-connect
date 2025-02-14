@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Header from "../../layout/dashboardheader";
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from "./change-password";
-import UpdateRegistrationAdmin from "./update-registrationadmin";
+
 import CommitteeMemberArea from "./committe-members";
 import ResearcherArea from "./researcher";
 import Country from "./country";
@@ -100,9 +100,6 @@ const DashboardArea = () => {
         return <TestSystemManufacturerArea />;
       case "change-password":
         return <ChangePassword />;
-      case "update-registrationadmin":
-        return <UpdateRegistrationAdmin />;
-       
       default:
         return <OrderInfo setActiveTab={setActiveTab} />;
     }
@@ -113,14 +110,11 @@ const DashboardArea = () => {
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area pt-180 pb-120">
-        <div
-          className="container"
-          style={{ marginTop: "-90px", width: "100%" }}
-        >
-          <div className="profile__inner p-relative">
+        <div className="container mt-n5 w-100">
+          <div className="profile__inner position-relative">
             <ProfileShapes />
             <div className="row">
-              <div className="col-xxl-8 col-lg-8" style={{ width: "100%" }}>
+              <div className="col-xxl-8 col-lg-8 w-100">
                 <div className="profile__tab-content">
                   {/* Dynamically render content based on activeTab */}
                   {renderContent()}
@@ -132,6 +126,7 @@ const DashboardArea = () => {
       </section>
     </>
   );
+  
 };
 
 export default DashboardArea;

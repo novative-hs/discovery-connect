@@ -37,18 +37,20 @@ const biobankRoutes = require("./routes/biobankRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoutes");
 
-const ethnictiyRoutes = require("./routes/samplefieldsRoutes");
-const sampleconditionRoutes = require("./routes/samplefieldsRoutes");
-const storagetemperatureRoutes = require("./routes/samplefieldsRoutes");
-const containertypeRoutes = require("./routes/samplefieldsRoutes");
-const quantityunitRoutes = require("./routes/samplefieldsRoutes");
-const sampletypematrixRoutes = require("./routes/samplefieldsRoutes");
-const testmethodRoutes = require("./routes/samplefieldsRoutes");
-const testresultunitRoutes = require("./routes/samplefieldsRoutes");
-const testsystemRoutes = require("./routes/samplefieldsRoutes");
-const testsystemmanufacturerRoutes = require("./routes/samplefieldsRoutes");
-const testkitmanufacturerRoutes = require("./routes/samplefieldsRoutes");
-const concurrentmedicalconditionsRoutes = require("./routes/samplefieldsRoutes");
+const ethnictiyRoutes = require("./routes/ethnicityRoutes");
+const sampleconditionRoutes = require("./routes/sampleconditionRoutes");
+const storagetemperatureRoutes = require("./routes/storagetemperatureRoutes");
+const containertypeRoutes = require("./routes/containertypeRoutes");
+const quantityunitRoutes = require("./routes/quantityunitRoutes");
+const sampletypematrixRoutes = require("./routes/sampletypematrixRoutes");
+const testmethodRoutes = require("./routes/testmethodRoutes");
+const testresultunitRoutes = require("./routes/testresultunitRoutes");
+const testsystemRoutes = require("./routes/testsystemRoutes");
+const testsystemmanufecturerRoutes = require("./routes/testsystemmanufecturerRoutes");
+const testkitmanufacturerRoutes = require("./routes/testkitmanufacturerRoutes");
+const concurrentmedicalconditionsRoutes = require("./routes/concurrentmedicalconditionsRoutes");
+const historyRoutes = require("./routes/historyRoutes");
+
 
 // Routes
 app.use('/api', historyRoutes); 

@@ -392,16 +392,14 @@ const CommitteeMemberArea = () => {
     if (value === "") {
       fetchCommitteemembers();
     } else {
-      // Filter the researchers array based on the field and value
       const filtered = committeemembers.filter((committeemember) =>
-        committeemember[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
+        committeemember[field]?.toString().toLowerCase().startsWith(value.toLowerCase())
       );
       setCommitteemembers(filtered);
     }
   };
+  
+  
 
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal) {
@@ -447,242 +445,135 @@ const CommitteeMemberArea = () => {
               </div>
               {/* Table */}
               <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
-                    <tr className="text-center">
-                      {[
-                        { label: "ID", placeholder: "Search ID", field: "id" },
-                        {
-                          label: "Name",
-                          placeholder: "Search Name",
-                          field: "CommitteeMemberName",
-                        },
-                        {
-                          label: "Email",
-                          placeholder: "Search Email",
-                          field: "email",
-                        },
-                        {
-                          label: "Password",
-                          placeholder: "Search Password",
-                          field: "password",
-                        },
-                        {
-                          label: "Contact",
-                          placeholder: "Search Contact",
-                          field: "phoneNumber",
-                        },
-                        {
-                          label: "CNIC",
-                          placeholder: "Search CNIC",
-                          field: "cnic",
-                        },
-                        {
-                          label: "Full Address",
-                          placeholder: "Search full Address",
-                          field: "fullAddress",
-                        },
-                        {
-                          label: "City",
-                          placeholder: "Search City",
-                          field: "city",
-                        },
-                        {
-                          label: "District",
-                          placeholder: "Search District",
-                          field: "district",
-                        },
-                        {
-                          label: "Country",
-                          placeholder: "Search Country",
-                          field: "country",
-                        },
-                        {
-                          label: "Organization",
-                          placeholder: "Search Organization",
-                          field: "organization",
-                        },
-                        {
-                          label: "Committee Type",
-                          placeholder: "Search Committee Type",
-                          field: "committeetype",
-                        },
-                        {
-                          label: "Registered_at",
-                          placeholder: "Search Created_at",
-                          field: "created_at",
-                        },
-                        {
-                          label: "Status",
-                          placeholder: "Search Status",
-                          field: "status",
-                        },
-                      ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="px-4">
-                          <input
-                            type="text"
-                            className="form-control w-100 px-4 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
-                          {label}
-                        </th>
-                      ))}
-                      <th className="col-1">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((committeemember) => (
-                        <tr key={committeemember.id}>
-                          <td>{committeemember.id}</td>
-                          <td>{committeemember.CommitteeMemberName}</td>
-                          <td>{committeemember.email}</td>
-                          <td>{committeemember.password}</td>
-                          <td>{committeemember.phoneNumber}</td>
-                          <td>{committeemember.cnic}</td>
-                          <td>{committeemember.fullAddress}</td>
-                          <td>{committeemember.city_name}</td>
-                          <td>{committeemember.district_name}</td>
-                          <td>{committeemember.country_name}</td>
-                          <td>{committeemember.organization_name}</td>
-                          <td>{committeemember.committeetype}</td>
-                          <td>{formatDate(committeemember.created_at)}</td>
-                          <td>{committeemember.status}</td>
-                          <td>
-                            <div className="d-flex justify-content-around gap-2">
-                              <button
-                                className="btn btn-success btn-sm py-0 px-1"
-                                onClick={() => handleEditClick(committeemember)}
-                                title="Edit Committee Member"
-                              >
-                                <FontAwesomeIcon icon={faEdit} size="xs" />
-                              </button>{" "}
-                              <div className="btn-group">
-                                <button
-                                  className="btn btn-warning btn-sm py-0 px-1"
-                                  onClick={() =>
-                                    handleToggleCommitteeTypeOptions(
-                                      committeemember.id
-                                    )
-                                  }
-                                  title="Edit Committee Member Action (Scientific/Ethical)" // This is the text that will appear on hover
-                                >
-                                  <FontAwesomeIcon icon={faPlus} size="xs" />
-                                </button>
-                                {showCommitteeTypeOptions[
-                                  committeemember.id
-                                ] && (
-                                  <div className="dropdown-menu show">
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() => {
-                                        handleCommitteeTypeClick(
-                                          committeemember.id,
-                                          "Scientific"
-                                        );
-                                      }}
-                                    >
-                                      Scientific
-                                    </button>
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() => {
-                                        handleCommitteeTypeClick(
-                                          committeemember.id,
-                                          "Ethical"
-                                        );
-                                      }}
-                                    >
-                                      Ethical
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                              {""}
-                              <div className="btn-group">
-                                <button
-                                  className="btn btn-primary btn-sm py-0 px-1"
-                                  onClick={() =>
-                                    handleToggleStatusOptions(
-                                      committeemember.id
-                                    )
-                                  }
-                                  title="Edit Committee Member Action (Active/inActive)" // This is the text that will appear on hover
-                                >
-                                  <FontAwesomeIcon
-                                    icon={faQuestionCircle}
-                                    size="xs"
-                                  />
-                                </button>
-                                {statusOptionsVisibility[
-                                  committeemember.id
-                                ] && (
-                                  <div className="dropdown-menu show">
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() => {
-                                        handleStatusClick(
-                                          committeemember.id,
-                                          "Active"
-                                        );
-                                      }}
-                                    >
-                                      Active
-                                    </button>
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() => {
-                                        handleStatusClick(
-                                          committeemember.id,
-                                          "Inactive"
-                                        );
-                                      }}
-                                    >
-                                      Inactive
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                              {""}
-                              <button
-                                className="btn btn-danger btn-sm py-0 px-1"
-                                onClick={() => {
-                                  setSelectedCommitteememberId(
-                                    committeemember.id
-                                  );
-                                  setShowDeleteModal(true);
-                                }}
-                                title="Delete Committee Member" // This is the text that will appear on hover
-                              >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
-                              </button>
-                              <button
-                                className="btn btn-info btn-sm"
-                                onClick={() => {
-                                  setShowHistoryModal(true);
-                                  console.log("Done");
-                                }}
-                                title="Committee Member History" // This is the text that will appear on hover
-                              >
-                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="8" className="text-center">
-                          No Committee Members Available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+  <table className="table table-bordered table-hover">
+    <thead className="thead-dark">
+      <tr className="text-center">
+        {[
+          { label: "ID", placeholder: "Search ID", field: "id" },
+          { label: "CommitteeMemberName", placeholder: "Search Name", field: "CommitteeMemberName" },
+          { label: "Email", placeholder: "Search Email", field: "email" },
+          { label: "Password", placeholder: "Search Password", field: "password" },
+          { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
+          { label: "CNIC", placeholder: "Search CNIC", field: "cnic" },
+          { label: "Full Address", placeholder: "Search Full Address", field: "fullAddress" },
+          { label: "City", placeholder: "Search City", field: "city" },
+          { label: "District", placeholder: "Search District", field: "district" },
+          { label: "Country", placeholder: "Search Country", field: "country" },
+          { label: "Organization", placeholder: "Search Organization", field: "organization" },
+          { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
+          { label: "Registered At", placeholder: "Search Created At", field: "created_at" },
+          { label: "Status", placeholder: "Search Status", field: "status" },
+        ].map(({ label, placeholder, field }) => (
+          <th key={field} className="px-3 py-2" style={{ minWidth: "140px" }}>
+            <div className="d-flex flex-column">
+              <input
+                type="text"
+                className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
+                placeholder={placeholder}
+                onChange={(e) => handleFilterChange(field, e.target.value)}
+              />
+              <small className="fw-bold">{label}</small>
+            </div>
+          </th>
+        ))}
+        <th className="col-1">Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {currentData.length > 0 ? (
+        currentData.map((committeemember) => (
+          <tr key={committeemember.id}>
+            <td>{committeemember.id}</td>
+            <td>{committeemember.CommitteeMemberName}</td>
+            <td>{committeemember.email}</td>
+            <td>{committeemember.password}</td>
+            <td>{committeemember.phoneNumber}</td>
+            <td>{committeemember.cnic}</td>
+            <td>{committeemember.fullAddress}</td>
+            <td>{committeemember.city_name}</td>
+            <td>{committeemember.district_name}</td>
+            <td>{committeemember.country_name}</td>
+            <td>{committeemember.organization_name}</td>
+            <td>{committeemember.committeetype}</td>
+            <td>{formatDate(committeemember.created_at)}</td>
+            <td>{committeemember.status}</td>
+            <td>
+              <div className="d-flex justify-content-around gap-2">
+                <button
+                  className="btn btn-success btn-sm py-0 px-1"
+                  onClick={() => handleEditClick(committeemember)}
+                  title="Edit Committee Member"
+                >
+                  <FontAwesomeIcon icon={faEdit} size="xs" />
+                </button>
+
+                <div className="btn-group">
+                  <button
+                    className="btn btn-warning btn-sm py-0 px-1"
+                    onClick={() => handleToggleCommitteeTypeOptions(committeemember.id)}
+                    title="Edit Committee Type"
+                  >
+                    <FontAwesomeIcon icon={faPlus} size="xs" />
+                  </button>
+                  {showCommitteeTypeOptions[committeemember.id] && (
+                    <div className="dropdown-menu show">
+                      <button className="dropdown-item" onClick={() => handleCommitteeTypeClick(committeemember.id, "Scientific")}>Scientific</button>
+                      <button className="dropdown-item" onClick={() => handleCommitteeTypeClick(committeemember.id, "Ethical")}>Ethical</button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="btn-group">
+                  <button
+                    className="btn btn-primary btn-sm py-0 px-1"
+                    onClick={() => handleToggleStatusOptions(committeemember.id)}
+                    title="Edit Status"
+                  >
+                    <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                  </button>
+                  {statusOptionsVisibility[committeemember.id] && (
+                    <div className="dropdown-menu show">
+                      <button className="dropdown-item" onClick={() => handleStatusClick(committeemember.id, "Active")}>Active</button>
+                      <button className="dropdown-item" onClick={() => handleStatusClick(committeemember.id, "Inactive")}>Inactive</button>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="btn btn-danger btn-sm py-0 px-1"
+                  onClick={() => {
+                    setSelectedCommitteememberId(committeemember.id);
+                    setShowDeleteModal(true);
+                  }}
+                  title="Delete Committee Member"
+                >
+                  <FontAwesomeIcon icon={faTrash} size="sm" />
+                </button>
+
+                <button
+                  className="btn btn-info btn-sm"
+                  onClick={() => {
+                    setShowHistoryModal(true);
+                    console.log("Done");
+                  }}
+                  title="Committee Member History"
+                >
+                  <FontAwesomeIcon icon={faHistory} size="sm" />
+                </button>
               </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="15" className="text-center">No Committee Members Available</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
 
               {/* Pagination */}
               <div className="pagination d-flex justify-content-end align-items-center mt-3">
@@ -835,6 +726,8 @@ const CommitteeMemberArea = () => {
                                     required
                                   />
                                 </div>
+                                <div className="form-group">
+                                  <label>Phone Number</label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -842,9 +735,10 @@ const CommitteeMemberArea = () => {
                                   value={formData.phoneNumber}
                                   onChange={handleInputChange}
                                   required
-                                  pattern="^\d{11}$"
-                                  title="Phone number must be exactly 11 digits"
+                                  pattern="/^\d{4}-\d{7}$/"
+                                  title="Phone number must be in the format 0123-4567890 and numeric"
                                 />
+                                </div>
                               </>
                             ) : (
                               <>

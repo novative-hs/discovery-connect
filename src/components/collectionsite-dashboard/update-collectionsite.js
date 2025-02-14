@@ -16,10 +16,13 @@ const schema = Yup.object().shape({
   phoneNumber: Yup.string()
     .required("Phone Number is required")
     .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric",
+      /^\d{4}-\d{7}$/,
+      "Phone number must be in the format 0123-4567890 and numeric",
     )
     .label("Phone Number"),
+  ntnNumber: Yup.string()
+    .required("NTN Number is required")
+    .label("NTN Number"),
   fullAddress: Yup.string()
     .required("Full Address is required")
     .label("Full Address"),
@@ -450,7 +453,7 @@ const UpdateCollectionSite = () => {
               id="phoneNumber"
               {...register("phoneNumber")}
               type="text"
-              placeholder="Enter Phone Number"
+              placeholder="XXXX-XXXXXXX"
               style={{
                 width: "100%",
                 padding: "20px",

@@ -208,18 +208,21 @@ const CollectionsiteArea = () => {
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchCollectionsites();
-    } else {
-      // Filter the researchers array based on the field and value
-      const filtered = allcollectionsites.filter((collectionsite) =>
-        collectionsite[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-      setCollectionsites(filtered);
-    }
+    if (!value.trim()) return fetchCollectionsites(); // Reset if input is empty
+  
+    setCollectionsites(
+      allcollectionsites.filter((collectionsite) => {
+        const fieldValue = collectionsite[field]?.toString().toLowerCase().trim(); // Normalize field
+        const searchValue = value.toLowerCase().trim(); // Normalize input
+  
+        if (!fieldValue) return false;
+  
+        // Exact match for "status", partial match for others
+        return field === "status"
+          ? fieldValue.startsWith(searchValue) // Ensures "i" matches "inactive" but not "active"
+          : fieldValue.includes(searchValue);
+      })
+    );
   };
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {

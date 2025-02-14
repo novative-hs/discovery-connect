@@ -11,24 +11,26 @@ const cityModel = require("../models/cityModel");
 const historyModel = require("../models/historyModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
-const sample_approvalModel = require("../models/sampleapprovalModel")
-const paymentModel = require('../models/paymentModals')
-const ethnicityModel = require('../models/samplefieldsModel')
-const sampleconditionModel = require('../models/samplefieldsModel')
-const storagetemperatureModel = require('../models/samplefieldsModel')
-const containertypeModel = require('../models/samplefieldsModel')
-const quantityunitModel = require('../models/samplefieldsModel')
-const sampletypematrixModel = require('../models/samplefieldsModel')
-const testmethodModel = require('../models/samplefieldsModel')
-const testresultunitModel = require('../models/samplefieldsModel')
-const testsystemModel = require('../models/samplefieldsModel')
-const testsystemmanufacturerModel = require('../models/samplefieldsModel')
-const testkitmanufacturerModel = require('../models/samplefieldsModel')
-const concurrentmedicalconditionsModel = require('../models/samplefieldsModel')
+
+const sample_approvalModel=require("../models/sampleapprovalModel")
+const paymentModel=require('../models/paymentModals')
+const ethnicityModel=require('../models/ethnicityModel')
+const sampleconditionModel=require('../models/sampleconditionModel')
+const storagetemperatureModel=require('../models/storagetemperatureModel')
+const containertypeModel=require('../models/containertypeModel')
+const quantityunitModel=require('../models/quantityunitModel')
+const sampletypematrixModel=require('../models/sampletypematrixModel')
+const testmethodModel=require('../models/testmethodModel')
+const testresultunitModel=require('../models/testresultunitModel')
+const testsystemModel=require('../models/testsystemModel')
+const testsystemmanufacturerModel=require('../models/testsystemmanufacturerModel')
+const testkitmanufacturerModel=require('../models/testkitmanufacturerModel')
+const concurrentmedicalconditionsModel=require('../models/concurrentmedicalconditionsModel')
+const historyModel = require("../models/historyModel");
 
 // Function to initialize all tables
 function Database() {
-  ethnicityModel.createEthnicityTable();
+
   cityModel.createCityTable();
   historyModel.RegistrationAdmin_History();
   countryModel.createCountryTable();
@@ -40,23 +42,29 @@ function Database() {
   signupModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
-  //samplereceiveModel.createSampleReceiveTable();
+  samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
   productModel.createProductsTable();
   wishlistModel.createWishlistTable();
   cartModel.createCartTable();
-  //sample_approvalModel.createSampleApprovalTable();
-  paymentModel.createPaymentTable();
-  sampleconditionModel.createSampleConditionTable();
-  storagetemperatureModel.createStorageTemperatureTable();
-  containertypeModel.createContainerTypeTable()
-  quantityunitModel.createQuantityUnitTable();
-  sampletypematrixModel.createSampleTypeMatrixTable();
-  testmethodModel.createTestMethodTable()
-  testresultunitModel.createTestResultUnitTable();
-  testsystemModel.createTestSystemTable();
-  testsystemmanufacturerModel.createTestSystemManufacturerTable();
-  testkitmanufacturerModel.createTestKitManufacturerTable();
-  concurrentmedicalconditionsModel.createConcurrentMedicalConditionsTable();
+  sample_approvalModel.createSampleApprovalTable();
+ paymentModel.createPaymentTable();
+ ethnicityModel.createEthnicityTable();
+ sampleconditionModel.createSampleConditionTable();
+ storagetemperatureModel.createStorageTemperatureTable();
+ containertypeModel.createContainerTypeTable()
+ quantityunitModel.createQuantityUnitTable();
+ sampletypematrixModel.createSampleTypeMatrixTable();
+ testmethodModel.createTestMethodTable()
+testresultunitModel.createTestResultUnitTable();
+ testsystemModel.createTestSystemTable();
+ testsystemmanufacturerModel.createTestSystemManufecturerTable();
+ testkitmanufacturerModel.createTestKitManufacturerTable();
+ concurrentmedicalconditionsModel.createConcurrentMedicalConditionsTable();
+ historyModel.RegistrationAdmin_History();
+ historyModel.create_historyTable();
+ historyModel.create_samplehistoryTable();
+ 
+
 }
 Database();
