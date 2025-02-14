@@ -58,7 +58,7 @@ function Database() {
  testmethodModel.createTestMethodTable()
 testresultunitModel.createTestResultUnitTable();
  testsystemModel.createTestSystemTable();
- testsystemmanufacturerModel.createTestSystemManufecturerTable();
+ testsystemmanufacturerModel.createTestSystemManufacturerTable();
  testkitmanufacturerModel.createTestKitManufacturerTable();
  concurrentmedicalconditionsModel.createConcurrentMedicalConditionsTable();
  historyModel.RegistrationAdmin_History();

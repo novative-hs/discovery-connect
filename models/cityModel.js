@@ -211,9 +211,6 @@ const updateCity = (id, data, callback) => {
 };
 
 
-
-
-
 const deleteCity = (id, callback) => {
   mysqlConnection.beginTransaction((err) => {
     if (err) {
@@ -256,6 +253,47 @@ const deleteCity = (id, callback) => {
     });
   });
 };
+
+const getCount = (callback) => {
+  // Queries to get the record count for each table
+  const queries = {
+    totalCities: 'SELECT COUNT(*) AS count FROM city',
+    totalDistricts: 'SELECT COUNT(*) AS count FROM district',
+    totalCountries: 'SELECT COUNT(*) AS count FROM country',
+    totalResearchers: 'SELECT COUNT(*) AS count FROM researcher',
+    totalOrganizations: 'SELECT COUNT(*) AS count FROM organization',
+    totalCommitteeMembers: 'SELECT COUNT(*) AS count FROM committee_member',
+    totalCollectionSites: 'SELECT COUNT(*) AS count FROM collectionsite',
+    totalOrders: 'SELECT COUNT(*) AS count FROM cart'
+  };
+
+  let results = {};
+
+  // Function to execute queries sequentially
+  const executeQuery = (key, query) => {
+    return new Promise((resolve, reject) => {
+      mysqlConnection.query(query, (err, result) => {
+        if (err) {
+          console.log(err)
+          reject(err); // If any query fails, reject the promise
+        } else {
+          results[key] = result[0].count; // Store the count for each table
+          resolve();
+        }
+      });
+    });
+  };
+
+  // Run all queries concurrently
+  Promise.all(Object.entries(queries).map(([key, query]) => executeQuery(key, query)))
+    .then(() => {
+      callback(null, results); // Return the counts when all queries have completed
+    })
+    .catch((err) => {
+      callback(err, null); // If any error occurs, pass the error to the callback
+    });
+};
+
 
 
 module.exports = {
