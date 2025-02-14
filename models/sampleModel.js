@@ -129,6 +129,7 @@ const createSample = (data, callback) => {
       console.log('Sample inserted successfully with masterID:', masterID);
       callback(null, { insertId: id, masterID: masterID });
     });
+   
   });
 };
 

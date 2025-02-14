@@ -42,6 +42,53 @@ const SampleArea = () => {
      TestSystemManufacturer: "",
      user_account_id: "",
    });
+   const tableHeaders = [
+    { label: "ID", key: "id" },
+    { label: "Master ID", key: "masterID" },
+    { label: "Donor ID", key: "donorID" },
+    { label: "Sample Name", key: "samplename" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Ethnicity", key: "ethnicity" },
+    { label: "Sample Condition", key: "samplecondition" },
+    { label: "Storage Temp", key: "storagetemp" },
+    { label: "Storage Temp Unit", key: "storagetempUnit" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Price", key: "price" },
+    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
+    { label: "Quantity", key: "quantity" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Lab Name", key: "labname" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Type Matrix Subtype", key: "TypeMatrixSubtype" },
+    { label: "Procurement Type", key: "ProcurementType" },
+    { label: "End Time", key: "endTime" },
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Test Method", key: "TestMethod" },
+    { label: "Test Result", key: "TestResult" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
+    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
+    { label: "Cut Off Range", key: "CutOffRange" },
+    { label: "Cut Off Range Unit", key: "CutOffRangeUnit" },
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
+    { label: "Concurrent Medications", key: "ConcurrentMedications" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Result Remarks", key: "ResultRemarks" },
+    { label: "Test Kit", key: "TestKit" },
+    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
+    { label: "Test System", key: "TestSystem" },
+    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+    { label: "Discount", key: "discount" },
+    { label: "Status", key: "status" },
+  ];
    const [isCartOpen,setIsCartOpen]=useState(false);
 const[quantity,setQuantity]=useState(0);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
@@ -165,1022 +212,145 @@ const[quantity,setQuantity]=useState(0);
   }
 
   return (
-    <section className="policy__area pb-120">
-      <div className="container" style={{ marginTop: "-20px", width: "auto" }}>
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
+    <section className="policy__area pb-120 overflow-hidden">
+    <div className="container-fluid mt-n5">
+      <div className="row justify-content-center mt-5">
+        <div className="col-12 col-md-10">
+          <div className="policy__wrapper policy__translate position-relative mt-5">
+            {/* {Button} */}
+            <div className="d-flex flex-column w-100">
               {/* Success Message */}
               {successMessage && (
-                <div className="alert alert-success" role="alert">
+                <div
+                  className="alert alert-success w-100 text-start mb-2"
+                  role="alert"
+                >
                   {successMessage}
                 </div>
               )}
+            </div>
 
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr style={{ textAlign: "center" }}>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        ID 
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Donor ID"
-                          onChange={(e) =>
-                            handleFilterChange("donorID", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Donor ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Name"
-                          onChange={(e) =>
-                            handleFilterChange("samplename", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Sample Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Age"
-                          onChange={(e) =>
-                            handleFilterChange("age", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Age
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Gender"
-                          onChange={(e) =>
-                            handleFilterChange("gender", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Gender
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Ethnicity"
-                          onChange={(e) =>
-                            handleFilterChange("ethnicity", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Ethnicity
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Condition"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "samplecondition",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Sample Condition
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Storage Temperature"
-                          onChange={(e) =>
-                            handleFilterChange("storagetemp", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Storage Temperature
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Container Type"
-                          onChange={(e) =>
-                            handleFilterChange("ContainerType", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Container Type
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Country"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "CountryOfCollection",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Country Of Collection
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Price"
-                          onChange={(e) =>
-                            handleFilterChange("price", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Price
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Price Currency"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SamplePriceCurrency",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Sample Price Currency
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Quantity"
-                          onChange={(e) =>
-                            handleFilterChange("quantity", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Quantity
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Quantity Unit"
-                          onChange={(e) =>
-                            handleFilterChange("QuantityUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Quantity Unit
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Sample Type Matrix"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "SampleTypeMatrix",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Sample Type Matrix
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Smoking Status"
-                          onChange={(e) =>
-                            handleFilterChange("SmokingStatus", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Smoking Status
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Alcohol Or Drug Abuse"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "AlcoholOrDrugAbuse",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Alcohol Or Drug Abuse
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Infectious Disease Testing"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "InfectiousDiseaseTesting",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Infectious Disease Testing
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Infectious Disease Result"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "InfectiousDiseaseResult",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Infectious Disease Result
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Freeze Thaw Cycles"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "FreezeThawCycles",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Freeze Thaw Cycles
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Date Of Collection"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "DateOfCollection",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Date Of Collection
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Concurrent Medical Conditions"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ConcurrentMedicalConditions",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Concurrent Medical Conditions
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Concurrent Medications"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "ConcurrentMedications",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Concurrent Medications
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Diagnosis Test Parameter"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "DiagnosisTestParameter",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Diagnosis Test Parameter
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result"
-                          onChange={(e) =>
-                            handleFilterChange("TestResult", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test Result
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Result Unit"
-                          onChange={(e) =>
-                            handleFilterChange("TestResultUnit", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test Result Unit
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Method"
-                          onChange={(e) =>
-                            handleFilterChange("TestMethod", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test Method
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test Kit Manufacturer"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TestKitManufacturer",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test Kit Manufacturer
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test System"
-                          onChange={(e) =>
-                            handleFilterChange("TestSystem", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test System
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Test System Manufacturer"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "TestSystemManufacturer",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Test System Manufacturer
-                      </th>
-                      {/*<th>User ID</th>*/}
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Status"
-                          onChange={(e) =>
-                            handleFilterChange("discount", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Discount
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%",
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px",
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Status
-                      </th>
-                     
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        Action
-                      </th>
+                    <tr>
+                      {tableHeaders.map(({ label, key }, index) => (
+                        <th key={index} className="px-4 text-center">
+                          <div className="d-flex flex-column align-items-center">
+                            <input
+                              type="text"
+                              className="form-control form-control-sm w-100"
+                              placeholder={label}
+                              onChange={(e) =>
+                                handleFilterChange(key, e.target.value)
+                              }
+                              style={{ minWidth: "120px"}} 
+                            />
+                            <span className="fw-bold mt-1 d-block text-nowrap">
+                              {label}
+                            </span>
+                          </div>
+                        </th>
+                      ))}
+                      <th className="px-3 align-middle text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((sample) => (
-                        <tr key={sample.id}>
-                          <td>{sample.id}</td>
-                          <td>{sample.donorID}</td>
-                          <td>{sample.samplename}</td>
-                          <td>{sample.age}</td>
-                          <td>{sample.gender}</td>
-                          <td>{sample.ethnicity}</td>
-                          <td>{sample.samplecondition}</td>
-                          <td>{sample.storagetemp}</td>
-                          <td>{sample.ContainerType}</td>
-                          <td>{sample.CountryOfCollection}</td>
-                          <td>{sample.price}</td>
-                          <td>{sample.SamplePriceCurrency}</td>
-                          <td>{sample.quantity}</td>
-                          <td>{sample.QuantityUnit}</td>
-                          <td>{sample.SampleTypeMatrix}</td>
-                          <td>{sample.SmokingStatus}</td>
-                          <td>{sample.AlcoholOrDrugAbuse}</td>
-                          <td>{sample.InfectiousDiseaseTesting}</td>
-                          <td>{sample.InfectiousDiseaseResult}</td>
-                          <td>{sample.FreezeThawCycles}</td>
-                          <td>{sample.DateOfCollection}</td>
-                          <td>{sample.ConcurrentMedicalConditions}</td>
-                          <td>{sample.ConcurrentMedications}</td>
-                          <td>{sample.DiagnosisTestParameter}</td>
-                          <td>{sample.TestResult}</td>
-                          <td>{sample.TestResultUnit}</td>
-                          <td>{sample.TestMethod}</td>
-                          <td>{sample.TestKitManufacturer}</td>
-                          <td>{sample.TestSystem}</td>
-                          <td>{sample.TestSystemManufacturer}</td>
-                          <td>{sample.discount}%</td>
-                          {/*<td>{sample.user_id}</td>*/}
-                          <td>{sample.status}</td>
-                          <td>
-                            <button
-                              className="btn d-flex align-items-center"
-                              onClick={() => handleUpdate(sample)}
-                              title="add to cart"
-                            >
-                              <Cart className="me-2" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="8" className="text-center">
-                          No samples available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+      {currentData.length > 0 ? (
+        currentData.map((sample) => (
+          <tr key={sample.id}>
+            {tableHeaders.map(({ key }, index) => (
+              <td key={index}>{sample[key] || "N/A"}</td>
+            ))}
+            <td>
+              <div className="d-flex justify-content-around gap-2">
+                <button className="btn btn-success btn-sm" onClick={() => handleEditClick(sample)}>
+                  <i className="fas fa-edit"></i>
+                </button>
+                <button className="btn btn-danger btn-sm" onClick={() => {
+                  setSelectedSampleId(sample.id);
+                  setShowDeleteModal(true);
+                }}>
+                  <i className="fas fa-trash"></i>
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => handleTransferClick(sample)}>
+                  <i className="fas fa-exchange-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan={tableHeaders.length + 1} className="text-center">
+            No samples available
+          </td>
+        </tr>
+      )}
+    </tbody>
                 </table>
               </div>
               {/* Pagination Controls */}
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${
-                          currentPage === pageNumber
-                            ? "btn-primary"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
+              <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
                       >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
+                          }`}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
                       >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
             </div>
           </div>

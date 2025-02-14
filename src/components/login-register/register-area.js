@@ -6,26 +6,35 @@ import RegisterForm from "@components/forms/register-form";
 
 const RegisterArea = () => {
   return (
-    <section className="login__area pt-110 pb-110">
-      <div className="container">
-        <div className="login__inner p-relative z-index-1">
-          <Shapes />
-          <div className="row justify-content-center">
-            <div className="col-xl-6 col-lg-8 col-md-10">
-              <div className="login__wrapper">
-                <div className="login__top mb-30 text-center">
-                  <h3 className="login__title">Register Now!</h3>
-                  <p>You can signup with you social account below</p>
-                </div>
-                <div className="login__form">
-                  {/* register form start */}
-                  <RegisterForm/>
-                  {/* register form end */}
-                  <div className="login__register-now">
-                    <p>
-                      Already have an account? <Link href="/login">Log in</Link>
-                    </p>
-                  </div>
+    <section className="login__area position-relative mb-5 mt-50">
+      <div className="container-sm position-relative z-index-1">
+        <div className="d-flex justify-content-center">
+          {/* <Shapes/> */}
+          <div
+            className="col-lg-3 col-md-5 col-sm-8 p-5 w-100 flex-grow-1"
+            style={{ maxWidth: "550px", minWidth: "280px" }}
+          >
+            <div className="login__wrapper bg-white border rounded shadow-sm p-2">
+              <div className="login__top mb-2 text-center">
+                <p className="login__title fw-bold text-black fs-5 mb-1">
+                  Register Now!
+                </p>
+                <p className="text-muted small mb-2">
+                  Sign up with your social account below
+                </p>
+              </div>
+              <div className="login__form">
+                <RegisterForm
+                  inputClass="form-control-sm"
+                  buttonClass="btn-sm"
+                />
+                <div className="login__register-now text-center mt-2">
+                  <p className="small mb-1">
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-primary fw-bold">
+                      Log in
+                    </Link>
+                  </p>
                 </div>
               </div>
             </div>

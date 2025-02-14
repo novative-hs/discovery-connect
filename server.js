@@ -45,8 +45,10 @@ const testsystemRoutes = require("./routes/testsystemRoutes");
 const testsystemmanufecturerRoutes = require("./routes/testsystemmanufecturerRoutes");
 const testkitmanufacturerRoutes = require("./routes/testkitmanufacturerRoutes");
 const concurrentmedicalconditionsRoutes = require("./routes/concurrentmedicalconditionsRoutes");
+const historyRoutes = require("./routes/historyRoutes");
 
 // Routes
+app.use('/api', historyRoutes); 
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);
 app.use("/api/city", cityRoutes);

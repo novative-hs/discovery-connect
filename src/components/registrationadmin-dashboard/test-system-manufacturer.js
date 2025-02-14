@@ -307,7 +307,7 @@ const TestSystemManufacturerArea = () => {
                       {[
                         { label: "ID", placeholder: "Search ID", field: "id" },
                         {
-                          label: "Test System Name Manufacturer",
+                          label: "Test System Manufacturer Name",
                           placeholder: "Search Test System Name Manufacturer",
                           field: "name",
                         },

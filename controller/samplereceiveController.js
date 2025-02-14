@@ -49,7 +49,7 @@ const getSampleReceiveInTransit = (req, res) => {
       s.TestSystemManufacturer,
       sr.ReceivedByCollectionSite,
       sr.ReceivedByCollectionSite AS user_account_id,
-      sd.Quantity,
+      
       s.status
     FROM samplereceive sr
     INNER JOIN sample s ON sr.sampleID = s.id

@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faEdit,
-  faTrash,
-  faCheckCircle,
-  faTimesCircle,
-} from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const ResearcherArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -27,36 +22,11 @@ const ResearcherArea = () => {
   const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
   const [successMessage, setSuccessMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-  const itemsPerPage = 10;
-
-  const [recordsPerPage, setRecordsPerPage] = useState(5); // Default: 5 per page
   const [currentPage, setCurrentPage] = useState(1);
-  const totalRecords = researchers.length; // Total records count
-  const totalPages = Math.ceil(totalRecords / recordsPerPage);
+  const itemsPerPage = 10;
+  // Calculate total pages
+  const totalPages = Math.ceil(researchers.length / itemsPerPage);
 
-  // Calculate pagination indices
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const paginatedData = researchers.slice(
-    indexOfFirstRecord,
-    indexOfLastRecord
-  );
-
-  const resetFormData = () => {
-    setFormData({
-      ResearcherName: "",
-      email: "",
-      phoneNumber: "",
-      nameofOrganization: "",
-      // created_at: "",
-      status: "",
-      // logo: ""
-    });
-  };
-  const handleRecordsPerPageChange = (e) => {
-    setRecordsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset to first page when changing records per page
-  };
   // Fetch researchers from backend when component loads
   useEffect(() => {
     fetchResearchers(); // Call the function when the component mounts
@@ -79,46 +49,53 @@ const ResearcherArea = () => {
     });
   };
 
-    // const formatDateTime = (dateTime) => {
-    //   const date = new Date(dateTime);
-    //   const formattedDate = date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
-    //   return formattedDate;
-    // };
+  // const formatDateTime = (dateTime) => {
+  //   const date = new Date(dateTime);
+  //   const formattedDate = date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
+  //   return formattedDate;
+  // };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        try {
-            // POST request to your backend API
-            const response = await axios.post('http://localhost:5000/api/researchers/post', formData);
-            console.log("Researcher added successfully:", response.data);
+    try {
+      // POST request to your backend API
+      const response = await axios.post(
+        "http://localhost:5000/api/researchers/post",
+        formData
+      );
+      console.log("Researcher added successfully:", response.data);
 
-            // Refresh the researcher list after successful submission
-            const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
-            setResearchers(newResponse.data); // Update state with the new list
+      // Refresh the researcher list after successful submission
+      const newResponse = await axios.get(
+        "http://localhost:5000/api/admin/researcher/get"
+      );
+      setResearchers(newResponse.data); // Update state with the new list
 
-            // Clear form after submission
-            setFormData({
-                ResearcherName: "",
-                email: "",
-                phoneNumber: "",
-                nameofOrganization: "",
-                // created_at: "",
-                status: "",
+      // Clear form after submission
+      setFormData({
+        ResearcherName: "",
+        email: "",
+        phoneNumber: "",
+        nameofOrganization: "",
+        // created_at: "",
+        status: "",
+      });
+      setShowAddModal(false); // Close modal after submission
+    } catch (error) {
+      console.error("Error adding researcher:", error);
+    }
+  };
 
-            });
-            setShowAddModal(false); // Close modal after submission
-        } catch (error) {
-            console.error("Error adding researcher:", error);
-        }
-    };
-
-
-    const handleDelete = async () => {
-        try {
-            // Send delete request to backend
-            await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedResearcherId}`);
-            console.log(`Researcher with ID ${selectedResearcherId} deleted successfully.`);
+  const handleDelete = async () => {
+    try {
+      // Send delete request to backend
+      await axios.delete(
+        `http://localhost:5000/api/researchers/delete/${selectedResearcherId}`
+      );
+      console.log(
+        `Researcher with ID ${selectedResearcherId} deleted successfully.`
+      );
 
       // Set success message
       setSuccessMessage("Researcher deleted successfully.");
@@ -128,9 +105,11 @@ const ResearcherArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-            // Refresh the researcher list after deletion
-            const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
-            setResearchers(newResponse.data);
+      // Refresh the researcher list after deletion
+      const newResponse = await axios.get(
+        "http://localhost:5000/api/admin/researcher/get"
+      );
+      setResearchers(newResponse.data);
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -186,17 +165,17 @@ const ResearcherArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-        try {
-            const response = await axios.put(
-                `http://localhost:5000/api/admin/researchers/edit/${selectedResearcherId}`,
-                formData
-            );
-            console.log("Researcher updated successfully:", response.data);
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/admin/researchers/edit/${selectedResearcherId}`,
+        formData
+      );
+      console.log("Researcher updated successfully:", response.data);
 
-            const newResponse = await axios.get(
-                "http://localhost:5000/api/admin/researcher/get"
-            );
-            setResearchers(newResponse.data);
+      const newResponse = await axios.get(
+        "http://localhost:5000/api/admin/researcher/get"
+      );
+      setResearchers(newResponse.data);
 
       setShowEditModal(false);
       setSuccessMessage("Researcher updated successfully.");
@@ -277,51 +256,30 @@ const ResearcherArea = () => {
                 )}
 
                 {/* Status Filter */}
-                <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-2">
-                  {/* Left-aligned Status Filter */}
-                  <div className="d-flex align-items-center gap-2">
-                    <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
-                      Status:
-                    </label>
-                    <select
-                      id="statusFilter"
-                      className="form-control mb-2"
-                      style={{ width: "auto" }}
-                      onChange={(e) =>
-                        handleFilterChange("status", e.target.value)
-                      }
-                    >
-                      <option value="">All</option>
-                      <option value="pending">pending</option>
-                      <option value="approved">approved</option>
-                    </select>
-                  </div>
+                <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
+                  <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                    Status:
+                  </label>
 
-                  {/* Right-aligned Show Filter */}
-                  <div className="d-flex justify-content-end align-items-center">
-                    <label className="mb-0 d-flex align-items-center">
-                      Show:
-                      <select
-                        id="recordsPerPage"
-                        className="form-select ms-2 w-auto"
-                        value={recordsPerPage}
-                        onChange={handleRecordsPerPageChange}
-                      >
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value={totalRecords}>All</option>
-                      </select>
-                    </label>
-                  </div>
+                  <select
+                    id="statusFilter"
+                    className="form-control mb-2"
+                    style={{ width: "auto" }}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    } // Pass "status" as the field
+                  >
+                    <option value="">All</option>
+                    <option value="pending">pending</option>
+                    <option value="approved">approved</option>
+                  </select>
                 </div>
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive w-100 ">
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
-                  <thead className="thead-dark ">
+                  <thead className="thead-dark">
                     <tr className="text-center">
                       {[
                         { label: "ID", placeholder: "Search ID", field: "id" },
@@ -351,16 +309,22 @@ const ResearcherArea = () => {
                           field: "status",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="px-4">
-                          <input
-                            type="text"
-                            className="form-control w-100 px-4 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
-                          {label}
+                        <th
+                          key={field}
+                          className="px-3 align-middle"
+                          style={{ minWidth: "150px" }}
+                        >
+                          <div className="d-flex flex-column">
+                            <input
+                              type="text"
+                              className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
+                              placeholder={placeholder}
+                              onChange={(e) =>
+                                handleFilterChange(field, e.target.value)
+                              }
+                            />
+                            <small className="fw-bold">{label}</small>
+                          </div>
                         </th>
                       ))}
                       <th className="col-1">Action</th>
@@ -368,27 +332,15 @@ const ResearcherArea = () => {
                   </thead>
 
                   <tbody>
-                    {paginatedData.length > 0 ? (
-                      paginatedData.map((researcher) => (
-                        <tr
-                          key={researcher.id}
-                          className={
-                            researcher.status === "pending"
-                              ? "table-warning"
-                              : researcher.status === "unapproved"
-                              ? "table-danger"
-                              : researcher.status === "approved"
-                              ? "table-success"
-                              : ""
-                          }
-                        >
+                    {currentData.length > 0 ? (
+                      currentData.map((researcher) => (
+                        <tr key={researcher.id}>
                           <td>{researcher.id}</td>
                           <td>{researcher.ResearcherName}</td>
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>
                           <td>{researcher.OrganizationName}</td>
                           <td>{researcher.status}</td>
-
                           <td>
                             <div className="d-flex justify-content-around gap-2">
                               <button
@@ -423,80 +375,68 @@ const ResearcherArea = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-2">
-              <p style={{ marginTop: "10px" }}>
-                Showing {Math.min(indexOfLastRecord, totalRecords)} out of{" "}
-                {totalRecords} entries
-              </p>
 
               {/* Pagination Controls */}
-              <ul className="pagination justify-content-end">
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <a
-                    className="page-link"
-                    href="#"
-                    onClick={() =>
-                      currentPage > 1 && setCurrentPage(currentPage - 1)
-                    }
-                  >
-                    &laquo;
-                  </a>
-                </li>
-                {Array.from(
-                  { length: totalPages },
-                  (_, index) => index + 1
-                ).map((page) => (
-                  <li
-                    key={page}
-                    className={`page-item ${
-                      currentPage === page ? "active" : ""
-                    }`}
-                  >
-                    <a
-                      className="page-link"
-                      href="#"
-                      onClick={() => setCurrentPage(page)}
+              <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
                     >
-                      {page}
-                    </a>
-                  </li>
-                ))}
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <a
-                    className="page-link"
-                    href="#"
-                    onClick={() =>
-                      currentPage < totalPages &&
-                      setCurrentPage(currentPage + 1)
-                    }
-                  >
-                    &raquo;
-                  </a>
-                </li>
-              </ul>
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
+                          }`}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
-
-              {/* <div>
-        <button 
-          disabled={currentPage === 1} 
-          onClick={() => setCurrentPage(currentPage - 1)}
-        >
-          Previous
-        </button>
-        <span> Page {currentPage} </span>
-        <button 
-          disabled={indexOfLastRecord >= totalRecords} 
-          onClick={() => setCurrentPage(currentPage + 1)}
-        >
-          Next
-        </button>
-      </div> */}
               {/* Modal for Adding Committe members */}
               {showEditModal && (
                 <>
@@ -532,7 +472,7 @@ const ResearcherArea = () => {
                             className="close"
                             onClick={() => {
                               setShowEditModal(false);
-                              resetFormData();
+                             
                             }}
                             style={{
                               fontSize: "1.5rem",

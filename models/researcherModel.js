@@ -3,24 +3,25 @@ const mysqlConnection = require("../config/db");
 
 function createResearcher(data, callback) {
   console.log("Researcher Model",data)
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
+  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo,added_by } = data;
   const query = `
-    INSERT INTO researcher (user_account_id,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country)
-    VALUES (?,?, ?, ?, ?, ?,?,?)
+    INSERT INTO researcher (user_account_id,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,added_by)
+    VALUES (?,?, ?, ?, ?, ?,?,?,?)
   `;
 
- mysqlConnection.query(query, [userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress,city,district, country], callback);
+ mysqlConnection.query(query, [userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress,city,district, country,nameofOrganization], callback);
 }
 
 // Function to fetch all researchers
 function getAllResearchers(callback) {
   const query = `
-    SELECT researcher.id, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.logo, researcher.status,
+    SELECT researcher.id,researcher.added_by, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.logo, researcher.status,
            user_account.email,
            organization.id AS organization_id, organization.OrganizationName
     FROM researcher
     JOIN user_account ON researcher.user_account_id = user_account.id
     JOIN organization ON researcher.nameofOrganization = organization.id
+    ORDER BY researcher.id ASC
   `;
   mysqlConnection.query(query, callback);
 }

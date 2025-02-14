@@ -212,153 +212,136 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-light bg-light">
-        <div className="container-fluid">
-          <Image src={logo} alt="Logo" width={240} height={150} />
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+ <nav className="navbar navbar-expand-lg navbar-light bg-light py-1 w-100">
+  <div className="container-fluid">
+    {/* Logo */}
+    <a className="navbar-brand">
+      <Image src={logo} alt="Logo" width={100} height={60} className="img-fluid" />
+    </a>
 
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              {menuItems.map(({ label, tab, dropdown }, index) => (
-                <li key={tab} className="nav-item dropdown">
-                  <button
-                    className={`nav-link btn ${
-                      activeTab === tab ? "text-primary" : "text-dark"
-                    }`}
-                    onClick={() => {
-                      if (dropdown) {
-                        handleToggleSampleDropdown(index); // Toggle only the clicked dropdown
-                      } else {
-                        setActiveTab(tab);
-                      }
-                    }}
-                  >
-                    {label}
-                  </button>
+    {/* Navbar Toggler */}
+    <button
+      className="navbar-toggler ms-auto"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span className="navbar-toggler-icon"></span>
+    </button>
 
-                  {/* Render dropdown items if available */}
-                  {dropdown && showSampleDropdown === index && (
-                    <ul className="dropdown-menu show">
-                      {dropdown.map(({ label, tab }) => (
-                        <li key={tab}>
-                          <button
-                            className="dropdown-item"
-                            onClick={() => {
-                              setActiveTab(tab);
-                              setShowSampleDropdown(null); // Close dropdown after clicking
-                            }}
-                          >
-                            {label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-
-            {/* Wrap these items in a div to conditionally move them */}
-            <div
-              className={`d-flex align-items-center ${
-                isProfileOpen ? "move-to-off-canvas" : ""
-              }`}
+    {/* Collapsible Navbar */}
+    <div className="collapse navbar-collapse w-100" id="navbarSupportedContent">
+      {/* Navbar Menu */}
+      <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+        {menuItems.map(({ label, tab, dropdown }, index) => (
+          <li key={tab} className="nav-item dropdown">
+            <button
+              className={`nav-link btn btn-sm ${activeTab === tab ? "text-primary" : "text-dark"} fs-7`}
+              onClick={() => {
+                if (dropdown) {
+                  handleToggleSampleDropdown(index);
+                } else {
+                  setActiveTab(tab);
+                }
+              }}
             >
-              {userType === "registrationadmin" && (
-                <>
-                  <h4>Welcome Admin!</h4>
-                </>
-              )}
+              {label}
+            </button>
 
-              <div className="dropdown me-3">
-                <button
-                  className="btn dropdown-toggle d-flex align-items-center"
-                  type="button"
-                  id="userDropdown"
-                  data-bs-toggle="dropdown"
-                  aria-expanded={showDropdown}
-                  onClick={handleToggleDropdown}
-                >
-                  {/* Conditional rendering for user logo or default icon */}
-                  {userlogo ? (
-                    <Image
-                      src={userlogo} // Assuming user.logo contains the URL to the user's logo
-                      alt="User Logo"
-                      width={50} // Adjust size as needed
-                      height={50}
-                      className="rounded-circle"
-                    />
-                  ) : (
-                    <i className="fa fa-user"></i>
-                  )}
+            {dropdown && showSampleDropdown === index && (
+              <ul className="dropdown-menu show">
+                {dropdown.map(({ label, tab }) => (
+                  <li key={tab}>
+                    <button
+                      className="dropdown-item fs-7"
+                      onClick={() => {
+                        setActiveTab(tab);
+                        setShowSampleDropdown(null);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {/* Right Section */}
+      <div className="d-flex align-items-center gap-2">
+        {userType === "registrationadmin" && <h6 className="m-0 fs-7 text-white">Welcome Admin!</h6>}
+
+        {/* User Dropdown */}
+        <div className="dropdown">
+          <button
+            className="btn btn-sm dropdown-toggle d-flex align-items-center"
+            type="button"
+            id="userDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded={showDropdown}
+            onClick={handleToggleDropdown}
+          >
+            {userlogo ? (
+              <Image src={userlogo} alt="User Logo" width={35} height={35} className="rounded-circle border" />
+            ) : (
+              <i className="fa fa-user fs-6 text-dark"></i>
+            )}
+          </button>
+          <ul className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""}`} aria-labelledby="userDropdown">
+            {userType !== "registrationadmin" && (
+              <li>
+                <button className="dropdown-item fs-7" onClick={handleUpdateProfile}>
+                  Update Profile
                 </button>
-                <ul
-                  className={`dropdown-menu dropdown-menu-end ${
-                    showDropdown ? "show" : ""
-                  }`}
-                  aria-labelledby="userDropdown"
-                >
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={handleUpdateProfile}
-                    >
-                      Update Profile
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={handleChangePassword}
-                    >
-                      Change Password
-                    </button>
-                  </li>
-                  <li>
-                    <button className="dropdown-item" onClick={handleLogout}>
-                      Logout
-                    </button>
-                  </li>
-                </ul>
-              </div>
-
-              {userType !== "registrationadmin" && (
-                <>
-                  <Link
-                    href="/wishlist"
-                    className="btn d-flex align-items-center me-3 position-relative"
-                  >
-                    <Heart className="me-2" />
-                    <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                      {wishlist.length}
-                    </span>
-                  </Link>
-
-                  <Link
-                    href="/cart"
-                    className="btn d-flex align-items-center me-3 position-relative"
-                  >
-                    <Cart className="me-2" />
-                    <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                      {cartCount}
-                    </span>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+              </li>
+            )}
+            <li>
+              <button className="dropdown-item fs-7" onClick={handleChangePassword}>
+                Change Password
+              </button>
+            </li>
+            <li>
+              <button className="dropdown-item fs-7" onClick={handleLogout}>
+                Logout
+              </button>
+            </li>
+          </ul>
         </div>
-      </nav>
+
+        {/* Wishlist & Cart for Researchers */}
+        {userType === "researcher" && (
+          <div className="d-flex gap-2">
+            <Link href="/wishlist" className="btn btn-sm position-relative">
+              <Heart className="fs-6 text-white" />
+              {wishlist.length > 0 && (
+                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                  {wishlist.length}
+                </span>
+              )}
+            </Link>
+
+            <Link href="/cart" className="btn btn-sm position-relative">
+              <Cart className="fs-6 text-white" />
+              {cartCount > 0 && (
+                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+
       {/* Conditionally render the CartSidebar */}
     </>
   );

@@ -3,11 +3,12 @@ import React from "react";
 const User = () => {
   return (
     <svg
-      width="18"
-      height="20"
+      width="14" // Reduced size
+      height="16" // Reduced size
       viewBox="0 0 18 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="user-icon" // Optional Bootstrap class
     >
       <path
         d="M17.0001 19V17C17.0001 15.9391 16.5787 14.9217 15.8285 14.1716C15.0784 13.4214 14.061 13 13.0001 13H5.00012C3.93926 13 2.92184 13.4214 2.17169 14.1716C1.42155 14.9217 1.00012 15.9391 1.00012 17V19"

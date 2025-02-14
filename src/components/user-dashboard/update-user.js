@@ -22,7 +22,7 @@ const schema = Yup.object().shape({
   countryid: Yup.string().required("Country is required").label("Country"),
   phoneNumber: Yup.string()
   .matches(
-    /^\d{4}-\d{6}$/,
+    /^\d{4}-\d{7}$/,
     "Phone number must be in the format 0123-4567890 and numeric"
   )
   .required("Phone number is required")
@@ -70,6 +70,13 @@ const UpdateUser = () => {
             ).toString("base64")}`
           : null
       );
+      if (researcher.logo && researcher.logo.data) {
+        const blob = new Blob([new Uint8Array(researcher.logo.data)], {
+          type: "image/jpeg",
+        });
+        const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
+        setLogoFile(file);
+      }
       reset({
         ...researcher,
         OrganizationName: researcher.nameofOrganization, // Ensure correct mapping

@@ -24,9 +24,10 @@ const testsystemModel=require('../models/testsystemModel')
 const testsystemmanufacturerModel=require('../models/testsystemmanufacturerModel')
 const testkitmanufacturerModel=require('../models/testkitmanufacturerModel')
 const concurrentmedicalconditionsModel=require('../models/concurrentmedicalconditionsModel')
+const historyModel = require("../models/historyModel");
 // Function to initialize all tables
 function Database() {
-  ethnicityModel.createEthnicityTable();
+
   cityModel.createCityTable();
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
@@ -37,13 +38,14 @@ function Database() {
   signupModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
-  //samplereceiveModel.createSampleReceiveTable();
+  samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
   productModel.createProductsTable();
   wishlistModel.createWishlistTable();
   cartModel.createCartTable();
-  //sample_approvalModel.createSampleApprovalTable();
+  sample_approvalModel.createSampleApprovalTable();
  paymentModel.createPaymentTable();
+ ethnicityModel.createEthnicityTable();
  sampleconditionModel.createSampleConditionTable();
  storagetemperatureModel.createStorageTemperatureTable();
  containertypeModel.createContainerTypeTable()
@@ -55,5 +57,9 @@ testresultunitModel.createTestResultUnitTable();
  testsystemmanufacturerModel.createTestSystemManufecturerTable();
  testkitmanufacturerModel.createTestKitManufacturerTable();
  concurrentmedicalconditionsModel.createConcurrentMedicalConditionsTable();
+ historyModel.RegistrationAdmin_History();
+ historyModel.create_historyTable();
+ historyModel.create_samplehistoryTable();
+ 
 }
 Database();

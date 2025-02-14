@@ -56,21 +56,24 @@ const OrganizationArea = () => {
     
       // Filter the researchers list
       const handleFilterChange = (field, value) => {
-        if (value === "") {
-          fetchOrganizations();
-        } else {
-          // Perform exact match for "status" field
-          const filtered = allorganizations.filter((organization) =>
-            field === "status"
-              ? organization[field]?.toString().toLowerCase() === value.toLowerCase()
-              : organization[field]
-                  ?.toString()
-                  .toLowerCase()
-                  .includes(value.toLowerCase())
-          );
-          setOrganizations(filtered);
-        }
-      };  
+        if (!value.trim()) return fetchOrganizations(); // Reset if input is empty
+      
+        setOrganizations(
+          allorganizations.filter((organization) => {
+            const fieldValue = organization[field]?.toString().toLowerCase().trim(); // Normalize field
+            const searchValue = value.toLowerCase().trim(); // Normalize input
+      
+            if (!fieldValue) return false;
+      
+            // Exact match for "status", partial match for others
+            return field === "status"
+              ? fieldValue.startsWith(searchValue) // Ensures "i" matches "inactive" but not "active"
+              : fieldValue.includes(searchValue);
+          })
+        );
+      };
+      
+      
     const handleInputChange = (e) => {
         setFormData({
             ...formData,
@@ -261,7 +264,8 @@ const OrganizationArea = () => {
                     <option value="pending">pending</option>
                     <option value="approved">approved</option>
                   </select>
-                </div>
+                
+              </div>
               </div>
 
 
@@ -355,8 +359,8 @@ const OrganizationArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
+              
+                
                   <ul className="pagination justify-content-end">
                     <li
                       className={`page-item ${
@@ -413,8 +417,8 @@ const OrganizationArea = () => {
                       </a>
                     </li>
                   </ul>
-                </nav>
-              </div>
+                
+              
               {/* Modal for Adding Committe members */}
               {showEditModal && (
                 <>

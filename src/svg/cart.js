@@ -3,11 +3,12 @@ import React from "react";
 const Cart = () => {
   return (
     <svg
-      width="21"
-      height="20"
+      width="16" // Reduced size
+      height="16" // Reduced size
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="cart-icon" // Optional Bootstrap/Custom class
     >
       <path
         d="M7.85739 19C8.33077 19 8.71453 18.6163 8.71453 18.1429C8.71453 17.6695 8.33077 17.2857 7.85739 17.2857C7.384 17.2857 7.00024 17.6695 7.00024 18.1429C7.00024 18.6163 7.384 19 7.85739 19Z"

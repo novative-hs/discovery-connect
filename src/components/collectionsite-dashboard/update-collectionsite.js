@@ -16,8 +16,8 @@ const schema = Yup.object().shape({
   phoneNumber: Yup.string()
     .required("Phone Number is required")
     .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric",
+      /^\d{4}-\d{7}$/,
+      "Phone number must be in the format 0123-4567890 and numeric",
     )
     .label("Phone Number"),
   ntnNumber: Yup.string()

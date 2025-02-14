@@ -12,8 +12,7 @@ const CityArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  }
-  else{
+  } else {
     console.log("account_id on city page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
@@ -31,7 +30,7 @@ const CityArea = () => {
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(cityname.length / itemsPerPage);
-const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // Fetch City from backend when component loads
   useEffect(() => {
     fetchcityname(); // Call the function when the component mounts
@@ -216,7 +215,7 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
         // Refresh the city list
         const newResponse = await axios.get(
-           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
         );
         setcityname(newResponse.data);
       } catch (error) {
@@ -226,225 +225,133 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
     reader.readAsBinaryString(file);
   };
-  
+
   return (
-    <section className="policy__area pb-120">
-       <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto",}}
-      >
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
+    <section className="policy__area pb-120 overflow-hidden">
+      <div className="container-fluid mt-n5">
+        <div className="row justify-content-center mt-5">
+          <div className="col-12 col-md-10">
+            <div className="policy__wrapper policy__translate position-relative mt-5">
+              {/* Button Container */}
+              <div className="d-flex flex-column w-100">
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    className="alert alert-success w-100 text-start mb-2"
+                    role="alert"
+                  >
+                    {successMessage}
+                  </div>
+                )}
+
+                {/* Button Container */}
+                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+                  {/* Add Country Button */}
+                  <button
+                    className="btn btn-primary mb-2"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Add City
+                  </button>
+
+                  {/* Upload Button (Styled as Label for Hidden Input) */}
+                  <label className="btn btn-secondary mb-2">
+                    Upload City List
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      style={{ display: "none" }}
+                      onChange={handleFileUpload}
+                    />
+                  </label>
                 </div>
-              )}
-     <div className="d-flex justify-content-end align-items-center mb-3">
-  {/* Upload City List Button */}
-
-
-  {/* Add City Button */}
-  <button
-    className="btn btn-primary me-3"
-    onClick={() => setShowAddModal(true)}
-  >
-    Add City
-  </button>
-  <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
-    Upload City List
-    <input
-      type="file"
-      accept=".xlsx, .xls" // Accept only Excel files
-      style={{ display: "none" }}
-      onChange={handleFileUpload}
-    />
-  </label>
-</div>
+              </div>
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              <div className="table-responsive w-100 ">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                  <tr style={{textAlign:'center',}}>
-                  <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search City Name"
-                          onChange={(e) =>
-                            handleFilterChange("name", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        City Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Added by"
-                          onChange={(e) =>
-                            handleFilterChange("added_by", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", 
-                          }}
-                        />
-                       Added By</th>
-                       <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Created at"
-                          onChange={(e) =>
-                            handleFilterChange("created_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Created At
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Updated at"
-                          onChange={(e) =>
-                            handleFilterChange("updated_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Updated At
-                      </th>
-                      
-                      <th>Action</th>
+                    <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "City Name",
+                          placeholder: "Search City Name",
+                          field: "name",
+                        },
+                        {
+                          label: "Added By",
+                          placeholder: "Search Added by",
+                          field: "added_by",
+                        },
+                        {
+                          label: "Created At",
+                          placeholder: "Search Created at",
+                          field: "created_at",
+                        },
+                        {
+                          label: "Updated At",
+                          placeholder: "Search Updated at",
+                          field: "updated_at",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th key={field} className="px-3">
+                          <input
+                            type="text"
+                            className="form-control w-100 px-2 py-1 mx-auto"
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                          />
+                          {label}
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {currentData.length > 0 ? (
-                      currentData.map((cityname) => (
-                        <tr key={cityname.id}>
-                          <td>{cityname.id}</td>
-                          <td>{cityname.name}</td>
-                          <td>{cityname.added_by}</td>
-                          <td>{formatDate(cityname.created_at)}</td>
-                          <td>{formatDate(cityname.updated_at)}</td>
-                          <td>
-                          <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
-                            <button
-                              className="btn btn-success btn-sm py-0 px-1"
-                              onClick={() => handleEditClick(cityname)}
-                              title="Edit City" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="xs" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm py-0 px-1"
-                              onClick={() => {
-                                setSelectedcitynameId(cityname.id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete City" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                         </div>
-                          </td>
-                        </tr>
-                      ))
+                      currentData.map(
+                        ({ id, name, added_by, created_at, updated_at }) => (
+                          <tr key={id}>
+                            <td>{id}</td>
+                            <td>{name}</td>
+                            <td>{added_by}</td>
+                            <td>{formatDate(created_at)}</td>
+                            <td>{formatDate(updated_at)}</td>
+                            <td>
+                              <div className="d-flex justify-content-around gap-2">
+                                <button
+                                  className="btn btn-success btn-sm py-0 px-1"
+                                  onClick={() =>
+                                    handleEditClick({
+                                      id,
+                                      name,
+                                      added_by,
+                                      created_at,
+                                      updated_at,
+                                    })
+                                  }
+                                  title="Edit Country"
+                                >
+                                  <FontAwesomeIcon icon={faEdit} size="xs" />
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm py-0 px-1"
+                                  onClick={() => {
+                                    selectedcitynameId(id);
+                                    setShowDeleteModal(true);
+                                  }}
+                                  title="Delete Country"
+                                >
+                                  <FontAwesomeIcon icon={faTrash} size="sm" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      )
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center">
@@ -457,265 +364,201 @@ const url= `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
               </div>
 
               {/* Pagination Controls */}
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${
-                          currentPage === pageNumber
-                            ? "btn-primary"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
+              <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
                       >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
+                          }`}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
                       >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
 
               {/* Modal for Adding Committe members */}
-              {showAddModal && (
-  <>
-  {/* Bootstrap Backdrop with Blur */}
-  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+              {(showAddModal || showEditModal) && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
-  {/* Modal Content */}
-  <div
-    className="modal show d-block"
-    tabIndex="-1"
-    role="dialog"
-    style={{
-      zIndex: 1050, 
-      position: "fixed",
-      top: "120px",
-      left: "50%",
-      transform: "translateX(-50%)",
-    }}
-  >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add City</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>City Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="cityname"
-                              value={formData.cityname} // Use 'cityname' here instead of 'name'
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">
+                            {showAddModal ? "Add Country" : "Edit Country"}
+                          </h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                            }}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
                           </button>
                         </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
 
-              {/* Edit cityname Modal */}
-              {showEditModal && (
-             <>
-             {/* Bootstrap Backdrop with Blur */}
-             <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-           
-             {/* Modal Content */}
-             <div
-               className="modal show d-block"
-               tabIndex="-1"
-               role="dialog"
-               style={{
-                 zIndex: 1050, 
-                 position: "fixed",
-                 top: "120px",
-                 left: "50%",
-                 transform: "translateX(-50%)",
-               }}
-             >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit City</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
                         >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>City Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="cityname"
-                              value={formData.cityname}
-                              onChange={handleInputChange}
-                              required
-                            />
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            <div className="form-group">
+                              <label>City Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="cityname"
+                                value={formData.cityname}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
                           </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update City
-                          </button>
-                        </div>
-                      </form>
+
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              {showAddModal ? "Save" : "Update Country"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
 
               {/* Modal for Deleting cityname */}
               {showDeleteModal && (
-  <>
-    {/* Bootstrap Backdrop with Blur */}
-    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
-    {/* Modal Content */}
-    <div
-      className="modal show d-block"
-      tabIndex="-1"
-      role="dialog"
-      style={{
-        zIndex: 1050, 
-        position: "fixed",
-        top: "120px",
-        left: "50%",
-        transform: "translateX(-50%)",
-      }}
-    >
-      <div className="modal-dialog" role="document">
-        <div className="modal-content">
-          <div className="modal-header" style={{ backgroundColor: "transparent" }}>
-            <h5 className="modal-title">Delete City</h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setShowDeleteModal(false)}
-            ></button>
-          </div>
-          <div className="modal-body">
-            <p>Are you sure you want to delete this city?</p>
-          </div>
-          <div className="modal-footer">
-            <button
-              className="btn btn-danger"
-              onClick={handleDelete}
-            >
-              Delete
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-)}
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div
+                          className="modal-header"
+                          style={{ backgroundColor: "transparent" }}
+                        >
+                          <h5 className="modal-title">Delete City</h5>
+                          <button
+                            type="button"
+                            className="btn-close"
+                            onClick={() => setShowDeleteModal(false)}
+                          ></button>
+                        </div>
+                        <div className="modal-body">
+                          <p>Are you sure you want to delete this city?</p>
+                        </div>
+                        <div className="modal-footer">
+                          <button
+                            className="btn btn-danger"
+                            onClick={handleDelete}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
