@@ -34,7 +34,6 @@ const {
   getProductById,
 } = require("./controller/productController");
 const biobankRoutes = require("./routes/biobankRoutes");
-const historyRoutes = require("./routes/historyRoutes");
 const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoutes");
 
 const ethnictiyRoutes = require("./routes/ethnicityRoutes");
