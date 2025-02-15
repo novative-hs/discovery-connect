@@ -190,7 +190,7 @@ const BioBankSampleArea = () => {
     };
 
     fetchCollectionSiteNames();
-  }, [id]);
+  }, [selectedSampleId]);
 
   // Sample Price Filter
   useEffect(() => {
