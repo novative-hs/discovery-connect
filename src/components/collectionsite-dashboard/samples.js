@@ -22,6 +22,37 @@ const SampleArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
 
+  const tableHeaders = [
+    { label: "Donor ID", key: "donorID" },
+    { label: "Sample Name", key: "samplename" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Ethnicity", key: "ethnicity" },
+    { label: "Sample Condition", key: "samplecondition" },
+    { label: "Storage Temperature", key: "storagetemp" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Quantity", key: "quantity" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
+    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    { label: "Concurrent Medications", key: "ConcurrentMedications" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Test Result", key: "TestResult" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Test Method", key: "TestMethod" },
+    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
+    { label: "Test System", key: "TestSystem" },
+    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+    { label: "Status", key: "status" },
+  ];
+
   const [formData, setFormData] = useState({
     donorID: "",
     samplename: "",
@@ -146,7 +177,7 @@ const SampleArea = () => {
     }
   };
 
-
+// get collectionsite names in collectionsite dashboard in stock transfer modal
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
       try {
@@ -314,16 +345,13 @@ const SampleArea = () => {
 
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
-
     const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } =
       transferDetails;
-
     // Validate input before making the API call
     if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber || !Quantity) {
       alert("All fields are required.");
       return;
     }
-
     try {
       // POST request to your backend API
       const response = await axios.post(
@@ -337,26 +365,18 @@ const SampleArea = () => {
         }
       );
       console.log("Sample dispatched successfully:", response.data);
-
       alert("Sample dispatched successfully!");
       const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
       setSamples(newResponse.data); // Update state with the new list
-
       setShowTransferModal(false); // Close the modal after submission
     } catch (error) {
       if (error.response) {
-        // Server responded with a status other than 200
-        console.error("Error response:", error.response.data);
         alert(`Error: ${error.response.data.error}`);
       } else if (error.request) {
-        // Request was made but no response received
-        console.error("No response received:", error.request);
         alert("No response received from server.");
       } else {
-        // Something else happened
-        console.error("Error dispatching sample:", error.message);
         alert("An unexpected error occurred.");
       }
     }
@@ -492,6 +512,7 @@ const SampleArea = () => {
       );
     }
   };
+
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal || showTransferModal) {
       // Prevent background scroll when modal is open
@@ -505,7 +526,7 @@ const SampleArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
 
   return (
-    <section className="profile__area pt-180 pb-20">       {/* Inner Container Color can be visible through this */}
+    <section className="profile__area pt-180 pb-120">       {/* Inner Container Color can be visible through this */}
       <div
         className="container"
         style={{ marginTop: "-180px", width: "170%", marginLeft: "-135px" }}>
@@ -518,880 +539,56 @@ const SampleArea = () => {
         {/* Add Samples Button */}
         <div
           className="d-flex justify-content-end mb-3 position-relative"
-          style={{ top: "-2px", marginRight: "130px" }}>
+          style={{ top: "2px", marginRight: "130px" }}>
           <button
             className="btn"
             onClick={() => setShowAddModal(true)}
             style={{
               backgroundColor: "#FFEE99", // Soft pastel yellow
               borderColor: "#FFD700", // Gold border
-              color: "#000000", // Black text for contrast
+              color: "#000000", // Black text
               marginLeft: "-10px",
             }}
           >
             Add Samples
           </button>
         </div>
+
         {/* Table */}
         <div
           className="table-responsive"
-          style={{ margin: "0 auto", width: "80%", textAlign: "center" }}>
+          style={{ margin: "25px auto 0 auto", width: "80%", textAlign: "center" }}>
           <table className="table table-bordered table-hover">
-            <thead className="table-primary">        {/*Table Head Color*/}
+            <thead>
               <tr>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "80px",
-                  }}>
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search ID"
-                      onChange={(e) =>
-                        handleFilterChange("id", e.target.value)
-                      }
-                      style={{
-                        width: "70%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "70px",
-                        maxWidth: "120px",
-                      }} />
-                    ID
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}>
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Sample Name"
-                      onChange={(e) =>
-                        handleFilterChange("samplename", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }} />
-                    Sample Name
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Age"
-                      onChange={(e) =>
-                        handleFilterChange("age", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Age
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "100px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Gender"
-                      onChange={(e) =>
-                        handleFilterChange("gender", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Gender
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Ethnicity"
-                      onChange={(e) =>
-                        handleFilterChange("ethnicity", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Ethnicity
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Sample Condition"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "samplecondition",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Sample Condition
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Storage Temperature"
-                      onChange={(e) =>
-                        handleFilterChange("storagetemp", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Storage Temperature
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Container Type"
-                      onChange={(e) =>
-                        handleFilterChange("ContainerType", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Container Type
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Country"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "CountryOfCollection",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Country Of Collection
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Quantity"
-                      onChange={(e) =>
-                        handleFilterChange("quantity", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Quantity
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Quantity Unit"
-                      onChange={(e) =>
-                        handleFilterChange("QuantityUnit", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Quantity Unit
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Sample Type Matrix"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "SampleTypeMatrix",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Sample Type Matrix
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Smoking Status"
-                      onChange={(e) =>
-                        handleFilterChange("SmokingStatus", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Smoking Status
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Alcohol Or Drug Abuse"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "AlcoholOrDrugAbuse",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Alcohol Or Drug Abuse
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Infectious Disease Testing"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "InfectiousDiseaseTesting",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Infectious Disease Testing
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Infectious Disease Result"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "InfectiousDiseaseResult",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Infectious Disease Result
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Freeze Thaw Cycles"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "FreezeThawCycles",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Freeze Thaw Cycles
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Date Of Collection"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "DateOfCollection",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Date Of Collection
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Concurrent Medical Conditions"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "ConcurrentMedicalConditions",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Concurrent Medical Conditions
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Concurrent Medications"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "ConcurrentMedications",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Concurrent Medications
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Diagnosis Test Parameter"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "DiagnosisTestParameter",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Diagnosis Test Parameter
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Test Result"
-                      onChange={(e) =>
-                        handleFilterChange("TestResult", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Test Result
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Test Result Unit"
-                      onChange={(e) =>
-                        handleFilterChange("TestResultUnit", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Test Result Unit
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Test Method"
-                      onChange={(e) =>
-                        handleFilterChange("TestMethod", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Test Method
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}>
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Test Kit Manufacturer"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "TestKitManufacturer",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Test Kit Manufacturer
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Test System"
-                      onChange={(e) =>
-                        handleFilterChange("TestSystem", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Test System
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}>
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Test System Manufacturer"
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "TestSystemManufacturer",
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Test System Manufacturer
-                  </div>
-                </th>
-                <th
-                  className="px-3"
-                  style={{
-                    verticalAlign: "middle",
-                    textAlign: "center",
-                    width: "110px",
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center w-100">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search Status"
-                      onChange={(e) =>
-                        handleFilterChange("status", e.target.value)
-                      }
-                      style={{
-                        width: "80%",
-                        padding: "4px",
-                        height: "35px",
-                        boxSizing: "border-box",
-                        minWidth: "90px",
-                        maxWidth: "120px",
-                      }}
-                    />
-                    Status
-                  </div>
-                </th>
-                <th>Action</th>
+                {tableHeaders.map(({ label, key }, index) => (
+                  <th key={index} className="px-4 text-center"
+                    style={{ backgroundColor: "#F4C2C2", color: "#000" }}>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm w-100 text-center"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "70px", maxWidth: "120px", height: "30px", padding: "2px 5px", fontSize: "14px", lineHeight: "normal" }}
+                      />
+                      <span className="fw-bold mt-1 d-block text-nowrap">{label}</span>
+                    </div>
+                  </th>
+                ))}
+                <th className="px-3 align-middle text-center"
+                  style={{ backgroundColor: "#F4C2C2" }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                    <td>{sample.id}</td>
-                    <td>{sample.samplename}</td>
-                    <td>{sample.age}</td>
-                    <td>{sample.gender}</td>
-                    <td>{sample.ethnicity}</td>
-                    <td>{sample.samplecondition}</td>
-                    <td>{sample.storagetemp}</td>
-                    <td>{sample.ContainerType}</td>
-                    <td>{sample.CountryOfCollection}</td>
-                    <td>{sample.quantity}</td>
-                    <td>{sample.QuantityUnit}</td>
-                    <td>{sample.SampleTypeMatrix}</td>
-                    <td>{sample.SmokingStatus}</td>
-                    <td>{sample.AlcoholOrDrugAbuse}</td>
-                    <td>{sample.InfectiousDiseaseTesting}</td>
-                    <td>{sample.InfectiousDiseaseResult}</td>
-                    <td>{sample.FreezeThawCycles}</td>
-                    <td>{sample.DateOfCollection}</td>
-                    <td>{sample.ConcurrentMedicalConditions}</td>
-                    <td>{sample.ConcurrentMedications}</td>
-                    <td>{sample.DiagnosisTestParameter}</td>
-                    <td>{sample.TestResult}</td>
-                    <td>{sample.TestResultUnit}</td>
-                    <td>{sample.TestMethod}</td>
-                    <td>{sample.TestKitManufacturer}</td>
-                    <td>{sample.TestSystem}</td>
-                    <td>{sample.TestSystemManufacturer}</td>
-                    <td>{sample.status}</td>
-                    <td>
+                    {tableHeaders.map(({ key }, index) => (
+                      <td key={index} style={{ maxWidth: "150px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {sample[key] || "N/A"}</td>
+                    ))}
+                    <td style={{ maxWidth: "120px" }}>
                       <div
                         style={{
                           display: "flex",
@@ -1434,76 +631,64 @@ const SampleArea = () => {
             </tbody>
           </table>
         </div>
-        <div
-          className="pagination d-flex justify-content-center align-items-center mt-3"
-          style={{
-            gap: "10px",
-          }}
-        >
-          {/* Previous Button */}
-          <button
-            className="btn btn-sm btn-secondary"
-            disabled={currentPage === 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-          >
-            <i className="fas fa-chevron-left"></i>
-          </button>
-          {/* Page Numbers with Ellipsis */}
-          {Array.from({ length: totalPages }).map((_, index) => {
-            const pageNumber = index + 1;
-            // Show page number if it's the first, last, current, or adjacent to current
-            if (
-              pageNumber === 1 || // Always show the first page
-              pageNumber === totalPages || // Always show the last page
-              pageNumber === currentPage || // Show current page
-              pageNumber === currentPage - 1 || // Show previous page
-              pageNumber === currentPage + 1 // Show next page
-            ) {
-              return (
-                <button
-                  key={pageNumber}
-                  className={`btn btn-sm ${currentPage === pageNumber
-                    ? "btn-primary"
-                    : "btn-outline-secondary"
-                    }`}
-                  onClick={() => handlePageChange(pageNumber)}
-                  style={{
-                    minWidth: "40px",
-                  }}
-                >
-                  {pageNumber}
-                </button>
-              );
-            }
 
-            // Add ellipsis if previous number wasn't shown
-            if (
-              (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-              (pageNumber === totalPages - 1 &&
-                currentPage < totalPages - 2) // Ellipsis before the last page
-            ) {
-              return (
-                <span
-                  key={`ellipsis-${pageNumber}`}
-                  style={{
-                    minWidth: "40px",
-                    textAlign: "center",
-                  }}
+        {/* Pagination */}
+        <div className="pagination d-flex justify-content-end align-items-center mt-4 me-5 pe-5">
+          <nav aria-label="Page navigation example">
+            <ul className="pagination justify-content-end">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""
+                  }`}
+              >
+                <a
+                  className="page-link"
+                  href="#"
+                  aria-label="Previous"
+                  onClick={() =>
+                    currentPage > 1 && handlePageChange(currentPage - 1)
+                  }
                 >
-                  ...
-                </span>
-              );
-            }
-            return null; // Skip the page number
-          })}
-          {/* Next Button */}
-          <button
-            className="btn btn-sm btn-secondary"
-            disabled={currentPage === totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-          >
-            <i className="fas fa-chevron-right"></i>
-          </button>
+                  <span aria-hidden="true">&laquo;</span>
+                  <span className="sr-only">Previous</span>
+                </a>
+              </li>
+              {Array.from({ length: totalPages }).map((_, index) => {
+                const pageNumber = index + 1;
+                return (
+                  <li
+                    key={pageNumber}
+                    className={`page-item ${currentPage === pageNumber ? "active" : ""
+                      }`}
+                  >
+                    <a
+                      className="page-link"
+                      href="#"
+                      onClick={() => handlePageChange(pageNumber)}
+                    >
+                      {pageNumber}
+                    </a>
+                  </li>
+                );
+              })}
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                  }`}
+              >
+                <a
+                  className="page-link"
+                  href="#"
+                  aria-label="Next"
+                  onClick={() =>
+                    currentPage < totalPages &&
+                    handlePageChange(currentPage + 1)
+                  }
+                >
+                  <span aria-hidden="true">&raquo;</span>
+                  <span className="sr-only">Next</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
 
         {/* Modal for Adding Samples */}
@@ -1519,7 +704,7 @@ const SampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "40px",
+                top: "80px",
                 left: "50%",
                 transform: "translateX(-50%)",
               }}>
@@ -1528,7 +713,7 @@ const SampleArea = () => {
                 role="document"
                 style={{ maxWidth: "90vw", width: "95vw" }}>
                 <div className="modal-content">
-                  <div className="modal-header">
+                  <div className="modal-header" style={{ backgroundColor: "#ADD8E6" }}>
                     <h5 className="modal-title">Add Sample</h5>
                     <button
                       type="button"
@@ -1559,6 +744,12 @@ const SampleArea = () => {
                               value={formData.donorID}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1570,6 +761,12 @@ const SampleArea = () => {
                               value={formData.samplename}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1581,6 +778,12 @@ const SampleArea = () => {
                               value={formData.age}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1591,9 +794,14 @@ const SampleArea = () => {
                               value={formData.gender}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Gender</option>
+                              <option value="" hidden>Select Gender</option>
                               <option value="Male">Male</option>
                               <option value="Female">Female</option>
                             </select>
@@ -1606,9 +814,14 @@ const SampleArea = () => {
                               value={formData.ethnicity}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.ethnicity ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Ethnicity</option>
+                              <option value="" hidden>Select Ethnicity</option>
                               {ethnicityNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1617,7 +830,7 @@ const SampleArea = () => {
                         </div>
                         {/* Column 2 */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label>Sample Condition</label>
                             <select
                               className="form-control"
@@ -1625,9 +838,14 @@ const SampleArea = () => {
                               value={formData.samplecondition}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.samplecondition ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Sample Condition</option>
+                              <option value="" hidden>Select Sample Condition</option>
                               {sampleconditionNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1641,9 +859,14 @@ const SampleArea = () => {
                               value={formData.storagetemp}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.storagetemp ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Storage Temperature</option>
+                              <option value="" hidden>Select Storage Temperature</option>
                               {storagetemperatureNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1657,9 +880,14 @@ const SampleArea = () => {
                               value={formData.ContainerType}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.ContainerType ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Container type</option>
+                              <option value="" hidden>Select Container type</option>
                               {containertypeNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1674,6 +902,12 @@ const SampleArea = () => {
                               value={formData.CountryOfCollection}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.CountryOfCollection ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1685,6 +919,12 @@ const SampleArea = () => {
                               value={formData.quantity}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.quantity ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                         </div>
@@ -1698,9 +938,14 @@ const SampleArea = () => {
                               value={formData.QuantityUnit}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.QuantityUnit ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Quantity Unit</option>
+                              <option value="" hidden>Select Quantity Unit</option>
                               {quantityunitNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1714,9 +959,14 @@ const SampleArea = () => {
                               value={formData.SampleTypeMatrix}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.SampleTypeMatrix ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Sample Type Matrix</option>
+                              <option value="" hidden>Select Sample Type Matrix</option>
                               {sampletypematrixNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1725,37 +975,38 @@ const SampleArea = () => {
                           <div className="form-group">
                             <label className="form-label">Smoking Status</label>
                             <div>
-                              <div className="form-check form-check-inline">
+                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
                                 <input
                                   className="form-check-input"
                                   type="radio"
                                   name="SmokingStatus"
                                   value="Smoker"
+                                  checked={formData.SmokingStatus === "Smoker"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "16px", height: "16px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label fs-6">Smoker</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Smoker</label>
                               </div>
-
-                              <div className="form-check form-check-inline ms-3">
+                              <div className="form-check form-check-inline">
                                 <input
                                   className="form-check-input"
                                   type="radio"
                                   name="SmokingStatus"
                                   value="Non-Smoker"
+                                  checked={formData.SmokingStatus === "Non-Smoker"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label fs-6">Non-Smoker</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Non-Smoker</label>
                               </div>
                             </div>
                           </div>
                           <div className="form-group">
                             <label className="form-label">Alcohol Or Drug Abuse</label>
                             <div>
-                              <div className="form-check form-check-inline">
+                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1763,12 +1014,11 @@ const SampleArea = () => {
                                   value="Yes"
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label fs-6">Yes</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Yes</label>
                               </div>
-
-                              <div className="form-check form-check-inline ms-3">
+                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1776,9 +1026,8 @@ const SampleArea = () => {
                                   value="No"
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
                                 />
-                                <label className="form-check-label fs-6">No</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>No</label>
                               </div>
                             </div>
                           </div>
@@ -1791,15 +1040,21 @@ const SampleArea = () => {
                               value={formData.InfectiousDiseaseTesting}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.InfectiousDiseaseTesting ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                         </div>
                         {/* Column 4 */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label className="form-label">Infectious Disease Result</label>
                             <div>
-                              <div className="form-check form-check-inline">
+                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1807,11 +1062,12 @@ const SampleArea = () => {
                                   value="Positive"
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label fs-6">Positive</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Positive</label>
                               </div>
-                              <div className="form-check form-check-inline ms-3">
+
+                              <div className="form-check form-check-inline">
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1819,9 +1075,9 @@ const SampleArea = () => {
                                   value="Negative"
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label fs-6">Negative</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Negative</label>
                               </div>
                             </div>
                           </div>
@@ -1834,6 +1090,12 @@ const SampleArea = () => {
                               value={formData.FreezeThawCycles}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1846,7 +1108,12 @@ const SampleArea = () => {
                               onChange={handleInputChange}
                               max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.DateOfCollection ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1857,9 +1124,14 @@ const SampleArea = () => {
                               value={formData.ConcurrentMedicalConditions}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.ConcurrentMedicalConditions ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Concurrent Medical Conditions</option>
+                              <option value="" hidden>Select Concurrent Medical Conditions</option>
                               {concurrentmedicalconditionsNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1874,12 +1146,18 @@ const SampleArea = () => {
                               value={formData.ConcurrentMedications}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.ConcurrentMedications ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                         </div>
                         {/* {Column 5} */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label>Diagnosis Test Parameter</label>
                             <input
                               type="text"
@@ -1888,6 +1166,12 @@ const SampleArea = () => {
                               value={formData.DiagnosisTestParameter}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.DiagnosisTestParameter ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1899,6 +1183,12 @@ const SampleArea = () => {
                               value={formData.TestResult}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.TestResult ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1909,9 +1199,14 @@ const SampleArea = () => {
                               value={formData.TestResultUnit}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestResultUnit ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Test Result Unit</option>
+                              <option value="" hidden>Select Test Result Unit</option>
                               {testresultunitNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1925,9 +1220,14 @@ const SampleArea = () => {
                               value={formData.TestMethod}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestMethod ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Test Method</option>
+                              <option value="" hidden>Select Test Method</option>
                               {testmethodNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1941,9 +1241,14 @@ const SampleArea = () => {
                               value={formData.TestKitManufacturer}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestKitManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Test Kit Manufacturer</option>
+                              <option value="" hidden>Select Test Kit Manufacturer</option>
                               {testkitmanufacturerNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1961,9 +1266,9 @@ const SampleArea = () => {
                                   />
                                 </div> */}
                         </div>
-                         {/* {Column 6} */}
-                         <div className="col-md-2">
-                         <div className="form-group">
+                        {/* {Column 6} */}
+                        <div className="col-md-2">
+                          <div className="form-group">
                             <label>Test System</label>
                             <select
                               className="form-control"
@@ -1971,9 +1276,14 @@ const SampleArea = () => {
                               value={formData.TestSystem}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestSystem ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Test System</option>
+                              <option value="" hidden>Select Test System</option>
                               {testsystemNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -1987,14 +1297,19 @@ const SampleArea = () => {
                               value={formData.TestSystemManufacturer}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "white" : "#f0f0f0" }}
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestSystemManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
-                              <option value="">Select Test System Manufacturer</option>
+                              <option value="" hidden>Select Test System Manufacturer</option>
                               {testsystemmanufacturerNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
                             </select>
-                          </div>                        
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2032,7 +1347,7 @@ const SampleArea = () => {
                 role="document"
                 style={{ maxWidth: "90%", width: "95vw" }}>
                 <div className="modal-content">
-                  <div className="modal-header">
+                  <div className="modal-header" style={{ backgroundColor: "#ADD8E6" }}>
                     <h5 className="modal-title">Edit Sample</h5>
                     <button
                       type="button"
@@ -2044,8 +1359,7 @@ const SampleArea = () => {
                         right: "10px",
                         top: "10px",
                         cursor: "pointer",
-                      }}
-                    >
+                      }}>
                       <span>&times;</span>
                     </button>
                   </div>
@@ -2055,17 +1369,6 @@ const SampleArea = () => {
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
-                          {/* <div className="form-group">
-                                  <label>Donor ID</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    name="donorID"
-                                    value={formData.donorID}
-                                    onChange={handleInputChange}
-                                    required
-                                  />
-                                </div> */}
                           <div className="form-group">
                             <label>Sample Name</label>
                             <input
@@ -2075,6 +1378,12 @@ const SampleArea = () => {
                               value={formData.samplename}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -2086,6 +1395,12 @@ const SampleArea = () => {
                               value={formData.age}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -2096,10 +1411,11 @@ const SampleArea = () => {
                               value={formData.gender}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.gender ? "black" : "#c0c0c0" }}
                             >
                               <option value="">Select Gender</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
+                              <option value="Male" style={{ color: "black" }}>Male</option>
+                              <option value="Female" style={{ color: "black" }}>Female</option>
                             </select>
                           </div>
                           <div className="form-group">
@@ -2110,8 +1426,9 @@ const SampleArea = () => {
                               value={formData.ethnicity}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.ethnicity ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.ethnicity ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Ethnicity</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Ethnicity</option>
                               {ethnicityNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2125,8 +1442,9 @@ const SampleArea = () => {
                               value={formData.samplecondition}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.samplecondition ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.samplecondition ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Sample Condition</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Sample Condition</option>
                               {sampleconditionNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2143,8 +1461,9 @@ const SampleArea = () => {
                               value={formData.storagetemp}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.storagetemp ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.storagetemp ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Storage Temperature</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Storage Temperature</option>
                               {storagetemperatureNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2158,8 +1477,9 @@ const SampleArea = () => {
                               value={formData.ContainerType}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.ContainerType ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.ContainerType ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Container type</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Container type</option>
                               {containertypeNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2174,6 +1494,12 @@ const SampleArea = () => {
                               value={formData.CountryOfCollection}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.CountryOfCollection ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -2185,11 +1511,14 @@ const SampleArea = () => {
                               value={formData.quantity}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.quantity ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
-                        </div>
-                        {/* {Column 3} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Quantity Unit</label>
                             <select
@@ -2198,13 +1527,17 @@ const SampleArea = () => {
                               value={formData.QuantityUnit}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.QuantityUnit ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.QuantityUnit ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Quantity Unit</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Quantity Unit</option>
                               {quantityunitNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
                             </select>
                           </div>
+                        </div>
+                        {/* {Column 3} */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Sample Type Matrix</label>
                             <select
@@ -2213,8 +1546,9 @@ const SampleArea = () => {
                               value={formData.SampleTypeMatrix}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.SampleTypeMatrix ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.SampleTypeMatrix ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Sample Type Matrix</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Sample Type Matrix</option>
                               {sampletypematrixNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2223,7 +1557,7 @@ const SampleArea = () => {
                           <div className="form-group">
                             <label className="form-label">Smoking Status</label>
                             <div>
-                              <div className="form-check form-check-inline">
+                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -2232,12 +1566,11 @@ const SampleArea = () => {
                                   checked={formData.SmokingStatus === "Smoker"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label fs-6">Smoker</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Smoker</label>
                               </div>
-
-                              <div className="form-check form-check-inline ms-3">
+                              <div className="form-check form-check-inline">
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -2246,9 +1579,9 @@ const SampleArea = () => {
                                   checked={formData.SmokingStatus === "Non-Smoker"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label fs-6">Non-Smoker</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Non-Smoker</label>
                               </div>
                             </div>
                           </div>
@@ -2264,11 +1597,10 @@ const SampleArea = () => {
                                   checked={formData.AlcoholOrDrugAbuse === "Yes"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label fs-6">Yes</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Yes</label>
                               </div>
-
                               <div className="form-check form-check-inline ms-3">
                                 <input
                                   className="form-check-input"
@@ -2278,9 +1610,9 @@ const SampleArea = () => {
                                   checked={formData.AlcoholOrDrugAbuse === "No"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label fs-6">No</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>No</label>
                               </div>
                             </div>
                           </div>
@@ -2293,12 +1625,18 @@ const SampleArea = () => {
                               value={formData.InfectiousDiseaseTesting}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.InfectiousDiseaseResult ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
                             <label className="form-label">Infectious Disease Result</label>
                             <div>
-                              <div className="form-check form-check-inline">
+                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -2307,11 +1645,10 @@ const SampleArea = () => {
                                   checked={formData.InfectiousDiseaseResult === "Positive"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label fs-6">Positive</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Positive</label>
                               </div>
-
                               <div className="form-check form-check-inline ms-3">
                                 <input
                                   className="form-check-input"
@@ -2321,9 +1658,9 @@ const SampleArea = () => {
                                   checked={formData.InfectiousDiseaseResult === "Negative"}
                                   onChange={handleInputChange}
                                   required
-                                  style={{ width: "14px", height: "14px" }} // Reduced size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label fs-6">Negative</label>
+                                <label className="form-check-label" style={{ fontSize: "14px" }}>Negative</label>
                               </div>
                             </div>
                           </div>
@@ -2339,6 +1676,12 @@ const SampleArea = () => {
                               value={formData.FreezeThawCycles}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -2351,6 +1694,7 @@ const SampleArea = () => {
                               onChange={handleInputChange}
                               max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                               required
+                              style={{ backgroundColor: formData.DateOfCollection ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.DateOfCollection ? "black" : "#c0c0c0" }}
                             />
                           </div>
                           <div className="form-group">
@@ -2361,8 +1705,9 @@ const SampleArea = () => {
                               value={formData.ConcurrentMedicalConditions}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.ConcurrentMedicalConditions ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.ConcurrentMedicalConditions ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Concurrent Medical Conditions</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Concurrent Medical Conditions</option>
                               {concurrentmedicalconditionsNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2377,6 +1722,12 @@ const SampleArea = () => {
                               value={formData.ConcurrentMedications}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.ConcurrentMedications ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -2388,8 +1739,17 @@ const SampleArea = () => {
                               value={formData.DiagnosisTestParameter}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.DiagnosisTestParameter ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
+                        </div>
+                        {/* {Column 5} */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test Result</label>
                             <input
@@ -2399,11 +1759,14 @@ const SampleArea = () => {
                               value={formData.TestResult}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                height: "45px",
+                                fontSize: "14px",
+                                backgroundColor: formData.TestResult ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             />
                           </div>
-                        </div>
-                        {/* {Column 5} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test Result Unit</label>
                             <select
@@ -2412,8 +1775,9 @@ const SampleArea = () => {
                               value={formData.TestResultUnit}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.TestResultUnit ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.TestResultUnit ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Test Result Unit</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Test Result Unit</option>
                               {testresultunitNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2427,8 +1791,9 @@ const SampleArea = () => {
                               value={formData.TestMethod}
                               onChange={handleInputChange}
                               required
+                              style={{ backgroundColor: formData.TestMethod ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.TestMethod ? "black" : "#c0c0c0" }}
                             >
-                              <option value="">Select Test Method</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>Select Test Method</option>
                               {testmethodNames.map((name, index) => (
                                 <option key={index} value={name}>{name}</option>
                               ))}
@@ -2442,6 +1807,12 @@ const SampleArea = () => {
                               value={formData.TestKitManufacturer}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestKitManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
                               <option value="">Select Test Kit Manufacturer</option>
                               {testkitmanufacturerNames.map((name, index) => (
@@ -2457,6 +1828,12 @@ const SampleArea = () => {
                               value={formData.TestSystem}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestSystem ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
                               <option value="">Select Test System</option>
                               {testsystemNames.map((name, index) => (
@@ -2464,6 +1841,9 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
+                        </div>
+                        {/* {Column 6} */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test System Manufacturer</label>
                             <select
@@ -2472,6 +1852,12 @@ const SampleArea = () => {
                               value={formData.TestSystemManufacturer}
                               onChange={handleInputChange}
                               required
+                              style={{
+                                fontSize: "14px",
+                                height: "45px",
+                                backgroundColor: formData.TestSystemManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                color: "black",
+                              }}
                             >
                               <option value="">Select Test System Manufacturer</option>
                               {testsystemmanufacturerNames.map((name, index) => (
@@ -2751,7 +2137,7 @@ const SampleArea = () => {
       {/* </div> */}
       {/* //     </div> */}
       {/* //   </div> */}
-    // </section>
+    </section>
   );
 };
 

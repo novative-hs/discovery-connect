@@ -17,6 +17,38 @@ const SampleDispatchArea = () => {
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
+
+  const tableHeaders = [
+    { label: "Donor ID", key: "donorID" },
+    { label: "Sample Name", key: "samplename" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Ethnicity", key: "ethnicity" },
+    { label: "Sample Condition", key: "samplecondition" },
+    { label: "Storage Temp", key: "storagetemp" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Quantity", key: "Quantity" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
+    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    { label: "Concurrent Medications", key: "ConcurrentMedications" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Test Result", key: "TestResult" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Test Method", key: "TestMethod" },
+    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
+    { label: "Test System", key: "TestSystem" },
+    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+    { label: "Status", key: "status" },
+  ];
+
   const [formData, setFormData] = useState({
     donorID: "",
     samplename: "",
@@ -47,54 +79,8 @@ const SampleDispatchArea = () => {
     TestSystemManufacturer: "",
     // logo: ""
   });
-  const tableHeaders = [
-    { label: "ID", key: "id" },
-    { label: "Master ID", key: "masterID" },
-    { label: "Donor ID", key: "donorID" },
-    { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
-    { label: "Sample Condition", key: "samplecondition" },
-    { label: "Storage Temp", key: "storagetemp" },
-    { label: "Storage Temp Unit", key: "storagetempUnit" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Price", key: "price" },
-    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Lab Name", key: "labname" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Type Matrix Subtype", key: "TypeMatrixSubtype" },
-    { label: "Procurement Type", key: "ProcurementType" },
-    { label: "End Time", key: "endTime" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Test Method", key: "TestMethod" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
-    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
-    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Cut Off Range", key: "CutOffRange" },
-    { label: "Cut Off Range Unit", key: "CutOffRangeUnit" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
-    { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Result Remarks", key: "ResultRemarks" },
-    { label: "Test Kit", key: "TestKit" },
-    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
-    { label: "Test System", key: "TestSystem" },
-    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Discount", key: "discount" },
-    { label: "Status", key: "status" },
-  ];
-  const [successMessage, setSuccessMessage] = useState("");
+
+  const [successMessage, setSuccessMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -114,9 +100,7 @@ const SampleDispatchArea = () => {
   const fetchSamples = async () => {
     try {
       // will fetch sample to correct dedicated collectionsite with correct ID
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`
-      );
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`);
       const apiData = response.data;
 
       // Directly set the data array from the response
@@ -134,6 +118,7 @@ const SampleDispatchArea = () => {
 
   // Fetch samples from backend when component loads
   useEffect(() => {
+
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
@@ -248,48 +233,41 @@ const SampleDispatchArea = () => {
   }, [showReceiveModal]);
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-      <div className="container-fluid mt-n5">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
-              {/* {Button} */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
-              </div>
+    <section className="profile__area pt-180 pb-120">
+      <div
+        className="container"
+        style={{ marginTop: "-180px", width: "170%", marginLeft: "-135px" }}>
+              {/* Success Message */}
+              {successMessage && (
+                <div className="alert alert-success" role="alert">
+                  {successMessage}
+                </div>
+              )}
+              
               {/* Table */}
-              <div className="table-responsive w-100">
+              <div
+                className="table-responsive"
+                style={{ margin: "40px auto 0 auto", width: "80%", textAlign: "center" }}>
                 <table className="table table-bordered table-hover">
-                <thead className="thead-dark">
+                  <thead>
                     <tr>
                       {tableHeaders.map(({ label, key }, index) => (
-                        <th key={index} className="px-4 text-center">
+                        <th key={index} className="px-4 text-center"
+                          style={{ backgroundColor: "#F4C2C2", color: "#000" }}>
                           <div className="d-flex flex-column align-items-center">
                             <input
                               type="text"
                               className="form-control form-control-sm w-100 text-center"
-                              placeholder={`Search ${label}`} 
-                              onChange={(e) =>
-                                handleFilterChange(key, e.target.value)
-                              }
-                              style={{ minWidth: "140px"}} 
+                              placeholder={`Search ${label}`}
+                              onChange={(e) => handleFilterChange(key, e.target.value)}
+                              style={{ minWidth: "70px", maxWidth: "120px", height: "30px", padding: "2px 5px", fontSize: "14px", lineHeight: "normal" }}
                             />
-                            <span className="fw-bold mt-1 d-block text-nowrap">
-                              {label}
-                            </span>
-                            {/* text-nowrap ensures text stays in one line */}
+                            <span className="fw-bold mt-1 d-block text-nowrap">{label}</span>
                           </div>
                         </th>
                       ))}
-                      <th className="px-3 align-middle text-center">Action</th>
+                      <th className="px-3 align-middle text-center"
+                        style={{ backgroundColor: "#F4C2C2", color: "#000" }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -304,7 +282,7 @@ const SampleDispatchArea = () => {
                               style={{
                                 display: "flex",
                                 justifyContent: "space-around",
-                                gap: "5px",
+                                gap: "3px",
                               }}
                             >
                               <button
@@ -326,10 +304,7 @@ const SampleDispatchArea = () => {
                                 className="btn btn-primary btn-sm"
                                 onClick={() => handleTransferClick(sample)}
                               >
-                                <FontAwesomeIcon
-                                  icon={faExchangeAlt}
-                                  size="sm"
-                                />
+                                <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                               </button>
                             </div>
                           </td>
@@ -348,14 +323,14 @@ const SampleDispatchArea = () => {
                   </tbody>
                 </table>
               </div>
+
               {/* Pagination */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
+              <div className="pagination d-flex justify-content-end align-items-center mt-4 me-5 pe-5">
                 <nav aria-label="Page navigation example">
                   <ul className="pagination justify-content-end">
                     <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === 1 ? "disabled" : ""
+                        }`}
                     >
                       <a
                         className="page-link"
@@ -374,9 +349,8 @@ const SampleDispatchArea = () => {
                       return (
                         <li
                           key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
+                          className={`page-item ${currentPage === pageNumber ? "active" : ""
+                            }`}
                         >
                           <a
                             className="page-link"
@@ -389,9 +363,8 @@ const SampleDispatchArea = () => {
                       );
                     })}
                     <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                        }`}
                     >
                       <a
                         className="page-link"
@@ -500,10 +473,7 @@ const SampleDispatchArea = () => {
                     </form>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
+              )}       
       </div>
     </section>
   );

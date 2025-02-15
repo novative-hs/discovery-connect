@@ -54,11 +54,10 @@ const updateCollectionSiteStatus = (id, status, callback) => {
     callback(err, result);
   });
 };
-
-// function getCollectionSiteById(id, callback) {
-//   const query = 'SELECT * FROM researcher WHERE id = ?';
-//   mysqlConnection.query(query, [id], callback);
-// }  
+function getCollectionSiteById(id, callback) {
+  const query = 'SELECT * FROM researcher WHERE id = ?';
+  mysqlConnection.query(query, [id], callback);
+}  
 
 // Function to delete a collection site
 const deleteCollectionSite = (id, callback) => {
@@ -68,7 +67,7 @@ const deleteCollectionSite = (id, callback) => {
   });
 };
 
-// Function to GET collectionsite names
+// Function to GET collectionsite names in collectionsite dashboard
 const getAllCollectionSiteNames = (user_account_id, callback) => {
   // Query to fetch collectionsite data
   const collectionSiteQuery = `
@@ -86,6 +85,43 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
       });
 };
 
+// Function to GET collectionsite names in biobank dashboard
+const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
+  // First, get the user_account_id of the collection site that posted this sample
+  const sampleQuery = `SELECT user_account_id FROM sample WHERE id = ?`;
+
+  mysqlConnection.query(sampleQuery, [sample_id], (err, sampleResult) => {
+    if (err) {
+      console.error("SQL Error (Sample):", err);
+      callback(err, null);
+      return;
+    }
+
+    if (sampleResult.length === 0) {
+      callback(null, []); // No sample found, return empty
+      return;
+    }
+
+    const sampleOwnerUserId = sampleResult[0].user_account_id;
+
+    // Now fetch collection site names EXCLUDING the one that owns this sample
+    const collectionSiteQuery = `
+      SELECT CollectionSiteName 
+      FROM collectionsite 
+      WHERE user_account_id != ?;
+    `;
+
+    mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
+      if (err) {
+        console.error("SQL Error (CollectionSite):", err);
+        callback(err, null);
+        return;
+      }
+
+      callback(null, results);
+    });
+  });
+};
 
 function updateCollectionSiteDetail(id, data, callback) {
   const { 
@@ -199,11 +235,12 @@ function getCollectionSiteDetail(id, callback) {
 module.exports = {
   getCollectionSiteDetail,
   updateCollectionSiteDetail,
-  // getCollectionSiteById,
+  getAllCollectionSiteNames,
+  getAllCollectionSiteNamesInBiobank,
+  getCollectionSiteById,
   getAllCollectionSites,
   createCollectionSite,
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,
-  getAllCollectionSiteNames
 };
