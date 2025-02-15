@@ -36,7 +36,7 @@ const Footer = () => {
             <div className="col-12 col-md-4 col-lg-3 col-xl-2">
               <div className="widget">
                 <Link href="/">
-                  <Image src={logo} alt="Discovery Connect Logo" width="120" height="120" />
+                  <Image src={logo} alt="Discovery Connect Logo" width="110" height="60" />
                 </Link>
               </div>
             </div>

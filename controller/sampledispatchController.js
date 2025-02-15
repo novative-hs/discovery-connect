@@ -108,69 +108,56 @@ const createSampleDispatch = (req, res) => {
     FROM sample 
     WHERE id = ?
   `;
-
   mysqlConnection.query(getTransferFromQuery, [id], (err, results) => {
     if (err) {
       console.error('Database error fetching TransferFrom:', err);
       return res.status(500).json({ error: 'Error fetching TransferFrom' });
     }
-
     if (results.length === 0) {
       return res.status(404).json({ error: 'Sample not found' });
     }
-
     const TransferFrom = results[0].user_account_id;
     const currentQuantity = results[0].currentQuantity;
-
     // Check if there is enough quantity in the sample to dispatch
     if (currentQuantity < Quantity) {
       return res.status(400).json({ error: 'Insufficient quantity available for dispatch' });
     }
-
     // Deduct the dispatched quantity from the sample
     const updateQuantityQuery = `
       UPDATE sample
       SET quantity = Quantity - ?
       WHERE id = ?
     `;
-
     mysqlConnection.query(updateQuantityQuery, [Quantity, id], (updateErr) => {
       if (updateErr) {
         console.error('Database error during quantity update:', updateErr);
         return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
       }
-
       // Create the sample dispatch record
       sampleDispatchModel.createSampleDispatch({ TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity }, id, (err, result) => {
         if (err) {
           console.error('Database error during INSERT:', err);
           return res.status(500).json({ error: 'An error occurred while creating the dispatch' });
         }
-
         // Determine the sample's new status based on the remaining quantity
         const newStatus = currentQuantity - Quantity > 0 ? 'In Stock' : 'In Transit';
-
         // Update the sample's status
         const updateStatusQuery = `
           UPDATE sample
           SET status = ?
           WHERE id = ?
         `;
-
         mysqlConnection.query(updateStatusQuery, [newStatus, id], (updateStatusErr) => {
           if (updateStatusErr) {
             console.error('Database error during status update:', updateStatusErr);
             return res.status(500).json({ error: 'An error occurred while updating the sample status' });
           }
-
           res.status(201).json({ message: 'Sample Dispatch created successfully', id: result.insertId });
         });
       });
     });
   });
 };
-
-
 
 
 module.exports = {

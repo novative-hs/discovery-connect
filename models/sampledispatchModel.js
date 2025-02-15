@@ -106,34 +106,28 @@ const getDispatchedwithInTransitStatus = (req, res) => {
     INNER JOIN sample s ON sd.sampleID = s.id
     WHERE sd.TransferTo = ? AND sd.status = 'In Transit'
   `;
-
   // Execute the query using the logged-in user's `user_account_id`
   mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
       console.error("Database error fetching samples:", err.message);
       return res.status(500).json({ error: "An error occurred while fetching samples" });
     }
-
     if (results.length === 0) {
       return res.status(404).json({ message: "No samples found for this user" });
     }
-
     // Return the results (samples received by the user)
     res.status(200).json({ data: results });
   });
 };
 
 
-
-
-
+// Function to transfer sample 
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
   const { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = dispatchData;
   const query = `
     INSERT INTO sampledispatch (TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
-  
   mysqlConnection.query(query, [TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID], callback);
 };
 

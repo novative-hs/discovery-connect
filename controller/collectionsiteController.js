@@ -63,7 +63,7 @@ const deleteCollectionSite = (req, res) => {
   });
 };
 
-// Controller to fetch collection site names
+// Controller to fetch collection site names in collectionsite dashboard
 const getAllCollectionSiteNames = (req, res) => {
   const { user_account_id } = req.params; // Extract logged-in user's ID from request parameters
 
@@ -80,6 +80,28 @@ const getAllCollectionSiteNames = (req, res) => {
     }));
     res.status(200).json({ data: collectionSites });
     });
+};
+
+// Controller to fetch collection site names in biobank dashboard
+const getAllCollectionSiteNamesInBiobank = (req, res) => {
+  const { sample_id } = req.params;
+  
+  if (!sample_id) {
+    console.log("No Sample ID received in request");
+    return res.status(400).json({ error: "Sample ID is required" });
+  }
+
+  console.log("Received Sample ID:", sample_id); // Debugging
+
+  collectionsiteModel.getAllCollectionSiteNamesInBiobank(sample_id, (err, results) => {
+    if (err) {
+      console.error("Error fetching data:", err);
+      return res.status(500).json({ error: "An error occurred while fetching data" });
+    }
+
+    console.log("Database Query Result:", results); // Debugging
+    res.status(200).json({ data: results });
+  });
 };
 
 const updateCollectionSiteDetail = (req, res) => {
@@ -137,6 +159,7 @@ module.exports = {
   getCollectionSiteDetail,
   updateCollectionSiteDetail,
   getAllCollectionSiteNames,
+  getAllCollectionSiteNamesInBiobank,
   getAllCollectionSites,
   getCollectionSiteById,
   updateCollectionSiteStatus,
