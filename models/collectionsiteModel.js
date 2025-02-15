@@ -106,7 +106,7 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
 
     // Now fetch collection site names EXCLUDING the one that owns this sample
     const collectionSiteQuery = `
-      SELECT CollectionSiteName 
+      SELECT CollectionSiteName, user_account_id 
       FROM collectionsite 
       WHERE user_account_id != ?;
     `;

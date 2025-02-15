@@ -98,9 +98,14 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
       console.error("Error fetching data:", err);
       return res.status(500).json({ error: "An error occurred while fetching data" });
     }
+      // Ensure the response includes `CollectionSiteName` and `user_account_id`
+      const collectionSites = results.map(row => ({
+        CollectionSiteName: row.CollectionSiteName,
+        user_account_id: row.user_account_id,
+      }));
 
-    console.log("Database Query Result:", results); // Debugging
-    res.status(200).json({ data: results });
+      console.log("Database Query Result:", collectionSites); // Debugging
+      res.status(200).json({ data: collectionSites });
   });
 };
 
