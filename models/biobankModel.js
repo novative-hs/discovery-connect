@@ -29,9 +29,11 @@ const createBiobankSample = (data, callback) => {
   console.log("Inserting data into database:", data);
   console.log(data);
 
-  // Generate ID using formula
-  const id = parseInt(data.donorID) + parseInt(data.user_account_id);
-  const masterID = id - 2; 
+    // Generate a random 3-digit number
+    const randomSuffix = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
+    // Calculate Master ID
+    const id = parseInt(data.donorID) + parseInt(data.user_account_id);
+    const masterID = `${id}${randomSuffix}`;
 
   const query = `
     INSERT INTO sample (
