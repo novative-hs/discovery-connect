@@ -211,7 +211,7 @@ const ResearcherArea = () => {
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/get-reg-history/${filterType}/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
       setHistoryData(data);
@@ -222,6 +222,7 @@ const ResearcherArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
+    console.log(id)
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };

@@ -8,24 +8,25 @@ const productModel = require("../models/productModel");
 const wishlistModel = require("../models/wishlistModel");
 const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
-const historyModel = require("../models/historyModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
 
 const sample_approvalModel=require("../models/sampleapprovalModel")
 const paymentModel=require('../models/paymentModals')
-const ethnicityModel=require('../models/ethnicityModel')
-const sampleconditionModel=require('../models/sampleconditionModel')
-const storagetemperatureModel=require('../models/storagetemperatureModel')
-const containertypeModel=require('../models/containertypeModel')
-const quantityunitModel=require('../models/quantityunitModel')
-const sampletypematrixModel=require('../models/sampletypematrixModel')
-const testmethodModel=require('../models/testmethodModel')
-const testresultunitModel=require('../models/testresultunitModel')
-const testsystemModel=require('../models/testsystemModel')
-const testsystemmanufacturerModel=require('../models/testsystemmanufacturerModel')
-const testkitmanufacturerModel=require('../models/testkitmanufacturerModel')
-const concurrentmedicalconditionsModel=require('../models/concurrentmedicalconditionsModel')
+
+
+const ethnicityModel=require('../models/samplefieldsModel')
+const sampleconditionModel=require('../models/samplefieldsModel')
+const storagetemperatureModel=require('../models/samplefieldsModel')
+const containertypeModel=require('../models/samplefieldsModel')
+const quantityunitModel=require('../models/samplefieldsModel')
+const sampletypematrixModel=require('../models/samplefieldsModel')
+const testmethodModel=require('../models/samplefieldsModel')
+const testresultunitModel=require('../models/samplefieldsModel')
+const testsystemModel=require('../models/samplefieldsModel')
+const testsystemmanufacturerModel=require('../models/samplefieldsModel')
+const testkitmanufacturerModel=require('../models/samplefieldsModel')
+const concurrentmedicalconditionsModel=require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
 
 // Function to initialize all tables

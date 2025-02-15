@@ -66,6 +66,7 @@ const getHistory = (filterType, id, callback) => {
       return callback(err, null);
     }
 
+
     // If no results in RegistrationAdmin_History, fallback to the history table
     if (results.length === 0) {
       let fallbackQuery = `
@@ -145,7 +146,7 @@ const create_historyTable = () => {
     }
   });
 };
-const create_samplehistoryTable=()=>{
+const create_samplehistoryTable = () => {
   const create_historyTable = `
   CREATE TABLE sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

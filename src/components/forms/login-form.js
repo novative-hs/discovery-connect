@@ -18,7 +18,7 @@ const schema = Yup.object().shape({
 
 const LoginForm = () => {
   const [showPass, setShowPass] = useState(false);
-  const [loginUser, {}] = useLoginUserMutation();
+  const [loginUser, { }] = useLoginUserMutation();
   const router = useRouter();
   // react hook form
   const {
@@ -29,7 +29,7 @@ const LoginForm = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  
   const onSubmit = async (data) => {
     try {
       const result = await loginUser({
@@ -37,23 +37,26 @@ const LoginForm = () => {
         password: data.password,
       });
   
+      console.log("Login result:", result); // Debug log for result
+  
       if (result?.error) {
         notifyError(result?.error?.data?.error);
       } else {
-        const { id, accountType, authToken } = result?.data?.user || {};
+        const { id, accountType, authToken } = result?.data?.user || {}; // Use 'id' instead of 'userID'
         if (!id) {
+          console.error("id is undefined in the API response.");
           return notifyError("Unexpected error: User ID is missing.");
         }
-
+  
         localStorage.setItem("userID", id); // Store 'id' as userID
-        localStorage.setItem("accountType", accountType);
+        localStorage.setItem("accountType",accountType)
         notifySuccess("Login successfully");
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-
+  
         // Redirect based on account type
         if (accountType) {
           router.push("/dashboardheader");
-        } else {
+        }  else {
           router.push("/default-dashboard");
         }
       }
@@ -63,76 +66,67 @@ const LoginForm = () => {
     }
   };
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="w-100 w-md-50 mx-auto p-2"
-    >
-      {/* Email Field */}
-      <div className="mb-2 position-relative">
-        <div className="input-group input-group-sm">
-          <span className="input-group-text bg-white border-end-0 px-2">
-            <UserTwo />
-          </span>
-          <input
-            {...register("email")}
-            name="email"
-            type="email"
-            placeholder="Enter your email"
-            className="form-control form-control-sm border-start-0"
-            id="email"
-          />
-        </div>
-        <small className="text-danger">
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="login__input-wrapper">
+        <div className="login__input-item">
+          <div className="login__input">
+            <input
+              {...register("email")}
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              id="email"
+            />
+            <span>
+              <UserTwo />
+            </span>
+          </div>
           <ErrorMessage message={errors.email?.message} />
-        </small>
-      </div>
-
-      {/* Password Field */}
-      <div className="mb-2 position-relative">
-        <div className="input-group input-group-sm">
-          <span className="input-group-text bg-white border-end-0 px-2">
-            <Lock />
-          </span>
-          <input
-            {...register("password")}
-            name="password"
-            type={showPass ? "text" : "password"}
-            placeholder="Password"
-            className="form-control form-control-sm border-start-0"
-            id="password"
-          />
-          <button
-            type="button"
-            className="btn btn-light border btn-sm"
-            onClick={() => setShowPass(!showPass)}
-          >
-            {showPass ? <i className="fa-regular fa-eye"></i> : <EyeCut />}
-          </button>
         </div>
-        <small className="text-danger">
-          <ErrorMessage message={errors.password?.message} />
-        </small>
+
+        <div className="login__input-item">
+          <div className="login__input-item-inner p-relative">
+            <div className="login__input">
+              <input
+                {...register("password")}
+                name="password"
+                type={showPass ? "text" : "password"}
+                placeholder="Password"
+                id="password"
+              />
+              <span>
+                <Lock />
+              </span>
+            </div>
+            <span
+              className="login-input-eye"
+              onClick={() => setShowPass(!showPass)}
+            >
+              {showPass ? <i className="fa-regular fa-eye"></i> : <EyeCut />}
+            </span>
+            {/* error msg start */}
+            <ErrorMessage message={errors.password?.message} />
+            {/* error msg end */}
+          </div>
+        </div>
       </div>
 
-      {/* Remember Me & Forgot Password */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="form-check">
-          <input type="checkbox" className="form-check-input" id="remember" />
-          <label className="form-check-label" htmlFor="remember">
-            Remember me
-          </label>
+      <div className="login__option mb-25 d-sm-flex justify-content-between">
+        <div className="login__remember">
+          <input type="checkbox" id="tp-remember" />
+          <label htmlFor="tp-remember">Remember me</label>
         </div>
         <div className="login__forgot">
-          <Link href="/forgot" className="small">
-            Forgot password?
-          </Link>
+          <Link href="/forgot">forgot password?</Link>
         </div>
       </div>
-
-      {/* Submit Button */}
-      <button type="submit" className="tp-btn w-100 py-2">
-        Sign In
-      </button>
+      <div className="login__btn">
+        {/* <Link href="/user-dashboard"> */}
+          <button type="submit" className="tp-btn w-100">
+            Sign In
+          </button>
+        {/* </Link> */}
+      </div>
     </form>
   );
 };
