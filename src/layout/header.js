@@ -26,9 +26,8 @@ const Header = ({ style_2 = false }) => {
       <header>
         <div className={`header__area ${style_2 ? "" : "header__transparent"}`}>
           <div
-            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
-              style_2 ? "header__bottom-13-white" : "grey-bg-17"
-            } header__sticky ${sticky ? "header-sticky" : ""}`}
+            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"
+              } header__sticky ${sticky ? "header-sticky" : ""}`}
             id="header-sticky"
           >
             <div className="container-fluid">
@@ -36,12 +35,13 @@ const Header = ({ style_2 = false }) => {
                 <div className="row align-items-center">
                   {/* Logo Section - Reduced Width & Logo Size */}
                   <div className="col-xxl-1 col-xl-2 col-lg-3 col-md-4 col-sm-5 col-6">
-                    <div className="logo">
+                    <div className="logo"style={{ marginLeft: "-30px" }}>
                       <Link href="/">
                         <Image
                           src={logo}
                           alt="logo"
-                          style={{ width: "120px", height: "auto" }}
+                          width={150} // Set height and width independently
+                          height={80} 
                         />
                       </Link>
                     </div>

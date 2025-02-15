@@ -17,7 +17,7 @@ const Footer = () => {
             <div className="col-12 col-md-2">
               <div className="widget text-center">
                 <Link href="/">
-                  <Image src={logo} alt="Discovery Connect Logo" width="110" height="60" />
+                  <Image src={logo} alt="Discovery Connect Logo" width="120" height="60" />
                 </Link>
               </div>
             </div>

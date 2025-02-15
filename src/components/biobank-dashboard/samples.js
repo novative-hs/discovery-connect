@@ -9,13 +9,12 @@ import {
 import { getLocalStorage } from "@utils/localstorage";
 
 const BioBankSampleArea = () => {
-  
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   }
   else {
-    console.log("Biobank site Id on sample page is:", id);
+    console.log("Collection site Id on sample page is:", id);
   }
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -125,53 +124,7 @@ const BioBankSampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: "",
   });
-  const tableHeaders = [
-    { label: "ID", key: "id" },
-    { label: "Master ID", key: "masterID" },
-    { label: "Donor ID", key: "donorID" },
-    { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
-    { label: "Sample Condition", key: "samplecondition" },
-    { label: "Storage Temp", key: "storagetemp" },
-    { label: "Storage Temp Unit", key: "storagetempUnit" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Price", key: "price" },
-    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Lab Name", key: "labname" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Type Matrix Subtype", key: "TypeMatrixSubtype" },
-    { label: "Procurement Type", key: "ProcurementType" },
-    { label: "End Time", key: "endTime" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Test Method", key: "TestMethod" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
-    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
-    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Cut Off Range", key: "CutOffRange" },
-    { label: "Cut Off Range Unit", key: "CutOffRangeUnit" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
-    { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Result Remarks", key: "ResultRemarks" },
-    { label: "Test Kit", key: "TestKit" },
-    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
-    { label: "Test System", key: "TestSystem" },
-    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Discount", key: "discount" },
-    { label: "Status", key: "status" },
-  ];
+
   const handleTransferClick = (sample) => {
     console.log("Transfer action for:", sample);
     setSelectedSampleId(sample.id);
