@@ -130,7 +130,7 @@ const TestKitManufacturerArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/testkitmanufacturer/get-testkitmanufacturer"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testkitmanufacturer/get-testkitmanufacturer`
       );
       setTestKitManufacturername(newResponse.data);
 

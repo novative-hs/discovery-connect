@@ -4,17 +4,17 @@ const mysqlConnection = require("../config/db");
 const createCartTable = () => {
   const cartTableQuery = `
   CREATE TABLE IF NOT EXISTS cart (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  sample_id INT,
-  price FLOAT,
-  quantity INT,
-  payment_method VARCHAR(255),
-  totalpayment DECIMAL(10, 2),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES user_account(id),
-  FOREIGN KEY (sample_id) REFERENCES sample(id)
-    )`;
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    sample_id BIGINT,
+    price FLOAT,
+    quantity INT,
+    payment_method VARCHAR(255),
+    totalpayment DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user_account(id),
+    FOREIGN KEY (sample_id) REFERENCES sample(id)
+  )`;
 
   mysqlConnection.query(cartTableQuery, (err, result) => {
     if (err) {
@@ -23,28 +23,30 @@ const createCartTable = () => {
       console.log("Cart table created or already exists.");
     }
   });
-  // alterCartTable();
 };
+
+
 // cartModel.js
 const createCart = (data, callback) => {
   console.log("Incoming request body:", data);
 
-  const { researcher_id, cart_items, payment_method, sample_id } = data;
+  const { researcher_id, cart_items, payment_method } = data;
 
-  // Validate incoming data
   if (!researcher_id || !cart_items || !payment_method) {
     return callback(new Error("Missing required fields"));
   }
 
-  // Perform database inserts for each cart item
-  cart_items.forEach((item) => {
+  let insertCount = 0;
+  let hasError = false;
+
+  cart_items.forEach((item, index) => {
     const query = `
       INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
     const values = [
       researcher_id,
-      item.sample_id, // Default to null if item.id is undefined
+      item.sample_id || null, // Default to null if undefined
       item.price,
       item.samplequantity,
       payment_method,
@@ -54,14 +56,22 @@ const createCart = (data, callback) => {
     mysqlConnection.query(query, values, (err) => {
       if (err) {
         console.error("Error inserting into cart:", err);
-        return callback(err);
+        if (!hasError) {
+          hasError = true;
+          return callback(err); // Only call the callback once on error
+        }
+      }
+
+      insertCount++;
+
+      // Call the callback only when all queries have completed successfully
+      if (insertCount === cart_items.length && !hasError) {
+        callback(null, { message: "Cart items added successfully" });
       }
     });
   });
-
-  // After all inserts (no errors), call the callback
-  callback(null, { message: "Cart items added successfully" });
 };
+
 
 
 const getAllCart = (id, callback, res) => {

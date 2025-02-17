@@ -30,7 +30,7 @@ const ResearcherArea = () => {
   const totalPages = Math.ceil(researchers.length / itemsPerPage);
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/get-reg-history/${filterType}/${id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -52,7 +52,7 @@ const ResearcherArea = () => {
   const fetchResearchers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/admin/researcher/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
       );
       setResearchers(response.data);
       setAllResearchers(response.data) // Store fetched researchers in state
@@ -78,11 +78,11 @@ const ResearcherArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/researchers/post', formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/post`, formData);
       console.log("Researcher added successfully:", response.data);
 
       // Refresh the researcher list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
+      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`);
       setResearchers(newResponse.data); // Update state with the new list
 
       // Clear form after submission
@@ -105,7 +105,7 @@ const ResearcherArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedResearcherId}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/delete/${selectedResearcherId}`);
       console.log(`Researcher with ID ${selectedResearcherId} deleted successfully.`);
 
       // Set success message
@@ -117,7 +117,7 @@ const ResearcherArea = () => {
       }, 3000);
 
       // Refresh the researcher list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
+      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`);
       setResearchers(newResponse.data);
 
       // Close modal after deletion
@@ -146,13 +146,13 @@ const ResearcherArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/admin/researchers/edit/${selectedResearcherId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
       console.log("Researcher updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/admin/researcher/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
       );
       setResearchers(newResponse.data);
 

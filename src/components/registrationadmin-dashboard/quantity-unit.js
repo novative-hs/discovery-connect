@@ -118,7 +118,7 @@ const QuantityUnitArea = () => {
 
       // Refresh the quantityunit list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/quantityunit/get-quantityunit"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/quantityunit/get-quantityunit`
       );
       setethnicityname(newResponse.data);
 

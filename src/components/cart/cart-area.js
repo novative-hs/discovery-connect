@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 // internal
@@ -54,7 +54,7 @@ const CartArea = () => {
                             </Link>
                           </td>
                           <td className="product-price">
-                            <span className="amount">{item.price.toFixed(2)}</span>
+                            <span className="amount">{item.price}</span>
                           </td>
                           <td className="product-quantity">
                             <span className="quantity">{item.quantity}</span>
@@ -91,8 +91,8 @@ const CartArea = () => {
                         </li>
                       </ul>
                       <Link href={`/login?from=checkout`} className="tp-btn cursor-pointer">
-  Proceed to checkout
-</Link>
+                        Proceed to checkout
+                      </Link>
                     </div>
                   </div>
                 </div>

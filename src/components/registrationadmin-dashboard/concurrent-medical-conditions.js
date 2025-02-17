@@ -130,7 +130,7 @@ const ConcurrentMedicalConditionsArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/concurrentmedicalconditions/get-concurrentmedicalconditions"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/concurrentmedicalconditions/get-concurrentmedicalconditions`
       );
       setConcurrentMedicalname(newResponse.data);
 

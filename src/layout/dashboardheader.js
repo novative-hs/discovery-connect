@@ -77,7 +77,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/user/getAccountDetail/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
 
       setUser(response.data[0]); // Store fetched organization data
@@ -89,7 +89,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const fetchCart = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/cart/getCount/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
 
       console.log("API Response:", response.data);
@@ -148,6 +148,8 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   const handleLogout = () => {
+    setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };

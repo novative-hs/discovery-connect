@@ -26,7 +26,7 @@ const OrganizationArea = () => {
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/get-reg-history/${filterType}/${id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -53,7 +53,7 @@ const OrganizationArea = () => {
   const fetchOrganizations = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/admin/organization/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
       setAllOrganizations(response.data);
       setOrganizations(response.data); // Store fetched organizations in state
@@ -111,11 +111,11 @@ const OrganizationArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/organizations/post', formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/organizations/post`, formData);
       console.log("Organization added successfully:", response.data);
 
       // Refresh the organization list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/admin/organization/get');
+      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`);
       setOrganizations(newResponse.data); // Update state with the new list
 
       // Clear form after submission
@@ -137,7 +137,7 @@ const OrganizationArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/admin/organization/delete/${selectedOrganizationId}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${selectedOrganizationId}`);
       console.log(`Organization with ID ${selectedOrganizationId} deleted successfully.`);
 
       // Set success message
@@ -149,7 +149,7 @@ const OrganizationArea = () => {
       }, 3000);
 
       // Refresh the organization list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/admin/organization/get');
+      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`);
       setOrganizations(newResponse.data);
 
       // Close modal after deletion
@@ -177,13 +177,13 @@ const OrganizationArea = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/admin/organization/edit/${selectedOrganizationId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${selectedOrganizationId}`,
         formData
       );
       console.log("Organization updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/admin/organization/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
       setOrganizations(newResponse.data);
 

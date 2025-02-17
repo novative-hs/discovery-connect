@@ -130,7 +130,7 @@ const TestMethodArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/testmethod/get-testmethod"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testmethod/get-testmethod`
       );
       setTestMethodname(newResponse.data);
 

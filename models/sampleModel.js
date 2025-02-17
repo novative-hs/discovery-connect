@@ -82,21 +82,25 @@ const getSamples = (id, callback) => {
 
 const getAllSamples = (callback) => {
   const query = `
-    SELECT 
-      s.*,
-      cs.CollectionSiteName AS CollectionSiteName,
-      c.name AS CityName,
-      d.name AS DistrictName
-    FROM 
-      sample s
-    JOIN 
-      collectionsite cs ON s.user_account_id = cs.user_account_id
-    JOIN 
-      city c ON cs.city = c.id
-    JOIN 
-      district d ON cs.district = d.id
-    WHERE 
-      s.status = 'In Stock'
+SELECT 
+  s.*,
+  cs.CollectionSiteName AS Name,
+  bb.Name AS Name,
+  c.name AS CityName,
+  d.name AS DistrictName
+FROM 
+  sample s
+LEFT JOIN 
+  CollectionSite cs ON s.user_account_id = cs.user_account_id
+LEFT JOIN 
+  biobank bb ON s.user_account_id = bb.id
+LEFT JOIN 
+  city c ON cs.city = c.id
+LEFT JOIN 
+  district d ON cs.district = d.id
+WHERE 
+  s.status = 'In Stock' and s.price > 0;
+
   `;
 
   // Log query being executed
@@ -147,7 +151,6 @@ const getAllSamples = (callback) => {
     });
   });
 };
-
 
 
 // Function to get a sample by its ID

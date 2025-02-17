@@ -30,7 +30,7 @@ const CollectionsiteArea = () => {
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/get-reg-history/${filterType}/${id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -51,7 +51,7 @@ const CollectionsiteArea = () => {
   }, []);
   const fetchCollectionsites = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/collectionsite/get');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`);
       setAllCollectionsites(response.data)
       setCollectionsites(response.data); // Store fetched collectionsites in state
     } catch (error) {
@@ -78,11 +78,11 @@ const CollectionsiteArea = () => {
 
     try {
       // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/collectionsite/post', formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/post`, formData);
       console.log("Collectionsite added successfully:", response.data);
 
       // Refresh the collectionsite list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
+      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`);
       setCollectionsites(newResponse.data); // Update state with the new list
 
       // Clear form after submission
@@ -102,7 +102,7 @@ const CollectionsiteArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/collectionsite/delete/${selectedCollectionsiteId}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/delete/${selectedCollectionsiteId}`);
       console.log(`Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`);
 
       // Set success message
@@ -114,7 +114,7 @@ const CollectionsiteArea = () => {
       }, 3000);
 
       // Refresh the collectionsite list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
+      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`);
       setCollectionsites(newResponse.data);
 
       // Close modal after deletion
@@ -129,7 +129,7 @@ const CollectionsiteArea = () => {
   };
   const sendApprovalEmail = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/user/send-email', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}0/api/user/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

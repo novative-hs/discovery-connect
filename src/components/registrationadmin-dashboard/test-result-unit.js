@@ -130,7 +130,7 @@ const TestResultUnitArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/testresultunit/get-testresultunit"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testresultunit/get-testresultunit`
       );
       setTestResultUnitname(newResponse.data);
 

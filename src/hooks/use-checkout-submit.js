@@ -50,8 +50,8 @@ const useCheckoutSubmit = () => {
   const couponRef = useRef("");
 
   useEffect(() => {
-    if (localStorage.getItem("cart")) {
-      const data = localStorage.getItem("cart");
+    if (localStorage.getItem("couponInfo")) {
+      const data = localStorage.getItem("couponInfo");
       const coupon = JSON.parse(data);
       setCouponInfo(coupon);
       setDiscountPercentage(coupon.discountPercentage);

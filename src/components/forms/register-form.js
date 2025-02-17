@@ -121,21 +121,21 @@ const RegisterForm = () => {
       }
     };
 
-    fetchData("http://localhost:5000/api/city/get-city", setCityname, "City");
+    fetchData(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`, setCityname, "City");
     fetchData(
-      "http://localhost:5000/api/district/get-district",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`,
       setDistrictname,
       "District"
     );
     fetchData(
-      "http://localhost:5000/api/country/get-country",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`,
       setCountryname,
       "Country"
     );
 
     // Fetch all organizations and filter approved ones
     fetchData(
-      "http://localhost:5000/api/admin/organization/get",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`,
       (data) => {
         setOrganizationname(data);
         setOrganizationname(data.filter((org) => org.status === "approved"));
@@ -176,7 +176,7 @@ const RegisterForm = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/user/send-email",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`,
         {
           method: "POST",
           headers: {

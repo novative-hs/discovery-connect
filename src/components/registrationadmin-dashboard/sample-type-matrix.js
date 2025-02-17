@@ -130,7 +130,7 @@ const SampleTypeMatrixArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/sampletypematrix/get-sampletypematrix"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampletypematrix/get-sampletypematrix`
       );
       setSampleTypeMatrixname(newResponse.data);
 

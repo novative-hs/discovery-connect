@@ -9,32 +9,30 @@ const RegistrationAdmin_History = () => {
       added_by INT,
       organization_id INT,
       collectionsite_id INT,
-      researcher_id INT,
+      resaercher_id INT,
       city_id INT,
       country_id INT,
       district_id INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      status ENUM('added', 'updated', 'deleted') DEFAULT 'added',
+      status ENUM('active', 'inactive', 'unapproved', 'approved') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
-      FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
+      FOREIGN KEY (resaercher_id) REFERENCES researcher(id) ON DELETE CASCADE,
       FOREIGN KEY (city_id) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE
     )`;
 
-  mysqlConnection.query(
-    createRegistrationAdmin_HistoryTable,
-    (err, results) => {
-      if (err) {
-        console.error("Error creating History table: ", err);
-      } else {
-        console.log("Registration Admin History table created Successfully");
-      }
+
+  mysqlConnection.query(createRegistrationAdmin_HistoryTable, (err, results) => {
+    if (err) {
+      console.error("Error creating History table: ", err);
+    } else {
+      console.log("Registration Admin History table created Successfully");
     }
-  );
+  });
 };
 
 const getHistory = (filterType, id, callback) => {

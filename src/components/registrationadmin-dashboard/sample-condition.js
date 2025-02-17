@@ -130,7 +130,7 @@ const SampleConditionArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/samplecondition/get-samplecondition"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplecondition/get-samplecondition`
       );
       setSampleConditionname(newResponse.data);
 

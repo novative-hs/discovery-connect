@@ -37,14 +37,11 @@ const LoginForm = () => {
         password: data.password,
       });
   
-      console.log("Login result:", result); // Debug log for result
-  
       if (result?.error) {
         notifyError(result?.error?.data?.error);
       } else {
-        const { id, accountType, authToken } = result?.data?.user || {}; // Use 'id' instead of 'userID'
+        const { id, accountType, authToken } = result?.data?.user || {};
         if (!id) {
-          console.error("id is undefined in the API response.");
           return notifyError("Unexpected error: User ID is missing.");
         }
   
@@ -52,15 +49,21 @@ const LoginForm = () => {
         localStorage.setItem("accountType",accountType)
         notifySuccess("Login successfully");
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-  
-        // Redirect based on account type
-        if (accountType) {
-          router.push("/dashboardheader");
-        }  else {
-          router.push("/default-dashboard");
-        }
+          // Check if the user came from the checkout page
+         
+          const fromPage = router.query.from;
+          if (fromPage === "checkout") {
+            router.push("/checkout"); // Redirect back to the checkout page
+          } else {
+            if (accountType) {
+              router.push("/dashboardheader");
+            }  else {
+              router.push("/default-dashboard");
+            }
+            }
+          } 
       }
-    } catch (error) {
+     catch (error) {
       console.error("Login error:", error);
       notifyError("An unexpected error occurred.");
     }

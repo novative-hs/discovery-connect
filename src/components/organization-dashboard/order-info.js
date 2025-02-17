@@ -40,7 +40,7 @@ const [id, setUserID] = useState(null);
 
   const fetchUserCount = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/researcher/get`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get`);
   
       if (Array.isArray(response.data)) {
         

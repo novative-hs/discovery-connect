@@ -105,7 +105,7 @@ const CommitteeMemberArea = () => {
   const sendApprovalEmail = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/user/send-email",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`,
         {
           method: "POST",
           headers: {

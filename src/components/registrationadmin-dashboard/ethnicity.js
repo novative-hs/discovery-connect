@@ -119,7 +119,7 @@ const EthnicityArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/ethnicity/get-ethnicity"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ethnicity/get-ethnicity`
       );
       setethnicityname(newResponse.data);
 

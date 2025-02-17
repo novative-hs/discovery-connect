@@ -126,7 +126,7 @@ const StorageTemperatureArea = () => {
 
       // Refresh the cityname list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/storagetemperature/get-storagetemperature"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/storagetemperature/get-storagetemperature`
       );
       setStoragetemperaturename(newResponse.data);
 

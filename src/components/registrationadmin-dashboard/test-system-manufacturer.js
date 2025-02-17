@@ -130,7 +130,7 @@ const TestSystemManufacturerArea = () => {
 
       // Refresh the Manufacturer list after deletion
       const newResponse = await axios.get(
-        "http://localhost:5000/api/testsystemmanufacturer/get-testsystemmanufacturer"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystemmanufacturer/get-testsystemmanufacturer`
       );
       setTestSystemManufacturername(newResponse.data);
 

@@ -81,7 +81,7 @@ const UpdateBioBank = () => {
   const fetchcollectionsite = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/collectionsite/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get/${id}`
       );
       setCollectionSite(response.data);
     } catch (error) {
@@ -91,7 +91,7 @@ const UpdateBioBank = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/city/get-city"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
       );
       setcityname(response.data);
     } catch (error) {
@@ -109,7 +109,7 @@ const UpdateBioBank = () => {
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/district/get-district"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
       );
       setdistrictname(response.data);
     } catch (error) {
@@ -120,7 +120,7 @@ const UpdateBioBank = () => {
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
       );
       setcountryname(response.data);
     } catch (error) {
@@ -153,7 +153,7 @@ const UpdateBioBank = () => {
   
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/collectionsite/updatedetail/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/updatedetail/${id}`,
         formData, // Sending the FormData object with both fields and the file
         {
           headers: {

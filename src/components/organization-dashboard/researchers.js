@@ -278,7 +278,7 @@ const ResearcherArea = () => {
     }
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/user/updateProfile/${selectedResearcherId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/updateProfile/${selectedResearcherId}`,
         newformData,
         {
           headers: {
