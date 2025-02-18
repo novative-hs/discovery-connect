@@ -1,7 +1,7 @@
 const mysqlConnection = require("../config/db");
 // Function to create the city table
 const createuser_accountTable = () => {
-    const createuser_accountTable = `
+  const createuser_accountTable = `
     CREATE TABLE IF NOT EXISTS user_account (
       id INT AUTO_INCREMENT PRIMARY KEY,
       email VARCHAR(255) NOT NULL UNIQUE,
@@ -22,7 +22,7 @@ const createuser_accountTable = () => {
 
 // Researcher Table
 const create_researcherTable = () => {
-    const create_researcherTable = `
+  const create_researcherTable = `
     CREATE TABLE IF NOT EXISTS researcher (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
@@ -51,7 +51,7 @@ const create_researcherTable = () => {
 };
 
 const create_organizationTable = () => {
-    const create_organizationTable = `
+  const create_organizationTable = `
     CREATE TABLE IF NOT EXISTS organization (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
@@ -82,7 +82,7 @@ const create_organizationTable = () => {
 };
 
 const create_collectionsiteTable = () => {
-    const create_collectionsiteTable = `
+  const create_collectionsiteTable = `
     CREATE TABLE IF NOT EXISTS collectionsite (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
@@ -119,13 +119,13 @@ const create_biobankTable = () => {
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 )`;
 
-mysqlConnection.query(create_biobankTable, (err, results) => {
-  if (err) {
-    console.error("Error biobank table: ", err);
-  } else {
-    console.log("Biobank table created Successfully");
-  }
-});
+  mysqlConnection.query(create_biobankTable, (err, results) => {
+    if (err) {
+      console.error("Error biobank table: ", err);
+    } else {
+      console.log("Biobank table created Successfully");
+    }
+  });
 };
 
 
@@ -235,9 +235,9 @@ const getAccountDetail = (id, callback) => {
             if (err) {
               return callback(err, null); // Pass error to the controller
             }
- 
-              return callback(null, collectionsiteResults); // Return collectiosite info 
-            
+
+            return callback(null, collectionsiteResults); // Return collectiosite info 
+
           }
         );
       } else {
@@ -268,7 +268,7 @@ const updateAccount = (req, callback) => {
     HECPMDCRegistrationNo,
     ntnNumber,
   } = req.body;
-  
+
   // Handle the logo file (if provided)
   let logo = null;
   if (req.file) {
@@ -439,8 +439,8 @@ const updateAccount = (req, callback) => {
     );
   });
 };
-// Function to insert a new City member
 
+// Function to Create Account
 const createAccount = (req, callback) => {
   const {
     accountType,
@@ -463,117 +463,134 @@ const createAccount = (req, callback) => {
 
   let logo = req.file ? req.file.buffer : null;
 
-  mysqlConnection.beginTransaction((err) => {
+  mysqlPool.getConnection((err, connection) => {
     if (err) {
-      console.error("Error starting transaction:", err);
+      console.error("Error getting database connection:", err);
       return callback(err, null);
     }
 
-    const checkEmailQuery = "SELECT * FROM user_account WHERE email = ?";
-    mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
+    connection.beginTransaction((err) => {
       if (err) {
-        return mysqlConnection.rollback(() => callback(err, null));
+        connection.release();
+        console.error("Error starting transaction:", err);
+        return callback(err, null);
       }
 
-      if (results.length > 0) {
-        return mysqlConnection.rollback(() =>
-          callback(new Error("Email already exists"), null)
-        );
-      }
+      connection.query(checkEmailQuery, [email], (err, results) => {
+        if (err) {
+          return connection.rollback(() => {
+            connection.release();
+            callback(err, null);
+          });
+        }
 
-      const userAccountQuery = `INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)`;
-      mysqlConnection.query(
-        userAccountQuery,
-        [email, password, accountType],
-        (err, userAccountResults) => {
-          if (err) {
-            return mysqlConnection.rollback(() => callback(err, null));
-          }
+        if (results.length > 0) {
+          return connection.rollback(() => {
+            connection.release();
+            callback(new Error("Email already exists"), null);
+          });
+        }
 
-          const userAccountId = userAccountResults.insertId;
-          let query, values;
-
-          switch (accountType) {
-            case "Researcher":
-              query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-              values = [
-                userAccountId,
-                ResearcherName,
-                phoneNumber,
-                fullAddress,
-                city,
-                district,
-                country,
-                nameofOrganization,
-                logo,
-                added_by,
-              ];
-              break;
-
-            case "Organization":
-              query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-              values = [
-                userAccountId,
-                OrganizationName,
-                type,
-                HECPMDCRegistrationNo,
-                ntnNumber,
-                phoneNumber,
-                fullAddress,
-                city,
-                district,
-                country,
-                logo,
-              ];
-              break;
-
-            case "CollectionSites":
-              query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-              values = [
-                userAccountId,
-                CollectionSiteName,
-                phoneNumber,
-                fullAddress,
-                city,
-                district,
-                country,
-                logo,
-              ];
-              break;
-
-            case "RegistrationAdmin":
-            case "biobank":
-              return callback(null, {
-                message: `${accountType} account registered successfully`,
-                userId: userAccountId,
-              });
-
-            default:
-              return mysqlConnection.rollback(() =>
-                callback(new Error("Invalid account type"), null)
-              );
-          }
-
-          mysqlConnection.query(query, values, (err, results) => {
+        const userAccountQuery = `INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)`;
+        connection.query(
+          userAccountQuery,
+          [email, password, accountType],
+          (err, userAccountResults) => {
             if (err) {
-              return mysqlConnection.rollback(() => callback(err, null));
+              return connection.rollback(() => {
+                connection.release();
+                callback(err, null);
+              });
             }
 
-            const userId = results.insertId;
+            const userAccountId = userAccountResults.insertId;
+            let query, values;
 
-            // Identify correct ID for history table
-            let organizationId = null,
-              researcherId = null,
-              collectionsiteId = null;
+            switch (accountType) {
+              case "Researcher":
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                values = [
+                  userAccountId,
+                  ResearcherName,
+                  phoneNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+                  nameofOrganization,
+                  logo,
+                  added_by,
+                ];
+                break;
 
-            if (accountType === "Organization") organizationId = userId;
-            if (accountType === "Researcher") researcherId = userId;
-            if (accountType === "CollectionSites") collectionsiteId = userId;
+              case "Organization":
+                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                values = [
+                  userAccountId,
+                  OrganizationName,
+                  type,
+                  HECPMDCRegistrationNo,
+                  ntnNumber,
+                  phoneNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+                  logo,
+                ];
+                break;
 
-            const historyQuery = `
+              case "CollectionSites":
+                query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                values = [
+                  userAccountId,
+                  CollectionSiteName,
+                  phoneNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+                  logo,
+                ];
+                break;
+
+              case "RegistrationAdmin":
+              case "biobank":
+                return callback(null, {
+                  message: `${accountType} account registered successfully`,
+                  userId: userAccountId,
+                });
+
+              default:
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(new Error("Invalid account type"), null);
+                });
+            }
+
+            connection.query(query, values, (err, results) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(err, null);
+                });
+              }
+
+              const userId = results.insertId;
+
+              // Identify correct ID for history table
+              let organizationId = null,
+                researcherId = null,
+                collectionsiteId = null;
+
+              if (accountType === "Organization") organizationId = userId;
+              if (accountType === "Researcher") researcherId = userId;
+              if (accountType === "CollectionSites") collectionsiteId = userId;
+
+              const historyQuery = `
             INSERT INTO history (
               email, password, ResearcherName, CollectionSiteName, OrganizationName, 
               HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
@@ -581,56 +598,61 @@ const createAccount = (req, callback) => {
               researcher_id, collectionsite_id, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-            const historyValues = [
-              email,
-              password,
-              ResearcherName || null,
-              CollectionSiteName || null,
-              OrganizationName || null,
-              HECPMDCRegistrationNo || null,
-              ntnNumber || null,
-              nameofOrganization || null,
-              type || null,
-              phoneNumber,
-              fullAddress,
-              city,
-              district,
-              country,
-              logo,
-              added_by || null,
-              organizationId,
-              researcherId,
-              collectionsiteId,
-              "added",
-            ];
+              const historyValues = [
+                email,
+                password,
+                ResearcherName || null,
+                CollectionSiteName || null,
+                OrganizationName || null,
+                HECPMDCRegistrationNo || null,
+                ntnNumber || null,
+                nameofOrganization || null,
+                type || null,
+                phoneNumber,
+                fullAddress,
+                city,
+                district,
+                country,
+                logo,
+                added_by || null,
+                organizationId,
+                researcherId,
+                collectionsiteId,
+                "added",
+              ];
 
-            mysqlConnection.query(
-              historyQuery,
-              historyValues,
-              (err, historyResults) => {
-                if (err) {
-                  return mysqlConnection.rollback(() => callback(err, null));
-                }
-
-                mysqlConnection.commit((err) => {
+              connection.query(
+                historyQuery,
+                historyValues,
+                (err, historyResults) => {
                   if (err) {
-                    return mysqlConnection.rollback(() => callback(err, null));
+                    return connection.rollback(() => callback(err, null));
                   }
 
-                  callback(null, {
-                    message: "Account registered successfully",
-                    userId: userAccountId,
+                  connection.commit((err) => {
+                    if (err) {
+                      return connection.rollback(() => {
+                        connection.release();
+                        callback(err, null);
+                      });
+                    }
+
+                    connection.release(); // Always release the connection!
+                    callback(null, {
+                      message: "Account registered successfully",
+                      userId: userAccountId,
+                    });
                   });
-                });
-              }
-            );
-          });
-        }
-      );
+                }
+              );
+            });
+          }
+        );
+      });
     });
   });
 };
- 
+
 const loginAccount = (data, callback) => {
   const { email, password } = data;
 
@@ -640,7 +662,7 @@ const loginAccount = (data, callback) => {
   }
 
   // Query to verify email and password for any account type
-  const query = 
+  const query =
     `SELECT id, email, accountType 
      FROM user_account 
      WHERE email = ? AND password = ?`;
@@ -655,7 +677,7 @@ const loginAccount = (data, callback) => {
 
       // If account type is Researcher, check the status in researcher table
       if (user.accountType === 'Researcher') {
-        const researcherQuery = 
+        const researcherQuery =
           `SELECT status FROM researcher WHERE user_account_id = ?`;
 
         mysqlConnection.query(researcherQuery, [user.id], (err, researcherResults) => {
@@ -670,7 +692,7 @@ const loginAccount = (data, callback) => {
           }
         });
       } else if (user.accountType === 'Organization') {
-        const OrganizationQuery = 
+        const OrganizationQuery =
           `SELECT status FROM organization WHERE user_account_id = ?`;
 
         mysqlConnection.query(OrganizationQuery, [user.id], (err, OrganizationResults) => {
@@ -685,7 +707,7 @@ const loginAccount = (data, callback) => {
           }
         });
       } else if (user.accountType === 'CollectionSites') {
-        const collectionsiteQuery = 
+        const collectionsiteQuery =
           `SELECT status FROM collectionsite WHERE user_account_id = ?`;
 
         mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsiteResults) => {
@@ -699,7 +721,7 @@ const loginAccount = (data, callback) => {
             return callback({ status: "fail", message: "Account is not approved" }, null);
           }
         });
-      } else{
+      } else {
         // For non-researcher accounts, return the user info
         callback(null, user);
       }
@@ -777,7 +799,7 @@ function changepassword(data, callback) {
       callback({ status: 500, message: "Update error" }, null);
     });
 }
-  
+
 module.exports = {
   changepassword,
   loginAccount,
@@ -790,5 +812,5 @@ module.exports = {
   createuser_accountTable,
   createAccount,
   updateAccount,
-  
+
 };

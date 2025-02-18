@@ -25,11 +25,11 @@ const schema = Yup.object().shape({
   accountType: Yup.string().required("Account Type is required"),
   phoneNumber: Yup.string()
     .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric"
+      /^\d{4}-\d{7}$/,
+      "Phone number must be in this format e.g. 0123-4567892"
     )
-
-    .required("Phone number is required"),
+    .required("Phone number is required")
+    .label("Phone number is required"),
   logo: Yup.mixed().required("Logo is required"),
   fullAddress: Yup.string().required("Full Address is required"),
   city: Yup.string().required("City is required"),
@@ -65,7 +65,7 @@ const schema = Yup.object().shape({
     then: Yup.string().required("HEC / PMDC Registration No is required!"),
   }),
   ntnNumber: Yup.string().when("accountType", {
-    is: ["Organization", "CollectionSites"],
+    is: ["Organization"],
     then: Yup.string().required("NTN Number is required!"),
   }),
   // CollectionSites-specific fields (conditional validation)
@@ -85,7 +85,7 @@ const RegisterForm = () => {
   const [countryname, setCountryname] = useState([]);
   const [Org_name, setOrganizationname] = useState([]);
   const router = useRouter();
-  const [registerUser, {}] = useRegisterUserMutation();
+  const [registerUser, { }] = useRegisterUserMutation();
 
   const {
     register,
@@ -237,7 +237,6 @@ const RegisterForm = () => {
     // Append CollectionSite-specific fields
     if (data.accountType === "CollectionSites") {
       formData.append("CollectionSiteName", data.CollectionSiteName);
-      formData.append("ntnNumber", data.ntnNumber);
       formData.append("fullAddress", data.fullAddress);
       formData.append("city", data.city);
       formData.append("district", data.district);
@@ -246,10 +245,9 @@ const RegisterForm = () => {
     }
 
     // Append logo (if a file is selected)
-    if (data.logo && data.logo[0]) {
-      formData.append("logo", data.logo[0]);
+    if (data.logo) {
+      formData.append("logo", data.logo);
     }
-
     // Send the formData to the backend
     registerUser(formData)
       .then((result) => {
@@ -257,9 +255,12 @@ const RegisterForm = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-         sendApprovalEmail(data);
-
-         notifySuccess(`${result?.data?.message}. Your account status is currently pending. Please wait for approval.`);
+          sendApprovalEmail(data);
+          setLogo("");
+          setValue("logo", "");
+          notifySuccess(
+            `${result?.data?.message}. Your account status is currently pending. Please wait for approval.`
+          );
 
           router.push("/login");
         }
@@ -268,11 +269,13 @@ const RegisterForm = () => {
         notifyError(
           error?.response?.data?.error || "An unexpected error occurred"
         );
+        setLogo("");
+        setValue("logo", "");
       });
 
     reset();
   };
- 
+
 
   useEffect(() => {
     console.log(errors);
@@ -362,7 +365,7 @@ const RegisterForm = () => {
               <option value="">Select Account Type</option>
               <option value="Researcher">Researcher</option>
               <option value="Organization">Organization</option>
-              <option value="CollectionSites">CollectionSites</option>
+              <option value="CollectionSites">Collection Site</option>
             </select>
           </div>
           <ErrorMessage message={errors.accountType?.message} />
@@ -537,8 +540,11 @@ const RegisterForm = () => {
                   className="btn btn-outline-secondary bg-transparent border-0"
                   onClick={triggerFileInput}
                 >
-                  {accountTypeLabel}
-                  <span className="form-label px-1">{logo}</span>
+                  {logo ? (
+                    <span className="form-label px-1">{logo}</span>
+                  ) : (
+                    accountTypeLabel
+                  )}
                 </label>
 
                 <input
@@ -549,11 +555,11 @@ const RegisterForm = () => {
                   onChange={handleLogoChange}
                 />
               </div>
-              {/* Show error message only when validation fails */}
               <ErrorMessage
                 name="logo"
                 component="div"
                 className="error-message"
+                message={errors.logo?.message}
               />
             </div>
 

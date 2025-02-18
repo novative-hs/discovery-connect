@@ -20,9 +20,6 @@ const schema = Yup.object().shape({
       "Phone number must be in the format 0123-4567890 and numeric",
     )
     .label("Phone Number"),
-  ntnNumber: Yup.string()
-    .required("NTN Number is required")
-    .label("NTN Number"),
   fullAddress: Yup.string()
     .required("Full Address is required")
     .label("Full Address"),
