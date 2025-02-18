@@ -235,13 +235,18 @@ const Header = ({ setActiveTab, activeTab }) => {
             {/* Navbar Menu */}
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {menuItems.map(({ label, tab, dropdown }, index) => (
-                <li key={tab} className="nav-item dropdown">
+                <li
+                  key={tab}
+                  className="nav-item dropdown"
+                  onMouseEnter={() => dropdown && setShowSampleDropdown(index)}
+                  onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
+                >
                   <button
-                    className={`nav-link btn btn-sm ${activeTab === tab ? "text-primary" : "text-dark"} fs-7`}
+                    className={`nav-link btn btn-sm ${
+                      activeTab === tab ? "text-primary" : "text-dark"
+                    } fs-7`}
                     onClick={() => {
-                      if (dropdown) {
-                        handleToggleSampleDropdown(index);
-                      } else {
+                      if (!dropdown) {
                         setActiveTab(tab);
                       }
                     }}
@@ -272,7 +277,7 @@ const Header = ({ setActiveTab, activeTab }) => {
 
             {/* Right Section */}
             <div className="d-flex align-items-center gap-2">
-              {userType === "registrationadmin" && <h6 className="m-0 fs-7 text-white">Welcome Admin!</h6>}
+              {userType === "registrationadmin" && <h4 className="m-0 text-black">Welcome Admin!</h4>}
 
               {/* User Dropdown */}
               <div className="dropdown">
