@@ -31,10 +31,12 @@ const CityArea = () => {
   const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
   const [cityname, setcityname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+ 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(cityname.length / itemsPerPage);
+
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   // Fetch City from backend when component loads
   useEffect(() => {
@@ -483,79 +485,66 @@ const CityArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${currentPage === pageNumber
-                          ? "btn-primary"
-                          : "btn-outline-secondary"
+             {/* Pagination Controls */}
+             <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
                           }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
                       >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
-                      >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
 
               {/* Modal for Adding Committe members */}

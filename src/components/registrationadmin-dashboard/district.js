@@ -292,183 +292,90 @@ const DistrictArea = () => {
               >
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr style={{ textAlign: 'center', }}>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search District Name"
-                          onChange={(e) =>
-                            handleFilterChange("name", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        District Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Added by"
-                          onChange={(e) =>
-                            handleFilterChange("added_by", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Added By</th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Created at"
-                          onChange={(e) =>
-                            handleFilterChange("created_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Created At
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Updated at"
-                          onChange={(e) =>
-                            handleFilterChange("updated_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Updated At
-                      </th>
-                      <th>Action</th>
+                  <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "District Name",
+                          placeholder: "Search District Name",
+                          field: "name",
+                        },
+                        {
+                          label: "Added By",
+                          placeholder: "Search Added by",
+                          field: "added_by",
+                        },
+                        {
+                          label: "Created At",
+                          placeholder: "Search Created at",
+                          field: "created_at",
+                        },
+                        {
+                          label: "Updated At",
+                          placeholder: "Search Updated at",
+                          field: "updated_at",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th key={field} className="px-3">
+                          <input
+                            type="text"
+                            className="form-control w-100 px-2 py-1 mx-auto"
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                          />
+                          {label}
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {districtname.length > 0 ? (
-                      districtname.map((districtname) => (
-                        <tr key={districtname.id}>
-                          <td>{districtname.id}</td>
-                          <td>{districtname.name}</td>
-                          <td>{districtname.added_by}</td>
-                          <td>{formatDate(districtname.created_at)}</td>
-                          <td>{formatDate(districtname.updated_at)}</td>
-                          <td>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
-                              <button
-                                className="btn btn-success btn-sm py-0 px-1"
-                                onClick={() => handleEditClick(districtname)}
-                                title="Edit District" // This is the text that will appear on hover
-                              >
-                                <FontAwesomeIcon icon={faEdit} size="xs" />
-
-                              </button>{" "}
-                              <button
-                                className="btn btn-danger btn-sm py-0 px-1"
-                                onClick={() => {
-                                  setSelecteddistrictnameId(districtname.id);
-                                  setShowDeleteModal(true);
-                                }}
-                                title="Delete District" // This is the text that will appear on hover
-                              >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
-                              </button>
-                              <button
-                                className="btn btn-info btn-sm"
-                                onClick={() => handleShowHistory("district", districtname.id)}
-                                title="History Sample"
-                              >
-                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                    {currentData.length > 0 ? (
+                      currentData.map(
+                        ({ id, name, added_by, created_at, updated_at }) => (
+                          <tr key={id}>
+                            <td>{id}</td>
+                            <td>{name}</td>
+                            <td>{added_by}</td>
+                            <td>{formatDate(created_at)}</td>
+                            <td>{formatDate(updated_at)}</td>
+                            <td>
+                              <div className="d-flex justify-content-around gap-2">
+                                <button
+                                  className="btn btn-success btn-sm py-0 px-1"
+                                  onClick={() =>
+                                    handleEditClick({
+                                      id,
+                                      name,
+                                      added_by,
+                                      created_at,
+                                      updated_at,
+                                    })
+                                  }
+                                  title="Edit District"
+                                >
+                                  <FontAwesomeIcon icon={faEdit} size="xs" />
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm py-0 px-1"
+                                  onClick={() => {
+                                    setSelecteddistrictnameId(id);
+                                    setShowDeleteModal(true);
+                                  }}
+                                  title="Delete District"
+                                >
+                                  <FontAwesomeIcon icon={faTrash} size="sm" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      )
                     ) : (
                       <tr>
-                        <td colSpan="8" className="text-center">
+                        <td colSpan="6" className="text-center">
                           No District Available
                         </td>
                       </tr>
@@ -476,80 +383,69 @@ const DistrictArea = () => {
                   </tbody>
                 </table>
               </div>
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
 
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${currentPage === pageNumber
-                            ? "btn-primary"
-                            : "btn-outline-secondary"
+            {/* Pagination Controls */}
+            <div className="pagination d-flex justify-content-end align-items-center mt-3">
+                <nav aria-label="Page navigation example">
+                  <ul className="pagination justify-content-end">
+                    <li
+                      className={`page-item ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Previous"
+                        onClick={() =>
+                          currentPage > 1 && handlePageChange(currentPage - 1)
+                        }
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                        <span className="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <li
+                          key={pageNumber}
+                          className={`page-item ${
+                            currentPage === pageNumber ? "active" : ""
                           }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
+                        >
+                          <a
+                            className="page-link"
+                            href="#"
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </a>
+                        </li>
+                      );
+                    })}
+                    <li
+                      className={`page-item ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      <a
+                        className="page-link"
+                        href="#"
+                        aria-label="Next"
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          handlePageChange(currentPage + 1)
+                        }
                       >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
-                      >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
+                        <span aria-hidden="true">&raquo;</span>
+                        <span className="sr-only">Next</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
+
               {/* Modal for Adding Committe members */}
               {showAddModal && (
                 <>
