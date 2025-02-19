@@ -1,4 +1,7 @@
 const mysqlConnection = require("../config/db");
+const mysqlPool = require("../config/db");
+const {sendEmail}=require("../config/email")
+
 // Function to create the city table
 const createuser_accountTable = () => {
   const createuser_accountTable = `
@@ -127,7 +130,6 @@ const create_biobankTable = () => {
     }
   });
 };
-
 
 
 const getAccountDetail = (id, callback) => {
@@ -475,7 +477,9 @@ const createAccount = (req, callback) => {
         console.error("Error starting transaction:", err);
         return callback(err, null);
       }
-
+      
+      // Check if email already exists in the user_account table
+      const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
       connection.query(checkEmailQuery, [email], (err, results) => {
         if (err) {
           return connection.rollback(() => {
@@ -581,14 +585,24 @@ const createAccount = (req, callback) => {
 
               const userId = results.insertId;
 
+              let name=null
               // Identify correct ID for history table
               let organizationId = null,
                 researcherId = null,
                 collectionsiteId = null;
 
-              if (accountType === "Organization") organizationId = userId;
-              if (accountType === "Researcher") researcherId = userId;
-              if (accountType === "CollectionSites") collectionsiteId = userId;
+              if (accountType === "Organization") 
+                {
+                  name=OrganizationName
+                organizationId = userId;}
+              if (accountType === "Researcher") {
+                name=ResearcherName
+                researcherId = userId;
+              }
+              if (accountType === "CollectionSites") {
+                collectionsiteId = userId;
+                name=CollectionSiteName
+              }
 
               const historyQuery = `
             INSERT INTO history (
@@ -638,6 +652,12 @@ const createAccount = (req, callback) => {
                     }
 
                     connection.release(); // Always release the connection!
+                    sendEmail(
+                      email,
+                      "Welcome to Discovery Connect",
+                      ` Dear ${name},\n\nYour account status is currently pending. 
+                      Please wait for approval.\n\nBest regards,\n LabHazir`
+                    );
                     callback(null, {
                       message: "Account registered successfully",
                       userId: userAccountId,

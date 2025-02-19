@@ -1,18 +1,20 @@
+require("dotenv").config();
 const mysql = require("mysql2");
-// databse connection
-var mysqlConnection = mysql.createConnection({
+
+const mysqlPool = mysql.createPool({
     host: "localhost",
     user: "root",
     password: "discoveryconnect321",
     database: "branchlabhazr4",
 });
 
-// check wether the connection is successfull or not !!
-mysqlConnection.connect((err) => {
+mysqlPool.getConnection((err, connection) => {
     if (err) {
-        console.log(
-            "Database Connection Error" + JSON.stringify(err, undefined, 2)
-        );
-    } else console.log("Connection Successful");
+        console.error("❌ Database Connection Error", err);
+    } else {
+        console.log("✅ Connection Successful to MySQL");
+        connection.release(); // Release connection back to pool
+    }
 });
-module.exports = mysqlConnection;
+
+module.exports = mysqlPool;

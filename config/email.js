@@ -1,41 +1,50 @@
-require('dotenv').config();
-const nodemailer = require('nodemailer');
-const { secret } = require('./secret');
+require("dotenv").config();
+const nodemailer = require("nodemailer");
+const { secret } = require("./secret");
 
-// sendEmail
-module.exports.sendEmail = (body, res, message) => {
-  const transporter = nodemailer.createTransport({
-    host: secret.email_host,
-    service: secret.email_service,
-    port: secret.email_port,
-    secure: true,
-    auth: {
-      user: secret.email_user,
-      pass: secret.email_pass,
-    },
-  });
+// Create a reusable transporter object
+const transporter = nodemailer.createTransport({
+  host: secret.email_host, 
+  service: secret.email_service, 
+  port: secret.email_port || 465, 
+  secure: secret.email_port == 465, 
+  auth: {
+    user: secret.email_user,
+    pass: secret.email_pass, 
+  },
+});
 
-  transporter.verify(function (err, success) {
-    if (err) {
-      res.status(403).send({
-        message: `Error happen when verify ${err.message}`,
-      });
-      console.log(err.message);
-    } else {
-      console.log('Server is ready to take our messages');
-    }
-  });
+// Verify transporter before sending emails
+transporter.verify((err, success) => {
+  if (err) {
+    console.error(" Email transporter verification failed:", err.message);
+  } else {
+    console.log(" Email transporter is ready.");
+  }
+});
 
-  transporter.sendMail(body, (err, data) => {
-    if (err) {
-      res.status(403).send({
-        message: `Error happen when sending email ${err.message}`,
-      });
-    } else {
-      res.send({
-        message: message,
-      });
-    }
-  });
+// Function to send an email
+const sendEmail = async (to, subject, text) => {
+  if (!to || !subject || !text) {
+    console.error("Missing email parameters");
+    throw new Error("Missing email parameters");
+  }
+
+  const mailOptions = {
+    from: secret.email_user,
+    to,
+    subject,
+    text,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${to}`);
+    return { success: true, message: "Email sent successfully." };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error("Error sending email.");
+  }
 };
 
+module.exports = { sendEmail };

@@ -129,7 +129,7 @@ const CollectionsiteArea = () => {
   };
   const sendApprovalEmail = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}0/api/user/send-email`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
