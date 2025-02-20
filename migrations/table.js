@@ -38,7 +38,7 @@ function Database() {
   signupModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
-  //samplereceiveModel.createSampleReceiveTable();
+  samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
   productModel.createProductsTable();
   wishlistModel.createWishlistTable();

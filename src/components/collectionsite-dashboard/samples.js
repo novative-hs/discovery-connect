@@ -1083,7 +1083,7 @@ const SampleArea = () => {
                           </div>
                           <div className="form-group">
                             <label>Freeze Thaw Cycles</label>
-                            <input
+                            <select
                               type="text"
                               className="form-control"
                               name="FreezeThawCycles"
@@ -1096,7 +1096,14 @@ const SampleArea = () => {
                                 backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
                                 color: "black",
                               }}
-                            />
+                            >
+                              <option value="">Select an option</option>
+                              <option value="None">None</option>
+                              <option value="One">One</option>
+                              <option value="Two">Two</option>
+                              <option value="Three">Three</option>
+                              <option value="Four">Four</option>
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Date Of Collection</label>
@@ -1667,9 +1674,9 @@ const SampleArea = () => {
                         </div>
                         {/* Column 4 */}
                         <div className="col-md-2">
-                          <div className="form-group">
+                        <div className="form-group">
                             <label>Freeze Thaw Cycles</label>
-                            <input
+                            <select
                               type="text"
                               className="form-control"
                               name="FreezeThawCycles"
@@ -1681,8 +1688,14 @@ const SampleArea = () => {
                                 fontSize: "14px",
                                 backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
                                 color: "black",
-                              }}
-                            />
+                              }}>
+                              <option value="">Select an option</option>
+                              <option value="None">None</option>
+                              <option value="One">One</option>
+                              <option value="Two">Two</option>
+                              <option value="Three">Three</option>
+                              <option value="Four">Four</option>
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Date of Collection</label>
