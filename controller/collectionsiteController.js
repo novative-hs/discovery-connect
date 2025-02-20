@@ -91,8 +91,6 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
     return res.status(400).json({ error: "Sample ID is required" });
   }
 
-  console.log("Received Sample ID:", sample_id); // Debugging
-
   collectionsiteModel.getAllCollectionSiteNamesInBiobank(sample_id, (err, results) => {
     if (err) {
       console.error("Error fetching data:", err);

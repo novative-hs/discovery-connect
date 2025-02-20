@@ -1688,8 +1688,7 @@ const SampleArea = () => {
                                 fontSize: "14px",
                                 backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
                                 color: "black",
-                              }}
-                            >
+                              }}>
                               <option value="">Select an option</option>
                               <option value="None">None</option>
                               <option value="One">One</option>

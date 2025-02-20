@@ -2,13 +2,13 @@ const mysqlConnection = require("../config/db");
 
 // Function to get all samples with 'In Stock' status
 const getBiobankSamples = (id, callback) => {
-    // Validate and parse `id`
-    const user_account_id = parseInt(id);
-    if (isNaN(user_account_id)) {
-      console.error("Invalid user_account_id:", id);
-      return callback(new Error("Invalid user_account_id"), null);
-    }
-    const query = `
+  // Validate and parse `id`
+  const user_account_id = parseInt(id);
+  if (isNaN(user_account_id)) {
+    console.error("Invalid user_account_id:", id);
+    return callback(new Error("Invalid user_account_id"), null);
+  }
+  const query = `
     SELECT *
     FROM sample
     WHERE status = "In Stock" 
@@ -34,15 +34,20 @@ const createBiobankSample = (data, callback) => {
     // Calculate Master ID
     const id = parseInt(data.donorID) + parseInt(data.user_account_id);
     const masterID = `${id}${randomSuffix}`;
+  // Generate a random 3-digit number
+  const randomSuffix = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
+  // Calculate Master ID
+  const id = parseInt(data.donorID) + parseInt(data.user_account_id);
+  const masterID = `${id}${randomSuffix}`;
 
   const query = `
     INSERT INTO sample (
       id, donorID, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    mysqlConnection.query(query, [
-      id, data.donorID, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock'
-    ], (err, results) => {
+  mysqlConnection.query(query, [
+    id, data.donorID, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock'
+  ], (err, results) => {
     if (err) {
       console.error('Error in MySQL query:', err);
       return callback(err, null);
@@ -75,7 +80,7 @@ const updateBiobankSample = (id, data, callback) => {
   const values = [
     data.donorID, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting,
     data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
-    data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem,data.TestSystemManufacturer, data.status, id
+    data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, id
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
@@ -84,8 +89,8 @@ const updateBiobankSample = (id, data, callback) => {
 };
 
 module.exports = {
-    getBiobankSamples,
-    createBiobankSample,
-    updateBiobankSample
-  
+  getBiobankSamples,
+  createBiobankSample,
+  updateBiobankSample
+
 };
