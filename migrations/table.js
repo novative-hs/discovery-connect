@@ -10,6 +10,7 @@ const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
+// const newtablefieldsModel = require("../models/newtablefieldsModel");
 
 const sample_approvalModel = require("../models/sampleapprovalModel")
 const paymentModel = require('../models/paymentModals')
@@ -64,8 +65,7 @@ function Database() {
   concurrentmedicalconditionsModel.createConcurrentMedicalConditionsTable();
   historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
-  //historyModel.create_samplehistoryTable();
-
+  // newtablefieldsModel.createOrUpdateTables();
 
 }
 Database();
