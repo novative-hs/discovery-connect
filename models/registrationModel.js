@@ -252,6 +252,7 @@ const getAccountDetail = (id, callback) => {
   });
 };
 
+// Function to update account (Researcher, Organization, Collection Sites)
 const updateAccount = (req, callback) => {
   const {
     user_account_id,
@@ -277,21 +278,27 @@ const updateAccount = (req, callback) => {
     // If a file was uploaded, convert it to a buffer
     logo = req.file.buffer;
   }
-  //Start MySQL transaction
-  mysqlConnection.beginTransaction((err) => {
+  mysqlConnection.getConnection((err, connection) => {
     if (err) {
+      console.error("Error getting database connection:", err);
+      return callback(err, null);
+    }
+  connection.beginTransaction((err) => {
+    if (err) {
+      connection.release();
       console.error("Error starting transaction:", err);
       return callback(err, null);
     }
 
     // Check if user account exists
     const checkAccountQuery = "SELECT * FROM user_account WHERE id = ?";
-    mysqlConnection.query(
+    connection.query(
       checkAccountQuery,
       [user_account_id],
       (err, results) => {
         if (err) {
-          return mysqlConnection.rollback(() => {
+          return connection.rollback(() => {
+            connection.release();
             console.error("Database Query Error:", err);
             callback(err, null);
           });
@@ -299,7 +306,8 @@ const updateAccount = (req, callback) => {
 
         if (results.length === 0) {
           // If account does not exist, return an error
-          return mysqlConnection.rollback(() => {
+          return connection.rollback(() => {
+            connection.release();
             callback(new Error("Account not found"), null);
           });
         }
@@ -310,12 +318,13 @@ const updateAccount = (req, callback) => {
       `;
         const updateUserAccountValues = [useraccount_email, user_account_id];
 
-        mysqlConnection.query(
+        connection.query(
           updateUserAccountQuery,
           updateUserAccountValues,
           (err, userAccountResults) => {
             if (err) {
-              return mysqlConnection.rollback(() => {
+              return connection.rollback(() => {
+                connection.release();
                 console.error("Error updating user_account:", err);
                 callback(err, null);
               });
@@ -406,35 +415,39 @@ const updateAccount = (req, callback) => {
                 break;
 
               default:
-                return mysqlConnection.rollback(() => {
+                return connection.rollback(() => {
+                  connection.release();
                   callback(new Error("Invalid account type"), null);
                 });
             }
 
             // Execute the query for the secondary table
-            mysqlConnection.query(query, values, (err, results) => {
+            connection.query(query, values, (err, results) => {
               if (err) {
-                return mysqlConnection.rollback(() => {
+                return connection.rollback(() => {
+                  connection.release();
                   console.error("Error updating secondary table:", err);
                   callback(err, null);
                 });
               }
 
               // If everything is successful, commit the transaction
-              mysqlConnection.commit((err) => {
+              connection.commit((err) => {
                 if (err) {
-                  return mysqlConnection.rollback(() => {
+                  return connection.rollback(() => {
+                    connection.release();
                     console.error("Error committing transaction:", err);
                     callback(err, null);
                   });
                 }
-
+                connection.release();
                 callback(null, {
                   message: "Account updated successfully",
                   userId: user_account_id,
                 });
               });
             });
+          });
           }
         );
       }
