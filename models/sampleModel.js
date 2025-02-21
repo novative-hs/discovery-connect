@@ -91,7 +91,7 @@ SELECT
 FROM 
   sample s
 LEFT JOIN 
-  CollectionSite cs ON s.user_account_id = cs.user_account_id
+  collectionsite cs ON s.user_account_id = cs.user_account_id
 LEFT JOIN 
   biobank bb ON s.user_account_id = bb.id
 LEFT JOIN 
