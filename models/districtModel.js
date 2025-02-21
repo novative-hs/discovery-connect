@@ -1,4 +1,6 @@
 const mysqlConnection = require("../config/db");
+const mysqlPool = require("../config/db");
+
 // Function to create the city table
 const createDistrictTable = () => {
   const createDistrictTable = `
@@ -36,61 +38,60 @@ const getAllDistricts = (callback) => {
 
 const createDistrict = (data, callback) => {
   console.log('Received Request Body:', data); // Debugging
-
   const { bulkData, districtname, added_by } = data || {}; // Handle undefined gracefully
-
-  mysqlConnection.beginTransaction((err) => {
+  mysqlPool.getConnection((err, connection) => { // Use connection from pool
     if (err) {
       return callback(err, null);
     }
-
+  connection.beginTransaction((err) => {
+    if (err) {
+      connection.release();
+      return callback(err, null);
+    }
     if (bulkData) {
       const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
       const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
-
       const districtQuery = `
         INSERT INTO district (name, added_by)
         VALUES ?
         ON DUPLICATE KEY UPDATE name = name;
       `;
-
-      mysqlConnection.query(districtQuery, [values], (err, districtResult) => {
+      connection.query(districtQuery, [values], (err, districtResult) => {
         if (err) {
-          return mysqlConnection.rollback(() => {
+          return connection.rollback(() => {
+            connection.release();
             callback(err, null);
           });
         }
-
         const insertedDistrictds = districtResult.insertId; // Get the first inserted city ID
         if (!insertedDistrictds) {
           return mysqlConnection.rollback(() => {
             callback(new Error("Failed to retrieve city ID"), null);
           });
         }
-
         // Insert into RegistrationAdmin_History
         const historyValues = uniqueData.map(({ name, added_by }) => [
           name, added_by, insertedDistrictds, 'active'
         ]);
-
         const historyQuery = `
           INSERT INTO RegistrationAdmin_History (created_name, added_by, district_id, status)
           VALUES ?
         `;
-
-        mysqlConnection.query(historyQuery, [historyValues], (err, historyResult) => {
+        connection.query(historyQuery, [historyValues], (err, historyResult) => {
           if (err) {
-            return mysqlConnection.rollback(() => {
+            return connection.rollback(() => {
+              connection.release();
               callback(err, null);
             });
           }
-
-          mysqlConnection.commit((err) => {
+          connection.commit((err) => {
             if (err) {
-              return mysqlConnection.rollback(() => {
+              return connection.rollback(() => {
+                connection.release();
                 callback(err, null);
               });
             }
+            connection.release();
             callback(null, { districtResult, historyResult });
           });
         });
@@ -102,83 +103,88 @@ const createDistrict = (data, callback) => {
         VALUES (?, ?)
         ON DUPLICATE KEY UPDATE name = name;
       `;
-
-      mysqlConnection.query(districtQuery, [districtname, added_by], (err, districtResult) => {
+      connection.query(districtQuery, [districtname, added_by], (err, districtResult) => {
         if (err) {
-          return mysqlConnection.rollback(() => {
+          return connection.rollback(() => {
+            connection.release();
             callback(err, null);
           });
         }
-
         const districtId = districtResult.insertId;
         if (!districtId) {
           return mysqlConnection.rollback(() => {
             callback(new Error("Failed to retrieve district ID"), null);
           });
         }
-
         // Insert into RegistrationAdmin_History
         const historyQuery = `
           INSERT INTO RegistrationAdmin_History (created_name,  added_by, district_id, status)
           VALUES (?, ?, ?, ?)
         `;
-
-        mysqlConnection.query(historyQuery, [districtname, added_by, districtId, 'active'], (err, historyResult) => {
+        connection.query(historyQuery, [districtname, added_by, districtId, 'active'], (err, historyResult) => {
           if (err) {
-            return mysqlConnection.rollback(() => {
+            return connection.rollback(() => {
+              connection.release();
               callback(err, null);
             });
           }
-
-          mysqlConnection.commit((err) => {
+          connection.commit((err) => {
             if (err) {
-              return mysqlConnection.rollback(() => {
+              return connection.rollback(() => {
+                connection.release();
                 callback(err, null);
               });
             }
+            connection.release();
             callback(null, { districtResult, historyResult });
           });
         });
       });
-
     } else {
       callback(new Error('Invalid data'), null);
     }
   });
+});
 };
 
 
 // Function to update a City member
 const updateDistrict = (id, data, callback) => {
   const { districtname, added_by } = data;
-
-  mysqlConnection.beginTransaction((err) => {
+  mysqlPool.getConnection((err, connection) => { // Use connection from pool
     if (err) {
       return callback(err, null);
     }
+  connection.beginTransaction((err) => {
+    if (err) {
+      connection.release();
+      return callback(err, null);
+    }
     const fetchDistrictQuery = `SELECT name FROM district WHERE id = ?`;
-    mysqlConnection.query(fetchDistrictQuery, [id], (err, results) => {
+    connection.query(fetchDistrictQuery, [id], (err, results) => {
       if (err) {
-        return mysqlConnection.rollback(() => {
+        return connection.rollback(() => {
+          connection.release();
           callback(err, null);
         });
       }
 
       if (results.length === 0) {
-        return mysqlConnection.rollback(() => {
+        return connection.rollback(() => {
+          connection.release();
           callback(new Error("District not found"), null);
         });
       }
-
       const oldDistrictName = results[0].name;
       const updateDistrictQuery = `
         UPDATE district
         SET name = ?, added_by = ?
         WHERE id = ?
       `;
-      mysqlConnection.query(updateDistrictQuery, [districtname, added_by, id], (err, result) => {
+      connection.query(updateDistrictQuery, [districtname, added_by, id], (err, result) => {
         if (err) {
-          return mysqlConnection.rollback(() => {
+          return connection.rollback(() => {
+            connection.release();
             callback(err, null);
           });
         }
@@ -187,26 +193,29 @@ const updateDistrict = (id, data, callback) => {
           SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
           WHERE district_id = ?
         `;
-
-        mysqlConnection.query(updateHistoryQuery, [oldDistrictName, districtname, added_by, id], (err, historyResult) => {
+        connection.query(updateHistoryQuery, [oldDistrictName, districtname, added_by, id], (err, historyResult) => {
           if (err) {
-            return mysqlConnection.rollback(() => {
+            return connection.rollback(() => {
+              connection.release();
               callback(err, null);
             });
           }
 
-          mysqlConnection.commit((err) => {
+          connection.commit((err) => {
             if (err) {
-              return mysqlConnection.rollback(() => {
+              return connection.rollback(() => {
+                connection.release();
                 callback(err, null);
               });
             }
+            connection.release();
             callback(null, { result, historyResult });
           });
         });
       });
     });
   });
+});
 };
 
 // Function to delete a City member
