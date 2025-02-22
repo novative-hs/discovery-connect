@@ -709,7 +709,7 @@ const CommitteeMemberArea = () => {
                       <div className="modal-content">
                         <div className="modal-header">
                           <h5 className="modal-title">
-                            {showAddModal ? "Add District" : "Edit District"}
+                            {showAddModal ? "Add Committee Member" : "Edit Committee Member"}
                           </h5>
                           <button
                             type="button"
@@ -743,6 +743,7 @@ const CommitteeMemberArea = () => {
                               <input
                                 type="text"
                                 className="form-control"
+                                placeholder="Enter Name"
                                 name="CommitteeMemberName"
                                 value={formData.CommitteeMemberName}
                                 onChange={handleInputChange}
@@ -767,6 +768,7 @@ const CommitteeMemberArea = () => {
                                 name="email"
                                 value={formData.email}
                                 onChange={handleInputChange}
+                                placeholder="Enter Email"
                                 required
                               />
                             </div>
@@ -777,6 +779,7 @@ const CommitteeMemberArea = () => {
                                   type={showPassword ? "text" : "password"}
                                   className="form-control"
                                   name="password"
+                                  placeholder="Enter Password"
                                   value={formData.password}
                                   onChange={handleInputChange}
                                   pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
@@ -820,6 +823,7 @@ const CommitteeMemberArea = () => {
                                 type="text"
                                 className="form-control"
                                 name="cnic"
+                                placeholder="Enter CNIC"
                                 value={formData.cnic}
                                 onChange={handleInputChange}
                                 pattern="^\d{5}-\d{7}-\d{1}$"
@@ -834,6 +838,7 @@ const CommitteeMemberArea = () => {
                                 type="text"
                                 className="form-control"
                                 name="fullAddress"
+                                placeholder="Enter Full Address"
                                 value={formData.fullAddress}
                                 onChange={handleInputChange}
                                 required

@@ -69,13 +69,7 @@ useEffect(() => {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
   }, [filteredDistrictname]);
-  
 
-  // Calculate visible page range
-  const startPage = Math.max(1, currentPage - Math.floor(maxPageNumbersToShow / 2));
-  const endPage = Math.min(totalPages, startPage + maxPageNumbersToShow - 1);
-  // Adjust startPage if endPage is at max
-  const adjustedStartPage = Math.max(1, endPage - maxPageNumbersToShow + 1);
 
   const currentData = filteredDistrictname.slice(
     currentPage * itemsPerPage,

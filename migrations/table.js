@@ -54,7 +54,7 @@ function Database() {
   samplefieldsModel.createConcurrentMedicalConditionsTable();
   historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
-  // newtablefieldsModel.createOrUpdateTables();
+   newtablefieldModel.createOrUpdateTables();
 
 }
 Database();
