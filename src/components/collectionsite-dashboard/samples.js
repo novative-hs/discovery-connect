@@ -208,43 +208,43 @@ const SampleArea = () => {
       .then(response => response.json())
       .then(data => setSampleConditionNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperaturenames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`)
       .then(response => response.json())
       .then(data => setStorageTemperatureNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertypenames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertype`)
       .then(response => response.json())
       .then(data => setContainerTypeNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunitnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunit`)
       .then(response => response.json())
       .then(data => setQuantityUnitNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrixnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrix`)
       .then(response => response.json())
       .then(data => setSampleTypeMatrixNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethodnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethod`)
       .then(response => response.json())
       .then(data => setTestMethodNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunitnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunit`)
       .then(response => response.json())
       .then(data => setTestResultUnitNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditionsnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditions`)
       .then(response => response.json())
       .then(data => setConcurrentMedicalConditionsNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturernames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturer`)
       .then(response => response.json())
       .then(data => setTestKitManufacturerNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystem`)
       .then(response => response.json())
       .then(data => setTestSystemNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturernames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturer`)
       .then(response => response.json())
       .then(data => setTestSystemManufacturerNames(data));
 
@@ -1097,7 +1097,7 @@ const SampleArea = () => {
                                 color: "black",
                               }}
                             >
-                              <option value="">Select an option</option>
+                              <option value="" hidden >Select an option</option>
                               <option value="None">None</option>
                               <option value="One">One</option>
                               <option value="Two">Two</option>

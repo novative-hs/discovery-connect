@@ -100,6 +100,7 @@ const create_historyTable = () => {
     ntnNumber VARCHAR(50),
     nameofOrganization INT,
     type VARCHAR(50),
+    CollectionSiteType VARCHAR(50),
     phoneNumber VARCHAR(15),
     fullAddress TEXT,
     city INT,

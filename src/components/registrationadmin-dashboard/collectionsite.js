@@ -9,8 +9,8 @@ const CollectionsiteArea = () => {
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
- 
-  const [selectedCollectionsiteId, setSelectedCollectionsiteId] =useState(null);
+
+  const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null);
   const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [formData, setFormData] = useState({
@@ -21,11 +21,11 @@ const CollectionsiteArea = () => {
     status: "",
     // logo: ""
   });
- 
- const [filteredCollectionsite, setFilteredCollectionsite] = useState([]);
+
+  const [filteredCollectionsite, setFilteredCollectionsite] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-   const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -70,37 +70,6 @@ const CollectionsiteArea = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/post`,
-        formData
-      );
-      console.log("Collectionsite added successfully:", response.data);
-
-      // Refresh the collectionsite list after successful submission
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
-      );
-      setCollectionsites(newResponse.data); // Update state with the new list
-
-      // Clear form after submission
-      setFormData({
-        CollectionSiteName: "",
-        email: "",
-        phoneNumber: "",
-        // created_at: "",
-        status: "",
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding collectionsite:", error);
-    }
   };
 
   const handleDelete = async () => {
@@ -178,7 +147,7 @@ const CollectionsiteArea = () => {
     }
   };
 
- 
+
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
 
@@ -197,23 +166,23 @@ const CollectionsiteArea = () => {
     setCurrentPage(0); // Reset to first page when filtering
   };
   useEffect(() => {
-      const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
-        if (!statusFilter) return true;
-        return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
-      });
-  
-      setFilteredCollectionsite(updatedFilteredCollectionsite);
-      setCurrentPage(0); // Reset to first page when filtering
-    }, [collectionsites, statusFilter]);
-  
-    const handlePageChange = (event) => {
-      setCurrentPage(event.selected); 
-    };
-    
-    const currentData = filteredCollectionsite.slice(
-      currentPage * itemsPerPage,
-      (currentPage + 1) * itemsPerPage
-    );
+    const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
+      if (!statusFilter) return true;
+      return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
+    });
+
+    setFilteredCollectionsite(updatedFilteredCollectionsite);
+    setCurrentPage(0); // Reset to first page when filtering
+  }, [collectionsites, statusFilter]);
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
+
+  const currentData = filteredCollectionsite.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
   useEffect(() => {
     if (showDeleteModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
@@ -227,7 +196,7 @@ const CollectionsiteArea = () => {
   }, [showDeleteModal, showEditModal, showHistoryModal]);
 
   useEffect(() => {
-    if (showDeleteModal  || showEditModal) {
+    if (showDeleteModal || showEditModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -247,7 +216,7 @@ const CollectionsiteArea = () => {
       status: "",
     });
   };
-  
+
   return (
     <section className="policy__area pb-120 overflow-hidden">
       <div className="container-fluid mt-n5">
@@ -380,12 +349,12 @@ const CollectionsiteArea = () => {
 
               {/* Pagination Controls */}
               {filteredCollectionsite.length >= 0 && (
-  <Pagination
-    handlePageClick={handlePageChange}
-    pageCount={Math.max(1, Math.ceil(filteredCollectionsite.length / itemsPerPage))}
-    focusPage={currentPage}
-  />
-)}
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={Math.max(1, Math.ceil(filteredCollectionsite.length / itemsPerPage))}
+                  focusPage={currentPage}
+                />
+              )}
               {/* Modal for Edit Collectionsite  */}
               {showEditModal && (
                 <>
@@ -411,9 +380,7 @@ const CollectionsiteArea = () => {
                       <div className="modal-content">
                         <div className="modal-header">
                           <h5 className="modal-title">
-                            {showAddModal
-                              ? "Add collectionsite"
-                              : "Edit collectionsite"}
+                    Edit collectionsite
                           </h5>
                           <button
                             type="button"
@@ -435,7 +402,7 @@ const CollectionsiteArea = () => {
                         </div>
 
                         <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                          onSubmit={handleUpdate} // Conditionally use submit handler
                         >
                           <div className="modal-body">
                             {/* Form Fields */}
@@ -502,7 +469,7 @@ const CollectionsiteArea = () => {
 
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              {showAddModal ? "Save" : "Update Collectionsite"}
+                              Update Collectionsite
                             </button>
                           </div>
                         </form>

@@ -1,6 +1,6 @@
 const mysqlConnection = require("../config/db");
 const mysqlPool = require("../config/db");
-const {sendEmail}=require("../config/email")
+const { sendEmail } = require("../config/email")
 
 // Function to create the city table
 const createuser_accountTable = () => {
@@ -89,7 +89,7 @@ const create_collectionsiteTable = () => {
     CREATE TABLE IF NOT EXISTS collectionsite (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
-      type VARCHAR(50),
+      CollectionSiteType VARCHAR(50),
       CollectionSiteName VARCHAR(100),
       fullAddress TEXT,
       city INT,
@@ -212,6 +212,7 @@ const getAccountDetail = (id, callback) => {
         const collectionsiteQuery = `
          SELECT 
       collectionsite.*, 
+      collectionsite.CollectionSiteType,
       city.id AS cityid, 
       city.name AS cityname, 
       district.id AS districtid, 
@@ -261,6 +262,7 @@ const updateAccount = (req, callback) => {
     ResearcherName,
     OrganizationName,
     CollectionSiteName,
+    CollectionSiteType,
     phoneNumber,
     fullAddress,
     city,
@@ -283,59 +285,59 @@ const updateAccount = (req, callback) => {
       console.error("Error getting database connection:", err);
       return callback(err, null);
     }
-  connection.beginTransaction((err) => {
-    if (err) {
-      connection.release();
-      console.error("Error starting transaction:", err);
-      return callback(err, null);
-    }
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        console.error("Error starting transaction:", err);
+        return callback(err, null);
+      }
 
-    // Check if user account exists
-    const checkAccountQuery = "SELECT * FROM user_account WHERE id = ?";
-    connection.query(
-      checkAccountQuery,
-      [user_account_id],
-      (err, results) => {
-        if (err) {
-          return connection.rollback(() => {
-            connection.release();
-            console.error("Database Query Error:", err);
-            callback(err, null);
-          });
-        }
+      // Check if user account exists
+      const checkAccountQuery = "SELECT * FROM user_account WHERE id = ?";
+      connection.query(
+        checkAccountQuery,
+        [user_account_id],
+        (err, results) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              console.error("Database Query Error:", err);
+              callback(err, null);
+            });
+          }
 
-        if (results.length === 0) {
-          // If account does not exist, return an error
-          return connection.rollback(() => {
-            connection.release();
-            callback(new Error("Account not found"), null);
-          });
-        }
+          if (results.length === 0) {
+            // If account does not exist, return an error
+            return connection.rollback(() => {
+              connection.release();
+              callback(new Error("Account not found"), null);
+            });
+          }
 
-        // Update user account table
-        const updateUserAccountQuery = `
+          // Update user account table
+          const updateUserAccountQuery = `
         UPDATE user_account SET email = ? WHERE id = ?
       `;
-        const updateUserAccountValues = [useraccount_email, user_account_id];
+          const updateUserAccountValues = [useraccount_email, user_account_id];
 
-        connection.query(
-          updateUserAccountQuery,
-          updateUserAccountValues,
-          (err, userAccountResults) => {
-            if (err) {
-              return connection.rollback(() => {
-                connection.release();
-                console.error("Error updating user_account:", err);
-                callback(err, null);
-              });
-            }
+          connection.query(
+            updateUserAccountQuery,
+            updateUserAccountValues,
+            (err, userAccountResults) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  console.error("Error updating user_account:", err);
+                  callback(err, null);
+                });
+              }
 
-            let query, values;
+              let query, values;
 
-            // Prepare the query and values based on account type
-            switch (accountType) {
-              case "Researcher":
-                query = `
+              // Prepare the query and values based on account type
+              switch (accountType) {
+                case "Researcher":
+                  query = `
                 UPDATE researcher SET 
                   ResearcherName = ?, 
                   phoneNumber = ?, 
@@ -347,21 +349,21 @@ const updateAccount = (req, callback) => {
                   logo = ?
                 WHERE user_account_id = ?
               `;
-                values = [
-                  ResearcherName,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  nameofOrganization,
-                  logo,
-                  user_account_id,
-                ];
-                break;
+                  values = [
+                    ResearcherName,
+                    phoneNumber,
+                    fullAddress,
+                    city,
+                    district,
+                    country,
+                    nameofOrganization,
+                    logo,
+                    user_account_id,
+                  ];
+                  break;
 
-              case "Organization":
-                query = `
+                case "Organization":
+                  query = `
                 UPDATE organization SET 
                   OrganizationName = ?, 
                   type = ?, 
@@ -375,25 +377,26 @@ const updateAccount = (req, callback) => {
                   logo = ?
                 WHERE user_account_id = ?
               `;
-                values = [
-                  OrganizationName,
-                  type,
-                  HECPMDCRegistrationNo,
-                  ntnNumber,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  logo,
-                  user_account_id,
-                ];
-                break;
+                  values = [
+                    OrganizationName,
+                    type,
+                    HECPMDCRegistrationNo,
+                    ntnNumber,
+                    phoneNumber,
+                    fullAddress,
+                    city,
+                    district,
+                    country,
+                    logo,
+                    user_account_id,
+                  ];
+                  break;
 
-              case "CollectionSites":
-                query = `
+                case "CollectionSites":
+                  query = `
                 UPDATE collectionsite SET 
                   CollectionSiteName = ?, 
+                  CollectionSiteType = ?,
                   phoneNumber = ?, 
                   fullAddress = ?, 
                   city = ?, 
@@ -402,55 +405,56 @@ const updateAccount = (req, callback) => {
                   logo = ?
                 WHERE user_account_id = ?
               `;
-                values = [
-                  CollectionSiteName,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  logo,
-                  user_account_id,
-                ];
-                break;
+                  values = [
+                    CollectionSiteName,
+                    CollectionSiteType,
+                    phoneNumber,
+                    fullAddress,
+                    city,
+                    district,
+                    country,
+                    logo,
+                    user_account_id,
+                  ];
+                  break;
 
-              default:
-                return connection.rollback(() => {
-                  connection.release();
-                  callback(new Error("Invalid account type"), null);
-                });
-            }
-
-            // Execute the query for the secondary table
-            connection.query(query, values, (err, results) => {
-              if (err) {
-                return connection.rollback(() => {
-                  connection.release();
-                  console.error("Error updating secondary table:", err);
-                  callback(err, null);
-                });
+                default:
+                  return connection.rollback(() => {
+                    connection.release();
+                    callback(new Error("Invalid account type"), null);
+                  });
               }
 
-              // If everything is successful, commit the transaction
-              connection.commit((err) => {
+              // Execute the query for the secondary table
+              connection.query(query, values, (err, results) => {
                 if (err) {
                   return connection.rollback(() => {
                     connection.release();
-                    console.error("Error committing transaction:", err);
+                    console.error("Error updating secondary table:", err);
                     callback(err, null);
                   });
                 }
-                connection.release();
-                callback(null, {
-                  message: "Account updated successfully",
-                  userId: user_account_id,
+
+                // If everything is successful, commit the transaction
+                connection.commit((err) => {
+                  if (err) {
+                    return connection.rollback(() => {
+                      connection.release();
+                      console.error("Error committing transaction:", err);
+                      callback(err, null);
+                    });
+                  }
+                  connection.release();
+                  callback(null, {
+                    message: "Account updated successfully",
+                    userId: user_account_id,
+                  });
                 });
               });
             });
-          });
-          }
-        );
-      }
+        }
+      );
+    }
     );
   });
 };
@@ -464,6 +468,7 @@ const createAccount = (req, callback) => {
     ResearcherName,
     OrganizationName,
     CollectionSiteName,
+    CollectionSiteType,
     phoneNumber,
     fullAddress,
     city,
@@ -490,7 +495,7 @@ const createAccount = (req, callback) => {
         console.error("Error starting transaction:", err);
         return callback(err, null);
       }
-      
+
       // Check if email already exists in the user_account table
       const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
       connection.query(checkEmailQuery, [email], (err, results) => {
@@ -560,11 +565,12 @@ const createAccount = (req, callback) => {
                 break;
 
               case "CollectionSites":
-                query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;  
+                query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, logo) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   CollectionSiteName,
+                  CollectionSiteType,
                   phoneNumber,
                   fullAddress,
                   city,
@@ -597,32 +603,32 @@ const createAccount = (req, callback) => {
               }
 
               const userId = results.insertId;
-              let name=null
+              let name = null
               // Identify correct ID for history table
               let organizationId = null,
                 researcherId = null,
                 collectionsiteId = null;
 
-              if (accountType === "Organization") 
-                {
-                  name=OrganizationName
-                organizationId = userId;}
+              if (accountType === "Organization") {
+                name = OrganizationName
+                organizationId = userId;
+              }
               if (accountType === "Researcher") {
-                name=ResearcherName
+                name = ResearcherName
                 researcherId = userId;
               }
               if (accountType === "CollectionSites") {
                 collectionsiteId = userId;
-                name=CollectionSiteName
+                name = CollectionSiteName
               }
 
               const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName, CollectionSiteName, OrganizationName, 
-                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
                   researcher_id, collectionsite_id, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
@@ -634,6 +640,7 @@ const createAccount = (req, callback) => {
                 ntnNumber || null,
                 nameofOrganization || null,
                 type || null,
+                CollectionSiteType || null,
                 phoneNumber,
                 fullAddress,
                 city,
@@ -661,7 +668,7 @@ const createAccount = (req, callback) => {
                   }
 
                   connection.release(); // Always release the connection!
-                  
+
                   //  Send Confirmation Email
                   sendEmail(
                     email,
@@ -670,25 +677,25 @@ const createAccount = (req, callback) => {
                     Please wait for approval.\n\nBest regards,\n LabHazir`
                   );
 
-                    connection.release(); // Always release the connection!
-                    sendEmail(
-                      email,
-                      "Welcome to Discovery Connect",
-                      ` Dear ${name},\n\nYour account status is currently pending. 
+                  connection.release(); // Always release the connection!
+                  sendEmail(
+                    email,
+                    "Welcome to Discovery Connect",
+                    ` Dear ${name},\n\nYour account status is currently pending. 
                       Please wait for approval.\n\nBest regards,\n LabHazir`
-                    );
-                    callback(null, {
-                      message: "Account registered successfully",
-                      userId: userAccountId,
-                    });
+                  );
+                  callback(null, {
+                    message: "Account registered successfully",
+                    userId: userAccountId,
                   });
                 });
               });
             });
-          }
-        );
-      });
+          });
+      }
+      );
     });
+  });
 };
 
 

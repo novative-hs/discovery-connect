@@ -107,7 +107,7 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
 
 const updateCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
-  const { useraccount_email, type, CollectionSiteName, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
+  const { useraccount_email, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
   const file = req.file;
 
   if (!file) {
@@ -118,8 +118,8 @@ const updateCollectionSiteDetail = (req, res) => {
   const updateData = {
     useraccount_email,
     CollectionSiteName,
+    CollectionSiteType,
     phoneNumber,
-    type,
     fullAddress,
     cityid,
     districtid,

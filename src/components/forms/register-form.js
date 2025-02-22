@@ -71,7 +71,11 @@ const schema = Yup.object().shape({
   // CollectionSites-specific fields (conditional validation)
   CollectionSiteName: Yup.string().when("accountType", {
     is: "CollectionSites",
-    then: Yup.string().required("CollectionSites Name is required!"),
+    then: Yup.string().required("Collection Site Name is required!"),
+  }),
+  CollectionSiteType: Yup.string().when("accountType", {
+    is: "CollectionSites",
+    then: Yup.string().required("Type is required!"),
   }),
 });
 
@@ -199,6 +203,7 @@ const RegisterForm = () => {
     // Append CollectionSite-specific fields
     if (data.accountType === "CollectionSites") {
       formData.append("CollectionSiteName", data.CollectionSiteName);
+      formData.append("CollectionSiteType", data.CollectionSiteType);
       formData.append("fullAddress", data.fullAddress);
       formData.append("city", data.city);
       formData.append("district", data.district);
@@ -465,7 +470,7 @@ const RegisterForm = () => {
                       {...register("CollectionSiteName")}
                       name="CollectionSiteName"
                       type="text"
-                      placeholder="CollectionSites Name"
+                      placeholder="Collection Site Name"
                       id="CollectionSiteName"
                     />
                     <span>
@@ -473,6 +478,30 @@ const RegisterForm = () => {
                     </span>
                   </div>
                   <ErrorMessage message={errors.CollectionSiteName?.message} />
+                </div>
+                <div className="login__input-item">
+                  <div className="login__input">
+                    <select
+                      {...register("CollectionSiteType")}
+                      name="CollectionSiteType"
+                      id="CollectionSiteType"
+                      style={{
+                        width: "100%",
+                        height: "50px",
+                        paddingLeft: "50px",
+                        borderColor: "#f0f0f0",
+                        color: "#808080",
+                      }}>
+                      <option value="">Select Type</option>
+                      <option value="Hospital">Hospital</option>
+                      <option value="Independent Lab">Independent Lab</option>
+                      <option value="Blood Bank">Blood Bank</option>
+                    </select>
+                    <span>
+                      <i className="fa-solid fa-id-card"></i>
+                    </span>
+                  </div>
+                  <ErrorMessage message={errors.CollectionSiteType?.message} />
                 </div>
               </>
             )}
