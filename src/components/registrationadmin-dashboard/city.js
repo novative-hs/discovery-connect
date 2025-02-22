@@ -31,11 +31,11 @@ const CityArea = () => {
   const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
   const [cityname, setcityname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
- 
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  // Calculate total pages
   const totalPages = Math.ceil(cityname.length / itemsPerPage);
+  const maxPageNumbersToShow = 3;
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
   // Fetch City from backend when component loads
@@ -50,6 +50,12 @@ const CityArea = () => {
       console.error("Error fetching City:", error);
     }
   };
+
+  // Calculate visible page range
+  const startPage = Math.max(1, currentPage - Math.floor(maxPageNumbersToShow / 2));
+  const endPage = Math.min(totalPages, startPage + maxPageNumbersToShow - 1);
+  // Adjust startPage if endPage is at max
+  const adjustedStartPage = Math.max(1, endPage - maxPageNumbersToShow + 1);
 
   const currentData = cityname.slice(
     (currentPage - 1) * itemsPerPage,
@@ -237,7 +243,7 @@ const CityArea = () => {
 
         // Refresh the city list
         const newResponse = await axios.get(
-           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
         );
         setcityname(newResponse.data);
       } catch (error) {
@@ -485,62 +491,71 @@ const CityArea = () => {
               </div>
 
               {/* Pagination Controls */}
-             {/* Pagination Controls */}
-             <div className="pagination d-flex justify-content-end align-items-center mt-3">
+              <div className="pagination d-flex justify-content-end align-items-center mt-3">
                 <nav aria-label="Page navigation example">
                   <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
+                    {/* Previous Button */}
+                    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                       <a
                         className="page-link"
                         href="#"
                         aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
                       >
                         <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
                       </a>
                     </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
+
+                    {/* Pagination Number Buttons */}
+                    {adjustedStartPage > 1 && (
+                      <li className="page-item">
+                        <a className="page-link" href="#" onClick={() => handlePageChange(1)}>1</a>
+                      </li>
+                    )}
+
+                    {adjustedStartPage > 2 && (
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
+                      </li>
+                    )}
+
+                    {Array.from({ length: endPage - adjustedStartPage + 1 }).map((_, index) => {
+                      const pageNumber = adjustedStartPage + index;
                       return (
                         <li
                           key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
+                          className={`page-item ${currentPage === pageNumber ? "active" : ""}`}
                         >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
+                          <a className="page-link" href="#" onClick={() => handlePageChange(pageNumber)}>
                             {pageNumber}
                           </a>
                         </li>
                       );
                     })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
+
+                    {endPage < totalPages - 1 && (
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
+                      </li>
+                    )}
+
+                    {endPage < totalPages && (
+                      <li className="page-item">
+                        <a className="page-link" href="#" onClick={() => handlePageChange(totalPages)}>
+                          {totalPages}
+                        </a>
+                      </li>
+                    )}
+
+                    {/* Next Button */}
+                    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
                       <a
                         className="page-link"
                         href="#"
                         aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
                       >
                         <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
                       </a>
                     </li>
                   </ul>

@@ -2,14 +2,14 @@ const mysqlConnection = require("../config/db");
 
 
 function createResearcher(data, callback) {
-  console.log("Researcher Model",data)
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo,added_by } = data;
+  console.log("Researcher Model", data)
+  const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
     INSERT INTO researcher (user_account_id,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,added_by)
     VALUES (?,?, ?, ?, ?, ?,?,?,?)
   `;
 
- mysqlConnection.query(query, [userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress,city,district, country,nameofOrganization], callback);
+  mysqlConnection.query(query, [userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, nameofOrganization], callback);
 }
 
 // Function to fetch all researchers
@@ -40,7 +40,9 @@ function getResearchersByOrganization(organizationId, callback) {
     organization.id AS organization_id,
     user_account.email,
     user_account.password,
-    organization.OrganizationName AS organization_name
+    organization.OrganizationName AS organization_name,
+    user_account.created_at,
+    user_account.updated_at
 FROM 
     researcher
 LEFT JOIN city ON researcher.city = city.id
@@ -53,6 +55,7 @@ WHERE
   `;
   mysqlConnection.query(query, [organizationId], callback);
 }
+
 // Function to fetch a single researcher by ID
 function getResearcherById(id, callback) {
   const query = `SELECT 
@@ -82,23 +85,23 @@ WHERE
 
 // Function to update a researcher's details
 function updateResearcher(id, data, callback) {
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
+  const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
   console.log(data)
   const query = `
     UPDATE researcher
     SET ResearcherName = ?, phoneNumber = ?, nameofOrganization = ?, fullAddress = ?,city=?,district=?, country = ?, logo = ?
     WHERE id = ?
   `;
-mysqlConnection.query(query, [ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo, id], callback);
+  mysqlConnection.query(query, [ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, id], callback);
 }
 
 
 function updateResearcherDetail(id, data, callback) {
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
-  
-  
-  
-  
+  const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
+
+
+
+
   mysqlConnection.beginTransaction((err) => {
     if (err) {
       console.error('Error starting transaction:', err);
@@ -137,8 +140,8 @@ function updateResearcherDetail(id, data, callback) {
       `;
 
       mysqlConnection.query(
-        updateCollectionSiteQuery, 
-        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id], 
+        updateCollectionSiteQuery,
+        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id],
         (err, result) => {
           if (err) {
             return mysqlConnection.rollback(() => {

@@ -33,8 +33,8 @@ const CountryArea = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  // Calculate total pages
   const totalPages = Math.ceil(countryname.length / itemsPerPage);
+  const maxPageNumbersToShow = 3;
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -50,6 +50,12 @@ const CountryArea = () => {
       console.error("Error fetching Country:", error);
     }
   };
+
+  // Calculate visible page range
+  const startPage = Math.max(1, currentPage - Math.floor(maxPageNumbersToShow / 2));
+  const endPage = Math.min(totalPages, startPage + maxPageNumbersToShow - 1);
+  // Adjust startPage if endPage is at max
+  const adjustedStartPage = Math.max(1, endPage - maxPageNumbersToShow + 1);
 
   const currentData = countryname.slice(
     (currentPage - 1) * itemsPerPage,
@@ -90,7 +96,7 @@ const CountryArea = () => {
       console.error("Error fetching history:", error);
     }
   };
-  
+
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
@@ -126,7 +132,7 @@ const CountryArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
       );
       console.log(
         `countryname with ID ${selectedcountrynameId} deleted successfully.`
@@ -154,18 +160,18 @@ const CountryArea = () => {
       );
     }
   };
-    useEffect(() => {
-      if (showDeleteModal || showAddModal || showEditModal ||showHistoryModal) {
-        // Prevent background scroll when modal is open
-        document.body.style.overflow = "hidden";
-        document.body.classList.add("modal-open");
-      } else {
-        // Allow scrolling again when modal is closed
-        document.body.style.overflow = "auto";
-        document.body.classList.remove("modal-open");
-      }
-    }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-    
+  useEffect(() => {
+    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
   const handleEditClick = (countryname) => {
     console.log("data in case of update is", countryname);
     setselectedcountrynameId(countryname.id);
@@ -361,38 +367,38 @@ const CountryArea = () => {
                           <td>{formatDate(countryname.created_at)}</td>
                           <td>{formatDate(countryname.updated_at)}</td>
                           <td>
-                          <div
+                            <div
                               style={{
                                 display: "flex",
                                 justifyContent: "space-around",
                                 gap: "5px",
                               }}
                             >
-                            <button
-                              className="btn btn-success btn-sm py-0 px-1"
-                              onClick={() => handleEditClick(countryname)}
-                              title="Edit Country" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="xs" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm py-0 px-1"
-                              onClick={() => {
-                                setselectedcountrynameId(countryname.id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete Country" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                                                          <button
-                              className="btn btn-info btn-sm"
-                              onClick={() => handleShowHistory("country", countryname.id)} 
-                              title="History Sample"
-                            >
-                              <FontAwesomeIcon icon={faHistory} size="sm" />
-                            </button>
-                         </div>
+                              <button
+                                className="btn btn-success btn-sm py-0 px-1"
+                                onClick={() => handleEditClick(countryname)}
+                                title="Edit Country" // This is the text that will appear on hover
+                              >
+                                <FontAwesomeIcon icon={faEdit} size="xs" />
+                              </button>{" "}
+                              <button
+                                className="btn btn-danger btn-sm py-0 px-1"
+                                onClick={() => {
+                                  setselectedcountrynameId(countryname.id);
+                                  setShowDeleteModal(true);
+                                }}
+                                title="Delete Country" // This is the text that will appear on hover
+                              >
+                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                              </button>
+                              <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => handleShowHistory("country", countryname.id)}
+                                title="History Sample"
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -411,58 +417,68 @@ const CountryArea = () => {
               <div className="pagination d-flex justify-content-end align-items-center mt-3">
                 <nav aria-label="Page navigation example">
                   <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
+                    {/* Previous Button */}
+                    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                       <a
                         className="page-link"
                         href="#"
                         aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
                       >
                         <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
                       </a>
                     </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
+
+                    {/* Pagination Number Buttons */}
+                    {adjustedStartPage > 1 && (
+                      <li className="page-item">
+                        <a className="page-link" href="#" onClick={() => handlePageChange(1)}>1</a>
+                      </li>
+                    )}
+
+                    {adjustedStartPage > 2 && (
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
+                      </li>
+                    )}
+
+                    {Array.from({ length: endPage - adjustedStartPage + 1 }).map((_, index) => {
+                      const pageNumber = adjustedStartPage + index;
                       return (
                         <li
                           key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
+                          className={`page-item ${currentPage === pageNumber ? "active" : ""}`}
                         >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
+                          <a className="page-link" href="#" onClick={() => handlePageChange(pageNumber)}>
                             {pageNumber}
                           </a>
                         </li>
                       );
                     })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
+
+                    {endPage < totalPages - 1 && (
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
+                      </li>
+                    )}
+
+                    {endPage < totalPages && (
+                      <li className="page-item">
+                        <a className="page-link" href="#" onClick={() => handlePageChange(totalPages)}>
+                          {totalPages}
+                        </a>
+                      </li>
+                    )}
+
+                    {/* Next Button */}
+                    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
                       <a
                         className="page-link"
                         href="#"
                         aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
                       >
                         <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
                       </a>
                     </li>
                   </ul>
@@ -471,234 +487,235 @@ const CountryArea = () => {
 
               {/* Modal for Adding countrys */}
               {showAddModal && (
-                 <>
-                 {/* Bootstrap Backdrop with Blur */}
-                 <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-             
-                 {/* Modal Content */}
-                 <div
-                   className="modal show d-block"
-                   tabIndex="-1"
-                   role="dialog"
-                   style={{
-                     zIndex: 1050, 
-                     position: "fixed",
-                     top: "120px",
-                     left: "50%",
-                     transform: "translateX(-50%)",
-                   }}
-                 >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Country</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Country Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="countryname"
-                              value={formData.countryname} // Use 'countryname' here instead of 'name'
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Add Country</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowAddModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
                           </button>
                         </div>
-                      </form>
+                        <form onSubmit={handleSubmit}>
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            <div className="form-group">
+                              <label>Country Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="countryname"
+                                value={formData.countryname} // Use 'countryname' here instead of 'name'
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              Save
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
-{showHistoryModal && (
-  <>
-    {/* Bootstrap Backdrop with Blur */}
-    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+              
+              {showHistoryModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-    {/* Modal Content */}
-    <div
-      className="modal show d-block"
-      tabIndex="-1"
-      role="dialog"
-      style={{
-        zIndex: 1050,
-        position: "fixed",
-        top: "100px",
-        left: "50%",
-        transform: "translateX(-50%)",
-      }}
-    >
-      <div className="modal-dialog modal-md" role="document">
-        <div className="modal-content">
-          {/* Modal Header */}
-          <div className="modal-header">
-            <h5 className="modal-title">History</h5>
-            <button
-              type="button"
-              className="close"
-              onClick={() => setShowHistoryModal(false)}
-              style={{
-                fontSize: "1.5rem",
-                position: "absolute",
-                right: "10px",
-                top: "10px",
-                cursor: "pointer",
-              }}
-            >
-              <span>&times;</span>
-            </button>
-          </div>
-
-          {/* Chat-style Modal Body */}
-          <div
-            className="modal-body"
-            style={{
-              maxHeight: "500px",
-              overflowY: "auto",
-              backgroundColor: "#e5ddd5", // WhatsApp-style background
-              padding: "15px",
-              borderRadius: "10px",
-            }}
-          >
-{historyData && historyData.length > 0 ? (
-  historyData.map((log, index) => {
-    const { created_name, updated_name, added_by, created_at, updated_at } = log;
-
-    return (
-      <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
-        {/* Message for City Addition */}
-        <div
-          style={{
-            padding: "10px 15px",
-            borderRadius: "15px",
-            backgroundColor: "#ffffff",
-            boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-            maxWidth: "75%",
-            fontSize: "14px",
-            textAlign: "left",
-          }}
-        >
-          <b>Country:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
-        </div>
-
-        {/* Message for City Update (Only if it exists) */}
-        {updated_name && updated_at && (
-          <div
-            style={{
-              padding: "10px 15px",
-              borderRadius: "15px",
-              backgroundColor: "#dcf8c6", // Light green for updates
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-              maxWidth: "75%",
-              fontSize: "14px",
-              textAlign: "left",
-              marginTop: "5px", // Spacing between messages
-            }}
-          >
-            <b>Country:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-          </div>
-        )}
-      </div>
-    );
-  })
-) : (
-  <p className="text-left">No history available.</p>
-)}
-
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-)}
-              {/* Edit countryname Modal */}
-              {showEditModal && (
-            <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-        
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050, 
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Country</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Country Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="countryname"
-                              value={formData.countryname}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Country
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "100px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog modal-md" role="document">
+                      <div className="modal-content">
+                        {/* Modal Header */}
+                        <div className="modal-header">
+                          <h5 className="modal-title">History</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowHistoryModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
                           </button>
                         </div>
-                      </form>
+
+                        {/* Chat-style Modal Body */}
+                        <div
+                          className="modal-body"
+                          style={{
+                            maxHeight: "500px",
+                            overflowY: "auto",
+                            backgroundColor: "#e5ddd5", // WhatsApp-style background
+                            padding: "15px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          {historyData && historyData.length > 0 ? (
+                            historyData.map((log, index) => {
+                              const { created_name, updated_name, added_by, created_at, updated_at } = log;
+
+                              return (
+                                <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
+                                  {/* Message for City Addition */}
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor: "#ffffff",
+                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                    }}
+                                  >
+                                    <b>Country:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                  </div>
+
+                                  {/* Message for City Update (Only if it exists) */}
+                                  {updated_name && updated_at && (
+                                    <div
+                                      style={{
+                                        padding: "10px 15px",
+                                        borderRadius: "15px",
+                                        backgroundColor: "#dcf8c6", // Light green for updates
+                                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                        maxWidth: "75%",
+                                        fontSize: "14px",
+                                        textAlign: "left",
+                                        marginTop: "5px", // Spacing between messages
+                                      }}
+                                    >
+                                      <b>Country:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-left">No history available.</p>
+                          )}
+
+
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </>
+              )}
+              {/* Edit countryname Modal */}
+              {showEditModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Edit Country</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowEditModal(false)}
+                            style={{
+                              // background: 'none',
+                              // border: 'none',
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+                        <form onSubmit={handleUpdate}>
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            <div className="form-group">
+                              <label>Country Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="countryname"
+                                value={formData.countryname}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              Update Country
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
               {/* Modal for Deleting Countryname */}
