@@ -6,8 +6,11 @@ import {
   faTrash,
   faQuestionCircle,
   faPlus,
+  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
+import Pagination from "@ui/Pagination";
+import moment from "moment";
 const ContainerTypeArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -20,59 +23,91 @@ const ContainerTypeArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedContainerTypenameId, setSelectedContainerTypenameId] =useState(null); // Store ID of ContainerType to delete
   const [formData, setFormData] = useState({
-    containertypename: "",
+    name: "",
     added_by: id,
   });
   const [editContainerTypename, setEditContainerTypename] =
     useState(null); // State for selected City to edit
   const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
   // Calculate total pages
-  const totalPages = Math.ceil(containertypename.length / itemsPerPage);
+   const [filteredContainertypename, setFilteredContainertypename] = useState([]); // Store filtered cities
+    const [currentPage, setCurrentPage] = useState(0);
+    const itemsPerPage = 10;
+    // Calculate total pages
+    const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch ContainerType from backend when component loads
   useEffect(() => {
-    console.log("useEffect", formData);
     fetchContainerTypename(); // Call the function when the component mounts
   }, []);
   const fetchContainerTypename = async () => {
     try {
       const response = await axios.get(
-        `${url}/containertype/get-containertype`
+        `${url}/samplefields/get-samplefields/containertype`
       );
+      setFilteredContainertypename(response.data); // Initialize filtered list
       setContainerTypename(response.data); // Store fetched ContainerType in state
     } catch (error) {
       console.error("Error fetching Container Type :", error);
     }
   };
-
-  const currentData = containertypename.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchContainerTypename(); // Reset to fetch original data
-    } else {
-      // Filter the sample array based on the field and value
-      const filtered = containertypename.filter((containertype) =>
-        containertype[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-      setContainerTypename(filtered); // Update the state with filtered results
+ useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredContainertypename.length / itemsPerPage));
+    setTotalPages(pages);
+    
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  };
+  }, [filteredContainertypename]);
+  
+ 
+   const currentData = filteredContainertypename.slice(
+     currentPage * itemsPerPage,
+     (currentPage + 1) * itemsPerPage
+   );
+ 
+   const handlePageChange = (event) => {
+     setCurrentPage(event.selected);
+   };
+ 
+   const handleFilterChange = (field, value) => {
+     let filtered = [];
+ 
+     if (value.trim() === "") {
+       filtered = containertypename; // Show all if filter is empty
+     } else {
+       filtered = containertypename.filter((containertype) =>
+        containertype[field]?.toString().toLowerCase().includes(value.toLowerCase())
+       );
+     }
+ 
+     setFilteredContainertypename(filtered);
+     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+     setCurrentPage(0); // Reset to first page after filtering
+   };
+ 
+   const fetchHistory = async (filterType, id) => {
+     try {
+       const response = await fetch(
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+       );
+       const data = await response.json();
+       setHistoryData(data);
+     } catch (error) {
+       console.error("Error fetching history:", error);
+     }
+   };
+ 
+   // Call this function when opening the modal
+   const handleShowHistory = (filterType, id) => {
+     fetchHistory(filterType, id);
+     setShowHistoryModal(true);
+   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -88,7 +123,7 @@ const ContainerTypeArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/containertype/post-containertype`,
+        `${url}/samplefields/post-samplefields/containertype`,
         formData
       );
       console.log("Container Type  added successfully:", response.data);
@@ -102,7 +137,7 @@ const ContainerTypeArea = () => {
       fetchContainerTypename();
       // Clear form after submission
       setFormData({
-        containertypename: "",
+        name: "",
         added_by: id,
       });
       setShowAddModal(false); // Close modal after submission
@@ -115,7 +150,7 @@ const ContainerTypeArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/containertype/delete-containertype/${selectedContainerTypenameId}`
+        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
       );
       console.log(
         `ContainerType name with ID ${selectedContainerTypenameId} deleted successfully.`
@@ -129,11 +164,7 @@ const ContainerTypeArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containertype/get-containertype`
-      );
-      setContainerTypename(newResponse.data);
+    fetchContainerTypename();
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -147,7 +178,7 @@ const ContainerTypeArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showDeleteModal || showAddModal || showEditModal ||showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -156,7 +187,7 @@ const ContainerTypeArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
   const handleEditClick = (containertypename) => {
     console.log("data in case of update is", containertypename);
@@ -165,7 +196,7 @@ const ContainerTypeArea = () => {
     setEditContainerTypename(containertypename);
 
     setFormData({
-      containertypename: containertypename.name,
+      name: containertypename.name,
       added_by: id,
     });
 
@@ -177,7 +208,7 @@ const ContainerTypeArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/containertype/put-containertype/${selectedContainerTypenameId}`,
+        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
         formData
       );
       console.log(
@@ -189,7 +220,7 @@ const ContainerTypeArea = () => {
 
       setShowEditModal(false);
       setSuccessMessage("Container Type updated successfully.");
-
+resetFormData()
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -237,7 +268,7 @@ const ContainerTypeArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/containertype/post-containertype`,
+          `${url}/samplefields/post-samplefields/containertype`,
           { bulkData: dataWithAddedBy }
         );
         console.log("Container Type added successfully:", response.data);
@@ -253,7 +284,8 @@ const ContainerTypeArea = () => {
 
   const resetFormData = () => {
     setFormData({
-      containertypename: "",
+      name: "",
+      added_by: id,
     });
   };
 
@@ -381,6 +413,15 @@ const ContainerTypeArea = () => {
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
+                                <button
+                                                                                                className="btn btn-info btn-sm"
+                                                                                                onClick={() =>
+                                                                                                  handleShowHistory("containertype", id)
+                                                                                                }
+                                                                                                title="History Container Type"
+                                                                                              >
+                                                                                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                                                                                              </button>
                               </div>
                             </td>
                           </tr>
@@ -398,66 +439,14 @@ const ContainerTypeArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3 w-100">
-                <nav aria-label="Page navigation example" className="w-100">
-                  <ul className="pagination justify-content-end w-100">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              { totalPages >=0 && (
+  <Pagination
+    handlePageClick={handlePageChange}
+    pageCount={totalPages}
+    focusPage={currentPage}
+  />
+)}
+
 
               {/* Modal for Adding Committe members */}
               {(showAddModal || showEditModal) && (
@@ -519,8 +508,8 @@ const ContainerTypeArea = () => {
                               <input
                                 type="text"
                                 className="form-control"
-                                name="containertypename" // Fix here
-                                value={formData.containertypename}
+                                name="name" // Fix here
+                                value={formData.name}
                                 onChange={handleInputChange}
                                 required
                               />
@@ -602,6 +591,133 @@ const ContainerTypeArea = () => {
                   </div>
                 </>
               )}
+              {showHistoryModal && (
+                                            <>
+                                              {/* Bootstrap Backdrop with Blur */}
+                                              <div
+                                                className="modal-backdrop fade show"
+                                                style={{ backdropFilter: "blur(5px)" }}
+                                              ></div>
+                            
+                                              {/* Modal Content */}
+                                              <div
+                                                className="modal show d-block"
+                                                tabIndex="-1"
+                                                role="dialog"
+                                                style={{
+                                                  zIndex: 1050,
+                                                  position: "fixed",
+                                                  top: "100px",
+                                                  left: "50%",
+                                                  transform: "translateX(-50%)",
+                                                }}
+                                              >
+                                                <div className="modal-dialog modal-md" role="document">
+                                                  <div className="modal-content">
+                                                    {/* Modal Header */}
+                                                    <div className="modal-header">
+                                                      <h5 className="modal-title">History</h5>
+                                                      <button
+                                                        type="button"
+                                                        className="close"
+                                                        onClick={() => setShowHistoryModal(false)}
+                                                        style={{
+                                                          fontSize: "1.5rem",
+                                                          position: "absolute",
+                                                          right: "10px",
+                                                          top: "10px",
+                                                          cursor: "pointer",
+                                                        }}
+                                                      >
+                                                        <span>&times;</span>
+                                                      </button>
+                                                    </div>
+                            
+                                                    {/* Chat-style Modal Body */}
+                                                    <div
+                                                      className="modal-body"
+                                                      style={{
+                                                        maxHeight: "500px",
+                                                        overflowY: "auto",
+                                                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                                                        padding: "15px",
+                                                        borderRadius: "10px",
+                                                      }}
+                                                    >
+                                                      {historyData && historyData.length > 0 ? (
+                                                        historyData.map((log, index) => {
+                                                          const {
+                                                            created_name,
+                                                            updated_name,
+                                                            added_by,
+                                                            created_at,
+                                                            updated_at,
+                                                          } = log;
+                            
+                                                          return (
+                                                            <div
+                                                              key={index}
+                                                              style={{
+                                                                display: "flex",
+                                                                flexDirection: "column",
+                                                                alignItems: "flex-start",
+                                                                marginBottom: "10px",
+                                                              }}
+                                                            >
+                                                              {/* Message for City Addition */}
+                                                              <div
+                                                                style={{
+                                                                  padding: "10px 15px",
+                                                                  borderRadius: "15px",
+                                                                  backgroundColor: "#ffffff",
+                                                                  boxShadow:
+                                                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                                                  maxWidth: "75%",
+                                                                  fontSize: "14px",
+                                                                  textAlign: "left",
+                                                                }}
+                                                              >
+                                                                <b>Container type:</b> {created_name} was <b>added</b>{" "}
+                                                                by Registration Admin at{" "}
+                                                                {moment(created_at).format(
+                                                                  "DD MMM YYYY, h:mm A"
+                                                                )}
+                                                              </div>
+                            
+                                                              {/* Message for City Update (Only if it exists) */}
+                                                              {updated_name && updated_at && (
+                                                                <div
+                                                                  style={{
+                                                                    padding: "10px 15px",
+                                                                    borderRadius: "15px",
+                                                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                                                    boxShadow:
+                                                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                                                    maxWidth: "75%",
+                                                                    fontSize: "14px",
+                                                                    textAlign: "left",
+                                                                    marginTop: "5px", // Spacing between messages
+                                                                  }}
+                                                                >
+                                                                  <b>Container type:</b> {updated_name} was{" "}
+                                                                  <b>updated</b> by Registration Admin at{" "}
+                                                                  {moment(updated_at).format(
+                                                                    "DD MMM YYYY, h:mm A"
+                                                                  )}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                          );
+                                                        })
+                                                      ) : (
+                                                        <p className="text-left">No history available.</p>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </>
+                                          )}
             </div>
           </div>
         </div>

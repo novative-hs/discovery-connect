@@ -38,24 +38,12 @@ const RegistrationAdmin_History = () => {
 const getHistory = (filterType, id, callback) => {
   let query = "";
   let params = [id];
+  const column = `${filterType}_id`;
 
-
-  if (filterType === "city") {
-    query = "SELECT * FROM RegistrationAdmin_History WHERE city_id = ?";
-  } else if (filterType === "district") {
-    query = "SELECT * FROM RegistrationAdmin_History WHERE district_id = ?";
-  } else if (filterType === "country") {
-    query = "SELECT * FROM RegistrationAdmin_History WHERE country_id = ?";
-
-  } else if (filterType === "organization") {
-    query = "SELECT * FROM RegistrationAdmin_History WHERE organization_id = ?";
-  } else if (filterType === "researcher") {
-    query = "SELECT * FROM RegistrationAdmin_History WHERE researcher_id = ?";
-  } else if (filterType === "collectionsite") {
-    query =
-      "SELECT * FROM RegistrationAdmin_History WHERE collectionsite_id = ?";
-
-  } else {
+  if (filterType ) {
+    query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
+  } 
+  else {
     return callback(new Error("Invalid filter type"), null);
   }
 
@@ -63,8 +51,6 @@ const getHistory = (filterType, id, callback) => {
     if (err) {
       return callback(err, null);
     }
-
-
     // If no results in RegistrationAdmin_History, fallback to the history table
     if (results.length === 0) {
       let fallbackQuery = `

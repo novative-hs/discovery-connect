@@ -1,4 +1,6 @@
 const mysqlConnection = require("../config/db");
+const mysqlPool = require("../config/db"); // Adjust the path as needed
+const {sendEmail}=require("../config/email")
 // Function to create the city table
 const createuser_accountTable = () => {
   const createuser_accountTable = `
@@ -475,7 +477,9 @@ const createAccount = (req, callback) => {
         console.error("Error starting transaction:", err);
         return callback(err, null);
       }
-
+      
+      // Check if email already exists
+      const checkEmailQuery = "SELECT * FROM user_account WHERE email = ?";
       connection.query(checkEmailQuery, [email], (err, results) => {
         if (err) {
           return connection.rollback(() => {
@@ -509,7 +513,7 @@ const createAccount = (req, callback) => {
             switch (accountType) {
               case "Researcher":
                 query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
@@ -526,7 +530,7 @@ const createAccount = (req, callback) => {
 
               case "Organization":
                 query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   OrganizationName,
@@ -544,7 +548,7 @@ const createAccount = (req, callback) => {
 
               case "CollectionSites":
                 query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;  
                 values = [
                   userAccountId,
                   CollectionSiteName,
@@ -580,23 +584,32 @@ const createAccount = (req, callback) => {
               }
 
               const userId = results.insertId;
-
+              let name=null
               // Identify correct ID for history table
               let organizationId = null,
                 researcherId = null,
                 collectionsiteId = null;
 
-              if (accountType === "Organization") organizationId = userId;
-              if (accountType === "Researcher") researcherId = userId;
-              if (accountType === "CollectionSites") collectionsiteId = userId;
+              if (accountType === "Organization") 
+                {
+                  name=OrganizationName
+                organizationId = userId;}
+              if (accountType === "Researcher") {
+                name=ResearcherName
+                researcherId = userId;
+              }
+              if (accountType === "CollectionSites") {
+                collectionsiteId = userId;
+                name=CollectionSiteName
+              }
 
               const historyQuery = `
-            INSERT INTO history (
-              email, password, ResearcherName, CollectionSiteName, OrganizationName, 
-              HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
-              fullAddress, city, district, country, logo, added_by, organization_id, 
-              researcher_id, collectionsite_id, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                INSERT INTO history (
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
+                  fullAddress, city, district, country, logo, added_by, organization_id, 
+                  researcher_id, collectionsite_id, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
@@ -621,30 +634,35 @@ const createAccount = (req, callback) => {
                 "added",
               ];
 
-              connection.query(
-                historyQuery,
-                historyValues,
-                (err, historyResults) => {
+              connection.query(historyQuery, historyValues, (err, historyResults) => {
+                if (err) {
+                  return connection.rollback(() => callback(err, null));
+                }
+
+                connection.commit((err) => {
                   if (err) {
-                    return connection.rollback(() => callback(err, null));
+                    return connection.rollback(() => {
+                      connection.release();
+                      callback(err, null);
+                    });
                   }
 
-                  connection.commit((err) => {
-                    if (err) {
-                      return connection.rollback(() => {
-                        connection.release();
-                        callback(err, null);
-                      });
-                    }
+                  connection.release(); // Always release the connection!
+                  
+                  //  Send Confirmation Email
+                  sendEmail(
+                    email,
+                    "Welcome to Discovery Connect",
+                    ` Dear ${name},\n\nYour account status is currently pending. 
+                    Please wait for approval.\n\nBest regards,\n LabHazir`
+                  );
 
-                    connection.release(); // Always release the connection!
-                    callback(null, {
-                      message: "Account registered successfully",
-                      userId: userAccountId,
-                    });
+                  callback(null, {
+                    message: "Account registered successfully",
+                    userId: userAccountId,
                   });
-                }
-              );
+                });
+              });
             });
           }
         );
@@ -652,6 +670,7 @@ const createAccount = (req, callback) => {
     });
   });
 };
+
 
 const loginAccount = (data, callback) => {
   const { email, password } = data;

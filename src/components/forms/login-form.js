@@ -44,7 +44,6 @@ const LoginForm = () => {
         if (!id) {
           return notifyError("Unexpected error: User ID is missing.");
         }
-  
         localStorage.setItem("userID", id); // Store 'id' as userID
         localStorage.setItem("accountType",accountType)
         notifySuccess("Login successfully");

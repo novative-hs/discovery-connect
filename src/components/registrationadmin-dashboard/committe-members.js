@@ -7,8 +7,10 @@ import {
   faQuestionCircle,
   faPlus,
   faHistory,
+  faEye,
+  faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
-
+import Pagination from "@ui/Pagination";
 const CommitteeMemberArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -19,6 +21,7 @@ const CommitteeMemberArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCommitteememberId, setSelectedCommitteememberId] =
     useState(null); // Store ID of Committee Members to delete
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     CommitteeMemberName: "",
     email: "",
@@ -42,12 +45,12 @@ const CommitteeMemberArea = () => {
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
   const [organization, setOrganization] = useState();
-  const [formStep, setFormStep] = useState(1);
-
+  const [formStep, setFormStep] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filteredCommitteemembers, setFilteredCommitteemembers] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   // Calculate total pages
-  const totalPages = Math.ceil(committeemembers.length / itemsPerPage);
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -59,14 +62,28 @@ const CommitteeMemberArea = () => {
     fetchcountryname();
     fetchOrganization();
   }, []);
+
   const fetchCommitteemembers = async () => {
     try {
       const response = await axios.get(`${url}/committeemember/get`);
       setCommitteemembers(response.data); // Store fetched Committee Members in state
+      setFilteredCommitteemembers(response.data);
     } catch (error) {
       console.error("Error fetching Committee Members:", error);
     }
   };
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredCommitteemembers.length / itemsPerPage)
+    );
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredCommitteemembers]);
+
   const fetchOrganization = async () => {
     try {
       const response = await axios.get(`${url}/admin/organization/get`);
@@ -102,33 +119,7 @@ const CommitteeMemberArea = () => {
       console.error("Error fetching Country:", error);
     }
   };
-  const sendApprovalEmail = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            name: formData.CommitteeMemberName,
-            status: formData.status,
-          }),
-        }
-      );
 
-      const data = await response.json();
-      if (response.ok) {
-        console.log("Email sent successfully:", data.message);
-      } else {
-        console.error("Error sending email:", data.error);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
   const handleInputChange = (e) => {
     console.log(organization);
     setFormData({
@@ -147,12 +138,10 @@ const CommitteeMemberArea = () => {
         formData
       );
       console.log("Committee Member added successfully:", response.data);
-      sendApprovalEmail();
       // Refresh the committeemember list after successful submission
-      const newResponse = await axios.get(`${url}/committeemember/get`);
-      setCommitteemembers(newResponse.data); // Update state with the new list
+      fetchCommitteemembers();
 
-      setSuccessMessage("Researcher updated successfully.");
+      setSuccessMessage("Committee Member updated successfully.");
       resetFormData();
       setTimeout(() => {
         setSuccessMessage("");
@@ -182,8 +171,7 @@ const CommitteeMemberArea = () => {
       }, 3000);
 
       // Refresh the committeemember list after deletion
-      const newResponse = await axios.get(`${url}/committeemember/get`);
-      setCommitteemembers(newResponse.data);
+      fetchCommitteemembers();
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -227,9 +215,7 @@ const CommitteeMemberArea = () => {
       );
       console.log("Committeemember updated successfully:", response.data);
 
-      const newResponse = await axios.get(`${url}/committeemember/get`);
-      setCommitteemembers(newResponse.data);
-      sendApprovalEmail();
+      fetchCommitteemembers();
       setShowEditModal(false);
       setSuccessMessage("Committeemember updated successfully.");
 
@@ -290,6 +276,11 @@ const CommitteeMemberArea = () => {
         ...prev,
         [committeememberId]: false,
       }));
+      fetchCommitteemembers();
+      setSuccessMessage("Committe Member Type Updated successfully");
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
     } catch (error) {
       console.error(
         "Error updating committee member:",
@@ -329,6 +320,10 @@ const CommitteeMemberArea = () => {
         { status: option }, // Only send the selected `status`
         { headers: { "Content-Type": "application/json" } }
       );
+      setSuccessMessage("Committe Member Status Updated successfully");
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
       console.log("Update successful:", response.data.message);
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
@@ -343,6 +338,8 @@ const CommitteeMemberArea = () => {
         ...prev,
         [committeememberId]: false,
       }));
+
+      fetchCommitteemembers();
     } catch (error) {
       console.error(
         "Error updating status:",
@@ -357,49 +354,35 @@ const CommitteeMemberArea = () => {
       [committeememberId]: !prev[committeememberId],
     }));
   };
-  const handleNextStep = () => {
-    console.log("Current formData:", formData); // Debugging
 
-    if (
-      !formData.CommitteeMemberName ||
-      formData.CommitteeMemberName.trim() === "" ||
-      !formData.email ||
-      formData.email.trim() === "" ||
-      !formData.password ||
-      formData.password.trim() === "" ||
-      !formData.phoneNumber ||
-      formData.phoneNumber.trim() === ""
-    ) {
-      console.log("Validation failed."); // Debugging
-      alert("Please fill out all fields");
-      return;
-    }
-
-    console.log("Validation passed. Moving to Step 2."); // Debugging
-    setFormStep(2);
-  };
-
-  const currentData = committeemembers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const currentData = filteredCommitteemembers.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
-  // Filter the researchers list
+
+  // Filter the Committe member list
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchCommitteemembers();
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = committeemembers; // Show all if filter is empty
     } else {
-      const filtered = committeemembers.filter((committeemember) =>
-        committeemember[field]?.toString().toLowerCase().startsWith(value.toLowerCase())
+      filtered = committeemembers.filter((committeemember) =>
+        committeemember[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
       );
-      setCommitteemembers(filtered);
     }
+
+    setFilteredCommitteemembers(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
-  
-  
 
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal) {
@@ -445,197 +428,260 @@ const CommitteeMemberArea = () => {
               </div>
               {/* Table */}
               <div className="table-responsive w-100">
-  <table className="table table-bordered table-hover">
-    <thead className="thead-dark">
-      <tr className="text-center">
-        {[
-          { label: "ID", placeholder: "Search ID", field: "id" },
-          { label: "CommitteeMemberName", placeholder: "Search Name", field: "CommitteeMemberName" },
-          { label: "Email", placeholder: "Search Email", field: "email" },
-          { label: "Password", placeholder: "Search Password", field: "password" },
-          { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-          { label: "CNIC", placeholder: "Search CNIC", field: "cnic" },
-          { label: "Full Address", placeholder: "Search Full Address", field: "fullAddress" },
-          { label: "City", placeholder: "Search City", field: "city" },
-          { label: "District", placeholder: "Search District", field: "district" },
-          { label: "Country", placeholder: "Search Country", field: "country" },
-          { label: "Organization", placeholder: "Search Organization", field: "organization" },
-          { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
-          { label: "Registered At", placeholder: "Search Created At", field: "created_at" },
-          { label: "Status", placeholder: "Search Status", field: "status" },
-        ].map(({ label, placeholder, field }) => (
-          <th key={field} className="px-3 py-2" style={{ minWidth: "140px" }}>
-            <div className="d-flex flex-column">
-              <input
-                type="text"
-                className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
-                placeholder={placeholder}
-                onChange={(e) => handleFilterChange(field, e.target.value)}
-              />
-              <small className="fw-bold">{label}</small>
-            </div>
-          </th>
-        ))}
-        <th className="col-1">Action</th>
-      </tr>
-    </thead>
+                <table className="table table-bordered table-hover">
+                  <thead className="thead-dark">
+                    <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "CommitteeMemberName",
+                          placeholder: "Search Name",
+                          field: "CommitteeMemberName",
+                        },
+                        {
+                          label: "Email",
+                          placeholder: "Search Email",
+                          field: "email",
+                        },
+                        {
+                          label: "Password",
+                          placeholder: "Search Password",
+                          field: "password",
+                        },
+                        {
+                          label: "Contact",
+                          placeholder: "Search Contact",
+                          field: "phoneNumber",
+                        },
+                        {
+                          label: "CNIC",
+                          placeholder: "Search CNIC",
+                          field: "cnic",
+                        },
+                        {
+                          label: "Full Address",
+                          placeholder: "Search Full Address",
+                          field: "fullAddress",
+                        },
+                        {
+                          label: "City",
+                          placeholder: "Search City",
+                          field: "city",
+                        },
+                        {
+                          label: "District",
+                          placeholder: "Search District",
+                          field: "district",
+                        },
+                        {
+                          label: "Country",
+                          placeholder: "Search Country",
+                          field: "country",
+                        },
+                        {
+                          label: "Organization",
+                          placeholder: "Search Organization",
+                          field: "organization",
+                        },
+                        {
+                          label: "Committee Type",
+                          placeholder: "Search Committee Type",
+                          field: "committeetype",
+                        },
+                        {
+                          label: "Registered At",
+                          placeholder: "Search Created At",
+                          field: "created_at",
+                        },
+                        {
+                          label: "Status",
+                          placeholder: "Search Status",
+                          field: "status",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th
+                          key={field}
+                          className="px-3 py-2"
+                          style={{ minWidth: "140px" }}
+                        >
+                          <div className="d-flex flex-column">
+                            <input
+                              type="text"
+                              className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
+                              placeholder={placeholder}
+                              onChange={(e) =>
+                                handleFilterChange(field, e.target.value)
+                              }
+                            />
+                            <small className="fw-bold">{label}</small>
+                          </div>
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
+                    </tr>
+                  </thead>
 
-    <tbody>
-      {currentData.length > 0 ? (
-        currentData.map((committeemember) => (
-          <tr key={committeemember.id}>
-            <td>{committeemember.id}</td>
-            <td>{committeemember.CommitteeMemberName}</td>
-            <td>{committeemember.email}</td>
-            <td>{committeemember.password}</td>
-            <td>{committeemember.phoneNumber}</td>
-            <td>{committeemember.cnic}</td>
-            <td>{committeemember.fullAddress}</td>
-            <td>{committeemember.city_name}</td>
-            <td>{committeemember.district_name}</td>
-            <td>{committeemember.country_name}</td>
-            <td>{committeemember.organization_name}</td>
-            <td>{committeemember.committeetype}</td>
-            <td>{formatDate(committeemember.created_at)}</td>
-            <td>{committeemember.status}</td>
-            <td>
-              <div className="d-flex justify-content-around gap-2">
-                <button
-                  className="btn btn-success btn-sm py-0 px-1"
-                  onClick={() => handleEditClick(committeemember)}
-                  title="Edit Committee Member"
-                >
-                  <FontAwesomeIcon icon={faEdit} size="xs" />
-                </button>
+                  <tbody>
+                    {currentData.length > 0 ? (
+                      currentData.map((committeemember) => (
+                        <tr key={committeemember.id}>
+                          <td>{committeemember.id}</td>
+                          <td>{committeemember.CommitteeMemberName}</td>
+                          <td>{committeemember.email}</td>
+                          <td>{committeemember.password}</td>
+                          <td>{committeemember.phoneNumber}</td>
+                          <td>{committeemember.cnic}</td>
+                          <td>{committeemember.fullAddress}</td>
+                          <td>{committeemember.city_name}</td>
+                          <td>{committeemember.district_name}</td>
+                          <td>{committeemember.country_name}</td>
+                          <td>{committeemember.organization_name}</td>
+                          <td>{committeemember.committeetype}</td>
+                          <td>{formatDate(committeemember.created_at)}</td>
+                          <td>{committeemember.status}</td>
+                          <td>
+                            <div className="d-flex justify-content-around gap-2">
+                              <button
+                                className="btn btn-success btn-sm py-0 px-1"
+                                onClick={() => handleEditClick(committeemember)}
+                                title="Edit Committee Member"
+                              >
+                                <FontAwesomeIcon icon={faEdit} size="xs" />
+                              </button>
 
-                <div className="btn-group">
-                  <button
-                    className="btn btn-warning btn-sm py-0 px-1"
-                    onClick={() => handleToggleCommitteeTypeOptions(committeemember.id)}
-                    title="Edit Committee Type"
-                  >
-                    <FontAwesomeIcon icon={faPlus} size="xs" />
-                  </button>
-                  {showCommitteeTypeOptions[committeemember.id] && (
-                    <div className="dropdown-menu show">
-                      <button className="dropdown-item" onClick={() => handleCommitteeTypeClick(committeemember.id, "Scientific")}>Scientific</button>
-                      <button className="dropdown-item" onClick={() => handleCommitteeTypeClick(committeemember.id, "Ethical")}>Ethical</button>
-                    </div>
-                  )}
-                </div>
+                              <div className="btn-group">
+                                <button
+                                  className="btn btn-warning btn-sm py-0 px-1"
+                                  onClick={() =>
+                                    handleToggleCommitteeTypeOptions(
+                                      committeemember.id
+                                    )
+                                  }
+                                  title="Edit Committee Type"
+                                >
+                                  <FontAwesomeIcon icon={faPlus} size="xs" />
+                                </button>
+                                {showCommitteeTypeOptions[
+                                  committeemember.id
+                                ] && (
+                                  <div className="dropdown-menu show">
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() =>
+                                        handleCommitteeTypeClick(
+                                          committeemember.id,
+                                          "Scientific"
+                                        )
+                                      }
+                                    >
+                                      Scientific
+                                    </button>
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() =>
+                                        handleCommitteeTypeClick(
+                                          committeemember.id,
+                                          "Ethical"
+                                        )
+                                      }
+                                    >
+                                      Ethical
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
 
-                <div className="btn-group">
-                  <button
-                    className="btn btn-primary btn-sm py-0 px-1"
-                    onClick={() => handleToggleStatusOptions(committeemember.id)}
-                    title="Edit Status"
-                  >
-                    <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
-                  </button>
-                  {statusOptionsVisibility[committeemember.id] && (
-                    <div className="dropdown-menu show">
-                      <button className="dropdown-item" onClick={() => handleStatusClick(committeemember.id, "Active")}>Active</button>
-                      <button className="dropdown-item" onClick={() => handleStatusClick(committeemember.id, "Inactive")}>Inactive</button>
-                    </div>
-                  )}
-                </div>
+                              <div className="btn-group">
+                                <button
+                                  className="btn btn-primary btn-sm py-0 px-1"
+                                  onClick={() =>
+                                    handleToggleStatusOptions(
+                                      committeemember.id
+                                    )
+                                  }
+                                  title="Edit Status"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={faQuestionCircle}
+                                    size="xs"
+                                  />
+                                </button>
+                                {statusOptionsVisibility[
+                                  committeemember.id
+                                ] && (
+                                  <div className="dropdown-menu show">
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() =>
+                                        handleStatusClick(
+                                          committeemember.id,
+                                          "Active"
+                                        )
+                                      }
+                                    >
+                                      Active
+                                    </button>
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={() =>
+                                        handleStatusClick(
+                                          committeemember.id,
+                                          "Inactive"
+                                        )
+                                      }
+                                    >
+                                      Inactive
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
 
-                <button
-                  className="btn btn-danger btn-sm py-0 px-1"
-                  onClick={() => {
-                    setSelectedCommitteememberId(committeemember.id);
-                    setShowDeleteModal(true);
-                  }}
-                  title="Delete Committee Member"
-                >
-                  <FontAwesomeIcon icon={faTrash} size="sm" />
-                </button>
+                              <button
+                                className="btn btn-danger btn-sm py-0 px-1"
+                                onClick={() => {
+                                  setSelectedCommitteememberId(
+                                    committeemember.id
+                                  );
+                                  setShowDeleteModal(true);
+                                }}
+                                title="Delete Committee Member"
+                              >
+                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                              </button>
 
-                <button
-                  className="btn btn-info btn-sm"
-                  onClick={() => {
-                    setShowHistoryModal(true);
-                    console.log("Done");
-                  }}
-                  title="Committee Member History"
-                >
-                  <FontAwesomeIcon icon={faHistory} size="sm" />
-                </button>
+                              <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => {
+                                  setShowHistoryModal(true);
+                                  console.log("Done");
+                                }}
+                                title="Committee Member History"
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="15" className="text-center">
+                          No Committee Members Available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="15" className="text-center">No Committee Members Available</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
-
 
               {/* Pagination */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
               {/* Modal for Adding/Editing Committee members */}
 
               {(showAddModal || showEditModal) && (
@@ -688,188 +734,195 @@ const CommitteeMemberArea = () => {
                         <form
                           onSubmit={showAddModal ? handleSubmit : handleUpdate}
                         >
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            {formStep === 1 ? (
-                              <>
-                                {/* Step 1: Basic Information */}
-                                <div className="form-group">
-                                  <label>Name</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    name="CommitteeMemberName"
-                                    value={formData.CommitteeMemberName}
-                                    onChange={handleInputChange}
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group">
-                                  <label>Email</label>
-                                  <input
-                                    type="email"
-                                    className="form-control"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group">
-                                  <label>Password</label>
-                                  <input
-                                    type="password"
-                                    className="form-control"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleInputChange}
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group">
-                                  <label>Phone Number</label>
+                          <div
+                            className="modal-body"
+                            style={{ maxHeight: "400px", overflowY: "auto" }}
+                          >
+                            <div className="form-group">
+                              <label>Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="CommitteeMemberName"
+                                value={formData.CommitteeMemberName}
+                                onChange={handleInputChange}
+                                pattern="^[A-Za-z\s]+$"
+                                title="Only letters and spaces are allowed."
+                                required
+                              />
+                              {!/^[A-Za-z\s]*$/.test(
+                                formData.CommitteeMemberName
+                              ) && (
+                                <small className="text-danger">
+                                  Only letters and spaces are allowed.
+                                </small>
+                              )}
+                            </div>
+
+                            <div className="form-group">
+                              <label>Email</label>
+                              <input
+                                type="email"
+                                className="form-control"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                            <div className="col-md-12">
+                              <label className="form-label">Password</label>
+                              <div className="input-group input-group-sm">
                                 <input
-                                  type="text"
+                                  type={showPassword ? "text" : "password"}
                                   className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
+                                  name="password"
+                                  value={formData.password}
                                   onChange={handleInputChange}
+                                  pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+                                  title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
                                   required
-                                  pattern="/^\d{4}-\d{7}$/"
-                                  title="Phone number must be in the format 0123-4567890 and numeric"
                                 />
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                {/* Step 2: Additional Information */}
-                                <div className="form-group">
-                                  <label>CNIC</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    name="cnic"
-                                    value={formData.cnic}
-                                    onChange={handleInputChange}
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group">
-                                  <label>Full Address</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    name="fullAddress"
-                                    value={formData.fullAddress}
-                                    onChange={handleInputChange}
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group">
-                                  <label>City</label>
-                                  <select
-                                    className="form-control"
-                                    name="city"
-                                    value={formData.city} // Store the selected city ID in formData
-                                    onChange={handleInputChange} // Handle change to update formData
-                                    required
+                                <span
+                                  className="input-group-text"
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  <i
+                                    className={
+                                      showPassword
+                                        ? "fa-regular fa-eye"
+                                        : "fa-regular fa-eye-slash"
+                                    }
+                                  ></i>
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="form-group">
+                              <label>Phone Number</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="phoneNumber"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                required
+                                pattern="^\d{4}-\d{7}$"
+                                placeholder="0123-4567890"
+                                title="Phone number must be in the format 0123-4567890 and numeric"
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label>CNIC</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="cnic"
+                                value={formData.cnic}
+                                onChange={handleInputChange}
+                                pattern="^\d{5}-\d{7}-\d{1}$"
+                                title="CNIC must be in the format XXXXX-XXXXXXX-X ."
+                                required
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label>Full Address</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="fullAddress"
+                                value={formData.fullAddress}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>City</label>
+                              <select
+                                className="form-control p-2"
+                                name="city"
+                                value={formData.city} // Store the selected city ID in formData
+                                onChange={handleInputChange} // Handle change to update formData
+                                required
+                              >
+                                <option value="" disabled>
+                                  Select City
+                                </option>
+                                {cityname.map((city) => (
+                                  <option key={city.id} value={city.id}>
+                                    {city.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label>District</label>
+                              <select
+                                className="form-control  p-2"
+                                name="district"
+                                value={formData.district}
+                                onChange={handleInputChange}
+                                required
+                              >
+                                <option value="" disabled>
+                                  Select District
+                                </option>
+                                {districtname.map((district) => (
+                                  <option key={district.id} value={district.id}>
+                                    {district.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label>Country</label>
+                              <select
+                                className="form-control p-2"
+                                name="country"
+                                value={formData.country}
+                                onChange={handleInputChange}
+                                required
+                              >
+                                <option value="" disabled>
+                                  Select Country
+                                </option>
+                                {countryname.map((country) => (
+                                  <option key={country.id} value={country.id}>
+                                    {country.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label>Organization</label>
+                              <select
+                                className="form-control  p-2"
+                                name="organization"
+                                value={formData.organization}
+                                onChange={handleInputChange}
+                                required
+                              >
+                                <option value="" disabled>
+                                  Select Organization
+                                </option>
+                                {organization.map((organization) => (
+                                  <option
+                                    key={organization.id}
+                                    value={organization.id}
                                   >
-                                    <option value="" disabled>
-                                      Select City
-                                    </option>
-                                    {cityname.map((city) => (
-                                      <option key={city.id} value={city.id}>
-                                        {city.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="form-group">
-                                  <label>District</label>
-                                  <select
-                                    className="form-control"
-                                    name="district"
-                                    value={formData.district}
-                                    onChange={handleInputChange}
-                                    required
-                                  >
-                                    <option value="" disabled>
-                                      Select District
-                                    </option>
-                                    {districtname.map((district) => (
-                                      <option
-                                        key={district.id}
-                                        value={district.id}
-                                      >
-                                        {district.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="form-group">
-                                  <label>Country</label>
-                                  <select
-                                    className="form-control"
-                                    name="country"
-                                    value={formData.country}
-                                    onChange={handleInputChange}
-                                    required
-                                  >
-                                    <option value="" disabled>
-                                      Select Country
-                                    </option>
-                                    {countryname.map((country) => (
-                                      <option
-                                        key={country.id}
-                                        value={country.id}
-                                      >
-                                        {country.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="form-group">
-                                  <label>Organization</label>
-                                  <select
-                                    className="form-control"
-                                    name="organization"
-                                    value={formData.organization}
-                                    onChange={handleInputChange}
-                                    required
-                                  >
-                                    <option value="" disabled>
-                                      Select Organization
-                                    </option>
-                                    {organization.map((organization) => (
-                                      <option
-                                        key={organization.id}
-                                        value={organization.id}
-                                      >
-                                        {organization.OrganizationName}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </>
-                            )}
+                                    {organization.OrganizationName}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
 
                           <div className="modal-footer">
-                            {formStep === 2 && (
-                              <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={() => setFormStep(1)}
-                              >
-                                Back
-                              </button>
-                            )}
-                            <button
-                              type="submit"
-                              className="btn btn-primary"
-                              onClick={formStep === 1 ? handleNextStep : null} // Use handleNextStep only in Step 1
-                            >
-                              {formStep === 1 ? "Next" : "Save"}
+                            <button type="submit" className="btn btn-primary">
+                              {showAddModal ? "Save" : "Update"}
                             </button>
                           </div>
                         </form>

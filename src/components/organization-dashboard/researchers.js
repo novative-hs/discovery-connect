@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { notifyError } from "@utils/toast";
-
+import Pagination from "@ui/Pagination";
 const ResearcherArea = () => {
   const id = localStorage.getItem("userID");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -37,12 +37,13 @@ const ResearcherArea = () => {
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
   const [organization, setOrganization] = useState();
+  const [filteredResearchername, setFilteredResearchername] = useState([]); // Store filtered cities
   const [currentStep, setCurrentStep] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [orgid, setorgId] = useState();
   // Calculate total pages
-  const totalPages = Math.ceil(researchers.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
   const [logoFile, setLogoFile] = useState(null);
 
   // Fetch researchers from backend when component loads
@@ -57,12 +58,14 @@ const ResearcherArea = () => {
       console.log("account_id on city page is:", id);
     }
   }, []);
+  
   const fetchResearcher = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${orgid}`
       );
       console.log(response.data.length)
+      setFilteredResearchername(response.data);
       setResearchers(response.data); // Store fetched researchers in state
     } catch (error) {
       console.error("Error fetching researchers:", error);
@@ -150,7 +153,7 @@ const ResearcherArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData)
+    console.log(formData);
     setCurrentStep(1);
     e.preventDefault();
 
@@ -222,7 +225,7 @@ const ResearcherArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log(id)
+    console.log(id);
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -300,37 +303,42 @@ const ResearcherArea = () => {
       console.error("Error updating researcher:", error);
     }
   };
+   useEffect(() => {
+      const pages = Math.max(1, Math.ceil(filteredResearchername.length / itemsPerPage));
+      setTotalPages(pages);
+      
+      if (currentPage >= pages) {
+        setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      }
+    }, [filteredResearchername]);
 
   // Get the current data for the table
-  const currentData = researchers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const currentData = filteredResearchername.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchResearcher();
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = researchers; // Show all if filter is empty
     } else {
-      const filtered = researchers.filter(
-        (researcher) =>
-          field === "status"
-            ? researcher[field]
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase()) // Change to partial matching for status
-            : researcher[field]
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase()) // Partial match for other fields
+      filtered = researchers.filter((city) =>
+        city[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      setResearchers(filtered);
     }
+
+    setFilteredResearchername(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
+
 
   useEffect(() => {
     if (showAddModal || showEditModal || showHistoryModal) {
@@ -370,15 +378,14 @@ const ResearcherArea = () => {
 
               {/* Button */}
               <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Researcher Button */}
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add Researcher
-                  </button>
-
-                </div>
+                {/* Add Researcher Button */}
+                <button
+                  className="btn btn-primary mb-2"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  Add Researcher
+                </button>
+              </div>
 
               {/* Table */}
               <div className="table-responsive w-100">
@@ -525,184 +532,293 @@ const ResearcherArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
 
               {/* Modal for Adding Researchers */}
               {(showAddModal || showEditModal) && (
-  <>
-    {/* Bootstrap Backdrop */}
-    <div className="modal-backdrop fade show"></div>
+                <>
+                  {/* Bootstrap Backdrop */}
+                  <div className="modal-backdrop fade show"></div>
 
-    {/* Modal Content */}
-    <div className="modal show d-block" tabIndex="-1" role="dialog">
-      <div className="modal-dialog modal-md modal-dialog-centered" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">{showAddModal ? "Add Researcher" : "Edit Researcher"}</h5>
-            <button type="button" className="btn-close" onClick={() => { setShowAddModal(false); setShowEditModal(false); resetFormData(); }}></button>
-          </div>
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                  >
+                    <div
+                      className="modal-dialog modal-md modal-dialog-centered"
+                      role="document"
+                    >
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">
+                            {showAddModal
+                              ? "Add Researcher"
+                              : "Edit Researcher"}
+                          </h5>
+                          <button
+                            type="button"
+                            className="btn-close"
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                              resetFormData();
+                            }}
+                          ></button>
+                        </div>
 
-          {/* Form */}
-          <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
-            <div className="modal-body overflow-auto text-start" style={{ maxHeight: "65vh" }}>
-              
-              {/* Image Preview Section */}
-              <div className="text-center mb-3">
-                {preview ? (
-                  <img src={preview} alt="Preview" className="rounded-circle border" width="60" height="60" />
-                ) : (
-                  <span className="d-inline-block rounded-circle bg-light text-muted text-center fs-4 border" style={{ width: "60px", height: "60px", lineHeight: "60px" }}>
-                    <i className="fa-solid fa-user"></i>
-                  </span>
-                )}
-              </div>
+                        {/* Form */}
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate}
+                        >
+                          <div
+                            className="modal-body overflow-auto text-start"
+                            style={{ maxHeight: "65vh" }}
+                          >
+                            {/* Image Preview Section */}
+                            <div className="text-center mb-3">
+                              {preview ? (
+                                <img
+                                  src={preview}
+                                  alt="Preview"
+                                  className="rounded-circle border"
+                                  width="60"
+                                  height="60"
+                                />
+                              ) : (
+                                <span
+                                  className="d-inline-block rounded-circle bg-light text-muted text-center fs-4 border"
+                                  style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    lineHeight: "60px",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-user"></i>
+                                </span>
+                              )}
+                            </div>
 
-              {/* File Upload */}
-              <div className="mb-2">
-                <label className="form-label">Profile Picture</label>
-                <input type="file" className="form-control form-control-sm" name="logo" onChange={handleInputChange} accept="image/*" />
-              </div>
+                            {/* File Upload */}
+                            <div className="mb-2">
+                              <label className="form-label">
+                                Profile Picture
+                              </label>
+                              <input
+                                type="file"
+                                className="form-control form-control-sm"
+                                name="logo"
+                                onChange={handleInputChange}
+                                accept="image/*"
+                                required
+                              />
+                            </div>
 
-              {/* Form Fields */}
-              <div className="row g-2">
-                <div className="col-md-12">
-                  <label className="form-label">Name</label>
-                  <input type="text" className="form-control form-control-sm" name="ResearcherName" value={formData.ResearcherName} onChange={handleInputChange} required />
-                </div>
-                <div className="col-md-12">
-                  <label className="form-label">Email</label>
-                  <input type="email" className="form-control form-control-sm" name="email" value={formData.email} onChange={handleInputChange} required />
-                </div>
-                <div className="col-md-12">
-                  <label className="form-label">Password</label>
-                  <div className="input-group input-group-sm">
-                    <input type={showPassword ? "text" : "password"} className="form-control" name="password" value={formData.password} onChange={handleInputChange} required />
-                    <button className="btn btn-outline-secondary" type="button" onClick={() => setShowPassword(!showPassword)}>
-                      <i className={showPassword ? "fa-regular fa-eye" : "fa-regular fa-eye-slash"}></i>
-                    </button>
+                            {/* Form Fields */}
+                            <div className="row g-2">
+                              <div className="col-md-12">
+                                <label className="form-label">Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  name="ResearcherName"
+                                  value={formData.ResearcherName}
+                                  onChange={handleInputChange}
+                                   pattern="^[A-Za-z\s]+$"
+                                title="Only letters and spaces are allowed."
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-12">
+                                <label className="form-label">Email</label>
+                                <input
+                                  type="email"
+                                  className="form-control form-control-sm"
+                                  name="email"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-12">
+                                <label className="form-label">Password</label>
+                                <div className="input-group input-group-sm">
+                                  <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="form-control"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    required
+                                    pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?':{}|<>])[A-Za-z\d!@#$%^&*(),.?':{}|<>]{6,}$"
+                                  title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                                  />
+
+                                  <button
+                                    className="btn btn-outline-secondary"
+                                    type="button"
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                  >
+                                    <i
+                                      className={
+                                        showPassword
+                                          ? "fa-regular fa-eye"
+                                          : "fa-regular fa-eye-slash"
+                                      }
+                                    ></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label">
+                                  Account Type
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm bg-light"
+                                  name="accountType"
+                                  value={formData.accountType}
+                                  readOnly
+                                />
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label">
+                                  Organization
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm bg-light"
+                                  name="nameofOrganization"
+                                  value={organization.OrganizationName}
+                                  readOnly
+                                />
+                              </div>
+                              <div className="col-md-12">
+                                <label className="form-label">
+                                  Phone Number
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  required
+                                  pattern="^\d{4}-\d{7}$"
+                                  title="Format: 0304-5861729"
+                                />
+                              </div>
+                              <div className="col-12">
+                                <label className="form-label">
+                                  Full Address
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  name="fullAddress"
+                                  value={formData.fullAddress}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label">City</label>
+                                <select
+                                  className="form-select form-select-sm p-2"
+                                  name="city"
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select City
+                                  </option>
+                                  {cityname.map((city) => (
+                                    <option key={city.id} value={city.id}>
+                                      {city.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label">District</label>
+                                <select
+                                  className="form-select form-select-sm p-2"
+                                  name="district"
+                                  value={formData.district}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select District
+                                  </option>
+                                  {districtname.map((district) => (
+                                    <option
+                                      key={district.id}
+                                      value={district.id}
+                                    >
+                                      {district.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label">Country</label>
+                                <select
+                                  className="form-select form-select-sm p-2"
+                                  name="country"
+                                  value={formData.country}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select Country
+                                  </option>
+                                  {countryname.map((country) => (
+                                    <option key={country.id} value={country.id}>
+                                      {country.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Modal Footer */}
+                          <div className="modal-footer py-2">
+                            <button
+                              type="submit"
+                              className="btn btn-primary btn-sm"
+                            >
+                              {showAddModal ? "Save" : "Update"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => {
+                                setShowAddModal(false);
+                                setShowEditModal(false);
+                                resetFormData();
+                              }}
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Account Type</label>
-                  <input type="text" className="form-control form-control-sm bg-light" name="accountType" value={formData.accountType} readOnly />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Organization</label>
-                  <input type="text" className="form-control form-control-sm bg-light" name="nameofOrganization" value={organization.OrganizationName} readOnly />
-                </div>
-                <div className="col-md-12">
-                  <label className="form-label">Phone Number</label>
-                  <input type="text" className="form-control form-control-sm" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required pattern="^\d{4}-\d{7}$" title="Format: 0304-5861729" />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Full Address</label>
-                  <input type="text" className="form-control form-control-sm" name="fullAddress" value={formData.fullAddress} onChange={handleInputChange} required />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">City</label>
-                  <select className="form-select form-select-sm p-2" name="city" value={formData.city} onChange={handleInputChange} required>
-                    <option value="" disabled>Select City</option>
-                    {cityname.map((city) => (
-                      <option key={city.id} value={city.id}>{city.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">District</label>
-                  <select className="form-select form-select-sm p-2" name="district" value={formData.district} onChange={handleInputChange} required>
-                    <option value="" disabled>Select District</option>
-                    {districtname.map((district) => (
-                      <option key={district.id} value={district.id}>{district.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Country</label>
-                  <select className="form-select form-select-sm p-2" name="country" value={formData.country} onChange={handleInputChange} required>
-                    <option value="" disabled>Select Country</option>
-                    {countryname.map((country) => (
-                      <option key={country.id} value={country.id}>{country.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="modal-footer py-2">
-              <button type="submit" className="btn btn-primary btn-sm">{showAddModal ? "Save" : "Update"}</button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowAddModal(false); setShowEditModal(false); resetFormData(); }}>
-                Close
-              </button>
-            </div>
-
-          </form>
-        </div>
-      </div>
-    </div>
-  </>
-)}
-
+                </>
+              )}
 
               {/* Modal for Deleting Researchers */}
               {showHistoryModal && (

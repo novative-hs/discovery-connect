@@ -162,44 +162,7 @@ const RegisterForm = () => {
       fileInputRef.current.click(); // Trigger file input
     }
   };
-  const sendApprovalEmail = async (data) => {
-    let name = "";
-
-    // Assign the correct name based on accountType
-    if (data.accountType === "Researcher") {
-      name = data.ResearcherName;
-    } else if (data.accountType === "Collectionsite") {
-      name = data.CollectionSiteName;
-    } else if (data.accountType === "Organization") {
-      name = data.OrganizationName;
-    }
-
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: data.email,
-            name: name,
-            status: "pending",
-          }),
-        }
-      );
-
-      const result = await response.json(); // Rename 'data' to 'result' to avoid shadowing
-      if (response.ok) {
-        console.log("Email sent successfully:", result.message);
-      } else {
-        console.error("Error sending email:", result.error);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
+ 
 
   const onSubmit = (data) => {
     console.log(data)
@@ -255,7 +218,6 @@ const RegisterForm = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-          sendApprovalEmail(data);
           setLogo("");
           setValue("logo", "");
           notifySuccess(

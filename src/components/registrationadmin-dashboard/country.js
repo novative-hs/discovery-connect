@@ -10,6 +10,7 @@ import {
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
+import Pagination from "@ui/Pagination"
 const CountryArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -29,13 +30,12 @@ const CountryArea = () => {
   });
   const [editCountryname, setEditCountryname] = useState(null); // State for selected Country to edit
   const [countryname, setCountryname] = useState([]); // State to hold fetched Country
+  const [filteredCountryname, setFilteredCountryname] = useState([]); // Store filtered cities
+    const [currentPage, setCurrentPage] = useState(0);
+    const itemsPerPage = 10;
+    const [totalPages, setTotalPages] = useState(0);
+
   const [successMessage, setSuccessMessage] = useState("");
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(countryname.length / itemsPerPage);
-
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch Country from backend when component loads
@@ -45,35 +45,45 @@ const CountryArea = () => {
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(`${url}/country/get-country`);
+      setFilteredCountryname(response.data)
       setCountryname(response.data); // Store fetched Country in state
     } catch (error) {
       console.error("Error fetching Country:", error);
     }
   };
-
-  const currentData = countryname.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchcountryname(); // Reset to fetch original data
-    } else {
-      // Filter the sample array based on the field and value
-      const filtered = countryname.filter((countryname) =>
-        countryname[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-      setCountryname(filtered); // Update the state with filtered results
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredCountryname.length / itemsPerPage));
+    setTotalPages(pages);
+    
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
+  }, [filteredCountryname]);
+  
+
+  const currentData = filteredCountryname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = countryname; // Show all if filter is empty
+    } else {
+      filtered = countryname.filter((country) =>
+        country[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      );
+    }
+
+    setFilteredCountryname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
+  };
+
 
   const handleInputChange = (e) => {
     setFormData({
@@ -216,7 +226,7 @@ const CountryArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const resetFormData = () => {
-    setFormData({ countryname: "" }); // Reset to empty state
+    setFormData({ countryname: "",added_by: id, }); // Reset to empty state
   };
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -286,7 +296,7 @@ const CountryArea = () => {
 
                 {/* Button Container */}
                 <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Country Button */}
+                  {/* Add Storage Condition Button */}
                   <button
                     className="btn btn-primary mb-2"
                     onClick={() => setShowAddModal(true)}
@@ -301,7 +311,9 @@ const CountryArea = () => {
                       type="file"
                       accept=".xlsx, .xls"
                       style={{ display: "none" }}
-                      onChange={handleFileUpload}
+                      onChange={(e) => {
+                        handleFileUpload(e);
+                      }}
                     />
                   </label>
                 </div>
@@ -361,13 +373,7 @@ const CountryArea = () => {
                           <td>{formatDate(countryname.created_at)}</td>
                           <td>{formatDate(countryname.updated_at)}</td>
                           <td>
-                          <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
+                          <div className="d-flex justify-content-around gap-2">
                             <button
                               className="btn btn-success btn-sm py-0 px-1"
                               onClick={() => handleEditClick(countryname)}
@@ -408,131 +414,92 @@ const CountryArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
 
               {/* Modal for Adding countrys */}
-              {showAddModal && (
-                 <>
-                 {/* Bootstrap Backdrop with Blur */}
-                 <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-             
-                 {/* Modal Content */}
-                 <div
-                   className="modal show d-block"
-                   tabIndex="-1"
-                   role="dialog"
-                   style={{
-                     zIndex: 1050, 
-                     position: "fixed",
-                     top: "120px",
-                     left: "50%",
-                     transform: "translateX(-50%)",
-                   }}
-                 >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Country</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Country Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="countryname"
-                              value={formData.countryname} // Use 'countryname' here instead of 'name'
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
+              {(showAddModal || showEditModal) && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">
+                            {showAddModal ? "Add Country" : "Edit Country"}
+                          </h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                              resetFormData();
+                            }}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
                           </button>
                         </div>
-                      </form>
+
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                        >
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            <div className="form-group">
+                              <label>Country Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="countryname"
+                                value={formData.countryname}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              {showAddModal ? "Save" : "Update Country"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
+
 {showHistoryModal && (
   <>
     {/* Bootstrap Backdrop with Blur */}
@@ -636,71 +603,7 @@ const CountryArea = () => {
   </>
 )}
               {/* Edit countryname Modal */}
-              {showEditModal && (
-            <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-        
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050, 
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Country</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Country Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="countryname"
-                              value={formData.countryname}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Country
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
+             
               {/* Modal for Deleting Countryname */}
               {showDeleteModal && (
                 <>

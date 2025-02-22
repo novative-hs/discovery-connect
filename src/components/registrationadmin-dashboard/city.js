@@ -9,13 +9,13 @@ import {
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
+import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
 const CityArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  }
-  else {
+  } else {
     console.log("account_id on city page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,15 +29,15 @@ const CityArea = () => {
     added_by: id,
   });
   const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
-  const [cityname, setcityname] = useState([]); // State to hold fetched City
-  const [successMessage, setSuccessMessage] = useState("");
- 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [cityname, setcityname] = useState([]); // Store all cities
+  const [filteredCityname, setFilteredCityname] = useState([]); // Store filtered cities
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(cityname.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
+  // Calculate total pages dynamically
 
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+  const [successMessage, setSuccessMessage] = useState("");
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // Fetch City from backend when component loads
   useEffect(() => {
     fetchcityname(); // Call the function when the component mounts
@@ -45,35 +45,51 @@ const CityArea = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data); // Store fetched City in state
+      setcityname(response.data);
+      setFilteredCityname(response.data); // Initialize filtered list
     } catch (error) {
       console.error("Error fetching City:", error);
     }
   };
-
-  const currentData = cityname.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredCityname.length / itemsPerPage));
+    setTotalPages(pages);
+    
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredCityname]);
+  
+  const currentData = filteredCityname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchcityname(); // Reset to fetch original data
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = cityname; // Show all if filter is empty
     } else {
-      // Filter the sample array based on the field and value
-      const filtered = cityname.filter((cityname) =>
-        cityname[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = cityname.filter((city) =>
+        city[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      setcityname(filtered); // Update the state with filtered results
     }
+
+    setFilteredCityname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
+
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -190,6 +206,10 @@ const CityArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      formData({
+        cityname:"",
+        added_by: id,
+      })
     } catch (error) {
       console.error(
         `Error updating cityname with ID ${selectedcitynameId}:`,
@@ -237,7 +257,7 @@ const CityArea = () => {
 
         // Refresh the city list
         const newResponse = await axios.get(
-           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
         );
         setcityname(newResponse.data);
       } catch (error) {
@@ -249,182 +269,89 @@ const CityArea = () => {
   };
 
   return (
-    <section className="policy__area pb-120">
-      <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto", }}
-      >
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
+    <section className="policy__area pb-120 overflow-hidden">
+      <div className="container-fluid mt-n5">
+        <div className="row justify-content-center mt-5">
+          <div className="col-12 col-md-10">
+            <div className="policy__wrapper policy__translate position-relative mt-5">
+              {/* Button Container */}
+              <div className="d-flex flex-column w-100">
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    className="alert alert-success w-100 text-start mb-2"
+                    role="alert"
+                  >
+                    {successMessage}
+                  </div>
+                )}
+
+                {/* Button Container */}
+                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+                  {/* Add Storage Condition Button */}
+                  <button
+                    className="btn btn-primary mb-2"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Add City
+                  </button>
+
+                  {/* Upload Button (Styled as Label for Hidden Input) */}
+                  <label className="btn btn-secondary mb-2">
+                    Upload City List
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        handleFileUpload(e);
+                      }}
+                    />
+                  </label>
                 </div>
-              )}
-              <div className="d-flex justify-content-end align-items-center mb-3">
-                {/* Upload City List Button */}
-
-
-                {/* Add City Button */}
-                <button
-                  className="btn btn-primary me-3"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add City
-                </button>
-                <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
-                  Upload City List
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls" // Accept only Excel files
-                    style={{ display: "none" }}
-                    onChange={handleFileUpload}
-                  />
-                </label>
               </div>
+
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr style={{ textAlign: 'center', }}>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search City Name"
-                          onChange={(e) =>
-                            handleFilterChange("name", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        City Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Added by"
-                          onChange={(e) =>
-                            handleFilterChange("added_by", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px",
-                          }}
-                        />
-                        Added By</th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Created at"
-                          onChange={(e) =>
-                            handleFilterChange("created_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Created At
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Updated at"
-                          onChange={(e) =>
-                            handleFilterChange("updated_at", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Updated At
-                      </th>
-
-                      <th>Action</th>
+                    <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "City Name",
+                          placeholder: "Search Test Method Name",
+                          field: "name",
+                        },
+                        {
+                          label: "Added By",
+                          placeholder: "Search Added by",
+                          field: "added_by",
+                        },
+                        {
+                          label: "Created At",
+                          placeholder: "Search Created at",
+                          field: "created_at",
+                        },
+                        {
+                          label: "Updated At",
+                          placeholder: "Search Updated at",
+                          field: "updated_at",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th key={field} className="px-3">
+                          <input
+                            type="text"
+                            className="form-control w-100 px-2 py-1 mx-auto"
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                          />
+                          {label}
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
                     </tr>
                   </thead>
 
@@ -438,13 +365,7 @@ const CityArea = () => {
                           <td>{formatDate(cityname.created_at)}</td>
                           <td>{formatDate(cityname.updated_at)}</td>
                           <td>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
+                            <div className="d-flex justify-content-around gap-2">
                               <button
                                 className="btn btn-success btn-sm py-0 px-1"
                                 onClick={() => handleEditClick(cityname)}
@@ -464,7 +385,9 @@ const CityArea = () => {
                               </button>
                               <button
                                 className="btn btn-info btn-sm"
-                                onClick={() => handleShowHistory("city", cityname.id)}
+                                onClick={() =>
+                                  handleShowHistory("city", cityname.id)
+                                }
                                 title="History Sample"
                               >
                                 <FontAwesomeIcon icon={faHistory} size="sm" />
@@ -483,75 +406,23 @@ const CityArea = () => {
                   </tbody>
                 </table>
               </div>
-
               {/* Pagination Controls */}
-             {/* Pagination Controls */}
-             <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
 
-              {/* Modal for Adding Committe members */}
-              {showAddModal && (
+              {/* Modal for Adding and Editing City */}
+              {(showAddModal || showEditModal) && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
                   {/* Modal Content */}
                   <div
@@ -569,11 +440,16 @@ const CityArea = () => {
                     <div className="modal-dialog" role="document">
                       <div className="modal-content">
                         <div className="modal-header">
-                          <h5 className="modal-title">Add City</h5>
+                          <h5 className="modal-title">
+                            {showAddModal ? "Add Country" : "Edit Country"}
+                          </h5>
                           <button
                             type="button"
                             className="close"
-                            onClick={() => setShowAddModal(false)}
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                            }}
                             style={{
                               fontSize: "1.5rem",
                               position: "absolute",
@@ -585,7 +461,10 @@ const CityArea = () => {
                             <span>&times;</span>
                           </button>
                         </div>
-                        <form onSubmit={handleSubmit}>
+
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                        >
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
@@ -594,15 +473,16 @@ const CityArea = () => {
                                 type="text"
                                 className="form-control"
                                 name="cityname"
-                                value={formData.cityname} // Use 'cityname' here instead of 'name'
+                                value={formData.cityname}
                                 onChange={handleInputChange}
                                 required
                               />
                             </div>
                           </div>
+
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              Save
+                              {showAddModal ? "Save" : "Update Country"}
                             </button>
                           </div>
                         </form>
@@ -611,10 +491,14 @@ const CityArea = () => {
                   </div>
                 </>
               )}
+
               {showHistoryModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
                   {/* Modal Content */}
                   <div
@@ -663,23 +547,42 @@ const CityArea = () => {
                         >
                           {historyData && historyData.length > 0 ? (
                             historyData.map((log, index) => {
-                              const { created_name, updated_name, added_by, created_at, updated_at } = log;
+                              const {
+                                created_name,
+                                updated_name,
+                                added_by,
+                                created_at,
+                                updated_at,
+                              } = log;
 
                               return (
-                                <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-start",
+                                    marginBottom: "10px",
+                                  }}
+                                >
                                   {/* Message for City Addition */}
                                   <div
                                     style={{
                                       padding: "10px 15px",
                                       borderRadius: "15px",
                                       backgroundColor: "#ffffff",
-                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      boxShadow:
+                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                       maxWidth: "75%",
                                       fontSize: "14px",
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>City:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    <b>City:</b> {created_name} was <b>added</b>{" "}
+                                    by Registration Admin at{" "}
+                                    {moment(created_at).format(
+                                      "DD MMM YYYY, h:mm A"
+                                    )}
                                   </div>
 
                                   {/* Message for City Update (Only if it exists) */}
@@ -689,14 +592,19 @@ const CityArea = () => {
                                         padding: "10px 15px",
                                         borderRadius: "15px",
                                         backgroundColor: "#dcf8c6", // Light green for updates
-                                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                        boxShadow:
+                                          "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                         maxWidth: "75%",
                                         fontSize: "14px",
                                         textAlign: "left",
                                         marginTop: "5px", // Spacing between messages
                                       }}
                                     >
-                                      <b>City:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                      <b>City:</b> {updated_name} was{" "}
+                                      <b>updated</b> by Registration Admin at{" "}
+                                      {moment(updated_at).format(
+                                        "DD MMM YYYY, h:mm A"
+                                      )}
                                     </div>
                                   )}
                                 </div>
@@ -705,77 +613,7 @@ const CityArea = () => {
                           ) : (
                             <p className="text-left">No history available.</p>
                           )}
-
-
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-
-              {/* Edit cityname Modal */}
-              {showEditModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Edit City</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowEditModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <form onSubmit={handleUpdate}>
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>City Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="cityname"
-                                value={formData.cityname}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              Update City
-                            </button>
-                          </div>
-                        </form>
                       </div>
                     </div>
                   </div>
@@ -786,7 +624,10 @@ const CityArea = () => {
               {showDeleteModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
                   {/* Modal Content */}
                   <div
@@ -803,7 +644,10 @@ const CityArea = () => {
                   >
                     <div className="modal-dialog" role="document">
                       <div className="modal-content">
-                        <div className="modal-header" style={{ backgroundColor: "transparent" }}>
+                        <div
+                          className="modal-header"
+                          style={{ backgroundColor: "transparent" }}
+                        >
                           <h5 className="modal-title">Delete City</h5>
                           <button
                             type="button"
