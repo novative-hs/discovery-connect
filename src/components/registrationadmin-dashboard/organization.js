@@ -2,12 +2,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faHistory } from '@fortawesome/free-solid-svg-icons';
-
+import Pagination from "@ui/Pagination";
+import moment from "moment";
 const OrganizationArea = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+   const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [editOrganization, setEditOrganization] = useState(null); // State for selected organization to edit
   const [selectedOrganizationId, setSelectedOrganizationId] = useState(null); // Store ID of organization to delete
+  const [allorganizations, setAllOrganizations] = useState([]); // State to hold fetched organizations
+  const [organizations, setOrganizations] = useState([]); // State to hold fetched organizations
+
   const [formData, setFormData] = useState({
     OrganizationName: "",
     email: "",
@@ -17,12 +22,14 @@ const OrganizationArea = () => {
     // logo: ""
   });
   const [historyData, setHistoryData] = useState([]);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [allorganizations, setAllOrganizations] = useState([]); // State to hold fetched organizations
-  const [editOrganization, setEditOrganization] = useState(null); // State for selected organization to edit
-  const [organizations, setOrganizations] = useState([]); // State to hold fetched organizations
-  const [successMessage, setSuccessMessage] = useState('');
+const [filteredOrganizations, setFilteredOrganizations] = useState([]);
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+  const [successMessage, setSuccessMessage] = useState('');
+ const [searchTerm, setSearchTerm] = useState("");
+ const [currentPage, setCurrentPage] = useState(0);
+ const itemsPerPage = 10;
+ // Calculate total pages
+ const totalPages = Math.ceil(organizations.length / itemsPerPage);
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -42,14 +49,9 @@ const OrganizationArea = () => {
 
   // Fetch organizations from backend when component loads
   useEffect(() => {
-
-
     fetchOrganizations(); // Call the function when the component mounts
   }, []);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(organizations.length / itemsPerPage);
+  
   const fetchOrganizations = async () => {
     try {
       const response = await axios.get(
@@ -62,34 +64,41 @@ const OrganizationArea = () => {
     }
   };
 
-  const currentData = organizations.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const handleFilterChange = (field, value) => {
+    setSearchTerm(value);
 
+    if (!value) {
+      setOrganizations(allorganizations);
+    } else {
+      const filtered = allorganizations.filter((organization) => {
+        return organization[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+      setOrganizations(filtered);
+    }
+
+    setCurrentPage(0); // Reset to first page when filtering
+  };
+  useEffect(() => {
+      const updatedFilteredOrganization = organizations.filter((organization) => {
+        if (!statusFilter) return true;
+        return organization.status.toLowerCase() === statusFilter.toLowerCase();
+      });
+  
+      setFilteredOrganizations(updatedFilteredOrganization);
+      setCurrentPage(0); // Reset to first page when filtering
+    }, [organizations, statusFilter]);
+  
+    const handlePageChange = (event) => {
+      setCurrentPage(event.selected); 
+    };
     
-      const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-      };
-    
-      // Filter the researchers list
-      const handleFilterChange = (field, value) => {
-        if (!value.trim()) return fetchOrganizations(); // Reset if input is empty
-      
-        setOrganizations(
-          allorganizations.filter((organization) => {
-            const fieldValue = organization[field]?.toString().toLowerCase().trim(); // Normalize field
-            const searchValue = value.toLowerCase().trim(); // Normalize input
-      
-            if (!fieldValue) return false;
-      
-            // Exact match for "status", partial match for others
-            return field === "status"
-              ? fieldValue.startsWith(searchValue) // Ensures "i" matches "inactive" but not "active"
-              : fieldValue.includes(searchValue);
-          })
-        );
-      };
+    const currentData = filteredOrganizations.slice(
+      currentPage * itemsPerPage,
+      (currentPage + 1) * itemsPerPage
+    );
       
       
     const handleInputChange = (e) => {
@@ -99,39 +108,6 @@ const OrganizationArea = () => {
         });
     };
 
-
-  // const formatDateTime = (dateTime) => {
-  //   const date = new Date(dateTime);
-  //   const formattedDate = date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
-  //   return formattedDate;
-  // };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/organizations/post`, formData);
-      console.log("Organization added successfully:", response.data);
-
-      // Refresh the organization list after successful submission
-      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`);
-      setOrganizations(newResponse.data); // Update state with the new list
-
-      // Clear form after submission
-      setFormData({
-        OrganizationName: "",
-        email: "",
-        phoneNumber: "",
-        // created_at: "",
-        status: "",
-
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding organization:", error);
-    }
-  };
 
 
   const handleDelete = async () => {
@@ -172,6 +148,12 @@ const OrganizationArea = () => {
     });
   };
 
+  useEffect(() => {
+    console.log("All Researchers:", organizations);
+    console.log("Filtered Researchers:", filteredOrganizations);
+    console.log("Current Data:", currentData);
+  }, [filteredOrganizations, currentData]);
+
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -197,13 +179,9 @@ const OrganizationArea = () => {
       console.error(`Error updating organization with ID ${selectedOrganizationId}:`, error);
     }
   };
-  // Filter samples based on the selected status
-  const filteredOrganizations = organizations.filter(organization => {
-    if (!statusFilter) return true; // If no filter is selected, show all
-    return organization.status === statusFilter;
-  });
+
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
+    if (showDeleteModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -212,187 +190,89 @@ const OrganizationArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+  }, [showDeleteModal, showEditModal, showHistoryModal]);
 
 
   return (
-    <section className="policy__area pb-120">
-      <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto", }}
-      >
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
+    <section className="policy__area pb-120 overflow-hidden">
+    <div className="container-fluid mt-n5">
+      <div className="row justify-content-center mt-5">
+        <div className="col-12 col-md-10">
+          <div className="policy__wrapper policy__translate position-relative mt-5">
+            {/* Button Container */}
+            <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
               {/* Success Message */}
               {successMessage && (
-                <div className="alert alert-success" role="alert">
+                <div
+                  className="alert alert-success w-100 text-start"
+                  role="alert"
+                >
                   {successMessage}
                 </div>
               )}
-              <div className="d-flex justify-content-between align-items-center mb-3" style={{ marginTop: "-20px", width: "120%", marginLeft: "-80px" }}>
-                <div className="d-flex align-items-center">
-                  <label htmlFor="statusFilter" className="mr-2"
-                    style={{
-                      marginLeft: "60px",
-                      marginRight: "10px",
-                      fontSize: "16px",
-                      fontWeight: "bold"
-                    }
-                    }>
-                    Status:</label>
-                  <select
-                    id="statusFilter"
-                    className="form-control"
-                    style={{ width: "100px" }}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    } // Pass "status" as the field
 
-                  >
-                    <option value="">All</option>
-                    <option value="pending">pending</option>
-                    <option value="approved">approved</option>
-                    {/* <option value="unapproved">unapproved</option> */}
-                  </select>
-                
-              </div>
-              </div>
+              {/* Status Filter */}
+              <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
+                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                  Status:
+                </label>
 
-              {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
-                    <tr>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Name"
-                          onChange={(e) =>
-                            handleFilterChange("CollectionSiteName", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Name
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Email"
-                          onChange={(e) =>
-                            handleFilterChange("email", e.target.value)
-                          }
-                        />
-                        Email</th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Phone Number"
-                          onChange={(e) =>
-                            handleFilterChange("phoneNumber", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Contact
-                      </th>
-                      {/* <th>Registered_at</th> */}
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Status
-                      </th>
-                      <th>Action</th>
+                <select
+                  id="statusFilter"
+                  className="form-control mb-2"
+                  style={{ width: "auto" }}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value)
+                  } // Pass "status" as the field
+                >
+                  <option value="">All</option>
+                  <option value="pending">pending</option>
+                  <option value="approved">approved</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="table-responsive w-100">
+              <table className="table table-bordered table-hover">
+                <thead className="thead-dark">
+                <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "Name",
+                          placeholder: "Search Name",
+                          field: "OrganizationName",
+                        },
+                        {
+                          label: "Email",
+                          placeholder: "Search Email",
+                          field: "email",
+                        },
+                        {
+                          label: "Contact",
+                          placeholder: "Search Contact",
+                          field: "phoneNumber",
+                        },
+                        {
+                          label: "Status",
+                          placeholder: "Search Status",
+                          field: "status",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th key={field} className="px-3">
+                          <input
+                            type="text"
+                            className="form-control w-100 px-2 py-1 mx-auto"
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                          />
+                          {label}
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -406,13 +286,7 @@ const OrganizationArea = () => {
                           {/* <td>{organization.created_at}</td> */}
                           <td>{organization.status}</td>
                           <td>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
+                          <div className="d-flex justify-content-around gap-2">
                               <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(organization)}
@@ -451,137 +325,15 @@ const OrganizationArea = () => {
                   </tbody>
                 </table>
               </div>
-            {/* Pagination Controls */}
-            <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-              {/* Modal for Adding Organizations */}
-              {/* {showAddModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Add Organization</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowAddModal(false)}
-                          style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body"> */}
-              {/* Form Fields */}
-              {/* <div className="form-group">
-                            <label>Organization Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="OrganizationName"
-                              value={formData.OrganizationName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Save
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              )} */}
-
+           {/* Pagination */}
+           {filteredOrganizations.length >= 0 && (
+  <Pagination
+    handlePageClick={handlePageChange}
+    pageCount={Math.max(1, Math.ceil(filteredOrganizations.length / itemsPerPage))}
+    focusPage={currentPage}
+  />
+)}
+ 
               {/* Edit Organization Modal */}
               {showEditModal && (
                 <>
@@ -741,6 +493,7 @@ const OrganizationArea = () => {
                               return (
                                 <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
                                   {/* Message for City Addition */}
+                         
                                   <div
                                     style={{
                                       padding: "10px 15px",
@@ -752,7 +505,7 @@ const OrganizationArea = () => {
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>City:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    <b>Organization:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
                                   </div>
 
                                   {/* Message for City Update (Only if it exists) */}
@@ -769,7 +522,7 @@ const OrganizationArea = () => {
                                         marginTop: "5px", // Spacing between messages
                                       }}
                                     >
-                                      <b>City:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                      <b>Organization:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                                     </div>
                                   )}
                                 </div>

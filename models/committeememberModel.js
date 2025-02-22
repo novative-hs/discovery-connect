@@ -1,5 +1,5 @@
 const mysqlConnection = require("../config/db");
-
+const {sendEmail}=require("../config/email");
 // New Updated fields in Table
 const addFieldToCommitteememberTable = (tableName, fieldName, fieldType) => {
   const checkColumnQuery = `
@@ -189,16 +189,52 @@ const updateCommitteeMember = (id, data, callback) => {
 };
 
 // Function to update a committee member's status
-const updateCommitteeMemberStatus = (id, status, callback) => {
-  const query = `
-    UPDATE committee_member
-    SET status = ?
-    WHERE id = ?
-  `;
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    callback(err, result);
-  });
+const updateCommitteeMemberStatus = async (id, status) => {
+  try {
+    // Update committee member status
+    const updateQuery = `UPDATE committee_member SET status = ? WHERE id = ?`;
+    const updateResult = await new Promise((resolve, reject) => {
+      mysqlConnection.query(updateQuery, [status, id], (err, results) => {
+        if (err) return reject(err);
+        if (results.affectedRows === 0) {
+          return reject(new Error("No committee member found with the given ID."));
+        }
+        resolve(results);
+      });
+    });
+
+    // Fetch committee member's email
+    const getEmailQuery = "SELECT email FROM committee_member WHERE id = ?";
+    const emailResult = await new Promise((resolve, reject) => {
+      mysqlConnection.query(getEmailQuery, [id], (err, results) => {
+        if (err) return reject(err);
+        if (results.length === 0) return reject(new Error("Committee member email not found."));
+        resolve(results[0].email);
+      });
+    });
+
+    const email = emailResult;
+
+    // Prepare email content
+    let emailText = `Dear Committee Member,\n\nYour account status is currently inactive. 
+    Please wait for approval.\n\nBest regards,\nLab Hazir`;
+
+    if (status === "active") {
+      emailText = `Dear Committee Member,\n\nYour account is now active! 
+      You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+    }
+
+    // Send email
+    await sendEmail(email, "Welcome to Discovery Connect", emailText);
+
+    return { message: "Status updated and email sent" };
+  } catch (error) {
+    console.error("Error in updateCommitteeMemberStatus:", error);
+    throw error; // Ensures error is properly propagated
+  }
 };
+
+
 
 // Function to update a committee member's type
 const updateCommitteeMemberType = (id, updateFields, callback) => {

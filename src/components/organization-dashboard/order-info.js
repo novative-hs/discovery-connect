@@ -47,7 +47,7 @@ const [id, setUserID] = useState(null);
         const filteredResearchers = response.data.filter(researcher => {
           return researcher.added_by == id; 
         });
-  
+  console.log(filteredResearchers)
         setUserCount(filteredResearchers.length); 
       } else {
         console.warn("Unexpected API response:", response.data);

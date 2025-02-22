@@ -5,9 +5,11 @@ import {
   faEdit,
   faTrash,
   faQuestionCircle,
-  faPlus,
+  faPlus,  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
+import Pagination from "@ui/Pagination";
+import moment from "moment";
 const SampleTypeMatrixArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -18,19 +20,22 @@ const SampleTypeMatrixArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+   const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
   const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] =useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
-    sampletypematrixname: "",
+    name: "",
     added_by: id,
   });
   const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] =
     useState(null); // State for selected City to edit
   const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const[filteredSampletypematrixname,setFilteredSampletypematrixname]=useState([])
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
-  const totalPages = Math.ceil(sampletypematrixname.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -41,37 +46,67 @@ const SampleTypeMatrixArea = () => {
   const fetchSampleTypeMatrixname = async () => {
     try {
       const response = await axios.get(
-        `${url}/sampletypematrix/get-sampletypematrix`
+        `${url}/samplefields/get-samplefields/sampletypematrix`
       );
+      setFilteredSampletypematrixname(response.data); // Initialize filtered list
       setSampleTypeMatrixname(response.data); // Store fetched SampleTypeMatrix in state
     } catch (error) {
       console.error("Error fetching Sample Type Matrix :", error);
     }
   };
-
-  const currentData = sampletypematrixname.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchSampleTypeMatrixname(); // Reset to fetch original data
-    } else {
-      // Filter the sample array based on the field and value
-      const filtered = sampletypematrixname.filter((sampletypematrix) =>
-        sampletypematrix[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-      setSampleTypeMatrixname(filtered); // Update the state with filtered results
+ useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredSampletypematrixname.length / itemsPerPage));
+    setTotalPages(pages);
+    
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  };
+  }, [filteredSampletypematrixname]);
+  
+ 
+   const currentData = filteredSampletypematrixname.slice(
+     currentPage * itemsPerPage,
+     (currentPage + 1) * itemsPerPage
+   );
+ 
+   const handlePageChange = (event) => {
+     setCurrentPage(event.selected);
+   };
+ 
+   const handleFilterChange = (field, value) => {
+     let filtered = [];
+ 
+     if (value.trim() === "") {
+       filtered = sampletypematrixname; // Show all if filter is empty
+     } else {
+       filtered = sampletypematrixname.filter((sampletypematrix) =>
+        sampletypematrix[field]?.toString().toLowerCase().includes(value.toLowerCase())
+       );
+     }
+ 
+     setFilteredSampletypematrixname(filtered);
+     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+     setCurrentPage(0); // Reset to first page after filtering
+   };
+ 
+   const fetchHistory = async (filterType, id) => {
+     try {
+       const response = await fetch(
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+       );
+       const data = await response.json();
+       setHistoryData(data);
+     } catch (error) {
+       console.error("Error fetching history:", error);
+     }
+   };
+ 
+   // Call this function when opening the modal
+   const handleShowHistory = (filterType, id) => {
+     fetchHistory(filterType, id);
+     setShowHistoryModal(true);
+   };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -87,7 +122,7 @@ const SampleTypeMatrixArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/sampletypematrix/post-sampletypematrix`,
+        `${url}/samplefields/post-samplefields/sampletypematrix`,
         formData
       );
       console.log("Sample Type Matrix added successfully:", response.data);
@@ -101,7 +136,7 @@ const SampleTypeMatrixArea = () => {
       fetchSampleTypeMatrixname();
       // Clear form after submission
       setFormData({
-        sampletypematrixname: "",
+        name: "",
         added_by: id,
       });
       setShowAddModal(false); // Close modal after submission
@@ -114,7 +149,7 @@ const SampleTypeMatrixArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/sampletypematrix/delete-sampletypematrix/${selectedSampleTypeMatrixnameId}`
+        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
       );
       console.log(
         `Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId} deleted successfully.`
@@ -129,10 +164,7 @@ const SampleTypeMatrixArea = () => {
       }, 3000);
 
       // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampletypematrix/get-sampletypematrix`
-      );
-      setSampleTypeMatrixname(newResponse.data);
+      fetchSampleTypeMatrixname();
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -146,7 +178,7 @@ const SampleTypeMatrixArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showDeleteModal || showAddModal || showEditModal|| showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -155,7 +187,7 @@ const SampleTypeMatrixArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
   const handleEditClick = (sampletypematrix) => {
     console.log("data in case of update is", sampletypematrix);
@@ -164,7 +196,7 @@ const SampleTypeMatrixArea = () => {
     setEditSampleTypeMatrixname(sampletypematrix);
 
     setFormData({
-      sampletypematrixname: sampletypematrix.name,
+      name: sampletypematrix.name,
       added_by: id,
     });
 
@@ -176,7 +208,7 @@ const SampleTypeMatrixArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/sampletypematrix/put-sampletypematrix/${selectedSampleTypeMatrixnameId}`,
+        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
         formData
       );
       console.log(
@@ -192,6 +224,7 @@ const SampleTypeMatrixArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      resetFormData()
     } catch (error) {
       console.error(
         `Error updating Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId}:`,
@@ -236,7 +269,7 @@ const SampleTypeMatrixArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/sampletypematrix/post-sampletypematrix`,
+          `${url}/samplefields/post-samplefields/sampletypematrix`,
           { bulkData: dataWithAddedBy }
         );
         console.log("Sample Type Matrix added successfully:", response.data);
@@ -252,7 +285,8 @@ const SampleTypeMatrixArea = () => {
 
   const resetFormData = () => {
     setFormData({
-      sampletypematrixname: "",
+      name: "",
+      added_by: id,
     });
   };
 
@@ -380,6 +414,15 @@ const SampleTypeMatrixArea = () => {
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
+                                <button
+                                                                                                className="btn btn-info btn-sm"
+                                                                                                onClick={() =>
+                                                                                                  handleShowHistory("sampletypematrix", id)
+                                                                                                }
+                                                                                                title="History Sample type matrix"
+                                                                                              >
+                                                                                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                                                                                              </button>
                               </div>
                             </td>
                           </tr>
@@ -397,66 +440,13 @@ const SampleTypeMatrixArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3 w-100">
-                <nav aria-label="Page navigation example" className="w-100">
-                  <ul className="pagination justify-content-end w-100">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              { totalPages >=0 && (
+  <Pagination
+    handlePageClick={handlePageChange}
+    pageCount={totalPages}
+    focusPage={currentPage}
+  />
+)}
 
               {/* Modal for Adding Committe members */}
               {(showAddModal || showEditModal) && (
@@ -518,8 +508,8 @@ const SampleTypeMatrixArea = () => {
                               <input
                                 type="text"
                                 className="form-control"
-                                name="sampletypematrixname" // Fix here
-                                value={formData.sampletypematrixname}
+                                name="name" // Fix here
+                                value={formData.name}
                                 onChange={handleInputChange}
                                 required
                               />
@@ -601,6 +591,133 @@ const SampleTypeMatrixArea = () => {
                   </div>
                 </>
               )}
+               {showHistoryModal && (
+                                            <>
+                                              {/* Bootstrap Backdrop with Blur */}
+                                              <div
+                                                className="modal-backdrop fade show"
+                                                style={{ backdropFilter: "blur(5px)" }}
+                                              ></div>
+                            
+                                              {/* Modal Content */}
+                                              <div
+                                                className="modal show d-block"
+                                                tabIndex="-1"
+                                                role="dialog"
+                                                style={{
+                                                  zIndex: 1050,
+                                                  position: "fixed",
+                                                  top: "100px",
+                                                  left: "50%",
+                                                  transform: "translateX(-50%)",
+                                                }}
+                                              >
+                                                <div className="modal-dialog modal-md" role="document">
+                                                  <div className="modal-content">
+                                                    {/* Modal Header */}
+                                                    <div className="modal-header">
+                                                      <h5 className="modal-title">History</h5>
+                                                      <button
+                                                        type="button"
+                                                        className="close"
+                                                        onClick={() => setShowHistoryModal(false)}
+                                                        style={{
+                                                          fontSize: "1.5rem",
+                                                          position: "absolute",
+                                                          right: "10px",
+                                                          top: "10px",
+                                                          cursor: "pointer",
+                                                        }}
+                                                      >
+                                                        <span>&times;</span>
+                                                      </button>
+                                                    </div>
+                            
+                                                    {/* Chat-style Modal Body */}
+                                                    <div
+                                                      className="modal-body"
+                                                      style={{
+                                                        maxHeight: "500px",
+                                                        overflowY: "auto",
+                                                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                                                        padding: "15px",
+                                                        borderRadius: "10px",
+                                                      }}
+                                                    >
+                                                      {historyData && historyData.length > 0 ? (
+                                                        historyData.map((log, index) => {
+                                                          const {
+                                                            created_name,
+                                                            updated_name,
+                                                            added_by,
+                                                            created_at,
+                                                            updated_at,
+                                                          } = log;
+                            
+                                                          return (
+                                                            <div
+                                                              key={index}
+                                                              style={{
+                                                                display: "flex",
+                                                                flexDirection: "column",
+                                                                alignItems: "flex-start",
+                                                                marginBottom: "10px",
+                                                              }}
+                                                            >
+                                                              {/* Message for City Addition */}
+                                                              <div
+                                                                style={{
+                                                                  padding: "10px 15px",
+                                                                  borderRadius: "15px",
+                                                                  backgroundColor: "#ffffff",
+                                                                  boxShadow:
+                                                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                                                  maxWidth: "75%",
+                                                                  fontSize: "14px",
+                                                                  textAlign: "left",
+                                                                }}
+                                                              >
+                                                                <b>Sample Type Matrix:</b> {created_name} was <b>added</b>{" "}
+                                                                by Registration Admin at{" "}
+                                                                {moment(created_at).format(
+                                                                  "DD MMM YYYY, h:mm A"
+                                                                )}
+                                                              </div>
+                            
+                                                              {/* Message for City Update (Only if it exists) */}
+                                                              {updated_name && updated_at && (
+                                                                <div
+                                                                  style={{
+                                                                    padding: "10px 15px",
+                                                                    borderRadius: "15px",
+                                                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                                                    boxShadow:
+                                                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                                                    maxWidth: "75%",
+                                                                    fontSize: "14px",
+                                                                    textAlign: "left",
+                                                                    marginTop: "5px", // Spacing between messages
+                                                                  }}
+                                                                >
+                                                                  <b>Sample Type Matrix:</b> {updated_name} was{" "}
+                                                                  <b>updated</b> by Registration Admin at{" "}
+                                                                  {moment(updated_at).format(
+                                                                    "DD MMM YYYY, h:mm A"
+                                                                  )}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                          );
+                                                        })
+                                                      ) : (
+                                                        <p className="text-left">No history available.</p>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </>
+                                          )}
             </div>
           </div>
         </div>

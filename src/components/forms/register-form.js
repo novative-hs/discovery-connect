@@ -163,7 +163,6 @@ const RegisterForm = () => {
     }
   };
 
-
   const onSubmit = (data) => {
     console.log(data)
     const formData = new FormData();

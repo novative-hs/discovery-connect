@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faQuestionCircle, faPlus, faHistory } from '@fortawesome/free-solid-svg-icons';
-import * as XLSX from "xlsx";
 import moment from "moment";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEdit,
+  faTrash,
+  faQuestionCircle,
+  faPlus,
+  faHistory
+} from "@fortawesome/free-solid-svg-icons";
+import * as XLSX from "xlsx";
+import Pagination from "@ui/Pagination";
 const DistrictArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  }
-  else {
+  } else {
     console.log("account_id on District page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
   const [selecteddistrictnameId, setSelecteddistrictnameId] = useState(null); // Store ID of District to delete
   const [formData, setFormData] = useState({
     districtname: "",
@@ -24,43 +29,47 @@ const DistrictArea = () => {
   });
   const [editdistrictname, setEditdistrictname] = useState(null); // State for selected District to edit
   const [districtname, setdistrictname] = useState([]); // State to hold fetched District
-  const [successMessage, setSuccessMessage] = useState('');
-
-  const [currentPage, setCurrentPage] = useState(1);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [filteredDistrictname, setFilteredDistrictname] = useState([]); // Store filtered cities
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(districtname.length / itemsPerPage);
-  const maxPageNumbersToShow = 3;
-
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+  const [totalPages, setTotalPages] = useState(0);
+  const [historyData, setHistoryData] = useState([]);
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch District from backend when component loads
   useEffect(() => {
-
     fetchdistrictname(); // Call the function when the component mounts
   }, []);
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(`${url}/district/get-district`);
+      setFilteredDistrictname(response.data);
       setdistrictname(response.data); // Store fetched District in state
     } catch (error) {
       console.error("Error fetching District:", error);
     }
   };
   const fetchHistory = async (filterType, id) => {
+    
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
+      console.log(data)
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
     }
   };
-
-  // Call this function when opening the modal
-  const handleShowHistory = (filterType, id) => {
-    fetchHistory(filterType, id);
-    setShowHistoryModal(true);
-  };
+useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredDistrictname.length / itemsPerPage));
+    setTotalPages(pages);
+    
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredDistrictname]);
+  
 
   // Calculate visible page range
   const startPage = Math.max(1, currentPage - Math.floor(maxPageNumbersToShow / 2));
@@ -68,40 +77,52 @@ const DistrictArea = () => {
   // Adjust startPage if endPage is at max
   const adjustedStartPage = Math.max(1, endPage - maxPageNumbersToShow + 1);
 
-  const currentData = districtname.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const currentData = filteredDistrictname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
-
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchdistrictname(); // Reset to fetch original data
+    let filtered;
+  
+    if (value.trim() === "") {
+      filtered = districtname; // Show all if filter is empty
     } else {
-      // Filter the sample array based on the field and value
-      const filtered = districtname.filter((districtname) =>
-        districtname[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = districtname.filter((district) =>
+        district[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      setdistrictname(filtered); // Update the state with filtered results
     }
+  
+    const newTotalPages = Math.ceil(filtered.length / itemsPerPage) || 1; // Ensure at least 1 page
+  
+    setFilteredDistrictname(filtered);
+    setTotalPages(newTotalPages); 
+    setCurrentPage(0); // Reset to first page after filtering
   };
+  
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
-
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       // POST request to your backend API
-      const response = await axios.post(`${url}/district/post-district`, formData);
+      const response = await axios.post(
+        `${url}/district/post-district`,
+        formData
+      );
       console.log("district added successfully:", response.data);
 
       // Refresh the districtname list after successful submission
@@ -112,7 +133,6 @@ const DistrictArea = () => {
       setFormData({
         districtname: "",
         added_by: id,
-
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
@@ -120,19 +140,22 @@ const DistrictArea = () => {
     }
   };
 
-
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/delete-district/${selecteddistrictnameId}`);
-      console.log(`districtname with ID ${selecteddistrictnameId} deleted successfully.`);
+      await axios.delete(
+        `http://localhost:5000/api/district/delete-district/${selecteddistrictnameId}`
+      );
+      console.log(
+        `districtname with ID ${selecteddistrictnameId} deleted successfully.`
+      );
 
       // Set success message
-      setSuccessMessage('districtname deleted successfully.');
+      setSuccessMessage("districtname deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
-        setSuccessMessage('');
+        setSuccessMessage("");
       }, 3000);
 
       // Refresh the districtname list after deletion
@@ -143,7 +166,10 @@ const DistrictArea = () => {
       setShowDeleteModal(false);
       setSelecteddistrictnameId(null);
     } catch (error) {
-      console.error(`Error deleting district with ID ${selecteddistrictnameId}:`, error);
+      console.error(
+        `Error deleting district with ID ${selecteddistrictnameId}:`,
+        error
+      );
     }
   };
   const handleEditClick = (districtname) => {
@@ -153,7 +179,7 @@ const DistrictArea = () => {
     setShowEditModal(true); // Show the edit modal
     setFormData({
       districtname: districtname.name, // Ensure it's 'districtname' and not 'name'
-      added_by: id
+      added_by: id,
     });
   };
 
@@ -167,9 +193,7 @@ const DistrictArea = () => {
       );
       console.log("districtname updated successfully:", response.data);
 
-      const newResponse = await axios.get(
-        `${url}/district/get-district`
-      );
+      const newResponse = await axios.get(`${url}/district/get-district`);
       setdistrictname(newResponse.data);
 
       setShowEditModal(false);
@@ -179,17 +203,25 @@ const DistrictArea = () => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating districtname with ID ${selecteddistrictnameId}:`, error);
+      console.error(
+        `Error updating districtname with ID ${selecteddistrictnameId}:`,
+        error
+      );
     }
   };
 
+  const resetFormData = () => {
+    setFormData({ districtname: "",added_by: id, }); // Reset to empty state
+  };
+
   const formatDate = (date) => {
-    const options = { year: '2-digit', month: 'short', day: '2-digit' };
-    const formattedDate = new Date(date).toLocaleDateString('en-GB', options);
-    const [day, month, year] = formattedDate.split(' ');
+    const options = { year: "2-digit", month: "short", day: "2-digit" };
+    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
+    const [day, month, year] = formattedDate.split(" ");
 
     // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+    const formattedMonth =
+      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
 
     return `${day}-${formattedMonth}-${year}`;
   };
@@ -205,7 +237,6 @@ const DistrictArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -227,14 +258,14 @@ const DistrictArea = () => {
       try {
         // POST data to your existing API
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
+          "http://localhost:5000/api/district/post-district",
           { bulkData: dataWithAddedBy }
         );
         console.log("Countries added successfully:", response.data);
 
-        // Refresh the city list
+        // Refresh the District list
         const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
+          "http://localhost:5000/api/district/get-district"
         );
         setdistrictname(newResponse.data);
       } catch (error) {
@@ -246,56 +277,49 @@ const DistrictArea = () => {
   };
 
   return (
-    <section className="policy__area pb-120">
-      <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto", }}
-      >
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        >
-          <div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
+    <section className="policy__area pb-120 overflow-hidden">
+      <div className="container-fluid mt-n5">
+        <div className="row justify-content-center mt-5">
+          <div className="col-12 col-md-10">
+            <div className="policy__wrapper policy__translate position-relative mt-5">
+              {/* Button Container */}
+              <div className="d-flex flex-column w-100">
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    className="alert alert-success w-100 text-start mb-2"
+                    role="alert"
+                  >
+                    {successMessage}
+                  </div>
+                )}
+
+                {/* Button Container */}
+                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+                  {/* Add District Button */}
+
+                  <button
+                    className="btn btn-primary mb-2"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Add District
+                  </button>
+
+                  {/* Upload Button (Styled as Label for Hidden Input) */}
+                  <label className="btn btn-secondary mb-2">
+                    Upload District List
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      style={{ display: "none" }}
+                      onChange={handleFileUpload}
+                    />
+                  </label>
                 </div>
-              )}
-              {/* Add District Button */}
-              <div className="d-flex justify-content-end align-items-center mb-3">
-                {/* Upload City List Button */}
-
-
-                {/* Add City Button */}
-                <button
-                  className="btn btn-primary me-3"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add District
-                </button>
-                <label className="btn btn-secondary me-3"> {/* Added `me-3` for spacing */}
-                  Upload District List
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls" // Accept only Excel files
-                    style={{ display: "none" }}
-                    onChange={handleFileUpload}
-                  />
-                </label>
               </div>
 
-
-              {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              {/* Table with responsive scroll */}
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
                     <tr className="text-center">
@@ -337,6 +361,7 @@ const DistrictArea = () => {
                       <th className="col-1">Action</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {currentData.length > 0 ? (
                       currentData.map(
@@ -374,6 +399,15 @@ const DistrictArea = () => {
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
+                                <button
+                                className="btn btn-info btn-sm"
+                                onClick={() =>
+                                  handleShowHistory("district", id)
+                                }
+                                title="History District"
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button>
                               </div>
                             </td>
                           </tr>
@@ -391,82 +425,21 @@ const DistrictArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    {/* Previous Button */}
-                    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                      </a>
-                    </li>
-
-                    {/* Pagination Number Buttons */}
-                    {adjustedStartPage > 1 && (
-                      <li className="page-item">
-                        <a className="page-link" href="#" onClick={() => handlePageChange(1)}>1</a>
-                      </li>
-                    )}
-
-                    {adjustedStartPage > 2 && (
-                      <li className="page-item disabled">
-                        <span className="page-link">...</span>
-                      </li>
-                    )}
-
-                    {Array.from({ length: endPage - adjustedStartPage + 1 }).map((_, index) => {
-                      const pageNumber = adjustedStartPage + index;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${currentPage === pageNumber ? "active" : ""}`}
-                        >
-                          <a className="page-link" href="#" onClick={() => handlePageChange(pageNumber)}>
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-
-                    {endPage < totalPages - 1 && (
-                      <li className="page-item disabled">
-                        <span className="page-link">...</span>
-                      </li>
-                    )}
-
-                    {endPage < totalPages && (
-                      <li className="page-item">
-                        <a className="page-link" href="#" onClick={() => handlePageChange(totalPages)}>
-                          {totalPages}
-                        </a>
-                      </li>
-                    )}
-
-                    {/* Next Button */}
-                    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
               {/* Modal for Adding Committe members */}
-              {showAddModal && (
+              {(showAddModal || showEditModal) && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
                   {/* Modal Content */}
                   <div
@@ -484,23 +457,32 @@ const DistrictArea = () => {
                     <div className="modal-dialog" role="document">
                       <div className="modal-content">
                         <div className="modal-header">
-                          <h5 className="modal-title">Add District</h5>
+                          <h5 className="modal-title">
+                            {showAddModal ? "Add District" : "Edit District"}
+                          </h5>
                           <button
                             type="button"
                             className="close"
-                            onClick={() => setShowAddModal(false)}
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                              resetFormData(); // Reset form data when closing the modal
+                            }}
                             style={{
-                              fontSize: '1.5rem',
-                              position: 'absolute',
-                              right: '10px',
-                              top: '10px',
-                              cursor: 'pointer'
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
                             }}
                           >
                             <span>&times;</span>
                           </button>
                         </div>
-                        <form onSubmit={handleSubmit}>
+
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                        >
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
@@ -509,15 +491,16 @@ const DistrictArea = () => {
                                 type="text"
                                 className="form-control"
                                 name="districtname"
-                                value={formData.districtname}  // Use 'districtname' here instead of 'name'
+                                value={formData.districtname}
                                 onChange={handleInputChange}
                                 required
                               />
                             </div>
                           </div>
+
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              Save
+                              {showAddModal ? "Save" : "Update District"}
                             </button>
                           </div>
                         </form>
@@ -527,6 +510,63 @@ const DistrictArea = () => {
                 </>
               )}
 
+              {/* Modal for Deleting districtname */}
+              {showDeleteModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "120px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog" role="document">
+                      <div className="modal-content">
+                        <div
+                          className="modal-header"
+                          style={{ backgroundColor: "transparent" }}
+                        >
+                          <h5 className="modal-title">Delete District</h5>
+                          <button
+                            type="button"
+                            className="btn-close"
+                            onClick={() => setShowDeleteModal(false)}
+                          ></button>
+                        </div>
+                        <div className="modal-body">
+                          <p>Are you sure you want to delete this District?</p>
+                        </div>
+                        <div className="modal-footer">
+                          <button
+                            className="btn btn-danger"
+                            onClick={handleDelete}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
               {showHistoryModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
@@ -623,136 +663,6 @@ const DistrictArea = () => {
                           )}
 
 
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Edit districtname Modal */}
-              {showEditModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Edit District</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowEditModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: '1.5rem',
-                              position: 'absolute',
-                              right: '10px',
-                              top: '10px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <form onSubmit={handleUpdate}>
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>District Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="districtname"
-                                value={formData.districtname}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              Update District
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Modal for Deleting districtname */}
-              {showDeleteModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Delete District</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowDeleteModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <div className="modal-body">
-                          <p>Are you sure you want to delete this district?</p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
                         </div>
                       </div>
                     </div>

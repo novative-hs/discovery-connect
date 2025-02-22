@@ -200,51 +200,51 @@ const SampleArea = () => {
 
   // Sample fields Dropdown
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ethnicity/ethnicitynames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/ethnicity`)
       .then(response => response.json())
       .then(data => setEthnicityNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplecondition/sampleconditionnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplecondition`)
       .then(response => response.json())
       .then(data => setSampleConditionNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/storagetemperature/storagetemperaturenames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperaturenames`)
       .then(response => response.json())
       .then(data => setStorageTemperatureNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containertype/containertypenames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertypenames`)
       .then(response => response.json())
       .then(data => setContainerTypeNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/quantityunit/quantityunitnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunitnames`)
       .then(response => response.json())
       .then(data => setQuantityUnitNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampletypematrix/sampletypematrixnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrixnames`)
       .then(response => response.json())
       .then(data => setSampleTypeMatrixNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testmethod/testmethodnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethodnames`)
       .then(response => response.json())
       .then(data => setTestMethodNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testresultunit/testresultunitnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunitnames`)
       .then(response => response.json())
       .then(data => setTestResultUnitNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/concurrentmedicalconditions/concurrentmedicalconditionsnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditionsnames`)
       .then(response => response.json())
       .then(data => setConcurrentMedicalConditionsNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testkitmanufacturer/testkitmanufacturernames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturernames`)
       .then(response => response.json())
       .then(data => setTestKitManufacturerNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystem/testsystemnames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemnames`)
       .then(response => response.json())
       .then(data => setTestSystemNames(data));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystemmanufacturer/testsystemmanufacturernames`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturernames`)
       .then(response => response.json())
       .then(data => setTestSystemManufacturerNames(data));
 

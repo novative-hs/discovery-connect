@@ -208,5 +208,5 @@ module.exports = {
   createAccount,
   getAccountDetail,
   updateAccount,
-  sendEmail,
+  
 };

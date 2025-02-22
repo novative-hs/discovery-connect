@@ -28,27 +28,25 @@ const getCollectionSiteById = (req, res) => {
 };
 
 // Controller to update collection site status
-const updateCollectionSiteStatus = (req, res) => {
+const updateCollectionSiteStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
+    return res.status(400).json({ error: "Status is required" });
   }
 
-  collectionsiteModel.updateCollectionSiteStatus(id, status, (err, result) => {
-    if (err) {
-      console.error('Error updating collection site status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating collection site status' });
-    }
+  try {
+    const result = await collectionsiteModel.updateCollectionSiteStatus(id, status);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Collection site not found or no changes made' });
-    }
+    res.status(200).json(result); // Sends success response
 
-    res.status(200).json({ message: 'Collection site status updated successfully' });
-  });
+  } catch (error) {
+    console.error("Error updating collection site status:", error);
+    res.status(500).json({ error: "An error occurred while updating collection site status" });
+  }
 };
+
 //Controller to delete a collection site
 const deleteCollectionSite = (req, res) => {
   const { id } = req.params;  // Get the id from request parameters

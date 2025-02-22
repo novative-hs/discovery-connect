@@ -526,7 +526,7 @@ const createAccount = (req, callback) => {
             switch (accountType) {
               case "Researcher":
                 query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
@@ -543,7 +543,7 @@ const createAccount = (req, callback) => {
 
               case "Organization":
                 query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   OrganizationName,
@@ -561,7 +561,7 @@ const createAccount = (req, callback) => {
 
               case "CollectionSites":
                 query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;  
                 values = [
                   userAccountId,
                   CollectionSiteName,
@@ -597,7 +597,6 @@ const createAccount = (req, callback) => {
               }
 
               const userId = results.insertId;
-
               let name=null
               // Identify correct ID for history table
               let organizationId = null,
@@ -618,12 +617,12 @@ const createAccount = (req, callback) => {
               }
 
               const historyQuery = `
-            INSERT INTO history (
-              email, password, ResearcherName, CollectionSiteName, OrganizationName, 
-              HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
-              fullAddress, city, district, country, logo, added_by, organization_id, 
-              researcher_id, collectionsite_id, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                INSERT INTO history (
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
+                  fullAddress, city, district, country, logo, added_by, organization_id, 
+                  researcher_id, collectionsite_id, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
@@ -648,21 +647,28 @@ const createAccount = (req, callback) => {
                 "added",
               ];
 
-              connection.query(
-                historyQuery,
-                historyValues,
-                (err, historyResults) => {
+              connection.query(historyQuery, historyValues, (err, historyResults) => {
+                if (err) {
+                  return connection.rollback(() => callback(err, null));
+                }
+
+                connection.commit((err) => {
                   if (err) {
-                    return connection.rollback(() => callback(err, null));
+                    return connection.rollback(() => {
+                      connection.release();
+                      callback(err, null);
+                    });
                   }
 
-                  connection.commit((err) => {
-                    if (err) {
-                      return connection.rollback(() => {
-                        connection.release();
-                        callback(err, null);
-                      });
-                    }
+                  connection.release(); // Always release the connection!
+                  
+                  //  Send Confirmation Email
+                  sendEmail(
+                    email,
+                    "Welcome to Discovery Connect",
+                    ` Dear ${name},\n\nYour account status is currently pending. 
+                    Please wait for approval.\n\nBest regards,\n LabHazir`
+                  );
 
                     connection.release(); // Always release the connection!
                     sendEmail(
@@ -676,15 +682,15 @@ const createAccount = (req, callback) => {
                       userId: userAccountId,
                     });
                   });
-                }
-              );
+                });
+              });
             });
           }
         );
       });
     });
-  });
 };
+
 
 const loginAccount = (data, callback) => {
   const { email, password } = data;

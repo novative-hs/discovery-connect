@@ -6,8 +6,11 @@ import {
   faTrash,
   faQuestionCircle,
   faPlus,
+  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
+import Pagination from "@ui/Pagination";
+import moment from "moment";
 const TestMethodArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -18,19 +21,22 @@ const TestMethodArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedTestMethodnameId, setSelectedTestMethodnameId] =useState(null); // Store ID of Plasma to delete
+   const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+  const [selectedTestMethodnameId, setSelectedTestMethodnameId] =
+    useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
-    testmethodname: "",
+    name: "",
     added_by: id,
   });
-  const [editTestMethodname, setEditTestMethodname] =
-    useState(null); // State for selected TestMethod to edit
+  const [editTestMethodname, setEditTestMethodname] = useState(null); // State for selected TestMethod to edit
   const [testmethodname, setTestMethodname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
+  const[filteredTestMethod,setFilteredTestMethod]=useState([])
   const itemsPerPage = 10;
   // Calculate total pages
-  const totalPages = Math.ceil(testmethodname.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -40,39 +46,65 @@ const TestMethodArea = () => {
   }, []);
   const fetchTestMethodname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/testmethod/get-testmethod`
-      );
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testmethod`);
+      setFilteredTestMethod(response.data)
       setTestMethodname(response.data); // Store fetched TestMethod in state
     } catch (error) {
       console.error("Error fetching TestMethod :", error);
     }
   };
-
-  const currentData = testmethodname.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchTestMethodname(); // Reset to fetch original data
-    } else {
-      // Filter the sample array based on the field and value
-      const filtered = testmethodname.filter((testmethod) =>
-        testmethod[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-      setTestMethodname(filtered); // Update the state with filtered results
-    }
-  };
-
+    useEffect(() => {
+      const pages = Math.max(1, Math.ceil(filteredTestMethod.length / itemsPerPage));
+      setTotalPages(pages);
+      
+      if (currentPage >= pages) {
+        setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      }
+    }, [filteredTestMethod]);
+    
+   
+     const currentData = filteredTestMethod.slice(
+       currentPage * itemsPerPage,
+       (currentPage + 1) * itemsPerPage
+     );
+   
+     const handlePageChange = (event) => {
+       setCurrentPage(event.selected);
+     };
+   
+     const handleFilterChange = (field, value) => {
+       let filtered = [];
+   
+       if (value.trim() === "") {
+         filtered = testmethodname; // Show all if filter is empty
+       } else {
+         filtered = testmethodname.filter((testmethod) =>
+          testmethod[field]?.toString().toLowerCase().includes(value.toLowerCase())
+         );
+       }
+   
+       setFilteredTestMethod(filtered);
+       setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+       setCurrentPage(0); // Reset to first page after filtering
+     };
+   
+     const fetchHistory = async (filterType, id) => {
+       try {
+         const response = await fetch(
+           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+         );
+         const data = await response.json();
+         setHistoryData(data);
+       } catch (error) {
+         console.error("Error fetching history:", error);
+       }
+     };
+   
+     // Call this function when opening the modal
+     const handleShowHistory = (filterType, id) => {
+       fetchHistory(filterType, id);
+       setShowHistoryModal(true);
+     };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -87,7 +119,7 @@ const TestMethodArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/testmethod/post-testmethod`,
+        `${url}/samplefields/post-samplefields/testmethod`,
         formData
       );
       console.log("Test Method added successfully:", response.data);
@@ -101,7 +133,7 @@ const TestMethodArea = () => {
       fetchTestMethodname();
       // Clear form after submission
       setFormData({
-        testmethodname: "",
+        name: "",
         added_by: id,
       });
       setShowAddModal(false); // Close modal after submission
@@ -114,7 +146,7 @@ const TestMethodArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/testmethod/delete-testmethod/${selectedTestMethodnameId}`
+        `${url}/samplefields/delete-samplefields/testmethod/${selectedTestMethodnameId}`
       );
       console.log(
         `Test Method name with ID ${selectedTestMethodnameId} deleted successfully.`
@@ -128,12 +160,7 @@ const TestMethodArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testmethod/get-testmethod`
-      );
-      setTestMethodname(newResponse.data);
-
+     fetchTestMethodname()
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedTestMethodnameId(null);
@@ -146,7 +173,7 @@ const TestMethodArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -155,7 +182,7 @@ const TestMethodArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showDeleteModal, showAddModal, showEditModal ,showHistoryModal]);
 
   const handleEditClick = (testmethodname) => {
     console.log("data in case of update is", testmethodname);
@@ -164,7 +191,7 @@ const TestMethodArea = () => {
     setEditTestMethodname(testmethodname);
 
     setFormData({
-      testmethodname: testmethodname.name,
+      name: testmethodname.name,
       added_by: id,
     });
 
@@ -176,13 +203,10 @@ const TestMethodArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/testmethod/put-testmethod/${selectedTestMethodnameId}`,
+        `${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`,
         formData
       );
-      console.log(
-        "Test Method Name updated successfully:",
-        response.data
-      );
+      console.log("Test Method Name updated successfully:", response.data);
 
       fetchTestMethodname();
 
@@ -192,6 +216,7 @@ const TestMethodArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      resetFormData()
     } catch (error) {
       console.error(
         `Error updating Test Method name with ID ${selectedTestMethodnameId}:`,
@@ -235,10 +260,9 @@ const TestMethodArea = () => {
 
       try {
         // POST request inside the same function
-        const response = await axios.post(
-          `${url}/testmethod/post-testmethod`,
-          { bulkData: dataWithAddedBy }
-        );
+        const response = await axios.post(`${url}/samplefields/post-samplefields/testmethod`, {
+          bulkData: dataWithAddedBy,
+        });
         console.log("Test Method added successfully:", response.data);
 
         fetchTestMethodname();
@@ -252,7 +276,8 @@ const TestMethodArea = () => {
 
   const resetFormData = () => {
     setFormData({
-      testmethodname: "",
+      name: "",
+      added_by: id,
     });
   };
 
@@ -380,6 +405,15 @@ const TestMethodArea = () => {
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
+                                <button
+                                  className="btn btn-info btn-sm"
+                                  onClick={() =>
+                                    handleShowHistory("testmethod", id)
+                                  }
+                                  title="History Test Method"
+                                >
+                                  <FontAwesomeIcon icon={faHistory} size="sm" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -397,66 +431,13 @@ const TestMethodArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3 w-100">
-                <nav aria-label="Page navigation example" className="w-100">
-                  <ul className="pagination justify-content-end w-100">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
 
               {/* Modal for Adding Committe members */}
               {(showAddModal || showEditModal) && (
@@ -518,8 +499,8 @@ const TestMethodArea = () => {
                               <input
                                 type="text"
                                 className="form-control"
-                                name="testmethodname" // Fix here
-                                value={formData.testmethodname}
+                                name="name" // Fix here
+                                value={formData.name}
                                 onChange={handleInputChange}
                                 required
                               />
@@ -528,9 +509,7 @@ const TestMethodArea = () => {
 
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              {showAddModal
-                                ? "Save"
-                                : "Update Test Method"}
+                              {showAddModal ? "Save" : "Update Test Method"}
                             </button>
                           </div>
                         </form>
@@ -568,9 +547,7 @@ const TestMethodArea = () => {
                           className="modal-header"
                           style={{ backgroundColor: "transparent" }}
                         >
-                          <h5 className="modal-title">
-                            Delete Test Method
-                          </h5>
+                          <h5 className="modal-title">Delete Test Method</h5>
                           <button
                             type="button"
                             className="btn-close"
@@ -595,6 +572,133 @@ const TestMethodArea = () => {
                           >
                             Cancel
                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              {showHistoryModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "100px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog modal-md" role="document">
+                      <div className="modal-content">
+                        {/* Modal Header */}
+                        <div className="modal-header">
+                          <h5 className="modal-title">History</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowHistoryModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+
+                        {/* Chat-style Modal Body */}
+                        <div
+                          className="modal-body"
+                          style={{
+                            maxHeight: "500px",
+                            overflowY: "auto",
+                            backgroundColor: "#e5ddd5", // WhatsApp-style background
+                            padding: "15px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          {historyData && historyData.length > 0 ? (
+                            historyData.map((log, index) => {
+                              const {
+                                created_name,
+                                updated_name,
+                                added_by,
+                                created_at,
+                                updated_at,
+                              } = log;
+
+                              return (
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-start",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  {/* Message for City Addition */}
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor: "#ffffff",
+                                      boxShadow:
+                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                    }}
+                                  >
+                                    <b>Test Method:</b> {created_name} was{" "}
+                                    <b>added</b> by Registration Admin at{" "}
+                                    {moment(created_at).format(
+                                      "DD MMM YYYY, h:mm A"
+                                    )}
+                                  </div>
+
+                                  {/* Message for City Update (Only if it exists) */}
+                                  {updated_name && updated_at && (
+                                    <div
+                                      style={{
+                                        padding: "10px 15px",
+                                        borderRadius: "15px",
+                                        backgroundColor: "#dcf8c6", // Light green for updates
+                                        boxShadow:
+                                          "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                        maxWidth: "75%",
+                                        fontSize: "14px",
+                                        textAlign: "left",
+                                        marginTop: "5px", // Spacing between messages
+                                      }}
+                                    >
+                                      <b>Test Method:</b> {updated_name} was{" "}
+                                      <b>updated</b> by Registration Admin at{" "}
+                                      {moment(updated_at).format(
+                                        "DD MMM YYYY, h:mm A"
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-left">No history available.</p>
+                          )}
                         </div>
                       </div>
                     </div>

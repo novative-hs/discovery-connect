@@ -5,7 +5,6 @@ const registrationController = require("../controller/registrationController");
 const storage = multer.memoryStorage(); 
 const upload = multer({ storage: storage });
 
-router.post("/send-email", registrationController.sendEmail);
 router.post('/create-account-table', registrationController.createuser_accountTable);
 router.post('/create-researcher-table', registrationController.create_researcherTable);
 router.post('/create-organization-table', registrationController.create_organizationTable);

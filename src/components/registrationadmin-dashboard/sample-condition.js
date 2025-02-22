@@ -6,8 +6,12 @@ import {
   faTrash,
   faQuestionCircle,
   faPlus,
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
+import Pagination from "@ui/Pagination";
+import moment from "moment";
+
 const SampleConditionArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -18,20 +22,24 @@ const SampleConditionArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+
   const [selectedSampleConditionnameId, setSelectedSampleConditionnameId] =
     useState(null); // Store ID of City to delete
-   const [formData, setFormData] = useState({
-    sampleconditionname: "",
-      added_by: id,
-    });
-  const [editSampleConditionname, setEditSampleConditionname] =
-    useState(null); // State for selected City to edit
+  const [formData, setFormData] = useState({
+    name: "",
+    added_by: id,
+  });
+  const [editSampleConditionname, setEditSampleConditionname] = useState(null); // State for selected City to edit
   const [sampleconditionname, setSampleConditionname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredSampleconditionname, setFilteredSampleconditionname] =
+    useState([]); // Store filtered cities
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
-  const totalPages = Math.ceil(sampleconditionname.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -42,36 +50,70 @@ const SampleConditionArea = () => {
   const fetchSampleConditionname = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplecondition/get-samplecondition`
+        `${url}/samplefields/get-samplefields/samplecondition`
       );
+      setFilteredSampleconditionname(response.data); // Initialize filtered list
       setSampleConditionname(response.data); // Store fetched City in state
     } catch (error) {
       console.error("Error fetching Sample Condition", error);
     }
   };
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredSampleconditionname.length / itemsPerPage)
+    );
+    setTotalPages(pages);
 
-  const currentData = sampleconditionname.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredSampleconditionname]);
+
+  const currentData = filteredSampleconditionname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchSampleConditionname(); // Reset to fetch original data
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = sampleconditionname; // Show all if filter is empty
     } else {
-      // Filter the sample array based on the field and value
-      const filtered = sampleconditionname.filter((samplecondition) =>
+      filtered = sampleconditionname.filter((samplecondition) =>
         samplecondition[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
       );
-      setSampleConditionname(filtered); // Update the state with filtered results
     }
+
+    setFilteredSampleconditionname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
+  };
+
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
   };
 
   const handleInputChange = (e) => {
@@ -88,7 +130,7 @@ const SampleConditionArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplecondition/post-samplecondition`,
+        `${url}/samplefields/post-samplefields/samplecondition`,
         formData
       );
       console.log("Sample Condition added successfully:", response.data);
@@ -100,10 +142,7 @@ const SampleConditionArea = () => {
       }, 3000);
       fetchSampleConditionname();
       // Clear form after submission
-      setFormData({
-        sampleconditionname: "",
-        added_by: id,
-      });
+      resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding Sample Condition:", error);
@@ -114,7 +153,7 @@ const SampleConditionArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplecondition/delete-samplecondition/${selectedSampleConditionnameId}`
+        `${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`
       );
       console.log(
         `Sample Condition name with ID ${selectedSampleConditionnameId} deleted successfully.`
@@ -128,12 +167,7 @@ const SampleConditionArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplecondition/get-samplecondition`
-      );
-      setSampleConditionname(newResponse.data);
-
+      fetchSampleConditionname();
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedSampleConditionnameId(null);
@@ -146,7 +180,7 @@ const SampleConditionArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -155,7 +189,7 @@ const SampleConditionArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (sampleconditionname) => {
     console.log("data in case of update is", sampleconditionname);
@@ -164,7 +198,7 @@ const SampleConditionArea = () => {
     setEditSampleConditionname(sampleconditionname);
 
     setFormData({
-      sampleconditionname: sampleconditionname.name,
+      name: sampleconditionname.name,
       added_by: id,
     });
 
@@ -176,13 +210,10 @@ const SampleConditionArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplecondition/put-samplecondition/${selectedSampleConditionnameId}`,
+        `${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`,
         formData
       );
-      console.log(
-        "sample condition Name updated successfully:",
-        response.data
-      );
+      console.log("sample condition Name updated successfully:", response.data);
 
       fetchSampleConditionname();
 
@@ -236,7 +267,7 @@ const SampleConditionArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplecondition/post-samplecondition`,
+          `${url}/samplefields/post-samplefields/samplecondition`,
           { bulkData: dataWithAddedBy }
         );
         console.log("Sample condition added successfully:", response.data);
@@ -252,7 +283,8 @@ const SampleConditionArea = () => {
 
   const resetFormData = () => {
     setFormData({
-      sampleconditionname: "",
+      name: "",
+      added_by: id,
     });
   };
 
@@ -380,6 +412,15 @@ const SampleConditionArea = () => {
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
+                                <button
+                                  className="btn btn-info btn-sm"
+                                  onClick={() =>
+                                    handleShowHistory("samplecondition", id)
+                                  }
+                                  title="History Sample Condition"
+                                >
+                                  <FontAwesomeIcon icon={faHistory} size="sm" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -397,66 +438,13 @@ const SampleConditionArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3 w-100">
-                <nav aria-label="Page navigation example" className="w-100">
-                  <ul className="pagination justify-content-end w-100">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
 
               {/* Modal for Adding Committe members */}
               {(showAddModal || showEditModal) && (
@@ -518,8 +506,8 @@ const SampleConditionArea = () => {
                               <input
                                 type="text"
                                 className="form-control"
-                                name="sampleconditionname" // Fix here
-                                value={formData.sampleconditionname}
+                                name="name" // Fix here
+                                value={formData.name}
                                 onChange={handleInputChange}
                                 required
                               />
@@ -528,9 +516,7 @@ const SampleConditionArea = () => {
 
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              {showAddModal
-                                ? "Save"
-                                : "Update SampleCondition"}
+                              {showAddModal ? "Save" : "Update SampleCondition"}
                             </button>
                           </div>
                         </form>
@@ -579,7 +565,8 @@ const SampleConditionArea = () => {
                         </div>
                         <div className="modal-body">
                           <p>
-                            Are you sure you want to delete this Sample Condition?
+                            Are you sure you want to delete this Sample
+                            Condition?
                           </p>
                         </div>
                         <div className="modal-footer">
@@ -595,6 +582,133 @@ const SampleConditionArea = () => {
                           >
                             Cancel
                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              {showHistoryModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
+
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "100px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog modal-md" role="document">
+                      <div className="modal-content">
+                        {/* Modal Header */}
+                        <div className="modal-header">
+                          <h5 className="modal-title">History</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowHistoryModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+
+                        {/* Chat-style Modal Body */}
+                        <div
+                          className="modal-body"
+                          style={{
+                            maxHeight: "500px",
+                            overflowY: "auto",
+                            backgroundColor: "#e5ddd5", // WhatsApp-style background
+                            padding: "15px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          {historyData && historyData.length > 0 ? (
+                            historyData.map((log, index) => {
+                              const {
+                                created_name,
+                                updated_name,
+                                added_by,
+                                created_at,
+                                updated_at,
+                              } = log;
+
+                              return (
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-start",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  {/* Message for City Addition */}
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor: "#ffffff",
+                                      boxShadow:
+                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                    }}
+                                  >
+                                    <b>Sample Condition:</b> {created_name} was{" "}
+                                    <b>added</b> by Registration Admin at{" "}
+                                    {moment(created_at).format(
+                                      "DD MMM YYYY, h:mm A"
+                                    )}
+                                  </div>
+
+                                  {/* Message for City Update (Only if it exists) */}
+                                  {updated_name && updated_at && (
+                                    <div
+                                      style={{
+                                        padding: "10px 15px",
+                                        borderRadius: "15px",
+                                        backgroundColor: "#dcf8c6", // Light green for updates
+                                        boxShadow:
+                                          "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                        maxWidth: "75%",
+                                        fontSize: "14px",
+                                        textAlign: "left",
+                                        marginTop: "5px", // Spacing between messages
+                                      }}
+                                    >
+                                      <b>Sample Condition:</b> {updated_name} was{" "}
+                                      <b>updated</b> by Registration Admin at{" "}
+                                      {moment(updated_at).format(
+                                        "DD MMM YYYY, h:mm A"
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-left">No history available.</p>
+                          )}
                         </div>
                       </div>
                     </div>

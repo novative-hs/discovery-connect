@@ -23,26 +23,22 @@ const getCurrentOrganizationById = (req, res) => {
 
 
 // Controller to update organization status
-const updateOrganizationStatus = (req, res) => {
+const updateOrganizationStatus = async(req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   if (!status) {
     return res.status(400).json({ error: "Status is required" });
   }
-
-  organizationModel.updateOrganizationStatus(id, status, (err, result) => {
-    if (err) {
-      console.error("Error updating organization status:", err);
-      return res.status(500).json({ error: "An error occurred while updating status" });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Organization not found or no changes made" });
-    }
-
-    res.status(200).json({ message: "Organization status updated successfully" });
-  });
+try {
+    const result = await organizationModel.updateOrganizationStatus(id, status);
+    res.status(200).json(result); // Sends success response
+  } catch (error) {
+    console.error("Error updating Organization  status:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating Organization status" });
+  }
 };
 
 const updateOrganization = (req, res) => {
