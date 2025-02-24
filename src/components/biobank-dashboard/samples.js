@@ -206,56 +206,56 @@ const BioBankSampleArea = () => {
   }, [filter, samples]);
 
   // Sample fields Dropdown
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ethnicity/ethnicitynames`)
-      .then(response => response.json())
-      .then(data => setEthnicityNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplecondition/sampleconditionnames`)
-      .then(response => response.json())
-      .then(data => setSampleConditionNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/storagetemperature/storagetemperaturenames`)
-      .then(response => response.json())
-      .then(data => setStorageTemperatureNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/containertype/containertypenames`)
-      .then(response => response.json())
-      .then(data => setContainerTypeNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/quantityunit/quantityunitnames`)
-      .then(response => response.json())
-      .then(data => setQuantityUnitNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampletypematrix/sampletypematrixnames`)
-      .then(response => response.json())
-      .then(data => setSampleTypeMatrixNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testmethod/testmethodnames`)
-      .then(response => response.json())
-      .then(data => setTestMethodNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testresultunit/testresultunitnames`)
-      .then(response => response.json())
-      .then(data => setTestResultUnitNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/concurrentmedicalconditions/concurrentmedicalconditionsnames`)
-      .then(response => response.json())
-      .then(data => setConcurrentMedicalConditionsNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testkitmanufacturer/testkitmanufacturernames`)
-      .then(response => response.json())
-      .then(data => setTestKitManufacturerNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystem/testsystemnames`)
-      .then(response => response.json())
-      .then(data => setTestSystemNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/testsystemmanufacturer/testsystemmanufacturernames`)
-      .then(response => response.json())
-      .then(data => setTestSystemManufacturerNames(data));
-
-  }, []);
+    useEffect(() => {
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/ethnicity`)
+        .then(response => response.json())
+        .then(data => setEthnicityNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplecondition`)
+        .then(response => response.json())
+        .then(data => setSampleConditionNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`)
+        .then(response => response.json())
+        .then(data => setStorageTemperatureNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertype`)
+        .then(response => response.json())
+        .then(data => setContainerTypeNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunit`)
+        .then(response => response.json())
+        .then(data => setQuantityUnitNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrix`)
+        .then(response => response.json())
+        .then(data => setSampleTypeMatrixNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethod`)
+        .then(response => response.json())
+        .then(data => setTestMethodNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunit`)
+        .then(response => response.json())
+        .then(data => setTestResultUnitNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditions`)
+        .then(response => response.json())
+        .then(data => setConcurrentMedicalConditionsNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturer`)
+        .then(response => response.json())
+        .then(data => setTestKitManufacturerNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystem`)
+        .then(response => response.json())
+        .then(data => setTestSystemNames(data));
+  
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturer`)
+        .then(response => response.json())
+        .then(data => setTestSystemManufacturerNames(data));
+  
+    }, []);
 
   const currentData = samples.slice(
     (currentPage - 1) * itemsPerPage,
