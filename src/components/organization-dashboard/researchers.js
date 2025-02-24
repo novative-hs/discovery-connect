@@ -29,6 +29,27 @@ const ResearcherArea = () => {
     logo: "",
     added_by: "",
   });
+  const [activeField, setActiveField] = useState(null);
+  const [filters, setFilters] = useState({});
+
+  const headers = [
+    { label: "ID", field: "id", icon: "fa-hashtag", minWidth: "80px" },
+    { label: "Name", field: "ResearcherName", icon: "fa-user", minWidth: "150px" },
+    { label: "Email", field: "email", icon: "fa-envelope", minWidth: "170px" },
+    { label: "Phone", field: "phoneNumber", icon: "fa-phone", minWidth: "130px" },
+    { label: "Org", field: "organization_name", icon: "fa-building", minWidth: "150px" },
+    { label: "City", field: "city_name", icon: "fa-city", minWidth: "120px" },
+    { label: "Country", field: "country_name", icon: "fa-globe", minWidth: "120px" },
+    { label: "District", field: "district_name", icon: "fa-map-marker-alt", minWidth: "120px" },
+    { label: "Address", field: "fullAddress", icon: "fa-home", minWidth: "200px" },
+    { label: "Created", field: "created_at", icon: "fa-calendar-plus", minWidth: "140px" },
+    { label: "Updated", field: "updated_at", icon: "fa-calendar-check", minWidth: "140px" },
+    { label: "Status", field: "status", icon: "fa-info-circle", minWidth: "100px" },
+  ];
+
+  const handleBlur = () => {
+    setActiveField(null);
+  };
   const [showPassword, setShowPassword] = useState(false);
   const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
   const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
@@ -58,13 +79,13 @@ const ResearcherArea = () => {
       console.log("account_id on city page is:", id);
     }
   }, []);
-  
+
   const fetchResearcher = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${orgid}`
       );
-      console.log(response.data.length)
+      console.log(response.data.length);
       setFilteredResearchername(response.data);
       setResearchers(response.data); // Store fetched researchers in state
     } catch (error) {
@@ -303,14 +324,17 @@ const ResearcherArea = () => {
       console.error("Error updating researcher:", error);
     }
   };
-   useEffect(() => {
-      const pages = Math.max(1, Math.ceil(filteredResearchername.length / itemsPerPage));
-      setTotalPages(pages);
-      
-      if (currentPage >= pages) {
-        setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-      }
-    }, [filteredResearchername]);
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredResearchername.length / itemsPerPage)
+    );
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredResearchername]);
 
   // Get the current data for the table
   const currentData = filteredResearchername.slice(
@@ -338,7 +362,6 @@ const ResearcherArea = () => {
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
-
 
   useEffect(() => {
     if (showAddModal || showEditModal || showHistoryModal) {
@@ -388,9 +411,16 @@ const ResearcherArea = () => {
               </div>
 
               {/* Table */}
-              <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover small">
-                  <thead className="thead-dark">
+              <div className="table-responsive w-100 ">
+                <table
+                  className="table table-bordered table-hover small"
+                  style={{
+                    backgroundColor: "#f8f9ff", // Light blue background
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <thead style={{ backgroundColor: "#eef0fb" }}>
                     <tr className="text-center">
                       {[
                         { label: "ID", field: "id", minWidth: "80px" },
@@ -448,7 +478,7 @@ const ResearcherArea = () => {
                           style={{ minWidth }}
                         >
                           <div className="d-flex flex-column align-items-center">
-                            <input
+                          <input
                               type="text"
                               className="form-control form-control-sm text-center"
                               placeholder={label}
@@ -457,6 +487,7 @@ const ResearcherArea = () => {
                               }
                               style={{ minWidth: "100px" }}
                             />
+                             
                             <span className="fw-bold mt-1">{label}</span>
                           </div>
                         </th>
@@ -631,8 +662,8 @@ const ResearcherArea = () => {
                                   name="ResearcherName"
                                   value={formData.ResearcherName}
                                   onChange={handleInputChange}
-                                   pattern="^[A-Za-z\s]+$"
-                                title="Only letters and spaces are allowed."
+                                  pattern="^[A-Za-z\s]+$"
+                                  title="Only letters and spaces are allowed."
                                   required
                                 />
                               </div>
@@ -658,7 +689,7 @@ const ResearcherArea = () => {
                                     onChange={handleInputChange}
                                     required
                                     pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?':{}|<>])[A-Za-z\d!@#$%^&*(),.?':{}|<>]{6,}$"
-                                  title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                                    title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
                                   />
 
                                   <button

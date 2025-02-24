@@ -271,163 +271,111 @@ const updateAccount = (req, callback) => {
     ntnNumber,
   } = req.body;
 
-  // Handle the logo file (if provided)
-  let logo = null;
-  if (req.file) {
-    // If a file was uploaded, convert it to a buffer
-    logo = req.file.buffer;
-  }
-  //Start MySQL transaction
+  let logo = req.file ? req.file.buffer : null;
+
   mysqlConnection.beginTransaction((err) => {
-    if (err) {
-      console.error("Error starting transaction:", err);
-      return callback(err, null);
-    }
+    if (err) return callback(err, null);
 
-    // Check if user account exists
-    const checkAccountQuery = "SELECT * FROM user_account WHERE id = ?";
-    mysqlConnection.query(
-      checkAccountQuery,
-      [user_account_id],
-      (err, results) => {
-        if (err) {
-          return mysqlConnection.rollback(() => {
-            console.error("Database Query Error:", err);
-            callback(err, null);
-          });
+    // Fetch previous email and password from user_account
+    const checkAccountQuery = "SELECT email, password FROM user_account WHERE id = ?";
+    mysqlConnection.query(checkAccountQuery, [user_account_id], (err, userResults) => {
+      if (err) return mysqlConnection.rollback(() => callback(err, null));
+      if (userResults.length === 0) return mysqlConnection.rollback(() => callback(new Error("Account not found"), null));
+
+      const previousEmail = userResults[0].email;
+      const previousPassword = userResults[0].password;
+
+      // Update user_account table
+      const updateUserAccountQuery = "UPDATE user_account SET email = ? WHERE id = ?";
+      mysqlConnection.query(updateUserAccountQuery, [useraccount_email, user_account_id], (err) => {
+        if (err) return mysqlConnection.rollback(() => callback(err, null));
+
+        let fetchQuery, updateQuery, values;
+
+        switch (accountType) {
+          case "Researcher":
+            fetchQuery = "SELECT * FROM researcher WHERE user_account_id = ?";
+            updateQuery = `
+              UPDATE researcher SET 
+                ResearcherName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                country = ?, nameofOrganization = ?, logo = ? WHERE user_account_id = ?
+            `;
+            values = [ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, user_account_id];
+            break;
+
+          case "Organization":
+            fetchQuery = "SELECT * FROM organization WHERE user_account_id = ?";
+            updateQuery = `
+              UPDATE organization SET 
+                OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, ntnNumber = ?, 
+                phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
+              WHERE user_account_id = ?
+            `;
+            values = [OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+            break;
+
+          case "CollectionSites":
+            fetchQuery = "SELECT * FROM collectionsite WHERE user_account_id = ?";
+            updateQuery = `
+              UPDATE collectionsite SET 
+                CollectionSiteName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                country = ?, logo = ? WHERE user_account_id = ?
+            `;
+            values = [CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+            break;
+
+          default:
+            return mysqlConnection.rollback(() => callback(new Error("Invalid account type"), null));
         }
 
-        if (results.length === 0) {
-          // If account does not exist, return an error
-          return mysqlConnection.rollback(() => {
-            callback(new Error("Account not found"), null);
-          });
-        }
+        // Fetch previous details before updating
+        mysqlConnection.query(fetchQuery, [user_account_id], (err, previousResults) => {
+          if (err) return mysqlConnection.rollback(() => callback(err, null));
 
-        // Update user account table
-        const updateUserAccountQuery = `
-        UPDATE user_account SET email = ? WHERE id = ?
-      `;
-        const updateUserAccountValues = [useraccount_email, user_account_id];
+          const previousData = previousResults[0] || {};
 
-        mysqlConnection.query(
-          updateUserAccountQuery,
-          updateUserAccountValues,
-          (err, userAccountResults) => {
-            if (err) {
-              return mysqlConnection.rollback(() => {
-                console.error("Error updating user_account:", err);
-                callback(err, null);
-              });
-            }
+          // Perform update
+          mysqlConnection.query(updateQuery, values, (err) => {
+            if (err) return mysqlConnection.rollback(() => callback(err, null));
 
-            let query, values;
+            // Insert previous values into history
+            const historyQuery = `
+              INSERT INTO history (
+                email, password, ResearcherName, CollectionSiteName, OrganizationName, 
+                HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
+                fullAddress, city, district, country, logo, added_by, organization_id, 
+                researcher_id, collectionsite_id, status
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
 
-            // Prepare the query and values based on account type
-            switch (accountType) {
-              case "Researcher":
-                query = `
-                UPDATE researcher SET 
-                  ResearcherName = ?, 
-                  phoneNumber = ?, 
-                  fullAddress = ?, 
-                  city = ?, 
-                  district = ?, 
-                  country = ?, 
-                  nameofOrganization = ?, 
-                  logo = ?
-                WHERE user_account_id = ?
-              `;
-                values = [
-                  ResearcherName,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  nameofOrganization,
-                  logo,
-                  user_account_id,
-                ];
-                break;
+            const historyValues = [
+              previousEmail,
+              previousPassword,
+              previousData.ResearcherName || null,
+              previousData.CollectionSiteName || null,
+              previousData.OrganizationName || null,
+              previousData.HECPMDCRegistrationNo || null,
+              previousData.ntnNumber || null,
+              previousData.nameofOrganization || null,
+              previousData.type || null,
+              previousData.phoneNumber || null,
+              previousData.fullAddress || null,
+              previousData.city || null,
+              previousData.district || null,
+              previousData.country || null,
+              previousData.logo || null,
+              added_by|| null, // added_by (assuming it's available somewhere)
+              previousData.organization_id || null,
+              previousData.researcher_id || null,
+              previousData.collectionsite_id || null,
+              "updated",
+            ];
 
-              case "Organization":
-                query = `
-                UPDATE organization SET 
-                  OrganizationName = ?, 
-                  type = ?, 
-                  HECPMDCRegistrationNo = ?, 
-                  ntnNumber = ?, 
-                  phoneNumber = ?, 
-                  fullAddress = ?, 
-                  city = ?, 
-                  district = ?, 
-                  country = ?, 
-                  logo = ?
-                WHERE user_account_id = ?
-              `;
-                values = [
-                  OrganizationName,
-                  type,
-                  HECPMDCRegistrationNo,
-                  ntnNumber,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  logo,
-                  user_account_id,
-                ];
-                break;
+            mysqlConnection.query(historyQuery, historyValues, (err) => {
+              if (err) return mysqlConnection.rollback(() => callback(err, null));
 
-              case "CollectionSites":
-                query = `
-                UPDATE collectionsite SET 
-                  CollectionSiteName = ?, 
-                  phoneNumber = ?, 
-                  fullAddress = ?, 
-                  city = ?, 
-                  district = ?, 
-                  country = ?, 
-                  logo = ?
-                WHERE user_account_id = ?
-              `;
-                values = [
-                  CollectionSiteName,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  logo,
-                  user_account_id,
-                ];
-                break;
-
-              default:
-                return mysqlConnection.rollback(() => {
-                  callback(new Error("Invalid account type"), null);
-                });
-            }
-
-            // Execute the query for the secondary table
-            mysqlConnection.query(query, values, (err, results) => {
-              if (err) {
-                return mysqlConnection.rollback(() => {
-                  console.error("Error updating secondary table:", err);
-                  callback(err, null);
-                });
-              }
-
-              // If everything is successful, commit the transaction
               mysqlConnection.commit((err) => {
-                if (err) {
-                  return mysqlConnection.rollback(() => {
-                    console.error("Error committing transaction:", err);
-                    callback(err, null);
-                  });
-                }
+                if (err) return mysqlConnection.rollback(() => callback(err, null));
 
                 callback(null, {
                   message: "Account updated successfully",
@@ -435,10 +383,10 @@ const updateAccount = (req, callback) => {
                 });
               });
             });
-          }
-        );
-      }
-    );
+          });
+        });
+      });
+    });
   });
 };
 
@@ -670,7 +618,6 @@ const createAccount = (req, callback) => {
     });
   });
 };
-
 
 const loginAccount = (data, callback) => {
   const { email, password } = data;
