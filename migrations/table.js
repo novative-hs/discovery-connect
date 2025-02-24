@@ -18,7 +18,6 @@ const paymentModel = require('../models/paymentModals')
 
 const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
-const newtablefieldModel=require("../models/newtablefieldModel")
 // Function to initialize all tables
 function Database() {
 
@@ -54,7 +53,7 @@ function Database() {
   samplefieldsModel.createConcurrentMedicalConditionsTable();
   historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
-   newtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 
 }
 Database();
