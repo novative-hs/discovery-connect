@@ -17,7 +17,7 @@ import SampleConditionArea from "./sample-condition";
 import StorageTemperatureArea from "./storage-temperature";
 import ContainerTypeArea from "./container-type";
 import QuantityUnitArea from "./quantity-unit";
-import SampleTypeMatrixArea from "./sample-type-matrix"; 
+import SampleTypeMatrixArea from "./sample-type-matrix";
 import TestMethodArea from "./test-method";
 import TestResultUnitArea from "./test-result-unit";
 import ConcurrentMedicalConditionsArea from "./concurrent-medical-conditions";
@@ -104,13 +104,13 @@ const DashboardArea = () => {
         return <OrderInfo setActiveTab={setActiveTab} />;
     }
   };
-  
+
 
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area pt-180 pb-120">
-        <div className="container mt-n5 w-100">
+        <div className="container" style={{ marginTop: '-80px' }}>
           <div className="profile__inner position-relative">
             <ProfileShapes />
             <div className="row">
@@ -126,7 +126,6 @@ const DashboardArea = () => {
       </section>
     </>
   );
-  
 };
 
 export default DashboardArea;
