@@ -91,11 +91,7 @@ const CollectionsiteArea = () => {
       }, 3000);
 
       // Refresh the collectionsite list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
-      );
-      setCollectionsites(newResponse.data);
-
+      fetchCollectionsites(); 
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedCollectionsiteId(null);
@@ -129,11 +125,9 @@ const CollectionsiteArea = () => {
       );
       console.log("Collectionsite updated successfully:", response.data);
 
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
-      );
+      fetchCollectionsites(); 
       setShowEditModal(false);
-      setCollectionsites(newResponse.data);
+      
 
       setSuccessMessage("Collectionsite updated successfully.");
       setTimeout(() => {

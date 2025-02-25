@@ -146,11 +146,7 @@ const CityArea = () => {
       }, 3000);
 
       // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
-      );
-      setcityname(newResponse.data);
-
+      fetchcityname()
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedcitynameId(null);
@@ -256,10 +252,7 @@ const CityArea = () => {
         console.log("Cities added successfully:", response.data);
 
         // Refresh the city list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
-        );
-        setcityname(newResponse.data);
+        fetchcityname()
       } catch (error) {
         console.error("Error uploading file:", error);
       }

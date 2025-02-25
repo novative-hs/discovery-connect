@@ -37,91 +37,29 @@ const getAllCountries = (callback) => {
 };
 
 const createCountry = (data, callback) => {
-  console.log('Received Request Body:', data); // Debugging
-  const { bulkData, countryname, added_by } = data || {}; // Handle undefined gracefully
-  mysqlPool.getConnection((err, connection) => { // Use connection from pool
-    if (err) {
-      return callback(err, null);
-    }
-  connection.beginTransaction((err) => {
-    if (err) {
-      connection.release();
-      return callback(err, null);
-    }
-    if (bulkData) {
-      const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
-      const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
-      const cityQuery = `
-        INSERT INTO country (name, added_by)
-        VALUES ?
-        ON DUPLICATE KEY UPDATE name = name;
-      `;
-      connection.query(cityQuery, [values], (err, countryResult) => {
-        if (err) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(err, null);
-          });
-        }
-        const insertedCountryIds = countryResult.insertId; // Get the first inserted country ID
-        if (!insertedCountryIds) {
-          return mysqlConnection.rollback(() => {
-            callback(new Error("Failed to retrieve country ID"), null);
-          });
-        }
-        // Insert into RegistrationAdmin_History
-        const historyValues = uniqueData.map(({ name, added_by }) => [
-          name, added_by, insertedCountryIds, 'active'
-        ]);
-        const historyQuery = `
-          INSERT INTO RegistrationAdmin_History (created_name, added_by, country_id, status)
+  console.log("Received Request Body:", data);
+  const { bulkData, countryname, added_by } = data || {};
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err, null);
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        return callback(err, null);
+      }
+
+      if (bulkData) {
+        const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+        const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+
+        const countryQuery = `
+          INSERT INTO country (name, added_by)
           VALUES ?
+          ON DUPLICATE KEY UPDATE name = VALUES(name);
         `;
-        connection.query(historyQuery, [historyValues], (err, historyResult) => {
-          if (err) {
-            return connection.rollback(() => {
-              connection.release();
-              callback(err, null);
-            });
-          }
-          connection.commit((err) => {
-            if (err) {
-              return connection.rollback(() => {
-                connection.release();
-                callback(err, null);
-              });
-            }
-            connection.release();
-            callback(null, { countryResult, historyResult });
-          });
-        });
-      });
-    } else if (countryname && added_by) {
-      const cityQuery = `
-        INSERT INTO country (name, added_by)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE name = name;
-      `;
-      connection.query(cityQuery, [countryname, added_by], (err, countryResult) => {
-        if (err) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(err, null);
-          });
-        }
-        const countryId = countryResult.insertId;
-        if (!countryId) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(new Error("Failed to retrieve country ID"), null);
-          });
-        }
-        // Insert into RegistrationAdmin_History
-        const historyQuery = `
-          INSERT INTO RegistrationAdmin_History (created_name,  added_by, country_id, status)
-          VALUES (?, ?, ?, ?)
-        `;
-        connection.query(historyQuery, [countryname, added_by, countryId, 'active'], (err, historyResult) => {
+
+        connection.query(countryQuery, [values], (err) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
@@ -129,23 +67,121 @@ const createCountry = (data, callback) => {
             });
           }
 
-          connection.commit((err) => {
+          // ✅ Fetch the correct `id`s from the country table
+          const countryNames = uniqueData.map(({ name }) => name);
+          const fetchIdsQuery = `
+            SELECT id, name FROM country WHERE name IN (?);
+          `;
+
+          connection.query(fetchIdsQuery, [countryNames], (err, results) => {
             if (err) {
               return connection.rollback(() => {
                 connection.release();
                 callback(err, null);
               });
             }
-            connection.release();
-            callback(null, { countryResult, historyResult });
+
+            // ✅ Map country names to correct IDs
+            const countryMap = new Map(results.map(({ id, name }) => [name, id]));
+            const historyValues = uniqueData.map(({ name, added_by }) => [
+              name,
+              added_by,
+              countryMap.get(name), // ✅ Use the correct `country_id`
+              "active",
+            ]);
+
+            const historyQuery = `
+              INSERT INTO RegistrationAdmin_History (created_name, added_by, country_id, status)
+              VALUES ?;
+            `;
+
+            connection.query(historyQuery, [historyValues], (err, historyResult) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(err, null);
+                });
+              }
+
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    callback(err, null);
+                  });
+                }
+
+                connection.release();
+                callback(null, { message: "Bulk data inserted successfully", historyResult });
+              });
+            });
           });
         });
-      });
-    } else {
-      callback(new Error('Invalid data'), null);
-    }
+      } 
+      
+      else if (countryname && added_by) {
+        const countryQuery = `
+          INSERT INTO country (name, added_by)
+          VALUES (?, ?)
+          ON DUPLICATE KEY UPDATE name = VALUES(name);
+        `;
+
+        connection.query(countryQuery, [countryname, added_by], (err) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              callback(err, null);
+            });
+          }
+
+          // ✅ Fetch correct country ID
+          const fetchIdQuery = `SELECT id FROM country WHERE name = ?`;
+
+          connection.query(fetchIdQuery, [countryname], (err, result) => {
+            if (err || result.length === 0) {
+              return connection.rollback(() => {
+                connection.release();
+                callback(err || new Error("Country ID not found"), null);
+              });
+            }
+
+            const countryId = result[0].id;
+
+            const historyQuery = `
+              INSERT INTO RegistrationAdmin_History (created_name, added_by, country_id, status)
+              VALUES (?, ?, ?, ?);
+            `;
+
+            connection.query(historyQuery, [countryname, added_by, countryId, "active"], (err, historyResult) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(err, null);
+                });
+              }
+
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    callback(err, null);
+                  });
+                }
+
+                connection.release();
+                callback(null, { message: "Single country inserted successfully", historyResult });
+              });
+            });
+          });
+        });
+      } 
+      
+      else {
+        connection.release();
+        callback(new Error("Invalid data"), null);
+      }
+    });
   });
-});
 };
 
 // Function to update a City 

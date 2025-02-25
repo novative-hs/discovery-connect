@@ -409,7 +409,7 @@ const updateAccount = (req, callback) => {
                     previousData.district || null,
                     previousData.country || null,
                     previousData.logo || null,
-                    added_by || null, // added_by (assuming it's available somewhere)
+                    previousData.added_by || null, // added_by (assuming it's available somewhere)
                     previousData.organization_id || null,
                     previousData.researcher_id || null,
                     previousData.collectionsite_id || null,

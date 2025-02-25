@@ -151,8 +151,7 @@ const CountryArea = () => {
       }, 3000);
 
       // Refresh the countryname list after deletion
-      const newResponse = await axios.get(`${url}/country/get-country`);
-      setCountryname(newResponse.data);
+      fetchcountryname();
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -197,8 +196,7 @@ const CountryArea = () => {
       );
       console.log("countryname updated successfully:", response.data);
 
-      const newResponse = await axios.get(`${url}/country/get-country`);
-      setCountryname(newResponse.data);
+      fetchcountryname();
 
       setShowEditModal(false);
       setSuccessMessage("Country updated successfully.");
@@ -264,10 +262,7 @@ const CountryArea = () => {
         console.log("Countries added successfully:", response.data);
 
         // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
-        );
-        setCountryname(newResponse.data);
+        fetchcountryname();
       } catch (error) {
         console.error("Error uploading file:", error);
       }

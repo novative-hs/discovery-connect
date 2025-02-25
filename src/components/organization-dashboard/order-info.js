@@ -5,11 +5,7 @@ import { Box } from "@svg/index"; // Ensure correct import
 
 function SingleResearcherInfo({ icon, info, title, onClick }) {
   return (
-    <div
-      className="col-md-12 col-sm-6"
-      onClick={onClick}
-      style={{ cursor: "pointer" }}
-    >
+    <div className="col-md-12 col-sm-6" onClick={onClick} style={{ cursor: "pointer" }}>
       <div className="profile__main-info-item d-flex flex-column align-items-center text-center">
         <div className="profile__main-info-icon d-flex align-items-center justify-content-center gap-2">
           <span className="profile-icon-count profile-download">{info}</span>
@@ -23,43 +19,55 @@ function SingleResearcherInfo({ icon, info, title, onClick }) {
 
 const OrderInfo = ({ setActiveTab }) => {
   const [userCount, setUserCount] = useState(null);
+  const [id, setUserID] = useState(null);
   const router = useRouter();
-const [id, setUserID] = useState(null);
-   useEffect(() => {
+
+  useEffect(() => {
+    const fetchData = async () => {
       const storedUserID = localStorage.getItem("userID");
       if (storedUserID) {
-        setUserID(storedUserID);
-        console.log("Organization ID:", storedUserID); // Verify storedUserID
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get/${storedUserID}`
+          );
+          if (response.data.length > 0) {
+            setUserID(response.data[0].id);
+          }
+        } catch (error) {
+          console.error("Error fetching organization ID:", error);
+        }
       }
-    }, []);
+    };
+    fetchData();
+  }, []);
+
   useEffect(() => {
     if (id !== null) {
-    fetchUserCount();
+      const fetchUserCount = async () => {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${id}`
+          );
+          if (Array.isArray(response.data)) {
+            setUserCount(response.data.length);
+          } else {
+            console.warn("Unexpected API response:", response.data);
+            setUserCount(0);
+          }
+        } catch (error) {
+          console.error("Error fetching researcher count:", error);
+          setUserCount(0);
+        }
+      };
+      fetchUserCount();
     }
   }, [id]);
 
-  const fetchUserCount = async () => {
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get`);
-  
-      if (Array.isArray(response.data)) {
-        
-        const filteredResearchers = response.data.filter(researcher => {
-          return researcher.added_by == id; 
-        });
-  console.log(filteredResearchers)
-        setUserCount(filteredResearchers.length); 
-      } else {
-        console.warn("Unexpected API response:", response.data);
-        setUserCount(0);
-      }
-    } catch (error) {
-      console.error("Error fetching researcher count:", error);
-      setUserCount(0);
+  useEffect(() => {
+    if (id !== null) {
+      console.log("Updated Organization ID:", id);
     }
-  };
-  
-  
+  }, [id]);
 
   const researcherStat = {
     label: "Total Researchers",
@@ -72,7 +80,9 @@ const [id, setUserID] = useState(null);
     <div className="profile__main-info p-4 ">
       <div className="row justify-content-start">
         <div className="profile__main-content">
-          <h7 className="profile__main-title text-capitalize  text-start pb-4">Welcome</h7>
+          <h7 className="profile__main-title text-capitalize text-start pb-4">
+            Welcome
+          </h7>
         </div>
         <div className="col-lg-4 col-md-6 col-sm-10">
           <SingleResearcherInfo

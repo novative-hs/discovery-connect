@@ -120,9 +120,7 @@ useEffect(() => {
       console.log("district added successfully:", response.data);
 
       // Refresh the districtname list after successful submission
-      const newResponse = await axios.get(`${url}/district/get-district`);
-      setdistrictname(newResponse.data); // Update state with the new list
-
+      fetchdistrictname(); 
       // Clear form after submission
       setFormData({
         districtname: "",
@@ -153,8 +151,7 @@ useEffect(() => {
       }, 3000);
 
       // Refresh the districtname list after deletion
-      const newResponse = await axios.get(`${url}/district/get-district`);
-      setdistrictname(newResponse.data);
+      fetchdistrictname(); 
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -187,8 +184,7 @@ useEffect(() => {
       );
       console.log("districtname updated successfully:", response.data);
 
-      const newResponse = await axios.get(`${url}/district/get-district`);
-      setdistrictname(newResponse.data);
+      fetchdistrictname(); 
 
       setShowEditModal(false);
       setSuccessMessage("District updated successfully.");
@@ -258,10 +254,7 @@ useEffect(() => {
         console.log("Countries added successfully:", response.data);
 
         // Refresh the District list
-        const newResponse = await axios.get(
-          "http://localhost:5000/api/district/get-district"
-        );
-        setdistrictname(newResponse.data);
+        fetchdistrictname(); 
       } catch (error) {
         console.error("Error uploading file:", error);
       }
@@ -379,7 +372,7 @@ useEffect(() => {
                                       updated_at,
                                     })
                                   }
-                                  title="Edit District"
+                                  title="Edit"
                                 >
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
@@ -389,7 +382,7 @@ useEffect(() => {
                                     setSelecteddistrictnameId(id);
                                     setShowDeleteModal(true);
                                   }}
-                                  title="Delete District"
+                                  title="Delete"
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
@@ -398,7 +391,7 @@ useEffect(() => {
                                 onClick={() =>
                                   handleShowHistory("district", id)
                                 }
-                                title="History District"
+                                title="History"
                               >
                                 <FontAwesomeIcon icon={faHistory} size="sm" />
                               </button>
