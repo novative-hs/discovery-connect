@@ -143,7 +143,7 @@ const getSampleHistory = (sampleId, callback) => {
     SELECT 
       sh.id AS history_id,
       sh.sample_id,
-      sh.updated_at AS history_updated_at,
+      CAST(sh.updated_at AS CHAR) AS updated_at,
       s.samplename,
       s.age,
       s.gender,
