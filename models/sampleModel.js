@@ -197,9 +197,20 @@ const createSample = (data, callback) => {
         return callback(err, null);
       }
       console.log('Sample inserted successfully with masterID:', masterID);
+      // Insert into sample_history
+      const historyQuery = `
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)`;
+      
+      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+        if (err) {
+          console.error('Error inserting into sample_history:', err);
+          return callback(err, null);
+        }
+        console.log('Sample history recorded.', historyResults);
       callback(null, { insertId: id, masterID: masterID });
     });
-
+  });
   });
 };
 
@@ -219,8 +230,20 @@ const updateSample = (id, data, callback) => {
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
+     // Insert into sample_history
+     const historyQuery = `
+     INSERT INTO sample_history (sample_id)
+     VALUES (?)`;
+   
+   mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+     if (err) {
+       console.error('Error inserting into sample_history:', err);
+       return callback(err, null);
+     }
+     console.log('Sample history recorded.', historyResults);
     callback(err, result);
   });
+});
 };
 
 // Function to update a sample's status

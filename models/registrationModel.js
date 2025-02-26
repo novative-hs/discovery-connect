@@ -331,7 +331,7 @@ const updateAccount = (req, callback) => {
                   callback(err, null);
                 });
               }
-              
+
               let fetchQuery, updateQuery, values;
 
               switch (accountType) {
@@ -384,6 +384,18 @@ const updateAccount = (req, callback) => {
                 connection.query(updateQuery, values, (err) => {
                   if (err) return mysqlConnection.rollback(() => callback(err, null));
 
+                  let organizationID = null;
+                  let researcherID = null;
+                  let collectionSiteID = null;
+
+                  if (previousData.OrganizationName) {
+                    organizationID = previousData.id; // Organization
+                  } else if (previousData.ResearcherName) {
+                    researcherID = previousData.id; // Researcher
+                  } else if (previousData.CollectionSiteName) {
+                    collectionSiteID = previousData.id; // Collection Site
+                  }
+
                   const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName, CollectionSiteName, OrganizationName, 
@@ -409,10 +421,10 @@ const updateAccount = (req, callback) => {
                     previousData.district || null,
                     previousData.country || null,
                     previousData.logo || null,
-                    previousData.added_by || null, // added_by (assuming it's available somewhere)
-                    previousData.organization_id || null,
-                    previousData.researcher_id || null,
-                    previousData.collectionsite_id || null,
+                    previousData.added_by || null,
+                    organizationID || null,
+                    researcherID || null,
+                    collectionSiteID || null,
                     "updated",
                   ];
 

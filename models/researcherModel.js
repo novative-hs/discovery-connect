@@ -166,10 +166,6 @@ function updateResearcherDetail(id, data, callback) {
       );
     });
   });
-
-
-
-
 }
 
 const deleteResearcher = (id, callback) => {

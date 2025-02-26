@@ -20,6 +20,7 @@ const RegistrationAdmin_History = () => {
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
       FOREIGN KEY (resaercher_id) REFERENCES researcher(id) ON DELETE CASCADE,
+      FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
       FOREIGN KEY (city_id) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE
@@ -36,53 +37,38 @@ const RegistrationAdmin_History = () => {
 };
 
 const getHistory = (filterType, id, callback) => {
-  let query = "";
-  let params = [id];
-  const column = `${filterType}_id`;
+  if (!filterType || !id)
+    return callback(new Error("Invalid parameters"), null);
+  column = `${filterType}_id`;
+  if (!column) return callback(new Error("Invalid filter type"), null);
 
-  if (filterType ) {
-    query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
-  } 
-  else {
-    return callback(new Error("Invalid filter type"), null);
-  }
+  const query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
 
-  mysqlConnection.query(query, params, (err, results) => {
-    if (err) {
-      return callback(err, null);
-    }
-    // If no results in RegistrationAdmin_History, fallback to the history table
-    if (results.length === 0) {
-      let fallbackQuery = `
-        SELECT 
-    history.*,
-    city.name AS city_name,
-    district.name AS district_name,
-    country.name AS country_name,
-    organization.OrganizationName AS organization_name,
-    user_account.email AS added_by
-FROM history
-LEFT JOIN city ON history.city = city.id
-LEFT JOIN district ON history.district = district.id
-LEFT JOIN country ON history.country = country.id
-LEFT JOIN organization ON history.nameofOrganization = organization.id
-LEFT JOIN user_account ON history.added_by = user_account.id
-WHERE history.${filterType}_id = ?;
+  mysqlConnection.query(query, [id], (err, results) => {
+    if (err || results.length === 0) {
+      // If an error occurs or no results found, run the fallback query
+      const fallbackQuery = `
+        SELECT history.*, city.name AS city_name, district.name AS district_name,
+               country.name AS country_name, organization.OrganizationName AS organization_name,
+               user_account.email AS added_by
+        FROM history
+        LEFT JOIN city ON history.city = city.id
+        LEFT JOIN district ON history.district = district.id
+        LEFT JOIN country ON history.country = country.id
+        LEFT JOIN organization ON history.nameofOrganization = organization.id
+        LEFT JOIN user_account ON history.added_by = user_account.id
+        WHERE history.${column} = ?;
       `;
+
       mysqlConnection.query(
         fallbackQuery,
-        params,
+        [id],
         (fallbackErr, fallbackResults) => {
-          if (fallbackErr) {
-            return callback(fallbackErr, null);
-          }
-          console.log(fallbackResults);
-          callback(null, fallbackResults);
+          return callback(fallbackErr, fallbackResults);
         }
       );
-
     } else {
-      callback(null, results);
+      return callback(null, results);
     }
   });
 };
@@ -110,6 +96,7 @@ const create_historyTable = () => {
     organization_id INT,
     collectionsite_id INT,
     researcher_id INT,
+    sample_id INT,
     added_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -120,7 +107,8 @@ const create_historyTable = () => {
     FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
     FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
-    FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE
+    FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
   )`;
 
   mysqlConnection.query(create_historyTable, (err, results) => {
@@ -131,45 +119,14 @@ const create_historyTable = () => {
     }
   });
 };
+
 const create_samplehistoryTable = () => {
   const create_historyTable = `
   CREATE TABLE sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    donorID VARCHAR(50),
-    masterID BIGINT,
-    user_account_id INT,
-    samplename VARCHAR(100),
-    age INT,
-    gender VARCHAR(10),
-    ethnicity VARCHAR(50),
-    samplecondition VARCHAR(100),
-    storagemp VARCHAR(255),
-    ContainerType VARCHAR(50),
-    CountryOfCollection VARCHAR(50),
-    price FLOAT,
-    SamplePriceCurrency VARCHAR(255),
-    quantity FLOAT,
-    QuantityUnit VARCHAR(20),
-    SampleTypeMatrix VARCHAR(100),
-    SmokingStatus VARCHAR(50),
-    AlcoholOrDrugAbuse VARCHAR(50),
-    InfectiousDiseaseTesting VARCHAR(100),
-    InfectiousDiseaseResult VARCHAR(100),
-    FreezeThawCycles VARCHAR(50),
-    DateOfCollection VARCHAR(50),
-    ConcurrentMedicalConditions INT,
-    ConcurrentMedications INT,
-    DiagnosisTestParameter VARCHAR(50),
-     TestResult INT,
-    TestResultUnit INT,
-    TestMethod INT,
-    TestKitManufacturer INT,
-    TestSystem INT,
-    TestSystemManufacturer INT
-    logo LONGBLOB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sample_id BIGINT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    status ENUM('added', 'updated', 'deleted')
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
 )`;
 
   mysqlConnection.query(create_historyTable, (err, results) => {
@@ -180,10 +137,64 @@ const create_samplehistoryTable = () => {
     }
   });
 }
+
+const getSampleHistory = (sampleId, callback) => {
+  const query = `
+    SELECT 
+      sh.id AS history_id,
+      sh.sample_id,
+      sh.updated_at AS history_updated_at,
+      s.samplename,
+      s.age,
+      s.gender,
+      s.ethnicity,
+      s.samplecondition,
+      s.storagetemp,
+      s.ContainerType,
+      s.CountryOfCollection,
+      s.price,
+      s.SamplePriceCurrency,
+      s.quantity,
+      s.QuantityUnit,
+      s.SampleTypeMatrix,
+      s.SmokingStatus,
+      s.AlcoholOrDrugAbuse,
+      s.InfectiousDiseaseTesting,
+      s.InfectiousDiseaseResult,
+      s.FreezeThawCycles,
+      s.DateOfCollection,
+      s.ConcurrentMedicalConditions,
+      s.ConcurrentMedications,
+      s.DiagnosisTestParameter,
+      s.TestResult,
+      s.TestResultUnit,
+      s.TestMethod,
+      s.TestKitManufacturer,
+      s.TestSystem,
+      s.TestSystemManufacturer,
+      s.status AS sample_status,
+      s.created_at
+    FROM sample_history sh
+    JOIN sample s ON sh.sample_id = s.id
+    WHERE sh.sample_id = ?`;
+
+  mysqlConnection.query(query, [sampleId], (err, results) => {
+    if (err) {
+      console.error("Error fetching sample history with sample details: ", err);
+      callback(err, null);
+    } else {
+      callback(null, results);
+    }
+  });
+};
+
+
+
 module.exports = {
   RegistrationAdmin_History,
   getHistory,
   create_historyTable,
-  create_samplehistoryTable
+  create_samplehistoryTable,
+  getSampleHistory
 };
 

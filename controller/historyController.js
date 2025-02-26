@@ -6,6 +6,7 @@ const RegistrationAdmin_History = (req, res) => {
   historyModel.RegistrationAdmin_History();
   res.status(200).json({ message: "Registration Admin Historytable creation process started" });
 };
+
 // Controller to get all History
 const getHistory = (req, res) => {
   const { filterType, id } = req.params; // Get filter type and ID from URL params
@@ -27,8 +28,25 @@ const create_historyTable = (req, res) => {
   res.status(200).json({ message: "History table creation process started" });
 };
 
+// Controller to get all History
+const getSampleHistory = (req, res) => {
+  const { id } = req.params; // Get the sample_id from URL
+
+  historyModel.getSampleHistory(id, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching history" });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No history found for this sample" });
+    }
+    res.status(200).json(results);
+  });
+};
+
+
 module.exports = {
   RegistrationAdmin_History,
   getHistory,
-  create_historyTable
+  create_historyTable,
+  getSampleHistory
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { notifyError } from "@utils/toast";
@@ -226,7 +227,7 @@ const ResearcherArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log(id);
+    console.log("ID", id);
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -255,8 +256,8 @@ const ResearcherArea = () => {
     setPreview(
       researcher.logo && researcher.logo.data
         ? `data:image/jpeg;base64,${Buffer.from(researcher.logo.data).toString(
-            "base64"
-          )}`
+          "base64"
+        )}`
         : null
     );
     if (researcher.logo && researcher.logo.data) {
@@ -394,8 +395,8 @@ const ResearcherArea = () => {
 
               {/* Table */}
               <div className="table-responsive w-100">
-              <table className="table table-bordered table-hover  text-center">
-              <thead className="table-primary">
+                <table className="table table-bordered table-hover  text-center">
+                  <thead className="table-primary">
                     <tr
                       className="text-center"
                     >
@@ -462,7 +463,7 @@ const ResearcherArea = () => {
                               onChange={(e) =>
                                 handleFilterChange(field, e.target.value)
                               }
-                              style={{ minWidth: "100px",backgroundColor:'white' }}
+                              style={{ minWidth: "100px", backgroundColor: 'white' }}
                             />
 
                             <span className="fw-bold mt-1">{label}</span>
@@ -504,8 +505,8 @@ const ResearcherArea = () => {
                                     researcher.status === "Draft"
                                       ? "gray"
                                       : researcher.status === "approved"
-                                      ? "green"
-                                      : "red",
+                                        ? "green"
+                                        : "red",
                                 }}
                               ></span>
                               {researcher.status}
@@ -515,20 +516,24 @@ const ResearcherArea = () => {
                             <div className="d-flex justify-content-center gap-1">
                               <button
                                 className="btn btn-outline-primary btn-sm"
-                                onClick={() => handleEditClick(researcher)}
+                                onClick={() => {
+                                  handleEditClick(researcher)
+                                }}
                                 title="Edit"
                               >
                                 <i className="fa fa-edit"></i>
                               </button>
                               <button
                                 className="btn btn-outline-success btn-sm"
-                                onClick={() =>
-                                  handleShowHistory("researcher", researcher.id)
-                                }
+                                onClick={() => {
+                                  console.log("ID", researcher.id);
+                                  handleShowHistory("researcher", researcher.id);
+                                }}
                                 title="History"
                               >
                                 <i className="fa fa-history"></i>
                               </button>
+
                             </div>
                           </td>
                         </tr>
@@ -621,16 +626,14 @@ const ResearcherArea = () => {
 
                             {/* File Upload */}
                             <div className="mb-2">
-                              <label className="form-label">
-                                Profile Picture
-                              </label>
+                              <label className="form-label">Profile Picture</label>
                               <input
                                 type="file"
                                 className="form-control form-control-sm"
                                 name="logo"
                                 onChange={handleInputChange}
                                 accept="image/*"
-                                required
+                                required={showAddModal} // Required only when adding
                               />
                             </div>
 
@@ -833,7 +836,7 @@ const ResearcherArea = () => {
                 </>
               )}
 
-              {/* Modal for Deleting Researchers */}
+              {/* Modal for History of Researchers */}
               {showHistoryModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}

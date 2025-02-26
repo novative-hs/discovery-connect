@@ -20,6 +20,8 @@ const SampleArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
 
   const tableHeaders = [
@@ -177,7 +179,7 @@ const SampleArea = () => {
     }
   };
 
-// get collectionsite names in collectionsite dashboard in stock transfer modal
+  // get collectionsite names in collectionsite dashboard in stock transfer modal
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
       try {
@@ -415,6 +417,25 @@ const SampleArea = () => {
     }
   };
 
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
+      );
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
+    console.log("ID", id);
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
+
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
     setEditSample(sample);
@@ -514,7 +535,7 @@ const SampleArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showTransferModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showTransferModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -523,7 +544,7 @@ const SampleArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showTransferModal, showHistoryModal]);
 
   return (
     <section className="profile__area pt-180 pb-120">       {/* Inner Container Color can be visible through this */}
@@ -599,6 +620,7 @@ const SampleArea = () => {
                         <button
                           className="btn btn-success btn-sm"
                           onClick={() => handleEditClick(sample)}
+                          title="Edit"
                         >
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>{" "}
@@ -608,14 +630,25 @@ const SampleArea = () => {
                             setSelectedSampleId(sample.id);
                             setShowDeleteModal(true);
                           }}
+                          title="Delete"
                         >
                           <FontAwesomeIcon icon={faTrash} size="sm" />
                         </button>
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => handleTransferClick(sample)}
+                          title="Transfer"
                         >
                           <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() =>
+                            handleShowHistory("sample", sample.id)
+                          }
+                          title="History"
+                        >
+                          <i className="fa fa-history"></i>
                         </button>
                       </div>
                     </td>
@@ -1674,7 +1707,7 @@ const SampleArea = () => {
                         </div>
                         {/* Column 4 */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label>Freeze Thaw Cycles</label>
                             <select
                               type="text"
@@ -2146,10 +2179,122 @@ const SampleArea = () => {
             </div>
           </>
         )}
+
+        {/* Modal for History of Researchers */}
+        {showHistoryModal && (
+          <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "100px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="modal-dialog modal-md" role="document">
+                <div className="modal-content">
+                  {/* Modal Header */}
+                  <div className="modal-header">
+                    <h5 className="modal-title">History</h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => setShowHistoryModal(false)}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+
+                  {/* Chat-style Modal Body */}
+                  <div
+                    className="modal-body"
+                    style={{
+                      maxHeight: "500px",
+                      overflowY: "auto",
+                      backgroundColor: "#e5ddd5", // WhatsApp-style background
+                      padding: "15px",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    {historyData && historyData.length > 0 ? (
+                      historyData.map((log, index) => {
+                        const hiddenFields = [
+                          "logo",
+                          "ntnNumber",
+                          "type",
+                          "city",
+                          "country",
+                          "district",
+                          "OrganizationName",
+                          "nameofOrganization",
+                          "CollectionSiteName",
+                          "HECPMDCRegistrationNo",
+                          "organization_id",
+                          "collectionsite_id",
+                        ]; // Add fields you want to hide
+
+                        return (
+                          <div
+                            key={index}
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-start",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                padding: "10px 15px",
+                                borderRadius: "15px",
+                                backgroundColor: "#ffffff",
+                                boxShadow:
+                                  "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                maxWidth: "75%",
+                                fontSize: "14px",
+                                textAlign: "left",
+                              }}
+                            >
+                              {Object.entries(log).map(([key, value]) =>
+                                !hiddenFields.includes(key) ? ( // Only show fields that are NOT in hiddenFields array
+                                  <div key={key}>
+                                    <b>{key.replace(/_/g, " ")}:</b>{" "}
+                                    {value}
+                                  </div>
+                                ) : null
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-left">No history available.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-      {/* </div> */}
-      {/* //     </div> */}
-      {/* //   </div> */}
     </section>
   );
 };

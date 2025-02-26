@@ -5,8 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
-  faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
