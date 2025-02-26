@@ -173,7 +173,7 @@ const getSampleHistory = (sampleId, callback) => {
       s.TestSystem,
       s.TestSystemManufacturer,
       s.status AS sample_status,
-      s.created_at
+      CAST(s.created_at AS CHAR) AS created_at 
     FROM sample_history sh
     JOIN sample s ON sh.sample_id = s.id
     WHERE sh.sample_id = ?`;
@@ -187,7 +187,6 @@ const getSampleHistory = (sampleId, callback) => {
     }
   });
 };
-
 
 
 module.exports = {
