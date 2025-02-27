@@ -183,7 +183,6 @@ const ResearcherArea = () => {
     console.log("FormData to submit:", formDataToSubmit);
 
     try {
-      // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/signup`,
         formDataToSubmit,
@@ -193,23 +192,25 @@ const ResearcherArea = () => {
           },
         }
       );
-      console.log("Researcher added successfully:", response.data);
-      // Refresh the researcher list after successful submission
+
+      // Success handling
       fetchResearcher();
-
-      // Clear form after submission
       resetFormData();
-      setSuccessMessage("Researcher added successfully.");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
 
-      setShowAddModal(false); // Close modal after submission
+      setSuccessMessage("Researcher added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error(
-        "Error adding researcher:",
-        error.response?.data || error.message
-      );
+      // console.error("Error adding researcher:", error);
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Something went wrong! Please try again.";
+
+      // Display error in notification
+      notifyError(errorMessage);
+    } finally {
+      setShowAddModal(false);
+      resetFormData()
     }
   };
 

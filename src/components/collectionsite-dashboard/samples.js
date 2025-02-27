@@ -25,7 +25,6 @@ const SampleArea = () => {
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
 
   const tableHeaders = [
-    { label: "Donor ID", key: "donorID" },
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -56,7 +55,6 @@ const SampleArea = () => {
   ];
 
   const [formData, setFormData] = useState({
-    donorID: "",
     samplename: "",
     age: "",
     gender: "",
@@ -308,7 +306,6 @@ const SampleArea = () => {
 
       // Clear form after submission
       setFormData({
-        donorID: "",
         samplename: "",
         age: "",
         gender: "",
@@ -441,7 +438,6 @@ const SampleArea = () => {
     setEditSample(sample);
     setShowEditModal(true);
     setFormData({
-      donorID: sample.donorID,
       samplename: sample.samplename,
       age: sample.age,
       gender: sample.gender,
@@ -492,7 +488,6 @@ const SampleArea = () => {
 
       // Reset formData after update
       setFormData({
-        donorID: "",
         samplename: "",
         age: "",
         gender: "",
