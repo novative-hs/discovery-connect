@@ -592,8 +592,8 @@ const SampleArea = () => {
                     </div>
                   </th>
                 ))}
-                <th className="px-3 align-middle text-center"
-                  style={{ backgroundColor: "#F4C2C2" }}>Action</th>
+                <th className="px-5 align-middle text-center"
+                  style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}>Action</th>
               </tr>
             </thead>
             <tbody>

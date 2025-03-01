@@ -602,8 +602,8 @@ const BioBankSampleArea = () => {
                     </div>
                   </th>
                 ))}
-                <th className="px-3 align-middle text-center"
-                  style={{ backgroundColor: "#F4C2C2", color: "#000", maxWidth: "100px" }}>Action</th>
+                <th className="px-5 align-middle text-center"
+                  style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}>Action</th>
               </tr>
             </thead>
             <tbody>
