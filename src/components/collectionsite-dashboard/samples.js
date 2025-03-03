@@ -542,20 +542,10 @@ const SampleArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showTransferModal, showHistoryModal]);
 
   return (
-    <section className="profile__area pt-180 pb-120">       {/* Inner Container Color can be visible through this */}
-      <div
-        className="container"
-        style={{ marginTop: "-180px", width: "170%", marginLeft: "-135px" }}>
-        {/* Success Message */}
-        {successMessage && (
-          <div className="alert alert-success" role="alert">
-            {successMessage}
-          </div>
-        )}
-        {/* Add Samples Button */}
-        <div
-          className="d-flex justify-content-end mb-3 position-relative"
-          style={{ top: "2px", marginRight: "130px" }}>
+    <section className="profile__area pt-30 pb-120">          {/* Inner Container Color can be visible through this */}
+      <div className="container-fluid px-md-4">
+        {/* Header Section with Button on the Right */}
+        <div className="d-flex justify-content-end mt-n3 mb-2">
           <button
             className="btn"
             onClick={() => setShowAddModal(true)}
@@ -563,18 +553,21 @@ const SampleArea = () => {
               backgroundColor: "#FFEE99", // Soft pastel yellow
               borderColor: "#FFD700", // Gold border
               color: "#000000", // Black text
-              marginLeft: "-10px",
-            }}
-          >
+            }}>
             Add Samples
           </button>
         </div>
 
+        {/* Success Message */}
+        {successMessage && (
+          <div className="alert alert-success text-center" role="alert">
+            {successMessage}
+          </div>
+        )}
+
         {/* Table */}
-        <div
-          className="table-responsive"
-          style={{ margin: "25px auto 0 auto", width: "80%", textAlign: "center" }}>
-          <table className="table table-bordered table-hover">
+        <div className="table-responsive mx-auto">
+          <table className="table table-bordered table-hover text-center">
             <thead>
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
@@ -601,48 +594,22 @@ const SampleArea = () => {
                 currentData.map((sample) => (
                   <tr key={sample.id}>
                     {tableHeaders.map(({ key }, index) => (
-                      <td key={index} style={{ maxWidth: "150px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {sample[key] || "N/A"}</td>
+                      <td key={index} className="text-center text-truncate" style={{ maxWidth: "150px" }}>
+                        {sample[key] || "N/A"}
+                      </td>
                     ))}
-                    <td style={{ maxWidth: "120px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-around",
-                          gap: "3px",
-                        }}
-                      >
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleEditClick(sample)}
-                          title="Edit"
-                        >
+                    <td className="text-center">
+                      <div className="d-flex justify-content-around gap-1">
+                        <button className="btn btn-success btn-sm" onClick={() => handleEditClick(sample)} title="Edit">
                           <FontAwesomeIcon icon={faEdit} size="sm" />
-                        </button>{" "}
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowDeleteModal(true);
-                          }}
-                          title="Delete"
-                        >
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => { setSelectedSampleId(sample.id); setShowDeleteModal(true); }} title="Delete">
                           <FontAwesomeIcon icon={faTrash} size="sm" />
                         </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleTransferClick(sample)}
-                          title="Transfer"
-                        >
+                        <button className="btn btn-primary btn-sm" onClick={() => handleTransferClick(sample)} title="Transfer">
                           <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
                         </button>
-                        <button
-                          className="btn btn-outline-success btn-sm"
-                          onClick={() =>
-                            handleShowHistory("sample", sample.id)
-                          }
-                          title="History"
-                        >
+                        <button className="btn btn-outline-success btn-sm" onClick={() => handleShowHistory("sample", sample.id)} title="History">
                           <i className="fa fa-history"></i>
                         </button>
                       </div>
@@ -651,9 +618,7 @@ const SampleArea = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
-                    No samples available
-                  </td>
+                  <td colSpan="8" className="text-center">No samples available</td>
                 </tr>
               )}
             </tbody>
