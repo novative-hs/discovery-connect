@@ -33,8 +33,8 @@ const Header = ({ style_2 = false }) => {
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
-                  <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: '-30px' }}>
+                <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
+                    <div className="logo" style={{ marginLeft: '-20px', marginTop: '20px' }}>
                       <Link href="/">
                         <Image src={logo} alt="logo" style={{ width: '150px', height: 'auto' }} />
                       </Link>
