@@ -9,41 +9,11 @@ const SingleCartItem = ({ item }) => {
   const { _id, samplename, price, title, quantity, discount } =
     item || {};
   const dispatch = useDispatch();
-  const item = useSelector((state) =>
-    state.cart.cart_product.find((item) => item.id === sample.id)
-  );
 
-  const quantity = item ? item.orderQuantity : 1;
-
-  useEffect(() => {
-    if (sample && !item) {
-      dispatch(add_cart_product(sample)); // Add sample if not already in cart
-    }
-  }, [sample, item, dispatch]);
-
-  const handleQuantityChange = (delta) => {
-    if (delta > 0) {
-      dispatch(quantityIncrement(sample.id)); // Increase quantity
-    } else {
-      dispatch(quantityDecrement(sample.id)); // Decrease quantity
-    }
+  // handle remove cart
+  const handleRemoveProduct = (prd) => {
+    dispatch(remove_product(prd));
   };
-
-  const getCurrencySymbol = (currency) => {
-    switch (currency?.toLowerCase()) {
-      case "pkr":
-        return "Rs";
-      case "usd":
-        return "$";
-      case "eur":
-        return "€";
-      case "gbp":
-        return "£";
-      default:
-        return currency || ""; // Default to empty if currency is unknown
-    }
-  };
-
   return (
     <div className="cartmini__widget-item">
       <div className="cartmini__thumb">
@@ -67,6 +37,12 @@ const SingleCartItem = ({ item }) => {
           {/* <span className="cartmini__quantity">{quantity}</span> */}
         </div>
       </div>
+      <button
+        className="cartmini__del"
+        onClick={() => handleRemoveProduct(item)}
+      >
+        <i className="fal fa-times"></i>
+      </button>
     </div>
   );
 };

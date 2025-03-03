@@ -99,7 +99,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
               type="button"
               className="product-action-btn"
             >
-              <Eye />
+              <Eye product={product}/>
               <span className="product-action-tooltip">Quick view</span>
             </button>
             <Link href={`/product-details/${_id}`}>

@@ -119,9 +119,19 @@ const deleteSample = (req, res) => {
     res.status(200).json({ message: "Sample deleted successfully" });
   });
 };
+const getFilteredSamples = (req, res) => {
+  const { price, smokingStatus } = req.query;
 
+  SampleModel.getFilteredSamples(price, smokingStatus, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database query failed", details: err });
+    }
+    res.status(200).json(results);
+  });
+};
 module.exports = {
   createSampleTable,
+  getFilteredSamples,
   getSamples,
   getAllSamples,
   getSampleById,

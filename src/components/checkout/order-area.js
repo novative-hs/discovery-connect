@@ -20,10 +20,14 @@ const OrderArea = ({
     );
   const subtotal = calculateSubtotal();
 
+
   // Handle Payment Submission
   const handleSubmit = async () => {
+    const userID = localStorage.getItem("userID"); // Retrieve user ID from local storage
+    const accountType = localStorage.getItem("accountType"); // Retrieve account type
+  
     const data = {
-      researcher_id: 1, // Replace with the actual user ID
+      researcher_id: userID, // Use the stored user ID
       cart_items: cart_products.map((item) => ({
         sample_id: item.id,
         price: item.price,
@@ -32,23 +36,28 @@ const OrderArea = ({
       })),
       payment_method: selectedPaymentMethod,
     };
-
+  
     try {
       const response = await axios.post("http://localhost:5000/api/cart", data);
       console.log("Order Placed Successfully:", response.data);
       alert("Order placed successfully!");
-      console.log("clear_cart function:", clear_cart);
+      
       dispatch(clear_cart());
-            // Redirect to home page after 1 second
-         setTimeout(() => {
-        router.push("/");  // Redirect using Next.js router
-      }, 1000); // 1 second delay
+  
+      // Redirect to user-specific dashboard after 1 second
+      setTimeout(() => {
+        if (accountType) {
+          router.push(`/dashboardheader`);
+        } else {
+          router.push(`/default-dashboard`);
+        }
+      }, 1000); // 1-second delay
     } catch (error) {
       console.error("Error placing order:", error);
       alert("Failed to place order. Please try again.");
     }
   };
-
+  
   return (
     <div className="your-order mb-30">
       <h3>Your order</h3>

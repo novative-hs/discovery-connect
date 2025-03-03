@@ -49,15 +49,21 @@ const LoginForm = () => {
         localStorage.setItem("accountType",accountType)
         notifySuccess("Login successfully");
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-  
-        // Redirect based on account type
-        if (accountType) {
-          router.push("/dashboardheader");
-        }  else {
-          router.push("/default-dashboard");
-        }
+          // Check if the user came from the checkout page
+         
+          const fromPage = router.query.from;
+          if (fromPage === "checkout") {
+            router.push("/checkout"); // Redirect back to the checkout page
+          } else {
+            if (accountType) {
+              router.push("/dashboardheader");
+            }  else {
+              router.push("/default-dashboard");
+            }
+            }
+          } 
       }
-    } catch (error) {
+     catch (error) {
       console.error("Login error:", error);
       notifyError("An unexpected error occurred.");
     }

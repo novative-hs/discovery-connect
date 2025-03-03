@@ -505,10 +505,34 @@ const DistrictArea = () => {
                             <span>&times;</span>
                           </button>
                         </div>
-                      </form>
+
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                        >
+                          <div className="modal-body">
+                            {/* Form Fields */}
+                            <div className="form-group">
+                              <label>District Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="districtname"
+                                value={formData.districtname}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="modal-footer">
+                            <button type="submit" className="btn btn-primary">
+                              {showAddModal ? "Save" : "Update District"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </>
               )}
 {showHistoryModal && (
@@ -613,74 +637,6 @@ const DistrictArea = () => {
     </div>
   </>
 )}
-              {/* Edit districtname Modal */}
-              {showEditModal && (
-          <>
-          {/* Bootstrap Backdrop with Blur */}
-          <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-      
-          {/* Modal Content */}
-          <div
-            className="modal show d-block"
-            tabIndex="-1"
-            role="dialog"
-            style={{
-              zIndex: 1050, 
-              position: "fixed",
-              top: "120px",
-              left: "50%",
-              transform: "translateX(-50%)",
-            }}
-          >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit District</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>District Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="districtname"
-                              value={formData.districtname}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          </div>
-
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              {showAddModal ? "Save" : "Update District"}
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
               {/* Modal for Deleting districtname */}
               {showDeleteModal && (
                 <>

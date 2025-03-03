@@ -14,7 +14,7 @@ const RegistrationAdmin_History = () => {
       country_id INT,
       district_id INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      status ENUM('active', 'inactive', 'unapproved') DEFAULT 'active',
+      status ENUM('active', 'inactive', 'unapproved', 'approved') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,

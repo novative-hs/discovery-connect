@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CartTwo, Compare, Eye, HeartTwo } from "@svg/index";
 import { RatingFull, RatingHalf } from "./rating";
 import { useDispatch } from "react-redux";
-import { initialOrderQuantity } from "src/redux/features/cartSlice";
+import {   add_cart_product, initialOrderQuantity } from "src/redux/features/cartSlice";
 import { setProduct } from "src/redux/features/productSlice";
 
 const SingleListProduct = ({ product }) => {
@@ -18,7 +18,10 @@ const SingleListProduct = ({ product }) => {
     dispatch(initialOrderQuantity())
     dispatch(setProduct(prd))
   };
-
+  // Handle adding the product to the cart
+  const handleAddToCart = (product) => {
+    dispatch(add_cart_product(product));
+  };
   return (
     <React.Fragment>
       <div className="product__list-item mb-30">
@@ -76,9 +79,11 @@ const SingleListProduct = ({ product }) => {
               <div className="product__list-action d-flex flex-wrap align-items-center">
                 <button
                   type="button"
+                  onClick={() => handleAddToCart(product)}
+                  // className="product-add-cart-btn w-100"
                   className="product-add-cart-btn product-add-cart-btn-2"
                 >
-                  <CartTwo />
+                  {/* <CartTwo /> */}
                   Add to Cart
                 </button>
                 <button

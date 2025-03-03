@@ -35,6 +35,7 @@ const ProductListItems = ({ itemsPerPage, items, setShowingListItems }) => {
       >
         <div className="product__list-wrapper mb-30">
           <div className="row">
+            
             {currentItems &&
               currentItems.map((product) => (
                 <div key={product._id} className="col-lg-12 col-md-6">

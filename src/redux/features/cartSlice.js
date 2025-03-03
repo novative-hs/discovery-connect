@@ -2,9 +2,9 @@ import { createSlice } from "@reduxjs/toolkit";
 import { getLocalStorage, setLocalStorage } from "@utils/localstorage";
 import { notifyError, notifySuccess } from "@utils/toast";
 
-// Initial state
 const initialState = {
-  cart_product: [], // Default to an empty array
+  cart_products: [],
+  orderQuantity: 1, 
 };
 
 export const cartSlice = createSlice({
@@ -17,7 +17,7 @@ export const cartSlice = createSlice({
       if (!isExist) {
         const newItem = {
           ...payload,
-          orderQuantity: 1,
+          orderQuantity: payload.quantity || 1,
         };
         state.cart_products = [...state.cart_products, newItem];
         notifySuccess(`Sampel added to cart`);
@@ -38,15 +38,52 @@ export const cartSlice = createSlice({
           return item;
         });
       }
-      setLocalStorage("cart_products", state.cart_product);
+      setLocalStorage("cart_products", state.cart_products);
+    },
+    // increment: (state, { payload }) => {
+    //   state.quantity = state.quantity + 1;
+    // },
+    // decrement: (state, { payload }) => {
+    //   state.quantity =
+    //     state.quantity > 1
+    //       ? state.quantity - 1
+    //       : (state.quantity = 1);
+    // },
+
+    increment: (state, { payload }) => {
+      const cartItem = state.cart_products.find(item => item.id === payload.id);
+      if (cartItem) {
+        if (cartItem.orderQuantity < cartItem.quantity) {
+          cartItem.orderQuantity += 1;
+        } else {
+          notifyError("No more quantity available for this product!");
+        }
+      }
+      state.cart_products = [...state.cart_products]; 
+      setLocalStorage("cart_products", state.cart_products);
+    },
+    
+    decrement: (state, { payload }) => {
+      const cartItem = state.cart_products.find(item => item.id === payload.id);
+      if (cartItem) {
+        if (cartItem.orderQuantity > 1) {
+          cartItem.orderQuantity -= 1;
+        }
+      }
+      state.cart_products = [...state.cart_products]; // Force Redux to recognize the change
+      setLocalStorage("cart_products", state.cart_products);
     },
 
     quantityDecrement: (state, { payload }) => {
-      const item = state.cart_product.find(item => item.id === payload);
-      if (item && item.orderQuantity > 1) {
-        item.orderQuantity -= 1;
-      }
-      setLocalStorage("cart_products", state.cart_product);
+      state.cart_products.map((item) => {
+        if (item._id === payload._id) {
+          if (item.orderQuantity > 1) {
+            item.orderQuantity = item.orderQuantity - 1;
+          }
+        }
+        return { ...item };
+      });
+      setLocalStorage("cart_products", state.cart_products);
     },
     remove_product: (state, { payload }) => {
       console.log("Removing product with id:", payload.id);
@@ -72,16 +109,14 @@ export const cartSlice = createSlice({
 });
 
 
-export const { 
-  add_cart_product, 
-  quantityIncrement, 
-  quantityDecrement, 
-  remove_product, 
+export const {
+  add_cart_product,
+  increment,
+  decrement,
   get_cart_products,
   remove_product,
   clear_cart,
   quantityDecrement,
   initialOrderQuantity,
 } = cartSlice.actions;
-
 export default cartSlice.reducer;

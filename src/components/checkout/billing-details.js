@@ -101,67 +101,6 @@ const BillingDetails = () => {
     );
   }
 
-  const fetchResearcher = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/user/getAccountDetail/${id}`);
-      setResearcher(response.data[0]); // Store fetched researcher data in state
-    } catch (error) {
-      console.error("Error fetching researcher:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (id === null) {
-      return <div>Loading...</div>; // Or redirect to login
-    } else {
-      fetchResearcher();
-      fetchcityname();
-      fetchdistrictname();
-      fetchcountryname();
-      console.log("account_id on city page is:", id);
-    }
-  }, [id]);
-
-  const fetchcityname = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/city/get-city");
-      setCityname(response.data); // Store fetched City in state
-    } catch (error) {
-      console.error("Error fetching City:", error);
-    }
-  };
-
-  const fetchdistrictname = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/district/get-district");
-      setDistrictname(response.data); // Store fetched District in state
-    } catch (error) {
-      console.error("Error fetching District:", error);
-    }
-  };
-
-  const fetchcountryname = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/country/get-country");
-      setCountryname(response.data); // Store fetched Country in state
-    } catch (error) {
-      console.error("Error fetching Country:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (researcher) {
-      // Set default values in the form
-      setValue("ResearcherName", researcher.ResearcherName);
-      setValue("fullAddress", researcher.fullAddress);
-      setValue("city", researcher.city);
-      setValue("district", researcher.district);
-      setValue("country", researcher.country);
-      setValue("email", researcher.useraccount_email);
-      setValue("contact", researcher.phoneNumber);
-    }
-  }, [researcher, setValue]);
-
   return (
     <form className="row" onSubmit={handleSubmit((data) => console.log(data))}>
       <CheckoutFormList

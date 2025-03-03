@@ -8,6 +8,7 @@ import ShopPrice from "../../shop-filtering/shop-price";
 
 const ShopSidebar = ({ all_products }) => {
   const router = useRouter();
+  console.log("data in the sidebar get is", all_products)
   const handleReset = () => {
     router.push("/shop");
   };
@@ -15,7 +16,7 @@ const ShopSidebar = ({ all_products }) => {
     <div className={`shop__sidebar on-left`}>
       <div className="shop__widget tp-accordion">
         <div className="accordion" id="shop_category">
-          <ShopCategory />
+          <ShopCategory all_products={all_products}/>
         </div>
       </div>
       <div className="shop__widget tp-accordion">
@@ -28,7 +29,7 @@ const ShopSidebar = ({ all_products }) => {
       </div>
       <div className="shop__widget tp-accordion">
         <div className="accordion" id="shop_price">
-          <ShopPrice />
+          <ShopPrice all_products={all_products}/>
         </div>
       </div>
       <div className="shop__widget tp-accordion">

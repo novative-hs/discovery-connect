@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 // internal
 import Wrapper from "@layout/wrapper";
 import SEO from "@components/seo";
@@ -27,31 +27,16 @@ export default function Shop({ query }) {
     setShortValue(e.value);
   };
 
-  // Render Logic
-  let content = null;
+  // Filtering and Sorting Logic (Must be at the top level)
+  const filtered_samples = useMemo(() => {
+    if (!samples) return [];
 
-  if (isLoading) {
-    content = <ShopLoader loading={isLoading} />;
-  }
+    let sortedSamples = [...samples];
 
-  if (!isLoading && isError) {
-    console.error("Error fetching samples:", error);
-    content = <ErrorMessage message="There was an error loading samples." />;
-  }
-
-  if (!isLoading && !isError && samples?.length === 0) {
-    content = <ErrorMessage message="No samples found!" />;
-  }
-
-  if (!isLoading && !isError && samples?.length > 0) {
-    let all_samples = samples;
-
-    let filtered_samples = all_samples;
-
-    // Example filtering logic (customize as needed)
+    // Apply filtering
     const { priceMin, priceMax } = query;
     if (priceMin || priceMax) {
-      filtered_samples = filtered_samples.filter((sample) => {
+      sortedSamples = sortedSamples.filter((sample) => {
         const price = Number(sample.price);
         return (
           (priceMin ? price >= Number(priceMin) : true) &&
@@ -60,21 +45,34 @@ export default function Shop({ query }) {
       });
     }
 
-    // Sorting logic
+    // Apply sorting
     if (shortValue === "Price low to high") {
-      filtered_samples = filtered_samples.sort((a, b) => a.price - b.price);
+      sortedSamples.sort((a, b) => a.price - b.price);
     } else if (shortValue === "Price high to low") {
-      filtered_samples = filtered_samples.sort((a, b) => b.price - a.price);
+      sortedSamples.sort((a, b) => b.price - a.price);
     }
 
+    return sortedSamples;
+  }, [samples, shortValue, query]);
+
+  // Render Logic
+  let content = null;
+
+  if (isLoading) {
+    content = <ShopLoader loading={isLoading} />;
+  } else if (isError) {
+    console.error("Error fetching samples:", error);
+    content = <ErrorMessage message="There was an error loading samples." />;
+  } else if (filtered_samples.length === 0) {
+    content = <ErrorMessage message="No samples found!" />;
+  } else {
     content = (
       <ShopArea
         products={filtered_samples}
-        all_products={all_samples}
+        all_products={samples}
         shortHandler={selectShortHandler}
       />
     );
-    console.log("sampledata on shop page is:", content)
   }
 
   return (
@@ -82,6 +80,7 @@ export default function Shop({ query }) {
       <SEO pageTitle={"Shop"} />
       <Header style_2={true} />
       <ShopBreadcrumb />
+   
       {content}
       <Footer />
     </Wrapper>
@@ -90,10 +89,5 @@ export default function Shop({ query }) {
 
 export const getServerSideProps = async (context) => {
   const { query } = context;
-
-  return {
-    props: {
-      query,
-    },
-  };
+  return { props: { query } };
 };

@@ -235,8 +235,30 @@ const deleteSample = (id, callback) => {
   });
 };
 
+const getFilteredSamples = (price, smokingStatus, callback) => {
+  let query = "SELECT * FROM sample WHERE is_deleted = FALSE";
+  let queryParams = [];
+
+  if (price) {
+    query += " AND price <= ?";
+    queryParams.push(price);
+  }
+
+  if (smokingStatus) {
+    query += " AND SmokingStatus = ?";
+    queryParams.push(smokingStatus);
+  }
+
+  mysqlConnection.query(query, queryParams, (err, results) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, results);
+  });
+};
 
 module.exports = {
+  getFilteredSamples,
   createSampleTable,
   getSamples,
   getAllSamples,

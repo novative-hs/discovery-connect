@@ -3,6 +3,7 @@ const router = express.Router();
 const SampleController = require('../controller/sampleController');
 
 // Sample Routes
+router.get("/sample/filterdata", SampleController.getFilteredSamples);
 router.get('/create-table', SampleController.createSampleTable);
 router.get('/sample/get/:id', SampleController.getSamples); // GET all samples for that specific Collectionsite Id
 router.get('/sample/getAll', SampleController.getAllSamples);
