@@ -1251,17 +1251,6 @@ const BioBankSampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          {/* <div className="form-group">
-                                  <label>Image</label>
-                                  <input
-                                    type="file"
-                                    className="form-control"
-                                    name="logo"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    required
-                                  />
-                                </div> */}
                         </div>
                         {/* {Column 6} */}
                         <div className="col-md-2">

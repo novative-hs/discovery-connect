@@ -109,18 +109,6 @@ const SampleArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(samples.length / itemsPerPage);
 
-
-  // const handleFileChange = (event) => {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     // You can add logic here to upload the file or store it in formData
-  //     setFormData({
-  //       ...formData,
-  //       logo: file,
-  //     });
-  //   }
-  // };
-
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -1254,17 +1242,6 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          {/* <div className="form-group">
-                                  <label>Image</label>
-                                  <input
-                                    type="file"
-                                    className="form-control"
-                                    name="logo"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    required
-                                  />
-                                </div> */}
                         </div>
                         {/* {Column 6} */}
                         <div className="col-md-2">
