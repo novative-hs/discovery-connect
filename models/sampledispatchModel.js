@@ -12,7 +12,7 @@ const createSampleDispatchTable = () => {
       Quantity VARCHAR(255) NOT NULL,
       status VARCHAR(255) DEFAULT 'In Transit',
       TransferTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      sampleID BIGINT NOT NULL,
+      sampleID VARCHAR(36) NOT NULL,
       FOREIGN KEY (sampleID) REFERENCES sample(id),
       FOREIGN KEY (TransferTo) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (TransferFrom) REFERENCES user_account(id) ON DELETE CASCADE

@@ -1,13 +1,15 @@
 const mysqlConnection = require("../config/db");
 const fs = require('fs');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 // Function to create the sample table
 const createSampleTable = () => {
   const sampleTable = `
     CREATE TABLE IF NOT EXISTS sample (
-        id BIGINT PRIMARY KEY,
+        id VARCHAR(36) PRIMARY KEY,
         donorID VARCHAR(50),
-        masterID BIGINT,
+        masterID VARCHAR(36),
         user_account_id INT,
         samplename VARCHAR(100),
         age INT,
@@ -152,7 +154,6 @@ WHERE
   });
 };
 
-
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -164,15 +165,9 @@ const getSampleById = (id, callback) => {
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
   console.log("Inserting data into database:", data);
-  console.log(data);
 
-  // Generate a random 3-digit number
-  const randomSuffix = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
-  // Calculate Master ID
-  const id = parseInt(data.donorID) + parseInt(data.user_account_id);
-  const masterID = `${id}${randomSuffix}`;
-
-  console.log("Master ID:", masterID);
+  const id = uuidv4(); // Generate a secure unique ID
+  const masterID = uuidv4(); // Secure Master ID
 
   const query = `
     INSERT INTO sample (
@@ -189,18 +184,18 @@ const createSample = (data, callback) => {
 
     console.log('Insert result:', results);
 
-    // Now update masterID
-    const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
-    mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
-      if (err) {
-        console.error('Error updating masterID:', err);
-        return callback(err, null);
-      }
-      console.log('Sample inserted successfully with masterID:', masterID);
+     // Now update masterID
+     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
+     mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
+       if (err) {
+         console.error('Error updating masterID:', err);
+         return callback(err, null);
+       }
+       console.log('Sample inserted successfully with masterID:', masterID);
+
       // Insert into sample_history
       const historyQuery = `
-        INSERT INTO sample_history (sample_id)
-        VALUES (?)`;
+        INSERT INTO sample_history (sample_id) VALUES (?)`;
       
       mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
         if (err) {
@@ -211,7 +206,7 @@ const createSample = (data, callback) => {
       callback(null, { insertId: id, masterID: masterID });
     });
   });
-  });
+});
 };
 
 // Function to update a sample by its ID (in Collectionsite)

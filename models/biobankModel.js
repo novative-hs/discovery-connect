@@ -1,4 +1,6 @@
 const mysqlConnection = require("../config/db");
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 // Function to get all samples with 'In Stock' status
 const getBiobankSamples = (id, callback) => {
@@ -27,13 +29,9 @@ const getBiobankSamples = (id, callback) => {
 // Function to create a new sample
 const createBiobankSample = (data, callback) => {
   console.log("Inserting data into database:", data);
-  console.log(data);
 
-    // Generate a random 3-digit number
-    const randomSuffix = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
-    // Calculate Master ID
-    const id = parseInt(data.donorID) + parseInt(data.user_account_id);
-    const masterID = `${id}${randomSuffix}`;  
+  const id = uuidv4(); // Generate a secure unique ID
+  const masterID = uuidv4(); // Secure Master ID
 
   const query = `
     INSERT INTO sample (
@@ -50,14 +48,14 @@ const createBiobankSample = (data, callback) => {
 
     console.log('Insert result:', results);
 
-    // Now update masterID
-    const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
-    mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
-      if (err) {
-        console.error('Error updating masterID:', err);
-        return callback(err, null);
-      }
-      console.log('Sample inserted successfully with masterID:', masterID);
+  // Now update masterID
+  const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
+  mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
+    if (err) {
+      console.error('Error updating masterID:', err);
+      return callback(err, null);
+    }
+    console.log('Sample inserted successfully with masterID:', masterID);
       callback(null, { insertId: id, masterID: masterID });
     });
   });

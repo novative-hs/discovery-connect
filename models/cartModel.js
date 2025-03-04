@@ -6,7 +6,7 @@ const createCartTable = () => {
   CREATE TABLE IF NOT EXISTS cart (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    sample_id BIGINT,
+    sample_id VARCHAR(36),
     price FLOAT,
     quantity INT,
     payment_method VARCHAR(255),
