@@ -1,5 +1,5 @@
 const mysqlConnection = require("../config/db");
-
+const mysqlPool = require("../config/db");
 // Function to create the SampleFields table
 const createEthnicityTable = () => {
   const createEthnicityTable = `
@@ -273,56 +273,58 @@ const getAllSampleFields = (tableName, callback) => {
 // Function to create all SampleFields
 const createSampleFields = (tableName, data, callback) => {
   console.log("Received Request Body:", data);
-
   const { bulkData, name, added_by } = data || {};
+  if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
 
-  if (!/^[a-zA-Z_]+$/.test(tableName)) {
-    return callback(new Error("Invalid table name"), null);
-  }
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err);
 
-  if (bulkData) {
-    const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
-    const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+    connection.beginTransaction(async (err) => {
+      if (err) return connection.release(), callback(err);
 
-    const query = `
-      INSERT INTO \`${tableName}\` (name, added_by)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE name = name;
-    `;
+      try {
+        let values = [];
 
-    mysqlConnection.query(query, [values], (err, result) => {
-      if (err) return callback(err, null);
-      callback(null, result);
+        if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
+          values = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+        } else if (name && added_by) {
+          values = [{ name, added_by }];
+        } else {
+          throw new Error("Invalid data");
+        }
+
+        // Insert unique values
+        const insertQuery = `INSERT IGNORE INTO \`${tableName}\` (name, added_by) VALUES ?;`;
+        await connection.promise().query(insertQuery, [values.map(({ name, added_by }) => [name, added_by])]);
+
+        // Fetch inserted IDs
+        const [rows] = await connection.promise().query(
+          `SELECT id, name FROM \`${tableName}\` WHERE name IN (?)`,
+          [values.map(({ name }) => name)]
+        );
+
+        if (rows.length === 0) throw new Error("Failed to retrieve inserted IDs");
+
+        // Insert history
+        const idColumn = `${tableName}_id`;
+        const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
+        const historyQuery = `INSERT INTO RegistrationAdmin_History (created_name, added_by, ${idColumn}, status) VALUES ?;`;
+        await connection.promise().query(historyQuery, [historyValues]);
+
+        connection.commit();
+        callback(null, { success: true });
+      } catch (err) {
+        connection.rollback();
+        callback(err);
+      } finally {
+        connection.release();
+      }
     });
-  } else if (name && added_by) {
-    const query = `
-      INSERT INTO \`${tableName}\` (name, added_by)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE name = name;
-    `;
-
-    mysqlConnection.query(query, [name, added_by], (err, result) => {
-      if (err) return callback(err, null);
-
-      const samplefieldsId = result.insertId;
-      if (!samplefieldsId) return callback(new Error("Failed to retrieve samplefieldsId ID"), null);
-
-      const idColumn = `${tableName}_id`;
-
-      const historyQuery = `
-        INSERT INTO RegistrationAdmin_History (created_name, added_by, ${idColumn}, status)
-        VALUES (?, ?, ?, 'active')
-      `;
-
-      mysqlConnection.query(historyQuery, [name, added_by, samplefieldsId], (err, historyResult) => {
-        if (err) return callback(err, null);
-        callback(null, { result, historyResult });
-      });
-    });
-  } else {
-    callback(new Error("Invalid data"), null);
-  }
+  });
 };
+
+
+
 
 // Function to update a record dynamically
 const updateSampleFields = (tableName, id, data, callback) => {
@@ -335,7 +337,8 @@ const updateSampleFields = (tableName, id, data, callback) => {
   const fetchQuery = `SELECT name FROM \`${tableName}\` WHERE id = ?`;
   mysqlConnection.query(fetchQuery, [id], (err, results) => {
     if (err) return callback(err, null);
-    if (results.length === 0) return callback(new Error("Record not found"), null);
+    if (results.length === 0)
+      return callback(new Error("Record not found"), null);
 
     const oldName = results[0].name;
     const idColumn = `${tableName}_id`;
@@ -355,10 +358,14 @@ const updateSampleFields = (tableName, id, data, callback) => {
         WHERE ${idColumn} = ?
       `;
 
-      mysqlConnection.query(updateHistoryQuery, [oldName, name, added_by, id], (err, historyResult) => {
-        if (err) return callback(err, null);
-        callback(null, { result, historyResult });
-      });
+      mysqlConnection.query(
+        updateHistoryQuery,
+        [oldName, name, added_by, id],
+        (err, historyResult) => {
+          if (err) return callback(err, null);
+          callback(null, { result, historyResult });
+        }
+      );
     });
   });
 };
@@ -381,10 +388,14 @@ const deleteSampleFields = (tableName, id, callback) => {
       WHERE ${idColumn} = ?
     `;
 
-    mysqlConnection.query(updateHistoryStatusQuery, [id], (err, historyResult) => {
-      if (err) return callback(err, null);
-      callback(null, { result, historyResult });
-    });
+    mysqlConnection.query(
+      updateHistoryStatusQuery,
+      [id],
+      (err, historyResult) => {
+        if (err) return callback(err, null);
+        callback(null, { result, historyResult });
+      }
+    );
   });
 };
 

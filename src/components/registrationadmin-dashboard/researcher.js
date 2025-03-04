@@ -175,11 +175,11 @@ const ResearcherArea = () => {
   }, [showDeleteModal, showEditModal, showHistoryModal]);
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-      <div className="container-fluid mt-n5">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
+    <section className="policy__area pb-40 overflow-hidden p-3">
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
+          <div className="d-flex flex-column w-100">
               {/* Button Container */}
               <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
                 {/* Success Message */}
@@ -329,26 +329,25 @@ const ResearcherArea = () => {
             </div>
             {/* Edit Researcher Modal */}
             {showEditModal && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">

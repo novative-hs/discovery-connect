@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { notifyError } from "@utils/toast";
-
+import Pagination from "@ui/Pagination";
 const ResearcherArea = () => {
   const id = localStorage.getItem("userID");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,6 +29,7 @@ const ResearcherArea = () => {
     logo: "",
     added_by: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
   const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
@@ -37,12 +38,13 @@ const ResearcherArea = () => {
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
   const [organization, setOrganization] = useState();
+  const [filteredResearchername, setFilteredResearchername] = useState([]); // Store filtered cities
   const [currentStep, setCurrentStep] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [orgid, setorgId] = useState();
   // Calculate total pages
-  const totalPages = Math.ceil(researchers.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
   const [logoFile, setLogoFile] = useState(null);
 
   // Fetch researchers from backend when component loads
@@ -57,12 +59,14 @@ const ResearcherArea = () => {
       console.log("account_id on city page is:", id);
     }
   }, []);
+
   const fetchResearcher = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${orgid}`
       );
-      console.log(response.data.length)
+      console.log(response.data.length);
+      setFilteredResearchername(response.data);
       setResearchers(response.data); // Store fetched researchers in state
     } catch (error) {
       console.error("Error fetching researchers:", error);
@@ -150,7 +154,7 @@ const ResearcherArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData)
+    console.log(formData);
     setCurrentStep(1);
     e.preventDefault();
 
@@ -178,7 +182,6 @@ const ResearcherArea = () => {
     console.log("FormData to submit:", formDataToSubmit);
 
     try {
-      // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/signup`,
         formDataToSubmit,
@@ -188,23 +191,25 @@ const ResearcherArea = () => {
           },
         }
       );
-      console.log("Researcher added successfully:", response.data);
-      // Refresh the researcher list after successful submission
+
+      // Success handling
       fetchResearcher();
-
-      // Clear form after submission
       resetFormData();
-      setSuccessMessage("Researcher added successfully.");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
 
-      setShowAddModal(false); // Close modal after submission
+      setSuccessMessage("Researcher added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error(
-        "Error adding researcher:",
-        error.response?.data || error.message
-      );
+      // console.error("Error adding researcher:", error);
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Something went wrong! Please try again.";
+
+      // Display error in notification
+      notifyError(errorMessage);
+    } finally {
+      setShowAddModal(false);
+      resetFormData();
     }
   };
 
@@ -222,7 +227,7 @@ const ResearcherArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log(id)
+    console.log(id);
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -300,36 +305,43 @@ const ResearcherArea = () => {
       console.error("Error updating researcher:", error);
     }
   };
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredResearchername.length / itemsPerPage)
+    );
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredResearchername]);
 
   // Get the current data for the table
-  const currentData = researchers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const currentData = filteredResearchername.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchResearcher();
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = researchers; // Show all if filter is empty
     } else {
-      const filtered = researchers.filter(
-        (researcher) =>
-          field === "status"
-            ? researcher[field]
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase()) // Change to partial matching for status
-            : researcher[field]
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase()) // Partial match for other fields
+      filtered = researchers.filter((city) =>
+        city[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      setResearchers(filtered);
     }
+
+    setFilteredResearchername(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
 
   useEffect(() => {
@@ -356,11 +368,18 @@ const ResearcherArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   return (
-    <section className="policy__area pb-100 overflow-hidden">
+    <section
+      className="policy__area pb-100 overflow-hidden"
+      //style={{ backgroundColor: " #EDF4F8" }}
+    >
       <div className="container mt-n4">
-        <div className="row justify-content-center mt-4">
+        <div className="row justify-content-center mt-2">
           <div className="col-12 col-lg-10">
-            <div className="policy__wrapper policy__translate position-relative mt-4">
+            <div className="policy__wrapper policy__translate position-relative mt-2 rounded border">
+              <h4 className="tp-8 fw-bold text-primary text-start pb-2">
+                <i className="fa fa-users me-2"></i> Researcher List
+              </h4>
+
               {/* Success Message */}
               {successMessage && (
                 <div className="alert alert-success w-100 text-start mb-2 small">
@@ -370,27 +389,19 @@ const ResearcherArea = () => {
 
               {/* Button */}
               <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Researcher Button */}
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add Researcher
-                  </button>
-
-                </div>
+                {/* Add Researcher Button */}
+                <button
+                  className="tp-btn-8 mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <span>+ Add Researcher</span>
+                </button>
+              </div>
 
               {/* Table */}
-              <div className="table-responsive w-100 ">
-                <table
-                  className="table table-bordered table-hover small"
-                  style={{
-                    backgroundColor: "#f8f9ff", // Light blue background
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <thead style={{ backgroundColor: "#eef0fb" }}>
+              <div className="table-responsive w-100">
+                <table className="table table-hover text-center align-middle w-auto border">
+                  <thead className="table-primary text-dark">
                     <tr className="text-center">
                       {[
                         { label: "ID", field: "id", minWidth: "80px" },
@@ -406,7 +417,7 @@ const ResearcherArea = () => {
                           minWidth: "130px",
                         },
                         {
-                          label: "Org",
+                          label: "Organization",
                           field: "organization_name",
                           minWidth: "150px",
                         },
@@ -431,33 +442,28 @@ const ResearcherArea = () => {
                           minWidth: "200px",
                         },
                         {
-                          label: "Created",
+                          label: "Created At",
                           field: "created_at",
                           minWidth: "140px",
                         },
                         {
-                          label: "Updated",
+                          label: "Updated At",
                           field: "updated_at",
                           minWidth: "140px",
                         },
                         { label: "Status", field: "status", minWidth: "100px" },
                       ].map(({ label, field, minWidth }, index) => (
-                        <th
-                          key={index}
-                          className="p-2 text-nowrap"
-                          style={{ minWidth }}
-                        >
+                        <th key={index} className="p-2" style={{ minWidth }}>
                           <div className="d-flex flex-column align-items-center">
-                          <input
+                            <input
                               type="text"
-                              className="form-control form-control-sm text-center"
+                              className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                               placeholder={label}
                               onChange={(e) =>
                                 handleFilterChange(field, e.target.value)
                               }
                               style={{ minWidth: "100px" }}
                             />
-                             
                             <span className="fw-bold mt-1">{label}</span>
                           </div>
                         </th>
@@ -471,7 +477,7 @@ const ResearcherArea = () => {
                     </tr>
                   </thead>
 
-                  <tbody>
+                  <tbody className="table-light">
                     {currentData.length > 0 ? (
                       currentData.map((researcher) => (
                         <tr key={researcher.id} className="text-center">
@@ -487,33 +493,66 @@ const ResearcherArea = () => {
                           <td>{formatDate(researcher.created_at)}</td>
                           <td>{formatDate(researcher.updated_at)}</td>
                           <td>
-                            <span
-                              className={`badge ${
-                                researcher.status === "approved"
-                                  ? "bg-success"
-                                  : researcher.status === "unapproved"
-                                  ? "bg-danger"
-                                  : "bg-warning"
-                              } p-1`}
-                            >
+                            <span className="d-flex align-items-center justify-content-center">
+                              <span
+                                className="rounded-circle d-inline-block me-2"
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  backgroundColor:
+                                    researcher.status === "Draft"
+                                      ? "#6c757d" // Gray
+                                      : researcher.status === "approved"
+                                      ? "#28a745" // Green
+                                      : "#dc3545", // Red
+                                }}
+                                title={researcher.status}
+                              ></span>
                               {researcher.status}
                             </span>
                           </td>
                           <td>
-                            <div className="d-flex justify-content-center gap-1">
+                            <div className="d-flex justify-content-center gap-2">
+                              {/* Edit Button */}
                               <button
-                                className="btn btn-outline-primary btn-sm"
+                                className="btn btn-outline-info btn-sm rounded-circle"
                                 onClick={() => handleEditClick(researcher)}
                                 title="Edit"
+                                onMouseEnter={(e) =>
+                                  (e.target.style.backgroundColor = "#28a745")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.target.style.backgroundColor =
+                                    "transparent")
+                                }
+                                style={{
+                                  transition: "0.3s ease",
+                                  color: "black",
+                                  borderColor: "#28a745",
+                                }}
                               >
                                 <i className="fa fa-edit"></i>
                               </button>
+
+                              {/* History Button */}
                               <button
-                                className="btn btn-outline-success btn-sm"
+                                className="btn btn-outline-success btn-sm rounded-circle"
                                 onClick={() =>
                                   handleShowHistory("researcher", researcher.id)
                                 }
                                 title="History"
+                                onMouseEnter={(e) =>
+                                  (e.target.style.backgroundColor = "#ADD8E6")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.target.style.backgroundColor =
+                                    "transparent")
+                                }
+                                style={{
+                                  transition: "0.3s ease",
+                                  color: "black",
+                                  borderColor: "#007bff",
+                                }}
                               >
                                 <i className="fa fa-history"></i>
                               </button>
@@ -523,7 +562,7 @@ const ResearcherArea = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="12" className="text-center p-2">
+                        <td colSpan="13" className="text-center p-2">
                           No researchers available
                         </td>
                       </tr>
@@ -533,184 +572,293 @@ const ResearcherArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={totalPages}
+                  focusPage={currentPage}
+                />
+              )}
 
               {/* Modal for Adding Researchers */}
               {(showAddModal || showEditModal) && (
-  <>
-    {/* Bootstrap Backdrop */}
-    <div className="modal-backdrop fade show"></div>
+                <>
+                  {/* Bootstrap Backdrop */}
+                  <div className="modal-backdrop fade show"></div>
 
-    {/* Modal Content */}
-    <div className="modal show d-block" tabIndex="-1" role="dialog">
-      <div className="modal-dialog modal-md modal-dialog-centered" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">{showAddModal ? "Add Researcher" : "Edit Researcher"}</h5>
-            <button type="button" className="btn-close" onClick={() => { setShowAddModal(false); setShowEditModal(false); resetFormData(); }}></button>
-          </div>
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                  >
+                    <div
+                      className="modal-dialog modal-md modal-dialog-centered"
+                      role="document"
+                    >
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="fw-bold modal-title text-primary">
+                            {showAddModal
+                              ? "Add Researcher"
+                              : "Edit Researcher"}
+                          </h5>
+                          <button
+                            type="button"
+                            className="btn-close"
+                            onClick={() => {
+                              setShowAddModal(false);
+                              setShowEditModal(false);
+                              resetFormData();
+                            }}
+                          ></button>
+                        </div>
 
-          {/* Form */}
-          <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
-            <div className="modal-body overflow-auto text-start" style={{ maxHeight: "65vh" }}>
-              
-              {/* Image Preview Section */}
-              <div className="text-center mb-3">
-                {preview ? (
-                  <img src={preview} alt="Preview" className="rounded-circle border" width="60" height="60" />
-                ) : (
-                  <span className="d-inline-block rounded-circle bg-light text-muted text-center fs-4 border" style={{ width: "60px", height: "60px", lineHeight: "60px" }}>
-                    <i className="fa-solid fa-user"></i>
-                  </span>
-                )}
-              </div>
+                        {/* Form */}
+                        <form
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate}
+                        >
+                          <div
+                            className="modal-body overflow-auto text-start"
+                            style={{ maxHeight: "65vh" }}
+                          >
+                            {/* Image Preview Section */}
+                            <div className="text-center mb-3">
+                              {preview ? (
+                                <img
+                                  src={preview}
+                                  alt="Preview"
+                                  className="rounded-circle border"
+                                  width="60"
+                                  height="60"
+                                />
+                              ) : (
+                                <span
+                                  className="d-inline-block rounded-circle bg-light text-muted text-center fs-4 border"
+                                  style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    lineHeight: "60px",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-user"></i>
+                                </span>
+                              )}
+                            </div>
 
-              {/* File Upload */}
-              <div className="mb-2">
-                <label className="form-label">Profile Picture</label>
-                <input type="file" className="form-control form-control-sm" name="logo" onChange={handleInputChange} accept="image/*" />
-              </div>
+                            {/* File Upload */}
+                            <div className="mb-2">
+                              <label className="form-label">
+                                Profile Picture
+                              </label>
+                              <input
+                                type="file"
+                                className="form-control form-control-sm"
+                                name="logo"
+                                onChange={handleInputChange}
+                                accept="image/*"
+                                required={showAddModal}
+                              />
+                            </div>
 
-              {/* Form Fields */}
-              <div className="row g-2">
-                <div className="col-md-12">
-                  <label className="form-label">Name</label>
-                  <input type="text" className="form-control form-control-sm" name="ResearcherName" value={formData.ResearcherName} onChange={handleInputChange} required />
-                </div>
-                <div className="col-md-12">
-                  <label className="form-label">Email</label>
-                  <input type="email" className="form-control form-control-sm" name="email" value={formData.email} onChange={handleInputChange} required />
-                </div>
-                <div className="col-md-12">
-                  <label className="form-label">Password</label>
-                  <div className="input-group input-group-sm">
-                    <input type={showPassword ? "text" : "password"} className="form-control" name="password" value={formData.password} onChange={handleInputChange} required />
-                    <button className="btn btn-outline-secondary" type="button" onClick={() => setShowPassword(!showPassword)}>
-                      <i className={showPassword ? "fa-regular fa-eye" : "fa-regular fa-eye-slash"}></i>
-                    </button>
+                            {/* Form Fields */}
+                            <div className="row g-2">
+                              <div className="col-md-12">
+                                <label className="form-label">Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  name="ResearcherName"
+                                  value={formData.ResearcherName}
+                                  onChange={handleInputChange}
+                                  pattern="^[A-Za-z\s]+$"
+                                  title="Only letters and spaces are allowed."
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-12">
+                                <label className="form-label">Email</label>
+                                <input
+                                  type="email"
+                                  className="form-control form-control-sm"
+                                  name="email"
+                                  value={formData.email}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-12">
+                                <label className="form-label">Password</label>
+                                <div className="input-group input-group-sm">
+                                  <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="form-control"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    required
+                                    pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?':{}|<>])[A-Za-z\d!@#$%^&*(),.?':{}|<>]{6,}$"
+                                    title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                                  />
+
+                                  <button
+                                    className="btn btn-outline-secondary"
+                                    type="button"
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                  >
+                                    <i
+                                      className={
+                                        showPassword
+                                          ? "fa-regular fa-eye"
+                                          : "fa-regular fa-eye-slash"
+                                      }
+                                    ></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label">
+                                  Account Type
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm bg-light"
+                                  name="accountType"
+                                  value={formData.accountType}
+                                  readOnly
+                                />
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label">
+                                  Organization
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm bg-light"
+                                  name="nameofOrganization"
+                                  value={organization.OrganizationName}
+                                  readOnly
+                                />
+                              </div>
+                              <div className="col-md-12">
+                                <label className="form-label">
+                                  Phone Number
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  required
+                                  pattern="^\d{4}-\d{7}$"
+                                  title="Format: 0304-5861729"
+                                />
+                              </div>
+                              <div className="col-12">
+                                <label className="form-label">
+                                  Full Address
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  name="fullAddress"
+                                  value={formData.fullAddress}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label">City</label>
+                                <select
+                                  className="form-select form-select-sm p-2"
+                                  name="city"
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select City
+                                  </option>
+                                  {cityname.map((city) => (
+                                    <option key={city.id} value={city.id}>
+                                      {city.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label">District</label>
+                                <select
+                                  className="form-select form-select-sm p-2"
+                                  name="district"
+                                  value={formData.district}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select District
+                                  </option>
+                                  {districtname.map((district) => (
+                                    <option
+                                      key={district.id}
+                                      value={district.id}
+                                    >
+                                      {district.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label">Country</label>
+                                <select
+                                  className="form-select form-select-sm p-2"
+                                  name="country"
+                                  value={formData.country}
+                                  onChange={handleInputChange}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    Select Country
+                                  </option>
+                                  {countryname.map((country) => (
+                                    <option key={country.id} value={country.id}>
+                                      {country.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Modal Footer */}
+                          <div className="modal-footer py-2">
+                            <button
+                              type="submit"
+                              className="tp-btn-8 px-3 py-2"
+                            >
+                              {showAddModal ? "Save" : "Update"}
+                            </button>
+                            <button
+                              type="button"
+                              className="tp-btn-8 bg-secondary text-white px-3 py-2"
+                              onClick={() => {
+                                setShowAddModal(false);
+                                setShowEditModal(false);
+                                resetFormData();
+                              }}
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Account Type</label>
-                  <input type="text" className="form-control form-control-sm bg-light" name="accountType" value={formData.accountType} readOnly />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Organization</label>
-                  <input type="text" className="form-control form-control-sm bg-light" name="nameofOrganization" value={organization.OrganizationName} readOnly />
-                </div>
-                <div className="col-md-12">
-                  <label className="form-label">Phone Number</label>
-                  <input type="text" className="form-control form-control-sm" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required pattern="^\d{4}-\d{7}$" title="Format: 0304-5861729" />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Full Address</label>
-                  <input type="text" className="form-control form-control-sm" name="fullAddress" value={formData.fullAddress} onChange={handleInputChange} required />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">City</label>
-                  <select className="form-select form-select-sm p-2" name="city" value={formData.city} onChange={handleInputChange} required>
-                    <option value="" disabled>Select City</option>
-                    {cityname.map((city) => (
-                      <option key={city.id} value={city.id}>{city.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">District</label>
-                  <select className="form-select form-select-sm p-2" name="district" value={formData.district} onChange={handleInputChange} required>
-                    <option value="" disabled>Select District</option>
-                    {districtname.map((district) => (
-                      <option key={district.id} value={district.id}>{district.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Country</label>
-                  <select className="form-select form-select-sm p-2" name="country" value={formData.country} onChange={handleInputChange} required>
-                    <option value="" disabled>Select Country</option>
-                    {countryname.map((country) => (
-                      <option key={country.id} value={country.id}>{country.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="modal-footer py-2">
-              <button type="submit" className="btn btn-primary btn-sm">{showAddModal ? "Save" : "Update"}</button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowAddModal(false); setShowEditModal(false); resetFormData(); }}>
-                Close
-              </button>
-            </div>
-
-          </form>
-        </div>
-      </div>
-    </div>
-  </>
-)}
-
+                </>
+              )}
 
               {/* Modal for Deleting Researchers */}
               {showHistoryModal && (
@@ -803,6 +951,7 @@ const ResearcherArea = () => {
                                       maxWidth: "75%",
                                       fontSize: "14px",
                                       textAlign: "left",
+                                      width: "100%",
                                     }}
                                   >
                                     {Object.entries(log).map(([key, value]) =>

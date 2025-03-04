@@ -282,11 +282,10 @@ const TestMethodArea = () => {
   };
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-      <div className="container-fluid mt-n5">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
+    <section className="policy__area pb-40 overflow-hidden p-4">
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
               {/* Button Container */}
               <div className="d-flex flex-column w-100">
                 {/* Success Message */}
@@ -325,15 +324,19 @@ const TestMethodArea = () => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
+              <div className="table-responsive overflow-auto w-100">
+              {" "}
+              {/* Increased width & scrolling */}
+              <table className="table table-bordered table-hover table-striped w-100">
+                {" "}
+                {/* Added w-100 */}
+                <thead className="thead-dark">
                     <tr className="text-center">
                       {[
                         { label: "ID", placeholder: "Search ID", field: "id" },
                         {
-                          label: "Test Method Name",
-                          placeholder: "Search Test Method Name",
+                          label: "Test Method",
+                          placeholder: "Search Test Method",
                           field: "name",
                         },
                         {
@@ -352,19 +355,19 @@ const TestMethodArea = () => {
                           field: "updated_at",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="px-3">
-                          <input
-                            type="text"
-                            className="form-control w-100 px-2 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
+                        <th key={field} className="col-md-2 px-1">
+                        <input
+                          type="text"
+                          className="form-control w-100 px-2 py-1 mx-auto"
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
                           {label}
                         </th>
                       ))}
-                      <th className="col-1">Action</th>
+                      <th className="col-md-1">Action</th>
                     </tr>
                   </thead>
 
@@ -406,7 +409,7 @@ const TestMethodArea = () => {
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
                                 <button
-                                  className="btn btn-info btn-sm"
+                                  className="btn btn-info btn-sm py-0 px-1"
                                   onClick={() =>
                                     handleShowHistory("testmethod", id)
                                   }
@@ -708,7 +711,7 @@ const TestMethodArea = () => {
             </div>
           </div>
         </div>
-      </div>
+      
     </section>
   );
 };

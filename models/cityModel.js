@@ -39,117 +39,141 @@ const getAllCities = (callback) => {
 
 // Function to create City
 const createCity = (data, callback) => {
-  console.log('Received Request Body:', data); // Debugging
-  const { bulkData, cityname, added_by } = data || {}; // Handle undefined gracefully
-  mysqlPool.getConnection((err, connection) => { // Use connection from pool
-    if (err) {
-      return callback(err, null);
-    }
+  console.log("Received Request Body:", data);
+  const { bulkData, cityname, added_by } = data || {};
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err, null);
+
     connection.beginTransaction((err) => {
-    if (err) {
-      connection.release();
-      return callback(err, null);
-    }
-    if (bulkData) {
-      const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
-      const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
-      const cityQuery = `
-        INSERT INTO city (name, added_by)
-        VALUES ?
-        ON DUPLICATE KEY UPDATE name = name;
-      `;
-      connection.query(cityQuery, [values], (err, cityResult) => {
-        if (err) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(err, null);
-          });
-        }
-        const insertedCityIds = cityResult.insertId; // Get the first inserted city ID
-        if (!insertedCityIds) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(new Error("Failed to retrieve city ID"), null);
-          });
-        }
-        // Insert into RegistrationAdmin_History
-        const historyValues = uniqueData.map(({ name, added_by }) => [
-          name, added_by, insertedCityIds, 'active'
-        ]);
-        const historyQuery = `
-          INSERT INTO RegistrationAdmin_History (created_name, added_by, city_id, status)
-          VALUES ?
+      if (err) {
+        connection.release();
+        return callback(err, null);
+      }
+
+      if (bulkData) {
+        const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+        const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
+
+        const cityQuery = `
+          INSERT IGNORE INTO city (name, added_by)
+          VALUES ?;
         `;
-        connection.query(historyQuery, [historyValues], (err, historyResult) => {
+
+        connection.query(cityQuery, [values], (err, cityResult) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
               callback(err, null);
             });
           }
-          connection.commit((err) => {
+
+          // Retrieve all inserted city IDs
+          const fetchCityIdsQuery = `
+            SELECT id, name FROM city WHERE name IN (?);
+          `;
+
+          connection.query(fetchCityIdsQuery, [uniqueData.map(({ name }) => name)], (err, cities) => {
             if (err) {
               return connection.rollback(() => {
                 connection.release();
                 callback(err, null);
               });
             }
-            connection.release();
-            callback(null, { cityResult, historyResult });
+
+            const historyValues = cities.map(({ id, name }) => [name, added_by, id, "active"]);
+
+            const historyQuery = `
+              INSERT INTO RegistrationAdmin_History (created_name, added_by, city_id, status)
+              VALUES ?;
+            `;
+
+            connection.query(historyQuery, [historyValues], (err, historyResult) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(err, null);
+                });
+              }
+
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    callback(err, null);
+                  });
+                }
+
+                connection.release();
+                callback(null, { cityResult, historyResult });
+              });
+            });
           });
         });
-      });
-    } else if (cityname && added_by) {
-      const cityQuery = `
-        INSERT INTO city (name, added_by)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE name = name;
-      `;
-      connection.query(cityQuery, [cityname, added_by], (err, cityResult) => {
-        if (err) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(err, null);
-          });
-        }
-        const cityId = cityResult.insertId;
-        if (!cityId) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(new Error("Failed to retrieve city ID"), null);
-          });
-        }
-        // Insert into RegistrationAdmin_History
-        const historyQuery = `
-          INSERT INTO RegistrationAdmin_History (created_name,  added_by, city_id, status)
-          VALUES (?, ?, ?, ?)
+      } else if (cityname && added_by) {
+        const cityQuery = `
+          INSERT IGNORE INTO city (name, added_by)
+          VALUES (?, ?);
         `;
-        connection.query(historyQuery, [cityname, added_by, cityId, 'active'], (err, historyResult) => {
+
+        connection.query(cityQuery, [cityname, added_by], (err, cityResult) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
               callback(err, null);
             });
           }
-          connection.commit((err) => {
-            if (err) {
+
+          const fetchCityIdQuery = `
+            SELECT id FROM city WHERE name = ?;
+          `;
+
+          connection.query(fetchCityIdQuery, [cityname], (err, cityRows) => {
+            if (err || cityRows.length === 0) {
               return connection.rollback(() => {
                 connection.release();
-                callback(err, null);
+                callback(new Error("Failed to retrieve city ID"), null);
               });
             }
-            connection.release();
-            callback(null, { cityResult, historyResult });
+
+            const cityId = cityRows[0].id;
+
+            const historyQuery = `
+              INSERT INTO RegistrationAdmin_History (created_name, added_by, city_id, status)
+              VALUES (?, ?, ?, ?);
+            `;
+
+            connection.query(historyQuery, [cityname, added_by, cityId, "active"], (err, historyResult) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(err, null);
+                });
+              }
+
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    callback(err, null);
+                  });
+                }
+
+                connection.release();
+                callback(null, { cityResult, historyResult });
+              });
+            });
           });
         });
-      });
-    } else {
-      connection.release()
-      callback(new Error('Invalid data'), null);
-    }
+      } else {
+        connection.release();
+        callback(new Error("Invalid data"), null);
+      }
+    });
   });
-});
 };
+
+
 
 // Function to update City
 const updateCity = (id, data, callback) => {

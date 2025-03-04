@@ -25,64 +25,51 @@ const RegistrationAdmin_History = () => {
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE
     )`;
 
-
-  mysqlConnection.query(createRegistrationAdmin_HistoryTable, (err, results) => {
-    if (err) {
-      console.error("Error creating History table: ", err);
-    } else {
-      console.log("Registration Admin History table created Successfully");
+  mysqlConnection.query(
+    createRegistrationAdmin_HistoryTable,
+    (err, results) => {
+      if (err) {
+        console.error("Error creating History table: ", err);
+      } else {
+        console.log("Registration Admin History table created Successfully");
+      }
     }
-  });
+  );
 };
 
 const getHistory = (filterType, id, callback) => {
-  let query = "";
-  let params = [id];
-  const column = `${filterType}_id`;
+  if (!filterType || !id)
+    return callback(new Error("Invalid parameters"), null);
+  column = `${filterType}_id`;
+  if (!column) return callback(new Error("Invalid filter type"), null);
 
-  if (filterType ) {
-    query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
-  } 
-  else {
-    return callback(new Error("Invalid filter type"), null);
-  }
+  const query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
 
-  mysqlConnection.query(query, params, (err, results) => {
-    if (err) {
-      return callback(err, null);
-    }
-    // If no results in RegistrationAdmin_History, fallback to the history table
-    if (results.length === 0) {
-      let fallbackQuery = `
-        SELECT 
-    history.*,
-    city.name AS city_name,
-    district.name AS district_name,
-    country.name AS country_name,
-    organization.OrganizationName AS organization_name,
-    user_account.email AS added_by
-FROM history
-LEFT JOIN city ON history.city = city.id
-LEFT JOIN district ON history.district = district.id
-LEFT JOIN country ON history.country = country.id
-LEFT JOIN organization ON history.nameofOrganization = organization.id
-LEFT JOIN user_account ON history.added_by = user_account.id
-WHERE history.${filterType}_id = ?;
+  mysqlConnection.query(query, [id], (err, results) => {
+    if (err || results.length === 0) {
+      // If an error occurs or no results found, run the fallback query
+      const fallbackQuery = `
+        SELECT history.*, city.name AS city_name, district.name AS district_name,
+               country.name AS country_name, organization.OrganizationName AS organization_name,
+               user_account.email AS added_by
+        FROM history
+        LEFT JOIN city ON history.city = city.id
+        LEFT JOIN district ON history.district = district.id
+        LEFT JOIN country ON history.country = country.id
+        LEFT JOIN organization ON history.nameofOrganization = organization.id
+        LEFT JOIN user_account ON history.added_by = user_account.id
+        WHERE history.${column} = ?;
       `;
+
       mysqlConnection.query(
         fallbackQuery,
-        params,
+        [id],
         (fallbackErr, fallbackResults) => {
-          if (fallbackErr) {
-            return callback(fallbackErr, null);
-          }
-          console.log(fallbackResults);
-          callback(null, fallbackResults);
+          return callback(fallbackErr, fallbackResults);
         }
       );
-
     } else {
-      callback(null, results);
+      return callback(null, results);
     }
   });
 };
@@ -179,11 +166,10 @@ const create_samplehistoryTable = () => {
       console.log("Sample History table created successfully");
     }
   });
-}
+};
 module.exports = {
   RegistrationAdmin_History,
   getHistory,
   create_historyTable,
-  create_samplehistoryTable
+  create_samplehistoryTable,
 };
-

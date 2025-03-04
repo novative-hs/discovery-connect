@@ -163,21 +163,26 @@ const getSampleById = (id, callback) => {
 
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-  console.log("Inserting data into database:", data);
-  console.log(data);
-
-  // Generate a random 3-digit number
-  const randomSuffix = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
-  // Calculate Master ID
-  const id = parseInt(data.donorID) + parseInt(data.user_account_id);
-  const masterID = `${id}${randomSuffix}`;
-
+  //console.log("Inserting data into database:", data);
+  const now = Date.now() % 1000; // Last 4 digits of timestamp
+  const randomPart = Math.floor(100 + Math.random() * 900); // 3-digit random number
+  const randomPart2 = Math.floor(100 + Math.random() * 900); // 3-digit random number
+  
+  const donorID = parseInt(data.donorID);
+  const userID = parseInt(data.user_account_id);
+  
+  const id = parseInt(`${(donorID + userID) % 1000}${randomPart}`);
+  
+  // Generate a shorter masterID
+  const masterID = parseInt(`${id}${now}${randomPart2}`);
+  
+  console.log("ID:", id);
   console.log("Master ID:", masterID);
-
+  
   const query = `
     INSERT INTO sample (
       id, donorID, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;  
 
   mysqlConnection.query(query, [
     id, data.donorID, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock'
@@ -202,6 +207,9 @@ const createSample = (data, callback) => {
 
   });
 };
+
+
+
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
