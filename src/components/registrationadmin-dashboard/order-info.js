@@ -13,7 +13,7 @@ const OrderInfo = ({ setActiveTab }) => {
   // Function to fetch user count data
   const fetchUserCount = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/city/getAll`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`);
       setUserCount(response.data); // Set the fetched counts in the state
     } catch (error) {
       console.error("Error fetching user count:", error);
@@ -26,14 +26,14 @@ const OrderInfo = ({ setActiveTab }) => {
   }
 
   const stats = [
-    { label: "Total City", count: userCount.totalCities, icon: "fa-solid fa-city", bg: "bg-primary", tab: "city" },
-    { label: "Total District", count: userCount.totalDistricts, icon: "fa-solid fa-flag", bg: "bg-info", tab: "district" },
-    { label: "Total Country", count: userCount.totalCountries, icon: "fa-solid fa-globe", bg: "bg-success", tab: "country" },
-    { label: "Total Researcher", count: userCount.totalResearchers, icon: "fa-solid fa-user", bg: "bg-warning", tab: "researcher" },
-    { label: "Total Organization", count: userCount.totalOrganizations, icon: "fa-solid fa-building", bg: "bg-danger", tab: "organization" },
-    { label: "Total Collection Site", count: userCount.totalCollectionSites, icon: "fa-solid fa-map-marker-alt", bg: "bg-dark", tab: "collectionsite" },
-    { label: "Total Committee Member", count: userCount.totalCommitteeMembers, icon: "fa-solid fa-users", bg: "bg-secondary", tab: "committee-members" },
-    { label: "Total Cart Items", count: userCount.totalOrders, icon: "fa-solid fa-shopping-cart", bg: "bg-success", tab: "order-info" },
+    { label: "Cities", count: userCount.totalCities, icon: "fa-solid fa-city", bg: "bg-primary", tab: "city" },
+    { label: "Districts", count: userCount.totalDistricts, icon: "fa-solid fa-flag", bg: "bg-info", tab: "district" },
+    { label: "Countries", count: userCount.totalCountries, icon: "fa-solid fa-globe", bg: "bg-success", tab: "country" },
+    { label: "Researchers", count: userCount.totalResearchers, icon: "fa-solid fa-user", bg: "bg-warning", tab: "researcher" },
+    { label: "Organizations", count: userCount.totalOrganizations, icon: "fa-solid fa-building", bg: "bg-danger", tab: "organization" },
+    { label: "Collection Sites", count: userCount.totalCollectionSites, icon: "fa-solid fa-map-marker-alt", bg: "bg-dark", tab: "collectionsite" },
+    { label: "Committee Members", count: userCount.totalCommitteeMembers, icon: "fa-solid fa-users", bg: "bg-secondary", tab: "committee-members" },
+    { label: "Cart Items", count: userCount.totalOrders, icon: "fa-solid fa-shopping-cart", bg: "bg-success", tab: "order-info" },
   ];
 
   // Handle stat div click and set active tab

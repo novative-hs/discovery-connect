@@ -16,14 +16,14 @@ const schema = Yup.object().shape({
   phoneNumber: Yup.string()
     .required("Phone Number is required")
     .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric",
+      /^\d{4}-\d{7}$/,
+      "Phone number must be in the format 0123-4567890 and numeric",
     )
     .label("Phone Number"),
   fullAddress: Yup.string()
     .required("Full Address is required")
     .label("Full Address"),
-  type: Yup.string().required("Type is required").label("Type"),
+  CollectionSiteType: Yup.string().required("Type is required").label("Type"),
 });
 
 const UpdateCollectionSite = () => {
@@ -267,19 +267,19 @@ const UpdateCollectionSite = () => {
             }}
           >
             <label
-              htmlFor="type"
+              htmlFor="CollectionSiteType"
               style={{
                 fontWeight: "bold",
                 width: "150px",
                 marginRight: "20px",
               }}
             >
-              Type
+            Type
             </label>
             <div className="profile__input" style={{ flexGrow: 1 }}>
               <select
-                id="type"
-                {...register("type")}
+                id="CollectionSiteType"
+                {...register("CollectionSiteType")}
                 style={{
                   width: "100%",
                   padding: "10px",
@@ -289,11 +289,11 @@ const UpdateCollectionSite = () => {
                 }}
               >
                 <option value="">Select Type</option>
-                <option value="Public">Public</option>
-                <option value="Private">Private</option>
-                <option value="NGO">NGO</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Independent Lab">Independent Lab</option>
+                <option value="Bio Bank">Bio Bank</option>
               </select>
-              <ErrorMessage message={errors.type?.message} />
+              <ErrorMessage message={errors.CollectionSiteType?.message} />
             </div>
           </div>
           {/* City */}
@@ -450,7 +450,7 @@ const UpdateCollectionSite = () => {
               id="phoneNumber"
               {...register("phoneNumber")}
               type="text"
-              placeholder="Enter Phone Number"
+              placeholder="XXXX-XXXXXXX"
               style={{
                 width: "100%",
                 padding: "20px",

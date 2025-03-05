@@ -8,10 +8,13 @@ import UpdateBioBank from './update-biobank';
 import BioBankSampleArea from './samples';
 import BioBankSampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
+import { getLocalStorage } from "@utils/localstorage";
+
 const DashboardArea = () => {
-  const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
+  const [activeTab, setActiveTab] = useState("samples");
   const router = useRouter();
   const [id, setUserID] = useState(null);
+
 
   useEffect(() => {
     const token = document.cookie
@@ -38,7 +41,6 @@ const DashboardArea = () => {
   if (!id) {
     return <div>Loading...</div>; // Or redirect to login
   }
-  // Function to render content based on the active tab
   const renderContent = () => {
     switch (activeTab) {
       case "samples":
@@ -56,12 +58,17 @@ const DashboardArea = () => {
 
   return (
     <>
-         <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-      <section className="profile__area pt-180 pb-120">
-        <div className="container" style={{ marginTop: '-90px', width: '100%' }}>
+      <Header setActiveTab={setActiveTab} activeTab={activeTab} />
+      <section className="profile__area pt-180 pb-120" style={{ backgroundColor: "#DFFFD6" }}>
+        <div className="container" style={{ marginTop: '-120px', width: '75%' }}>
           <div className="profile__inner p-relative">
             <ProfileShapes />
             <div className="row">
+              <div
+                className="text-danger fw-bold"
+                style={{ marginTop: "-40px" }}>
+                Note: Click on Edit Icon to Add Price and Currency for Sample.
+              </div>
               <div className="col-xxl-8 col-lg-8" style={{ width: '100%' }}>
                 <div className="profile__tab-content">
                   {/* Dynamically render content based on activeTab */}
@@ -74,6 +81,7 @@ const DashboardArea = () => {
       </section>
     </>
   );
+  
 };
 
 export default DashboardArea;

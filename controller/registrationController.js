@@ -3,8 +3,8 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   service: "Gmail", // You can replace it with any service you are using
   auth: {
-    user: "khollaqureshi.pma.it@gmail.com	", // Your email
-    pass: "bxec rtxs extp yyjg", // Your email password or app password
+    user: "labhazr4@gmail.com",
+    pass: "phua sjvn btyl jiyk", // Your email password or app password
   },
 });
 // Controller for creating the committe_member table
@@ -58,9 +58,8 @@ const sendEmail = async (req, res) => {
 
   // Email options
   const mailOptions = {
-    from: "khollaqureshi.pma.it@gmail.com", // Sender address
-    //to: email, // Recipient email
-    to: "khollaqureshi.pma.it@gmail.com",
+    from: "labhazr4@gmail.com", // Sender address
+    to: email, // Recipient email
     subject: "Account Status Update", // Subject
     text: emailText, // Email body
   };
@@ -209,5 +208,5 @@ module.exports = {
   createAccount,
   getAccountDetail,
   updateAccount,
-  sendEmail,
+  
 };

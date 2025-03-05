@@ -77,7 +77,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/user/getAccountDetail/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
 
       setUser(response.data[0]); // Store fetched organization data
@@ -89,7 +89,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const fetchCart = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/cart/getCount/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
 
       console.log("API Response:", response.data);
@@ -115,8 +115,8 @@ const Header = ({ setActiveTab, activeTab }) => {
       setUserLogo(
         user?.logo?.data
           ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-              "base64"
-            )}`
+            "base64"
+          )}`
           : null
       );
     }
@@ -148,6 +148,8 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   const handleLogout = () => {
+    setShowDropdown(false);
+    localStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };
@@ -155,66 +157,67 @@ const Header = ({ setActiveTab, activeTab }) => {
   const menuItems =
     userType == "organization"
       ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "Researcher List", tab: "researchers" },
-        ]
+        { label: "Profile", tab: "order-info" },
+        { label: "Researcher List", tab: "researchers" },
+      ]
       : userType == "researcher"
-      ? [
+        ? [
           { label: "Profile", tab: "order-info" },
           { label: "Sample List", tab: "samples" },
         ]
-      : userType == "registrationadmin"
-      ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "City", tab: "city" },
-          { label: "Country", tab: "country" },
-          { label: "District", tab: "district" },
-          { label: "Researcher List", tab: "researcher" },
-          { label: "Organization List", tab: "organization" },
-          { label: "Collection Site List", tab: "collectionsite" },
-          { label: "Committee Members List", tab: "committee-members" },
-          {
-            label: "Sample",
-            tab: "sample",
-            dropdown: [
-              { label: "Ethnicity", tab: "ethnicity" },
-              { label: "Sample Condition", tab: "sample-condition" },
-              { label: "Storage Temperature", tab: "storage-temperature" },
-              { label: "Container Type", tab: "container-type" },
-              { label: "Quantity Unit", tab: "quantity-unit" },
-              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
-              { label: "Test Method", tab: "test-method" },
-              { label: "Test Result Unit", tab: "test-result-unit" },
-              {
-                label: "Concurrent Medical Conditions",
-                tab: "concurrent-medical-conditions",
-              },
-              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
-              { label: "Test System", tab: "test-system" },
-              {
-                label: "Test System Manufacturer",
-                tab: "test-system-manufacturer",
-              },
-            ],
-          },
-        ]
-      : userType == "collectionsites"
-      ? [
-          { label: "Sample List", tab: "samples" },
-          { label: "Sample Dispatch", tab: "sample-dispatch" },
-        ]
-      : userType == "biobank"
-      ? [
-          { label: "Sample List", tab: "samples" },
-          { label: "Sample Dispatch", tab: "sample-dispatch" },
-        ]
-      : [];
+        : userType == "registrationadmin"
+          ? [
+            { label: "Profile", tab: "order-info" },
+            { label: "City", tab: "city" },
+            { label: "Country", tab: "country" },
+            { label: "District", tab: "district" },
+            { label: "Researcher List", tab: "researcher" },
+            { label: "Organization List", tab: "organization" },
+            { label: "Collection Site List", tab: "collectionsite" },
+            { label: "Committee Members List", tab: "committee-members" },
+            {
+              label: "Sample",
+              tab: "sample",
+              dropdown: [
+                { label: "Ethnicity", tab: "ethnicity" },
+                { label: "Sample Condition", tab: "sample-condition" },
+                { label: "Storage Temperature", tab: "storage-temperature" },
+                { label: "Container Type", tab: "container-type" },
+                { label: "Quantity Unit", tab: "quantity-unit" },
+                { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+                { label: "Test Method", tab: "test-method" },
+                { label: "Test Result Unit", tab: "test-result-unit" },
+                {
+                  label: "Concurrent Medical Conditions",
+                  tab: "concurrent-medical-conditions",
+                },
+                { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+                { label: "Test System", tab: "test-system" },
+                {
+                  label: "Test System Manufacturer",
+                  tab: "test-system-manufacturer",
+                },
+              ],
+            },
+          ]
+          : userType == "collectionsites"
+            ? [
+              { label: "Sample List", tab: "samples" },
+              { label: "Sample Dispatch", tab: "sample-dispatch" },
+            ]
+            : userType == "biobank"
+              ? [
+                { label: "Sample List", tab: "samples" },
+                { label: "Sample Dispatch", tab: "sample-dispatch" },
+              ]
+              : [];
 
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
-          <Image src={logo} alt="Logo" width={160} height={80} />
+          <Image src={logo} alt="Logo" width={170} height={75} />
+          {/* Navbar Toggler */}
           <button
             className="navbar-toggler"
             type="button"
@@ -227,18 +230,23 @@ const Header = ({ setActiveTab, activeTab }) => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          {/* Collapsible Navbar */}
+          <div className="collapse navbar-collapse w-100" id="navbarSupportedContent">
+            {/* Navbar Menu */}
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {menuItems.map(({ label, tab, dropdown }, index) => (
-                <li key={tab} className="nav-item dropdown">
+                <li
+                  key={tab}
+                  className="nav-item dropdown"
+                  onMouseEnter={() => dropdown && setShowSampleDropdown(index)}
+                  onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
+                >
                   <button
-                    className={`nav-link btn ${
+                    className={`nav-link btn btn-sm ${
                       activeTab === tab ? "text-primary" : "text-dark"
-                    }`}
+                    } fs-7`}
                     onClick={() => {
-                      if (dropdown) {
-                        handleToggleSampleDropdown(index); // Toggle only the clicked dropdown
-                      } else {
+                      if (!dropdown) {
                         setActiveTab(tab);
                       }
                     }}
@@ -246,16 +254,15 @@ const Header = ({ setActiveTab, activeTab }) => {
                     {label}
                   </button>
 
-                  {/* Render dropdown items if available */}
                   {dropdown && showSampleDropdown === index && (
                     <ul className="dropdown-menu show">
                       {dropdown.map(({ label, tab }) => (
                         <li key={tab}>
                           <button
-                            className="dropdown-item"
+                            className="dropdown-item fs-7"
                             onClick={() => {
                               setActiveTab(tab);
-                              setShowSampleDropdown(null); // Close dropdown after clicking
+                              setShowSampleDropdown(null);
                             }}
                           >
                             {label}
@@ -268,97 +275,76 @@ const Header = ({ setActiveTab, activeTab }) => {
               ))}
             </ul>
 
-            {/* Wrap these items in a div to conditionally move them */}
-            <div
-              className={`d-flex align-items-center ${
-                isProfileOpen ? "move-to-off-canvas" : ""
-              }`}
-            >
-              {userType === "registrationadmin" && (
-                <>
-                  <h4>Welcome Admin!</h4>
-                </>
-              )}
+            {/* Right Section */}
+            <div className="d-flex align-items-center gap-2">
+              {userType === "registrationadmin" && <h4 className="m-0 text-black">Welcome Admin!</h4>}
 
-              <div className="dropdown me-3">
+              {/* User Dropdown */}
+              <div className="dropdown">
                 <button
-                  className="btn dropdown-toggle d-flex align-items-center"
+                  className="btn btn-sm dropdown-toggle d-flex align-items-center"
                   type="button"
                   id="userDropdown"
                   data-bs-toggle="dropdown"
                   aria-expanded={showDropdown}
                   onClick={handleToggleDropdown}
                 >
-                  {/* Conditional rendering for user logo or default icon */}
                   {userlogo ? (
-                    <Image
-                      src={userlogo} // Assuming user.logo contains the URL to the user's logo
-                      alt="User Logo"
-                      width={50} // Adjust size as needed
-                      height={50}
-                      className="rounded-circle"
-                    />
+                    <Image src={userlogo} alt="User Logo" width={35} height={35} className="rounded-circle border" />
                   ) : (
-                    <i className="fa fa-user"></i>
+                    <i className="fa fa-user fs-6 text-dark"></i>
                   )}
                 </button>
-                <ul
-                  className={`dropdown-menu dropdown-menu-end ${
-                    showDropdown ? "show" : ""
-                  }`}
-                  aria-labelledby="userDropdown"
-                >
+                <ul className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""}`} aria-labelledby="userDropdown">
+                  {userType !== "registrationadmin" && (
+                    <li>
+                      <button className="dropdown-item fs-7" onClick={handleUpdateProfile}>
+                        Update Profile
+                      </button>
+                    </li>
+                  )}
                   <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={handleUpdateProfile}
-                    >
-                      Update Profile
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={handleChangePassword}
-                    >
+                    <button className="dropdown-item fs-7" onClick={handleChangePassword}>
                       Change Password
                     </button>
                   </li>
                   <li>
-                    <button className="dropdown-item" onClick={handleLogout}>
+                    <button className="dropdown-item fs-7" onClick={handleLogout}>
                       Logout
                     </button>
                   </li>
                 </ul>
               </div>
 
-              {userType !== "registrationadmin" && (
-                <>
-                  <Link
-                    href="/wishlist"
-                    className="btn d-flex align-items-center me-3 position-relative"
-                  >
-                    <Heart className="me-2" />
-                    <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                      {wishlist.length}
-                    </span>
+              {/* Wishlist & Cart for Researchers */}
+              {userType === "researcher" && (
+                <div className="d-flex gap-2">
+                  <Link href="/wishlist" className="btn btn-sm position-relative">
+                    <Heart className="fs-6 text-white" />
+                    {wishlist.length > 0 && (
+                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                        {wishlist.length}
+                      </span>
+                    )}
                   </Link>
 
-                  <Link
-                    href="/cart"
-                    className="btn d-flex align-items-center me-3 position-relative"
-                  >
-                    <Cart className="me-2" />
-                    <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                      {cartCount}
-                    </span>
+                  <Link href="/cart" className="btn btn-sm position-relative">
+                    <Cart className="fs-6 text-white" />
+                    {cartCount > 0 && (
+                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                        {cartCount}
+                      </span>
+                    )}
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
       </nav>
+
+
+
       {/* Conditionally render the CartSidebar */}
     </>
   );

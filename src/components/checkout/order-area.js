@@ -38,7 +38,7 @@ const OrderArea = ({
     };
   
     try {
-      const response = await axios.post("http://localhost:5000/api/cart", data);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, data);
       console.log("Order Placed Successfully:", response.data);
       alert("Order placed successfully!");
       

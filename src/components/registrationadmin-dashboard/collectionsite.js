@@ -2,12 +2,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
-
+import Pagination from "@ui/Pagination";
 const CollectionsiteArea = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null); // Store ID of collectionsite to delete
+  const [historyData, setHistoryData] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
+
+  const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null);
+  const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
+  const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [formData, setFormData] = useState({
     CollectionSiteName: "",
     email: "",
@@ -16,21 +21,21 @@ const CollectionsiteArea = () => {
     status: "",
     // logo: ""
   });
-  const [historyData, setHistoryData] = useState([]);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
-  const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
-  const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
+
+  const [filteredCollectionsite, setFilteredCollectionsite] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/get-reg-history/${filterType}/${id}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -44,15 +49,16 @@ const CollectionsiteArea = () => {
     setShowHistoryModal(true);
   };
 
-
   // Fetch collectionsites from backend when component loads
   useEffect(() => {
     fetchCollectionsites(); // Call the function when the component mounts
   }, []);
   const fetchCollectionsites = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/collectionsite/get');
-      setAllCollectionsites(response.data)
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
+      );
+      setAllCollectionsites(response.data);
       setCollectionsites(response.data); // Store fetched collectionsites in state
     } catch (error) {
       console.error("Error fetching collectionsites:", error);
@@ -66,44 +72,15 @@ const CollectionsiteArea = () => {
     });
   };
 
-  // const formatDateTime = (dateTime) => {
-  //   const date = new Date(dateTime);
-  //   const formattedDate = date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
-  //   return formattedDate;
-  // };
-
-  const handleSubmit = async (e) => {
-
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/collectionsite/post', formData);
-      console.log("Collectionsite added successfully:", response.data);
-
-      // Refresh the collectionsite list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
-      setCollectionsites(newResponse.data); // Update state with the new list
-
-      // Clear form after submission
-      setFormData({
-        CollectionSiteName: "",
-        email: "",
-        phoneNumber: "",
-        // created_at: "",
-        status: "",
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding collectionsite:", error);
-    }
-  };
-
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/collectionsite/delete/${selectedCollectionsiteId}`);
-      console.log(`Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/delete/${selectedCollectionsiteId}`
+      );
+      console.log(
+        `Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`
+      );
 
       // Set success message
       setSuccessMessage("Collectionsite deleted successfully.");
@@ -114,9 +91,7 @@ const CollectionsiteArea = () => {
       }, 3000);
 
       // Refresh the collectionsite list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/collectionsite/get');
-      setCollectionsites(newResponse.data);
-
+      fetchCollectionsites(); 
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedCollectionsiteId(null);
@@ -127,31 +102,6 @@ const CollectionsiteArea = () => {
       );
     }
   };
-  const sendApprovalEmail = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/user/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          name: formData.CollectionSiteName,
-          status:formData.status
-        }),
-      });
-  
-      const data = await response.json();
-      if (response.ok) {
-        console.log("Email sent successfully:", data.message);
-      } else {
-        console.error("Error sending email:", data.error);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-  
   const handleEditClick = (collectionsite) => {
     setSelectedCollectionsiteId(collectionsite.id);
     setEditCollectionsite(collectionsite); // Store the collectionsite data to edit
@@ -165,9 +115,7 @@ const CollectionsiteArea = () => {
     });
   };
 
-  
   const handleUpdate = async (e) => {
-
     e.preventDefault();
 
     try {
@@ -177,14 +125,11 @@ const CollectionsiteArea = () => {
       );
       console.log("Collectionsite updated successfully:", response.data);
 
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
-      );
-      setCollectionsites(newResponse.data);
-
+      fetchCollectionsites(); 
       setShowEditModal(false);
+      
+
       setSuccessMessage("Collectionsite updated successfully.");
-      sendApprovalEmail();
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -196,32 +141,44 @@ const CollectionsiteArea = () => {
     }
   };
 
-  const currentData = collectionsites.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // Filter the researchers list
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchCollectionsites();
+    setSearchTerm(value);
+
+    if (!value) {
+      setCollectionsites(allcollectionsites);
     } else {
-      // Filter the researchers array based on the field and value
-      const filtered = allcollectionsites.filter((collectionsite) =>
-        collectionsite[field]
+      const filtered = allcollectionsites.filter((collectionsite) => {
+        return collectionsite[field]
           ?.toString()
           .toLowerCase()
-          .includes(value.toLowerCase())
-      );
+          .includes(value.toLowerCase());
+      });
       setCollectionsites(filtered);
     }
+
+    setCurrentPage(0); // Reset to first page when filtering
   };
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
+    const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
+      if (!statusFilter) return true;
+      return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
+    });
+
+    setFilteredCollectionsite(updatedFilteredCollectionsite);
+    setCurrentPage(0); // Reset to first page when filtering
+  }, [collectionsites, statusFilter]);
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
+
+  const currentData = filteredCollectionsite.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+  useEffect(() => {
+    if (showDeleteModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -230,12 +187,10 @@ const CollectionsiteArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-
+  }, [showDeleteModal, showEditModal, showHistoryModal]);
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showDeleteModal || showEditModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -244,7 +199,7 @@ const CollectionsiteArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showDeleteModal, showEditModal]);
 
   const resetFormData = () => {
     setFormData({
@@ -255,9 +210,9 @@ const CollectionsiteArea = () => {
       status: "",
     });
   };
+
   return (
-  
-<section className="policy__area pb-120 overflow-hidden">
+    <section className="policy__area pb-120 overflow-hidden">
       <div className="container-fluid mt-n5">
         <div className="row justify-content-center mt-5">
           <div className="col-12 col-md-10">
@@ -387,66 +342,13 @@ const CollectionsiteArea = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${
-                            currentPage === pageNumber ? "active" : ""
-                          }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {filteredCollectionsite.length >= 0 && (
+                <Pagination
+                  handlePageClick={handlePageChange}
+                  pageCount={Math.max(1, Math.ceil(filteredCollectionsite.length / itemsPerPage))}
+                  focusPage={currentPage}
+                />
+              )}
               {/* Modal for Edit Collectionsite  */}
               {showEditModal && (
                 <>
@@ -464,7 +366,6 @@ const CollectionsiteArea = () => {
                     style={{
                       zIndex: 1050,
                       position: "fixed",
-                      top: "120px",
                       left: "50%",
                       transform: "translateX(-50%)",
                     }}
@@ -473,9 +374,7 @@ const CollectionsiteArea = () => {
                       <div className="modal-content">
                         <div className="modal-header">
                           <h5 className="modal-title">
-                            {showAddModal
-                              ? "Add collectionsite"
-                              : "Edit collectionsite"}
+                    Edit collectionsite
                           </h5>
                           <button
                             type="button"
@@ -497,7 +396,7 @@ const CollectionsiteArea = () => {
                         </div>
 
                         <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                          onSubmit={handleUpdate} // Conditionally use submit handler
                         >
                           <div className="modal-body">
                             {/* Form Fields */}
@@ -534,7 +433,6 @@ const CollectionsiteArea = () => {
                                 disabled
                               />
                             </div>
-                          
                             {/* <div className="form-group">
                             <label>Registered_at</label>
                             <input
@@ -564,7 +462,7 @@ const CollectionsiteArea = () => {
 
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              {showAddModal ? "Save" : "Update Collectionsite"}
+                              Update Collectionsite
                             </button>
                           </div>
                         </form>

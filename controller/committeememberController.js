@@ -40,16 +40,23 @@ const updateCommitteeMember = (req, res) => {
 };
 
 // Controller to update a committee member's status
-const updateCommitteeMemberStatus = (req, res) => {
+const updateCommitteeMemberStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
-  committeememberModel.updateCommitteeMemberStatus(id, status, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error updating status" });
-    }
-    res.status(200).json({ message: "Committee member status updated successfully" });
-  });
+
+  if (!status) {
+    return res.status(400).json({ error: "Status is required" });
+  }
+
+  try {
+    const result = await committeememberModel.updateCommitteeMemberStatus(id, status);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating committee member status:", error);
+    res.status(500).json({ error: "An error occurred while updating committee member status" });
+  }
 };
+
 
 // Controller to update a committee member's Type
 const updateCommitteeMemberType = (req, res) => {

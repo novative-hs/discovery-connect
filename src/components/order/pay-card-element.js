@@ -56,7 +56,7 @@ const PaymentCardElement = ({
     console.log("Payment", paymentData);
   
     try {
-      const response = await axios.post(`http://localhost:5000/api/payment/${id}`, paymentData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/${id}`, paymentData);
   
       if (response.data.status && response.data.status !== 200) {
         // If the backend sends a custom status code in response.data, handle it as an error

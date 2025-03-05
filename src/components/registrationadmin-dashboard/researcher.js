@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
+import Pagination from "@ui/Pagination";
 
 const ResearcherArea = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedResearcherId, setSelectedResearcherId] = useState(null); // Store ID of researcher to delete
-  const [allresearchers, setAllResearchers] = useState([]); // State to hold fetched researchers
+  const[historyData,setHistoryData]=useState([])
+  const [editResearcher, setEditResearcher] = useState(null);
+  const [selectedResearcherId, setSelectedResearcherId] = useState(null);
+  const [allResearchers, setAllResearchers] = useState([]);
+  const [researchers, setResearchers] = useState([]);
+  const [filteredResearchers, setFilteredResearchers] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   const [formData, setFormData] = useState({
     ResearcherName: "",
     email: "",
@@ -20,113 +28,78 @@ const ResearcherArea = () => {
     status: "",
     // logo: ""
   });
-  const [editResearcher, setEditResearcher] = useState(null); // State for selected researcher to edit
-  const [researchers, setResearchers] = useState([]); // State to hold fetched researchers
-  const [successMessage, setSuccessMessage] = useState('');
-  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(researchers.length / itemsPerPage);
-  const fetchHistory = async (filterType, id) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/get-reg-history/${filterType}/${id}`);
-      const data = await response.json();
-      setHistoryData(data);
-    } catch (error) {
-      console.error("Error fetching history:", error);
-    }
-  };
 
-  // Call this function when opening the modal
-  const handleShowHistory = (filterType, id) => {
-    fetchHistory(filterType, id);
-    setShowHistoryModal(true);
-  };
-
-  // Fetch researchers from backend when component loads
   useEffect(() => {
-
-    fetchResearchers(); // Call the function when the component mounts
+    fetchResearchers();
   }, []);
+
   const fetchResearchers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/admin/researcher/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
       );
       setResearchers(response.data);
-      setAllResearchers(response.data) // Store fetched researchers in state
+      setAllResearchers(response.data);
     } catch (error) {
       console.error("Error fetching researchers:", error);
     }
   };
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
 
-  // const formatDateTime = (dateTime) => {
-  //   const date = new Date(dateTime);
-  //   const formattedDate = date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
-  //   return formattedDate;
-  // };
+  const handleFilterChange = (field, value) => {
+    setSearchTerm(value);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post('http://localhost:5000/api/researchers/post', formData);
-      console.log("Researcher added successfully:", response.data);
-
-      // Refresh the researcher list after successful submission
-      const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
-      setResearchers(newResponse.data); // Update state with the new list
-
-      // Clear form after submission
-      setFormData({
-        ResearcherName: "",
-        email: "",
-        phoneNumber: "",
-        nameofOrganization: "",
-        // created_at: "",
-        status: "",
-
+    if (!value) {
+      setResearchers(allResearchers);
+    } else {
+      const filtered = allResearchers.filter((researcher) => {
+        return researcher[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
       });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding researcher:", error);
+      setResearchers(filtered);
     }
+
+    setCurrentPage(0); // Reset to first page when filtering
   };
 
+  useEffect(() => {
+    const updatedFilteredResearchers = researchers.filter((researcher) => {
+      if (!statusFilter) return true;
+      return researcher.status.toLowerCase() === statusFilter.toLowerCase();
+    });
 
+    setFilteredResearchers(updatedFilteredResearchers);
+    setCurrentPage(0); // Reset to first page when filtering
+  }, [researchers, statusFilter]);
+
+  const currentData = filteredResearchers.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected); // React Paginate uses 0-based index
+  };
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
-      await axios.delete(`http://localhost:5000/api/researchers/delete/${selectedResearcherId}`);
-      console.log(`Researcher with ID ${selectedResearcherId} deleted successfully.`);
-
-      // Set success message
-      setSuccessMessage('Researcher deleted successfully.');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-
-      // Refresh the researcher list after deletion
-      const newResponse = await axios.get('http://localhost:5000/api/admin/researcher/get');
-      setResearchers(newResponse.data);
-
-      // Close modal after deletion
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/delete/${selectedResearcherId}`
+      );
+      setSuccessMessage("Researcher deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      fetchResearchers(); // Refresh data after delete
       setShowDeleteModal(false);
       setSelectedResearcherId(null);
     } catch (error) {
-      console.error(`Error deleting researcher with ID ${selectedResearcherId}:`, error);
+      console.error(
+        `Error deleting researcher with ID ${selectedResearcherId}:`,
+        error
+      );
     }
   };
+
   const handleEditClick = (researcher) => {
     setSelectedResearcherId(researcher.id);
     setEditResearcher(researcher); // Store the researcher data to edit
@@ -140,19 +113,18 @@ const ResearcherArea = () => {
       status: researcher.status,
     });
   };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/admin/researchers/edit/${selectedResearcherId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
       console.log("Researcher updated successfully:", response.data);
 
       const newResponse = await axios.get(
-        "http://localhost:5000/api/admin/researcher/get"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
       );
       setResearchers(newResponse.data);
 
@@ -163,42 +135,35 @@ const ResearcherArea = () => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
-      console.error(`Error updating researcher with ID ${selectedResearcherId}:`, error);
-    }
-  };
-
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchResearchers();
-    } else {
-      // Perform exact match for "status" field
-      const filtered = allresearchers.filter((researcher) =>
-        field === "status"
-          ? researcher[field]?.toString().toLowerCase() === value.toLowerCase()
-          : researcher[field]
-            ?.toString()
-            .toLowerCase()
-            .includes(value.toLowerCase())
+      console.error(
+        `Error updating researcher with ID ${selectedResearcherId}:`,
+        error
       );
-      setResearchers(filtered);
     }
   };
-  // Filter samples based on the selected status
-  const filteredResearchers = researchers.filter((researcher) => {
-    if (!statusFilter) return true;
-    return researcher.status === statusFilter;
-  });
-
-  const currentData = filteredResearchers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
+    if (showDeleteModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -207,28 +172,32 @@ const ResearcherArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+  }, [showDeleteModal, showEditModal, showHistoryModal]);
 
   return (
-    <section className="policy__area pb-120">
-      <div
-        className="container"
-        style={{ marginTop: "-20px", width: "auto", }}
-      >
-        <div
-          className="row justify-content-center"
-          style={{ marginTop: "290px" }}
-        ><div className="col-xl-10">
-            <div className="policy__wrapper policy__translate p-relative z-index-1">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
-                </div>
-              )}
-              <div className="d-flex justify-content-between align-items-center mb-3" style={{ marginTop: "-20px", width: "120%", marginLeft: "-80px" }}>
-                <div className="d-flex align-items-center">
-                  <label htmlFor="statusFilter" className="mr-2" style={{ marginLeft: "60px", marginRight: "10px", fontSize: "16px", fontWeight: "bold" }}>Status:</label>
+    <section className="policy__area pb-120 overflow-hidden">
+      <div className="container-fluid mt-n5">
+        <div className="row justify-content-center mt-5">
+          <div className="col-12 col-md-10">
+            <div className="policy__wrapper policy__translate position-relative mt-5">
+              {/* Button Container */}
+              <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    className="alert alert-success w-100 text-start"
+                    role="alert"
+                  >
+                    {successMessage}
+                  </div>
+                )}
+
+                {/* Status Filter */}
+                <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
+                  <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                    Status:
+                  </label>
+
                   <select
                     id="statusFilter"
                     className="form-control mb-2"
@@ -240,167 +209,62 @@ const ResearcherArea = () => {
                     <option value="">All</option>
                     <option value="pending">pending</option>
                     <option value="approved">approved</option>
-                    {/* <option value="unapproved">unapproved</option> */}
                   </select>
                 </div>
-
               </div>
 
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{
-                  margin: "0 auto", // Center-align the table horizontally
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
+              <div className="table-responsive w-100">
                 <table className="table table-bordered table-hover">
                   <thead className="thead-dark">
-                    <tr>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search ID"
-                          onChange={(e) =>
-                            handleFilterChange("id", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        ID
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Name"
-                          onChange={(e) =>
-                            handleFilterChange("ResearcherName", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Name
-                      </th>
-                      <th>
-
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Email"
-                          onChange={(e) =>
-                            handleFilterChange("email", e.target.value)
-                          }
-                        />
-                        Email
-                      </th>
-
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Phone Number"
-                          onChange={(e) =>
-                            handleFilterChange("phoneNumber", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Contact
-                      </th>
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search Organization"
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "nameofOrganization",
-                              e.target.value
-                            )
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Organization
-                      </th>
-                      {/* <th>Registered_at</th> */}
-                      <th
-                        className="px-3"
-                        style={{
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          width: "200px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search status"
-                          onChange={(e) =>
-                            handleFilterChange("status", e.target.value)
-                          }
-                          style={{
-                            width: "80%", // Adjusted width for better responsiveness
-                            padding: "8px",
-                            boxSizing: "border-box",
-                            minWidth: "120px", // Minimum width to prevent shrinking too much
-                            maxWidth: "180px", // Maximum width for better control
-                          }}
-                        />
-                        Status
-                      </th>
-                      <th>Action</th>
+                    <tr className="text-center">
+                      {[
+                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "Name",
+                          placeholder: "Search Name",
+                          field: "ResearcherName",
+                        },
+                        {
+                          label: "Email",
+                          placeholder: "Search Email",
+                          field: "email",
+                        },
+                        {
+                          label: "Contact",
+                          placeholder: "Search Contact",
+                          field: "phoneNumber",
+                        },
+                        {
+                          label: "Organization",
+                          placeholder: "Search Organization",
+                          field: "OrganizationName",
+                        },
+                        {
+                          label: "Status",
+                          placeholder: "Search Status",
+                          field: "status",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th
+                          key={field}
+                          className="px-3 align-middle"
+                          style={{ minWidth: "150px" }}
+                        >
+                          <div className="d-flex flex-column">
+                            <input
+                              type="text"
+                              className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
+                              placeholder={placeholder}
+                              onChange={(e) =>
+                                handleFilterChange(field, e.target.value)
+                              }
+                            />
+                            <small className="fw-bold">{label}</small>
+                          </div>
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -412,36 +276,29 @@ const ResearcherArea = () => {
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>
                           <td>{researcher.OrganizationName}</td>
-                          {/* <td>{researcher.created_at}</td> */}
                           <td>{researcher.status}</td>
                           <td>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                                gap: "5px",
-                              }}
-                            >
+                            <div className="d-flex justify-content-around gap-2">
                               <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(researcher)}
-                                title="Edit Researcher" // This is the text that will appear on hover
                               >
-                                <FontAwesomeIcon icon={faEdit} size="sm" />
-                              </button>{" "}
+                                <FontAwesomeIcon icon={faEdit} />
+                              </button>
                               <button
                                 className="btn btn-danger btn-sm"
                                 onClick={() => {
                                   setSelectedResearcherId(researcher.id);
                                   setShowDeleteModal(true);
                                 }}
-                                title="Delete Researcher" // This is the text that will appear on hover
                               >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                                <FontAwesomeIcon icon={faTrash} />
                               </button>
                               <button
                                 className="btn btn-info btn-sm"
-                                onClick={() => handleShowHistory("researcher", researcher.id)}
+                                onClick={() =>
+                                  handleShowHistory("resaercher", researcher.id)
+                                }
                                 title="History"
                               >
                                 <FontAwesomeIcon icon={faHistory} size="sm" />
@@ -452,7 +309,7 @@ const ResearcherArea = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="text-center">
+                        <td colSpan="7" className="text-center">
                           No researchers available
                         </td>
                       </tr>
@@ -460,114 +317,71 @@ const ResearcherArea = () => {
                   </tbody>
                 </table>
               </div>
-              <div
-                className="pagination d-flex justify-content-center align-items-center mt-3"
-                style={{
-                  gap: "10px",
-                }}
-              >
-                {/* Previous Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
+
+              {/* Pagination */}
+              {filteredResearchers.length >= 0 && (
+  <Pagination
+    handlePageClick={handlePageChange}
+    pageCount={Math.max(1, Math.ceil(filteredResearchers.length / itemsPerPage))}
+    focusPage={currentPage}
+  />
+)}
+            </div>
+            {/* Edit Researcher Modal */}
+            {showEditModal && (
+              <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div
+                  className="modal-backdrop fade show"
+                  style={{ backdropFilter: "blur(5px)" }}
+                ></div>
+
+                {/* Modal Content */}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050,
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
                 >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page Numbers with Ellipsis */}
-                {Array.from({ length: totalPages }).map((_, index) => {
-                  const pageNumber = index + 1;
-                  // Show page number if it's the first, last, current, or adjacent to current
-                  if (
-                    pageNumber === 1 || // Always show the first page
-                    pageNumber === totalPages || // Always show the last page
-                    pageNumber === currentPage || // Show current page
-                    pageNumber === currentPage - 1 || // Show previous page
-                    pageNumber === currentPage + 1 // Show next page
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`btn btn-sm ${currentPage === pageNumber
-                            ? "btn-primary"
-                            : "btn-outline-secondary"
-                          }`}
-                        onClick={() => handlePageChange(pageNumber)}
-                        style={{
-                          minWidth: "40px",
-                        }}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  }
-
-                  // Add ellipsis if previous number wasn't shown
-                  if (
-                    (pageNumber === 2 && currentPage > 3) || // Ellipsis after the first page
-                    (pageNumber === totalPages - 1 &&
-                      currentPage < totalPages - 2) // Ellipsis before the last page
-                  ) {
-                    return (
-                      <span
-                        key={`ellipsis-${pageNumber}`}
-                        style={{
-                          minWidth: "40px",
-                          textAlign: "center",
-                        }}
-                      >
-                        ...
-                      </span>
-                    );
-                  }
-
-                  return null; // Skip the page number
-                })}
-
-                {/* Next Button */}
-                <button
-                  className="btn btn-sm btn-secondary"
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-              {/* Modal for Adding Researchers */}
-              {/* {showAddModal && (
-                <div className="modal show d-block" tabIndex="-1" role="dialog">
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Add Researcher</h5>
+                        <h5 className="modal-title">Edit Researcher</h5>
                         <button
                           type="button"
                           className="close"
-                          onClick={() => setShowAddModal(false)}
+                          onClick={() => setShowEditModal(false)}
                           style={{
-                            fontSize: '1.5rem',
-                            position: 'absolute',
-                            right: '10px',
-                            top: '10px',
-                            cursor: 'pointer'
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
                           <span>&times;</span>
                         </button>
                       </div>
-                      <form onSubmit={handleSubmit}>
-                        <div className="modal-body"> */}
-              {/* Form Fields */}
-              {/* <div className="form-group">
-                            <label>Researcher Name</label>
+                      <form onSubmit={handleUpdate}>
+                        <div className="modal-body">
+                          {/* Form Fields */}
+                          <div className="form-group">
+                            <label>Researcher name</label>
                             <input
                               type="text"
                               className="form-control"
                               name="ResearcherName"
                               value={formData.ResearcherName}
                               onChange={handleInputChange}
-                              required
+                              disabled
                             />
                           </div>
                           <div className="form-group">
@@ -578,7 +392,7 @@ const ResearcherArea = () => {
                               name="email"
                               value={formData.email}
                               onChange={handleInputChange}
-                              required
+                              disabled
                             />
                           </div>
                           <div className="form-group">
@@ -589,299 +403,237 @@ const ResearcherArea = () => {
                               name="phoneNumber"
                               value={formData.phoneNumber}
                               onChange={handleInputChange}
-                              required
+                              disabled
                             />
+                          </div>
+                          <div className="form-group">
+                            <label>Name Of Organization</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="OrganizationName"
+                              value={formData.OrganizationName}
+                              onChange={handleInputChange}
+                              disabled
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Status</label>
+                            <select
+                              className="form-control"
+                              name="status"
+                              value={formData.status}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="pending">pending</option>
+                              <option value="approved">approved</option>
+                              {/* <option value="unapproved">unapproved</option> */}
+                            </select>
                           </div>
                         </div>
                         <div className="modal-footer">
                           <button type="submit" className="btn btn-primary">
-                            Save
+                            Update Researcher
                           </button>
                         </div>
                       </form>
                     </div>
                   </div>
                 </div>
-              )} */}
+              </>
+            )}
+            {showHistoryModal && (
+              <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div
+                  className="modal-backdrop fade show"
+                  style={{ backdropFilter: "blur(5px)" }}
+                ></div>
 
-              {/* Edit Researcher Modal */}
-              {showEditModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Edit Researcher</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowEditModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: '1.5rem',
-                              position: 'absolute',
-                              right: '10px',
-                              top: '10px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <form onSubmit={handleUpdate}>
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>Researcher name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="ResearcherName"
-                                value={formData.ResearcherName}
-                                onChange={handleInputChange}
-                                disabled
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Email</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                disabled
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Phone Number</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
-                                onChange={handleInputChange}
-                                disabled
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Name Of Organization</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="OrganizationName"
-                                value={formData.OrganizationName}
-                                onChange={handleInputChange}
-                                disabled
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Status</label>
-                              <select
-                                className="form-control"
-                                name="status"
-                                value={formData.status}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="pending">pending</option>
-                                <option value="approved">approved</option>
-                                {/* <option value="unapproved">unapproved</option> */}
-                              </select>
-                            </div>
-                          </div>
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              Update Researcher
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              {showHistoryModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "100px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog modal-md" role="document">
-                      <div className="modal-content">
-                        {/* Modal Header */}
-                        <div className="modal-header">
-                          <h5 className="modal-title">History</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowHistoryModal(false)}
-                            style={{
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-
-                        {/* Chat-style Modal Body */}
-                        <div
-                          className="modal-body"
+                {/* Modal Content */}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050,
+                    position: "fixed",
+                    top: "100px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  <div className="modal-dialog modal-md" role="document">
+                    <div className="modal-content">
+                      {/* Modal Header */}
+                      <div className="modal-header">
+                        <h5 className="modal-title">History</h5>
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => setShowHistoryModal(false)}
                           style={{
-                            maxHeight: "500px",
-                            overflowY: "auto",
-                            backgroundColor: "#e5ddd5", // WhatsApp-style background
-                            padding: "15px",
-                            borderRadius: "10px",
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
                           }}
                         >
-                          {historyData && historyData.length > 0 ? (
-                            historyData.map((log, index) => {
-                              const { created_name, updated_name, added_by, created_at, updated_at } = log;
+                          <span>&times;</span>
+                        </button>
+                      </div>
 
-                              return (
-                                <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
-                                  {/* Message for City Addition */}
+                      {/* Chat-style Modal Body */}
+                      <div
+                        className="modal-body"
+                        style={{
+                          maxHeight: "500px",
+                          overflowY: "auto",
+                          backgroundColor: "#e5ddd5", // WhatsApp-style background
+                          padding: "15px",
+                          borderRadius: "10px",
+                        }}
+                      >
+                        {historyData && historyData.length > 0 ? (
+                          historyData.map((log, index) => {
+                            const {
+                              created_name,
+                              updated_name,
+                              added_by,
+                              created_at,
+                              updated_at,
+                            } = log;
+
+                            return (
+                              <div
+                                key={index}
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                  marginBottom: "10px",
+                                }}
+                              >
+                                {/* Message for City Addition */}
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#ffffff",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  <b>Researcher:</b> {created_name} was{" "}
+                                  <b>added</b> by Registration Admin at{" "}
+                                  {moment(created_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
+
+                                {/* Message for City Update (Only if it exists) */}
+                                {updated_name && updated_at && (
                                   <div
                                     style={{
                                       padding: "10px 15px",
                                       borderRadius: "15px",
-                                      backgroundColor: "#ffffff",
-                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      backgroundColor: "#dcf8c6", // Light green for updates
+                                      boxShadow:
+                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                       maxWidth: "75%",
                                       fontSize: "14px",
                                       textAlign: "left",
+                                      marginTop: "5px", // Spacing between messages
                                     }}
                                   >
-                                    <b>City:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    <b>Researcher:</b> {updated_name} was{" "}
+                                    <b>updated</b> by Registration Admin at{" "}
+                                    {moment(updated_at).format(
+                                      "DD MMM YYYY, h:mm A"
+                                    )}
                                   </div>
-
-                                  {/* Message for City Update (Only if it exists) */}
-                                  {updated_name && updated_at && (
-                                    <div
-                                      style={{
-                                        padding: "10px 15px",
-                                        borderRadius: "15px",
-                                        backgroundColor: "#dcf8c6", // Light green for updates
-                                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                        maxWidth: "75%",
-                                        fontSize: "14px",
-                                        textAlign: "left",
-                                        marginTop: "5px", // Spacing between messages
-                                      }}
-                                    >
-                                      <b>City:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })
-                          ) : (
-                            <p className="text-left">No history available.</p>
-                          )}
-
-
-                        </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-left">No history available.</p>
+                        )}
                       </div>
                     </div>
                   </div>
-                </>
-              )}
-              {/* Modal for Deleting Researchers */}
-              {showDeleteModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                </div>
+              </>
+            )}
+            {/* Modal for Deleting Researchers */}
+            {showDeleteModal && (
+              <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div
+                  className="modal-backdrop fade show"
+                  style={{ backdropFilter: "blur(5px)" }}
+                ></div>
 
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Delete Researcher</h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowDeleteModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <div className="modal-body">
-                          <p>Are you sure you want to delete this researcher?</p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                {/* Modal Content */}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050,
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">Delete Researcher</h5>
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => setShowDeleteModal(false)}
+                          style={{
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span>&times;</span>
+                        </button>
+                      </div>
+                      <div className="modal-body">
+                        <p>Are you sure you want to delete this researcher?</p>
+                      </div>
+                      <div className="modal-footer">
+                        <button
+                          className="btn btn-danger"
+                          onClick={handleDelete}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => setShowDeleteModal(false)}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   </div>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

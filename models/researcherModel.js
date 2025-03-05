@@ -1,26 +1,27 @@
 const mysqlConnection = require("../config/db");
-
+const {sendEmail}=require("../config/email");
 
 function createResearcher(data, callback) {
-  console.log("Researcher Model",data)
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
+  console.log("Researcher Model", data)
+  const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
-    INSERT INTO researcher (user_account_id,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country)
-    VALUES (?,?, ?, ?, ?, ?,?,?)
+    INSERT INTO researcher (user_account_id,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,added_by)
+    VALUES (?,?, ?, ?, ?, ?,?,?,?)
   `;
 
- mysqlConnection.query(query, [userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress,city,district, country], callback);
+  mysqlConnection.query(query, [userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, nameofOrganization], callback);
 }
 
 // Function to fetch all researchers
 function getAllResearchers(callback) {
   const query = `
-    SELECT researcher.id, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.logo, researcher.status,
+    SELECT researcher.id,researcher.added_by, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.logo, researcher.status,
            user_account.email,
            organization.id AS organization_id, organization.OrganizationName
     FROM researcher
     JOIN user_account ON researcher.user_account_id = user_account.id
     JOIN organization ON researcher.nameofOrganization = organization.id
+    ORDER BY researcher.id ASC
   `;
   mysqlConnection.query(query, callback);
 }
@@ -39,7 +40,9 @@ function getResearchersByOrganization(organizationId, callback) {
     organization.id AS organization_id,
     user_account.email,
     user_account.password,
-    organization.OrganizationName AS organization_name
+    organization.OrganizationName AS organization_name,
+    user_account.created_at,
+    user_account.updated_at
 FROM 
     researcher
 LEFT JOIN city ON researcher.city = city.id
@@ -52,6 +55,7 @@ WHERE
   `;
   mysqlConnection.query(query, [organizationId], callback);
 }
+
 // Function to fetch a single researcher by ID
 function getResearcherById(id, callback) {
   const query = `SELECT 
@@ -81,23 +85,23 @@ WHERE
 
 // Function to update a researcher's details
 function updateResearcher(id, data, callback) {
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
+  const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
   console.log(data)
   const query = `
     UPDATE researcher
     SET ResearcherName = ?, phoneNumber = ?, nameofOrganization = ?, fullAddress = ?,city=?,district=?, country = ?, logo = ?
     WHERE id = ?
   `;
-mysqlConnection.query(query, [ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo, id], callback);
+  mysqlConnection.query(query, [ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, id], callback);
 }
 
 
 function updateResearcherDetail(id, data, callback) {
-  const { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country, logo } = data;
-  
-  
-  
-  
+  const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
+
+
+
+
   mysqlConnection.beginTransaction((err) => {
     if (err) {
       console.error('Error starting transaction:', err);
@@ -136,8 +140,8 @@ function updateResearcherDetail(id, data, callback) {
       `;
 
       mysqlConnection.query(
-        updateCollectionSiteQuery, 
-        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id], 
+        updateCollectionSiteQuery,
+        [CollectionSiteName, phoneNumber, ntnNumber, fullAddress, cityid, districtid, countryid, type, file, id],
         (err, result) => {
           if (err) {
             return mysqlConnection.rollback(() => {
@@ -162,10 +166,6 @@ function updateResearcherDetail(id, data, callback) {
       );
     });
   });
-
-
-
-
 }
 
 const deleteResearcher = (id, callback) => {
@@ -176,24 +176,58 @@ const deleteResearcher = (id, callback) => {
 };
 
 // (Registration Admin) Function to update researcher status
-function updateResearcherStatus(id, status, callback) {
-  const updateQuery = 'UPDATE researcher SET status = ? WHERE id = ?';
+const updateResearcherStatus = async (id, status) => {
+  return new Promise((resolve, reject) => {
+    const updateQuery = "UPDATE researcher SET status = ? WHERE id = ?";
 
-  mysqlConnection.query(updateQuery, [status, id], (err, results) => {
-    if (err) return callback(err);
+    mysqlConnection.query(updateQuery, [status, id], (err, results) => {
+      if (err) return reject(err);
 
-    if (results.affectedRows > 0) {
+      if (results.affectedRows === 0) {
+        return reject(new Error("No researcher found with the given ID."));
+      }
+
+      // Insert into history
       const insertHistoryQuery = `
         INSERT INTO RegistrationAdmin_History (resaercher_id, status, updated_at)
         VALUES (?, ?, NOW())
       `;
 
-      mysqlConnection.query(insertHistoryQuery, [id, status], callback);
-    } else {
-      callback(new Error('No researcher found with the given ID.'));
-    }
+      mysqlConnection.query(insertHistoryQuery, [id, status], (err) => {
+        if (err) return reject(err);
+
+        // Fetch researcher email
+        const getEmailQuery = `SELECT ua.email 
+       FROM researcher r
+       JOIN user_account ua ON r.user_account_id = ua.id
+       WHERE r.id = ?`;
+        mysqlConnection.query(getEmailQuery, [id], async (err, emailResults) => {
+          if (err) return reject(err);
+          if (emailResults.length === 0) return reject(new Error("Researcher email not found."));
+
+          const email = emailResults[0].email;
+
+          let emailText = `Dear Collectionsite,\n\nYour account status is currently pending. 
+          Please wait for approval.\n\nBest regards,\nYour Company`;
+
+          if (status === "approved") {
+            emailText = `Dear Collectionsite,\n\nYour account has been approved! 
+            You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+          }
+
+          try {
+            await sendEmail(email, "Welcome to Discovery Connect", emailText);
+            resolve({ message: "Status updated and email sent" });
+          } catch (emailErr) {
+            console.error("Error sending email:", emailErr);
+            reject(emailErr);
+          }
+        });
+      });
+    });
   });
-}
+};
+
 
 
 

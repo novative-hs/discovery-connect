@@ -24,7 +24,7 @@ const BillingDetails = () => {
       const fetchUserData = async () => {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/user/getAccountDetail/${id}`
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
           );
           const data = await response.json();
           console.log("Fetched data:", data); // Log the data to verify the response

@@ -20,11 +20,11 @@ const schema = Yup.object().shape({
   districtid: Yup.string().required("District is required").label("District"),
   countryid: Yup.string().required("Country is required").label("Country"),
   phoneNumber: Yup.string()
-    .required("Phone Number is required")
     .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric",
+      /^\d{4}-\d{7}$/,
+      "Phone number must be in the format 0123-4567890 and numeric"
     )
+    .required("Phone number is required")
     .label("Phone Number"),
   ntnNumber: Yup.string()
     .required("NTN Number is required")
@@ -71,6 +71,13 @@ const UpdateOrganization = () => {
             ).toString("base64")}`
           : null
       );
+      if (organization.logo && organization.logo.data) {
+        const blob = new Blob([new Uint8Array(organization.logo.data)], {
+          type: "image/jpeg",
+        });
+        const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
+        setLogoFile(file);
+      }
       reset(organization); // Reset form with the organization data when available
     }
     console.log("org", organization);
@@ -556,7 +563,7 @@ const UpdateOrganization = () => {
               id="phoneNumber"
               {...register("phoneNumber")}
               type="text"
-              placeholder="Enter Phone Number (0123-456-7890)"
+              placeholder="Enter Phone Number (0123-4567890)"
               style={{
                 width: "100%",
                 padding: "20px",

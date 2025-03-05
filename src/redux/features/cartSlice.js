@@ -73,7 +73,6 @@ export const cartSlice = createSlice({
       state.cart_products = [...state.cart_products]; // Force Redux to recognize the change
       setLocalStorage("cart_products", state.cart_products);
     },
-
     quantityDecrement: (state, { payload }) => {
       state.cart_products.map((item) => {
         if (item._id === payload._id) {

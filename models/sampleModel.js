@@ -82,21 +82,25 @@ const getSamples = (id, callback) => {
 
 const getAllSamples = (callback) => {
   const query = `
-    SELECT 
-      s.*,
-      cs.CollectionSiteName AS CollectionSiteName,
-      c.name AS CityName,
-      d.name AS DistrictName
-    FROM 
-      sample s
-    JOIN 
-      collectionsite cs ON s.user_account_id = cs.user_account_id
-    JOIN 
-      city c ON cs.city = c.id
-    JOIN 
-      district d ON cs.district = d.id
-    WHERE 
-      s.status = 'In Stock'
+SELECT 
+  s.*,
+  cs.CollectionSiteName AS Name,
+  bb.Name AS Name,
+  c.name AS CityName,
+  d.name AS DistrictName
+FROM 
+  sample s
+LEFT JOIN 
+  collectionsite cs ON s.user_account_id = cs.user_account_id
+LEFT JOIN 
+  biobank bb ON s.user_account_id = bb.id
+LEFT JOIN 
+  city c ON cs.city = c.id
+LEFT JOIN 
+  district d ON cs.district = d.id
+WHERE 
+  s.status = 'In Stock' and s.price > 0;
+
   `;
 
   // Log query being executed
@@ -149,7 +153,6 @@ const getAllSamples = (callback) => {
 };
 
 
-
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -163,18 +166,22 @@ const createSample = (data, callback) => {
   console.log("Inserting data into database:", data);
   console.log(data);
 
-  // Generate ID using formula
+  // Generate a random 3-digit number
+  const randomSuffix = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
+  // Calculate Master ID
   const id = parseInt(data.donorID) + parseInt(data.user_account_id);
-  const masterID = id - 2; 
+  const masterID = `${id}${randomSuffix}`;
+
+  console.log("Master ID:", masterID);
 
   const query = `
     INSERT INTO sample (
       id, donorID, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    mysqlConnection.query(query, [
-      id, data.donorID, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock'
-    ], (err, results) => {
+  mysqlConnection.query(query, [
+    id, data.donorID, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock'
+  ], (err, results) => {
     if (err) {
       console.error('Error in MySQL query:', err);
       return callback(err, null);
@@ -190,8 +197,20 @@ const createSample = (data, callback) => {
         return callback(err, null);
       }
       console.log('Sample inserted successfully with masterID:', masterID);
+      // Insert into sample_history
+      const historyQuery = `
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)`;
+      
+      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+        if (err) {
+          console.error('Error inserting into sample_history:', err);
+          return callback(err, null);
+        }
+        console.log('Sample history recorded.', historyResults);
       callback(null, { insertId: id, masterID: masterID });
     });
+  });
   });
 };
 
@@ -207,12 +226,24 @@ const updateSample = (id, data, callback) => {
   const values = [
     data.donorID, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting,
     data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions,
-    data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem,data.TestSystemManufacturer, data.status, id
+    data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, id
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
+     // Insert into sample_history
+     const historyQuery = `
+     INSERT INTO sample_history (sample_id)
+     VALUES (?)`;
+   
+   mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+     if (err) {
+       console.error('Error inserting into sample_history:', err);
+       return callback(err, null);
+     }
+     console.log('Sample history recorded.', historyResults);
     callback(err, result);
   });
+});
 };
 
 // Function to update a sample's status

@@ -14,12 +14,13 @@ const schema = Yup.object().shape({
   districtid: Yup.string().required("District is required").label("District"),
   countryid: Yup.string().required("Country is required").label("Country"),
   phoneNumber: Yup.string()
-  .required("Phone Number is required")
-    .label("Phone Number")
-      .matches(
-        /^\d{4}-\d{3}-\d{4}$/,
-        "Phone number must be in the format 0123-456-7890 and numeric",
-      ),
+  .matches(
+    /^\d{4}-\d{7}$/,
+    "Phone number must be in the format 0123-4567890 and numeric"
+  )
+  .required("Phone number is required")
+  .label("Phone number is required"),
+
   ntnNumber: Yup.string()
     .required("NTN Number is required")
     .label("NTN Number"),
@@ -80,7 +81,7 @@ const UpdateBioBank = () => {
   const fetchcollectionsite = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/collectionsite/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get/${id}`
       );
       setCollectionSite(response.data);
     } catch (error) {
@@ -90,7 +91,7 @@ const UpdateBioBank = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/city/get-city"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
       );
       setcityname(response.data);
     } catch (error) {
@@ -108,7 +109,7 @@ const UpdateBioBank = () => {
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/district/get-district"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
       );
       setdistrictname(response.data);
     } catch (error) {
@@ -119,7 +120,7 @@ const UpdateBioBank = () => {
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/country/get-country"
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
       );
       setcountryname(response.data);
     } catch (error) {
@@ -152,7 +153,7 @@ const UpdateBioBank = () => {
   
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/collectionsite/updatedetail/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/updatedetail/${id}`,
         formData, // Sending the FormData object with both fields and the file
         {
           headers: {
@@ -473,7 +474,7 @@ const UpdateBioBank = () => {
               id="phoneNumber"
               {...register("phoneNumber")}
               type="text"
-              placeholder="Enter Phone Number"
+              placeholder="XXXX-XXXXXXX"
               style={{
                 width: "100%",
                 padding: "20px",

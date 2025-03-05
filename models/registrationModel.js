@@ -1,7 +1,10 @@
 const mysqlConnection = require("../config/db");
+const mysqlPool = require("../config/db");
+const { sendEmail } = require("../config/email")
+
 // Function to create the city table
 const createuser_accountTable = () => {
-    const createuser_accountTable = `
+  const createuser_accountTable = `
     CREATE TABLE IF NOT EXISTS user_account (
       id INT AUTO_INCREMENT PRIMARY KEY,
       email VARCHAR(255) NOT NULL UNIQUE,
@@ -22,7 +25,7 @@ const createuser_accountTable = () => {
 
 // Researcher Table
 const create_researcherTable = () => {
-    const create_researcherTable = `
+  const create_researcherTable = `
     CREATE TABLE IF NOT EXISTS researcher (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
@@ -51,7 +54,7 @@ const create_researcherTable = () => {
 };
 
 const create_organizationTable = () => {
-    const create_organizationTable = `
+  const create_organizationTable = `
     CREATE TABLE IF NOT EXISTS organization (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
@@ -82,11 +85,11 @@ const create_organizationTable = () => {
 };
 
 const create_collectionsiteTable = () => {
-    const create_collectionsiteTable = `
+  const create_collectionsiteTable = `
     CREATE TABLE IF NOT EXISTS collectionsite (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
-      type VARCHAR(50),
+      CollectionSiteType VARCHAR(50),
       CollectionSiteName VARCHAR(100),
       fullAddress TEXT,
       city INT,
@@ -119,15 +122,14 @@ const create_biobankTable = () => {
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 )`;
 
-mysqlConnection.query(create_biobankTable, (err, results) => {
-  if (err) {
-    console.error("Error biobank table: ", err);
-  } else {
-    console.log("Biobank table created Successfully");
-  }
-});
+  mysqlConnection.query(create_biobankTable, (err, results) => {
+    if (err) {
+      console.error("Error biobank table: ", err);
+    } else {
+      console.log("Biobank table created Successfully");
+    }
+  });
 };
-
 
 
 const getAccountDetail = (id, callback) => {
@@ -210,6 +212,7 @@ const getAccountDetail = (id, callback) => {
         const collectionsiteQuery = `
          SELECT 
       collectionsite.*, 
+      collectionsite.CollectionSiteType,
       city.id AS cityid, 
       city.name AS cityname, 
       district.id AS districtid, 
@@ -235,9 +238,9 @@ const getAccountDetail = (id, callback) => {
             if (err) {
               return callback(err, null); // Pass error to the controller
             }
- 
-              return callback(null, collectionsiteResults); // Return collectiosite info 
-            
+
+            return callback(null, collectionsiteResults); // Return collectiosite info 
+
           }
         );
       } else {
@@ -250,6 +253,7 @@ const getAccountDetail = (id, callback) => {
   });
 };
 
+// Function to update account (Researcher, Organization, Collection Sites)
 const updateAccount = (req, callback) => {
   const {
     user_account_id,
@@ -267,76 +271,267 @@ const updateAccount = (req, callback) => {
     type,
     HECPMDCRegistrationNo,
     ntnNumber,
+    added_by
   } = req.body;
-  
+
   // Handle the logo file (if provided)
   let logo = null;
   if (req.file) {
     // If a file was uploaded, convert it to a buffer
     logo = req.file.buffer;
   }
-  //Start MySQL transaction
-  mysqlConnection.beginTransaction((err) => {
+  mysqlConnection.getConnection((err, connection) => {
     if (err) {
-      console.error("Error starting transaction:", err);
+      console.error("Error getting database connection:", err);
+      return callback(err, null);
+    }
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        console.error("Error starting transaction:", err);
+        return callback(err, null);
+      }
+      // Check if user account exists
+      const checkAccountQuery = "SELECT email, password FROM user_account WHERE id = ?";
+      connection.query(
+        checkAccountQuery,
+        [user_account_id],
+        (err, results) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              console.error("Database Query Error:", err);
+              callback(err, null);
+            });
+          }
+
+          if (results.length === 0) {
+            // If account does not exist, return an error
+            return connection.rollback(() => {
+              connection.release();
+              callback(new Error("Account not found"), null);
+            });
+          }
+          const previousEmail = results[0].email;
+          const previousPassword = results[0].password;
+          // Update user account table
+          const updateUserAccountQuery = `
+        UPDATE user_account SET email = ? WHERE id = ?
+      `;
+          const updateUserAccountValues = [useraccount_email, user_account_id];
+
+          connection.query(
+            updateUserAccountQuery,
+            updateUserAccountValues,
+            (err, userAccountResults) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  console.error("Error updating user_account:", err);
+                  callback(err, null);
+                });
+              }
+
+              let fetchQuery, updateQuery, values;
+
+              switch (accountType) {
+                case "Researcher":
+                  fetchQuery = "SELECT * FROM researcher WHERE user_account_id = ?";
+                  updateQuery = `
+                    UPDATE researcher SET 
+                      ResearcherName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                      country = ?, nameofOrganization = ?, logo = ? WHERE user_account_id = ?
+                  `;
+                  values = [ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, user_account_id];
+                  break;
+
+                case "Organization":
+                  fetchQuery = "SELECT * FROM organization WHERE user_account_id = ?";
+                  updateQuery = `
+                    UPDATE organization SET 
+                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, ntnNumber = ?, 
+                      phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
+                    WHERE user_account_id = ?
+                  `;
+                  values = [OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+                  break;
+
+                case "CollectionSites":
+                  fetchQuery = "SELECT * FROM collectionsite WHERE user_account_id = ?";
+                  updateQuery = `
+                    UPDATE collectionsite SET 
+                      CollectionSiteName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                      country = ?, logo = ? WHERE user_account_id = ?
+                  `;
+                  values = [CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+                  break;
+
+                default:
+                  return mysqlConnection.rollback(() => callback(new Error("Invalid account type"), null));
+              }
+
+              // Execute the query for the secondary table
+              connection.query(fetchQuery, [user_account_id], (err, previousResults) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    console.error("Error updating secondary table:", err);
+                    callback(err, null);
+                  });
+                }
+                const previousData = previousResults[0] || {};
+
+                connection.query(updateQuery, values, (err) => {
+                  if (err) return mysqlConnection.rollback(() => callback(err, null));
+
+                  let organizationID = null;
+                  let researcherID = null;
+                  let collectionSiteID = null;
+
+                  if (previousData.OrganizationName) {
+                    organizationID = previousData.id; // Organization
+                  } else if (previousData.ResearcherName) {
+                    researcherID = previousData.id; // Researcher
+                  } else if (previousData.CollectionSiteName) {
+                    collectionSiteID = previousData.id; // Collection Site
+                  }
+
+                  const historyQuery = `
+                INSERT INTO history (
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
+                  fullAddress, city, district, country, logo, added_by, organization_id, 
+                  researcher_id, collectionsite_id, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `;
+
+                  const historyValues = [
+                    previousEmail,
+                    previousPassword,
+                    previousData.ResearcherName || null,
+                    previousData.CollectionSiteName || null,
+                    previousData.OrganizationName || null,
+                    previousData.HECPMDCRegistrationNo || null,
+                    previousData.ntnNumber || null,
+                    previousData.nameofOrganization || null,
+                    previousData.type || null,
+                    previousData.phoneNumber || null,
+                    previousData.fullAddress || null,
+                    previousData.city || null,
+                    previousData.district || null,
+                    previousData.country || null,
+                    previousData.logo || null,
+                    previousData.added_by || null,
+                    organizationID || null,
+                    researcherID || null,
+                    collectionSiteID || null,
+                    "updated",
+                  ];
+
+                  connection.query(historyQuery, historyValues, (err) => {
+                    if (err) return mysqlConnection.rollback(() => callback(err, null));
+
+                    // If everything is successful, commit the transaction
+                    connection.commit((err) => {
+                      if (err) {
+                        return connection.rollback(() => {
+                          connection.release();
+                          console.error("Error committing transaction:", err);
+                          callback(err, null);
+                        });
+                      }
+                      connection.release();
+                      callback(null, {
+                        message: "Account updated successfully",
+                        userId: user_account_id,
+                      });
+                    });
+                  });
+                });
+              });
+            });
+        }
+      );
+    }
+    );
+  });
+};
+
+// Function to Create Account
+const createAccount = (req, callback) => {
+  const {
+    accountType,
+    email,
+    password,
+    ResearcherName,
+    OrganizationName,
+    CollectionSiteName,
+    CollectionSiteType,
+    phoneNumber,
+    fullAddress,
+    city,
+    district,
+    country,
+    nameofOrganization,
+    type,
+    HECPMDCRegistrationNo,
+    ntnNumber,
+    added_by,
+  } = req.body;
+
+  let logo = req.file ? req.file.buffer : null;
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error getting database connection:", err);
       return callback(err, null);
     }
 
-    // Check if user account exists
-    const checkAccountQuery = "SELECT * FROM user_account WHERE id = ?";
-    mysqlConnection.query(
-      checkAccountQuery,
-      [user_account_id],
-      (err, results) => {
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        console.error("Error starting transaction:", err);
+        return callback(err, null);
+      }
+
+      // Check if email already exists in the user_account table
+      const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
+      connection.query(checkEmailQuery, [email], (err, results) => {
         if (err) {
-          return mysqlConnection.rollback(() => {
-            console.error("Database Query Error:", err);
+          return connection.rollback(() => {
+            connection.release();
             callback(err, null);
           });
         }
 
-        if (results.length === 0) {
-          // If account does not exist, return an error
-          return mysqlConnection.rollback(() => {
-            callback(new Error("Account not found"), null);
+        if (results.length > 0) {
+          return connection.rollback(() => {
+            connection.release();
+            callback(new Error("Email already exists"), null);
           });
         }
 
-        // Update user account table
-        const updateUserAccountQuery = `
-        UPDATE user_account SET email = ? WHERE id = ?
-      `;
-        const updateUserAccountValues = [useraccount_email, user_account_id];
-
-        mysqlConnection.query(
-          updateUserAccountQuery,
-          updateUserAccountValues,
+        const userAccountQuery = `INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)`;
+        connection.query(
+          userAccountQuery,
+          [email, password, accountType],
           (err, userAccountResults) => {
             if (err) {
-              return mysqlConnection.rollback(() => {
-                console.error("Error updating user_account:", err);
+              return connection.rollback(() => {
+                connection.release();
                 callback(err, null);
               });
             }
 
+            const userAccountId = userAccountResults.insertId;
             let query, values;
 
-            // Prepare the query and values based on account type
             switch (accountType) {
               case "Researcher":
-                query = `
-                UPDATE researcher SET 
-                  ResearcherName = ?, 
-                  phoneNumber = ?, 
-                  fullAddress = ?, 
-                  city = ?, 
-                  district = ?, 
-                  country = ?, 
-                  nameofOrganization = ?, 
-                  logo = ?
-                WHERE user_account_id = ?
-              `;
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
+                  userAccountId,
                   ResearcherName,
                   phoneNumber,
                   fullAddress,
@@ -345,26 +540,15 @@ const updateAccount = (req, callback) => {
                   country,
                   nameofOrganization,
                   logo,
-                  user_account_id,
+                  added_by,
                 ];
                 break;
 
               case "Organization":
-                query = `
-                UPDATE organization SET 
-                  OrganizationName = ?, 
-                  type = ?, 
-                  HECPMDCRegistrationNo = ?, 
-                  ntnNumber = ?, 
-                  phoneNumber = ?, 
-                  fullAddress = ?, 
-                  city = ?, 
-                  district = ?, 
-                  country = ?, 
-                  logo = ?
-                WHERE user_account_id = ?
-              `;
+                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
+                  userAccountId,
                   OrganizationName,
                   type,
                   HECPMDCRegistrationNo,
@@ -375,226 +559,144 @@ const updateAccount = (req, callback) => {
                   district,
                   country,
                   logo,
-                  user_account_id,
                 ];
                 break;
 
               case "CollectionSites":
-                query = `
-                UPDATE collectionsite SET 
-                  CollectionSiteName = ?, 
-                  phoneNumber = ?, 
-                  fullAddress = ?, 
-                  city = ?, 
-                  district = ?, 
-                  country = ?, 
-                  logo = ?
-                WHERE user_account_id = ?
-              `;
+                query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, logo) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
+                  userAccountId,
                   CollectionSiteName,
+                  CollectionSiteType,
                   phoneNumber,
                   fullAddress,
                   city,
                   district,
                   country,
                   logo,
-                  user_account_id,
                 ];
                 break;
 
+              case "RegistrationAdmin":
+              case "biobank":
+                return callback(null, {
+                  message: `${accountType} account registered successfully`,
+                  userId: userAccountId,
+                });
+
               default:
-                return mysqlConnection.rollback(() => {
+                return connection.rollback(() => {
+                  connection.release();
                   callback(new Error("Invalid account type"), null);
                 });
             }
 
-            // Execute the query for the secondary table
-            mysqlConnection.query(query, values, (err, results) => {
+            connection.query(query, values, (err, results) => {
               if (err) {
-                return mysqlConnection.rollback(() => {
-                  console.error("Error updating secondary table:", err);
+                return connection.rollback(() => {
+                  connection.release();
                   callback(err, null);
                 });
               }
 
-              // If everything is successful, commit the transaction
-              mysqlConnection.commit((err) => {
+              const userId = results.insertId;
+              let name = null
+              // Identify correct ID for history table
+              let organizationId = null,
+                researcherId = null,
+                collectionsiteId = null;
+
+              if (accountType === "Organization") {
+                name = OrganizationName
+                organizationId = userId;
+              }
+              if (accountType === "Researcher") {
+                name = ResearcherName
+                researcherId = userId;
+              }
+              if (accountType === "CollectionSites") {
+                collectionsiteId = userId;
+                name = CollectionSiteName
+              }
+
+              const historyQuery = `
+                INSERT INTO history (
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
+                  fullAddress, city, district, country, logo, added_by, organization_id, 
+                  researcher_id, collectionsite_id, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+              const historyValues = [
+                email,
+                password,
+                ResearcherName || null,
+                CollectionSiteName || null,
+                OrganizationName || null,
+                HECPMDCRegistrationNo || null,
+                ntnNumber || null,
+                nameofOrganization || null,
+                type || null,
+                CollectionSiteType || null,
+                phoneNumber,
+                fullAddress,
+                city,
+                district,
+                country,
+                logo,
+                added_by || null,
+                organizationId,
+                researcherId,
+                collectionsiteId,
+                "added",
+              ];
+
+              connection.query(historyQuery, historyValues, (err, historyResults) => {
                 if (err) {
-                  return mysqlConnection.rollback(() => {
-                    console.error("Error committing transaction:", err);
-                    callback(err, null);
-                  });
+                  return connection.rollback(() => callback(err, null));
                 }
 
-                callback(null, {
-                  message: "Account updated successfully",
-                  userId: user_account_id,
+                connection.commit((err) => {
+                  if (err) {
+                    return connection.rollback(() => {
+                      connection.release();
+                      callback(err, null);
+                    });
+                  }
+
+                  connection.release(); // Always release the connection!
+
+                  //  Send Confirmation Email
+                  sendEmail(
+                    email,
+                    "Welcome to Discovery Connect",
+                    ` Dear ${name},\n\nYour account status is currently pending. 
+                    Please wait for approval.\n\nBest regards,\n LabHazir`
+                  );
+
+                  connection.release(); // Always release the connection!
+                  sendEmail(
+                    email,
+                    "Welcome to Discovery Connect",
+                    ` Dear ${name},\n\nYour account status is currently pending. 
+                      Please wait for approval.\n\nBest regards,\n LabHazir`
+                  );
+                  callback(null, {
+                    message: "Account registered successfully",
+                    userId: userAccountId,
+                  });
                 });
               });
             });
-          }
-        );
-      }
-    );
-  });
-};
-// Function to insert a new City member
-const createAccount = (req, callback) => {
-  const {
-    accountType,
-    email,
-    password,
-    ResearcherName,
-    OrganizationName,
-    CollectionSiteName,
-    phoneNumber,
-    fullAddress,
-    city,
-    district,
-    country,
-    nameofOrganization,
-    type,
-    HECPMDCRegistrationNo,
-    ntnNumber,
-  } = req.body;
-
-  // Handle the logo file (if provided)
-  // const logo = req.file ? req.file.buffer : null && accountType === 'CollectionSites' || accountType === "Organization" || accountType === "Researcher"
-  let logo = null;
-  if (req.file) {
-    // If a file was uploaded, convert it to a buffer
-    logo = req.file.buffer;
-  }
-  console.log('Logo Buffer:', logo);
-
-  // Start MySQL transaction
-  mysqlConnection.beginTransaction((err) => {
-    if (err) {
-      console.error('Error starting transaction:', err);
-      return callback(err, null);
-    }
-
-    // Check if email already exists in the user_account table
-    const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
-    mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
-      if (err) {
-        return mysqlConnection.rollback(() => {
-          console.error('Database Query Error:', err);
-          callback(err, null);
-        });
-      }
-
-      if (results.length > 0) {
-        // If email already exists, return an error message
-        return mysqlConnection.rollback(() => {
-          callback(new Error('Email already exists'), null);
-        });
-      }
-
-      // If email does not exist, proceed with user account creation
-      const userAccountQuery = `
-        INSERT INTO user_account (email, password, accountType)
-        VALUES (?, ?, ?)
-      `;
-      const userAccountValues = [email, password, accountType];
-
-      mysqlConnection.query(userAccountQuery, userAccountValues, (err, userAccountResults) => {
-        if (err) {
-          return mysqlConnection.rollback(() => {
-            console.error('Error inserting into user_account:', err);
-            callback(err, null);
           });
-        }
-
-        const userAccountId = userAccountResults.insertId;
-        let query, values;
-
-        // Prepare the query and values based on account type
-        switch (accountType) {
-          case 'Researcher':
-            query = 'INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization,logo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-            values = [
-              userAccountId,
-              ResearcherName,
-              phoneNumber,
-              fullAddress,
-              city,
-              district,
-              country,
-              nameofOrganization,
-              logo
-            ];
-            break;
-
-          case 'Organization':
-            query = 'INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-            values = [
-              userAccountId,
-              OrganizationName,
-              type,
-              HECPMDCRegistrationNo,
-              ntnNumber,
-              phoneNumber,
-              fullAddress,
-              city,
-              district,
-              country,
-              logo,
-            ];
-            break;
-
-          case 'CollectionSites':
-            query = 'INSERT INTO collectionsite (user_account_id, CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-            values = [
-              userAccountId,
-              CollectionSiteName,
-              phoneNumber,
-              fullAddress,
-              city,
-              district,
-              country,
-              logo,
-            ];
-            break;
-
-          case 'RegistrationAdmin':
-            return callback(null, { message: 'RegistrationAdmin account registered successfully', userId: userAccountId });
-          case 'biobank':
-            return callback(null, { message: 'Biobank account registered successfully', userId: userAccountId });
-
-          default:
-            return mysqlConnection.rollback(() => {
-              callback(new Error('Invalid account type'), null);
-            });
-        }
-
-        // Execute the query for the secondary table
-        mysqlConnection.query(query, values, (err, results) => {
-          if (err) {
-            return mysqlConnection.rollback(() => {
-              console.error('Error inserting into secondary table:', err);
-              callback(err, null);
-            });
-          }
-
-          // If everything is successful, commit the transaction
-          mysqlConnection.commit((err) => {
-            if (err) {
-              return mysqlConnection.rollback(() => {
-                console.error('Error committing transaction:', err);
-                callback(err, null);
-              });
-            }
-
-            callback(null, { message: 'Account registered successfully', userId: userAccountId });
-          });
-        });
-      });
+      }
+      );
     });
   });
 };
- 
+
+
 const loginAccount = (data, callback) => {
   const { email, password } = data;
 
@@ -604,7 +706,7 @@ const loginAccount = (data, callback) => {
   }
 
   // Query to verify email and password for any account type
-  const query = 
+  const query =
     `SELECT id, email, accountType 
      FROM user_account 
      WHERE email = ? AND password = ?`;
@@ -619,7 +721,7 @@ const loginAccount = (data, callback) => {
 
       // If account type is Researcher, check the status in researcher table
       if (user.accountType === 'Researcher') {
-        const researcherQuery = 
+        const researcherQuery =
           `SELECT status FROM researcher WHERE user_account_id = ?`;
 
         mysqlConnection.query(researcherQuery, [user.id], (err, researcherResults) => {
@@ -634,7 +736,7 @@ const loginAccount = (data, callback) => {
           }
         });
       } else if (user.accountType === 'Organization') {
-        const OrganizationQuery = 
+        const OrganizationQuery =
           `SELECT status FROM organization WHERE user_account_id = ?`;
 
         mysqlConnection.query(OrganizationQuery, [user.id], (err, OrganizationResults) => {
@@ -649,7 +751,7 @@ const loginAccount = (data, callback) => {
           }
         });
       } else if (user.accountType === 'CollectionSites') {
-        const collectionsiteQuery = 
+        const collectionsiteQuery =
           `SELECT status FROM collectionsite WHERE user_account_id = ?`;
 
         mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsiteResults) => {
@@ -663,7 +765,7 @@ const loginAccount = (data, callback) => {
             return callback({ status: "fail", message: "Account is not approved" }, null);
           }
         });
-      } else{
+      } else {
         // For non-researcher accounts, return the user info
         callback(null, user);
       }
@@ -741,7 +843,7 @@ function changepassword(data, callback) {
       callback({ status: 500, message: "Update error" }, null);
     });
 }
-  
+
 module.exports = {
   changepassword,
   loginAccount,
@@ -754,5 +856,5 @@ module.exports = {
   createuser_accountTable,
   createAccount,
   updateAccount,
-  
+
 };

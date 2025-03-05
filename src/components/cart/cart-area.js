@@ -112,8 +112,8 @@ const CartArea = ({ product } ) => {
                         </li>
                       </ul>
                       <Link href={`/login?from=checkout`} className="tp-btn cursor-pointer">
-  Proceed to checkout
-</Link>
+                        Proceed to checkout
+                      </Link>
                     </div>
                   </div>
                 </div>

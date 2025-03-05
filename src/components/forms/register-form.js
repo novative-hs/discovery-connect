@@ -25,11 +25,11 @@ const schema = Yup.object().shape({
   accountType: Yup.string().required("Account Type is required"),
   phoneNumber: Yup.string()
     .matches(
-      /^\d{4}-\d{3}-\d{4}$/,
-      "Phone number must be in the format 0123-456-7890 and numeric"
+      /^\d{4}-\d{7}$/,
+      "Phone number must be in this format e.g. 0123-4567892"
     )
-
-    .required("Phone number is required"),
+    .required("Phone number is required")
+    .label("Phone number is required"),
   logo: Yup.mixed().required("Logo is required"),
   fullAddress: Yup.string().required("Full Address is required"),
   city: Yup.string().required("City is required"),
@@ -65,13 +65,17 @@ const schema = Yup.object().shape({
     then: Yup.string().required("HEC / PMDC Registration No is required!"),
   }),
   ntnNumber: Yup.string().when("accountType", {
-    is: ["Organization", "CollectionSites"],
+    is: ["Organization"],
     then: Yup.string().required("NTN Number is required!"),
   }),
   // CollectionSites-specific fields (conditional validation)
   CollectionSiteName: Yup.string().when("accountType", {
     is: "CollectionSites",
-    then: Yup.string().required("CollectionSites Name is required!"),
+    then: Yup.string().required("Collection Site Name is required!"),
+  }),
+  CollectionSiteType: Yup.string().when("accountType", {
+    is: "CollectionSites",
+    then: Yup.string().required("Type is required!"),
   }),
 });
 
@@ -85,7 +89,7 @@ const RegisterForm = () => {
   const [countryname, setCountryname] = useState([]);
   const [Org_name, setOrganizationname] = useState([]);
   const router = useRouter();
-  const [registerUser, {}] = useRegisterUserMutation();
+  const [registerUser, { }] = useRegisterUserMutation();
 
   const {
     register,
@@ -121,21 +125,21 @@ const RegisterForm = () => {
       }
     };
 
-    fetchData("http://localhost:5000/api/city/get-city", setCityname, "City");
+    fetchData(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`, setCityname, "City");
     fetchData(
-      "http://localhost:5000/api/district/get-district",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`,
       setDistrictname,
       "District"
     );
     fetchData(
-      "http://localhost:5000/api/country/get-country",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`,
       setCountryname,
       "Country"
     );
 
     // Fetch all organizations and filter approved ones
     fetchData(
-      "http://localhost:5000/api/admin/organization/get",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`,
       (data) => {
         setOrganizationname(data);
         setOrganizationname(data.filter((org) => org.status === "approved"));
@@ -160,44 +164,6 @@ const RegisterForm = () => {
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click(); // Trigger file input
-    }
-  };
-  const sendApprovalEmail = async (data) => {
-    let name = "";
-
-    // Assign the correct name based on accountType
-    if (data.accountType === "Researcher") {
-      name = data.ResearcherName;
-    } else if (data.accountType === "Collectionsite") {
-      name = data.CollectionSiteName;
-    } else if (data.accountType === "Organization") {
-      name = data.OrganizationName;
-    }
-
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/user/send-email",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: data.email,
-            name: name,
-            status: "pending",
-          }),
-        }
-      );
-
-      const result = await response.json(); // Rename 'data' to 'result' to avoid shadowing
-      if (response.ok) {
-        console.log("Email sent successfully:", result.message);
-      } else {
-        console.error("Error sending email:", result.error);
-      }
-    } catch (error) {
-      console.error("Error:", error);
     }
   };
 
@@ -237,7 +203,7 @@ const RegisterForm = () => {
     // Append CollectionSite-specific fields
     if (data.accountType === "CollectionSites") {
       formData.append("CollectionSiteName", data.CollectionSiteName);
-      formData.append("ntnNumber", data.ntnNumber);
+      formData.append("CollectionSiteType", data.CollectionSiteType);
       formData.append("fullAddress", data.fullAddress);
       formData.append("city", data.city);
       formData.append("district", data.district);
@@ -246,10 +212,9 @@ const RegisterForm = () => {
     }
 
     // Append logo (if a file is selected)
-    if (data.logo && data.logo[0]) {
-      formData.append("logo", data.logo[0]);
+    if (data.logo) {
+      formData.append("logo", data.logo);
     }
-
     // Send the formData to the backend
     registerUser(formData)
       .then((result) => {
@@ -257,9 +222,11 @@ const RegisterForm = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-         sendApprovalEmail(data);
-
-         notifySuccess(`${result?.data?.message}. Your account status is currently pending. Please wait for approval.`);
+          setLogo("");
+          setValue("logo", "");
+          notifySuccess(
+            "You information is received, you'll get email once your account got approval from registration admin"
+          );
 
           router.push("/login");
         }
@@ -268,11 +235,13 @@ const RegisterForm = () => {
         notifyError(
           error?.response?.data?.error || "An unexpected error occurred"
         );
+        setLogo("");
+        setValue("logo", "");
       });
 
     reset();
   };
- 
+
 
   useEffect(() => {
     console.log(errors);
@@ -362,7 +331,7 @@ const RegisterForm = () => {
               <option value="">Select Account Type</option>
               <option value="Researcher">Researcher</option>
               <option value="Organization">Organization</option>
-              <option value="CollectionSites">CollectionSites</option>
+              <option value="CollectionSites">Collection Site</option>
             </select>
           </div>
           <ErrorMessage message={errors.accountType?.message} />
@@ -501,7 +470,7 @@ const RegisterForm = () => {
                       {...register("CollectionSiteName")}
                       name="CollectionSiteName"
                       type="text"
-                      placeholder="CollectionSites Name"
+                      placeholder="Collection Site Name"
                       id="CollectionSiteName"
                     />
                     <span>
@@ -509,6 +478,30 @@ const RegisterForm = () => {
                     </span>
                   </div>
                   <ErrorMessage message={errors.CollectionSiteName?.message} />
+                </div>
+                <div className="login__input-item">
+                  <div className="login__input">
+                    <select
+                      {...register("CollectionSiteType")}
+                      name="CollectionSiteType"
+                      id="CollectionSiteType"
+                      style={{
+                        width: "100%",
+                        height: "50px",
+                        paddingLeft: "50px",
+                        borderColor: "#f0f0f0",
+                        color: "#808080",
+                      }}>
+                      <option value="">Select Type</option>
+                      <option value="Hospital">Hospital</option>
+                      <option value="Independent Lab">Independent Lab</option>
+                      <option value="Blood Bank">Blood Bank</option>
+                    </select>
+                    <span>
+                      <i className="fa-solid fa-id-card"></i>
+                    </span>
+                  </div>
+                  <ErrorMessage message={errors.CollectionSiteType?.message} />
                 </div>
               </>
             )}
@@ -537,8 +530,11 @@ const RegisterForm = () => {
                   className="btn btn-outline-secondary bg-transparent border-0"
                   onClick={triggerFileInput}
                 >
-                  {accountTypeLabel}
-                  <span className="form-label px-1">{logo}</span>
+                  {logo ? (
+                    <span className="form-label px-1">{logo}</span>
+                  ) : (
+                    accountTypeLabel
+                  )}
                 </label>
 
                 <input
@@ -549,11 +545,11 @@ const RegisterForm = () => {
                   onChange={handleLogoChange}
                 />
               </div>
-              {/* Show error message only when validation fails */}
               <ErrorMessage
                 name="logo"
                 component="div"
                 className="error-message"
+                message={errors.logo?.message}
               />
             </div>
 

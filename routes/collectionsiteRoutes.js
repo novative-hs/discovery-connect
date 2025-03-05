@@ -14,6 +14,7 @@ router.get('/:id', collectionsiteController.getCollectionSiteById);
 router.put('/edit/:id', collectionsiteController.updateCollectionSiteStatus);
 router.delete('/delete/:id', collectionsiteController.deleteCollectionSite);
 router.get('/collectionsitenames/:user_account_id', collectionsiteController.getAllCollectionSiteNames);
+router.get("/collectionsitenamesinbiobank/:sample_id", collectionsiteController.getAllCollectionSiteNamesInBiobank);
 router.put('/updatedetail/:id', upload.single('logo'), collectionsiteController.updateCollectionSiteDetail);
 router.get('/get/:id',collectionsiteController.getCollectionSiteDetail)
 module.exports = router;

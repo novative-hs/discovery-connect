@@ -1,5 +1,6 @@
 const mysqlConnection = require("../config/db");
-
+const mysqlPool = require("../config/db");
+const { sendEmail } = require("../config/email");
 // Function to get all collection sites
 const getAllCollectionSites = (callback) => {
   const query = `
@@ -20,45 +21,75 @@ const getAllCollectionSites = (callback) => {
 
 // Function to insert a new collection site
 const createCollectionSite = (data, callback) => {
-  const { user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
+  const { user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
   const query = `
-    INSERT INTO collectionsite (user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO collectionsite (user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber], (err, result) => {
+  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber], (err, result) => {
     callback(err, result);
   });
 };
 
 // Function to update a collection site
 const updateCollectionSite = (id, data, callback) => {
-  const { user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
+  const { user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
   const query = `
     UPDATE collectionsite
-    SET user_account_id = ?, username = ?, email = ?, password = ?, accountType = ?, CollectionSiteName = ?, confirmPassword = ?, fullAddress = ?, city = ?, district = ?, country = ?, phoneNumber = ?
+    SET user_account_id = ?, username = ?, email = ?, password = ?, accountType = ?, CollectionSiteName = ?, CollectionSiteType = ?, confirmPassword = ?, fullAddress = ?, city = ?, district = ?, country = ?, phoneNumber = ?
     WHERE id = ?
   `;
-  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, confirmPassword, fullAddress, city, district, country, phoneNumber, id], (err, result) => {
+  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber, id], (err, result) => {
     callback(err, result);
   });
 };
 
 // Function to update a collection site's status
-const updateCollectionSiteStatus = (id, status, callback) => {
-  const query = `
-    UPDATE collectionsite
-    SET status = ?
-    WHERE id = ?
-  `;
-  mysqlConnection.query(query, [status, id], (err, result) => {
-    callback(err, result);
-  });
+const updateCollectionSiteStatus = async (id, status) => {
+  try {
+    // Fetch email by joining collectionsite and user_account tables
+    const [results] = await mysqlConnection.promise().query(
+      `SELECT ua.email 
+       FROM collectionsite cs
+       JOIN user_account ua ON cs.user_account_id = ua.id
+       WHERE cs.id = ?`,
+      [id]
+    );
+
+    if (results.length === 0) throw new Error("Collection site not found");
+
+    const email = results[0].email;
+
+    // Update status
+    await mysqlConnection.promise().query(
+      `UPDATE collectionsite SET status = ? WHERE id = ?`,
+      [status, id]
+    );
+
+    // Prepare email content
+    let emailText = `Dear Collectionsite,\n\nYour account status is currently pending. 
+    Please wait for approval.\n\nBest regards,\nYour Company`;
+
+    if (status === "approved") {
+      emailText = `Dear Collectionsite,\n\nYour account has been approved! 
+      You can now log in and access your account.\n\nBest regards,\nYour Company`;
+    }
+
+    // Send email
+    await sendEmail(email, "Welcome to Discovery Connect", emailText);
+
+    return { message: "Status updated and email sent" };
+  } catch (error) {
+    console.error("Error:", error.message);
+    throw error;
+  }
 };
 
-// function getCollectionSiteById(id, callback) {
-//   const query = 'SELECT * FROM researcher WHERE id = ?';
-//   mysqlConnection.query(query, [id], callback);
-// }  
+
+function getCollectionSiteById(id, callback) {
+  const query = 'SELECT * FROM researcher WHERE id = ?';
+  mysqlConnection.query(query, [id], callback);
+}
 
 // Function to delete a collection site
 const deleteCollectionSite = (id, callback) => {
@@ -68,7 +99,7 @@ const deleteCollectionSite = (id, callback) => {
   });
 };
 
-// Function to GET collectionsite names
+// Function to GET collectionsite names in collectionsite dashboard
 const getAllCollectionSiteNames = (user_account_id, callback) => {
   // Query to fetch collectionsite data
   const collectionSiteQuery = `
@@ -82,96 +113,149 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
       callback(err, null);
       return;
     }
-      callback(null, results);
-      });
+    callback(null, results);
+  });
 };
 
+// Function to GET collectionsite names in biobank dashboard
+const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
+  // First, get the user_account_id of the collection site that posted this sample
+  const sampleQuery = `SELECT user_account_id FROM sample WHERE id = ?`;
 
-function updateCollectionSiteDetail(id, data, callback) {
-  const { 
-    useraccount_email, 
-    CollectionSiteName, 
-    phoneNumber,  
-    fullAddress, 
-    cityid, 
-    districtid, 
-    countryid, 
-    type, 
-    logo 
-  } = data;
-
-  const updateEmailQuery = `
-    UPDATE user_account
-    SET email = ?
-    WHERE id = ?
-  `;
-
-  mysqlConnection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
+  mysqlConnection.query(sampleQuery, [sample_id], (err, sampleResult) => {
     if (err) {
-      return mysqlConnection.rollback(() => {
-        console.error('Error updating email:', err);
-        return callback(err);
-      });
+      console.error("SQL Error (Sample):", err);
+      callback(err, null);
+      return;
     }
 
-    // Get the current logo from the database
-    const getCurrentLogoQuery = `SELECT logo FROM collectionsite WHERE user_account_id = ?`;
+    if (sampleResult.length === 0) {
+      callback(null, []); // No sample found, return empty
+      return;
+    }
 
-    mysqlConnection.query(getCurrentLogoQuery, [id], (err, results) => {
+    const sampleOwnerUserId = sampleResult[0].user_account_id;
+
+    // Now fetch collection site names EXCLUDING the one that owns this sample
+    const collectionSiteQuery = `
+      SELECT CollectionSiteName, user_account_id 
+      FROM collectionsite 
+      WHERE user_account_id != ?;
+    `;
+
+    mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
       if (err) {
-        return mysqlConnection.rollback(() => {
-          console.error('Error fetching current logo:', err);
-          return callback(err);
-        });
+        console.error("SQL Error (CollectionSite):", err);
+        callback(err, null);
+        return;
       }
 
-      const currentLogo = results[0]?.logo;
+      callback(null, results);
+    });
+  });
+};
 
-      // Use the provided logo or retain the existing one
-      const updatedLogo = logo || currentLogo;
+function updateCollectionSiteDetail(id, data, callback) {
+  const {
+    useraccount_email,
+    CollectionSiteName,
+    CollectionSiteType,
+    phoneNumber,
+    fullAddress,
+    cityid,
+    districtid,
+    countryid,
+    logo
+  } = data;
 
-      const updateCollectionSiteQuery = `
+  mysqlPool.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error getting connection from pool:", err);
+      return callback(err);
+    }
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        console.error("Error starting transaction:", err);
+        return callback(err);
+      }
+
+      const updateEmailQuery = `UPDATE user_account SET email = ? WHERE id = ?`;
+
+      connection.query(updateEmailQuery, [useraccount_email, id], (err, result) => {
+        if (err) {
+          return connection.rollback(() => {
+            connection.release();
+            console.error('Error updating email:', err);
+            return callback(err);
+          });
+        }
+
+        // Get the current logo from the database
+        const getCurrentLogoQuery = `SELECT logo FROM collectionsite WHERE user_account_id = ?`;
+
+        connection.query(getCurrentLogoQuery, [id], (err, results) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              console.error('Error fetching current logo:', err);
+              return callback(err);
+            });
+          }
+
+          const currentLogo = results[0]?.logo;
+
+          // Use the provided logo or retain the existing one
+          const updatedLogo = logo || currentLogo;
+
+          const updateCollectionSiteQuery = `
         UPDATE collectionsite
         SET
           CollectionSiteName = ?,
+          CollectionSiteType = ?,
           phoneNumber = ?,
           fullAddress = ?,
           city = ?,
           district = ?,
           country = ?,
-          type = ?,
           logo = ?  
         WHERE user_account_id = ?
       `;
 
-      mysqlConnection.query(
-        updateCollectionSiteQuery, 
-        [CollectionSiteName, phoneNumber, fullAddress, cityid, districtid, countryid, type, logo, id], 
-        (err, result) => {
-          if (err) {
-            return mysqlConnection.rollback(() => {
-              console.error('Error updating collectionsite:', err);
-              return callback(err);
-            });
-          }
+          connection.query(
+            updateCollectionSiteQuery,
+            [CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid, logo, id],
+            (err, result) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  console.error('Error updating collectionsite:', err);
+                  return callback(err);
+                });
+              }
 
-          // Commit the transaction if both queries succeed
-          mysqlConnection.commit((err) => {
-            if (err) {
-              return mysqlConnection.rollback(() => {
-                console.error('Error committing transaction:', err);
-                return callback(err);
+              // Commit the transaction if both queries succeed
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    console.error('Error committing transaction:', err);
+                    return callback(err);
+                  });
+                }
+                connection.release();
+                console.log('Both email and collectionsite updated successfully');
+                return callback(null, 'Both updates were successful');
               });
             }
-
-            console.log('Both email and collectionsite updated successfully');
-            return callback(null, 'Both updates were successful');
-          });
-        }
-      );
+          );
+        });
+      });
     });
   });
 }
+
 function getCollectionSiteDetail(id, callback) {
   const query = `
     SELECT 
@@ -192,18 +276,19 @@ function getCollectionSiteDetail(id, callback) {
     WHERE 
       collectionsite.user_account_id = ?
   `;
-  
+
   mysqlConnection.query(query, [id], callback);
-}  
+}
 
 module.exports = {
   getCollectionSiteDetail,
   updateCollectionSiteDetail,
-  // getCollectionSiteById,
+  getAllCollectionSiteNames,
+  getAllCollectionSiteNamesInBiobank,
+  getCollectionSiteById,
   getAllCollectionSites,
   createCollectionSite,
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,
-  getAllCollectionSiteNames
 };

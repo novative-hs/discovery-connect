@@ -34,21 +34,11 @@ const {
   getProductById,
 } = require("./controller/productController");
 const biobankRoutes = require("./routes/biobankRoutes");
-const historyRoutes = require("./routes/historyRoutes");
 const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoutes");
 
-const ethnictiyRoutes = require("./routes/samplefieldsRoutes");
-const sampleconditionRoutes = require("./routes/samplefieldsRoutes");
-const storagetemperatureRoutes = require("./routes/samplefieldsRoutes");
-const containertypeRoutes = require("./routes/samplefieldsRoutes");
-const quantityunitRoutes = require("./routes/samplefieldsRoutes");
-const sampletypematrixRoutes = require("./routes/samplefieldsRoutes");
-const testmethodRoutes = require("./routes/samplefieldsRoutes");
-const testresultunitRoutes = require("./routes/samplefieldsRoutes");
-const testsystemRoutes = require("./routes/samplefieldsRoutes");
-const testsystemmanufacturerRoutes = require("./routes/samplefieldsRoutes");
-const testkitmanufacturerRoutes = require("./routes/samplefieldsRoutes");
-const concurrentmedicalconditionsRoutes = require("./routes/samplefieldsRoutes");
+const samplefieldsRoutes = require("./routes/samplefieldsRoutes");
+const historyRoutes = require("./routes/historyRoutes");
+
 
 // Routes
 app.use('/api', historyRoutes); 
@@ -75,18 +65,7 @@ app.use("/api", cartRoutes);
 app.use("/api", biobankRoutes);
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);
 
-app.use("/api/ethnicity", ethnictiyRoutes);
-app.use("/api/samplecondition", sampleconditionRoutes);
-app.use("/api/storagetemperature", storagetemperatureRoutes);
-app.use("/api/quantityunit", quantityunitRoutes);
-app.use("/api/sampletypematrix", sampletypematrixRoutes);
-app.use("/api/testkitmanufacturer", testkitmanufacturerRoutes);
-app.use("/api/testmethod", testmethodRoutes);
-app.use("/api/testresultunit", testresultunitRoutes);
-app.use("/api/testsystem", testsystemRoutes);
-app.use("/api/testsystemmanufacturer", testsystemmanufacturerRoutes);
-app.use("/api/concurrentmedicalconditions", concurrentmedicalconditionsRoutes);
-app.use("/api/containertype",containertypeRoutes)
+app.use("/api/samplefields", samplefieldsRoutes);
 
 // Start the server
 app.listen(5000, () => {

@@ -1,38 +1,41 @@
 import React from "react";
-import { NextArrow, PrevArrow } from "@svg/index";
 import ReactPaginate from "react-paginate";
-
+import "bootstrap/dist/css/bootstrap.min.css";
+import { NextArrow, PrevArrow } from "@svg/index";
 const Pagination = ({ handlePageClick, pageCount, focusPage }) => {
+  
   return (
-    <ReactPaginate
-      nextLabel={
+    <div className="d-flex justify-content-end my-4">
+      <ReactPaginate
+       nextLabel={
         <span className="next page-numbers">
-          Next{" "}<NextArrow />
+          <NextArrow />
         </span>
       }
       previousLabel={
         <span className="tp-pagination-prev prev page-numbers">
-          <PrevArrow />{" "}Prev
+          <PrevArrow />
         </span>
       }
-      onPageChange={handlePageClick}
-      pageRangeDisplayed={3}
-      marginPagesDisplayed={2}
-      forcePage={focusPage}
-      pageCount={pageCount}
-      pageClassName="page-items"
-      pageLinkClassName="page-links"
-      previousClassName="page-items"
-      previousLinkClassName="page-links"
-      nextClassName="page-items"
-      nextLinkClassName="page-links"
-      breakLabel="..."
-      breakClassName="page-items"
-      breakLinkClassName="page-links"
-      containerClassName="paginasstions"
-      activeClassName="current"
-      renderOnZeroPageCount={null}
-    />
+        onPageChange={handlePageClick}
+        pageCount={pageCount}
+        forcePage={focusPage}
+        containerClassName="pagination flex-wrap"
+        pageClassName="page-item mx-1"
+        pageLinkClassName="page-link"
+        previousClassName="page-item mx-1"
+        previousLinkClassName="page-link"
+        nextClassName="page-item mx-1"
+        nextLinkClassName="page-link"
+        breakLabel="..."
+        breakClassName="page-item mx-1"
+        breakLinkClassName="page-link"
+        activeClassName="active"
+        pageRangeDisplayed={2}
+        marginPagesDisplayed={1}
+        renderOnZeroPageCount={null}
+      />
+    </div>
   );
 };
 

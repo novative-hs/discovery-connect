@@ -16,6 +16,7 @@ export default function Cart({ query }) {
       <Header style_2={true} />
       <CartBreadcrumb title='My Cart' subtitle='Cart' />
       <CartArea  product={product}/>
+      <CartArea/>
       {/* <ShopCta/> */}
       <Footer />
     </Wrapper>

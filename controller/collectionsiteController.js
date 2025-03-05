@@ -28,27 +28,25 @@ const getCollectionSiteById = (req, res) => {
 };
 
 // Controller to update collection site status
-const updateCollectionSiteStatus = (req, res) => {
+const updateCollectionSiteStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
+    return res.status(400).json({ error: "Status is required" });
   }
 
-  collectionsiteModel.updateCollectionSiteStatus(id, status, (err, result) => {
-    if (err) {
-      console.error('Error updating collection site status:', err);
-      return res.status(500).json({ error: 'An error occurred while updating collection site status' });
-    }
+  try {
+    const result = await collectionsiteModel.updateCollectionSiteStatus(id, status);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Collection site not found or no changes made' });
-    }
+    res.status(200).json(result); // Sends success response
 
-    res.status(200).json({ message: 'Collection site status updated successfully' });
-  });
+  } catch (error) {
+    console.error("Error updating collection site status:", error);
+    res.status(500).json({ error: "An error occurred while updating collection site status" });
+  }
 };
+
 //Controller to delete a collection site
 const deleteCollectionSite = (req, res) => {
   const { id } = req.params;  // Get the id from request parameters
@@ -63,7 +61,7 @@ const deleteCollectionSite = (req, res) => {
   });
 };
 
-// Controller to fetch collection site names
+// Controller to fetch collection site names in collectionsite dashboard
 const getAllCollectionSiteNames = (req, res) => {
   const { user_account_id } = req.params; // Extract logged-in user's ID from request parameters
 
@@ -82,9 +80,34 @@ const getAllCollectionSiteNames = (req, res) => {
     });
 };
 
+// Controller to fetch collection site names in biobank dashboard
+const getAllCollectionSiteNamesInBiobank = (req, res) => {
+  const { sample_id } = req.params;
+  
+  if (!sample_id) {
+    console.log("No Sample ID received in request");
+    return res.status(400).json({ error: "Sample ID is required" });
+  }
+
+  collectionsiteModel.getAllCollectionSiteNamesInBiobank(sample_id, (err, results) => {
+    if (err) {
+      console.error("Error fetching data:", err);
+      return res.status(500).json({ error: "An error occurred while fetching data" });
+    }
+      // Ensure the response includes `CollectionSiteName` and `user_account_id`
+      const collectionSites = results.map(row => ({
+        CollectionSiteName: row.CollectionSiteName,
+        user_account_id: row.user_account_id,
+      }));
+
+      console.log("Database Query Result:", collectionSites); // Debugging
+      res.status(200).json({ data: collectionSites });
+  });
+};
+
 const updateCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
-  const { useraccount_email, type, CollectionSiteName, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
+  const { useraccount_email, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
   const file = req.file;
 
   if (!file) {
@@ -95,8 +118,8 @@ const updateCollectionSiteDetail = (req, res) => {
   const updateData = {
     useraccount_email,
     CollectionSiteName,
+    CollectionSiteType,
     phoneNumber,
-    type,
     fullAddress,
     cityid,
     districtid,
@@ -136,6 +159,7 @@ module.exports = {
   getCollectionSiteDetail,
   updateCollectionSiteDetail,
   getAllCollectionSiteNames,
+  getAllCollectionSiteNamesInBiobank,
   getAllCollectionSites,
   getCollectionSiteById,
   updateCollectionSiteStatus,
