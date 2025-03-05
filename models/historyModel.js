@@ -124,7 +124,7 @@ const create_samplehistoryTable = () => {
   const create_historyTable = `
   CREATE TABLE sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    sample_id BIGINT NOT NULL,
+    sample_id VARCHAR(36) NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
 )`;

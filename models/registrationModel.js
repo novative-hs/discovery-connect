@@ -383,11 +383,11 @@ const updateAccount = (req, callback) => {
 
                 connection.query(updateQuery, values, (err) => {
                   if (err) return mysqlConnection.rollback(() => callback(err, null));
-
+                  
                   let organizationID = null;
                   let researcherID = null;
                   let collectionSiteID = null;
-
+                  
                   if (previousData.OrganizationName) {
                     organizationID = previousData.id; // Organization
                   } else if (previousData.ResearcherName) {
@@ -395,7 +395,7 @@ const updateAccount = (req, callback) => {
                   } else if (previousData.CollectionSiteName) {
                     collectionSiteID = previousData.id; // Collection Site
                   }
-
+                  
                   const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName, CollectionSiteName, OrganizationName, 
@@ -421,7 +421,7 @@ const updateAccount = (req, callback) => {
                     previousData.district || null,
                     previousData.country || null,
                     previousData.logo || null,
-                    previousData.added_by || null,
+                    previousData.added_by || null, 
                     organizationID || null,
                     researcherID || null,
                     collectionSiteID || null,

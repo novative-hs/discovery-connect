@@ -5,7 +5,7 @@ const createSampleApprovalTable = () => {
   CREATE TABLE IF NOT EXISTS sample_approval( 
   id INT AUTO_INCREMENT PRIMARY KEY, 
   user_id INT, 
-  sample_id BIGINT, 
+  sample_id VARCHAR(36), 
   sample_studycopy LONGBLOB, 
   reporting_mechanism VARCHAR(250), 
   institutional_board LONGBLOB, 

@@ -89,12 +89,12 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="profile__password">
+    <div className="profile__password p-2 mx-auto w-100 w-md-75 w-lg-50">
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="row g-3"> {/* Use g-3 for consistent spacing between rows */}
+      <div className="row g-2">
         <div className="col-12">
           <div className="profile__input-box">
-            <h4>Email Address</h4>
+            <h6 className="fs-7 mb-1">Email Address</h6>
             <div className="profile__input">
               <input
                 {...register("email", {
@@ -102,9 +102,9 @@ const ChangePassword = () => {
                 })}
                 type="email"
                 placeholder="Enter Email Address"
-                value={userDetail?.email || ""} // Pre-fill with user email
-                readOnly // Make the field non-editable
-                className="form-control"
+                value={userDetail?.email || ""}
+                readOnly
+                className="form-control form-control-sm"
               />
               <ErrorMessage message={errors.email?.message} />
             </div>
@@ -113,12 +113,12 @@ const ChangePassword = () => {
   
         <div className="col-12">
           <div className="profile__input-box">
-            <h4>Current Password</h4>
+            <h6 className="fs-7 mb-1">Current Password</h6>
             <div className="position-relative">
               <input
-                {...register("password", { required: `Password is required!` })}
+                {...register("password", { required: "Password is required!" })}
                 type={showCurrentPass ? "text" : "password"}
-                className="form-control"
+                className="form-control form-control-sm"
                 placeholder="Enter your password"
               />
               <span
@@ -127,9 +127,9 @@ const ChangePassword = () => {
                 style={{ cursor: "pointer" }}
               >
                 {showCurrentPass ? (
-                  <i className="fa-regular fa-eye"></i>
+                  <i className="fa-regular fa-eye fs-7"></i>
                 ) : (
-                  <i className="fa-regular fa-eye-slash"></i>
+                  <i className="fa-regular fa-eye-slash fs-7"></i>
                 )}
               </span>
             </div>
@@ -138,12 +138,12 @@ const ChangePassword = () => {
   
         <div className="col-12">
           <div className="profile__input-box">
-            <h4>New Password</h4>
+            <h6 className="fs-7 mb-1">New Password</h6>
             <div className="position-relative">
               <input
-                {...register("newPassword", { required: `New Password is required!` })}
+                {...register("newPassword", { required: "New Password is required!" })}
                 type={showNewPass ? "text" : "password"}
-                className="form-control"
+                className="form-control form-control-sm"
                 placeholder="Enter your new password"
               />
               <span
@@ -152,9 +152,9 @@ const ChangePassword = () => {
                 style={{ cursor: "pointer" }}
               >
                 {showNewPass ? (
-                  <i className="fa-regular fa-eye"></i>
+                  <i className="fa-regular fa-eye fs-7"></i>
                 ) : (
-                  <i className="fa-regular fa-eye-slash"></i>
+                  <i className="fa-regular fa-eye-slash fs-7"></i>
                 )}
               </span>
             </div>
@@ -163,12 +163,12 @@ const ChangePassword = () => {
   
         <div className="col-12">
           <div className="profile__input-box">
-            <h4>Confirm Password</h4>
+            <h6 className="fs-7 mb-1">Confirm Password</h6>
             <div className="position-relative">
               <input
                 {...register("confirmPassword")}
                 type={showConfirmPass ? "text" : "password"}
-                className="form-control"
+                className="form-control form-control-sm"
                 placeholder="Confirm your new password"
               />
               <span
@@ -177,22 +177,22 @@ const ChangePassword = () => {
                 style={{ cursor: "pointer" }}
               >
                 {showConfirmPass ? (
-                  <i className="fa-regular fa-eye"></i>
+                  <i className="fa-regular fa-eye fs-7"></i>
                 ) : (
-                  <i className="fa-regular fa-eye-slash"></i>
+                  <i className="fa-regular fa-eye-slash fs-7"></i>
                 )}
               </span>
             </div>
           </div>
         </div>
   
-        <div className="col-xxl-6 col-md-6">
-            <div className="profile__btn">
-              <button type="submit" className="tp-btn-3">
-                Update
-              </button>
-            </div>
+        <div className="col-12">
+          <div className="profile__btn">
+            <button type="submit" className="tp-btn-3">
+              Update
+            </button>
           </div>
+        </div>
       </div>
     </form>
   </div>

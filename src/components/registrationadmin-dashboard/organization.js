@@ -36,6 +36,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
+      console.log("Data",data)
     } catch (error) {
       console.error("Error fetching history:", error);
     }
@@ -194,11 +195,9 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
 
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-    <div className="container-fluid mt-n5">
-      <div className="row justify-content-center mt-5">
-        <div className="col-12 col-md-10">
-          <div className="policy__wrapper policy__translate position-relative mt-5">
+    <section className="policy__area pb-40 overflow-hidden p-3">
+    <div className="container">
+      <div className="row justify-content-center">
             {/* Button Container */}
             <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
               {/* Success Message */}
@@ -233,8 +232,12 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
             </div>
 
             {/* Table */}
-            <div className="table-responsive w-100">
-              <table className="table table-bordered table-hover">
+            <div className="table-responsive overflow-auto w-100 p-2">
+              {" "}
+              {/* Increased width & scrolling */}
+              <table className="table table-bordered table-hover table-striped w-100">
+                {" "}
+                {/* Added w-100 */}
                 <thead className="thead-dark">
                 <tr className="text-center">
                       {[
@@ -260,19 +263,19 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                           field: "status",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="px-3">
-                          <input
-                            type="text"
-                            className="form-control w-100 px-2 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
+                        <th key={field} className="col-md-2 px-1">
+                        <input
+                          type="text"
+                          className="form-control w-100 px-2 py-1 mx-auto"
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
                           {label}
                         </th>
                       ))}
-                      <th className="col-1">Action</th>
+                      <th className="col-md-1">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -288,14 +291,14 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                           <td>
                           <div className="d-flex justify-content-around gap-2">
                               <button
-                                className="btn btn-success btn-sm"
+                                className="btn btn-success btn-sm py-0 px-1"
                                 onClick={() => handleEditClick(organization)}
                                 title="Edit Organization"
                               >
                                 <FontAwesomeIcon icon={faEdit} size="sm" />
                               </button>{" "}
                               <button
-                                className="btn btn-danger btn-sm"
+                                className="btn btn-danger btn-sm py-0 px-1"
                                 onClick={() => {
                                   setSelectedOrganizationId(organization.id);
                                   setShowDeleteModal(true);
@@ -305,7 +308,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                                 <FontAwesomeIcon icon={faTrash} size="sm" />
                               </button>
                               <button
-                                className="btn btn-info btn-sm"
+                                className="btn btn-info btn-sm py-0 px-1"
                                 onClick={() => handleShowHistory("organization", organization.id)}
                                 title="History"
                               >
@@ -338,7 +341,10 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
               {showEditModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
                   {/* Modal Content */}
                   <div
@@ -348,7 +354,6 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                     style={{
                       zIndex: 1050,
                       position: "fixed",
-                      top: "120px",
                       left: "50%",
                       transform: "translateX(-50%)",
                     }}
@@ -488,7 +493,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                         >
                           {historyData && historyData.length > 0 ? (
                             historyData.map((log, index) => {
-                              const { created_name, updated_name, added_by, created_at, updated_at } = log;
+                              const { created_name, updated_name,OrganizationName, added_by, created_at, updated_at } = log;
 
                               return (
                                 <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
@@ -505,7 +510,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>Organization:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    <b>Organization:</b> {OrganizationName} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
                                   </div>
 
                                   {/* Message for City Update (Only if it exists) */}
@@ -603,8 +608,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
               )}
             </div>
           </div>
-        </div>
-      </div>
+      
     </section>
   );
 };

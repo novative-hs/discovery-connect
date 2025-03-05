@@ -51,6 +51,26 @@ const CommitteeMemberArea = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   // Calculate total pages
+  const columns = [
+    { label: "ID", placeholder: "Search ID", field: "id" },
+    { label: "Name", placeholder: "Search Name", field: "CommitteeMemberName" },
+    { label: "Email", placeholder: "Search Email", field: "email" },
+    { label: "Password", placeholder: "Search Password", field: "password" },
+    { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
+    { label: "CNIC", placeholder: "Search CNIC", field: "cnic" },
+    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
+    { label: "City", placeholder: "Search City", field: "city" },
+    { label: "District", placeholder: "Search District", field: "district" },
+    { label: "Country", placeholder: "Search Country", field: "country" },
+    { label: "Org", placeholder: "Search Org", field: "organization" },
+    {
+      label: "Committee",
+      placeholder: "Search Committee",
+      field: "committeetype",
+    },
+    { label: "Registered", placeholder: "Search Date", field: "created_at" },
+    { label: "Status", placeholder: "Search Status", field: "status" },
+  ];
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -397,622 +417,486 @@ const CommitteeMemberArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal]);
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-      <div className="container-fluid mt-n5">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
-              {/* {Button} */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
-
-                {/* Button Container */}
-                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Committee Member*/}
-
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add Committee Member
-                  </button>
+    <section className="policy__area pb-40 overflow-hidden p-4">
+      <div className="container">
+        <div className="row justify-content-center">
+         
+            {/* {Button} */}
+            <div className="d-flex flex-column w-100">
+              {/* Success Message */}
+              {successMessage && (
+                <div
+                  className="alert alert-success w-100 text-start mb-2"
+                  role="alert"
+                >
+                  {successMessage}
                 </div>
-              </div>
-              {/* Table */}
-              <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
-                    <tr className="text-center">
-                      {[
-                        { label: "ID", placeholder: "Search ID", field: "id" },
-                        {
-                          label: "CommitteeMemberName",
-                          placeholder: "Search Name",
-                          field: "CommitteeMemberName",
-                        },
-                        {
-                          label: "Email",
-                          placeholder: "Search Email",
-                          field: "email",
-                        },
-                        {
-                          label: "Password",
-                          placeholder: "Search Password",
-                          field: "password",
-                        },
-                        {
-                          label: "Contact",
-                          placeholder: "Search Contact",
-                          field: "phoneNumber",
-                        },
-                        {
-                          label: "CNIC",
-                          placeholder: "Search CNIC",
-                          field: "cnic",
-                        },
-                        {
-                          label: "Full Address",
-                          placeholder: "Search Full Address",
-                          field: "fullAddress",
-                        },
-                        {
-                          label: "City",
-                          placeholder: "Search City",
-                          field: "city",
-                        },
-                        {
-                          label: "District",
-                          placeholder: "Search District",
-                          field: "district",
-                        },
-                        {
-                          label: "Country",
-                          placeholder: "Search Country",
-                          field: "country",
-                        },
-                        {
-                          label: "Organization",
-                          placeholder: "Search Organization",
-                          field: "organization",
-                        },
-                        {
-                          label: "Committee Type",
-                          placeholder: "Search Committee Type",
-                          field: "committeetype",
-                        },
-                        {
-                          label: "Registered At",
-                          placeholder: "Search Created At",
-                          field: "created_at",
-                        },
-                        {
-                          label: "Status",
-                          placeholder: "Search Status",
-                          field: "status",
-                        },
-                      ].map(({ label, placeholder, field }) => (
-                        <th
-                          key={field}
-                          className="px-3 py-2"
-                          style={{ minWidth: "140px" }}
-                        >
-                          <div className="d-flex flex-column">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
-                              placeholder={placeholder}
-                              onChange={(e) =>
-                                handleFilterChange(field, e.target.value)
-                              }
-                            />
-                            <small className="fw-bold">{label}</small>
-                          </div>
-                        </th>
-                      ))}
-                      <th className="col-1">Action</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((committeemember) => (
-                        <tr key={committeemember.id}>
-                          <td>{committeemember.id}</td>
-                          <td>{committeemember.CommitteeMemberName}</td>
-                          <td>{committeemember.email}</td>
-                          <td>{committeemember.password}</td>
-                          <td>{committeemember.phoneNumber}</td>
-                          <td>{committeemember.cnic}</td>
-                          <td>{committeemember.fullAddress}</td>
-                          <td>{committeemember.city_name}</td>
-                          <td>{committeemember.district_name}</td>
-                          <td>{committeemember.country_name}</td>
-                          <td>{committeemember.organization_name}</td>
-                          <td>{committeemember.committeetype}</td>
-                          <td>{formatDate(committeemember.created_at)}</td>
-                          <td>{committeemember.status}</td>
-                          <td>
-                            <div className="d-flex justify-content-around gap-2">
-                              <button
-                                className="btn btn-success btn-sm py-0 px-1"
-                                onClick={() => handleEditClick(committeemember)}
-                                title="Edit Committee Member"
-                              >
-                                <FontAwesomeIcon icon={faEdit} size="xs" />
-                              </button>
-
-                              <div className="btn-group">
-                                <button
-                                  className="btn btn-warning btn-sm py-0 px-1"
-                                  onClick={() =>
-                                    handleToggleCommitteeTypeOptions(
-                                      committeemember.id
-                                    )
-                                  }
-                                  title="Edit Committee Type"
-                                >
-                                  <FontAwesomeIcon icon={faPlus} size="xs" />
-                                </button>
-                                {showCommitteeTypeOptions[
-                                  committeemember.id
-                                ] && (
-                                  <div className="dropdown-menu show">
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() =>
-                                        handleCommitteeTypeClick(
-                                          committeemember.id,
-                                          "Scientific"
-                                        )
-                                      }
-                                    >
-                                      Scientific
-                                    </button>
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() =>
-                                        handleCommitteeTypeClick(
-                                          committeemember.id,
-                                          "Ethical"
-                                        )
-                                      }
-                                    >
-                                      Ethical
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="btn-group">
-                                <button
-                                  className="btn btn-primary btn-sm py-0 px-1"
-                                  onClick={() =>
-                                    handleToggleStatusOptions(
-                                      committeemember.id
-                                    )
-                                  }
-                                  title="Edit Status"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={faQuestionCircle}
-                                    size="xs"
-                                  />
-                                </button>
-                                {statusOptionsVisibility[
-                                  committeemember.id
-                                ] && (
-                                  <div className="dropdown-menu show">
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() =>
-                                        handleStatusClick(
-                                          committeemember.id,
-                                          "Active"
-                                        )
-                                      }
-                                    >
-                                      Active
-                                    </button>
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={() =>
-                                        handleStatusClick(
-                                          committeemember.id,
-                                          "Inactive"
-                                        )
-                                      }
-                                    >
-                                      Inactive
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              <button
-                                className="btn btn-danger btn-sm py-0 px-1"
-                                onClick={() => {
-                                  setSelectedCommitteememberId(
-                                    committeemember.id
-                                  );
-                                  setShowDeleteModal(true);
-                                }}
-                                title="Delete Committee Member"
-                              >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
-                              </button>
-
-                              <button
-                                className="btn btn-info btn-sm"
-                                onClick={() => {
-                                  setShowHistoryModal(true);
-                                  console.log("Done");
-                                }}
-                                title="Committee Member History"
-                              >
-                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="15" className="text-center">
-                          No Committee Members Available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages >= 0 && (
-                <Pagination
-                  handlePageClick={handlePageChange}
-                  pageCount={totalPages}
-                  focusPage={currentPage}
-                />
               )}
-              {/* Modal for Adding/Editing Committee members */}
 
-              {(showAddModal || showEditModal) && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
+              {/* Button Container */}
+              <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+                {/* Add Committee Member*/}
 
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">
-                            {showAddModal ? "Add Committee Member" : "Edit Committee Member"}
-                          </h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => {
-                              setShowAddModal(false);
-                              setShowEditModal(false);
-                              resetFormData();
-                            }}
-                            style={{
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
+                <button
+                  className="btn btn-primary mb-2"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  Add Committee Member
+                </button>
+              </div>
+            </div>
+            {/* Table */}
+            <div className="table-responsive overflow-auto w-100 p-2">
+              {" "}
+              {/* Increased width & scrolling */}
+              <table className="table table-bordered table-hover table-striped w-100">
+                {" "}
+                {/* Added w-100 */}
+                <thead className="thead-dark">
+                  <tr className="text-center">
+                    {columns.map(({ label, field, placeholder }) => (
+                      <th key={label} className="px-2 py-2">
+                        <input
+                          type="text"
+                          className="form-control  w-100"
+                          placeholder={placeholder}
+                          style={{ minWidth: "100px" }} // Ensures visibility and alignment
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
+                        <div className="fw-bold mt-1">{label}</div>{" "}
+                        {/* Keeps label below input */}
+                      </th>
+                    ))}
+                    <th className="col-1">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.length > 0 ? (
+                    currentData.map((committeemember) => (
+                      <tr key={committeemember.id}>
+                        <td>{committeemember.id}</td>
+                        <td>{committeemember.CommitteeMemberName}</td>
+                        <td>{committeemember.email}</td>
+                        <td>{committeemember.password}</td>
+                        <td>{committeemember.phoneNumber}</td>
+                        <td>{committeemember.cnic}</td>
+                        <td>{committeemember.fullAddress}</td>
+                        <td>{committeemember.city_name}</td>
+                        <td>{committeemember.district_name}</td>
+                        <td>{committeemember.country_name}</td>
+                        <td>{committeemember.organization_name}</td>
+                        <td>{committeemember.committeetype}</td>
+                        <td>{formatDate(committeemember.created_at)}</td>
+                        <td>{committeemember.status}</td>
+                        <td>
+                          <div className="d-flex justify-content-around gap-2">
+                            <button
+                              className="btn btn-success btn-sm py-0 px-1"
+                              onClick={() => handleEditClick(committeemember)}
+                              title="Edit Committee Member"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>
 
-                        <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate}
-                        >
-                          <div
-                            className="modal-body"
-                            style={{ maxHeight: "400px", overflowY: "auto" }}
-                          >
-                            <div className="form-group">
-                              <label>Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Enter Name"
-                                name="CommitteeMemberName"
-                                value={formData.CommitteeMemberName}
-                                onChange={handleInputChange}
-                                pattern="^[A-Za-z\s]+$"
-                                title="Only letters and spaces are allowed."
-                                required
-                              />
-                              {!/^[A-Za-z\s]*$/.test(
-                                formData.CommitteeMemberName
-                              ) && (
-                                <small className="text-danger">
-                                  Only letters and spaces are allowed.
-                                </small>
+                            <div className="btn-group">
+                              <button
+                                className="btn btn-warning btn-sm py-0 px-1"
+                                onClick={() =>
+                                  handleToggleCommitteeTypeOptions(
+                                    committeemember.id
+                                  )
+                                }
+                                title="Edit Committee Type"
+                              >
+                                <FontAwesomeIcon icon={faPlus} size="xs" />
+                              </button>
+                              {showCommitteeTypeOptions[committeemember.id] && (
+                                <div className="dropdown-menu show">
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleCommitteeTypeClick(
+                                        committeemember.id,
+                                        "Scientific"
+                                      )
+                                    }
+                                  >
+                                    Scientific
+                                  </button>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleCommitteeTypeClick(
+                                        committeemember.id,
+                                        "Ethical"
+                                      )
+                                    }
+                                  >
+                                    Ethical
+                                  </button>
+                                </div>
                               )}
                             </div>
 
-                            <div className="form-group">
-                              <label>Email</label>
-                              <input
-                                type="email"
-                                className="form-control"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                placeholder="Enter Email"
-                                required
-                              />
-                            </div>
-                            <div className="col-md-12">
-                              <label className="form-label">Password</label>
-                              <div className="input-group input-group-sm">
-                                <input
-                                  type={showPassword ? "text" : "password"}
-                                  className="form-control"
-                                  name="password"
-                                  placeholder="Enter Password"
-                                  value={formData.password}
-                                  onChange={handleInputChange}
-                                  pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                                  title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                                  required
+                            <div className="btn-group">
+                              <button
+                                className="btn btn-primary btn-sm py-0 px-1"
+                                onClick={() =>
+                                  handleToggleStatusOptions(committeemember.id)
+                                }
+                                title="Edit Status"
+                              >
+                                <FontAwesomeIcon
+                                  icon={faQuestionCircle}
+                                  size="xs"
                                 />
-                                <span
-                                  className="input-group-text"
-                                  style={{ cursor: "pointer" }}
-                                  onClick={() => setShowPassword(!showPassword)}
-                                >
-                                  <i
-                                    className={
-                                      showPassword
-                                        ? "fa-regular fa-eye"
-                                        : "fa-regular fa-eye-slash"
+                              </button>
+                              {statusOptionsVisibility[committeemember.id] && (
+                                <div className="dropdown-menu show">
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleStatusClick(
+                                        committeemember.id,
+                                        "Active"
+                                      )
                                     }
-                                  ></i>
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="form-group">
-                              <label>Phone Number</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
-                                onChange={handleInputChange}
-                                required
-                                pattern="^\d{4}-\d{7}$"
-                                placeholder="0123-4567890"
-                                title="Phone number must be in the format 0123-4567890 and numeric"
-                              />
-                            </div>
-
-                            <div className="form-group">
-                              <label>CNIC</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="cnic"
-                                placeholder="Enter CNIC"
-                                value={formData.cnic}
-                                onChange={handleInputChange}
-                                pattern="^\d{5}-\d{7}-\d{1}$"
-                                title="CNIC must be in the format XXXXX-XXXXXXX-X ."
-                                required
-                              />
-                            </div>
-
-                            <div className="form-group">
-                              <label>Full Address</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="fullAddress"
-                                placeholder="Enter Full Address"
-                                value={formData.fullAddress}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>City</label>
-                              <select
-                                className="form-control p-2"
-                                name="city"
-                                value={formData.city} // Store the selected city ID in formData
-                                onChange={handleInputChange} // Handle change to update formData
-                                required
-                              >
-                                <option value="" disabled>
-                                  Select City
-                                </option>
-                                {cityname.map((city) => (
-                                  <option key={city.id} value={city.id}>
-                                    {city.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="form-group">
-                              <label>District</label>
-                              <select
-                                className="form-control  p-2"
-                                name="district"
-                                value={formData.district}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="" disabled>
-                                  Select District
-                                </option>
-                                {districtname.map((district) => (
-                                  <option key={district.id} value={district.id}>
-                                    {district.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="form-group">
-                              <label>Country</label>
-                              <select
-                                className="form-control p-2"
-                                name="country"
-                                value={formData.country}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="" disabled>
-                                  Select Country
-                                </option>
-                                {countryname.map((country) => (
-                                  <option key={country.id} value={country.id}>
-                                    {country.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="form-group">
-                              <label>Organization</label>
-                              <select
-                                className="form-control  p-2"
-                                name="organization"
-                                value={formData.organization}
-                                onChange={handleInputChange}
-                                required
-                              >
-                                <option value="" disabled>
-                                  Select Organization
-                                </option>
-                                {organization.map((organization) => (
-                                  <option
-                                    key={organization.id}
-                                    value={organization.id}
                                   >
-                                    {organization.OrganizationName}
-                                  </option>
-                                ))}
-                              </select>
+                                    Active
+                                  </button>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                      handleStatusClick(
+                                        committeemember.id,
+                                        "Inactive"
+                                      )
+                                    }
+                                  >
+                                    Inactive
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          </div>
 
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              {showAddModal ? "Save" : "Update"}
+                            <button
+                              className="btn btn-danger btn-sm py-0 px-1"
+                              onClick={() => {
+                                setSelectedCommitteememberId(
+                                  committeemember.id
+                                );
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete Committee Member"
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() => {
+                                setShowHistoryModal(true);
+                                console.log("Done");
+                              }}
+                              title="Committee Member History"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
                           </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              {/* Modal for Deleting Committeemembers */}
-              {showDeleteModal && (
-                <>
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="15" className="text-center">
+                        No Committee Members Available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">
-                            Delete Committee member
-                          </h5>
+            {/* Pagination */}
+            {totalPages >= 0 && (
+              <Pagination
+                handlePageClick={handlePageChange}
+                pageCount={totalPages}
+                focusPage={currentPage}
+              />
+            )}
+            {/* Modal for Adding/Editing Committee members */}
 
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => setShowDeleteModal(false)}
-                            style={{
-                              // background: 'none',
-                              // border: 'none',
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <div className="modal-body">
-                          <p>
-                            Are you sure you want to delete this committee
-                            member?
-                          </p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              {showHistoryModal && (
+            {(showAddModal || showEditModal) && (
+              <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div
+                  className="modal-backdrop fade show"
+                  style={{ backdropFilter: "blur(5px)" }}
+                ></div>
+
+                {/* Modal Content */}
                 <div
                   className="modal show d-block"
                   tabIndex="-1"
                   role="dialog"
                   style={{
-                    zIndex: 1050, // Ensure it's above the header
+                    zIndex: 1050,
+                    position: "fixed",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">
+                          {showAddModal
+                            ? "Add Committee Member"
+                            : "Edit Committee Member"}
+                        </h5>
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => {
+                            setShowAddModal(false);
+                            setShowEditModal(false);
+                            resetFormData();
+                          }}
+                          style={{
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span>&times;</span>
+                        </button>
+                      </div>
+
+                      <form
+                        onSubmit={showAddModal ? handleSubmit : handleUpdate}
+                      >
+                        <div
+                          className="modal-body"
+                          style={{ maxHeight: "400px", overflowY: "auto" }}
+                        >
+                          <div className="form-group">
+                            <label>Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Enter Name"
+                              name="CommitteeMemberName"
+                              value={formData.CommitteeMemberName}
+                              onChange={handleInputChange}
+                              pattern="^[A-Za-z\s]+$"
+                              title="Only letters and spaces are allowed."
+                              required
+                            />
+                            {!/^[A-Za-z\s]*$/.test(
+                              formData.CommitteeMemberName
+                            ) && (
+                              <small className="text-danger">
+                                Only letters and spaces are allowed.
+                              </small>
+                            )}
+                          </div>
+
+                          <div className="form-group">
+                            <label>Email</label>
+                            <input
+                              type="email"
+                              className="form-control"
+                              name="email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              placeholder="Enter Email"
+                              required
+                            />
+                          </div>
+                          <div className="col-md-12">
+                            <label className="form-label">Password</label>
+                            <div className="input-group input-group-sm">
+                              <input
+                                type={showPassword ? "text" : "password"}
+                                className="form-control"
+                                name="password"
+                                placeholder="Enter Password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+                                title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                                required
+                              />
+                              <span
+                                className="input-group-text"
+                                style={{ cursor: "pointer" }}
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                <i
+                                  className={
+                                    showPassword
+                                      ? "fa-regular fa-eye"
+                                      : "fa-regular fa-eye-slash"
+                                  }
+                                ></i>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="form-group">
+                            <label>Phone Number</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
+                              onChange={handleInputChange}
+                              required
+                              pattern="^\d{4}-\d{7}$"
+                              placeholder="0123-4567890"
+                              title="Phone number must be in the format 0123-4567890 and numeric"
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>CNIC</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="cnic"
+                              placeholder="Enter CNIC"
+                              value={formData.cnic}
+                              onChange={handleInputChange}
+                              pattern="^\d{5}-\d{7}-\d{1}$"
+                              title="CNIC must be in the format XXXXX-XXXXXXX-X ."
+                              required
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>Full Address</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="fullAddress"
+                              placeholder="Enter Full Address"
+                              value={formData.fullAddress}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>City</label>
+                            <select
+                              className="form-control p-2"
+                              name="city"
+                              value={formData.city} // Store the selected city ID in formData
+                              onChange={handleInputChange} // Handle change to update formData
+                              required
+                            >
+                              <option value="" disabled>
+                                Select City
+                              </option>
+                              {cityname.map((city) => (
+                                <option key={city.id} value={city.id}>
+                                  {city.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>District</label>
+                            <select
+                              className="form-control  p-2"
+                              name="district"
+                              value={formData.district}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="" disabled>
+                                Select District
+                              </option>
+                              {districtname.map((district) => (
+                                <option key={district.id} value={district.id}>
+                                  {district.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Country</label>
+                            <select
+                              className="form-control p-2"
+                              name="country"
+                              value={formData.country}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="" disabled>
+                                Select Country
+                              </option>
+                              {countryname.map((country) => (
+                                <option key={country.id} value={country.id}>
+                                  {country.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Organization</label>
+                            <select
+                              className="form-control  p-2"
+                              name="organization"
+                              value={formData.organization}
+                              onChange={handleInputChange}
+                              required
+                            >
+                              <option value="" disabled>
+                                Select Organization
+                              </option>
+                              {organization.map((organization) => (
+                                <option
+                                  key={organization.id}
+                                  value={organization.id}
+                                >
+                                  {organization.OrganizationName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="modal-footer">
+                          <button type="submit" className="btn btn-primary">
+                            {showAddModal ? "Save" : "Update"}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {/* Modal for Deleting Committeemembers */}
+            {showDeleteModal && (
+              <>
+                <div
+                  className="modal-backdrop fade show"
+                  style={{ backdropFilter: "blur(5px)" }}
+                ></div>
+
+                {/* Modal Content */}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050,
                     position: "fixed",
                     top: "120px",
                     left: "50%",
@@ -1022,30 +906,86 @@ const CommitteeMemberArea = () => {
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">
-                          History Committee Member
-                        </h5>
+                        <h5 className="modal-title">Delete Committee member</h5>
+
+                        <button
+                          type="button"
+                          className="close"
+                          onClick={() => setShowDeleteModal(false)}
+                          style={{
+                            // background: 'none',
+                            // border: 'none',
+                            fontSize: "1.5rem",
+                            position: "absolute",
+                            right: "10px",
+                            top: "10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span>&times;</span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => setShowHistoryModal(false)}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
+                      <div className="modal-body">
+                        <p>
+                          Are you sure you want to delete this committee member?
+                        </p>
+                      </div>
+                      <div className="modal-footer">
+                        <button
+                          className="btn btn-danger"
+                          onClick={handleDelete}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => setShowDeleteModal(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
+              </>
+            )}
+            {showHistoryModal && (
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050, // Ensure it's above the header
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">History Committee Member</h5>
+                    </div>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => setShowHistoryModal(false)}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          
         </div>
       </div>
     </section>

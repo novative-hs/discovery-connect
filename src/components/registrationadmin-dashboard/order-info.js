@@ -3,17 +3,18 @@ import axios from "axios";
 import { useRouter } from "next/router"; // Import useRouter from next/router
 
 const OrderInfo = ({ setActiveTab }) => {
-  const [userCount, setUserCount] = useState(null); // State to store fetched data
+  const [userCount, setUserCount] = useState(null);
 
-  // Fetch data on component mount
   useEffect(() => {
-    fetchUserCount(); // Call the function when the component mounts
+    fetchUserCount();
   }, []);
 
   // Function to fetch user count data
   const fetchUserCount = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`
+      );
       setUserCount(response.data); // Set the fetched counts in the state
     } catch (error) {
       console.error("Error fetching user count:", error);
@@ -33,7 +34,55 @@ const OrderInfo = ({ setActiveTab }) => {
     { label: "Organizations", count: userCount.totalOrganizations, icon: "fa-solid fa-building", bg: "bg-danger", tab: "organization" },
     { label: "Collection Sites", count: userCount.totalCollectionSites, icon: "fa-solid fa-map-marker-alt", bg: "bg-dark", tab: "collectionsite" },
     { label: "Committee Members", count: userCount.totalCommitteeMembers, icon: "fa-solid fa-users", bg: "bg-secondary", tab: "committee-members" },
-    { label: "Cart Items", count: userCount.totalOrders, icon: "fa-solid fa-shopping-cart", bg: "bg-success", tab: "order-info" },
+    // { label: "Cart Items", count: userCount.totalOrders, icon: "fa-solid fa-shopping-cart", bg: "bg-success", tab: "order-info" },
+    {
+      label: "Total City",
+      count: userCount.totalCities,
+      icon: "fa-solid fa-city",
+      tab: "city",
+    },
+    {
+      label: "Total Country",
+      count: userCount.totalCountries,
+      icon: "fa-solid fa-globe",
+      tab: "country",
+    },
+    {
+      label: "Total District",
+      count: userCount.totalDistricts,
+      icon: "fa-solid fa-flag",
+      tab: "district",
+    },
+    {
+      label: "Total Researcher",
+      count: userCount.totalResearchers,
+      icon: "fa-solid fa-user",
+      tab: "researcher",
+    },
+    {
+      label: "Total Organization",
+      count: userCount.totalOrganizations,
+      icon: "fa-solid fa-building",
+      tab: "organization",
+    },
+    {
+      label: "Total Collection Site",
+      count: userCount.totalCollectionSites,
+      icon: "fa-solid fa-map-marker-alt",
+      tab: "collectionsite",
+    },
+    {
+      label: "Total Committee Member",
+      count: userCount.totalCommitteeMembers,
+      icon: "fa-solid fa-users",
+      tab: "committee-members",
+    },
+    {
+      label: "Total Cart Items",
+      count: userCount.totalOrders,
+      icon: "fa-solid fa-shopping-cart",
+      tab: "order-info",
+    },
   ];
 
   // Handle stat div click and set active tab
@@ -42,24 +91,33 @@ const OrderInfo = ({ setActiveTab }) => {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="row g-4">
-        {stats.map((stat, index) => (
-          <div key={index} className="col-md-3">
-            <div
-              className={`card text-white ${stat.bg} shadow-lg rounded-lg text-center p-3`}
-              onClick={() => handleTabClick(stat.tab)}  // Change tab when clicked
-            >
-              <div className="card-body">
-                <i className={`${stat.icon} fa-2x mb-2`}></i>
-                <h5 className="card-title">{stat.label}</h5>
-                <p className="card-text text-white fs-4 fw-bold">{stat.count}</p>
+    <div className="container">
+    <div className="row row-cols-2 row-cols-md-4 g-3 justify-content-center">
+      {stats.map((stat, index) => (
+        <div key={index} className="col d-flex justify-content-center">
+          <div className="card text-center shadow-sm p-3 w-100"
+           onClick={() => handleTabClick(stat.tab)}
+           style={{ transition: "transform 0.3s ease-in-out" }} // Smooth animation
+           onMouseEnter={(e) =>
+             (e.currentTarget.style.transform = "scale(1.15)")
+           } // Increase size more
+           onMouseLeave={(e) =>
+             (e.currentTarget.style.transform = "scale(1)")
+           } // Back to normal>
+           >
+            <div className="card-body">
+              <div className="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2" style={{ width: "50px", height: "50px" }}>
+                <i className={`${stat.icon} fs-5`}></i>
               </div>
+              <h6 className="card-title text-black fs-6 fw-bold">{stat.label}</h6>
+              <p className="card-text text-primary fs-5 fw-bold">{stat.count}</p>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
+  </div>
+  
   );
 };
 

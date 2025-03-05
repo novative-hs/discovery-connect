@@ -1,96 +1,51 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { Box } from "@svg/index"; // Ensure correct import
-
-function SingleResearcherInfo({ icon, info, title, onClick }) {
-  return (
-    <div className="col-md-12 col-sm-6" onClick={onClick} style={{ cursor: "pointer" }}>
-      <div className="profile__main-info-item d-flex flex-column align-items-center text-center">
-        <div className="profile__main-info-icon d-flex align-items-center justify-content-center gap-2">
-          <span className="profile-icon-count profile-download">{info}</span>
-          <span className="researcher-icon">{icon}</span>
-        </div>
-        <h4 className="profile__main-info-title mt-2">{title}</h4>
-      </div>
-    </div>
-  );
-}
+import { Box } from "@svg/index";
 
 const OrderInfo = ({ setActiveTab }) => {
-  const [userCount, setUserCount] = useState(null);
-  const [id, setUserID] = useState(null);
+  const [user, setUser] = useState({ id: null, name: "" });
+  const [researcherCount, setResearcherCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
-      const storedUserID = localStorage.getItem("userID");
-      if (storedUserID) {
-        try {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get/${storedUserID}`
-          );
-          if (response.data.length > 0) {
-            setUserID(response.data[0].id);
-          }
-        } catch (error) {
-          console.error("Error fetching organization ID:", error);
-        }
+      const userID = localStorage.getItem("userID");
+      if (!userID) return;
+
+      try {
+        const orgRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get/${userID}`);
+        const organization = orgRes.data[0];
+        if (!organization) return;
+
+        setUser({ id: organization.id, name: organization.OrganizationName });
+
+        const researcherRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${organization.id}`);
+        setResearcherCount(Array.isArray(researcherRes.data) ? researcherRes.data.length : 0);
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
     };
+
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (id !== null) {
-      const fetchUserCount = async () => {
-        try {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${id}`
-          );
-          if (Array.isArray(response.data)) {
-            setUserCount(response.data.length);
-          } else {
-            console.warn("Unexpected API response:", response.data);
-            setUserCount(0);
-          }
-        } catch (error) {
-          console.error("Error fetching researcher count:", error);
-          setUserCount(0);
-        }
-      };
-      fetchUserCount();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id !== null) {
-      console.log("Updated Organization ID:", id);
-    }
-  }, [id]);
-
-  const researcherStat = {
-    label: "Total Researchers",
-    count: userCount || 0,
-    icon: <Box />,
-    tab: "researchers",
-  };
-
   return (
-    <div className="profile__main-info p-4 ">
+    <div className="profile__main-info p-4">
+      <h2 className="profile__main-title text-capitalize text-start fw-bold pb-4">
+        Welcome {user.name}
+      </h2>
       <div className="row justify-content-start">
-        <div className="profile__main-content">
-          <h7 className="profile__main-title text-capitalize text-start pb-4">
-            Welcome
-          </h7>
-        </div>
         <div className="col-lg-4 col-md-6 col-sm-10">
-          <SingleResearcherInfo
-            info={researcherStat.count}
-            icon={researcherStat.icon}
-            title={researcherStat.label}
-            onClick={() => setActiveTab(researcherStat.tab)}
-          />
+          <div className="col-md-12 col-sm-6 bg-white" onClick={() => setActiveTab("researchers")} style={{ cursor: "pointer" }}>
+            <div className="profile__main-info-item d-flex flex-column align-items-center text-center">
+              <div className="profile__main-info-icon d-flex align-items-center justify-content-center gap-2">
+                <span className="profile-icon-count profile-download">{researcherCount}</span>
+                <span className="researcher-icon"><Box /></span>
+              </div>
+              <h4 className="profile__main-info-title mt-2">Total Researchers</h4>
+            </div>
+          </div>
         </div>
       </div>
     </div>
