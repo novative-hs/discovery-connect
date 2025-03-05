@@ -91,7 +91,8 @@ const CollectionsiteArea = () => {
       }, 3000);
 
       // Refresh the collectionsite list after deletion
-      fetchCollectionsites(); 
+      fetchCollectionsites()
+
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedCollectionsiteId(null);
@@ -124,8 +125,7 @@ const CollectionsiteArea = () => {
         formData
       );
       console.log("Collectionsite updated successfully:", response.data);
-
-      fetchCollectionsites(); 
+      fetchCollectionsites()
       setShowEditModal(false);
       
 
@@ -212,11 +212,10 @@ const CollectionsiteArea = () => {
   };
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-      <div className="container-fluid mt-n5">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
+    <section className="policy__area pb-40 overflow-hidden p-3">
+    <div className="container">
+      <div className="row justify-content-center">
+        
               {/* Button Container */}
               <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
                 {/* Success Message */}
@@ -251,9 +250,13 @@ const CollectionsiteArea = () => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
+              <div className="table-responsive overflow-auto w-100 p-2">
+              {" "}
+              {/* Increased width & scrolling */}
+              <table className="table table-bordered table-hover table-striped w-100">
+                {" "}
+                {/* Added w-100 */}
+                <thead className="thead-dark">
                     <tr className="text-center">
                       {[
                         { label: "ID", placeholder: "Search ID", field: "id" },
@@ -278,19 +281,19 @@ const CollectionsiteArea = () => {
                           field: "status",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="px-3">
-                          <input
-                            type="text"
-                            className="form-control w-100 px-2 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
+                        <th key={field} className="col-md-2 px-1">
+                        <input
+                          type="text"
+                          className="form-control w-100 px-2 py-1 mx-auto"
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
                           {label}
                         </th>
                       ))}
-                      <th className="col-1">Action</th>
+                      <th className="col-md-1">Action</th>
                     </tr>
                   </thead>
 
@@ -534,8 +537,7 @@ const CollectionsiteArea = () => {
               )}
             </div>
           </div>
-        </div>
-      </div>
+        
     </section>
   );
 };

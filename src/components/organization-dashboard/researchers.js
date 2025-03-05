@@ -210,7 +210,7 @@ const ResearcherArea = () => {
       notifyError(errorMessage);
     } finally {
       setShowAddModal(false);
-      resetFormData()
+      resetFormData();
     }
   };
 
@@ -228,7 +228,7 @@ const ResearcherArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log("ID", id);
+    console.log(id);
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -369,13 +369,18 @@ const ResearcherArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   return (
-    <section className="policy__area pb-100 overflow-hidden">
+    <section
+      className="policy__area pb-100 overflow-hidden"
+      //style={{ backgroundColor: " #EDF4F8" }}
+    >
       <div className="container mt-n4">
-        <div className="row justify-content-center mt-4">
+        <div className="row justify-content-center mt-2">
           <div className="col-12 col-lg-10">
-            <div
-              className="policy__wrapper policy__translate position-relative mt-4 "
-            >
+            <div className="policy__wrapper policy__translate position-relative mt-2 rounded border">
+              <h4 className="tp-8 fw-bold text-primary text-start pb-2">
+                <i className="fa fa-users me-2"></i> Researcher List
+              </h4>
+
               {/* Success Message */}
               {successMessage && (
                 <div className="alert alert-success w-100 text-start mb-2 small">
@@ -387,20 +392,18 @@ const ResearcherArea = () => {
               <div className="d-flex justify-content-end align-items-center gap-2 w-100">
                 {/* Add Researcher Button */}
                 <button
-                  className="btn btn-primary mb-2"
+                  className="tp-btn-8 mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
                   onClick={() => setShowAddModal(true)}
                 >
-                  Add Researcher
+                  <span>+ Add Researcher</span>
                 </button>
               </div>
 
               {/* Table */}
               <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover  text-center">
-                  <thead className="table-primary">
-                    <tr
-                      className="text-center"
-                    >
+                <table className="table table-hover text-center align-middle w-auto border">
+                  <thead className="table-primary text-dark">
+                    <tr className="text-center">
                       {[
                         { label: "ID", field: "id", minWidth: "80px" },
                         {
@@ -415,7 +418,7 @@ const ResearcherArea = () => {
                           minWidth: "130px",
                         },
                         {
-                          label: "Org",
+                          label: "Organization",
                           field: "organization_name",
                           minWidth: "150px",
                         },
@@ -440,33 +443,28 @@ const ResearcherArea = () => {
                           minWidth: "200px",
                         },
                         {
-                          label: "Created",
+                          label: "Created At",
                           field: "created_at",
                           minWidth: "140px",
                         },
                         {
-                          label: "Updated",
+                          label: "Updated At",
                           field: "updated_at",
                           minWidth: "140px",
                         },
                         { label: "Status", field: "status", minWidth: "100px" },
                       ].map(({ label, field, minWidth }, index) => (
-                        <th
-                          key={index}
-                          className="p-2 text-nowrap"
-                          style={{ minWidth }}
-                        >
+                        <th key={index} className="p-2" style={{ minWidth }}>
                           <div className="d-flex flex-column align-items-center">
                             <input
                               type="text"
-                              className="form-control form-control-sm text-center"
+                              className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                               placeholder={label}
                               onChange={(e) =>
                                 handleFilterChange(field, e.target.value)
                               }
                               style={{ minWidth: "100px", backgroundColor: 'white' }}
                             />
-
                             <span className="fw-bold mt-1">{label}</span>
                           </div>
                         </th>
@@ -480,7 +478,7 @@ const ResearcherArea = () => {
                     </tr>
                   </thead>
 
-                  <tbody>
+                  <tbody className="table-light">
                     {currentData.length > 0 ? (
                       currentData.map((researcher) => (
                         <tr key={researcher.id} className="text-center">
@@ -500,37 +498,62 @@ const ResearcherArea = () => {
                               <span
                                 className="rounded-circle d-inline-block me-2"
                                 style={{
-                                  width: "10px",
-                                  height: "10px",
+                                  width: "12px",
+                                  height: "12px",
                                   backgroundColor:
                                     researcher.status === "Draft"
-                                      ? "gray"
+                                      ? "#6c757d" // Gray
                                       : researcher.status === "approved"
-                                        ? "green"
-                                        : "red",
+                                      ? "#28a745" // Green
+                                      : "#dc3545", // Red
                                 }}
+                                title={researcher.status}
                               ></span>
                               {researcher.status}
                             </span>
                           </td>
                           <td>
-                            <div className="d-flex justify-content-center gap-1">
+                            <div className="d-flex justify-content-center gap-2">
+                              {/* Edit Button */}
                               <button
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => {
-                                  handleEditClick(researcher)
-                                }}
+                                className="btn btn-outline-info btn-sm rounded-circle"
+                                onClick={() => handleEditClick(researcher)}
                                 title="Edit"
+                                onMouseEnter={(e) =>
+                                  (e.target.style.backgroundColor = "#28a745")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.target.style.backgroundColor =
+                                    "transparent")
+                                }
+                                style={{
+                                  transition: "0.3s ease",
+                                  color: "black",
+                                  borderColor: "#28a745",
+                                }}
                               >
                                 <i className="fa fa-edit"></i>
                               </button>
+
+                              {/* History Button */}
                               <button
-                                className="btn btn-outline-success btn-sm"
-                                onClick={() => {
-                                  console.log("ID", researcher.id);
-                                  handleShowHistory("researcher", researcher.id);
-                                }}
+                                className="btn btn-outline-success btn-sm rounded-circle"
+                                onClick={() =>
+                                  handleShowHistory("researcher", researcher.id)
+                                }
                                 title="History"
+                                onMouseEnter={(e) =>
+                                  (e.target.style.backgroundColor = "#ADD8E6")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.target.style.backgroundColor =
+                                    "transparent")
+                                }
+                                style={{
+                                  transition: "0.3s ease",
+                                  color: "black",
+                                  borderColor: "#007bff",
+                                }}
                               >
                                 <i className="fa fa-history"></i>
                               </button>
@@ -541,7 +564,7 @@ const ResearcherArea = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="12" className="text-center p-2">
+                        <td colSpan="13" className="text-center p-2">
                           No researchers available
                         </td>
                       </tr>
@@ -577,7 +600,7 @@ const ResearcherArea = () => {
                     >
                       <div className="modal-content">
                         <div className="modal-header">
-                          <h5 className="modal-title">
+                          <h5 className="fw-bold modal-title text-primary">
                             {showAddModal
                               ? "Add Researcher"
                               : "Edit Researcher"}
@@ -627,14 +650,16 @@ const ResearcherArea = () => {
 
                             {/* File Upload */}
                             <div className="mb-2">
-                              <label className="form-label">Profile Picture</label>
+                              <label className="form-label">
+                                Profile Picture
+                              </label>
                               <input
                                 type="file"
                                 className="form-control form-control-sm"
                                 name="logo"
                                 onChange={handleInputChange}
                                 accept="image/*"
-                                required={showAddModal} // Required only when adding
+                                required={showAddModal}
                               />
                             </div>
 
@@ -814,13 +839,13 @@ const ResearcherArea = () => {
                           <div className="modal-footer py-2">
                             <button
                               type="submit"
-                              className="btn btn-primary btn-sm"
+                              className="tp-btn-8 px-3 py-2"
                             >
                               {showAddModal ? "Save" : "Update"}
                             </button>
                             <button
                               type="button"
-                              className="btn btn-secondary btn-sm"
+                              className="tp-btn-8 bg-secondary text-white px-3 py-2"
                               onClick={() => {
                                 setShowAddModal(false);
                                 setShowEditModal(false);
@@ -837,7 +862,7 @@ const ResearcherArea = () => {
                 </>
               )}
 
-              {/* Modal for History of Researchers */}
+              {/* Modal for Deleting Researchers */}
               {showHistoryModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
@@ -928,6 +953,7 @@ const ResearcherArea = () => {
                                       maxWidth: "75%",
                                       fontSize: "14px",
                                       textAlign: "left",
+                                      width: "100%",
                                     }}
                                   >
                                     {Object.entries(log).map(([key, value]) =>

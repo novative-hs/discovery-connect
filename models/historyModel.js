@@ -26,17 +26,25 @@ const RegistrationAdmin_History = () => {
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE
     )`;
 
-
-  mysqlConnection.query(createRegistrationAdmin_HistoryTable, (err, results) => {
-    if (err) {
-      console.error("Error creating History table: ", err);
-    } else {
-      console.log("Registration Admin History table created Successfully");
+  mysqlConnection.query(
+    createRegistrationAdmin_HistoryTable,
+    (err, results) => {
+      if (err) {
+        console.error("Error creating History table: ", err);
+      } else {
+        console.log("Registration Admin History table created Successfully");
+      }
     }
-  });
+  );
 };
 
 const getHistory = (filterType, id, callback) => {
+  if (!filterType || !id)
+    return callback(new Error("Invalid parameters"), null);
+  column = `${filterType}_id`;
+  if (!column) return callback(new Error("Invalid filter type"), null);
+
+  const query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
   if (!filterType || !id)
     return callback(new Error("Invalid parameters"), null);
   column = `${filterType}_id`;
@@ -58,16 +66,34 @@ const getHistory = (filterType, id, callback) => {
         LEFT JOIN organization ON history.nameofOrganization = organization.id
         LEFT JOIN user_account ON history.added_by = user_account.id
         WHERE history.${column} = ?;
+  mysqlConnection.query(query, [id], (err, results) => {
+    if (err || results.length === 0) {
+      // If an error occurs or no results found, run the fallback query
+      const fallbackQuery = `
+        SELECT history.*, city.name AS city_name, district.name AS district_name,
+               country.name AS country_name, organization.OrganizationName AS organization_name,
+               user_account.email AS added_by
+        FROM history
+        LEFT JOIN city ON history.city = city.id
+        LEFT JOIN district ON history.district = district.id
+        LEFT JOIN country ON history.country = country.id
+        LEFT JOIN organization ON history.nameofOrganization = organization.id
+        LEFT JOIN user_account ON history.added_by = user_account.id
+        WHERE history.${column} = ?;
       `;
+
 
       mysqlConnection.query(
         fallbackQuery,
         [id],
+        [id],
         (fallbackErr, fallbackResults) => {
+          return callback(fallbackErr, fallbackResults);
           return callback(fallbackErr, fallbackResults);
         }
       );
     } else {
+      return callback(null, results);
       return callback(null, results);
     }
   });
@@ -196,4 +222,3 @@ module.exports = {
   create_samplehistoryTable,
   getSampleHistory
 };
-

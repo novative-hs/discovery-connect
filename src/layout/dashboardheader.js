@@ -28,14 +28,6 @@ const Header = ({ setActiveTab, activeTab }) => {
   const [userType, setUserType] = useState(null);
   const [cartCount, setCartCount] = useState();
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        !event.target.closest(".dropdown-menu") &&
-        !event.target.closest(".nav-link")
-      ) {
-        setShowSampleDropdown(null);
-      }
-    };
     const updateCartCount = () => {
       setCartCount(localStorage.getItem("cartCount") || 0);
     };
@@ -49,9 +41,6 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   const handleToggleDropdown = (index) => {
     setShowDropdown(showDropdown === index ? null : index); // Toggle only the clicked dropdown
-  };
-  const handleToggleSampleDropdown = (index) => {
-    setShowSampleDropdown(showSampleDropdown === index ? null : index); // Toggle only the clicked dropdown
   };
 
   useEffect(() => {
@@ -115,16 +104,12 @@ const Header = ({ setActiveTab, activeTab }) => {
       setUserLogo(
         user?.logo?.data
           ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-            "base64"
-          )}`
+              "base64"
+            )}`
           : null
       );
     }
   });
-
-  const handleSetActiveTab = (tab) => {
-    setActiveTab(tab);
-  };
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);
@@ -157,67 +142,66 @@ const Header = ({ setActiveTab, activeTab }) => {
   const menuItems =
     userType == "organization"
       ? [
-        { label: "Profile", tab: "order-info" },
-        { label: "Researcher List", tab: "researchers" },
-      ]
+          { label: "Profile", tab: "order-info" },
+          { label: "Researcher List", tab: "researchers" },
+        ]
       : userType == "researcher"
-        ? [
+      ? [
           { label: "Profile", tab: "order-info" },
           { label: "Sample List", tab: "samples" },
         ]
-        : userType == "registrationadmin"
-          ? [
-            { label: "Profile", tab: "order-info" },
-            { label: "City", tab: "city" },
-            { label: "Country", tab: "country" },
-            { label: "District", tab: "district" },
-            { label: "Researcher List", tab: "researcher" },
-            { label: "Organization List", tab: "organization" },
-            { label: "Collection Site List", tab: "collectionsite" },
-            { label: "Committee Members List", tab: "committee-members" },
-            {
-              label: "Sample",
-              tab: "sample",
-              dropdown: [
-                { label: "Ethnicity", tab: "ethnicity" },
-                { label: "Sample Condition", tab: "sample-condition" },
-                { label: "Storage Temperature", tab: "storage-temperature" },
-                { label: "Container Type", tab: "container-type" },
-                { label: "Quantity Unit", tab: "quantity-unit" },
-                { label: "Sample Type Matrix", tab: "sample-type-matrix" },
-                { label: "Test Method", tab: "test-method" },
-                { label: "Test Result Unit", tab: "test-result-unit" },
-                {
-                  label: "Concurrent Medical Conditions",
-                  tab: "concurrent-medical-conditions",
-                },
-                { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
-                { label: "Test System", tab: "test-system" },
-                {
-                  label: "Test System Manufacturer",
-                  tab: "test-system-manufacturer",
-                },
-              ],
-            },
-          ]
-          : userType == "collectionsites"
-            ? [
-              { label: "Sample List", tab: "samples" },
-              { label: "Sample Dispatch", tab: "sample-dispatch" },
-            ]
-            : userType == "biobank"
-              ? [
-                { label: "Sample List", tab: "samples" },
-                { label: "Sample Dispatch", tab: "sample-dispatch" },
-              ]
-              : [];
+      : userType == "registrationadmin"
+      ? [
+          { label: "Profile", tab: "order-info" },
+          { label: "City", tab: "city" },
+          { label: "Country", tab: "country" },
+          { label: "District", tab: "district" },
+          { label: "Researcher List", tab: "researcher" },
+          { label: "Organization List", tab: "organization" },
+          { label: "Collection Site List", tab: "collectionsite" },
+          { label: "Committee Members List", tab: "committee-members" },
+          {
+            label: "Sample",
+            tab: "sample",
+            dropdown: [
+              { label: "Ethnicity", tab: "ethnicity" },
+              { label: "Sample Condition", tab: "sample-condition" },
+              { label: "Storage Temperature", tab: "storage-temperature" },
+              { label: "Container Type", tab: "container-type" },
+              { label: "Quantity Unit", tab: "quantity-unit" },
+              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+              { label: "Test Method", tab: "test-method" },
+              { label: "Test Result Unit", tab: "test-result-unit" },
+              {
+                label: "Concurrent Medical Conditions",
+                tab: "concurrent-medical-conditions",
+              },
+              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+              { label: "Test System", tab: "test-system" },
+              {
+                label: "Test System Manufacturer",
+                tab: "test-system-manufacturer",
+              },
+            ],
+          },
+        ]
+      : userType == "collectionsites"
+      ? [
+          { label: "Sample List", tab: "samples" },
+          { label: "Sample Dispatch", tab: "sample-dispatch" },
+        ]
+      : userType == "biobank"
+      ? [
+          { label: "Sample List", tab: "samples" },
+          { label: "Sample Dispatch", tab: "sample-dispatch" },
+        ]
+      : [];
 
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
           <Image src={logo} alt="Logo" width={170} height={75} />
-          {/* Navbar Toggler */}
           <button
             className="navbar-toggler"
             type="button"
@@ -229,9 +213,11 @@ const Header = ({ setActiveTab, activeTab }) => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-
           {/* Collapsible Navbar */}
-          <div className="collapse navbar-collapse w-100" id="navbarSupportedContent">
+          <div
+            className="collapse navbar-collapse w-100"
+            id="navbarSupportedContent"
+          >
             {/* Navbar Menu */}
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {menuItems.map(({ label, tab, dropdown }, index) => (
@@ -242,7 +228,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
                 >
                   <button
-                    className={`nav-link btn btn-sm ${
+                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
                       activeTab === tab ? "text-primary" : "text-dark"
                     } fs-7`}
                     onClick={() => {
@@ -251,15 +237,46 @@ const Header = ({ setActiveTab, activeTab }) => {
                       }
                     }}
                   >
-                    {label}
+                    <small>{label}</small> {/* Makes text smaller */}
+                    {label === "Sample" && (
+                      <i
+                        className={`ms-2 fas ${
+                          showSampleDropdown === index
+                            ? "fa-caret-up"
+                            : "fa-caret-down"
+                        } text-black`}
+                      ></i>
+                    )}
                   </button>
 
                   {dropdown && showSampleDropdown === index && (
-                    <ul className="dropdown-menu show">
+                    <ul
+                      className="dropdown-menu show p-1"
+                      style={{
+                        minWidth: "120px", // Adjust width
+                        fontSize: "0.85rem", // Smaller font size
+                      }}
+                    >
                       {dropdown.map(({ label, tab }) => (
                         <li key={tab}>
                           <button
-                            className="dropdown-item fs-7"
+                            className="dropdown-item fs-7 px-2 py-1"
+                            style={{
+                              transition:
+                                "background-color 0.3s ease, color 0.3s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.classList.add(
+                                "bg-secondary",
+                                "text-white"
+                              );
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.classList.remove(
+                                "bg-secondary",
+                                "text-white"
+                              );
+                            }}
                             onClick={() => {
                               setActiveTab(tab);
                               setShowSampleDropdown(null);
@@ -276,8 +293,15 @@ const Header = ({ setActiveTab, activeTab }) => {
             </ul>
 
             {/* Right Section */}
-            <div className="d-flex align-items-center gap-2">
-              {userType === "registrationadmin" && <h4 className="m-0 text-black">Welcome Admin!</h4>}
+            <div className="d-flex align-items-center gap-2 ms-auto">
+              {userType === "registrationadmin" && (
+                <span
+                  className="text-primary fw-bold fs-6"
+                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+                >
+                  Welcome Admin!
+                </span>
+              )}
 
               {/* User Dropdown */}
               <div className="dropdown">
@@ -290,39 +314,60 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onClick={handleToggleDropdown}
                 >
                   {userlogo ? (
-                    <Image src={userlogo} alt="User Logo" width={35} height={35} className="rounded-circle border" />
+                    <Image
+                      src={userlogo}
+                      alt="User Logo"
+                      width={35}
+                      height={35}
+                      className="rounded-circle border"
+                    />
                   ) : (
                     <i className="fa fa-user fs-6 text-dark"></i>
                   )}
                 </button>
-                <ul className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""}`} aria-labelledby="userDropdown">
+                <ul
+                  className={`dropdown-menu dropdown-menu-end ${
+                    showDropdown ? "show" : ""
+                  }`}
+                  aria-labelledby="userDropdown"
+                >
                   {userType !== "registrationadmin" && (
                     <li>
-                      <button className="dropdown-item fs-7" onClick={handleUpdateProfile}>
+                      <button
+                        className="dropdown-item fs-7"
+                        onClick={handleUpdateProfile}
+                      >
                         Update Profile
                       </button>
                     </li>
                   )}
                   <li>
-                    <button className="dropdown-item fs-7" onClick={handleChangePassword}>
+                    <button
+                      className="dropdown-item fs-7"
+                      onClick={handleChangePassword}
+                    >
                       Change Password
                     </button>
                   </li>
                   <li>
-                    <button className="dropdown-item fs-7" onClick={handleLogout}>
+                    <button
+                      className="dropdown-item fs-7"
+                      onClick={handleLogout}
+                    >
                       Logout
                     </button>
                   </li>
                 </ul>
               </div>
-
-              {/* Wishlist & Cart for Researchers */}
               {userType === "researcher" && (
                 <div className="d-flex gap-2">
-                  <Link href="/wishlist" className="btn btn-sm position-relative">
-                    <Heart className="fs-6 text-white" />
+                  <Link
+                    href="/wishlist"
+                    className="btn btn-sm position-relative"
+                  >
+                    <Heart className="fs-7 text-white" />
                     {wishlist.length > 0 && (
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                      <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
                         {wishlist.length}
                       </span>
                     )}
@@ -342,8 +387,6 @@ const Header = ({ setActiveTab, activeTab }) => {
           </div>
         </div>
       </nav>
-
-
 
       {/* Conditionally render the CartSidebar */}
     </>

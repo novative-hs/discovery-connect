@@ -338,7 +338,10 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
               {showEditModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
-                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+                  <div
+                    className="modal-backdrop fade show"
+                    style={{ backdropFilter: "blur(5px)" }}
+                  ></div>
 
                   {/* Modal Content */}
                   <div
@@ -348,7 +351,6 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                     style={{
                       zIndex: 1050,
                       position: "fixed",
-                      top: "120px",
                       left: "50%",
                       transform: "translateX(-50%)",
                     }}
