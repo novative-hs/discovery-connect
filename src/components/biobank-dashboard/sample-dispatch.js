@@ -16,7 +16,6 @@ const BioBankSampleDispatchArea = () => {
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
 
   const tableHeaders = [
-    { label: "Donor ID", key: "donorID" },
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -47,7 +46,6 @@ const BioBankSampleDispatchArea = () => {
   ];
 
   const [formData, setFormData] = useState({
-    donorID: "",
     samplename: "",
     age: "",
     gender: "",
