@@ -287,414 +287,414 @@ const CountryArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <div className="row justify-content-center">
-            <div className="d-flex flex-column w-100">
-              {/* Success Message */}
-              {successMessage && (
-                <div
-                  className="alert alert-success w-100 text-start mb-2"
-                  role="alert"
-                >
-                  {successMessage}
-                </div>
-              )}
-              {/* Button Container */}
-              <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                {/* Add Storage Condition Button */}
-                <button
-                  className="btn btn-primary mb-2"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add Country
-                </button>
-
-                {/* Upload Button (Styled as Label for Hidden Input) */}
-                <label className="btn btn-secondary mb-2">
-                  Upload Country List
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      handleFileUpload(e);
-                    }}
-                  />
-                </label>
+          <div className="d-flex flex-column w-100">
+            {/* Success Message */}
+            {successMessage && (
+              <div
+                className="alert alert-success w-100 text-start mb-2"
+                role="alert"
+              >
+                {successMessage}
               </div>
-            </div>
-            {/* Table Section */}
-            <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
-                <tr className="text-center">
-  {[
-    { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
-    {
-      label: "Country Name",
-      placeholder: "Search Country Name",
-      field: "name",
-      width: "col-md-3",
-    },
-    {
-      label: "Added By",
-      placeholder: "Search Added by",
-      field: "added_by",
-      width: "col-md-2",
-    },
-    {
-      label: "Created At",
-      placeholder: "Search Created at",
-      field: "created_at",
-      width: "col-md-3",
-    },
-    {
-      label: "Updated At",
-      placeholder: "Search Updated at",
-      field: "updated_at",
-      width: "col-md-4", // Increased width
-    },
-  ].map(({ label, placeholder, field, width }) => (
-    <th key={field} className={`${width} px-2`}>
-      <input
-        type="text"
-        className="form-control w-100 px-2 py-1 mx-auto"
-        placeholder={placeholder}
-        onChange={(e) => handleFilterChange(field, e.target.value)}
-      />
-      {label}
-    </th>
-  ))}
-  <th className="col-md-2">Action</th>
-</tr>
-
-                </thead>
-                <tbody>
-                  {currentData.length > 0 ? (
-                    currentData.map((countryname) => (
-                      <tr key={countryname.id}>
-                        <td>{countryname.id}</td>
-                        <td>{countryname.name}</td>
-                        <td>{countryname.added_by}</td>
-                        <td>{formatDate(countryname.created_at)}</td>
-                        <td>{formatDate(countryname.updated_at)}</td>
-                        <td>
-                          <div className="d-flex justify-content-around gap-2">
-                            <button
-                              className="btn btn-success btn-sm py-0 px-1"
-                              onClick={() => handleEditClick(countryname)}
-                              title="Edit Country" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="xs" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm py-0 px-1"
-                              onClick={() => {
-                                setselectedcountrynameId(countryname.id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete Country" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                            <button
-                              className="btn btn-info btn-sm py-0 px-1"
-                              onClick={() =>
-                                handleShowHistory("country", countryname.id)
-                              }
-                              title="History Sample"
-                            >
-                              <FontAwesomeIcon icon={faHistory} size="sm" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center">
-                        No Country Available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {/* Pagination Controls */}
-            {totalPages >= 0 && (
-              <Pagination
-                handlePageClick={handlePageChange}
-                pageCount={totalPages}
-                focusPage={currentPage}
-              />
             )}
+            {/* Button Container */}
+            <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+              {/* Add Storage Condition Button */}
+              <button
+                className="btn btn-primary mb-2"
+                onClick={() => setShowAddModal(true)}
+              >
+                Add Country
+              </button>
 
-            {/* Modal for Adding countrys */}
-            {(showAddModal || showEditModal) && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
-
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
+              {/* Upload Button (Styled as Label for Hidden Input) */}
+              <label className="btn btn-secondary mb-2">
+                Upload Country List
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    handleFileUpload(e);
                   }}
-                >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">
-                          {showAddModal ? "Add Country" : "Edit Country"}
-                        </h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => {
-                            setShowAddModal(false);
-                            setShowEditModal(false);
-                            resetFormData();
-                          }}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
+                />
+              </label>
+            </div>
+          </div>
+          {/* Table Section */}
+          <div className="table-responsive overflow-auto w-100">
+            {" "}
+            {/* Increased width & scrolling */}
+            <table className="table table-bordered table-hover table-striped w-100">
+              {" "}
+              {/* Added w-100 */}
+              <thead className="thead-dark">
+                <tr className="text-center">
+                  {[
+                    { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
+                    {
+                      label: "Country Name",
+                      placeholder: "Search Country Name",
+                      field: "name",
+                      width: "col-md-3",
+                    },
+                    {
+                      label: "Added By",
+                      placeholder: "Search Added by",
+                      field: "added_by",
+                      width: "col-md-2",
+                    },
+                    {
+                      label: "Created At",
+                      placeholder: "Search Created at",
+                      field: "created_at",
+                      width: "col-md-3",
+                    },
+                    {
+                      label: "Updated At",
+                      placeholder: "Search Updated at",
+                      field: "updated_at",
+                      width: "col-md-4", // Increased width
+                    },
+                  ].map(({ label, placeholder, field, width }) => (
+                    <th key={field} className={`${width} px-2`}>
+                      <input
+                        type="text"
+                        className="form-control w-100 px-2 py-1 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) => handleFilterChange(field, e.target.value)}
+                      />
+                      {label}
+                    </th>
+                  ))}
+                  <th className="col-md-2">Action</th>
+                </tr>
 
-                      <form
-                        onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
-                      >
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Country Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="countryname"
-                              value={formData.countryname}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            {showAddModal ? "Save" : "Update Country"}
+              </thead>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((countryname) => (
+                    <tr key={countryname.id}>
+                      <td>{countryname.id}</td>
+                      <td>{countryname.name}</td>
+                      <td>{countryname.added_by}</td>
+                      <td>{formatDate(countryname.created_at)}</td>
+                      <td>{formatDate(countryname.updated_at)}</td>
+                      <td>
+                        <div className="d-flex justify-content-around gap-2">
+                          <button
+                            className="btn btn-success btn-sm py-0 px-1"
+                            onClick={() => handleEditClick(countryname)}
+                            title="Edit Country" // This is the text that will appear on hover
+                          >
+                            <FontAwesomeIcon icon={faEdit} size="xs" />
+                          </button>{" "}
+                          <button
+                            className="btn btn-danger btn-sm py-0 px-1"
+                            onClick={() => {
+                              setselectedcountrynameId(countryname.id);
+                              setShowDeleteModal(true);
+                            }}
+                            title="Delete Country" // This is the text that will appear on hover
+                          >
+                            <FontAwesomeIcon icon={faTrash} size="sm" />
+                          </button>
+                          <button
+                            className="btn btn-info btn-sm py-0 px-1"
+                            onClick={() =>
+                              handleShowHistory("country", countryname.id)
+                            }
+                            title="History Sample"
+                          >
+                            <FontAwesomeIcon icon={faHistory} size="sm" />
                           </button>
                         </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center">
+                      No Country Available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage}
+            />
+          )}
 
-            {showHistoryModal && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
+          {/* Modal for Adding countrys */}
+          {(showAddModal || showEditModal) && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
 
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "100px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog modal-md" role="document">
-                    <div className="modal-content">
-                      {/* Modal Header */}
-                      <div className="modal-header">
-                        <h5 className="modal-title">History</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowHistoryModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-
-                      {/* Chat-style Modal Body */}
-                      <div
-                        className="modal-body"
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">
+                        {showAddModal ? "Add Country" : "Edit Country"}
+                      </h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => {
+                          setShowAddModal(false);
+                          setShowEditModal(false);
+                          resetFormData();
+                        }}
                         style={{
-                          maxHeight: "500px",
-                          overflowY: "auto",
-                          backgroundColor: "#e5ddd5", // WhatsApp-style background
-                          padding: "15px",
-                          borderRadius: "10px",
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
                         }}
                       >
-                        {historyData && historyData.length > 0 ? (
-                          historyData.map((log, index) => {
-                            const {
-                              created_name,
-                              updated_name,
-                              added_by,
-                              created_at,
-                              updated_at,
-                            } = log;
+                        <span>&times;</span>
+                      </button>
+                    </div>
 
-                            return (
+                    <form
+                      onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                    >
+                      <div className="modal-body">
+                        {/* Form Fields */}
+                        <div className="form-group">
+                          <label>Country Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="countryname"
+                            value={formData.countryname}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="modal-footer">
+                        <button type="submit" className="btn btn-primary">
+                          {showAddModal ? "Save" : "Update Country"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {showHistoryModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "100px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog modal-md" role="document">
+                  <div className="modal-content">
+                    {/* Modal Header */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">History</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowHistoryModal(false)}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    {/* Chat-style Modal Body */}
+                    <div
+                      className="modal-body"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        padding: "15px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            created_name,
+                            updated_name,
+                            added_by,
+                            created_at,
+                            updated_at,
+                          } = log;
+
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Message for City Addition */}
                               <div
-                                key={index}
                                 style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "flex-start",
-                                  marginBottom: "10px",
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
                                 }}
                               >
-                                {/* Message for City Addition */}
+                                <b>Country:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
+                                {moment(created_at).format(
+                                  "DD MMM YYYY, h:mm A"
+                                )}
+                              </div>
+
+                              {/* Message for City Update (Only if it exists) */}
+                              {updated_name && updated_at && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
                                     borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
+                                    marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Country:</b> {created_name} was{" "}
-                                  <b>added</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
+                                  <b>Country:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
+                                  {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
                                 </div>
-
-                                {/* Message for City Update (Only if it exists) */}
-                                {updated_name && updated_at && (
-                                  <div
-                                    style={{
-                                      padding: "10px 15px",
-                                      borderRadius: "15px",
-                                      backgroundColor: "#dcf8c6", // Light green for updates
-                                      boxShadow:
-                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                      maxWidth: "75%",
-                                      fontSize: "14px",
-                                      textAlign: "left",
-                                      marginTop: "5px", // Spacing between messages
-                                    }}
-                                  >
-                                    <b>Country:</b> {updated_name} was{" "}
-                                    <b>updated</b> by Registration Admin at{" "}
-                                    {moment(updated_at).format(
-                                      "DD MMM YYYY, h:mm A"
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <p className="text-left">No history available.</p>
-                        )}
-                      </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
                     </div>
                   </div>
                 </div>
-              </>
-            )}
-            {/* Edit countryname Modal */}
+              </div>
+            </>
+          )}
+          {/* Edit countryname Modal */}
 
-            {/* Modal for Deleting Countryname */}
-            {showDeleteModal && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
+          {/* Modal for Deleting Countryname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
 
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div
-                        className="modal-header"
-                        style={{ backgroundColor: "transparent" }}
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">Delete Country</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this Country?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
                       >
-                        <h5 className="modal-title">Delete Country</h5>
-                        <button
-                          type="button"
-                          className="btn-close"
-                          onClick={() => setShowDeleteModal(false)}
-                        ></button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this Country?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 </div>
-              </>
-            )}
-          
+              </div>
+            </>
+          )}
+
         </div>
       </div>
     </section>

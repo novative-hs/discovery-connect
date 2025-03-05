@@ -71,7 +71,8 @@ const getSamples = (id, callback) => {
     WHERE s.status = "In Stock" 
       AND s.is_deleted = FALSE
       AND ua.accountType = "CollectionSites"
-      AND s.user_account_id = ?;
+      AND s.user_account_id = ?
+      ORDER BY s.created_at ASC; 
   `;
   mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
@@ -208,9 +209,6 @@ const createSample = (data, callback) => {
   });
 });
 };
-
-
-
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
