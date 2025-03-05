@@ -287,7 +287,6 @@ const CountryArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <div className="row justify-content-center">
-          <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
             <div className="d-flex flex-column w-100">
               {/* Success Message */}
               {successMessage && (
@@ -695,7 +694,7 @@ const CountryArea = () => {
                 </div>
               </>
             )}
-          </div>
+          
         </div>
       </div>
     </section>

@@ -294,7 +294,7 @@ const SampleTypeMatrixArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
     <div className="container">
       <div className="row justify-content-center">
-        <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
+       
               {/* Button Container */}
               <div className="d-flex flex-column w-100">
                 {/* Success Message */}
@@ -725,7 +725,7 @@ const SampleTypeMatrixArea = () => {
                                               </div>
                                             </>
                                           )}
-            </div>
+            
           </div>
         </div>
       

@@ -279,7 +279,7 @@ const CityArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <div className="row justify-content-center">
-          <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
+          
             {/* Button Container */}
             <div className="d-flex flex-column w-100">
               {/* Success Message */}
@@ -314,7 +314,7 @@ const CityArea = () => {
             </div>
 
             {/* Table Section */}
-            <div className="table-responsive overflow-auto w-100">
+            <div className="table-responsive overflow-auto w-100 p-2">
               {" "}
               {/* Increased width & scrolling */}
               <table className="table table-bordered table-hover table-striped w-100">
@@ -326,7 +326,7 @@ const CityArea = () => {
                       { label: "ID", placeholder: "Search ID", field: "id" },
                       {
                         label: "City Name",
-                        placeholder: "Search City",
+                        placeholder: "Search City Name",
                         field: "name",
                       },
                       {
@@ -371,6 +371,7 @@ const CityArea = () => {
                         <td>{formatDate(cityname.updated_at)}</td>
                         <td>
                           <div className="d-flex justify-content-around gap-2">
+                            
                             <button
                               className="btn btn-success btn-sm py-0 px-1"
                               onClick={() => handleEditClick(cityname)}
@@ -682,7 +683,7 @@ const CityArea = () => {
                 </div>
               </>
             )}
-          </div>
+          
         </div>
       </div>
     </section>

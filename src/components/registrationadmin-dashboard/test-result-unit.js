@@ -291,7 +291,7 @@ const TestResultUnitArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
     <div className="container">
       <div className="row justify-content-center">
-        <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
+       
               {/* Button Container */}
               <div className="d-flex flex-column w-100">
                 {/* Success Message */}
@@ -343,7 +343,7 @@ const TestResultUnitArea = () => {
                           label: "Test Result Unit",
                           placeholder: "Search Test Result Unit",
                           field: "name",
-                          width: "col-md-3"
+                          width: "col-md-2"
                         },
                         {
                           label: "Added By",
@@ -722,7 +722,7 @@ const TestResultUnitArea = () => {
                   </div>
                 </>
               )}
-            </div>
+            
           </div>
         </div>
       

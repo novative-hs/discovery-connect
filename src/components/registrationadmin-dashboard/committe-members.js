@@ -420,7 +420,7 @@ const CommitteeMemberArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
-          <div className="policy__wrapper policy__translate col-11 mx-auto p-5">
+         
             {/* {Button} */}
             <div className="d-flex flex-column w-100">
               {/* Success Message */}
@@ -446,7 +446,7 @@ const CommitteeMemberArea = () => {
               </div>
             </div>
             {/* Table */}
-            <div className="table-responsive overflow-auto w-100">
+            <div className="table-responsive overflow-auto w-100 p-2">
               {" "}
               {/* Increased width & scrolling */}
               <table className="table table-bordered table-hover table-striped w-100">
@@ -985,7 +985,7 @@ const CommitteeMemberArea = () => {
                 </div>
               </div>
             )}
-          </div>
+          
         </div>
       </div>
     </section>
