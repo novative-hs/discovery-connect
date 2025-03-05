@@ -184,77 +184,105 @@ const UpdateOrganization = () => {
     return `data:image/${format};base64,${window.btoa(binary)}`;
   };
   return (
-    <div className="profile__info-content">
+    <div className="profile__info-content p-2">
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
-          <div className="profile__logo" style={{ textAlign: "center" }}>
-            {preview ? (
-              <img
-                src={preview}
-                alt="Organization Logo"
-                style={{
-                  maxWidth: "150px",
-                  maxHeight: "150px",
-                  objectFit: "contain",
-                  marginBottom: "20px",
-                  borderColor: "black",
-                  borderWidth: "2px",
-                  borderStyle: "solid",
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  width: "70px",
-                  height: "70px",
-                  display: "inline-block",
-                  borderRadius: "50%",
-                  backgroundColor: "#eaeaea",
-                  color: "#aaa",
-                  fontSize: "30px",
-                  lineHeight: "70px",
-                  textAlign: "center",
-                }}
-              >
-                <i className="fa-solid fa-user"></i>
-              </span>
-            )}
+      <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
+  <div className="profile__logo" style={{ textAlign: "center" }}>
+    {preview ? (
+      <img
+        src={preview}
+        alt="Profile Logo"
+        style={{
+          width: "100px",
+          height: "100px",
+          objectFit: "cover",
+          borderRadius: "50%",
+          border: "2px solid black",
+          marginBottom: "10px",
+        }}
+      />
+    ) : (
+      <span
+        style={{
+          width: "200px",
+          height: "200px",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+          backgroundColor: "#eaeaea",
+          color: "#aaa",
+          fontSize: "50px",
+          border: "2px solid black",
+        }}
+      >
+        <i className="fa-solid fa-user"></i>
+      </span>
+    )}
 
-            <div
-              className="col-xxl-12 col-md-12"
+    {/* Change Button */}
+    <div style={{ marginTop: "10px" }}>
+      <label
+        htmlFor="logo"
+        style={{
+          backgroundColor: "#e6f9e6",
+          border: "1px solid #4CAF50",
+          color: "#4CAF50",
+          padding: "5px 15px",
+          borderRadius: "5px",
+          cursor: "pointer",
+          display: "inline-block",
+        }}
+      >
+        Upload Logo
+      </label>
+      <input
+        {...register("logo")}
+        type="file"
+        id="logo"
+        onChange={handleLogoUpload}
+        className="form-control"
+        accept="image/*"
+        style={{ display: "none" }}
+      />
+    </div>
+  </div>
+</div>
+<div
+            className="col-xxl-12 col-md-12"
+            style={{
+              marginBottom: "15px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <label
+              htmlFor="OrganizationName"
               style={{
-                marginBottom: "15px",
-                display: "flex",
-                alignItems: "center",
+                fontWeight: "bold",
+                width: "150px",
+                marginRight: "20px",
               }}
             >
-              <label
-                htmlFor="logo"
+              Organization Name
+            </label>
+            <div className="profile__input" style={{ flexGrow: 1 }}>
+              <input
+                id="OrganizationName"
+                {...register("OrganizationName")}
+                type="text"
+                placeholder="Enter Organization Name"
                 style={{
-                  fontWeight: "bold",
-                  width: "150px",
-                  marginRight: "20px",
-                  display: "inline-block", // Ensures label is inline
+                  width: "100%",
+                  padding: "20px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  height: "50px",
                 }}
-              >
-                Upload New Logo
-              </label>
-              <div className="profile__input" style={{ flexGrow: 1 }}>
-                <input
-                  {...register("logo")}
-                  name="logo"
-                  type="file"
-                  id="logo"
-                  onChange={handleLogoUpload}
-                  className="form-control form-control-sm"
-                  accept="image/*"
-                />
-
-                <ErrorMessage message={errors.logo?.message} />
-              </div>
+              />
+              <ErrorMessage message={errors.OrganizationName?.message} />
             </div>
           </div>
-        </div>
         <div className="row">
           {/* Email */}
           <div
@@ -297,41 +325,7 @@ const UpdateOrganization = () => {
           </div>
 
           {/* Organization Name */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="OrganizationName"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              Organization Name
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <input
-                id="OrganizationName"
-                {...register("OrganizationName")}
-                type="text"
-                placeholder="Enter Organization Name"
-                style={{
-                  width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              />
-              <ErrorMessage message={errors.OrganizationName?.message} />
-            </div>
-          </div>
+          
 
           {/* HEC/PMDC Registration Number */}
           <div

@@ -7,7 +7,7 @@ const createSampleReceiveTable = () => {
       receiverName VARCHAR(255) NOT NULL,
       ReceivedByCollectionSite INT NOT NULL,
       ReceiveTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      sampleID BIGINT NOT NULL,
+      sampleID VARCHAR(36) NOT NULL,
       FOREIGN KEY (sampleID) REFERENCES sample(id),
       FOREIGN KEY (ReceivedByCollectionSite) REFERENCES user_account(id) ON DELETE CASCADE
     )

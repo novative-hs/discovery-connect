@@ -545,117 +545,89 @@ const BioBankSampleArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showTransferModal]);
 
   return (
-    <section className="profile__area pt-180 pb-120">       {/* Inner Container Color can be visible through this */}
-      <div
-        className="container"
-        style={{ marginTop: "-180px", width: "170%", marginLeft: "-135px" }}>
-        {/* Success Message */}
-        {successMessage && (
-          <div className="alert alert-success" role="alert">
-            {successMessage}
-          </div>
-        )}
-        {/* Note and Add Samples Button */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          {/* Filter and Add Samples Button */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div className="d-flex align-items-center" style={{ marginLeft: "130px" }}>
-              <label className="fw-bold me-2">Filter: </label>
-              <select className="form-select" onChange={(e) => setFilter(e.target.value)}>
-                <option value="">All</option>
-                <option value="priceAdded">Price Added</option>
-                <option value="priceNotAdded">Price Not Added</option>
-              </select>
-            </div>
-          </div>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowAddModal(true)}
-            style={{
-              backgroundColor: "#FFEE99", // Soft pastel yellow
-              borderColor: "#FFD700", // Gold border
-              color: "#000000", // Black text
-              marginRight: "130px",
-            }}>
-            Add Samples
-          </button>
+    <section className="profile__area pt-30 pb-120">
+    <div className="container-fluid px-md-4">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="alert alert-success text-center" role="alert">
+          {successMessage}
         </div>
-        {/* Table */}
-        <div
-          className="table-responsive"
-          style={{ margin: "25px auto 0 auto", width: "80%", textAlign: "center" }}>
-          <table className="table table-bordered table-hover">
-            <thead>
-              <tr>
-                {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="px-4 text-center"
-                    style={{ backgroundColor: "#F4C2C2", color: "#000" }}>
-                    <div className="d-flex flex-column align-items-center">
-                      <input
-                        type="text"
-                        className="form-control form-control-sm w-100 text-center"
-                        placeholder={`Search ${label}`}
-                        onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "70px", maxWidth: "120px", height: "30px", padding: "2px 5px", fontSize: "14px", lineHeight: "normal" }}
-                      />
-                      <span className="fw-bold mt-1 d-block text-nowrap">{label}</span>
-                    </div>
-                  </th>
-                ))}
-                <th className="px-5 align-middle text-center"
-                  style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSamples.length > 0 ? (
-                filteredSamples.map((sample) => (
-                  <tr key={sample.id}>
-                    {tableHeaders.map(({ key }, index) => (
-                      <td key={index} style={{ maxWidth: "150px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {sample[key] || "N/A"}</td>
-                    ))}
-                    <td style={{ maxWidth: "120px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-around",
-                          gap: "3px",
-                        }}
-                      >
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleEditClick(sample)}
-                        >
-                          <FontAwesomeIcon icon={faEdit} size="sm" />
-                        </button>{" "}
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleTransferClick(sample)}
-                        >
-                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                        </button>
-                      </div>
+      )}
+  
+      {/* Header Section with Filter and Button */}
+      <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
+        {/* Filter Dropdown */}
+        <div className="d-flex align-items-center">
+          <label className="fw-bold me-2">Filter: </label>
+          <select className="form-select form-select-sm" onChange={(e) => setFilter(e.target.value)}>
+            <option value="">All</option>
+            <option value="priceAdded">Price Added</option>
+            <option value="priceNotAdded">Price Not Added</option>
+          </select>
+        </div>
+  
+        {/* Add Samples Button */}
+        <button
+          className="btn"
+          onClick={() => setShowAddModal(true)}
+          style={{ backgroundColor: "#FFEE99", borderColor: "#FFD700", color: "#000" }}>
+          Add Samples
+        </button>
+      </div>
+  
+      {/* Table */}
+      <div className="table-responsive mx-auto">
+        <table className="table table-bordered table-hover text-center">
+          <thead>
+            <tr>
+              {tableHeaders.map(({ label, key }, index) => (
+                <th key={index} className="px-4 text-center" style={{ backgroundColor: "#F4C2C2", color: "#000" }}>
+                  <div className="d-flex flex-column align-items-center">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm w-100 text-center"
+                      placeholder={`Search ${label}`}
+                      onChange={(e) => handleFilterChange(key, e.target.value)}
+                      style={{ minWidth: "70px", maxWidth: "120px", height: "30px", padding: "2px 5px", fontSize: "14px" }}
+                    />
+                    <span className="fw-bold mt-1 d-block text-nowrap">{label}</span>
+                  </div>
+                </th>
+              ))}
+              <th className="px-5 align-middle text-center" style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSamples.length > 0 ? (
+              filteredSamples.map((sample) => (
+                <tr key={sample.id}>
+                  {tableHeaders.map(({ key }, index) => (
+                    <td key={index} className="text-center text-truncate" style={{ maxWidth: "150px" }}>
+                      {sample[key] || "N/A"}
                     </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="text-center">
-                    No samples available
+                  ))}
+                  <td className="text-center">
+                    <div className="d-flex justify-content-around gap-1">
+                      <button className="btn btn-success btn-sm" onClick={() => handleEditClick(sample)} title="Edit">
+                        <FontAwesomeIcon icon={faEdit} size="sm" />
+                      </button>
+                      <button className="btn btn-danger btn-sm" onClick={() => { setSelectedSampleId(sample.id); setShowDeleteModal(true); }} title="Delete">
+                        <FontAwesomeIcon icon={faTrash} size="sm" />
+                      </button>
+                      <button className="btn btn-primary btn-sm" onClick={() => handleTransferClick(sample)} title="Transfer">
+                        <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-center">No samples available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
         </div>
 
         {/* Pagination */}
@@ -1279,17 +1251,6 @@ const BioBankSampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          {/* <div className="form-group">
-                                  <label>Image</label>
-                                  <input
-                                    type="file"
-                                    className="form-control"
-                                    name="logo"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    required
-                                  />
-                                </div> */}
                         </div>
                         {/* {Column 6} */}
                         <div className="col-md-2">

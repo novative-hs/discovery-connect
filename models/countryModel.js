@@ -183,7 +183,6 @@ const createCountry = (data, callback) => {
     });
   });
 };
-
 // Function to update a City 
 const updateCountry = (id, data, callback) => {
   const { countryname, added_by } = data;

@@ -186,7 +186,8 @@ const createDistrict = (data, callback) => {
 
 
 
-// Function to update a City member
+
+// Function to update a district
 const updateDistrict = (id, data, callback) => {
   const { districtname, added_by } = data;
   mysqlPool.getConnection((err, connection) => { // Use connection from pool

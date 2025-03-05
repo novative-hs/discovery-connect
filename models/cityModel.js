@@ -174,6 +174,8 @@ const createCity = (data, callback) => {
 };
 
 
+
+
 // Function to update City
 const updateCity = (id, data, callback) => {
   const { cityname, added_by } = data;

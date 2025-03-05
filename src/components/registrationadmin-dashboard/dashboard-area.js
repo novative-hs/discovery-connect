@@ -105,17 +105,41 @@ const DashboardArea = () => {
     }
   };
 
-
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-      <section className="profile__area pt-180 pb-120">
-        <div className="container" style={{ marginTop: '-80px' }}>
-          <div className="profile__inner position-relative">
+      <div className="d-flex justify-content-end me-3 mt-2">
+        <p className="fs-7">
+          {`Admin Dashboard / ${
+            activeTab === "order-info"
+              ? "Profile"
+              : [
+                  "ethnicity",
+                  "sample-condition",
+                  "storage-temperature",
+                  "container-type",
+                  "quantity-unit",
+                  "sample-type-matrix",
+                  "test-method",
+                  "test-result-unit",
+                  "concurrent-medical-conditions",
+                  "test-kit-manufacturer",
+                  "test-system",
+                  "test-system-manufacturer",
+                ].includes(activeTab)
+              ? `Sample / ${activeTab.replace(/-/g, " ")}`
+              : activeTab.replace(/-/g, " ")
+          }`}
+        </p>
+      </div>
+
+      <section className="profile__area pt-20 pb-80">
+        <div className="container mt-n5">
+          <div className="profile__inner position-relative min-vh-50">
             <ProfileShapes />
-            <div className="row">
-              <div className="col-xxl-8 col-lg-8 w-100">
-                <div className="profile__tab-content">
+            <div className="row justify-content-center">
+              <div className="col-xxl-10 col-lg-10 col-md-10 col-sm-12">
+                <div className="profile__tab-content p-3">
                   {/* Dynamically render content based on activeTab */}
                   {renderContent()}
                 </div>
