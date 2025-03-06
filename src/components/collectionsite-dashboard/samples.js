@@ -2117,7 +2117,7 @@ const SampleArea = () => {
           </>
         )}
 
-        {/* Modal for History of Researchers */}
+        {/* Modal for History of Samples */}
         {showHistoryModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}

@@ -28,61 +28,13 @@ const OrderInfo = ({ setActiveTab }) => {
 
   const stats = [
     { label: "Cities", count: userCount.totalCities, icon: "fa-solid fa-city", bg: "bg-primary", tab: "city" },
-    { label: "Districts", count: userCount.totalDistricts, icon: "fa-solid fa-flag", bg: "bg-info", tab: "district" },
     { label: "Countries", count: userCount.totalCountries, icon: "fa-solid fa-globe", bg: "bg-success", tab: "country" },
+    { label: "Districts", count: userCount.totalDistricts, icon: "fa-solid fa-flag", bg: "bg-info", tab: "district" },
     { label: "Researchers", count: userCount.totalResearchers, icon: "fa-solid fa-user", bg: "bg-warning", tab: "researcher" },
     { label: "Organizations", count: userCount.totalOrganizations, icon: "fa-solid fa-building", bg: "bg-danger", tab: "organization" },
     { label: "Collection Sites", count: userCount.totalCollectionSites, icon: "fa-solid fa-map-marker-alt", bg: "bg-dark", tab: "collectionsite" },
     { label: "Committee Members", count: userCount.totalCommitteeMembers, icon: "fa-solid fa-users", bg: "bg-secondary", tab: "committee-members" },
     // { label: "Cart Items", count: userCount.totalOrders, icon: "fa-solid fa-shopping-cart", bg: "bg-success", tab: "order-info" },
-    {
-      label: "Total City",
-      count: userCount.totalCities,
-      icon: "fa-solid fa-city",
-      tab: "city",
-    },
-    {
-      label: "Total Country",
-      count: userCount.totalCountries,
-      icon: "fa-solid fa-globe",
-      tab: "country",
-    },
-    {
-      label: "Total District",
-      count: userCount.totalDistricts,
-      icon: "fa-solid fa-flag",
-      tab: "district",
-    },
-    {
-      label: "Total Researcher",
-      count: userCount.totalResearchers,
-      icon: "fa-solid fa-user",
-      tab: "researcher",
-    },
-    {
-      label: "Total Organization",
-      count: userCount.totalOrganizations,
-      icon: "fa-solid fa-building",
-      tab: "organization",
-    },
-    {
-      label: "Total Collection Site",
-      count: userCount.totalCollectionSites,
-      icon: "fa-solid fa-map-marker-alt",
-      tab: "collectionsite",
-    },
-    {
-      label: "Total Committee Member",
-      count: userCount.totalCommitteeMembers,
-      icon: "fa-solid fa-users",
-      tab: "committee-members",
-    },
-    {
-      label: "Total Cart Items",
-      count: userCount.totalOrders,
-      icon: "fa-solid fa-shopping-cart",
-      tab: "order-info",
-    },
   ];
 
   // Handle stat div click and set active tab
