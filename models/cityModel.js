@@ -27,7 +27,7 @@ const createCityTable = () => {
 
 // Function to get all City members
 const getAllCities = (callback) => {
-  const query = 'SELECT * FROM city WHERE status = "active"';
+  const query = 'SELECT * FROM city WHERE status = "active" ORDER BY name ASC';
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);

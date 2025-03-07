@@ -8,7 +8,7 @@ import ErrorMessage from "@components/error-message/error";
 import { useRegisterUserMutation } from "src/redux/features/auth/authApi";
 import { notifyError, notifySuccess } from "@utils/toast";
 import axios from "axios";
-
+import Select from "react-select"
 // Validation schema
 const schema = Yup.object().shape({
   email: Yup.string().required("Email is required").email(),
@@ -90,6 +90,13 @@ const RegisterForm = () => {
   const [Org_name, setOrganizationname] = useState([]);
   const router = useRouter();
   const [registerUser, { }] = useRegisterUserMutation();
+  const [menuIsOpen, setMenuIsOpen] = useState(false);
+  const [menuIsOpen2, setMenuIsOpen2] = useState(false);
+  const [menuIsOpen3, setMenuIsOpen3] = useState(false);
+
+  const handleDivClick = () => setMenuIsOpen(true);
+  const handleDivClick2 = () => setMenuIsOpen2(true);
+  const handleDivClick3 = () => setMenuIsOpen3(true);
 
   const {
     register,
@@ -246,7 +253,38 @@ const RegisterForm = () => {
   useEffect(() => {
     console.log(errors);
   }, [errors]);
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      border: "none !important", // Remove border
+      boxShadow: "none !important", // Remove focus shadow
+      backgroundColor: "transparent",
+    }),
+    valueContainer: (base) => ({
+      ...base,
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      display: "none", // Hides default dropdown indicator
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999, // Keeps dropdown above other elements
+    }),
+  };
 
+  const districtOptions = districtname.map((district) => ({
+    value: district.id,
+    label: district.name,
+  }));
+  const cityOptions = cityname.map((city) => ({
+    value: city.id,
+    label: city.name,
+  }));
+  const countryOptions = countryname.map((country) => ({
+    value: country.id,
+    label: country.name,
+  }));
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="login__input-wrapper">
@@ -552,86 +590,97 @@ const RegisterForm = () => {
                 message={errors.logo?.message}
               />
             </div>
-
-            {/* City Fields */}
-            <div className="login__input-item">
-              <div className="login__input d-flex align-items-center w-100">
-                <select
-                  {...register("city")}
-                  className="form-select"
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    paddingLeft: "50px",
-                    borderColor: "#f0f0f0",
-                    color: "#808080",
+            {/* {/ City Fields /} */}
+            <div
+              className="login__input d-flex align-items-center mb-4 border rounded px-5 w-100 position-relative"
+              style={{ height: "50px", cursor: "pointer" }}
+              onClick={handleDivClick}
+            >
+              <span className="me-2 text-muted">
+                <i className="fa-solid fa-city"></i>
+              </span>
+              <div className="flex-grow-1">
+                <Select
+                  id="city-select"
+                  options={cityOptions}
+                  placeholder="Select City"
+                  onChange={(selectedOption) => {
+                    setValue("city", selectedOption.value);
+                    setTimeout(() => setMenuIsOpen(false), 100); // Ensure dropdown closes
                   }}
-                >
-                  <option value="">Select City</option>
-                  {cityname.map((city) => (
-                    <option key={city.id} value={city.id}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-                <span>
-                  <i className="fa-solid fa-city"></i>
-                </span>
+                  styles={customStyles}
+                  className="w-100"
+                  menuIsOpen={menuIsOpen}
+                  onMenuClose={() => setMenuIsOpen(false)}
+                  onBlur={() => setMenuIsOpen(false)}
+                />
               </div>
+              <span className="position-absolute end-0 me-3 text-muted text-end">
+                <i className="fa-solid fa-angle-down"></i>
+              </span>
               <ErrorMessage message={errors.city?.message} />
             </div>
-            {/* District Fields */}
-            <div className="login__input-item">
-              <div className="login__input">
-                <select
-                  {...register("district")}
-                  className="form-select"
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    paddingLeft: "50px",
-                    borderColor: "#f0f0f0",
-                    color: "#808080",
+
+            {/* {/ District Fields /} */}
+            <div
+              className="login__input d-flex align-items-center mb-4 border rounded px-5 w-100 position-relative"
+              style={{ height: "50px", cursor: "pointer" }}
+              onClick={handleDivClick2}
+            >
+              <span className="me-2 text-muted">
+                <i className="fa-solid fa-map-marker-alt"></i>
+              </span>
+              <div className="flex-grow-1">
+                <Select
+                  id="district-select"
+                  options={districtOptions}
+                  placeholder="Select District"
+                  onChange={(selectedOption) => {
+                    setValue("district", selectedOption.value);
+                    setTimeout(() => setMenuIsOpen2(false), 100);
                   }}
-                >
-                  <option value="">Select District</option>
-                  {districtname.map((district) => (
-                    <option key={district.id} value={district.id}>
-                      {district.name}
-                    </option>
-                  ))}
-                </select>
-                <span>
-                  <i className="fa-solid fa-map-marker-alt"></i>
-                </span>
+                  styles={customStyles}
+                  className="w-100"
+                  menuIsOpen={menuIsOpen2}
+                  onMenuClose={() => setMenuIsOpen2(false)}
+                  onBlur={() => setMenuIsOpen2(false)}
+                />
               </div>
+              <span className="position-absolute end-0 me-3 text-muted text-end">
+                <i className="fa-solid fa-angle-down"></i>
+              </span>
+
               <ErrorMessage message={errors.district?.message} />
             </div>
-            {/* Country Fields */}
-            <div className="login__input-item">
-              <div className="login__input">
-                <select
-                  {...register("country")}
-                  className="form-select"
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    paddingLeft: "50px",
-                    borderColor: "#f0f0f0",
-                    color: "#808080",
+
+            {/* {/ Country Field /} */}
+            <div
+              className="login__input d-flex align-items-center mb-4 border rounded px-5 w-100 position-relative"
+              style={{ height: "50px", cursor: "pointer" }}
+              onClick={handleDivClick3}
+            >
+              <span className="me-2 text-muted">
+                <i className="fa-solid fa-globe"></i>
+              </span>
+              <div className="flex-grow-1">
+                <Select
+                  id="country-select"
+                  options={countryOptions}
+                  placeholder="Select Country"
+                  onChange={(selectedOption) => {
+                    setValue("country", selectedOption.value);
+                    setTimeout(() => setMenuIsOpen3(false), 100);
                   }}
-                >
-                  <option value="">Select Country</option>
-                  {countryname.map((country) => (
-                    <option key={country.id} value={country.id}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-                <span>
-                  <i className="fa-solid fa-globe"></i>
-                </span>
+                  styles={customStyles}
+                  className="w-100"
+                  menuIsOpen={menuIsOpen3}
+                  onMenuClose={() => setMenuIsOpen3(false)}
+                  onBlur={() => setMenuIsOpen3(false)}
+                />
               </div>
+              <span className="position-absolute end-0 me-3 text-muted text-end">
+                <i className="fa-solid fa-angle-down"></i>
+              </span>
               <ErrorMessage message={errors.country?.message} />
             </div>
             {/* Address Fields */}

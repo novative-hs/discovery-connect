@@ -184,475 +184,136 @@ const UpdateOrganization = () => {
     return `data:image/${format};base64,${window.btoa(binary)}`;
   };
   return (
-    <div className="profile__info-content p-2">
-      <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
-  <div className="profile__logo" style={{ textAlign: "center" }}>
-    {preview ? (
-      <img
-        src={preview}
-        alt="Profile Logo"
-        style={{
-          width: "100px",
-          height: "100px",
-          objectFit: "cover",
-          borderRadius: "50%",
-          border: "2px solid black",
-          marginBottom: "10px",
-        }}
-      />
-    ) : (
-      <span
-        style={{
-          width: "200px",
-          height: "200px",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "50%",
-          backgroundColor: "#eaeaea",
-          color: "#aaa",
-          fontSize: "50px",
-          border: "2px solid black",
-        }}
-      >
-        <i className="fa-solid fa-user"></i>
-      </span>
-    )}
-
-    {/* Change Button */}
-    <div style={{ marginTop: "10px" }}>
-      <label
-        htmlFor="logo"
-        style={{
-          backgroundColor: "#e6f9e6",
-          border: "1px solid #4CAF50",
-          color: "#4CAF50",
-          padding: "5px 15px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          display: "inline-block",
-        }}
-      >
-        Upload Logo
-      </label>
-      <input
-        {...register("logo")}
-        type="file"
-        id="logo"
-        onChange={handleLogoUpload}
-        className="form-control"
-        accept="image/*"
-        style={{ display: "none" }}
-      />
-    </div>
-  </div>
-</div>
-<div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="OrganizationName"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              Organization Name
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <input
-                id="OrganizationName"
-                {...register("OrganizationName")}
-                type="text"
-                placeholder="Enter Organization Name"
-                style={{
-                  width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
+    <div className="container mt-4">
+      <div className="row">
+        {/* Profile Picture Section */}
+        <div className="col-lg-3 col-md-4 text-center mb-3">
+          <div className="profile__logo">
+            {preview ? (
+              <img
+                src={preview}
+                alt="Profile Logo"
+                className="rounded-circle border border-dark mb-2"
+                style={{ width: "150px", height: "150px", objectFit: "cover" }}
               />
-              <ErrorMessage message={errors.OrganizationName?.message} />
-            </div>
-          </div>
-        <div className="row">
-          {/* Email */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="useraccount_email"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-                fontSize: "15px",
-                color: "black",
-                marginBottom: 30,
-              }}
-            >
-              Email
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
+            ) : (
+              <span
+                className="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-secondary border border-dark fs-1"
+                style={{ width: "150px", height: "150px" }}
+              >
+                <i className="fa-solid fa-user"></i>
+              </span>
+            )}
+            <div className="mt-2">
+              <label htmlFor="logo" className="btn btn-outline-success btn-sm">
+                Upload Logo
+              </label>
               <input
-                id="useraccount_email"
-                {...register("useraccount_email")}
-                type="text"
-                placeholder="Enter Email"
-                style={{
-                  width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
+                {...register("logo")}
+                type="file"
+                id="logo"
+                onChange={handleLogoUpload}
+                className="d-none"
+                accept="image/*"
               />
-              <ErrorMessage message={errors.useraccount_email?.message} />
             </div>
-          </div>
-
-          {/* Organization Name */}
-          
-
-          {/* HEC/PMDC Registration Number */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="HECPMDCRegistrationNo"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              HEC/PMDC Registration Number
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <input
-                id="HECPMDCRegistrationNo"
-                {...register("HECPMDCRegistrationNo")}
-                type="text"
-                placeholder="Enter Registration Number"
-                style={{
-                  width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              />
-              <ErrorMessage message={errors.HECPMDCRegistrationNo?.message} />
-            </div>
-          </div>
-
-          {/* Type */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="type"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              Type
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="type"
-                {...register("type")}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select Type</option>
-                <option value="Public">Public</option>
-                <option value="Private">Private</option>
-                <option value="NGO">NGO</option>
-              </select>
-              <ErrorMessage message={errors.type?.message} />
-            </div>
-          </div>
-          {/* City */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="cityid"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              City
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="cityid"
-                {...register("cityid")}
-                defaultValue={organization?.cityid || ""} // Set the default value from the organization data
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select a city</option>
-                {cityname.map((city) => (
-                  <option key={city.id} value={city.id}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage message={errors.cityname?.message} />
-            </div>
-          </div>
-
-          {/* District */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="districtid"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              District
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="districtid"
-                {...register("districtid")}
-                defaultValue={organization?.districtid || ""} // Set the default value from the organization data
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select a district</option>
-                {districtname.map((district) => (
-                  <option key={district.id} value={district.id}>
-                    {district.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage message={errors.districtname?.message} />
-            </div>
-          </div>
-
-          {/* Country */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="countryid"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              Country
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="countryid"
-                {...register("countryid")}
-                defaultValue={organization?.countryid || ""} // Set the default value from the organization data
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select a country</option>
-                {countryname.map((country) => (
-                  <option key={country.id} value={country.id}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage message={errors.countryname?.message} />
-            </div>
+            <p className="small text-muted mt-2">Maximum upload size is <strong>1 MB</strong></p>
           </div>
         </div>
 
-        {/* Phone Number */}
-        <div
-          className="col-xxl-12 col-md-12"
-          style={{
-            marginBottom: "15px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <label
-            htmlFor="phoneNumber"
-            style={{
-              fontWeight: "bold",
-              width: "150px",
-              marginRight: "20px",
-            }}
-          >
-            Phone Number
-          </label>
-          <div className="profile__input" style={{ flexGrow: 1 }}>
-            <input
-              id="phoneNumber"
-              {...register("phoneNumber")}
-              type="text"
-              placeholder="Enter Phone Number (0123-4567890)"
-              style={{
-                width: "100%",
-                padding: "20px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                height: "50px",
-              }}
-            />
-            <ErrorMessage message={errors.phoneNumber?.message} />
-          </div>
-        </div>
+        {/* Form Section */}
+        <div className="col-lg-9 col-md-8">
+          <h4 className="mb-3">Update Profile</h4>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className="fw-bold pb-1">Organization Name</label>
+                <input {...register("OrganizationName")} type="text" className="form-control" placeholder="Enter Organization Name" />
+                <ErrorMessage message={errors.OrganizationName?.message} />
+              </div>
+              <div className="col-md-6">
+                <label className="fw-bold pb-1">Email</label>
+                <input {...register("useraccount_email")} type="email" className="form-control" placeholder="Enter Email" />
+                <ErrorMessage message={errors.useraccount_email?.message} />
+              </div>
+            </div>
 
-        {/* NTN Number */}
-        <div
-          className="col-xxl-12 col-md-12"
-          style={{
-            marginBottom: "15px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <label
-            htmlFor="ntnNumber"
-            style={{
-              fontWeight: "bold",
-              width: "150px",
-              marginRight: "20px",
-            }}
-          >
-            NTN Number
-          </label>
-          <div className="profile__input" style={{ flexGrow: 1 }}>
-            <input
-              id="ntnNumber"
-              {...register("ntnNumber")}
-              type="text"
-              placeholder="Enter NTN Number"
-              style={{
-                width: "100%",
-                padding: "20px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                height: "50px",
-              }}
-            />
-            <ErrorMessage message={errors.ntnNumber?.message} />
-          </div>
-        </div>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className="fw-bold pb-1">HEC/PMDC Registration No</label>
+                <input {...register("HECPMDCRegistrationNo")} type="text" className="form-control" placeholder="Enter Registration Number" />
+                <ErrorMessage message={errors.HECPMDCRegistrationNo?.message} />
+              </div>
+              <div className="col-md-6">
+                <label className="fw-bold pb-1">Type</label>
+                <select {...register("type")} className="form-select">
+                  <option value="">Select Type</option>
+                  <option value="Public">Public</option>
+                  <option value="Private">Private</option>
+                  <option value="NGO">NGO</option>
+                </select>
+                <ErrorMessage message={errors.type?.message} />
+              </div>
+            </div>
 
-        {/* Full Address */}
-        <div
-          className="col-xxl-12 col-md-12"
-          style={{
-            marginBottom: "15px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <label
-            htmlFor="fullAddress"
-            style={{
-              fontWeight: "bold",
-              width: "150px",
-              marginRight: "20px",
-            }}
-          >
-            Full Address
-          </label>
-          <div className="profile__input" style={{ flexGrow: 1 }}>
-            <textarea
-              id="fullAddress"
-              {...register("fullAddress")}
-              placeholder="Enter Full Address"
-              style={{
-                width: "100%",
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                height: "100px",
-              }}
-            ></textarea>
-            <ErrorMessage message={errors.fullAddress?.message} />
-          </div>
-        </div>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className="fw-bold pb-1">Phone Number</label>
+                <input {...register("phoneNumber")} type="text" className="form-control" placeholder="Enter Phone Number" />
+                <ErrorMessage message={errors.phoneNumber?.message} />
+              </div>
+              <div className="col-md-6">
+                <label className="fw-bold pb-1">NTN Number</label>
+                <input {...register("ntnNumber")} type="text" className="form-control" placeholder="Enter NTN Number" />
+                <ErrorMessage message={errors.ntnNumber?.message} />
+              </div>
+            </div>
 
-        {/* Submit Button */}
-        <div
-          className="profile__btn"
-          style={{ display: "flex", justifyContent: "flex-end" }}
-        >
-          <button type="submit" className="tp-btn-3">
-            Update Organization
-          </button>
+            <div className="row mb-3">
+              <div className="col-lg-4 col-md-6">
+                <label className="fw-bold pb-1">City</label>
+                <select {...register("cityid")} className="form-select">
+                  <option value="">Select a city</option>
+                  {cityname.map((city) => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
+                <ErrorMessage message={errors.cityid?.message} />
+              </div>
+              <div className="col-lg-4 col-md-6">
+                <label className="fw-bold pb-1">Country</label>
+                <select {...register("countryid")} className="form-select">
+                  <option value="">Select a Country</option>
+                  {countryname.map((country) => (
+                    <option key={country.id} value={country.id}>{country.name}</option>
+                  ))}
+                </select>
+                <ErrorMessage message={errors.countryid?.message} />
+              </div>
+              <div className="col-lg-4 col-md-6">
+                <label className="fw-bold pb-1">District</label>
+                <select {...register("districtid")} className="form-select">
+                  <option value="">Select a district</option>
+                  {districtname.map((district) => (
+                    <option key={district.id} value={district.id}>{district.name}</option>
+                  ))}
+                </select>
+                <ErrorMessage message={errors.districtid?.message} />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="fw-bold pb-1">Full Address</label>
+              <textarea {...register("fullAddress")} className="form-control" rows="3" placeholder="Enter Full Address"></textarea>
+              <ErrorMessage message={errors.fullAddress?.message} />
+            </div>
+
+            <div className="text-end">
+              <button type="submit" className="tp-btn-3">Update Organization</button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
