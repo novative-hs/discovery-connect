@@ -24,11 +24,11 @@ const SingleListProduct = ({ product }) => {
   };
   return (
     <React.Fragment>
-      <div className="product__list-item mb-30">
+   <div className="product__item p-relative transition-3 mb-50">
         <div className="row">
           <div className="col-xl-5 col-lg-5">
-            <div className="product__thumb product__list-thumb p-relative fix m-img">
-              <Link href={`product-details/${_id}`}>
+          <div className="product__thumb w-img p-relative fix">
+              {/* <Link href={`product-details/${_id}`}> */}
                  {/* <Image
                               src={product.imageUrl}
                               alt="product image"
@@ -36,18 +36,16 @@ const SingleListProduct = ({ product }) => {
                               height={1125}
                               style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             /> */}
-                <Image
-                  src={product.imageUrl}
-                  alt="image"
-                  width={335}
-                  height={325}
-                  style={{
-                    width: "335px",
-                    height: "325px",
-                    objectFit: "cover",
-                  }}
-                />
-              </Link>
+            <div className="product-image-frame">
+                   <Image
+                     src={product.imageUrl}
+                     alt="product image"
+                     width={960}
+                     height={1125}
+                     style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                   />
+                 </div>
+              {/* </Link> */}
               {discount > 0 && (
                 <div className="product__badge d-flex flex-column flex-wrap">
                   <span className={`product__badge-item has-new`}>sale</span>
@@ -56,14 +54,14 @@ const SingleListProduct = ({ product }) => {
             </div>
           </div>
           <div className="col-xl-7 col-lg-7">
-            <div className="product__list-content">
+            {/* <div className="product__list-content">
               <div className="product__rating product__rating-2 d-flex">
                 <RatingFull />
                 <RatingFull />
                 <RatingFull />
                 <RatingFull />
                 <RatingHalf />
-              </div>
+              </div> */}
 
               <h3 className="product__list-title">
               <span className="product__list-ammount">{product.samplename}</span>
@@ -86,7 +84,7 @@ const SingleListProduct = ({ product }) => {
                   {/* <CartTwo /> */}
                   Add to Cart
                 </button>
-                <button
+                {/* <button
                   type="button"
                   className="product-action-btn product-action-btn-2"
                 >
@@ -94,7 +92,7 @@ const SingleListProduct = ({ product }) => {
                   <span className="product-action-tooltip">
                     Add To Wishlist
                   </span>
-                </button>
+                </button> */}
                 <button
                   onClick={() => handleQuickView(product)}
                   type="button"
@@ -103,7 +101,7 @@ const SingleListProduct = ({ product }) => {
                   <Eye />
                   <span className="product-action-tooltip">Quick view</span>
                 </button>
-
+{/* 
                 <Link href={`/product-details/${_id}`}>
                   <button
                     type="button"
@@ -114,12 +112,12 @@ const SingleListProduct = ({ product }) => {
                       Product Details
                     </span>
                   </button>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
         </div>
-      </div>
+      {/* </div> */}
     </React.Fragment>
   );
 };
