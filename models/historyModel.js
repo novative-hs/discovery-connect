@@ -13,6 +13,7 @@ const RegistrationAdmin_History = () => {
       city_id INT,
       country_id INT,
       district_id INT,
+      sample_id VARCHAR(36),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive', 'unapproved', 'approved') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
