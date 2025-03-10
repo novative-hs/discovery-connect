@@ -46,37 +46,44 @@ const updateCollectionSite = (id, data, callback) => {
 
 // Function to update a collection site's status
 const updateCollectionSiteStatus = async (id, status) => {
+  const getEmailQuery = `
+    SELECT ua.email 
+    FROM collectionsite cs
+    JOIN user_account ua ON cs.user_account_id = ua.id
+    WHERE cs.id = ?
+  `;
+
+  const updateStatusQuery = `
+    UPDATE collectionsite SET status = ? WHERE id = ?
+  `;
+
   try {
-    // Fetch email by joining collectionsite and user_account tables
-    const [results] = await mysqlConnection.promise().query(
-      `SELECT ua.email 
-       FROM collectionsite cs
-       JOIN user_account ua ON cs.user_account_id = ua.id
-       WHERE cs.id = ?`,
-      [id]
-    );
+    // Fetch email and update status in parallel
+    const [[emailResults], _] = await Promise.all([
+      mysqlConnection.promise().query(getEmailQuery, [id]),
+      mysqlConnection.promise().query(updateStatusQuery, [status, id])
+    ]);
 
-    if (results.length === 0) throw new Error("Collection site not found");
+    // Check if email exists
+    if (emailResults.length === 0) {
+      throw new Error("Collection site not found");
+    }
 
-    const email = results[0].email;
-
-    // Update status
-    await mysqlConnection.promise().query(
-      `UPDATE collectionsite SET status = ? WHERE id = ?`,
-      [status, id]
-    );
+    const email = emailResults[0].email;
 
     // Prepare email content
     let emailText = `Dear Collectionsite,\n\nYour account status is currently pending. 
-    Please wait for approval.\n\nBest regards,\nYour Company`;
+    Please wait for approval.\n\nBest regards,\nLab Hazir`;
 
     if (status === "approved") {
       emailText = `Dear Collectionsite,\n\nYour account has been approved! 
-      You can now log in and access your account.\n\nBest regards,\nYour Company`;
+      You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
     }
 
-    // Send email
-    await sendEmail(email, "Welcome to Discovery Connect", emailText);
+    // Send email asynchronously (does not block function execution)
+    sendEmail(email, "Welcome to Discovery Connect", emailText)
+      .then(() => console.log("Email sent successfully"))
+      .catch((emailErr) => console.error("Error sending email:", emailErr));
 
     return { message: "Status updated and email sent" };
   } catch (error) {
@@ -84,6 +91,7 @@ const updateCollectionSiteStatus = async (id, status) => {
     throw error;
   }
 };
+
 
 
 function getCollectionSiteById(id, callback) {
@@ -105,7 +113,8 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
   const collectionSiteQuery = `
     SELECT CollectionSiteName, user_account_id 
     FROM collectionsite 
-    WHERE user_account_id != ?;
+    WHERE user_account_id != ?
+    AND status = 'approved';
   `;
   mysqlConnection.query(collectionSiteQuery, [user_account_id], (err, results) => {
     if (err) {

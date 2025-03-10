@@ -362,7 +362,7 @@ const CityArea = () => {
                   {currentData.length > 0 ? (
                     currentData.map((cityname) => (
                       <tr key={cityname.id}>
-                        <td>{cityname.id}</td>
+                        {/* <td>{cityname.id}</td> */}
                         <td>{cityname.name}</td>
                         <td>{cityname.added_by}</td>
                         <td>{formatDate(cityname.created_at)}</td>

@@ -6,7 +6,6 @@ import * as Yup from "yup";
 import { notifyError, notifySuccess } from "@utils/toast";
 import ErrorMessage from "@components/error-message/error";
 import axios from "axios";
-
 // Validation schema
 const schema = Yup.object().shape({
   useraccount_email: Yup.string().required("Email is required").label("Email"),
@@ -17,7 +16,7 @@ const schema = Yup.object().shape({
     .required("Phone Number is required")
     .matches(
       /^\d{4}-\d{7}$/,
-      "Phone number must be in the format 0123-4567890 and numeric",
+      "Phone number must be in the format 0123-4567890 and numeric"
     )
     .label("Phone Number"),
   fullAddress: Yup.string()
@@ -58,7 +57,7 @@ const UpdateCollectionSite = () => {
   const fetchcollectionsite = async () => {
     try {
       const response = await axios.get(
-         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get/${id}`
       );
       setCollectionSite(response.data);
     } catch (error) {
@@ -68,7 +67,7 @@ const UpdateCollectionSite = () => {
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
-       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
       );
       setcityname(response.data);
     } catch (error) {
@@ -78,15 +77,18 @@ const UpdateCollectionSite = () => {
   useEffect(() => {
     if (collectionsite) {
       console.log("Logo Data:", collectionsite.logo?.data);
-      console.log("Logo URL:", bufferToBase64(collectionsite.logo?.data, "jpeg"));
+      console.log(
+        "Logo URL:",
+        bufferToBase64(collectionsite.logo?.data, "jpeg")
+      );
       reset(collectionsite); // Reset form with the organization data when available
     }
   }, [collectionsite, reset]);
-  
+
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(
-         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
       );
       setdistrictname(response.data);
     } catch (error) {
@@ -97,7 +99,7 @@ const UpdateCollectionSite = () => {
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(
-         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
       );
       setcountryname(response.data);
     } catch (error) {
@@ -106,28 +108,30 @@ const UpdateCollectionSite = () => {
   };
   const onSubmit = async (data) => {
     let formData = new FormData();
-  
+
     // Add all the regular fields to the FormData
     for (let key in data) {
       if (data[key]) {
         formData.append(key, data[key]);
       }
     }
-  
+
     // If a new logo is provided, append it to the FormData
     if (logo) {
       formData.append("logo", logo); // Assuming `logo` is a File object (binary)
     } else {
       // If no new logo is uploaded, append the existing logo's binary data
       const binaryLogo = data.logo.data; // This is the existing logo buffer (e.g., Buffer or array)
-  
+
       // Convert the binary data to a Blob (binary file-like object)
-      const blob = new Blob([new Uint8Array(binaryLogo)], { type: "image/png" }); // Use the appropriate MIME type for the logo
-  
+      const blob = new Blob([new Uint8Array(binaryLogo)], {
+        type: "image/png",
+      }); // Use the appropriate MIME type for the logo
+
       // Append the Blob as a file object
       formData.append("logo", blob, "existing-logo.png"); // "existing-logo.png" can be the default name for the existing logo
     }
-  
+
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/updatedetail/${id}`,
@@ -152,363 +156,155 @@ const UpdateCollectionSite = () => {
     });
     return `data:image/${format};base64,${window.btoa(binary)}`;
   };
-  
-
 
   return (
-    <div className="profile__info-content">
-      <form encType="multipart/form-data" onSubmit={handleSubmit(onSubmit)}>
-        <div className="row">
-          {/* Image */}
+    <div className="container mt-4">
+      <div className="row">
+        {/* Profile Picture Section */}
+        <div className="col-lg-3 col-md-4 text-center mb-3">
           <div
-            className="col-xxl-12 col-md-12"
-            style={{ marginBottom: "15px" }}
+            className="profile__logo d-flex justify-content-center p-2 align-items-center border border-2 border-black rounded-circle"
+            style={{
+              width: "150px",
+              height: "150px",
+              overflow: "hidden",
+              marginLeft: "50px",
+            }}
           >
-            <div className="profile__logo" style={{ textAlign: "center" }}>
             <img
-                src={logo ? URL.createObjectURL(logo) : 
-                  collectionsite?.logo?.data ? bufferToBase64(collectionsite.logo.data, "jpeg") : 
-                  "/default-logo.png"
-                }
-                alt="Collection Site Logo"
-                style={{
-                  maxWidth: "150px",
-                  maxHeight: "150px",
-                  objectFit: "contain",
-                  marginBottom: "20px",
-                  borderRadius: 10,
-                }}
-              />
-            </div>
-          </div>
-          {/* Upload New Logo */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="logo"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-                display: "inline-block", // Ensures label is inline
-               
-              }}
-            >
-              Upload New Logo
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-            <input
-                {...register("logo")}
-                name="logo"
-                type="file"
-                id="logo"
-                onChange={(e) => logoHandler(e.target.files[0])}
-                className="form-control form-control-sm"
-              />
-
-              <ErrorMessage message={errors.logo?.message} />
-            </div>
-          </div>
-        </div>
-        <div className="row">
-          {/* Email */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="useraccount_email"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-                fontSize: "15px",
-                color: "black",
-                marginBottom: 30,
-              }}
-            >
-              Email
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <input
-                id="useraccount_email"
-                {...register("useraccount_email")}
-                type="text"
-                placeholder="Enter Email"
-                style={{
-                  width: "100%",
-                  padding: "20px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              />
-              <ErrorMessage message={errors.useraccount_email?.message} />
-            </div>
-          </div>
-
-          {/* Type */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="CollectionSiteType"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-            Type
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="CollectionSiteType"
-                {...register("CollectionSiteType")}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select Type</option>
-                <option value="Hospital">Hospital</option>
-                <option value="Independent Lab">Independent Lab</option>
-                <option value="Bio Bank">Bio Bank</option>
-              </select>
-              <ErrorMessage message={errors.CollectionSiteType?.message} />
-            </div>
-          </div>
-          {/* City */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="cityid"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              City
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="cityid"
-                {...register("cityid")}
-                defaultValue={collectionsite?.cityid || ""} // Set the default value from the collectionsite data
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select a city</option>
-                {cityname.map((city) => (
-                  <option key={city.id} value={city.id}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage message={errors.cityname?.message} />
-            </div>
-          </div>
-
-          {/* District */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="districtid"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              District
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="districtid"
-                {...register("districtid")}
-                defaultValue={collectionsite?.districtid || ""} // Set the default value from the collectionsite data
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select a district</option>
-                {districtname.map((district) => (
-                  <option key={district.id} value={district.id}>
-                    {district.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage message={errors.districtname?.message} />
-            </div>
-          </div>
-
-          {/* Country */}
-          <div
-            className="col-xxl-12 col-md-12"
-            style={{
-              marginBottom: "15px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <label
-              htmlFor="countryid"
-              style={{
-                fontWeight: "bold",
-                width: "150px",
-                marginRight: "20px",
-              }}
-            >
-              Country
-            </label>
-            <div className="profile__input" style={{ flexGrow: 1 }}>
-              <select
-                id="countryid"
-                {...register("countryid")}
-                defaultValue={collectionsite?.countryid || ""} // Set the default value from the collectionsite data
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  height: "50px",
-                }}
-              >
-                <option value="">Select a country</option>
-                {countryname.map((country) => (
-                  <option key={country.id} value={country.id}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage message={errors.countryname?.message} />
-            </div>
-          </div>
-        </div>
-
-        {/* Phone Number */}
-        <div
-          className="col-xxl-12 col-md-12"
-          style={{
-            marginBottom: "15px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <label
-            htmlFor="phoneNumber"
-            style={{
-              fontWeight: "bold",
-              width: "150px",
-              marginRight: "20px",
-            }}
-          >
-            Phone Number
-          </label>
-          <div className="profile__input" style={{ flexGrow: 1 }}>
-            <input
-              id="phoneNumber"
-              {...register("phoneNumber")}
-              type="text"
-              placeholder="XXXX-XXXXXXX"
-              style={{
-                width: "100%",
-                padding: "20px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                height: "50px",
-              }}
+              src={
+                logo
+                  ? URL.createObjectURL(logo)
+                  : collectionsite?.logo?.data
+                  ? bufferToBase64(collectionsite.logo.data, "jpeg")
+                  : "/default-logo.png"
+              }
+              alt="Collection Site Logo"
+              className="w-100 h-100 rounded-circle"
+              style={{ objectFit: "cover" }}
             />
-            <ErrorMessage message={errors.phoneNumber?.message} />
           </div>
+
+          <div className="mt-2">
+            <label htmlFor="logo" className="btn btn-outline-success btn-sm">
+              Upload Logo
+            </label>
+            <input
+              {...register("logo")}
+              name="logo"
+              type="file"
+              id="logo"
+              onChange={(e) => logoHandler(e.target.files[0])}
+              className="d-none"
+            />
+            <ErrorMessage message={errors.logo?.message} />
+          </div>
+          <p className="small text-muted mt-2">
+            Maximum upload size is <strong>1 MB</strong>
+          </p>
         </div>
 
-        {/* Full Address */}
-        <div
-          className="col-xxl-12 col-md-12"
-          style={{
-            marginBottom: "15px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <label
-            htmlFor="fullAddress"
-            style={{
-              fontWeight: "bold",
-              width: "150px",
-              marginRight: "20px",
-            }}
-          >
-            Full Address
-          </label>
-          <div className="profile__input" style={{ flexGrow: 1 }}>
-            <textarea
-              id="fullAddress"
-              {...register("fullAddress")}
-              placeholder="Enter Full Address"
-              style={{
-                width: "100%",
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                height: "100px",
-              }}
-            ></textarea>
-            <ErrorMessage message={errors.fullAddress?.message} />
-          </div>
-        </div>
+        {/* Form Section */}
+        <div className="col-lg-9 col-md-8">
+          <h4 className="mb-3">Update Profile</h4>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className=" pb-1">Email</label>
+                <input
+                  {...register("useraccount_email")}
+                  type="email"
+                  className="form-control"
+                  placeholder="Enter Email"
+                />
+                <ErrorMessage message={errors.useraccount_email?.message} />
+              </div>
+              <div className="col-md-6">
+                <label className=" pb-1">Phone Number</label>
+                <input
+                  {...register("phoneNumber")}
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter Phone Number"
+                />
+                <ErrorMessage message={errors.phoneNumber?.message} />
+              </div>
+            </div>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className=" pb-1">City</label>
+                <select {...register("cityid")} className="form-select">
+                  <option value="">Select a city</option>
+                  {cityname.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+                <ErrorMessage message={errors.cityid?.message} />
+              </div>
+              <div className="col-md-6">
+                <label className=" pb-1">Country</label>
+                <select {...register("countryid")} className="form-select">
+                  <option value="">Select a Country</option>
+                  {countryname.map((country) => (
+                    <option key={country.id} value={country.id}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+                <ErrorMessage message={errors.countryid?.message} />
+              </div>
+            
+            </div>
+            <div className="row mb-3">
+            <div className="col-md-6">
+                <label className="pb-1">District</label>
+                <select {...register("districtid")} className="form-select">
+                  <option value="">Select a district</option>
+                  {districtname.map((district) => (
+                    <option key={district.id} value={district.id}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
+                <ErrorMessage message={errors.districtid?.message} />
+              </div>
+              <div className="col-md-6">
+                <label className="pb-1">Type</label>
+                <select
+                  id="CollectionSiteType"
+                  {...register("CollectionSiteType")}
+                  className="form-select p-2"
+                >
+                  <option value="">Select Type</option>
+                  <option value="Hospital">Hospital</option>
+                  <option value="Independent Lab">Independent Lab</option>
+                  <option value="Bio Bank">Bio Bank</option>
+                </select>
+                <ErrorMessage message={errors.CollectionSiteType?.message} />
+              </div>
+            </div>
 
-        {/* Submit Button */}
-        <div
-          className="profile__btn"
-          style={{ display: "flex", justifyContent: "flex-end" }}
-        >
-          <button type="submit" className="tp-btn-3">
-            Update Collectionsite
-          </button>
+            <div className="mb-3">
+              <label className="pb-1">Full Address</label>
+              <textarea
+                {...register("fullAddress")}
+                className="form-control"
+                rows="3"
+                placeholder="Enter Full Address"
+              ></textarea>
+              <ErrorMessage message={errors.fullAddress?.message} />
+            </div>
+
+            <div className="text-end">
+              <button type="submit" className="tp-btn-3">
+                Update Collection Site
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

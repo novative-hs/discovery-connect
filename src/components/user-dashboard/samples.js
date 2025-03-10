@@ -5,7 +5,7 @@ import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
 import { notifyError, notifySuccess } from "@utils/toast";
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
 import { Cart } from "@svg/index";
-
+import Pagination from "@ui/Pagination";
 const SampleArea = () => {
   const id = localStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -30,7 +30,10 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -79,16 +82,17 @@ const SampleArea = () => {
   const [quantity, setQuantity] = useState(0);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(samples.length / itemsPerPage);
+  const [currentPage, setCurrentPage] = useState(0);
+    const itemsPerPage = 10;
+    // Calculate total pages
+    const [totalPages, setTotalPages] = useState(0);
+     const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
   const incrementQuantity = (sample) => {
     const updatedQuantity = quantity + 1;
     setQuantity(updatedQuantity); // Update quantity
 
     // Use a callback to ensure formData is set before making the API call
-    setFormData(prevData => {
+    setFormData((prevData) => {
       const newFormData = {
         ...prevData, // Preserve any existing data in formData
         samplename: sample.samplename,
@@ -120,7 +124,7 @@ const SampleArea = () => {
         TestKitManufacturer: sample.TestKitManufacturer,
         TestSystem: sample.TestSystem,
         TestSystemManufacturer: sample.TestSystemManufacturer,
-        user_account_id: id
+        user_account_id: id,
       };
 
       // Make API call directly after updating the form data
@@ -128,12 +132,12 @@ const SampleArea = () => {
     });
   };
 
-
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAll`
       );
+      setFilteredSamples(response.data)
       setSamples(response.data); // Store fetched samples in state
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -149,28 +153,47 @@ const SampleArea = () => {
     }
   }, []);
 
-  const currentData = samples.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+ useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredSamples.length / itemsPerPage)
+    );
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredSamples]);
+
+  // Get the current data for the table
+  const currentData = filteredSamples.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
+
+
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchSamples(); // Reset to fetch original data
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = samples; // Show all if filter is empty
     } else {
-      // Filter the sample array based on the field and value
-      const filtered = samples.filter((sample) =>
+      filtered = samples.filter((sample) =>
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      setSamples(filtered); // Update the state with filtered results
     }
+
+    setFilteredSamples(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
   const handleAddClick = async (e) => {
-    console.log(e)
+    console.log(e);
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/post`,
@@ -189,150 +212,104 @@ const SampleArea = () => {
     } catch (error) {
       notifyError("Error adding Sample to cart successfully");
       console.error(
-
         `Error to add sample cart with ID ${selectedSampleId}:`,
         error
       );
     }
-  }
+  };
 
   return (
-    <section className="policy__area pb-120 overflow-hidden">
-      <div className="container-fluid mt-n5">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
-              {/* {Button} */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
+    <section className="policy__area pb-40 overflow-hidden p-3">
+      <div className="container">
+        <div className="row justify-content-center">
+          {/* {Button} */}
+          <div className="d-flex flex-column w-100">
+            {/* Success Message */}
+            {successMessage && (
+              <div
+                className="alert alert-success w-100 text-start mb-2"
+                role="alert"
+              >
+                {successMessage}
               </div>
-
-              {/* Table */}
-              <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
-                    <tr>
-                      {tableHeaders.map(({ label, key }, index) => (
-                        <th key={index} className="px-4 text-center">
-                          <div className="d-flex flex-column align-items-center">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm w-100"
-                              placeholder={label}
-                              onChange={(e) =>
-                                handleFilterChange(key, e.target.value)
-                              }
-                              style={{ minWidth: "120px" }}
-                            />
-                            <span className="fw-bold mt-1 d-block text-nowrap">
-                              {label}
-                            </span>
-                          </div>
-                        </th>
-                      ))}
-                      <th className="px-3 align-middle text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((sample) => (
-                        <tr key={sample.id}>
-                          {tableHeaders.map(({ key }, index) => (
-                            <td key={index}>{sample[key] || "N/A"}</td>
-                          ))}
-                          <td>
-                            <div className="d-flex justify-content-around gap-2">
-                              <button className="btn btn-primary btn-sm" onClick={() => handleTransferClick(sample)}>
-                                <i className="fas fa-exchange-alt"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={tableHeaders.length + 1} className="text-center">
-                          No samples available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${currentPage === 1 ? "disabled" : ""
-                        }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${currentPage === pageNumber ? "active" : ""
-                            }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                        }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
+            )}
           </div>
+
+          {/* Table */}
+          <div className="table-responsive w-100">
+            <table className="table table-bordered table-hover">
+              <thead className="thead-dark">
+                <tr>
+                  {tableHeaders.map(({ label, key }, index) => (
+                    <th key={index} className="px-4 text-center">
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control form-control-sm w-100"
+                          placeholder={label}
+                          onChange={(e) =>
+                            handleFilterChange(key, e.target.value)
+                          }
+                          style={{ minWidth: "120px" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-nowrap">
+                          {label}
+                        </span>
+                      </div>
+                    </th>
+                  ))}
+                  <th className="px-3 align-middle text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((sample) => (
+                    <tr key={sample.id}>
+                      {tableHeaders.map(({ key }, index) => (
+                        <td key={index}>{sample[key] || "N/A"}</td>
+                      ))}
+                      <td>
+                        <div className="d-flex justify-content-around gap-2">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleTransferClick(sample)}
+                          >
+                            <i className="fas fa-exchange-alt"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={tableHeaders.length + 1}
+                      className="text-center"
+                    >
+                      No samples available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+          <Pagination
+            handlePageClick={handlePageChange}
+            pageCount={totalPages}
+            focusPage={currentPage}
+          />
+        )}
         </div>
       </div>
-      <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} sample={formData} />
 
+      <CartSidebar
+        isCartOpen={isCartOpen}
+        setIsCartOpen={setIsCartOpen}
+        sample={formData}
+      />
     </section>
-
   );
 };
 
