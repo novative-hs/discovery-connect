@@ -16,10 +16,6 @@ export default function Shop({ query }) {
   const [shortValue, setShortValue] = useState("");
 
   useEffect(() => {
-    console.log("Sample Data:", samples);
-    console.log("Is Loading:", isLoading);
-    console.log("Is Error:", isError);
-    console.log("Error:", error); // Log any errors
   }, [samples, isLoading, isError, error]);
 
   // Select Short Handler

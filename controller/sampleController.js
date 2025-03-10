@@ -33,7 +33,14 @@ const getAllSamples = (req, res) => {
   });
 };
 
-
+const getAllCSSamples = (req, res) => {
+  SampleModel.getAllCSSamples((err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples" });
+    }
+    res.status(200).json(results);
+  });
+};
 // Controller to get a sample by ID
 const getSampleById = (req, res) => {
   const { id } = req.params;
@@ -134,6 +141,7 @@ module.exports = {
   getFilteredSamples,
   getSamples,
   getAllSamples,
+  getAllCSSamples,
   getSampleById,
   createSample,
   updateSample,
