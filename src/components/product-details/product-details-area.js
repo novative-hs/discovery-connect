@@ -88,8 +88,7 @@ const ProductDetailsArea = ({ product }) => {
               <h3 className="product__details-title">{title}</h3>
 
               <p className="mt-20">
-                Shop Harry.com for every day low prices. Free shipping on orders
-                $35+ or Pickup In-store and get
+              Get high-quality blood samples for your research at Discovery Connect. Fast shipping and reliable sourcing!
               </p>
 
               {/* Product Details Price */}

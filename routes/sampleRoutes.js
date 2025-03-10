@@ -3,9 +3,11 @@ const router = express.Router();
 const SampleController = require('../controller/sampleController');
 
 // Sample Routes
+router.get("/sample/filterdata", SampleController.getFilteredSamples);
 router.get('/create-table', SampleController.createSampleTable);
 router.get('/sample/get/:id', SampleController.getSamples); // GET all samples for that specific Collectionsite Id
 router.get('/sample/getAll', SampleController.getAllSamples);
+router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById); // GET a single sample by ID
 router.post('/samples/postsample', SampleController.createSample); // POST a new sample
 router.put('/samples/edit/:id', SampleController.updateSample); // PUT update sample

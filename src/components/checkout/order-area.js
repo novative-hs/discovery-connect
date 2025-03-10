@@ -9,46 +9,61 @@ const OrderArea = ({
   isCheckoutSubmit,
 }) => {
   const { cart_products } = useSelector((state) => state.cart);
+  console.log("cart items are nnnn", cart_products)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const dispatch = useDispatch();
   const router = useRouter(); 
   // Calculate subtotal
-  const calculateSubtotal = () =>
-    cart_products?.reduce(
-      (total, item) => total + (item.quantity || 0) * (item.price || 0),
-      0
-    );
-  const subtotal = calculateSubtotal();
+  // const calculateSubtotal = () =>
+  //   cart_products?.reduce(
+  //     (total, item) => total + (item.quantity || 0) * (item.price || 0),
+  //     0
+  //   );
+  // const subtotal = calculateSubtotal();
 
+  // Calculate subtotal and total
+  const subtotal = cart_products.reduce(
+    (acc, item) => acc + item.price * item.orderQuantity,
+    0
+  );
   // Handle Payment Submission
   const handleSubmit = async () => {
+    const userID = localStorage.getItem("userID"); // Retrieve user ID from local storage
+    const accountType = localStorage.getItem("accountType"); // Retrieve account type
+  
     const data = {
-      researcher_id: 1, // Replace with the actual user ID
+      researcher_id: userID,
       cart_items: cart_products.map((item) => ({
         sample_id: item.id,
-        price: item.price,
-        samplequantity: item.quantity,
-        total: (item.quantity || 0) * (item.price || 0),
+        price: Number(item.price), // Ensure numeric conversion
+        samplequantity: Number(item.orderQuantity),
+        total: Number(item.orderQuantity) * Number(item.price), // Fix calculation
       })),
       payment_method: selectedPaymentMethod,
     };
-
+    
+  
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, data);
       console.log("Order Placed Successfully:", response.data);
       alert("Order placed successfully!");
-      console.log("clear_cart function:", clear_cart);
+      
       dispatch(clear_cart());
-            // Redirect to home page after 1 second
-         setTimeout(() => {
-        router.push("/");  // Redirect using Next.js router
-      }, 1000); // 1 second delay
+  
+      // Redirect to user-specific dashboard after 1 second
+      setTimeout(() => {
+        if (accountType) {
+          router.push(`/dashboardheader`);
+        } else {
+          router.push(`/default-dashboard`);
+        }
+      }, 1000); // 1-second delay
     } catch (error) {
       console.error("Error placing order:", error);
       alert("Failed to place order. Please try again.");
     }
   };
-
+  
   return (
     <div className="your-order mb-30">
       <h3>Your order</h3>
@@ -57,6 +72,7 @@ const OrderArea = ({
           <thead>
             <tr>
               <th className="product-name">Sample</th>
+              <th className="product-quantity">quantity</th>
               <th className="product-price">Price</th>
               <th className="product-total">Total</th>
             </tr>
@@ -67,7 +83,8 @@ const OrderArea = ({
                 <tr key={i}>
                   <td>{item.samplename || "N/A"}</td>
                   <td>{(item.price || 0).toFixed(2)}</td>
-                  <td>{((item.quantity || 0) * (item.price || 0)).toFixed(2)}</td>
+                  <td>{item.orderQuantity || 0}</td>
+                  <td>{((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}</td>
                 </tr>
               ))
             ) : (
@@ -84,7 +101,7 @@ const OrderArea = ({
               <th>Sub Total</th>
               <td colSpan="2" className="text-end">
                 <strong>
-                  <span className="amount">${subtotal.toFixed(2)}</span>
+                  <span className="amount">{subtotal.toFixed(2)}</span>
                 </strong>
               </td>
             </tr>

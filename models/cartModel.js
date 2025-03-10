@@ -37,41 +37,56 @@ const createCart = (data, callback) => {
   }
 
   let insertCount = 0;
-  let hasError = false;
+  let errors = [];
 
-  cart_items.forEach((item, index) => {
-    const query = `
+  cart_items.forEach((item) => {
+    const insertQuery = `
       INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
-    const values = [
+    const insertValues = [
       researcher_id,
-      item.sample_id || null, // Default to null if undefined
+      item.sample_id || null,
       item.price,
       item.samplequantity,
       payment_method,
       item.total,
     ];
 
-    mysqlConnection.query(query, values, (err) => {
+    mysqlConnection.query(insertQuery, insertValues, (err) => {
       if (err) {
         console.error("Error inserting into cart:", err);
-        if (!hasError) {
-          hasError = true;
-          return callback(err); // Only call the callback once on error
+        errors.push(err);
+      }
+
+      if (errors.length > 0) return callback(errors[0]); // Return first error
+
+      // **Step 2: Update stock only if insert succeeds**
+      const updateQuery = `
+        UPDATE sample 
+        SET quantity = quantity - ? 
+        WHERE id = ? AND quantity >= ?
+      `;
+      const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+
+      mysqlConnection.query(updateQuery, updateValues, (err, result) => {
+        if (err || result.affectedRows === 0) {
+          console.error("Error updating sample quantity or insufficient stock:", err);
+          errors.push(err || new Error("Insufficient stock"));
         }
-      }
 
-      insertCount++;
+        insertCount++;
 
-      // Call the callback only when all queries have completed successfully
-      if (insertCount === cart_items.length && !hasError) {
-        callback(null, { message: "Cart items added successfully" });
-      }
+        // **Final callback after all insertions & updates**
+        if (insertCount === cart_items.length && errors.length === 0) {
+          callback(null, { message: "Cart items added successfully and stock updated" });
+        } else if (insertCount === cart_items.length) {
+          callback(errors[0]); // Return first encountered error
+        }
+      });
     });
   });
 };
-
 
 
 const getAllCart = (id, callback, res) => {

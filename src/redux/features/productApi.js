@@ -5,7 +5,7 @@ export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // get all samples
     getAllSamples: builder.query({
-      query: () => "api/sample/getAll", // Adjust the API path as needed
+      query: () => "api/sample/getAllSamples", // Adjust the API path as needed
     }),
     // get discount products
     getDiscountProducts: builder.query({

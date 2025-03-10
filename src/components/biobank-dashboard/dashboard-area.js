@@ -41,7 +41,6 @@ const DashboardArea = () => {
   if (!id) {
     return <div>Loading...</div>; // Or redirect to login
   }
-
   const renderContent = () => {
     switch (activeTab) {
       case "samples":

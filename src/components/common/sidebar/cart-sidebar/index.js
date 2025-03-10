@@ -30,7 +30,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
                 </button>
               </div>
             </div>
-            {cart_products.length > 0 && (
+            {cart_products.length >  0 && (
               <div className="cartmini__widget">
                 {cart_products.map((item, i) => (
                   <SingleCartItem key={i} item={item} />
@@ -51,10 +51,9 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
               <Link href="/cart" className="tp-btn mb-10 w-100">
                 <span></span> view cart
               </Link>
-              <Link href={`/login?from=checkout`} className="tp-btn-border w-100 cursor-pointer">
+              <Link href="/checkout" className="tp-btn-border w-100 cursor-pointer">
                 <span></span> checkout
               </Link>
-            
             </div>
           </div>
         </div>

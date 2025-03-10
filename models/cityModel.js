@@ -340,5 +340,5 @@ module.exports = {
   updateCity,
   createCity,
   deleteCity,
-  getCount
+  getCount,
 };

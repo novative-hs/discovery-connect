@@ -14,15 +14,36 @@ import Link from "next/link";
 import { add_to_wishlist } from "src/redux/features/wishlist-slice";
 import { Modal } from "react-bootstrap";
 import { handleModalShow } from "src/redux/features/productSlice";
-
-const ProductModal = () => {
-  const { product, isShow } = useSelector((state) => state.product);
+import { Minus, Plus } from "@svg/index";
+import { decrement, increment } from "src/redux/features/cartSlice";
+const ProductModal = ({ product, discountPrd = false }) => {
+  console.log("value in product is:", product)
+  const { id, image_url, samplename, title, price, discount, originalPrice } = product || {};
+  const { isShow } = useSelector((state) => state.product);
   const { wishlist } = useSelector((state) => state.wishlist);
-  const { _id, image, relatedImages, title, tags, SKU, price, discount, originalPrice, sku } = product || {};
-  const [activeImg, setActiveImg] = useState(image);
+  const { image, relatedImages, tags, SKU,  sku } = product || {};
+  // const [activeImg, setActiveImg] = useState(image);
+  const { cart_products } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
-  const isWishlistAdded = wishlist.some((item) => item._id === _id);
+  const isWishlistAdded = wishlist.some((item) => item.id === id);
 
+
+  const handleIncrease = (item) => {
+    dispatch(increment({ id: item.id }));
+  };
+  
+  const handleDecrease = (item) => {
+    dispatch(decrement({ id: item.id }));
+    console.log("item after decreasing is", item.orderQuantity);
+  };
+  const cartItem = cart_products.find((item) => item.id === product.id);
+  const displayQuantity = cartItem ? cartItem.orderQuantity : product.quantity;
+  console.log(" item after decresing is ", product.quantity)
+  const subtotal = cart_products.reduce(
+    (acc, item) => acc + item.price * item.orderQuantity,
+    0
+  );
+  
   // handle add product
   const handleAddProduct = (prd) => {
     dispatch(add_cart_product(prd));
@@ -37,7 +58,7 @@ const ProductModal = () => {
     dispatch(handleModalShow())
     dispatch(initialOrderQuantity())
   }
-
+  const handleChange = (e) => {}
   return (
     <Modal
       show={isShow}
@@ -61,18 +82,19 @@ const ProductModal = () => {
               <div className="product__details-thumb-tab mr-40">
                 <div className="product__details-thumb-content w-img">
                   <div className="tab-content" id="nav-tabContent">
-                    <div className="active-img">
+                    <div className="active-img product-image-frame">
                       <Image
-                        src={activeImg}
+                        src={product.imageUrl
+                        }
                         alt="image"
-                        width={510}
-                        height={485}
-                        style={{ width: "100%", height: "100%" }}
+                        width={210}
+                        height={285}
+                        style={{ width: "60%", height: "100%" }}
                       />
                     </div>
                   </div>
                 </div>
-                <div className="product__details-thumb-nav tp-tab">
+                {/* <div className="product__details-thumb-nav tp-tab">
                   <nav>
                     <div className="nav nav-tabs justify-content-sm-between">
                       {relatedImages && relatedImages.length > 0 ? (
@@ -90,26 +112,46 @@ const ProductModal = () => {
                       )}
                     </div>
                   </nav>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
           <div className="col-lg-6">
             <div className="product__details-wrapper">
-              <h3 className="product__details-title">{title}</h3>
+              <h3 className="product__details-title">{product.samplename}</h3>
               <p className="mt-20">
-                Shop Harry.com for every day low prices. Free shipping on
-                orders $35+ or Pickup In-store and gett
+              Get high-quality blood samples for your research at Discovery Connect. Fast shipping and reliable sourcing!
               </p>
               {/* Price */}
-              <OldNewPrice
+              {/* <OldNewPrice
                 originalPrice={originalPrice}
                 discount={discount}
-              />
+              /> */}
+                  <div className="product__price">
+      <span className="product__ammount old-price">
+        {product.price?.toFixed(2) || "0.00"}
+      </span>
+      {/* <span className="product__ammount new-price">
+        ${product.price?.toFixed(2) || "0.00"}
+      </span> */}
+    </div>
               {/* Price */}
 
               {/* quantity */}
-              <Quantity />
+     <div className="tp-product-quantity mt-10 mb-10">
+     <span className="tp-cart-minus" onClick={() => handleDecrease(cartItem)}>
+  <Minus />
+</span>
+<input
+  className="tp-cart-input"
+  type="text"
+  value={cartItem ? cartItem.orderQuantity : product.quantity}
+  onChange={handleChange}
+/>
+<span className="tp-cart-plus" onClick={() => handleIncrease(cartItem)}>
+  <Plus />
+</span>
+        </div>
               {/* quantity */}
               <div className="product__details-action d-flex flex-wrap align-items-center">
                 <button
@@ -131,7 +173,7 @@ const ProductModal = () => {
                     Add To Wishlist
                   </span>
                 </button>
-                <Link href={`/product-details/${_id}`}>
+                <Link href={`/product-details/${id}`}>
                   <button type="button" className="product-action-btn">
                     <i className="fa-solid fa-link"></i>
                     <span className="product-action-tooltip">

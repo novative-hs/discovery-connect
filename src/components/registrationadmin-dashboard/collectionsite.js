@@ -25,8 +25,8 @@ const CollectionsiteArea = () => {
   const [filteredCollectionsite, setFilteredCollectionsite] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
@@ -436,7 +436,6 @@ const CollectionsiteArea = () => {
                                 disabled
                               />
                             </div>
-
                             {/* <div className="form-group">
                             <label>Registered_at</label>
                             <input

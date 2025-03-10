@@ -102,7 +102,7 @@ LEFT JOIN
 LEFT JOIN 
   district d ON cs.district = d.id
 WHERE 
-  s.status = 'In Stock' and s.price > 0;
+  s.status = 'In Stock' and s.price > 0 ;
 
   `;
 
@@ -154,7 +154,77 @@ WHERE
     });
   });
 };
+const getAllCSSamples = (callback) => {
+  const query = `
+SELECT 
+  s.*,
+  cs.CollectionSiteName AS Name,
+  bb.Name AS Name,
+  c.name AS CityName,
+  d.name AS DistrictName
+FROM 
+  sample s
+LEFT JOIN 
+  collectionsite cs ON s.user_account_id = cs.user_account_id
+LEFT JOIN 
+  biobank bb ON s.user_account_id = bb.id
+LEFT JOIN 
+  city c ON cs.city = c.id
+LEFT JOIN 
+  district d ON cs.district = d.id
+WHERE 
+  s.status = 'In Stock' and s.price > 0 and s.quantity > 0;
 
+  `;
+
+  // Log query being executed
+  console.log("Executing Query:", query);
+
+  mysqlConnection.query(query, (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null); // Will send 500 if there's an error with the query
+      return;
+    }
+
+    // Log results
+    console.log("DB Query Results:", results);
+
+    // Continue with image processing
+    const imageFolder = path.join(__dirname, '../uploads/Images');
+    fs.readdir(imageFolder, (fsErr, files) => {
+      if (fsErr) {
+        console.error("Error reading image folder:", fsErr);
+        callback(fsErr, null);
+        return;
+      }
+
+      console.log("Files in image folder:", files);
+      const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+      console.log("Filtered Image Files:", imageFiles);
+
+      const updatedResults = results.map(sample => {
+        if (imageFiles.length > 0) {
+          const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+          const imagePath = path.join(imageFolder, randomImage);
+
+          // Read the image file as binary data and convert to base64
+          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+
+          // Set the base64 encoded image in the sample object
+          sample.imageUrl = `data:image/${path.extname(randomImage).slice(1)};base64,${base64Image}`;
+        } else {
+          sample.imageUrl = null;
+        }
+        return sample;
+      });
+
+      console.log("Updated Results with Images:", updatedResults);
+
+      callback(null, updatedResults);
+    });
+  });
+};
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -262,11 +332,34 @@ const deleteSample = (id, callback) => {
   });
 };
 
+const getFilteredSamples = (price, smokingStatus, callback) => {
+  let query = "SELECT * FROM sample WHERE is_deleted = FALSE";
+  let queryParams = [];
+
+  if (price) {
+    query += " AND price <= ?";
+    queryParams.push(price);
+  }
+
+  if (smokingStatus) {
+    query += " AND SmokingStatus = ?";
+    queryParams.push(smokingStatus);
+  }
+
+  mysqlConnection.query(query, queryParams, (err, results) => {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, results);
+  });
+};
 
 module.exports = {
+  getFilteredSamples,
   createSampleTable,
   getSamples,
   getAllSamples,
+  getAllCSSamples,
   getSampleById,
   createSample,
   updateSample,

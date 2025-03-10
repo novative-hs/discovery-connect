@@ -96,7 +96,7 @@ const create_historyTable = () => {
     organization_id INT,
     collectionsite_id INT,
     researcher_id INT,
-    sample_id INT,
+    sample_id BIGINT,
     added_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

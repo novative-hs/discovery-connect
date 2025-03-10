@@ -1,11 +1,12 @@
 import React from "react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
+import {Minus,Plus} from "@svg/index";
 // internal
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
-import { remove_product } from "src/redux/features/cartSlice";
+import { remove_product, increment, decrement } from "src/redux/features/cartSlice";
 
-const CartArea = () => {
+const CartArea = ({ product } ) => {
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
 
@@ -16,10 +17,18 @@ const CartArea = () => {
 
   // Calculate subtotal and total
   const subtotal = cart_products.reduce(
-    (acc, product) => acc + product.price * product.quantity,
+    (acc, item) => acc + item.price * item.orderQuantity,
     0
   );
-
+  const handleIncrease = (item) => {
+    dispatch(increment({ id: item.id }));
+  };
+  
+  const handleDecrease = (item) => {
+    dispatch(decrement({ id: item.id }));
+    console.log("item after decreasing is", item.orderQuantity);
+  };
+  const handleChange = (e) => {}
   return (
     <section className="cart-area pt-100 pb-100">
       <div className="container">
@@ -46,35 +55,47 @@ const CartArea = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {cart_products.map((item, i) => (
-                        <tr key={i}>
-                          <td className="product-name">
-                            <Link href={`product-details/${item._id}`}>
-                              {item.samplename}
-                            </Link>
-                          </td>
-                          <td className="product-price">
-                            <span className="amount">{item.price}</span>
-                          </td>
-                          <td className="product-quantity">
-                            <span className="quantity">{item.quantity}</span>
-                          </td>
-                          <td className="product-subtotal">
-                            <span className="amount">
-                              {(item.price * item.quantity).toFixed(2)}
-                            </span>
-                          </td>
-                          <td className="product-remove">
-                            <button
-                              type="button"
-                              onClick={() => handleRemovePrd(item)}
-                            >
-                              <i className="fa fa-times"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+  {cart_products.map((item, i) => (
+    <tr key={i}>
+      <td className="product-name">
+        <Link href={`product-details/${item._id || item.id}`}>
+          {item.samplename}
+        </Link>
+      </td>
+      <td className="product-price">
+        <span className="amount">{item.price}</span>
+      </td>
+      {/* If you want to show the available stock somewhere, you can keep this */}
+      <td className="product-quantity">
+        <div className="tp-product-quantity mt-10 mb-10">
+          <span className="tp-cart-minus" onClick={() => handleDecrease(item)}>
+            <Minus />
+          </span>
+          <input
+            className="tp-cart-input"
+            type="text"
+            value={item.orderQuantity}  // <-- use orderQuantity here
+            onChange={handleChange}
+          />
+          <span className="tp-cart-plus" onClick={() => handleIncrease(item)}>
+            <Plus />
+          </span>
+        </div>
+      </td>
+      <td className="product-subtotal">
+        <span className="amount">
+          {(item.price * item.orderQuantity).toFixed(2)}  {/* use orderQuantity */}
+        </span>
+      </td>
+      <td className="product-remove">
+        <button type="button" onClick={() => handleRemovePrd(item)}>
+          <i className="fa fa-times"></i>
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
                   </table>
                 </div>
 

@@ -4,7 +4,7 @@ import { notifyError, notifySuccess } from "@utils/toast";
 
 const initialState = {
   cart_products: [],
-  orderQuantity: 1,
+  orderQuantity: 1, 
 };
 
 export const cartSlice = createSlice({
@@ -17,7 +17,7 @@ export const cartSlice = createSlice({
       if (!isExist) {
         const newItem = {
           ...payload,
-          orderQuantity: 1,
+          orderQuantity: payload.quantity || 1,
         };
         state.cart_products = [...state.cart_products, newItem];
         notifySuccess(`Sampel added to cart`);
@@ -40,14 +40,38 @@ export const cartSlice = createSlice({
       }
       setLocalStorage("cart_products", state.cart_products);
     },
+    // increment: (state, { payload }) => {
+    //   state.quantity = state.quantity + 1;
+    // },
+    // decrement: (state, { payload }) => {
+    //   state.quantity =
+    //     state.quantity > 1
+    //       ? state.quantity - 1
+    //       : (state.quantity = 1);
+    // },
+
     increment: (state, { payload }) => {
-      state.orderQuantity = state.orderQuantity + 1;
+      const cartItem = state.cart_products.find(item => item.id === payload.id);
+      if (cartItem) {
+        if (cartItem.orderQuantity < cartItem.quantity) {
+          cartItem.orderQuantity += 1;
+        } else {
+          notifyError("No more quantity available for this product!");
+        }
+      }
+      state.cart_products = [...state.cart_products]; 
+      setLocalStorage("cart_products", state.cart_products);
     },
+    
     decrement: (state, { payload }) => {
-      state.orderQuantity =
-        state.orderQuantity > 1
-          ? state.orderQuantity - 1
-          : (state.orderQuantity = 1);
+      const cartItem = state.cart_products.find(item => item.id === payload.id);
+      if (cartItem) {
+        if (cartItem.orderQuantity > 1) {
+          cartItem.orderQuantity -= 1;
+        }
+      }
+      state.cart_products = [...state.cart_products]; // Force Redux to recognize the change
+      setLocalStorage("cart_products", state.cart_products);
     },
     quantityDecrement: (state, { payload }) => {
       state.cart_products.map((item) => {
