@@ -44,16 +44,14 @@ const ProductModal = ({ product, discountPrd = false }) => {
     0
   );
   
-  // handle add product
   const handleAddProduct = (prd) => {
     dispatch(add_cart_product(prd));
   };
-  // initial Order Quantity
-  // handle add wishlist
+
   const handleAddWishlist = (prd) => {
     dispatch(add_to_wishlist(prd));
   };
-  // handle modal close 
+
   const handleModalClose = () => {
     dispatch(handleModalShow())
     dispatch(initialOrderQuantity())
@@ -94,65 +92,70 @@ const ProductModal = ({ product, discountPrd = false }) => {
                     </div>
                   </div>
                 </div>
-                {/* <div className="product__details-thumb-nav tp-tab">
-                  <nav>
-                    <div className="nav nav-tabs justify-content-sm-between">
-                      {relatedImages && relatedImages.length > 0 ? (
-                        relatedImages.map((img, i) => (
-                          <button
-                            key={i}
-                            className={`nav-link ${img === activeImg ? "active" : ""}`}
-                            onClick={() => setActiveImg(img)}
-                          >
-                            <img src={img} alt={`related-${i}`} />
-                          </button>
-                        ))
-                      ) : (
-                        <p>No related images available.</p>
-                      )}
-                    </div>
-                  </nav>
-                </div> */}
               </div>
-            </div>
-          </div>
-          <div className="col-lg-6">
-            <div className="product__details-wrapper">
-              <h3 className="product__details-title">{product.samplename}</h3>
+              <h6 className="product__details-title">{product.samplename}</h6>
               <p className="mt-20">
               Get high-quality blood samples for your research at Discovery Connect. Fast shipping and reliable sourcing!
               </p>
-              {/* Price */}
-              {/* <OldNewPrice
-                originalPrice={originalPrice}
-                discount={discount}
-              /> */}
                   <div className="product__price">
       <span className="product__ammount old-price">
-        {product.price?.toFixed(2) || "0.00"}
+      <b> Price: </b>{product.price?.toFixed(2) || "0.00"}
       </span>
-      {/* <span className="product__ammount new-price">
-        ${product.price?.toFixed(2) || "0.00"}
-      </span> */}
     </div>
-              {/* Price */}
+            </div>
+          </div>
+          <div className="col-lg-6">
+            <div className="product__details-wrapper"> 
+            <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Ethnicity:</p>
+                <span>{product.ethnicity}</span>
+              </div>
 
-              {/* quantity */}
-     <div className="tp-product-quantity mt-10 mb-10">
-     <span className="tp-cart-minus" onClick={() => handleDecrease(cartItem)}>
-  <Minus />
-</span>
-<input
-  className="tp-cart-input"
-  type="text"
-  value={cartItem ? cartItem.orderQuantity : product.quantity}
-  onChange={handleChange}
-/>
-<span className="tp-cart-plus" onClick={() => handleIncrease(cartItem)}>
-  <Plus />
-</span>
-        </div>
-              {/* quantity */}
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Container Type:</p>
+                <span>{product.ContainerType}</span>
+              </div>
+
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Sample Condition:</p>
+                <span>{product.samplecondition}</span>
+              </div>
+
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1"> Storage Temp:</p>
+                <span>{product.storagetemp}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Sample Type Matrix:</p>
+                <span>{product.SampleTypeMatrix}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Alcohol Or Drug Abuse:</p>
+                <span>{product.AlcoholOrDrugAbuse}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Smoking Status:</p>
+                <span>{product.SmokingStatus}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Storage Temp:</p>
+                <span>{product.storagetemp}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Infectious Disease Testing:</p>
+                <span>{product. InfectiousDiseaseTesting}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-1">
+                <p className="me-1">Infectious Disease Result:</p>
+                <span>{product.InfectiousDiseaseResult}</span>
+              </div>
+              <div className="product__details-sku product__details-more mb-3">
+                <p className="me-1">Collection Date:</p>
+                <span>{product.DateOfCollection}</span>
+              </div>
+              <div className="product__details-share">
+             
+              </div> 
               <div className="product__details-action d-flex flex-wrap align-items-center">
                 <button
                   onClick={() => handleAddProduct(product)}
@@ -162,40 +165,6 @@ const ProductModal = ({ product, discountPrd = false }) => {
                   <CartTwo />
                   Add to Cart
                 </button>
-                <button
-                  onClick={() => handleAddWishlist(product)}
-                  type="button"
-                  className={`product-action-btn ${isWishlistAdded ? "active" : ""
-                    }`}
-                >
-                  <HeartTwo />
-                  <span className="product-action-tooltip">
-                    Add To Wishlist
-                  </span>
-                </button>
-                <Link href={`/product-details/${id}`}>
-                  <button type="button" className="product-action-btn">
-                    <i className="fa-solid fa-link"></i>
-                    <span className="product-action-tooltip">
-                      Product Details
-                    </span>
-                  </button>
-                </Link>
-              </div>
-              <div className="product__details-sku product__details-more">
-                <p>SKU:</p>
-                <span>{sku}</span>
-              </div>
-              {/* Product Categories */}
-              <ProductCategories />
-              {/* Product Categories */}
-
-              {/* Tags */}
-              <ProductTags tag={tags} />
-              {/* Tags */}
-              <div className="product__details-share">
-                <span>Share:</span>
-                <SocialLinks />
               </div>
             </div>
           </div>
