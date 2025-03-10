@@ -301,7 +301,7 @@ const CollectionsiteArea = () => {
                     {currentData.length > 0 ? (
                       currentData.map((collectionsite) => (
                         <tr key={collectionsite.id}>
-                          <td>{collectionsite.id}</td>
+                          {/* <td>{collectionsite.id}</td> */}
                           <td>{collectionsite.CollectionSiteName}</td>
                           <td>{collectionsite.email}</td>
                           <td>{collectionsite.phoneNumber}</td>

@@ -271,7 +271,7 @@ const ResearcherArea = () => {
                     {currentData.length > 0 ? (
                       currentData.map((researcher) => (
                         <tr key={researcher.id}>
-                          <td>{researcher.id}</td>
+                          {/* <td>{researcher.id}</td> */}
                           <td>{researcher.ResearcherName}</td>
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>

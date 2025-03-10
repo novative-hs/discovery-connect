@@ -408,7 +408,7 @@ const ConcurrentMedicalConditionsArea = () => {
                     currentData.map(
                       ({ id, name, added_by, created_at, updated_at }) => (
                         <tr key={id}>
-                          <td>{id}</td>
+                          {/* <td>{id}</td> */}
                           <td>{name}</td>
                           <td>{added_by}</td>
                           <td>{formatDate(created_at)}</td>

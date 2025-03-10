@@ -282,7 +282,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                     {currentData.length > 0 ? (
                       currentData.map((organization) => (
                         <tr key={organization.id}>
-                          <td>{organization.id}</td>
+                          {/* <td>{organization.id}</td> */}
                           <td>{organization.OrganizationName}</td>
                           <td>{organization.email}</td>
                           <td>{organization.phoneNumber}</td>

@@ -375,7 +375,7 @@ const CountryArea = () => {
                 {currentData.length > 0 ? (
                   currentData.map((countryname) => (
                     <tr key={countryname.id}>
-                      <td>{countryname.id}</td>
+                      {/* <td>{countryname.id}</td> */}
                       <td>{countryname.name}</td>
                       <td>{countryname.added_by}</td>
                       <td>{formatDate(countryname.created_at)}</td>
