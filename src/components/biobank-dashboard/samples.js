@@ -7,13 +7,12 @@ import {
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { getLocalStorage } from "@utils/localstorage";
-
+import Pagination from "@ui/Pagination";
 const BioBankSampleArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  }
-  else {
+  } else {
     console.log("Collection site Id on sample page is:", id);
   }
 
@@ -22,7 +21,7 @@ const BioBankSampleArea = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-    const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
 
   const tableHeaders = [
@@ -45,7 +44,10 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -105,16 +107,19 @@ const BioBankSampleArea = () => {
   const [sampletypematrixNames, setSampleTypeMatrixNames] = useState([]);
   const [testmethodNames, setTestMethodNames] = useState([]);
   const [testresultunitNames, setTestResultUnitNames] = useState([]);
-  const [concurrentmedicalconditionsNames, setConcurrentMedicalConditionsNames] = useState([]);
+  const [
+    concurrentmedicalconditionsNames,
+    setConcurrentMedicalConditionsNames,
+  ] = useState([]);
   const [testkitmanufacturerNames, setTestKitManufacturerNames] = useState([]);
   const [testsystemNames, setTestSystemNames] = useState([]);
-  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
-
-
-  const [currentPage, setCurrentPage] = useState(1);
+  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] =
+    useState([]);
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
-  const totalPages = Math.ceil(samples.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
@@ -147,7 +152,7 @@ const BioBankSampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
       );
       console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownSamplesResponse.data.map(sample => ({
+      const ownSamples = ownSamplesResponse.data.map((sample) => ({
         ...sample,
         quantity: sample.quantity, // Use 'quantity' as is
       }));
@@ -157,14 +162,14 @@ const BioBankSampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
       );
       console.log("Received samples:", receivedSamplesResponse.data);
-      const receivedSamples = receivedSamplesResponse.data.map(sample => ({
+      const receivedSamples = receivedSamplesResponse.data.map((sample) => ({
         ...sample,
         quantity: sample.Quantity, // Map 'Quantity' to 'quantity'
       }));
 
       // Combine both responses
       const combinedSamples = [...ownSamples, ...receivedSamples];
-
+setFilteredSamples(combinedSamples)
       // Update state with the combined list
       setSamples(combinedSamples);
     } catch (error) {
@@ -179,13 +184,13 @@ const BioBankSampleArea = () => {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/collectionsitenamesinbiobank/${selectedSampleId}`
         );
         if (!response.ok) {
-          throw new Error('Failed to fetch collection site names');
+          throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-        console.log('Fetched Site Names:', data);
+        console.log("Fetched Site Names:", data);
         setCollectionSiteNames(data.data);
       } catch (error) {
-        console.error('Error fetching site names:', error);
+        console.error("Error fetching site names:", error);
       }
     };
 
@@ -194,11 +199,16 @@ const BioBankSampleArea = () => {
 
   // Sample Price Filter
   useEffect(() => {
-    if (samples.length > 0) { // Ensure samples are fetched
+    if (samples.length > 0) {
+      // Ensure samples are fetched
       if (filter === "priceAdded") {
-        setFilteredSamples(samples.filter(sample => sample.price && sample.price > 0));
+        setFilteredSamples(
+          samples.filter((sample) => sample.price && sample.price > 0)
+        );
       } else if (filter === "priceNotAdded") {
-        setFilteredSamples(samples.filter(sample => !sample.price || sample.price === null));
+        setFilteredSamples(
+          samples.filter((sample) => !sample.price || sample.price === null)
+        );
       } else {
         setFilteredSamples(samples);
       }
@@ -206,89 +216,123 @@ const BioBankSampleArea = () => {
   }, [filter, samples]);
 
   // Sample fields Dropdown
-    useEffect(() => {
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/ethnicity`)
-        .then(response => response.json())
-        .then(data => setEthnicityNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplecondition`)
-        .then(response => response.json())
-        .then(data => setSampleConditionNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`)
-        .then(response => response.json())
-        .then(data => setStorageTemperatureNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertype`)
-        .then(response => response.json())
-        .then(data => setContainerTypeNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunit`)
-        .then(response => response.json())
-        .then(data => setQuantityUnitNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrix`)
-        .then(response => response.json())
-        .then(data => setSampleTypeMatrixNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethod`)
-        .then(response => response.json())
-        .then(data => setTestMethodNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunit`)
-        .then(response => response.json())
-        .then(data => setTestResultUnitNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditions`)
-        .then(response => response.json())
-        .then(data => setConcurrentMedicalConditionsNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturer`)
-        .then(response => response.json())
-        .then(data => setTestKitManufacturerNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystem`)
-        .then(response => response.json())
-        .then(data => setTestSystemNames(data));
-  
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturer`)
-        .then(response => response.json())
-        .then(data => setTestSystemManufacturerNames(data));
-  
-    }, []);
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/ethnicity`)
+      .then((response) => response.json())
+      .then((data) => setEthnicityNames(data));
 
-  const currentData = samples.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplecondition`
+    )
+      .then((response) => response.json())
+      .then((data) => setSampleConditionNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`
+    )
+      .then((response) => response.json())
+      .then((data) => setStorageTemperatureNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertype`
+    )
+      .then((response) => response.json())
+      .then((data) => setContainerTypeNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunit`
+    )
+      .then((response) => response.json())
+      .then((data) => setQuantityUnitNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrix`
+    )
+      .then((response) => response.json())
+      .then((data) => setSampleTypeMatrixNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethod`)
+      .then((response) => response.json())
+      .then((data) => setTestMethodNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunit`
+    )
+      .then((response) => response.json())
+      .then((data) => setTestResultUnitNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditions`
+    )
+      .then((response) => response.json())
+      .then((data) => setConcurrentMedicalConditionsNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturer`
+    )
+      .then((response) => response.json())
+      .then((data) => setTestKitManufacturerNames(data));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystem`)
+      .then((response) => response.json())
+      .then((data) => setTestSystemNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturer`
+    )
+      .then((response) => response.json())
+      .then((data) => setTestSystemManufacturerNames(data));
+  }, []);
+
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredSamples.length / itemsPerPage)
+    );
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredSamples]);
+
+  // Get the current data for the table
+  const currentData = filteredSamples.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
+  // Filter the researchers list
   const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchSamples(); // Reset to fetch original data
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = samples; // Show all if filter is empty
     } else {
-      // Filter the sample array based on the field and value
-      const filtered = samples.filter((sample) =>
+      filtered = samples.filter((sample) =>
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
-      setSamples(filtered); // Update the state with filtered results
     }
+
+    setFilteredSamples(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
     // Update both formData and transferDetails state if applicable
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-    setTransferDetails((prevDetails) => ({
-      ...prevDetails,
-      [name]: value,
-    }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    setTransferDetails({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -354,11 +398,22 @@ const BioBankSampleArea = () => {
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
 
-    const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } =
-      transferDetails;
+    const {
+      TransferTo,
+      dispatchVia,
+      dispatcherName,
+      dispatchReceiptNumber,
+      Quantity,
+    } = transferDetails;
 
     // Validate input before making the API call
-    if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber || !Quantity) {
+    if (
+      !TransferTo ||
+      !dispatchVia ||
+      !dispatcherName ||
+      !dispatchReceiptNumber ||
+      !Quantity
+    ) {
       alert("All fields are required.");
       return;
     }
@@ -376,13 +431,15 @@ const BioBankSampleArea = () => {
         }
       );
       console.log("Sample dispatched successfully:", response.data);
-
       alert("Sample dispatched successfully!");
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
-      );
-      setSamples(newResponse.data); // Update state with the new list
-
+     fetchSamples()
+     setTransferDetails({
+      TransferTo: "",
+      dispatchVia: "",
+      dispatcherName: "",
+      dispatchReceiptNumber: "",
+      Quantity: "",
+    });
       setShowTransferModal(false); // Close the modal after submission
     } catch (error) {
       if (error.response) {
@@ -489,8 +546,6 @@ const BioBankSampleArea = () => {
       status: sample.status,
       user_account_id: sample.user_account_id,
     });
-
-
   };
 
   const handleUpdate = async (e) => {
@@ -554,7 +609,13 @@ const BioBankSampleArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showTransferModal || showHistoryModal) {
+    if (
+      showDeleteModal ||
+      showAddModal ||
+      showEditModal ||
+      showTransferModal ||
+      showHistoryModal
+    ) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -563,161 +624,169 @@ const BioBankSampleArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showTransferModal, showHistoryModal]);
+  }, [
+    showDeleteModal,
+    showAddModal,
+    showEditModal,
+    showTransferModal,
+    showHistoryModal,
+  ]);
 
   return (
     <section className="profile__area pt-30 pb-120">
-    <div className="container-fluid px-md-4">
-      {/* Success Message */}
-      {successMessage && (
-        <div className="alert alert-success text-center" role="alert">
-          {successMessage}
+      <div className="container-fluid px-md-4">
+        {/* Success Message */}
+        {successMessage && (
+          <div className="alert alert-success text-center" role="alert">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Header Section with Filter and Button */}
+        <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
+          {/* Filter Dropdown */}
+          <div className="d-flex align-items-center">
+            <label className="fw-bold me-2">Filter: </label>
+            <select
+              className="form-select form-select-sm"
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="priceAdded">Price Added</option>
+              <option value="priceNotAdded">Price Not Added</option>
+            </select>
+          </div>
+
+          {/* Add Samples Button */}
+          <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+            {/* Add Researcher Button */}
+            <button
+              className="btn mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
+              onClick={() => setShowAddModal(true)}
+            >
+              <span>Add Samples</span>
+            </button>
+          </div>
         </div>
-      )}
-  
-      {/* Header Section with Filter and Button */}
-      <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
-        {/* Filter Dropdown */}
-        <div className="d-flex align-items-center">
-          <label className="fw-bold me-2">Filter: </label>
-          <select className="form-select form-select-sm" onChange={(e) => setFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="priceAdded">Price Added</option>
-            <option value="priceNotAdded">Price Not Added</option>
-          </select>
-        </div>
-  
-        {/* Add Samples Button */}
-        <button
-          className="btn"
-          onClick={() => setShowAddModal(true)}
-          style={{ backgroundColor: "#FFEE99", borderColor: "#FFD700", color: "#000" }}>
-          Add Samples
-        </button>
-      </div>
-  
-      {/* Table */}
-      <div className="table-responsive mx-auto">
-        <table className="table table-bordered table-hover text-center">
-          <thead>
-            <tr>
-              {tableHeaders.map(({ label, key }, index) => (
-                <th key={index} className="px-4 text-center" style={{ backgroundColor: "#F4C2C2", color: "#000" }}>
-                  <div className="d-flex flex-column align-items-center">
-                    <input
-                      type="text"
-                      className="form-control form-control-sm w-100 text-center"
-                      placeholder={`Search ${label}`}
-                      onChange={(e) => handleFilterChange(key, e.target.value)}
-                      style={{ minWidth: "70px", maxWidth: "120px", height: "30px", padding: "2px 5px", fontSize: "14px" }}
-                    />
-                    <span className="fw-bold mt-1 d-block text-nowrap">{label}</span>
-                  </div>
+
+        {/* Table */}
+        <div className="table-responsive mx-auto">
+          <table className="table table-bordered table-hover text-center">
+            <thead>
+              <tr>
+                {tableHeaders.map(({ label, key }, index) => (
+                  <th
+                    key={index}
+                    className="px-4 text-center"
+                    //  style={{ backgroundColor: "#F4C2C2", color: "#000" }}
+                  >
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm w-100 text-center"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) =>
+                          handleFilterChange(key, e.target.value)
+                        }
+                        style={{
+                          minWidth: "70px",
+                          maxWidth: "120px",
+                          height: "30px",
+                          padding: "2px 5px",
+                          fontSize: "14px",
+                        }}
+                      />
+                      <span className="fw-bold mt-1 d-block text-nowrap">
+                        {label}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+                <th
+                  className="px-5 align-middle text-center"
+                  // style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}
+                >
+                  Action
                 </th>
-              ))}
-              <th className="px-5 align-middle text-center" style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSamples.length > 0 ? (
-              filteredSamples.map((sample) => (
-                <tr key={sample.id}>
-                  {tableHeaders.map(({ key }, index) => (
-                    <td key={index} className="text-center text-truncate" style={{ maxWidth: "150px" }}>
-                      {sample[key] || "N/A"}
-                    </td>
-                  ))}
-                  <td className="text-center">
-                    <div className="d-flex justify-content-around gap-1">
-                      <button className="btn btn-success btn-sm" onClick={() => handleEditClick(sample)} title="Edit">
-                        <FontAwesomeIcon icon={faEdit} size="sm" />
-                      </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => { setSelectedSampleId(sample.id); setShowDeleteModal(true); }} title="Delete">
-                        <FontAwesomeIcon icon={faTrash} size="sm" />
-                      </button>
-                      <button className="btn btn-primary btn-sm" onClick={() => handleTransferClick(sample)} title="Transfer">
-                        <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                      </button>
-                      <button className="btn btn-outline-success btn-sm" onClick={() => handleShowHistory("sample", sample.id)} title="History">
+              </tr>
+            </thead>
+            <tbody>
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr key={sample.id}>
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className="text-center text-truncate"
+                        style={{ maxWidth: "150px" }}
+                      >
+                        {sample[key] || "N/A"}
+                      </td>
+                    ))}
+                    <td className="text-center">
+                      <div className="d-flex justify-content-around gap-1">
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => handleEditClick(sample)}
+                          title="Edit"
+                        >
+                          <FontAwesomeIcon icon={faEdit} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => {
+                            setSelectedSampleId(sample.id);
+                            setShowDeleteModal(true);
+                          }}
+                          title="Delete"
+                        >
+                          <FontAwesomeIcon icon={faTrash} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleTransferClick(sample)}
+                          title="Transfer"
+                        >
+                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleShowHistory("sample", sample.id)}
+                          title="History"
+                        >
                           <i className="fa fa-history"></i>
                         </button>
-                    </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center">
+                    No samples available
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="text-center">No samples available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
         </div>
 
         {/* Pagination */}
-        <div className="pagination d-flex justify-content-end align-items-center mt-4 me-5 pe-5">
-          <nav aria-label="Page navigation example">
-            <ul className="pagination justify-content-end">
-              <li
-                className={`page-item ${currentPage === 1 ? "disabled" : ""
-                  }`}
-              >
-                <a
-                  className="page-link"
-                  href="#"
-                  aria-label="Previous"
-                  onClick={() =>
-                    currentPage > 1 && handlePageChange(currentPage - 1)
-                  }
-                >
-                  <span aria-hidden="true">&laquo;</span>
-                  <span className="sr-only">Previous</span>
-                </a>
-              </li>
-              {Array.from({ length: totalPages }).map((_, index) => {
-                const pageNumber = index + 1;
-                return (
-                  <li
-                    key={pageNumber}
-                    className={`page-item ${currentPage === pageNumber ? "active" : ""
-                      }`}
-                  >
-                    <a
-                      className="page-link"
-                      href="#"
-                      onClick={() => handlePageChange(pageNumber)}
-                    >
-                      {pageNumber}
-                    </a>
-                  </li>
-                );
-              })}
-              <li
-                className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                  }`}
-              >
-                <a
-                  className="page-link"
-                  href="#"
-                  aria-label="Next"
-                  onClick={() =>
-                    currentPage < totalPages &&
-                    handlePageChange(currentPage + 1)
-                  }
-                >
-                  <span aria-hidden="true">&raquo;</span>
-                  <span className="sr-only">Next</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
+        {totalPages >= 0 && (
+          <Pagination
+            handlePageClick={handlePageChange}
+            pageCount={totalPages}
+            focusPage={currentPage}
+          />
+        )}
         {/* Modal for Adding Samples */}
         {showAddModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
-            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
             {/* Modal Content */}
             <div
               className="modal show d-block"
@@ -729,25 +798,31 @@ const BioBankSampleArea = () => {
                 top: "80px",
                 left: "50%",
                 transform: "translateX(-50%)",
-              }}>
+              }}
+            >
               <div
                 className="modal-dialog"
                 role="document"
-                style={{ maxWidth: "90vw", width: "95vw" }}>
+                style={{ maxWidth: "90vw", width: "95vw" }}
+              >
                 <div className="modal-content">
-                  <div className="modal-header" style={{ backgroundColor: "#ADD8E6" }}>
+                  <div
+                    className="modal-header"
+                    // style={{ backgroundColor: "#ADD8E6" }}
+                  >
                     <h5 className="modal-title">Add Sample</h5>
                     <button
                       type="button"
                       className="close"
                       onClick={() => setShowAddModal(false)}
                       style={{
-                        fontSize: '1.5rem',
-                        position: 'absolute',
-                        right: '10px',
-                        top: '10px',
-                        cursor: 'pointer',
-                      }}>
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
                       <span>&times;</span>
                     </button>
                   </div>
@@ -769,7 +844,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.donorID
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -786,7 +863,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.samplename
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -803,7 +882,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.age
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -819,11 +900,15 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.gender
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Gender</option>
+                              <option value="" hidden>
+                                Select Gender
+                              </option>
                               <option value="Male">Male</option>
                               <option value="Female">Female</option>
                             </select>
@@ -839,13 +924,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.ethnicity ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.ethnicity
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Ethnicity</option>
+                              <option value="" hidden>
+                                Select Ethnicity
+                              </option>
                               {ethnicityNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -863,13 +954,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.samplecondition ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.samplecondition
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Sample Condition</option>
+                              <option value="" hidden>
+                                Select Sample Condition
+                              </option>
                               {sampleconditionNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -884,13 +981,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.storagetemp ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.storagetemp
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Storage Temperature</option>
+                              <option value="" hidden>
+                                Select Storage Temperature
+                              </option>
                               {storagetemperatureNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -905,13 +1008,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.ContainerType ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.ContainerType
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Container type</option>
+                              <option value="" hidden>
+                                Select Container type
+                              </option>
                               {containertypeNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -927,7 +1036,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.CountryOfCollection
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -944,7 +1055,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.price ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.price
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -964,7 +1077,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.SamplePriceCurrency ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.SamplePriceCurrency
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -981,7 +1096,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.quantity ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.quantity
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -997,13 +1114,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.QuantityUnit ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.QuantityUnit
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Quantity Unit</option>
+                              <option value="" hidden>
+                                Select Quantity Unit
+                              </option>
                               {quantityunitNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1018,20 +1141,29 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.SampleTypeMatrix ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.SampleTypeMatrix
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Sample Type Matrix</option>
+                              <option value="" hidden>
+                                Select Sample Type Matrix
+                              </option>
                               {sampletypematrixNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
                           <div className="form-group">
                             <label className="form-label">Smoking Status</label>
                             <div>
-                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
+                              <div
+                                className="form-check form-check-inline"
+                                style={{ marginRight: "10px" }}
+                              >
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1042,7 +1174,12 @@ const BioBankSampleArea = () => {
                                   required
                                   style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Smoker</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Smoker
+                                </label>
                               </div>
                               <div className="form-check form-check-inline">
                                 <input
@@ -1050,12 +1187,19 @@ const BioBankSampleArea = () => {
                                   type="radio"
                                   name="SmokingStatus"
                                   value="Non-Smoker"
-                                  checked={formData.SmokingStatus === "Non-Smoker"}
+                                  checked={
+                                    formData.SmokingStatus === "Non-Smoker"
+                                  }
                                   onChange={handleInputChange}
                                   required
                                   style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Non-Smoker</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Non-Smoker
+                                </label>
                               </div>
                             </div>
                           </div>
@@ -1063,9 +1207,14 @@ const BioBankSampleArea = () => {
                         {/* Column 4 */}
                         <div className="col-md-2">
                           <div className="form-group">
-                            <label className="form-label">Alcohol Or Drug Abuse</label>
+                            <label className="form-label">
+                              Alcohol Or Drug Abuse
+                            </label>
                             <div>
-                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
+                              <div
+                                className="form-check form-check-inline"
+                                style={{ marginRight: "10px" }}
+                              >
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1075,9 +1224,17 @@ const BioBankSampleArea = () => {
                                   required
                                   style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Yes</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Yes
+                                </label>
                               </div>
-                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
+                              <div
+                                className="form-check form-check-inline"
+                                style={{ marginRight: "10px" }}
+                              >
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1086,12 +1243,19 @@ const BioBankSampleArea = () => {
                                   onChange={handleInputChange}
                                   required
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>No</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  No
+                                </label>
                               </div>
                             </div>
                           </div>
                           <div className="form-group">
-                            <label>Infectious Disease Testing (HIV, HBV, HCV)</label>
+                            <label>
+                              Infectious Disease Testing (HIV, HBV, HCV)
+                            </label>
                             <input
                               type="text"
                               className="form-control"
@@ -1102,15 +1266,23 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.InfectiousDiseaseTesting ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor:
+                                  formData.InfectiousDiseaseTesting
+                                    ? "#f0f0f0"
+                                    : "#f0f0f0",
                                 color: "black",
                               }}
                             />
                           </div>
                           <div className="form-group">
-                            <label className="form-label">Infectious Disease Result</label>
+                            <label className="form-label">
+                              Infectious Disease Result
+                            </label>
                             <div>
-                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
+                              <div
+                                className="form-check form-check-inline"
+                                style={{ marginRight: "10px" }}
+                              >
                                 <input
                                   className="form-check-input"
                                   type="radio"
@@ -1120,7 +1292,12 @@ const BioBankSampleArea = () => {
                                   required
                                   style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Positive</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Positive
+                                </label>
                               </div>
 
                               <div className="form-check form-check-inline">
@@ -1133,7 +1310,12 @@ const BioBankSampleArea = () => {
                                   required
                                   style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Negative</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Negative
+                                </label>
                               </div>
                             </div>
                           </div>
@@ -1149,7 +1331,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.FreezeThawCycles
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
@@ -1174,7 +1358,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.DateOfCollection ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.DateOfCollection
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1193,14 +1379,23 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.ConcurrentMedicalConditions ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor:
+                                  formData.ConcurrentMedicalConditions
+                                    ? "#f0f0f0"
+                                    : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Concurrent Medical Conditions</option>
-                              {concurrentmedicalconditionsNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
-                              ))}
+                              <option value="" hidden>
+                                Select Concurrent Medical Conditions
+                              </option>
+                              {concurrentmedicalconditionsNames.map(
+                                (name, index) => (
+                                  <option key={index} value={name}>
+                                    {name}
+                                  </option>
+                                )
+                              )}
                             </select>
                           </div>
                           <div className="form-group">
@@ -1215,7 +1410,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.ConcurrentMedications ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.ConcurrentMedications
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1232,7 +1429,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.DiagnosisTestParameter ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.DiagnosisTestParameter
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1249,7 +1448,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.TestResult ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestResult
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1265,13 +1466,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestResultUnit ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestResultUnit
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Test Result Unit</option>
+                              <option value="" hidden>
+                                Select Test Result Unit
+                              </option>
                               {testresultunitNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1289,13 +1496,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestMethod ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestMethod
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Test Method</option>
+                              <option value="" hidden>
+                                Select Test Method
+                              </option>
                               {testmethodNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1310,13 +1523,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestKitManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestKitManufacturer
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Test Kit Manufacturer</option>
+                              <option value="" hidden>
+                                Select Test Kit Manufacturer
+                              </option>
                               {testkitmanufacturerNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1331,13 +1550,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestSystem ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestSystem
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Test System</option>
+                              <option value="" hidden>
+                                Select Test System
+                              </option>
                               {testsystemNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1352,14 +1577,22 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestSystemManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestSystemManufacturer
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="" hidden>Select Test System Manufacturer</option>
-                              {testsystemmanufacturerNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
-                              ))}
+                              <option value="" hidden>
+                                Select Test System Manufacturer
+                              </option>
+                              {testsystemmanufacturerNames.map(
+                                (name, index) => (
+                                  <option key={index} value={name}>
+                                    {name}
+                                  </option>
+                                )
+                              )}
                             </select>
                           </div>
                         </div>
@@ -1381,7 +1614,10 @@ const BioBankSampleArea = () => {
         {showEditModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
-            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
             {/* Modal Content */}
             <div
               className="modal show d-block"
@@ -1393,13 +1629,18 @@ const BioBankSampleArea = () => {
                 top: "40px",
                 left: "50%",
                 transform: "translateX(-50%)",
-              }}>
+              }}
+            >
               <div
                 className="modal-dialog"
                 role="document"
-                style={{ maxWidth: "90%", width: "95vw" }}>
+                style={{ maxWidth: "90%", width: "95vw" }}
+              >
                 <div className="modal-content">
-                  <div className="modal-header" style={{ backgroundColor: "#ADD8E6" }}>
+                  <div
+                    className="modal-header"
+                    // style={{ backgroundColor: "#ADD8E6" }}
+                  >
                     <h5 className="modal-title">Edit Sample</h5>
                     <button
                       type="button"
@@ -1434,7 +1675,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.samplename
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1451,7 +1694,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.age
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1464,11 +1709,22 @@ const BioBankSampleArea = () => {
                               value={formData.gender}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.gender ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.gender
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.gender ? "black" : "#c0c0c0",
+                              }}
                             >
                               <option value="">Select Gender</option>
-                              <option value="Male" style={{ color: "black" }}>Male</option>
-                              <option value="Female" style={{ color: "black" }}>Female</option>
+                              <option value="Male" style={{ color: "black" }}>
+                                Male
+                              </option>
+                              <option value="Female" style={{ color: "black" }}>
+                                Female
+                              </option>
                             </select>
                           </div>
                           <div className="form-group">
@@ -1479,11 +1735,22 @@ const BioBankSampleArea = () => {
                               value={formData.ethnicity}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.ethnicity ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.ethnicity ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.ethnicity
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.ethnicity ? "black" : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Ethnicity</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Ethnicity
+                              </option>
                               {ethnicityNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1495,11 +1762,24 @@ const BioBankSampleArea = () => {
                               value={formData.samplecondition}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.samplecondition ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.samplecondition ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.samplecondition
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.samplecondition
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Sample Condition</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Sample Condition
+                              </option>
                               {sampleconditionNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1514,11 +1794,24 @@ const BioBankSampleArea = () => {
                               value={formData.storagetemp}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.storagetemp ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.storagetemp ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.storagetemp
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.storagetemp
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Storage Temperature</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Storage Temperature
+                              </option>
                               {storagetemperatureNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1530,11 +1823,24 @@ const BioBankSampleArea = () => {
                               value={formData.ContainerType}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.ContainerType ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.ContainerType ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.ContainerType
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.ContainerType
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Container type</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Container type
+                              </option>
                               {containertypeNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1550,7 +1856,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.CountryOfCollection
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1567,7 +1875,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.price ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.price
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1584,7 +1894,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.SamplePriceCurrency ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.SamplePriceCurrency
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1604,7 +1916,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.quantity ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.quantity
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1617,11 +1931,24 @@ const BioBankSampleArea = () => {
                               value={formData.QuantityUnit}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.QuantityUnit ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.QuantityUnit ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.QuantityUnit
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.QuantityUnit
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Quantity Unit</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Quantity Unit
+                              </option>
                               {quantityunitNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1633,30 +1960,55 @@ const BioBankSampleArea = () => {
                               value={formData.SampleTypeMatrix}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.SampleTypeMatrix ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.SampleTypeMatrix ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.SampleTypeMatrix
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.SampleTypeMatrix
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Sample Type Matrix</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Sample Type Matrix
+                              </option>
                               {sampletypematrixNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
                           <div className="form-group">
                             <div className="form-group">
-                              <label className="form-label">Smoking Status</label>
+                              <label className="form-label">
+                                Smoking Status
+                              </label>
                               <div>
-                                <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
+                                <div
+                                  className="form-check form-check-inline"
+                                  style={{ marginRight: "10px" }}
+                                >
                                   <input
                                     className="form-check-input"
                                     type="radio"
                                     name="SmokingStatus"
                                     value="Smoker"
-                                    checked={formData.SmokingStatus === "Smoker"}
+                                    checked={
+                                      formData.SmokingStatus === "Smoker"
+                                    }
                                     onChange={handleInputChange}
                                     required
                                     style={{ transform: "scale(0.9)" }}
                                   />
-                                  <label className="form-check-label" style={{ fontSize: "14px" }}>Smoker</label>
+                                  <label
+                                    className="form-check-label"
+                                    style={{ fontSize: "14px" }}
+                                  >
+                                    Smoker
+                                  </label>
                                 </div>
                                 <div className="form-check form-check-inline">
                                   <input
@@ -1664,18 +2016,27 @@ const BioBankSampleArea = () => {
                                     type="radio"
                                     name="SmokingStatus"
                                     value="Non-Smoker"
-                                    checked={formData.SmokingStatus === "Non-Smoker"}
+                                    checked={
+                                      formData.SmokingStatus === "Non-Smoker"
+                                    }
                                     onChange={handleInputChange}
                                     required
                                     style={{ transform: "scale(0.9)" }}
                                   />
-                                  <label className="form-check-label" style={{ fontSize: "14px" }}>Non-Smoker</label>
+                                  <label
+                                    className="form-check-label"
+                                    style={{ fontSize: "14px" }}
+                                  >
+                                    Non-Smoker
+                                  </label>
                                 </div>
                               </div>
                             </div>
                           </div>
                           <div className="form-group">
-                            <label className="form-label">Alcohol Or Drug Abuse</label>
+                            <label className="form-label">
+                              Alcohol Or Drug Abuse
+                            </label>
                             <div>
                               <div className="form-check form-check-inline">
                                 <input
@@ -1683,12 +2044,19 @@ const BioBankSampleArea = () => {
                                   type="radio"
                                   name="AlcoholOrDrugAbuse"
                                   value="Yes"
-                                  checked={formData.AlcoholOrDrugAbuse === "Yes"}
+                                  checked={
+                                    formData.AlcoholOrDrugAbuse === "Yes"
+                                  }
                                   onChange={handleInputChange}
                                   required
                                   style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Yes</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Yes
+                                </label>
                               </div>
                               <div className="form-check form-check-inline ms-3">
                                 <input
@@ -1701,7 +2069,12 @@ const BioBankSampleArea = () => {
                                   required
                                   style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>No</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  No
+                                </label>
                               </div>
                             </div>
                           </div>
@@ -1720,26 +2093,42 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.InfectiousDiseaseResult ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor:
+                                  formData.InfectiousDiseaseResult
+                                    ? "#f0f0f0"
+                                    : "#f0f0f0",
                                 color: "black",
                               }}
                             />
                           </div>
                           <div className="form-group">
-                            <label className="form-label">Infectious Disease Result</label>
+                            <label className="form-label">
+                              Infectious Disease Result
+                            </label>
                             <div>
-                              <div className="form-check form-check-inline" style={{ marginRight: "10px" }}>
+                              <div
+                                className="form-check form-check-inline"
+                                style={{ marginRight: "10px" }}
+                              >
                                 <input
                                   className="form-check-input"
                                   type="radio"
                                   name="InfectiousDiseaseResult"
                                   value="Positive"
-                                  checked={formData.InfectiousDiseaseResult === "Positive"}
+                                  checked={
+                                    formData.InfectiousDiseaseResult ===
+                                    "Positive"
+                                  }
                                   onChange={handleInputChange}
                                   required
                                   style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Positive</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Positive
+                                </label>
                               </div>
                               <div className="form-check form-check-inline ms-3">
                                 <input
@@ -1747,12 +2136,20 @@ const BioBankSampleArea = () => {
                                   type="radio"
                                   name="InfectiousDiseaseResult"
                                   value="Negative"
-                                  checked={formData.InfectiousDiseaseResult === "Negative"}
+                                  checked={
+                                    formData.InfectiousDiseaseResult ===
+                                    "Negative"
+                                  }
                                   onChange={handleInputChange}
                                   required
                                   style={{ transform: "scale(0.9)" }}
                                 />
-                                <label className="form-check-label" style={{ fontSize: "14px" }}>Negative</label>
+                                <label
+                                  className="form-check-label"
+                                  style={{ fontSize: "14px" }}
+                                >
+                                  Negative
+                                </label>
                               </div>
                             </div>
                           </div>
@@ -1768,7 +2165,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.FreezeThawCycles ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.FreezeThawCycles
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
@@ -1790,7 +2189,16 @@ const BioBankSampleArea = () => {
                               onChange={handleInputChange}
                               max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                               required
-                              style={{ backgroundColor: formData.DateOfCollection ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.DateOfCollection ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.DateOfCollection
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.DateOfCollection
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             />
                           </div>
                           <div className="form-group">
@@ -1801,12 +2209,28 @@ const BioBankSampleArea = () => {
                               value={formData.ConcurrentMedicalConditions}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.ConcurrentMedicalConditions ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.ConcurrentMedicalConditions ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor:
+                                  formData.ConcurrentMedicalConditions
+                                    ? "#f0f0f0"
+                                    : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.ConcurrentMedicalConditions
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Concurrent Medical Conditions</option>
-                              {concurrentmedicalconditionsNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
-                              ))}
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Concurrent Medical Conditions
+                              </option>
+                              {concurrentmedicalconditionsNames.map(
+                                (name, index) => (
+                                  <option key={index} value={name}>
+                                    {name}
+                                  </option>
+                                )
+                              )}
                             </select>
                           </div>
                         </div>
@@ -1824,7 +2248,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.ConcurrentMedications ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.ConcurrentMedications
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1841,7 +2267,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.DiagnosisTestParameter ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.DiagnosisTestParameter
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1858,7 +2286,9 @@ const BioBankSampleArea = () => {
                               style={{
                                 height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.TestResult ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestResult
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             />
@@ -1871,11 +2301,24 @@ const BioBankSampleArea = () => {
                               value={formData.TestResultUnit}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.TestResultUnit ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.TestResultUnit ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.TestResultUnit
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.TestResultUnit
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Test Result Unit</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Test Result Unit
+                              </option>
                               {testresultunitNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1887,11 +2330,24 @@ const BioBankSampleArea = () => {
                               value={formData.TestMethod}
                               onChange={handleInputChange}
                               required
-                              style={{ backgroundColor: formData.TestMethod ? "#f0f0f0" : "#f0f0f0", fontSize: "14px", height: "45px", color: formData.TestMethod ? "black" : "#c0c0c0" }}
+                              style={{
+                                backgroundColor: formData.TestMethod
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
+                                fontSize: "14px",
+                                height: "45px",
+                                color: formData.TestMethod
+                                  ? "black"
+                                  : "#c0c0c0",
+                              }}
                             >
-                              <option value="" style={{ color: "#a0a0a0" }}>Select Test Method</option>
+                              <option value="" style={{ color: "#a0a0a0" }}>
+                                Select Test Method
+                              </option>
                               {testmethodNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1909,13 +2365,19 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestKitManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestKitManufacturer
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="">Select Test Kit Manufacturer</option>
+                              <option value="">
+                                Select Test Kit Manufacturer
+                              </option>
                               {testkitmanufacturerNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1930,13 +2392,17 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestSystem ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestSystem
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
                               <option value="">Select Test System</option>
                               {testsystemNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -1951,14 +2417,22 @@ const BioBankSampleArea = () => {
                               style={{
                                 fontSize: "14px",
                                 height: "45px",
-                                backgroundColor: formData.TestSystemManufacturer ? "#f0f0f0" : "#f0f0f0",
+                                backgroundColor: formData.TestSystemManufacturer
+                                  ? "#f0f0f0"
+                                  : "#f0f0f0",
                                 color: "black",
                               }}
                             >
-                              <option value="">Select Test System Manufacturer</option>
-                              {testsystemmanufacturerNames.map((name, index) => (
-                                <option key={index} value={name}>{name}</option>
-                              ))}
+                              <option value="">
+                                Select Test System Manufacturer
+                              </option>
+                              {testsystemmanufacturerNames.map(
+                                (name, index) => (
+                                  <option key={index} value={name}>
+                                    {name}
+                                  </option>
+                                )
+                              )}
                             </select>
                           </div>
                         </div>
@@ -2029,7 +2503,9 @@ const BioBankSampleArea = () => {
                         </select>
                       </div> */}
                 <div style={{ marginBottom: "15px" }}>
-                  <label style={{ display: "block", marginBottom: "5px" }}>Transfer to Collection Site</label>
+                  <label style={{ display: "block", marginBottom: "5px" }}>
+                    Transfer to Collection Site
+                  </label>
                   <select
                     name="TransferTo"
                     value={transferDetails.TransferTo}
@@ -2043,16 +2519,17 @@ const BioBankSampleArea = () => {
                   >
                     <option value="">Select</option>
                     {collectionSiteNames.map((site, index) => (
-                      <option key={site.user_account_id} value={site.user_account_id}>
+                      <option
+                        key={site.user_account_id}
+                        value={site.user_account_id}
+                      >
                         {site.CollectionSiteName || site.Name}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div style={{ marginBottom: "15px" }}>
-                  <label
-                    style={{ display: "block", marginBottom: "5px" }}
-                  >
+                  <label style={{ display: "block", marginBottom: "5px" }}>
                     Dispatch Via
                   </label>
                   <select
@@ -2072,9 +2549,7 @@ const BioBankSampleArea = () => {
                   </select>
                 </div>
                 <div style={{ marginBottom: "15px" }}>
-                  <label
-                    style={{ display: "block", marginBottom: "5px" }}
-                  >
+                  <label style={{ display: "block", marginBottom: "5px" }}>
                     Dispatcher Name
                   </label>
                   <input
@@ -2092,9 +2567,7 @@ const BioBankSampleArea = () => {
                   />
                 </div>
                 <div style={{ marginBottom: "15px" }}>
-                  <label
-                    style={{ display: "block", marginBottom: "5px" }}
-                  >
+                  <label style={{ display: "block", marginBottom: "5px" }}>
                     Dispatch Receipt Number
                   </label>
                   <input
@@ -2112,9 +2585,7 @@ const BioBankSampleArea = () => {
                   />
                 </div>
                 <div style={{ marginBottom: "15px" }}>
-                  <label
-                    style={{ display: "block", marginBottom: "5px" }}
-                  >
+                  <label style={{ display: "block", marginBottom: "5px" }}>
                     Quantity
                   </label>
                   <input
@@ -2156,7 +2627,12 @@ const BioBankSampleArea = () => {
                     type="button"
                     onClick={handleTransferSubmit}
                     style={{
-                      padding: "10px 15px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer",
+                      padding: "10px 15px",
+                      backgroundColor: "#007bff",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
                     }}
                   >
                     Submit
@@ -2171,7 +2647,10 @@ const BioBankSampleArea = () => {
         {showDeleteModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
-            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
 
             {/* Modal Content */}
             <div
@@ -2197,11 +2676,11 @@ const BioBankSampleArea = () => {
                       style={{
                         // background: 'none',
                         // border: 'none',
-                        fontSize: '1.5rem',
-                        position: 'absolute',
-                        right: '10px',
-                        top: '10px',
-                        cursor: 'pointer'
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
                       }}
                     >
                       <span>&times;</span>
@@ -2211,10 +2690,7 @@ const BioBankSampleArea = () => {
                     <p>Are you sure you want to delete this sample?</p>
                   </div>
                   <div className="modal-footer">
-                    <button
-                      className="btn btn-danger"
-                      onClick={handleDelete}
-                    >
+                    <button className="btn btn-danger" onClick={handleDelete}>
                       Delete
                     </button>
                     <button
@@ -2230,8 +2706,8 @@ const BioBankSampleArea = () => {
           </>
         )}
 
-         {/* Modal for History of Samples */}
-         {showHistoryModal && (
+        {/* Modal for History of Samples */}
+        {showHistoryModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div
@@ -2316,8 +2792,7 @@ const BioBankSampleArea = () => {
                                 padding: "10px 15px",
                                 borderRadius: "15px",
                                 backgroundColor: "#ffffff",
-                                boxShadow:
-                                  "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                 maxWidth: "75%",
                                 fontSize: "14px",
                                 textAlign: "left",
@@ -2326,8 +2801,7 @@ const BioBankSampleArea = () => {
                               {Object.entries(log).map(([key, value]) =>
                                 !hiddenFields.includes(key) ? ( // Only show fields that are NOT in hiddenFields array
                                   <div key={key}>
-                                    <b>{key.replace(/_/g, " ")}:</b>{" "}
-                                    {value}
+                                    <b>{key.replace(/_/g, " ")}:</b> {value}
                                   </div>
                                 ) : null
                               )}

@@ -786,63 +786,34 @@ const getUserEmail = (id, callback) => {
 };
 
 function changepassword(data, callback) {
-  const tables = [
-    "user_account",
-  ];
+  const table = "user_account"; 
+  const findUserQuery = `SELECT password FROM ${table} WHERE email = ?`;
 
-  const findUserQueries = tables.map(
-    (table) => `SELECT email FROM ${table} WHERE email = ?`
-  );
+  mysqlConnection.query(findUserQuery, [data.email], (err, result) => {
+    if (err) {
+      console.error("Error fetching password:", err);
+      return callback({ status: 500, message: "Database error" }, null);
+    }
+    const dbPassword = result[0].password; 
 
-  const updateQueries = tables.map(
-    (table) => `UPDATE ${table} SET password = ? WHERE email = ?`
-  );
+    if (data.password !== dbPassword) {
+      return callback({ status: 401, message: "Incorrect current password." }, null);
+    }
 
-  // First, find where the user exists
-  Promise.all(
-    findUserQueries.map((query) =>
-      new Promise((resolve, reject) => {
-        mysqlConnection.query(query, [data.email], (err, result) => {
-          if (err) {
-            reject(err);
-          } else if (result.length > 0) {
-            resolve(true); // User exists in this table
-          } else {
-            resolve(false); // User does not exist in this table
-          }
-        });
-      })
-    )
-  )
-    .then((exists) => {
-      const updatePromises = exists
-        .map((existsInTable, index) => {
-          if (existsInTable) {
-            return new Promise((resolve, reject) => {
-              mysqlConnection.query(
-                updateQueries[index],
-                [data.newPassword, data.email],
-                (err) => {
-                  if (err) reject(err);
-                  else resolve();
-                }
-              );
-            });
-          }
-          return Promise.resolve(); // Skip updates for tables where the user doesn't exist
-        })
-        .filter(Boolean); // Remove skipped promises
+    // Step 4: Update the password in the database
+    const updateQuery = `UPDATE ${table} SET password = ? WHERE email = ?`;
 
-      return Promise.all(updatePromises);
-    })
-    .then(() => {
-      callback(null, { message: "Password updated successfully" });
-    })
-    .catch((err) => {
-      console.error("Error updating password:", err);
-      callback({ status: 500, message: "Update error" }, null);
+    mysqlConnection.query(updateQuery, [data.newPassword, data.email], (err) => {
+      if (err) {
+        console.error("Error updating password:", err);
+        return callback({ status: 500, message: "Error updating password" }, null);
+      }
+
+      return callback(null, { message: "Password updated successfully." });
     });
+  });
 }
+
 
 module.exports = {
   changepassword,

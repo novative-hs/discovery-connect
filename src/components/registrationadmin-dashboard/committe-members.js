@@ -52,7 +52,7 @@ const CommitteeMemberArea = () => {
   const itemsPerPage = 5;
   // Calculate total pages
   const columns = [
-    { label: "ID", placeholder: "Search ID", field: "id" },
+  //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "CommitteeMemberName" },
     { label: "Email", placeholder: "Search Email", field: "email" },
     { label: "Password", placeholder: "Search Password", field: "password" },

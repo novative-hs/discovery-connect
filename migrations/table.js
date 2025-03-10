@@ -51,9 +51,9 @@ function Database() {
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
-  historyModel.RegistrationAdmin_History();
+ historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
-  historyModel.create_samplehistoryTable();
+ historyModel.create_samplehistoryTable();
 
   // newtablefieldModel.createOrUpdateTables();
 

@@ -339,7 +339,7 @@ const EthnicityArea = () => {
                 <thead className="thead-dark">
                   <tr className="text-center">
                     {[
-                      { label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                      //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                       {
                         label: "Ethnicity Name",
                         placeholder: "Search Ethnicity Name",

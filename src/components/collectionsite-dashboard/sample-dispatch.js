@@ -6,7 +6,7 @@ import {
   faTrash,
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
-
+import Pagination from "@ui/Pagination";
 const SampleDispatchArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -79,11 +79,11 @@ const SampleDispatchArea = () => {
   });
 
   const [successMessage, setSuccessMessage] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(samples.length / itemsPerPage);
-
+  const [currentPage, setCurrentPage] = useState(0);
+   const itemsPerPage = 10;
+   // Calculate total pages
+   const [totalPages, setTotalPages] = useState(0);
+const [filteredSamplename, setFilteredSamplename] = useState([]); 
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     receiverName: "",
@@ -103,6 +103,7 @@ const SampleDispatchArea = () => {
 
       // Directly set the data array from the response
       if (apiData.data && Array.isArray(apiData.data)) {
+        setFilteredSamplename(apiData.data)
         setSamples(apiData.data);
       } else {
         console.warn("Invalid response structure:", apiData);
@@ -120,26 +121,44 @@ const SampleDispatchArea = () => {
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
-  const currentData = samples.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleFilterChange = (field, value) => {
-    if (value === "") {
-      fetchSamples(); // Reset to fetch original data
-    } else {
-      // Filter the sample array based on the field and value
-      const filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-      setSamples(filtered); // Update the state with filtered results
-    }
-  };
+  useEffect(() => {
+       const pages = Math.max(
+         1,
+         Math.ceil(filteredSamplename.length / itemsPerPage)
+       );
+       setTotalPages(pages);
+   
+       if (currentPage >= pages) {
+         setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+       }
+     }, [filteredSamplename]);
+   
+     // Get the current data for the table
+     const currentData = filteredSamplename.slice(
+       currentPage * itemsPerPage,
+       (currentPage + 1) * itemsPerPage
+     );
+   
+     const handlePageChange = (event) => {
+       setCurrentPage(event.selected);
+     };
+   
+     // Filter the researchers list
+     const handleFilterChange = (field, value) => {
+       let filtered = [];
+   
+       if (value.trim() === "") {
+         filtered = samples; // Show all if filter is empty
+       } else {
+         filtered = samples.filter((sample) =>
+           sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
+         );
+       }
+   
+       setFilteredSamplename(filtered);
+       setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+       setCurrentPage(0); // Reset to first page after filtering
+     };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -188,13 +207,11 @@ const SampleDispatchArea = () => {
         }
       );
       console.log("Sample received successfully:", response.data);
+      
 
       alert("Sample received successfully!");
       console.log(`Fetching updated samples for ID: ${id}`);
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
-      );
-      setSamples(newResponse.data); // Update state with the new list
+      fetchSamples();
 
       setShowReceiveModal(false); // Close the modal after submission
     } catch (error) {
@@ -231,10 +248,8 @@ const SampleDispatchArea = () => {
   }, [showReceiveModal]);
 
   return (
-    <section className="profile__area pt-180 pb-120">
-      <div
-        className="container"
-        style={{ marginTop: "-180px", width: "170%", marginLeft: "-135px" }}>
+    <section className="profile__area pt-30 pb-120">          {/* Inner Container Color can be visible through this */}
+      <div className="container-fluid px-md-4">
               {/* Success Message */}
               {successMessage && (
                 <div className="alert alert-success" role="alert">
@@ -243,15 +258,14 @@ const SampleDispatchArea = () => {
               )}
               
               {/* Table */}
-              <div
-                className="table-responsive"
-                style={{ margin: "40px auto 0 auto", width: "80%", textAlign: "center" }}>
-                <table className="table table-bordered table-hover">
-                  <thead>
-                    <tr>
+              <div className="table-responsive mx-auto">
+          <table className="table table-bordered table-hover text-center">
+            <thead>
+              <tr>
                       {tableHeaders.map(({ label, key }, index) => (
                         <th key={index} className="px-4 text-center"
-                          style={{ backgroundColor: "#F4C2C2", color: "#000" }}>
+                          // style={{ backgroundColor: "#F4C2C2", color: "#000" }}
+                          >
                           <div className="d-flex flex-column align-items-center">
                             <input
                               type="text"
@@ -265,7 +279,8 @@ const SampleDispatchArea = () => {
                         </th>
                       ))}
                       <th className="px-3 align-middle text-center"
-                        style={{ backgroundColor: "#F4C2C2", color: "#000" }}>Action</th>
+                        // style={{ backgroundColor: "#F4C2C2", color: "#000" }}
+                        >Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -283,21 +298,13 @@ const SampleDispatchArea = () => {
                                 gap: "3px",
                               }}
                             >
-                              <button
+                              {/* <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(sample)}
                               >
                                 <FontAwesomeIcon icon={faEdit} size="sm" />
-                              </button>{" "}
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => {
-                                  setSelectedSampleId(sample.id);
-                                  setShowDeleteModal(true);
-                                }}
-                              >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
-                              </button>
+                              </button>{" "} */}
+                              
                               <button
                                 className="btn btn-primary btn-sm"
                                 onClick={() => handleTransferClick(sample)}
@@ -323,64 +330,13 @@ const SampleDispatchArea = () => {
               </div>
 
               {/* Pagination */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-4 me-5 pe-5">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${currentPage === 1 ? "disabled" : ""
-                        }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${currentPage === pageNumber ? "active" : ""
-                            }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                        }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-
+              {totalPages >= 0 && (
+              <Pagination
+                handlePageClick={handlePageChange}
+                pageCount={totalPages}
+                focusPage={currentPage}
+              />
+            )}
               {/* Modal for receiving Samples */}
               {showReceiveModal && (
                 <div

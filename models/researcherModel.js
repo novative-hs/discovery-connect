@@ -177,59 +177,56 @@ const deleteResearcher = (id, callback) => {
 
 // (Registration Admin) Function to update researcher status
 const updateResearcherStatus = async (id, status) => {
-  return new Promise((resolve, reject) => {
-    const updateQuery = "UPDATE researcher SET status = ? WHERE id = ?";
+  const updateQuery = "UPDATE researcher SET status = ? WHERE id = ?";
+  const insertHistoryQuery = `
+    INSERT INTO RegistrationAdmin_History (resaercher_id, status, updated_at)
+    VALUES (?, ?, NOW())
+  `;
+  const getEmailQuery = `
+    SELECT ua.email 
+    FROM researcher r
+    JOIN user_account ua ON r.user_account_id = ua.id
+    WHERE r.id = ?
+  `;
 
-    mysqlConnection.query(updateQuery, [status, id], (err, results) => {
-      if (err) return reject(err);
+  try {
+    // Update researcher status
+    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    if (updateResult.affectedRows === 0) {
+      throw new Error("No researcher found with the given ID.");
+    }
 
-      if (results.affectedRows === 0) {
-        return reject(new Error("No researcher found with the given ID."));
-      }
+    // Insert history and fetch email simultaneously (Parallel Execution)
+    const [_, emailResults] = await Promise.all([
+      mysqlConnection.promise().query(insertHistoryQuery, [id, status]),
+      mysqlConnection.promise().query(getEmailQuery, [id])
+    ]);
 
-      // Insert into history
-      const insertHistoryQuery = `
-        INSERT INTO RegistrationAdmin_History (resaercher_id, status, updated_at)
-        VALUES (?, ?, NOW())
-      `;
+    // Check if email exists
+    if (emailResults[0].length === 0) {
+      throw new Error("Researcher email not found.");
+    }
 
-      mysqlConnection.query(insertHistoryQuery, [id, status], (err) => {
-        if (err) return reject(err);
+    const email = emailResults[0][0].email;
+    let emailText = `Dear Researcher,\n\nYour account status is currently pending. 
+      Please wait for approval.\n\nBest regards,\nLab Hazir`;
 
-        // Fetch researcher email
-        const getEmailQuery = `SELECT ua.email 
-       FROM researcher r
-       JOIN user_account ua ON r.user_account_id = ua.id
-       WHERE r.id = ?`;
-        mysqlConnection.query(getEmailQuery, [id], async (err, emailResults) => {
-          if (err) return reject(err);
-          if (emailResults.length === 0) return reject(new Error("Researcher email not found."));
+    if (status === "approved") {
+      emailText = `Dear Researcher,\n\nYour account has been approved! 
+        You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+    }
 
-          const email = emailResults[0].email;
+    // Send email asynchronously (Does not block response)
+    sendEmail(email, "Welcome to Discovery Connect", emailText)
+      .then(() => console.log("Email sent successfully"))
+      .catch((emailErr) => console.error("Error sending email:", emailErr));
 
-          let emailText = `Dear Collectionsite,\n\nYour account status is currently pending. 
-          Please wait for approval.\n\nBest regards,\nYour Company`;
-
-          if (status === "approved") {
-            emailText = `Dear Collectionsite,\n\nYour account has been approved! 
-            You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
-          }
-
-          try {
-            await sendEmail(email, "Welcome to Discovery Connect", emailText);
-            resolve({ message: "Status updated and email sent" });
-          } catch (emailErr) {
-            console.error("Error sending email:", emailErr);
-            reject(emailErr);
-          }
-        });
-      });
-    });
-  });
+    return { message: "Status updated and email sent" };
+  } catch (error) {
+    console.error("Error updating researcher status:", error);
+    throw error;
+  }
 };
-
-
-
 
 module.exports = {
   createResearcher,

@@ -35,45 +35,7 @@ const create_collectionsiteTable = (req, res) => {
     .json({ message: "Collection Site table creation process started" });
 };
 
-const sendEmail = async (req, res) => {
-  const { email, name, status } = req.body;
 
-  // Default message for pending status
-  let emailText = `Dear ${name},\n\nYour account status is currently pending. Please wait for approval.\n\nBest regards,\nYour Company`;
-
-  // If status is 'approved', change the message
-  if (status === "approved") {
-    emailText = `Dear ${name},\n\nYour account has been approved! You can now log in and access your account.\n\nBest regards,\nYour Company`;
-  }
-
-  // If status is 'active', change the message
-  else if (status === "active") {
-    emailText = `Dear ${name},\n\nYour account is now active! You can log in and fully access your account.\n\nBest regards,\nYour Company`;
-  }
-
-  // If status is 'inactive', change the message
-  else if (status === "inactive") {
-    emailText = `Dear ${name},\n\nYour account is currently inactive. Please contact support for further assistance.\n\nBest regards,\nYour Company`;
-  }
-
-  // Email options
-  const mailOptions = {
-    from: "labhazr4@gmail.com", // Sender address
-    to: email, // Recipient email
-    subject: "Account Status Update", // Subject
-    text: emailText, // Email body
-  };
-
-  try {
-    // Sending email
-    await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully.");
-    res.status(200).json({ message: "Email sent successfully." });
-  } catch (error) {
-    console.error("Error sending email:", error);
-    res.status(500).json({ error: "Error sending email." });
-  }
-};
 
 const getAccountDetail = (req, res) => {
   const { id } = req.params;
@@ -180,9 +142,10 @@ const changepassword = (req, res) => {
     if (err) {
       return res.status(err.status || 500).json({ message: err.message });
     }
-    res.status(200).json(result);
+    return res.status(200).json({ message: "Password updated successfully." }); 
   });
 };
+
 const updateAccount = (req, res) => {
   console.log("Received Account Data:", req.body);
 

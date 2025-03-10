@@ -193,7 +193,7 @@ const UpdateOrganization = () => {
               <img
                 src={preview}
                 alt="Profile Logo"
-                className="rounded-circle border border-dark mb-2"
+                className="border border-2 border-primary rounded-circle"
                 style={{ width: "150px", height: "150px", objectFit: "cover" }}
               />
             ) : (
@@ -227,12 +227,12 @@ const UpdateOrganization = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="row mb-3">
               <div className="col-md-6">
-                <label className="fw-bold pb-1">Organization Name</label>
+                <label className="pb-1">Organization Name</label>
                 <input {...register("OrganizationName")} type="text" className="form-control" placeholder="Enter Organization Name" />
                 <ErrorMessage message={errors.OrganizationName?.message} />
               </div>
               <div className="col-md-6">
-                <label className="fw-bold pb-1">Email</label>
+                <label className="pb-1">Email</label>
                 <input {...register("useraccount_email")} type="email" className="form-control" placeholder="Enter Email" />
                 <ErrorMessage message={errors.useraccount_email?.message} />
               </div>
@@ -240,12 +240,12 @@ const UpdateOrganization = () => {
 
             <div className="row mb-3">
               <div className="col-md-6">
-                <label className="fw-bold pb-1">HEC/PMDC Registration No</label>
+                <label className="pb-1">HEC/PMDC Registration No</label>
                 <input {...register("HECPMDCRegistrationNo")} type="text" className="form-control" placeholder="Enter Registration Number" />
                 <ErrorMessage message={errors.HECPMDCRegistrationNo?.message} />
               </div>
               <div className="col-md-6">
-                <label className="fw-bold pb-1">Type</label>
+                <label className="pb-1">Type</label>
                 <select {...register("type")} className="form-select">
                   <option value="">Select Type</option>
                   <option value="Public">Public</option>
@@ -258,12 +258,12 @@ const UpdateOrganization = () => {
 
             <div className="row mb-3">
               <div className="col-md-6">
-                <label className="fw-bold pb-1">Phone Number</label>
+                <label className="pb-1">Phone Number</label>
                 <input {...register("phoneNumber")} type="text" className="form-control" placeholder="Enter Phone Number" />
                 <ErrorMessage message={errors.phoneNumber?.message} />
               </div>
               <div className="col-md-6">
-                <label className="fw-bold pb-1">NTN Number</label>
+                <label className="pb-1">NTN Number</label>
                 <input {...register("ntnNumber")} type="text" className="form-control" placeholder="Enter NTN Number" />
                 <ErrorMessage message={errors.ntnNumber?.message} />
               </div>
@@ -271,7 +271,7 @@ const UpdateOrganization = () => {
 
             <div className="row mb-3">
               <div className="col-lg-4 col-md-6">
-                <label className="fw-bold pb-1">City</label>
+                <label className="pb-1">City</label>
                 <select {...register("cityid")} className="form-select">
                   <option value="">Select a city</option>
                   {cityname.map((city) => (
@@ -281,7 +281,7 @@ const UpdateOrganization = () => {
                 <ErrorMessage message={errors.cityid?.message} />
               </div>
               <div className="col-lg-4 col-md-6">
-                <label className="fw-bold pb-1">Country</label>
+                <label className="pb-1">Country</label>
                 <select {...register("countryid")} className="form-select">
                   <option value="">Select a Country</option>
                   {countryname.map((country) => (
@@ -291,7 +291,7 @@ const UpdateOrganization = () => {
                 <ErrorMessage message={errors.countryid?.message} />
               </div>
               <div className="col-lg-4 col-md-6">
-                <label className="fw-bold pb-1">District</label>
+                <label className="pb-1">District</label>
                 <select {...register("districtid")} className="form-select">
                   <option value="">Select a district</option>
                   {districtname.map((district) => (
@@ -303,7 +303,7 @@ const UpdateOrganization = () => {
             </div>
 
             <div className="mb-3">
-              <label className="fw-bold pb-1">Full Address</label>
+              <label className="pb-1">Full Address</label>
               <textarea {...register("fullAddress")} className="form-control" rows="3" placeholder="Enter Full Address"></textarea>
               <ErrorMessage message={errors.fullAddress?.message} />
             </div>

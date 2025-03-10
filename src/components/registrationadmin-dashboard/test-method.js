@@ -342,7 +342,7 @@ const TestMethodArea = () => {
               <thead className="thead-dark">
                 <tr className="text-center">
                   {[
-                    { label: "ID", placeholder: "Search ID", field: "id" },
+                   // { label: "ID", placeholder: "Search ID", field: "id" },
                     {
                       label: "Test Method",
                       placeholder: "Search Test Method",
