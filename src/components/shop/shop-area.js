@@ -25,19 +25,26 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
     setSelectedPrice(null);
     setSelectedSmokingStatus("");
     setSelectedGender("");
-    setSelectedSampleType([]); 
+    setSelectedSampleType([]);
   };
 
   const filteredProducts = products.filter((product) => {
-    let matchesPrice = !selectedPrice || product.price <= selectedPrice;
-    let matchesSmoking = !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
+    let matchesPrice =
+      !selectedPrice ||
+      (product.price >= selectedPrice.min && product.price <= selectedPrice.max);
+
+    let matchesSmoking =
+      !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
+
     let matchesGender = !selectedGender || product.gender === selectedGender;
+
     let matchesSampleType =
-      selectedSampleType.length === 0 || selectedSampleType.some(type => product.SampleTypeMatrix.includes(type));
-  
+      selectedSampleType.length === 0 ||
+      selectedSampleType.some((type) => product.SampleTypeMatrix.includes(type));
+
     return matchesPrice && matchesSmoking && matchesGender && matchesSampleType;
   });
-  
+
 
   return (
     <section className="shop__area pb-40">
