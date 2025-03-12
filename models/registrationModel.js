@@ -38,6 +38,7 @@ const create_researcherTable = () => {
       nameofOrganization INT,
       logo LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      added_by INT,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (nameofOrganization) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,

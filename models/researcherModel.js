@@ -5,11 +5,11 @@ function createResearcher(data, callback) {
   console.log("Researcher Model", data)
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
-    INSERT INTO researcher (user_account_id,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,added_by)
-    VALUES (?,?, ?, ?, ?, ?,?,?,?)
+    INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  mysqlConnection.query(query, [userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, nameofOrganization], callback);
+  mysqlConnection.query(query, [userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by], callback);
 }
 
 // Function to fetch all researchers

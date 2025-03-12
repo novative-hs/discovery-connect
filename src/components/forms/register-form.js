@@ -263,7 +263,7 @@ const RegisterForm = () => {
           setLogo("");
           setValue("logo", "");
           notifySuccess(
-            "You information is received, you'll get email once your account got approval from registration admin"
+            "Your information is received, you'll get email once your account got approval from registration admin"
           );
 
           router.push("/login");
