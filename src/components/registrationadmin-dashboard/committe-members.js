@@ -435,8 +435,6 @@ const CommitteeMemberArea = () => {
 
               {/* Button Container */}
               <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                {/* Add Committee Member*/}
-
                 <button
                   className="btn btn-primary mb-2"
                   onClick={() => setShowAddModal(true)}

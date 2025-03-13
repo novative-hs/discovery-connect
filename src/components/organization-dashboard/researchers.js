@@ -402,7 +402,7 @@ const ResearcherArea = () => {
                 <thead className="table-primary text-dark">
                   <tr className="text-center">
                     {[
-                      { label: "ID", field: "id", minWidth: "80px" },
+                      // { label: "ID", field: "id", minWidth: "80px" },
                       {
                         label: "Name",
                         field: "ResearcherName",
@@ -679,11 +679,10 @@ const ResearcherArea = () => {
                                   name="password"
                                   value={formData.password}
                                   onChange={handleInputChange}
-                                  required
-                                  pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?':{}|<>])[A-Za-z\d!@#$%^&*(),.?':{}|<>]{6,}$"
+                                  pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
                                   title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                                  required
                                 />
-  
                                 <button
                                   className="btn btn-outline-secondary"
                                   type="button"
