@@ -668,6 +668,7 @@ const ResearcherArea = () => {
                                 value={formData.email}
                                 onChange={handleInputChange}
                                 required
+                                readOnly={showEditModal} // Make read-only when editing
                               />
                             </div>
                             <div className="col-md-12">
@@ -682,6 +683,7 @@ const ResearcherArea = () => {
                                   pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
                                   title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
                                   required
+                                  readOnly={showEditModal} // Make read-only when editing
                                 />
                                 <button
                                   className="btn btn-outline-secondary"

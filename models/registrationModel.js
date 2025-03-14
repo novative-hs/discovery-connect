@@ -259,8 +259,7 @@ const getAccountDetail = (id, callback) => {
 const updateAccount = (req, callback) => {
   const {
     user_account_id,
-    useraccount_email,          // update email through researcher dashboard
-    email,                    // if want to update email through organization dashboard
+    useraccount_email,
     password,
     accountType,
     ResearcherName,
@@ -320,10 +319,10 @@ const updateAccount = (req, callback) => {
           const previousPassword = results[0].password;
           // Update user account table
           const updateUserAccountQuery = `
-        UPDATE user_account SET email = ?, password = ? WHERE id = ?
+        UPDATE user_account SET email = ? WHERE id = ?
       `;
-          const updateUserAccountValues = [useraccount_email, email, password, user_account_id];
-          console.log("Updating user_account with:", { useraccount_email, email, password, user_account_id });
+          const updateUserAccountValues = [useraccount_email, user_account_id];
+          console.log("Updating user_account with:", { useraccount_email, user_account_id });
 
 
           connection.query(
