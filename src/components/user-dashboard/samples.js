@@ -30,10 +30,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -83,10 +80,10 @@ const SampleArea = () => {
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
-    const itemsPerPage = 10;
-    // Calculate total pages
-    const [totalPages, setTotalPages] = useState(0);
-     const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
+  const itemsPerPage = 10;
+  // Calculate total pages
+  const [totalPages, setTotalPages] = useState(0);
+  const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
   const incrementQuantity = (sample) => {
     const updatedQuantity = quantity + 1;
     setQuantity(updatedQuantity); // Update quantity
@@ -153,7 +150,7 @@ const SampleArea = () => {
     }
   }, []);
 
- useEffect(() => {
+  useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredSamples.length / itemsPerPage)
@@ -266,7 +263,12 @@ const SampleArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
-                        <td key={index}>{sample[key] || "N/A"}</td>
+                        <td
+                          key={index}
+                          className={key === "price" ? "text-end" : "text-center text-truncate"}
+                          style={{ maxWidth: "150px" }}
+                        >
+                          {sample[key] || "N/A"}</td>
                       ))}
                       <td>
                         <div className="d-flex justify-content-around gap-2">
@@ -295,12 +297,12 @@ const SampleArea = () => {
           </div>
           {/* Pagination Controls */}
           {totalPages >= 0 && (
-          <Pagination
-            handlePageClick={handlePageChange}
-            pageCount={totalPages}
-            focusPage={currentPage}
-          />
-        )}
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage}
+            />
+          )}
         </div>
       </div>
 

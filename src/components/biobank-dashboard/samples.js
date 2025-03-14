@@ -717,7 +717,7 @@ setFilteredSamples(combinedSamples)
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
-                        className="text-center text-truncate"
+                        className={key === "price" ? "text-end" : "text-center text-truncate"}
                         style={{ maxWidth: "150px" }}
                       >
                         {sample[key] || "N/A"}
