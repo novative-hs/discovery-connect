@@ -363,7 +363,7 @@ const SampleConditionArea = () => {
                           label: "Updated At",
                           placeholder: "Search Updated at",
                           field: "updated_at",
-                          width: "col-md-2"
+                          width: "col-md-3"
                         },
                       ].map(({ label, placeholder, field ,width}) => (
                         <th key={field} className={`${width} px-2`}>

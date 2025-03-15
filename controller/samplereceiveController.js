@@ -10,62 +10,79 @@ const createSampleReceiveTable = (req, res) => {
 // Controller to get all sample receivees in "In Transit" status
 const getSampleReceiveInTransit = (req, res) => {
   const id = req.params.id;
-
   if (!id) {
-    return res.status(400).json({ error: "ID parameter is missing" });
+      return res.status(400).json({ error: "ID parameter is missing" });
   }
 
   const query = `
     SELECT 
-      s.id,
-      s.masterID,
-      s.donorID,
-      s.samplename,
-      s.age,
-      s.gender,
-      s.ethnicity,
-      s.samplecondition,
-      s.storagetemp,
-      s.ContainerType,
-      s.CountryOfCollection,
-      s.price,
-      s.SamplePriceCurrency,
-      s.QuantityUnit,
-      s.SampleTypeMatrix,
-      s.SmokingStatus,
-      s.AlcoholOrDrugAbuse,
-      s.InfectiousDiseaseTesting,
-      s.InfectiousDiseaseResult,
-      s.FreezeThawCycles,
-      s.DateOfCollection,
-      s.ConcurrentMedicalConditions,
-      s.ConcurrentMedications,
-      s.DiagnosisTestParameter,
-      s.TestResult,
-      s.TestResultUnit,
-      s.TestMethod,
-      s.TestKitManufacturer,
-      s.TestSystem,
-      s.TestSystemManufacturer,
-      sr.ReceivedByCollectionSite,
-      sr.ReceivedByCollectionSite AS user_account_id,
-      sd.Quantity, 
-      s.status
-      
-    FROM samplereceive sr
-    INNER JOIN sample s ON sr.sampleID = s.id
-    INNER JOIN sampledispatch sd ON s.id = sd.sampleID
-    WHERE sr.ReceivedByCollectionSite = ?
+    s.id,
+    s.masterID,
+    s.donorID,
+    s.samplename,
+    s.age,
+    s.gender,
+    s.ethnicity,
+    s.samplecondition,
+    s.storagetemp,
+    s.ContainerType,
+    s.CountryOfCollection,
+    s.price,
+    s.SamplePriceCurrency,
+    s.QuantityUnit,
+    s.SampleTypeMatrix,
+    s.SmokingStatus,
+    s.AlcoholOrDrugAbuse,
+    s.InfectiousDiseaseTesting,
+    s.InfectiousDiseaseResult,
+    s.FreezeThawCycles,
+    s.DateOfCollection,
+    s.ConcurrentMedicalConditions,
+    s.ConcurrentMedications,
+    s.DiagnosisTestParameter,
+    s.TestResult,
+    s.TestResultUnit,
+    s.TestMethod,
+    s.TestKitManufacturer,
+    s.TestSystem,
+    s.TestSystemManufacturer,
+    sr.ReceivedByCollectionSite,
+    s.status,
+
+    COALESCE(sd.TotalQuantity, 0) AS Quantity  
+
+FROM sample s
+
+LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+
+LEFT JOIN (
+    SELECT sampleID, TransferTo, SUM(Quantity) AS TotalQuantity
+    FROM sampledispatch
+    WHERE status = 'In Stock'
+    GROUP BY sampleID, TransferTo
+) sd ON sd.sampleID = s.id 
+    AND sd.TransferTo = sr.ReceivedByCollectionSite
+
+WHERE sr.ReceivedByCollectionSite = ? 
+AND s.status = 'In Stock'  
+AND sr.sampleID IS NOT NULL  
+
+GROUP BY s.id, sr.ReceivedByCollectionSite, sd.TotalQuantity 
+
+ORDER BY s.id;
+
   `;
 
   mysqlConnection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching sample receive:", err);
-      return res.status(500).json({ error: "Error fetching sample receive" });
-    }
-    res.status(200).json(results);
+      if (err) {
+          console.error("Error fetching sample receive:", err);
+          return res.status(500).json({ error: "Error fetching sample receive" });
+      }
+      console.log(results);
+      res.status(200).json(results);
   });
 };
+
 
 
 // Controller to create a new sample receive
@@ -89,12 +106,12 @@ const createSampleReceive = (req, res) => {
 
        // Update the sampledispatch table's status to "In Stock"
        const updateDispatchStatusQuery = `
-       UPDATE sampledispatch
-       SET status = 'In Stock'
-       WHERE sampleID = ?
-     `;
+    UPDATE sampledispatch
+    SET status = 'In Stock'
+    WHERE sampleID = ? AND TransferTo = ?
+`;
 
-     mysqlConnection.query(updateDispatchStatusQuery, [id], (updateDispatchStatusErr) => {
+     mysqlConnection.query(updateDispatchStatusQuery, [id,ReceivedByCollectionSite], (updateDispatchStatusErr) => {
        if (updateDispatchStatusErr) {
          console.error('Database error during UPDATE status in sampledispatch:', updateDispatchStatusErr);
          return res.status(500).json({ error: 'An error occurred while updating the dispatch status' });

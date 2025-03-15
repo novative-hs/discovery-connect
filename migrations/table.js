@@ -55,7 +55,7 @@ function Database() {
   historyModel.create_historyTable();
  historyModel.create_samplehistoryTable();
 
-  // newtablefieldModel.createOrUpdateTables();
+  // znewtablefieldModel.createOrUpdateTables();
 
 }
 Database();

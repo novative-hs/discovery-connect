@@ -324,16 +324,20 @@ setFilteredSamples(combinedSamples)
   };
 
   const handleInputChange = (e) => {
-    // Update both formData and transferDetails state if applicable
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setTransferDetails({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+  
+    // Ensure both states update correctly
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  
+    setTransferDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -732,7 +736,7 @@ setFilteredSamples(combinedSamples)
                         >
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>
-                        <button
+                        {/* <button
                           className="btn btn-danger btn-sm"
                           onClick={() => {
                             setSelectedSampleId(sample.id);
@@ -741,7 +745,7 @@ setFilteredSamples(combinedSamples)
                           title="Delete"
                         >
                           <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button>
+                        </button> */}
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => handleTransferClick(sample)}

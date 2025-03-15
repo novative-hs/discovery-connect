@@ -37,6 +37,7 @@ const ChangePassword = () => {
   const {
     register,
     handleSubmit,
+    setValue, // Add this line
     formState: { errors },
     reset,
   } = useForm({
@@ -59,6 +60,7 @@ const ChangePassword = () => {
       );
       const userEmail = response.data?.data[0]; // Extract email from the response
       setUserDetail(userEmail); // Set only the email in state
+      setValue("email", userEmail);
     } catch (error) {
       console.error("Error fetching user detail:", error);
     }
