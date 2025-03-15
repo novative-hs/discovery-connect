@@ -276,7 +276,7 @@ useEffect(() => {
   };
 
   return (
-    <section className="policy__area pb-40 overflow-hidden p-3">
+    <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
           
@@ -317,14 +317,10 @@ useEffect(() => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
-                    <tr className="text-center">
+              <div className="table-responsive w-80">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
                        // { label: "ID", placeholder: "Search ID", field: "id" },
                         {
@@ -348,10 +344,10 @@ useEffect(() => {
                           field: "updated_at",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="col-md-2 px-1">
+                        <th key={field} className="col-md-2 px-2">
                         <input
                           type="text"
-                          className="form-control w-100 px-2 py-1 mx-auto"
+                            className="form-control w-100 mx-auto"
                           placeholder={placeholder}
                           onChange={(e) =>
                             handleFilterChange(field, e.target.value)

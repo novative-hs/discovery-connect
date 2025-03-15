@@ -333,13 +333,9 @@ const TestMethodArea = () => {
           </div>
 
           {/* Table with responsive scroll */}
-          <div className="table-responsive overflow-auto w-100 ">
-            {" "}
-            {/* Increased width & scrolling */}
-            <table className="table table-bordered table-hover table-striped w-100">
-              {" "}
-              {/* Added w-100 */}
-              <thead className="thead-dark">
+          <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
                    // { label: "ID", placeholder: "Search ID", field: "id" },

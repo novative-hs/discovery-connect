@@ -232,13 +232,9 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
             </div>
 
             {/* Table */}
-            <div className="table-responsive overflow-auto w-100 p-2">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
+            <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
                 <tr className="text-center">
                       {[
                        // { label: "ID", placeholder: "Search ID", field: "id" },
@@ -265,13 +261,13 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                       ].map(({ label, placeholder, field }) => (
                         <th key={field} className="col-md-2 px-1">
                         <input
-                          type="text"
-                          className="form-control w-100 px-2 py-1 mx-auto"
-                          placeholder={placeholder}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
-                        />
+                        type="text"
+                        className="form-control w-100 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
+                      />
                           {label}
                         </th>
                       ))}
