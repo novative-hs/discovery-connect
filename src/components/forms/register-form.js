@@ -115,11 +115,11 @@ const RegisterForm = () => {
   const fileInputRef = useRef(null);
   const accountType = watch("accountType");
   const selectedAccountType = watch("accountType");
-  
+
   // Dynamically change the "Choose Logo" label based on account type
   const handleSelectCity = (city) => {
     setSelectedCity(city);
-    setSearchTerm(""); 
+    setSearchTerm("");
     setShowDropdown(false);
     setValue("city", city.id);
   };
@@ -131,12 +131,11 @@ const RegisterForm = () => {
   };
 
   const handleSelectCountry = (country) => {
-    console.log("Country",country)
+    console.log("Country", country);
     setSelectedCountry(country);
     setSearchCountry("");
     setShowCountryDropdown(false);
     setValue("country", country.id);
-    
   };
 
   useEffect(() => {
@@ -584,7 +583,7 @@ const RegisterForm = () => {
                 />
               </div>
               <ErrorMessage
-                    name="logo"
+                name="logo"
                 component="div"
                 className="error-message"
                 message={errors.logo?.message}
@@ -605,11 +604,7 @@ const RegisterForm = () => {
                     if (!e.target.value) setSelectedCity(null); // Clear selected city when user deletes input
                   }}
                   onFocus={() => setShowDropdown(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowDropdown(false), 200)
-                  }
-                  
-                  
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                 />
                 <span>
                   <i className="fa-solid fa-city text-black"></i>
@@ -618,13 +613,8 @@ const RegisterForm = () => {
                 {/* Bootstrap Dropdown */}
                 {showDropdown && (
                   <ul
-                    className="dropdown-menu show w-100 position-absolute"
-                    style={{
-                      top: "100%",
-                      zIndex: 1000,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
+                    className="dropdown-menu show w-100 position-absolute bg-white shadow overflow-auto border-0 top-100"
+                    style={{ maxHeight: "350px" }}
                   >
                     {cityname
                       .filter(
@@ -654,7 +644,7 @@ const RegisterForm = () => {
               </span>
               <ErrorMessage message={errors.city?.message} />
             </div>
-
+            {/* District */}
             <div className="login__input-item">
               <div className="login__input d-flex align-items-center w-100 position-relative">
                 <input
@@ -683,13 +673,8 @@ const RegisterForm = () => {
                 {/* Bootstrap Dropdown for District */}
                 {showDistrictDropdown && (
                   <ul
-                    className="dropdown-menu show w-100 position-absolute"
-                    style={{
-                      top: "100%",
-                      zIndex: 1000,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
+                    className="dropdown-menu show w-100 position-absolute bg-white shadow overflow-auto border-0 top-100"
+                    style={{ maxHeight: "320px" }}
                   >
                     {districtname
                       .filter((district) =>
@@ -748,13 +733,8 @@ const RegisterForm = () => {
                 {/* Bootstrap Dropdown for Country */}
                 {showCountryDropdown && (
                   <ul
-                    className="dropdown-menu show w-100 position-absolute"
-                    style={{
-                      top: "100%",
-                      zIndex: 1000,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
+                    className="dropdown-menu show w-100 position-absolute bg-white shadow overflow-auto border-0 top-100"
+                    style={{ maxHeight: "250px" }}
                   >
                     {countryname
                       .filter((country) =>

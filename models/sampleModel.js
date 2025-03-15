@@ -65,20 +65,23 @@ const getSamples = (id, callback) => {
   }
 
   const query = `
-    SELECT s.*
-    FROM sample s
-    JOIN user_account ua ON s.user_account_id = ua.id
-    WHERE s.status = "In Stock" 
-      AND s.is_deleted = FALSE
-      AND ua.accountType = "CollectionSites"
-      AND s.user_account_id = ?
-      ORDER BY s.created_at ASC; 
+   SELECT s.*
+FROM sample s
+JOIN user_account ua ON s.user_account_id = ua.id
+WHERE s.status = "In Stock" 
+  AND s.is_deleted = FALSE
+  AND ua.accountType = "CollectionSites"
+  AND s.user_account_id = ? 
+  AND s.Quantity > 0 
+ORDER BY s.created_at ASC;
+
   `;
   mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return callback(err, null);
     }
+  
     callback(null, results);
   });
 };

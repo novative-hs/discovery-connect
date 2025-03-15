@@ -68,43 +68,62 @@ const getDispatchedwithInTransitStatus = (req, res) => {
   // SQL query to fetch samples where the logged-in user is the recipient (TransferTo)
   const query = `
     SELECT 
-      s.id,
-      s.masterID,
-      s.donorID,
-      s.samplename,
-      s.age,
-      s.gender,
-      s.ethnicity,
-      s.samplecondition,
-      s.storagetemp,
-      s.ContainerType,
-      s.CountryOfCollection,
-      s.price,
-      s.SamplePriceCurrency,
-      s.QuantityUnit,
-      s.SampleTypeMatrix,
-      s.SmokingStatus,
-      s.AlcoholOrDrugAbuse,      
-      s.InfectiousDiseaseTesting,
-      s.InfectiousDiseaseResult,
-      s.FreezeThawCycles,
-      s.DateOfCollection,
-      s.ConcurrentMedicalConditions,
-      s.ConcurrentMedications,
-      s.DiagnosisTestParameter,
-      s.TestResult,
-      s.TestResultUnit,
-      s.TestMethod,
-      s.TestKitManufacturer,
-      s.TestSystem,
-      s.TestSystemManufacturer,
-      s.user_account_id AS TransferFrom,
-      sd.TransferTo,
-      sd.Quantity AS Quantity,
-      sd.status AS status
+    s.id,
+    s.masterID,
+    s.donorID,
+    s.samplename,
+    s.age,
+    s.gender,
+    s.ethnicity,
+    s.samplecondition,
+    s.storagetemp,
+    s.ContainerType,
+    s.CountryOfCollection,
+    s.price,
+    s.SamplePriceCurrency,
+    s.QuantityUnit,
+    s.SampleTypeMatrix,
+    s.SmokingStatus,
+    s.AlcoholOrDrugAbuse,
+    s.InfectiousDiseaseTesting,
+    s.InfectiousDiseaseResult,
+    s.FreezeThawCycles,
+    s.DateOfCollection,
+    s.ConcurrentMedicalConditions,
+    s.ConcurrentMedications,
+    s.DiagnosisTestParameter,
+    s.TestResult,
+    s.TestResultUnit,
+    s.TestMethod,
+    s.TestKitManufacturer,
+    s.TestSystem,
+    s.TestSystemManufacturer,
+    sr.ReceivedByCollectionSite,
+
+    -- Calculate the actual quantity available
+    COALESCE((
+        SELECT SUM(sd.Quantity) 
+        FROM sampledispatch sd 
+        WHERE sd.sampleID = s.id 
+        AND sd.TransferTo = sr.ReceivedByCollectionSite
+        AND sd.status = 'In Stock'
+    ), 0) AS Quantity, 
+
+    s.status
+
+FROM samplereceive sr
+INNER JOIN sample s ON sr.sampleID = s.id
+WHERE sr.ReceivedByCollectionSite = ? 
+AND s.status = 'In Stock'  
+AND EXISTS (
+    SELECT 1 
     FROM sampledispatch sd
-    INNER JOIN sample s ON sd.sampleID = s.id
-    WHERE sd.TransferTo = ? AND sd.status = 'In Transit'
+    WHERE sd.sampleID = s.id 
+    AND sd.TransferTo = sr.ReceivedByCollectionSite
+    AND sd.status = 'In Stock'
+)  
+HAVING Quantity > 0
+ORDER BY s.id;
   `;
   // Execute the query using the logged-in user's `user_account_id`
   mysqlConnection.query(query, [user_account_id], (err, results) => {
@@ -124,12 +143,16 @@ const getDispatchedwithInTransitStatus = (req, res) => {
 // Function to transfer sample 
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
   const { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = dispatchData;
+
   const query = `
     INSERT INTO sampledispatch (TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
+
   mysqlConnection.query(query, [TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID], callback);
 };
+
+
 
 module.exports = {
   createSampleDispatchTable,

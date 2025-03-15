@@ -13,11 +13,15 @@ import { EyeCut } from "@svg/index"; // Adjust the import according to your setu
 const schema = Yup.object().shape({
   email: Yup.string().email().label("Email"),
   password: Yup.string().required().min(6).label("Password"),
-  newPassword: Yup.string().required().min(6).label("New Password") .min(6, "Password must be at least 6 characters long")
-  .matches(
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/,
-    "Password must contain at least one letter, one number, and one special character"
-  ),
+  newPassword: Yup.string()
+    .required()
+    .min(6)
+    .label("New Password")
+    .min(6, "Password must be at least 6 characters long")
+    .matches(
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/,
+      "Password must contain at least one letter, one number, and one special character"
+    ),
   confirmPassword: Yup.string().oneOf(
     [Yup.ref("newPassword"), null],
     "Passwords must match"
@@ -37,11 +41,13 @@ const ChangePassword = () => {
   const {
     register,
     handleSubmit,
+    setValue, // Add this line
     formState: { errors },
     reset,
   } = useForm({
     resolver: yupResolver(schema),
   });
+  
 
   useEffect(() => {
     if (id === null) {
@@ -59,6 +65,7 @@ const ChangePassword = () => {
       );
       const userEmail = response.data?.data[0]; // Extract email from the response
       setUserDetail(userEmail); // Set only the email in state
+      setValue("email", userEmail);
     } catch (error) {
       console.error("Error fetching user detail:", error);
     }
@@ -66,33 +73,38 @@ const ChangePassword = () => {
 
   // on submit
   const onSubmit = async (data) => {
+    console.log("Email", data.email);
     if (data.password === data.newPassword) {
-        notifyError("New password cannot be the same as the old password.");
-        return;
+      notifyError("New password cannot be the same as the old password.");
+      return;
     }
 
     const formData = {
-        email: data.email,
-        password: data.password,
-        newPassword: data.newPassword,
+      email: data.email,
+      password: data.password,
+      newPassword: data.newPassword,
     };
 
     axios
-        .put(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/changepassword`, formData)
-        .then((response) => {
-            notifySuccess(response.data.message);
-            reset();
-        }, (error) => {
-            // Error handling inside .then()
-            if (error.response) {
-                notifyError(error.response.data.message || "An error occurred.");
-            } else {
-                notifyError("An unexpected error occurred.");
-            }
-        });
-};
-
-
+      .put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/changepassword`,
+        formData
+      )
+      .then(
+        (response) => {
+          notifySuccess(response.data.message);
+          reset();
+        },
+        (error) => {
+          // Error handling inside .then()
+          if (error.response) {
+            notifyError(error.response.data.message || "An error occurred.");
+          } else {
+            notifyError("An unexpected error occurred.");
+          }
+        }
+      );
+  };
 
   return (
     <div className="profile__password">
@@ -104,7 +116,7 @@ const ChangePassword = () => {
             <div className="profile__input-box">
               <h4>Email Address</h4>
               <div className="profile__input">
-                <input
+              <input
                   {...register("email")}
                   type="email"
                   placeholder="Enter Email Address"

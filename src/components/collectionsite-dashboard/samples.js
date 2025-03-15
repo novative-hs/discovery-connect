@@ -152,38 +152,63 @@ const SampleArea = () => {
 
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
+        console.log("Fetching samples...");
 
-      // Fetch samples added by this collection site
-      const ownSamplesResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
-      );
-      console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.quantity, // Use 'quantity' as is
-      }));
+        if (!id) {
+            console.error("ID is missing.");
+            return;
+        }
 
-      // Fetch samples received by this collection site
-      const receivedSamplesResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
-      );
-      console.log("Received samples:", receivedSamplesResponse.data);
-      const receivedSamples = receivedSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.Quantity, // Map 'Quantity' to 'quantity'
-      }));
+        // Fetch own samples
+        const ownResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`);
+        const ownSamples = ownResponse.data.map(sample => ({
+            ...sample,
+            quantity: Number(sample.quantity) || 0, // Ensure it's a number
+        }));
+        console.log("Own samples...",ownSamples);
+        // Fetch received samples
+        const receivedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`);
+        const receivedSamples = receivedResponse.data.map(sample => ({
+            ...sample,
+            quantity: Number(sample.Quantity) || 0, // Ensure it's a number
+        }));
+        console.log("Receive samples...",receivedSamples);
+        // Use a Map to merge and sum quantities of duplicate samples
+        const sampleMap = new Map();
 
-      // Combine both responses
-      const combinedSamples = [...ownSamples, ...receivedSamples];
+        [...ownSamples, ...receivedSamples].forEach(sample => {
+            const sampleId = sample.id;
 
-      // Update state with the combined list
-      setSamples(combinedSamples);
-      setFilteredSamplename(combinedSamples);
+            if (sampleMap.has(sampleId)) {
+                // If the sample exists, add its quantity
+                const existingSample = sampleMap.get(sampleId);
+                existingSample.quantity += sample.quantity;
+                sampleMap.set(sampleId, existingSample);
+            } else {
+                // If the sample does not exist, add it to the map
+                sampleMap.set(sampleId, { ...sample });
+            }
+        });
+
+        let combinedSamples = Array.from(sampleMap.values());
+
+        // **Filter out samples with quantity = 0**
+        combinedSamples = combinedSamples.filter(sample => sample.quantity > 0);
+
+        console.log("Final filtered samples:", combinedSamples);
+
+        // Update state
+        setSamples(combinedSamples);
+        setFilteredSamplename(combinedSamples);
+
     } catch (error) {
-      console.error("Error fetching samples:", error);
+        console.error("Error fetching samples:", error);
     }
-  };
+};
+
+
+
+
 
   // get collectionsite names in collectionsite dashboard in stock transfer modal
   useEffect(() => {
@@ -242,7 +267,7 @@ const SampleArea = () => {
   const currentData = filteredSamplename.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
-  );
+);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -267,17 +292,19 @@ const SampleArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Update both formData and transferDetails state if applicable
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setTransferDetails({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  
+    // Ensure both states update correctly
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  
+    setTransferDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -663,7 +690,7 @@ const SampleArea = () => {
                         >
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>
-                        <button
+                        {/* <button
                           className="btn btn-danger btn-sm"
                           onClick={() => {
                             setSelectedSampleId(sample.id);
@@ -672,7 +699,7 @@ const SampleArea = () => {
                           title="Delete"
                         >
                           <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button>
+                        </button> */}
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => handleTransferClick(sample)}
