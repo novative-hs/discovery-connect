@@ -4,7 +4,6 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 // internal
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
-import UpdateBioBank from './update-biobank';
 import BioBankSampleArea from './samples';
 import BioBankSampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
@@ -49,8 +48,6 @@ const DashboardArea = () => {
         return <BioBankSampleDispatchArea />;
       case "change-password":
         return <ChangePassword />;
-      case "update-biobank":
-        return <UpdateBioBank />;
       default:
         return <BioBankSampleArea />;
     }

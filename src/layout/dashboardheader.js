@@ -113,14 +113,17 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);
+
+    if (userType === "biobank") {
+      return;
+    }
+
     if (userType === "organization") {
       setActiveTab("update-organization");
     } else if (userType === "researcher") {
       setActiveTab("update-user");
     } else if (userType === "collectionsites") {
       setActiveTab("update-collectionsite");
-    } else if (userType === "biobank") {
-      setActiveTab("update-biobank");
     } else {
       setActiveTab("update-profile");
     }
@@ -331,7 +334,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   }`}
                   aria-labelledby="userDropdown"
                 >
-                  {userType !== "registrationadmin" && (
+                  {userType !== "registrationadmin" && userType !== "biobank" && (
                     <li>
                       <button
                         className="dropdown-item fs-7"
