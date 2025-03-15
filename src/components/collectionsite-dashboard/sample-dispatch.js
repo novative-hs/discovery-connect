@@ -248,39 +248,42 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
   }, [showReceiveModal]);
 
   return (
-    <section className="profile__area pt-30 pb-120">          {/* Inner Container Color can be visible through this */}
-      <div className="container-fluid px-md-4">
+    <section className="policy__area pb-40 overflow-hidden p-3">
+        <div className="container">
+          <div className="row justify-content-center">
               {/* Success Message */}
               {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
-                </div>
-              )}
+              <div className="alert alert-success w-100 text-start mb-2 small">
+                {successMessage}
+              </div>
+            )}
               
               {/* Table */}
-              <div className="table-responsive mx-auto">
-          <table className="table table-bordered table-hover text-center">
-            <thead>
-              <tr>
+              <div className="table-responsive w-100">
+              <table className="table table-bordered table-hover text-center align-middle w-auto border">
+                <thead className="table-primary text-dark">
+                  <tr className="text-center">
                       {tableHeaders.map(({ label, key }, index) => (
-                        <th key={index} className="px-4 text-center"
-                          // style={{ backgroundColor: "#F4C2C2", color: "#000" }}
-                          >
+                        <th key={index} className="p-2"  style={{ minWidth: "140px" }}>
                           <div className="d-flex flex-column align-items-center">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm w-100 text-center"
-                              placeholder={`Search ${label}`}
-                              onChange={(e) => handleFilterChange(key, e.target.value)}
-                              style={{ minWidth: "70px", maxWidth: "120px", height: "30px", padding: "2px 5px", fontSize: "14px", lineHeight: "normal" }}
-                            />
-                            <span className="fw-bold mt-1 d-block text-nowrap">{label}</span>
+                          <input
+                            type="text"
+                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                            placeholder={`Search ${label}`}
+                            onChange={(e) =>
+                              handleFilterChange(key, e.target.value)
+                            }
+                            style={{ minWidth: "150px" }}
+                          />
+                               <span className="fw-bold mt-1 d-block text-nowrap text-center">
+                        {label}
+                      </span>
                           </div>
                         </th>
                       ))}
-                      <th className="px-3 align-middle text-center"
-                        // style={{ backgroundColor: "#F4C2C2", color: "#000" }}
-                        >Action</th>
+                      <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                      Action
+                    </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -428,6 +431,7 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
                   </div>
                 </div>
               )}       
+      </div>
       </div>
     </section>
   );

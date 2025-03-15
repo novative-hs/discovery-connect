@@ -635,7 +635,39 @@ setFilteredSamples(combinedSamples)
     showTransferModal,
     showHistoryModal,
   ]);
-
+  const resetFormData=()=>{
+    setFormData({
+      samplename: "",
+      age: "",
+      gender: "",
+      ethnicity: "",
+      samplecondition: "",
+      storagetemp: "",
+      ContainerType: "",
+      CountryOfCollection: "",
+      quantity: "",
+      QuantityUnit: "",
+      SampleTypeMatrix: "",
+      SmokingStatus: "",
+      AlcoholOrDrugAbuse: "",
+      InfectiousDiseaseTesting: "",
+      InfectiousDiseaseResult: "",
+      FreezeThawCycles: "",
+      DateOfCollection: "",
+      ConcurrentMedicalConditions: "",
+      ConcurrentMedications: "",
+      DiagnosisTestParameter: "",
+      TestResult: "",
+      TestResultUnit: "",
+      TestMethod: "",
+      TestKitManufacturer: "",
+      TestSystem: "",
+      TestSystemManufacturer: "",
+      status: "In Stock",
+      user_account_id: id,
+    });
+  
+  }
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -674,47 +706,36 @@ setFilteredSamples(combinedSamples)
         </div>
 
         {/* Table */}
-        <div className="table-responsive mx-auto">
-          <table className="table table-bordered table-hover text-center">
-            <thead>
-              <tr>
+        <div className="table-responsive w-100">
+            <table className="table table-bordered table-hover text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th
-                    key={index}
-                    className="px-4 text-center"
-                    //  style={{ backgroundColor: "#F4C2C2", color: "#000" }}
-                  >
-                    <div className="d-flex flex-column align-items-center">
-                      <input
-                        type="text"
-                        className="form-control form-control-sm w-100 text-center"
-                        placeholder={`Search ${label}`}
-                        onChange={(e) =>
-                          handleFilterChange(key, e.target.value)
-                        }
-                        style={{
-                          minWidth: "70px",
-                          maxWidth: "120px",
-                          height: "30px",
-                          padding: "2px 5px",
-                          fontSize: "14px",
-                        }}
-                      />
-                      <span className="fw-bold mt-1 d-block text-nowrap">
-                        {label}
-                      </span>
-                    </div>
-                  </th>
+                <th key={index} className="col-md-1 px-2">
+                 
+                <div className="d-flex flex-column align-items-center">
+                   <input
+                           type="text"
+                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                           placeholder={`Search ${label}`}
+                           onChange={(e) =>
+                             handleFilterChange(key, e.target.value)
+                           }
+                           style={{ minWidth: "150px" }}
+                         />
+                     <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+  {label}
+</span>
+
+                   </div>
+                 </th>
                 ))}
-                <th
-                  className="px-5 align-middle text-center"
-                  // style={{ backgroundColor: "#F4C2C2", minWidth: "150px" }}
-                >
-                  Action
-                </th>
+              <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                      Action
+                    </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="table-light">
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
@@ -784,7 +805,7 @@ setFilteredSamples(combinedSamples)
           />
         )}
         {/* Modal for Adding Samples */}
-        {showAddModal && (
+        {(showAddModal || showEditModal) && (
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div
@@ -814,11 +835,15 @@ setFilteredSamples(combinedSamples)
                     className="modal-header"
                     // style={{ backgroundColor: "#ADD8E6" }}
                   >
-                    <h5 className="modal-title">Add Sample</h5>
+                   {showAddModal ? "Add Sample" : "Edit Sample"}
                     <button
                       type="button"
                       className="close"
-                      onClick={() => setShowAddModal(false)}
+                      onClick={() => {
+                        setShowAddModal(false);
+                        setShowEditModal(false);
+                        resetFormData();
+                      }}
                       style={{
                         fontSize: "1.5rem",
                         position: "absolute",
@@ -830,7 +855,7 @@ setFilteredSamples(combinedSamples)
                       <span>&times;</span>
                     </button>
                   </div>
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
@@ -1063,6 +1088,7 @@ setFilteredSamples(combinedSamples)
                                   ? "#f0f0f0"
                                   : "#f0f0f0",
                                 color: "black",
+                                
                               }}
                             />
                           </div>
@@ -1210,23 +1236,23 @@ setFilteredSamples(combinedSamples)
                         </div>
                         {/* Column 4 */}
                         <div className="col-md-2">
-                          <div className="form-group">
+                        <div className="form-group">
                             <label className="form-label">
                               Alcohol Or Drug Abuse
                             </label>
                             <div>
-                              <div
-                                className="form-check form-check-inline"
-                                style={{ marginRight: "10px" }}
-                              >
+                              <div className="form-check form-check-inline">
                                 <input
                                   className="form-check-input"
                                   type="radio"
                                   name="AlcoholOrDrugAbuse"
                                   value="Yes"
+                                  checked={
+                                    formData.AlcoholOrDrugAbuse === "Yes"
+                                  }
                                   onChange={handleInputChange}
                                   required
-                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
                                 <label
                                   className="form-check-label"
@@ -1235,17 +1261,16 @@ setFilteredSamples(combinedSamples)
                                   Yes
                                 </label>
                               </div>
-                              <div
-                                className="form-check form-check-inline"
-                                style={{ marginRight: "10px" }}
-                              >
+                              <div className="form-check form-check-inline ms-3">
                                 <input
                                   className="form-check-input"
                                   type="radio"
                                   name="AlcoholOrDrugAbuse"
                                   value="No"
+                                  checked={formData.AlcoholOrDrugAbuse === "No"}
                                   onChange={handleInputChange}
                                   required
+                                  style={{ transform: "scale(0.9)" }}
                                 />
                                 <label
                                   className="form-check-label"
@@ -1292,9 +1317,13 @@ setFilteredSamples(combinedSamples)
                                   type="radio"
                                   name="InfectiousDiseaseResult"
                                   value="Positive"
+                                  checked={
+                                    formData.InfectiousDiseaseResult ===
+                                    "Positive"
+                                  }
                                   onChange={handleInputChange}
                                   required
-                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
                                 <label
                                   className="form-check-label"
@@ -1303,16 +1332,19 @@ setFilteredSamples(combinedSamples)
                                   Positive
                                 </label>
                               </div>
-
-                              <div className="form-check form-check-inline">
+                              <div className="form-check form-check-inline ms-3">
                                 <input
                                   className="form-check-input"
                                   type="radio"
                                   name="InfectiousDiseaseResult"
                                   value="Negative"
+                                  checked={
+                                    formData.InfectiousDiseaseResult ===
+                                    "Negative"
+                                  }
                                   onChange={handleInputChange}
                                   required
-                                  style={{ transform: "scale(0.9)" }} // Reduce radio button size
+                                  style={{ transform: "scale(0.9)" }}
                                 />
                                 <label
                                   className="form-check-label"
@@ -1604,7 +1636,7 @@ setFilteredSamples(combinedSamples)
                     </div>
                     <div className="modal-footer">
                       <button type="submit" className="btn btn-primary">
-                        Save
+                      {showAddModal ? "Save" : "Update"}
                       </button>
                     </div>
                   </form>
@@ -1614,845 +1646,6 @@ setFilteredSamples(combinedSamples)
           </>
         )}
 
-        {/* Edit Sample Modal */}
-        {showEditModal && (
-          <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "40px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-              <div
-                className="modal-dialog"
-                role="document"
-                style={{ maxWidth: "90%", width: "95vw" }}
-              >
-                <div className="modal-content">
-                  <div
-                    className="modal-header"
-                    // style={{ backgroundColor: "#ADD8E6" }}
-                  >
-                    <h5 className="modal-title">Edit Sample</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowEditModal(false)}
-                      style={{
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
-                  <form onSubmit={handleUpdate}>
-                    <div className="modal-body">
-                      {/* Parallel Columns - 5 columns */}
-                      <div className="row">
-                        {/* Column 1 */}
-                        <div className="col-md-2">
-                          <div className="form-group">
-                            <label>Sample Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="samplename"
-                              value={formData.samplename}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.samplename
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Age</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="age"
-                              value={formData.age}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.age
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Gender</label>
-                            <select
-                              className="form-control"
-                              name="gender"
-                              value={formData.gender}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.gender
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.gender ? "black" : "#c0c0c0",
-                              }}
-                            >
-                              <option value="">Select Gender</option>
-                              <option value="Male" style={{ color: "black" }}>
-                                Male
-                              </option>
-                              <option value="Female" style={{ color: "black" }}>
-                                Female
-                              </option>
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Ethnicity</label>
-                            <select
-                              className="form-control"
-                              name="ethnicity"
-                              value={formData.ethnicity}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.ethnicity
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.ethnicity ? "black" : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Ethnicity
-                              </option>
-                              {ethnicityNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Sample Condition</label>
-                            <select
-                              className="form-control"
-                              name="samplecondition"
-                              value={formData.samplecondition}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.samplecondition
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.samplecondition
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Sample Condition
-                              </option>
-                              {sampleconditionNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        {/* Column 2 */}
-                        <div className="col-md-2">
-                          <div className="form-group">
-                            <label>Storage Temperature</label>
-                            <select
-                              className="form-control"
-                              name="storagetemp"
-                              value={formData.storagetemp}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.storagetemp
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.storagetemp
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Storage Temperature
-                              </option>
-                              {storagetemperatureNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Container Type</label>
-                            <select
-                              className="form-control"
-                              name="ContainerType"
-                              value={formData.ContainerType}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.ContainerType
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.ContainerType
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Container type
-                              </option>
-                              {containertypeNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Country Of Collection</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="CountryOfCollection"
-                              value={formData.CountryOfCollection}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Price</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="price"
-                              value={formData.price}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.price
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Sample Price Currency</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="SamplePriceCurrency"
-                              value={formData.SamplePriceCurrency}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.SamplePriceCurrency
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                        </div>
-                        {/* {Column 3} */}
-                        <div className="col-md-2">
-                          <div className="form-group">
-                            <label>Quantity</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="quantity"
-                              value={formData.quantity}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.quantity
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Quantity Unit</label>
-                            <select
-                              className="form-control"
-                              name="QuantityUnit"
-                              value={formData.QuantityUnit}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.QuantityUnit
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.QuantityUnit
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Quantity Unit
-                              </option>
-                              {quantityunitNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Sample Type Matrix</label>
-                            <select
-                              className="form-control"
-                              name="SampleTypeMatrix"
-                              value={formData.SampleTypeMatrix}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.SampleTypeMatrix
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.SampleTypeMatrix
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Sample Type Matrix
-                              </option>
-                              {sampletypematrixNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <div className="form-group">
-                              <label className="form-label">
-                                Smoking Status
-                              </label>
-                              <div>
-                                <div
-                                  className="form-check form-check-inline"
-                                  style={{ marginRight: "10px" }}
-                                >
-                                  <input
-                                    className="form-check-input"
-                                    type="radio"
-                                    name="SmokingStatus"
-                                    value="Smoker"
-                                    checked={
-                                      formData.SmokingStatus === "Smoker"
-                                    }
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{ transform: "scale(0.9)" }}
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    style={{ fontSize: "14px" }}
-                                  >
-                                    Smoker
-                                  </label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                  <input
-                                    className="form-check-input"
-                                    type="radio"
-                                    name="SmokingStatus"
-                                    value="Non-Smoker"
-                                    checked={
-                                      formData.SmokingStatus === "Non-Smoker"
-                                    }
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{ transform: "scale(0.9)" }}
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    style={{ fontSize: "14px" }}
-                                  >
-                                    Non-Smoker
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">
-                              Alcohol Or Drug Abuse
-                            </label>
-                            <div>
-                              <div className="form-check form-check-inline">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="AlcoholOrDrugAbuse"
-                                  value="Yes"
-                                  checked={
-                                    formData.AlcoholOrDrugAbuse === "Yes"
-                                  }
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{ transform: "scale(0.9)" }}
-                                />
-                                <label
-                                  className="form-check-label"
-                                  style={{ fontSize: "14px" }}
-                                >
-                                  Yes
-                                </label>
-                              </div>
-                              <div className="form-check form-check-inline ms-3">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="AlcoholOrDrugAbuse"
-                                  value="No"
-                                  checked={formData.AlcoholOrDrugAbuse === "No"}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{ transform: "scale(0.9)" }}
-                                />
-                                <label
-                                  className="form-check-label"
-                                  style={{ fontSize: "14px" }}
-                                >
-                                  No
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        {/* Column 4 */}
-                        <div className="col-md-2">
-                          <div className="form-group">
-                            <label>Infectious Disease Testing</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="InfectiousDiseaseTesting"
-                              value={formData.InfectiousDiseaseTesting}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor:
-                                  formData.InfectiousDiseaseResult
-                                    ? "#f0f0f0"
-                                    : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">
-                              Infectious Disease Result
-                            </label>
-                            <div>
-                              <div
-                                className="form-check form-check-inline"
-                                style={{ marginRight: "10px" }}
-                              >
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="InfectiousDiseaseResult"
-                                  value="Positive"
-                                  checked={
-                                    formData.InfectiousDiseaseResult ===
-                                    "Positive"
-                                  }
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{ transform: "scale(0.9)" }}
-                                />
-                                <label
-                                  className="form-check-label"
-                                  style={{ fontSize: "14px" }}
-                                >
-                                  Positive
-                                </label>
-                              </div>
-                              <div className="form-check form-check-inline ms-3">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="InfectiousDiseaseResult"
-                                  value="Negative"
-                                  checked={
-                                    formData.InfectiousDiseaseResult ===
-                                    "Negative"
-                                  }
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{ transform: "scale(0.9)" }}
-                                />
-                                <label
-                                  className="form-check-label"
-                                  style={{ fontSize: "14px" }}
-                                >
-                                  Negative
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="form-group">
-                            <label>Freeze Thaw Cycles</label>
-                            <select
-                              type="text"
-                              className="form-control"
-                              name="FreezeThawCycles"
-                              value={formData.FreezeThawCycles}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.FreezeThawCycles
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            >
-                              <option value="">Select an option</option>
-                              <option value="None">None</option>
-                              <option value="One">One</option>
-                              <option value="Two">Two</option>
-                              <option value="Three">Three</option>
-                              <option value="Four">Four</option>
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Date of Collection</label>
-                            <input
-                              type="date"
-                              className="form-control"
-                              name="DateOfCollection"
-                              value={formData.DateOfCollection}
-                              onChange={handleInputChange}
-                              max={new Date().toISOString().split("T")[0]} // Set max to today’s date
-                              required
-                              style={{
-                                backgroundColor: formData.DateOfCollection
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.DateOfCollection
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Concurrent Medical Conditions</label>
-                            <select
-                              className="form-control"
-                              name="ConcurrentMedicalConditions"
-                              value={formData.ConcurrentMedicalConditions}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor:
-                                  formData.ConcurrentMedicalConditions
-                                    ? "#f0f0f0"
-                                    : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.ConcurrentMedicalConditions
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Concurrent Medical Conditions
-                              </option>
-                              {concurrentmedicalconditionsNames.map(
-                                (name, index) => (
-                                  <option key={index} value={name}>
-                                    {name}
-                                  </option>
-                                )
-                              )}
-                            </select>
-                          </div>
-                        </div>
-                        {/* {Column 5} */}
-                        <div className="col-md-2">
-                          <div className="form-group">
-                            <label>Concurrent Medications</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ConcurrentMedications"
-                              value={formData.ConcurrentMedications}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.ConcurrentMedications
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Diagnosis Test Parameter</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="DiagnosisTestParameter"
-                              value={formData.DiagnosisTestParameter}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.DiagnosisTestParameter
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Test Result</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="TestResult"
-                              value={formData.TestResult}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.TestResult
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Test Result Unit</label>
-                            <select
-                              className="form-control"
-                              name="TestResultUnit"
-                              value={formData.TestResultUnit}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.TestResultUnit
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.TestResultUnit
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Test Result Unit
-                              </option>
-                              {testresultunitNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Test Method</label>
-                            <select
-                              className="form-control"
-                              name="TestMethod"
-                              value={formData.TestMethod}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                backgroundColor: formData.TestMethod
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                fontSize: "14px",
-                                height: "45px",
-                                color: formData.TestMethod
-                                  ? "black"
-                                  : "#c0c0c0",
-                              }}
-                            >
-                              <option value="" style={{ color: "#a0a0a0" }}>
-                                Select Test Method
-                              </option>
-                              {testmethodNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        {/* {Column 6} */}
-                        <div className="col-md-2">
-                          <div className="form-group">
-                            <label>Test Kit Manufacturer</label>
-                            <select
-                              className="form-control"
-                              name="TestKitManufacturer"
-                              value={formData.TestKitManufacturer}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                fontSize: "14px",
-                                height: "45px",
-                                backgroundColor: formData.TestKitManufacturer
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            >
-                              <option value="">
-                                Select Test Kit Manufacturer
-                              </option>
-                              {testkitmanufacturerNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Test System</label>
-                            <select
-                              className="form-control"
-                              name="TestSystem"
-                              value={formData.TestSystem}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                fontSize: "14px",
-                                height: "45px",
-                                backgroundColor: formData.TestSystem
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            >
-                              <option value="">Select Test System</option>
-                              {testsystemNames.map((name, index) => (
-                                <option key={index} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group">
-                            <label>Test System Manufacturer</label>
-                            <select
-                              className="form-control"
-                              name="TestSystemManufacturer"
-                              value={formData.TestSystemManufacturer}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                fontSize: "14px",
-                                height: "45px",
-                                backgroundColor: formData.TestSystemManufacturer
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            >
-                              <option value="">
-                                Select Test System Manufacturer
-                              </option>
-                              {testsystemmanufacturerNames.map(
-                                (name, index) => (
-                                  <option key={index} value={name}>
-                                    {name}
-                                  </option>
-                                )
-                              )}
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="modal-footer">
-                      <button type="submit" className="btn btn-primary">
-                        Update Sample
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
 
         {/* Modal for transfreing Samples */}
         {showTransferModal && (

@@ -330,38 +330,35 @@ const TestResultUnitArea = () => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                  <thead className="thead-dark">
-                    <tr className="text-center">
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
                         //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                         {
                           label: "Test Result Unit",
                           placeholder: "Search Test Result Unit",
                           field: "name",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Added By",
                           placeholder: "Search Added by",
                           field: "added_by",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Created At",
                           placeholder: "Search Created at",
                           field: "created_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Updated At",
                           placeholder: "Search Updated at",
                           field: "updated_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                       ].map(({ label, placeholder, field,width }) => (
                         <th key={field} className={`${width} px-2`}>
@@ -391,7 +388,7 @@ const TestResultUnitArea = () => {
                             <td>{formatDate(created_at)}</td>
                             <td>{formatDate(updated_at)}</td>
                             <td>
-                              <div className="d-flex justify-content-around gap-2">
+                            <div className="d-flex justify-content-center gap-3">
                                 <button
                                   className="btn btn-success btn-sm py-0 px-1"
                                   onClick={() =>

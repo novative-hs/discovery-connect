@@ -444,21 +444,17 @@ const CommitteeMemberArea = () => {
               </div>
             </div>
             {/* Table */}
-            <div className="table-responsive overflow-auto w-100 p-2">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
-                  <tr className="text-center">
+            <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                     {columns.map(({ label, field, placeholder }) => (
-                      <th key={label} className="px-2 py-2">
+                      <th key={label} className="px-4 py-2">
                         <input
                           type="text"
                           className="form-control  w-100"
                           placeholder={placeholder}
-                          style={{ minWidth: "100px" }} // Ensures visibility and alignment
+                          style={{ minWidth: "160px" }} // Ensures visibility and alignment
                           onChange={(e) =>
                             handleFilterChange(field, e.target.value)
                           }
@@ -473,7 +469,7 @@ const CommitteeMemberArea = () => {
                 <tbody>
                   {currentData.length > 0 ? (
                     currentData.map((committeemember) => (
-                      <tr key={committeemember.id}>
+                      <tr key={committeemember.id} >
                         {/* <td>{committeemember.id}</td> */}
                         <td>{committeemember.CommitteeMemberName}</td>
                         <td>{committeemember.email}</td>
