@@ -299,7 +299,7 @@ const UpdateCollectionSite = () => {
 
             <div className="text-end">
               <button type="submit" className="tp-btn-3">
-                Update Collection Site
+                Update Profile
               </button>
             </div>
           </form>

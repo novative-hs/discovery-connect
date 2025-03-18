@@ -152,59 +152,59 @@ const SampleArea = () => {
 
   const fetchSamples = async () => {
     try {
-        console.log("Fetching samples...");
+      console.log("Fetching samples...");
 
-        if (!id) {
-            console.error("ID is missing.");
-            return;
+      if (!id) {
+        console.error("ID is missing.");
+        return;
+      }
+
+      // Fetch own samples
+      const ownResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`);
+      const ownSamples = ownResponse.data.map(sample => ({
+        ...sample,
+        quantity: Number(sample.quantity) || 0, // Ensure it's a number
+      }));
+      console.log("Own samples...", ownSamples);
+      // Fetch received samples
+      const receivedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`);
+      const receivedSamples = receivedResponse.data.map(sample => ({
+        ...sample,
+        quantity: Number(sample.Quantity) || 0, // Ensure it's a number
+      }));
+      console.log("Receive samples...", receivedSamples);
+      // Use a Map to merge and sum quantities of duplicate samples
+      const sampleMap = new Map();
+
+      [...ownSamples, ...receivedSamples].forEach(sample => {
+        const sampleId = sample.id;
+
+        if (sampleMap.has(sampleId)) {
+          // If the sample exists, add its quantity
+          const existingSample = sampleMap.get(sampleId);
+          existingSample.quantity += sample.quantity;
+          sampleMap.set(sampleId, existingSample);
+        } else {
+          // If the sample does not exist, add it to the map
+          sampleMap.set(sampleId, { ...sample });
         }
+      });
 
-        // Fetch own samples
-        const ownResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`);
-        const ownSamples = ownResponse.data.map(sample => ({
-            ...sample,
-            quantity: Number(sample.quantity) || 0, // Ensure it's a number
-        }));
-        console.log("Own samples...",ownSamples);
-        // Fetch received samples
-        const receivedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`);
-        const receivedSamples = receivedResponse.data.map(sample => ({
-            ...sample,
-            quantity: Number(sample.Quantity) || 0, // Ensure it's a number
-        }));
-        console.log("Receive samples...",receivedSamples);
-        // Use a Map to merge and sum quantities of duplicate samples
-        const sampleMap = new Map();
+      let combinedSamples = Array.from(sampleMap.values());
 
-        [...ownSamples, ...receivedSamples].forEach(sample => {
-            const sampleId = sample.id;
+      // **Filter out samples with quantity = 0**
+      combinedSamples = combinedSamples.filter(sample => sample.quantity > 0);
 
-            if (sampleMap.has(sampleId)) {
-                // If the sample exists, add its quantity
-                const existingSample = sampleMap.get(sampleId);
-                existingSample.quantity += sample.quantity;
-                sampleMap.set(sampleId, existingSample);
-            } else {
-                // If the sample does not exist, add it to the map
-                sampleMap.set(sampleId, { ...sample });
-            }
-        });
+      console.log("Final filtered samples:", combinedSamples);
 
-        let combinedSamples = Array.from(sampleMap.values());
-
-        // **Filter out samples with quantity = 0**
-        combinedSamples = combinedSamples.filter(sample => sample.quantity > 0);
-
-        console.log("Final filtered samples:", combinedSamples);
-
-        // Update state
-        setSamples(combinedSamples);
-        setFilteredSamplename(combinedSamples);
+      // Update state
+      setSamples(combinedSamples);
+      setFilteredSamplename(combinedSamples);
 
     } catch (error) {
-        console.error("Error fetching samples:", error);
+      console.error("Error fetching samples:", error);
     }
-};
+  };
 
 
 
@@ -247,7 +247,7 @@ const SampleArea = () => {
         console.error(`Error fetching ${tableName}:`, error);
       }
     };
-  
+
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
@@ -267,7 +267,7 @@ const SampleArea = () => {
   const currentData = filteredSamplename.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
-);
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -292,19 +292,19 @@ const SampleArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-  
+
     // Ensure both states update correctly
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
-  
+
     setTransferDetails((prevDetails) => ({
       ...prevDetails,
       [name]: value,
     }));
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -372,7 +372,7 @@ const SampleArea = () => {
       dispatchReceiptNumber,
       Quantity,
     } = transferDetails;
-  
+
     // Validate input before making the API call
     if (
       !TransferTo ||
@@ -384,7 +384,7 @@ const SampleArea = () => {
       alert("All fields are required.");
       return;
     }
-  
+
     try {
       // POST request to your backend API
       const response = await axios.post(
@@ -397,13 +397,13 @@ const SampleArea = () => {
           Quantity,
         }
       );
-  
+
       // Refresh the sample list
       fetchSamples();
-  
+
       console.log("Sample dispatched successfully:", response.data);
       alert("Sample dispatched successfully!");
-  
+
       // Reset the input fields
       setTransferDetails({
         TransferTo: "",
@@ -412,7 +412,7 @@ const SampleArea = () => {
         dispatchReceiptNumber: "",
         Quantity: "",
       });
-  
+
       // Close the modal
       setShowTransferModal(false);
     } catch (error) {
@@ -425,15 +425,15 @@ const SampleArea = () => {
       }
     }
   };
-  
+
   const handleModalClose = () => {
-     setTransferDetails({
-        TransferTo: "",
-        dispatchVia: "",
-        dispatcherName: "",
-        dispatchReceiptNumber: "",
-        Quantity: "",
-      });
+    setTransferDetails({
+      TransferTo: "",
+      dispatchVia: "",
+      dispatcherName: "",
+      dispatchReceiptNumber: "",
+      Quantity: "",
+    });
     setShowTransferModal(false); // Close the modal
   };
 
@@ -520,39 +520,39 @@ const SampleArea = () => {
       user_account_id: sample.user_account_id,
     });
   };
-const resetFormData=()=>{
-  setFormData({
-    samplename: "",
-    age: "",
-    gender: "",
-    ethnicity: "",
-    samplecondition: "",
-    storagetemp: "",
-    ContainerType: "",
-    CountryOfCollection: "",
-    quantity: "",
-    QuantityUnit: "",
-    SampleTypeMatrix: "",
-    SmokingStatus: "",
-    AlcoholOrDrugAbuse: "",
-    InfectiousDiseaseTesting: "",
-    InfectiousDiseaseResult: "",
-    FreezeThawCycles: "",
-    DateOfCollection: "",
-    ConcurrentMedicalConditions: "",
-    ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
-    TestResult: "",
-    TestResultUnit: "",
-    TestMethod: "",
-    TestKitManufacturer: "",
-    TestSystem: "",
-    TestSystemManufacturer: "",
-    status: "In Stock",
-    user_account_id: id,
-  });
+  const resetFormData = () => {
+    setFormData({
+      samplename: "",
+      age: "",
+      gender: "",
+      ethnicity: "",
+      samplecondition: "",
+      storagetemp: "",
+      ContainerType: "",
+      CountryOfCollection: "",
+      quantity: "",
+      QuantityUnit: "",
+      SampleTypeMatrix: "",
+      SmokingStatus: "",
+      AlcoholOrDrugAbuse: "",
+      InfectiousDiseaseTesting: "",
+      InfectiousDiseaseResult: "",
+      FreezeThawCycles: "",
+      DateOfCollection: "",
+      ConcurrentMedicalConditions: "",
+      ConcurrentMedications: "",
+      DiagnosisTestParameter: "",
+      TestResult: "",
+      TestResultUnit: "",
+      TestMethod: "",
+      TestKitManufacturer: "",
+      TestSystem: "",
+      TestSystemManufacturer: "",
+      status: "In Stock",
+      user_account_id: id,
+    });
 
-}
+  }
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -637,54 +637,54 @@ const resetFormData=()=>{
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
-        <div className="container">
-            {/* Success Message */}
-            {successMessage && (
-              <div className="alert alert-success w-100 text-start mb-2 small">
-                {successMessage}
-              </div>
-            )}
-  
-            {/* Button */}
-            <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-              {/* Add Sample Button */}
-              <button
-                className="tp-btn-8 mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
-                onClick={() => setShowAddModal(true)}
-              >
-                <span> Add Sample</span>
-              </button>
-            </div>
-  
+      <div className="container">
+        {/* Success Message */}
+        {successMessage && (
+          <div className="alert alert-success w-100 text-start mb-2 small">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Button */}
+        <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+          {/* Add Sample Button */}
+          <button
+            className="tp-btn-8 mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
+            onClick={() => setShowAddModal(true)}
+          >
+            <span> Add Sample</span>
+          </button>
+        </div>
+
 
         {/* Table */}
         <div className="table-responsive w-100">
-              <table className="table table-bordered table-hover text-center align-middle w-auto border" >
-                <thead className="table-primary text-dark">
-                  <tr className="text-center">
+          <table className="table table-bordered table-hover text-center align-middle w-auto border" >
+            <thead className="table-primary text-dark">
+              <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-                 
-                 <div className="d-flex flex-column align-items-center">
-                    <input
-                            type="text"
-                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                            placeholder={`Search ${label}`}
-                            onChange={(e) =>
-                              handleFilterChange(key, e.target.value)
-                            }
-                            style={{ minWidth: "150px" }}
-                          />
-                     <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
-  {label}
-</span>
+
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) =>
+                          handleFilterChange(key, e.target.value)
+                        }
+                        style={{ minWidth: "150px" }}
+                      />
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                        {label}
+                      </span>
 
                     </div>
                   </th>
                 ))}
                 <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-                      Action
-                    </th>
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="table-light">
@@ -786,10 +786,10 @@ const resetFormData=()=>{
                 <div className="modal-content">
                   <div
                     className="modal-header"
-                    // style={{ backgroundColor: "#ADD8E6" }}
+                  // style={{ backgroundColor: "#ADD8E6" }}
                   >
                     <h5 className="modal-title">
-                    {showAddModal ? "Add Sample" : "Edit Sample"}
+                      {showAddModal ? "Add Sample" : "Edit Sample"}
 
                     </h5>
                     <button
@@ -817,27 +817,26 @@ const resetFormData=()=>{
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
-                        
-                          <div className="form-group">
-                            <label>Donor ID</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="donorID"
-                              value={formData.donorID}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.donorID
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                        
+                          {showAddModal && (
+                            <div className="form-group">
+                              <label>Donor ID</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="donorID"
+                                value={formData.donorID}
+                                onChange={handleInputChange}
+                                required
+                                style={{
+                                  height: "45px",
+                                  fontSize: "14px",
+                                  backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
+                                  color: "black",
+                                }}
+                              />
+                            </div>
+                          )}
+
                           <div className="form-group">
                             <label>Sample Name</label>
                             <input
@@ -1217,11 +1216,11 @@ const resetFormData=()=>{
                               }}
                             />
                           </div>
-                         
+
                         </div>
                         {/* Column 4 */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label className="form-label">
                               Infectious Disease Result
                             </label>
@@ -1556,7 +1555,7 @@ const resetFormData=()=>{
                     </div>
                     <div className="modal-footer">
                       <button type="submit" className="btn btn-primary">
-                      {showAddModal ? "Save" : "Update"}
+                        {showAddModal ? "Save" : "Update"}
                       </button>
                     </div>
                   </form>
@@ -1565,9 +1564,6 @@ const resetFormData=()=>{
             </div>
           </>
         )}
-
-        {/* Edit Sample Modal */}
-     
 
         {/* Modal for transfreing Samples */}
         {showTransferModal && (
