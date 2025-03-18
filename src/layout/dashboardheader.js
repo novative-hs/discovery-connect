@@ -124,6 +124,11 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-user");
     } else if (userType === "collectionsites") {
       setActiveTab("update-collectionsite");
+    } else if (userType === "biobank") {
+      setActiveTab("update-biobank");
+    } 
+    else if (userType === "committeemember") {
+      setActiveTab("update-committeemember");
     } else {
       setActiveTab("update-profile");
     }
@@ -153,7 +158,7 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Profile", tab: "order-info" },
           { label: "Sample List", tab: "samples" },
         ]
-      : userType == "registrationadmin"
+      : userType == "databaseadmin"
       ? [
           { label: "Profile", tab: "order-info" },
           { label: "City", tab: "city" },
@@ -198,6 +203,15 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Sample List", tab: "samples" },
           { label: "Sample Dispatch", tab: "sample-dispatch" },
         ]
+        : userType == "committeemember"
+        ? [
+            { label: "Sample List", tab: "samples" },
+          ]
+          : userType == "registrationadmin"
+        ? [
+          { label: "Profile", tab: "order-info" },
+            { label: "Order List", tab: "order" },
+          ]
       : [];
 
   return (
@@ -298,6 +312,14 @@ const Header = ({ setActiveTab, activeTab }) => {
             {/* Right Section */}
             <div className="d-flex align-items-center gap-2 ms-auto">
               {userType === "registrationadmin" && (
+                <span
+                  className="text-primary fw-bold fs-6"
+                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+                >
+                  Welcome Registration Admin!
+                </span>
+              )}
+              {userType === "databaseadmin" && (
                 <span
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}

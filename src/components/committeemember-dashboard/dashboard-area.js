@@ -4,11 +4,11 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 // internal
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
-import OrderArea from './order';
+import UpdateCommitteemember from './update-committeemember';
+import SampleArea from './samples';
 import Header from '../../layout/dashboardheader';
-import OrderInfo from "./order-info";
 const DashboardArea = () => {
-  const [activeTab, setActiveTab] = useState("order-info"); // Default to "Samples"
+  const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
   const router = useRouter();
   const [id, setUserID] = useState(null);
 
@@ -27,7 +27,7 @@ const DashboardArea = () => {
     const storedUserID = localStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Registration Admin site  ID:", storedUserID); // Verify storedUserID
+      console.log("Committee member site  ID:", storedUserID); // Verify storedUserID
     } else {
       console.error("No userID found in localStorage");
       router.push("/login");
@@ -39,15 +39,14 @@ const DashboardArea = () => {
   }
   const renderContent = () => {
     switch (activeTab) {
-      case "order-info":
-          return <OrderInfo setActiveTab={setActiveTab} />;
-      case "order":
-        return <OrderArea />;
-       
+      case "samples":
+        return <SampleArea />;
       case "change-password":
         return <ChangePassword />;
+      case "update-committeemember":
+        return <UpdateCommitteemember />;
       default:
-        return <OrderInfo setActiveTab={setActiveTab} />;
+        return <SampleArea />;
     }
   };
 

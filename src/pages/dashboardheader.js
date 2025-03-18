@@ -6,10 +6,12 @@ import SEO from "@components/seo";
 import Wrapper from "@layout/wrapper";
 import Footer from "@layout/footer";
 import OrganizationDashboard from "@components/organization-dashboard/dashboard-area";
-import RegisterAdminDashboard from "@components/registrationadmin-dashboard/dashboard-area";
+import DatabaseAdminDashboard from "@components/databaseadmin-dashboard/dashboard-area";
+import RegistrationAdminDashboard from "@components/registrationadmin-dashboard/dashboard-area";
 import BiobankDashboard from "@components/biobank-dashboard/dashboard-area";
 import CollectionSideDashboard from "@components/collectionsite-dashboard/dashboard-area";
 import ResearcherDashboard from "@components/user-dashboard/dashboard-area";
+import CommitteememberDashboard from "@components/committeemember-dashboard/dashboard-area";
 import Loader from "@components/loader/loader";
 
 const UserOrdersPage = () => {
@@ -33,13 +35,17 @@ const UserOrdersPage = () => {
       case "organization":
         return <OrganizationDashboard />;
       case "registrationadmin":
-        return <RegisterAdminDashboard />;
+        return <RegistrationAdminDashboard />;
+        case "databaseadmin":
+          return <DatabaseAdminDashboard />;
       case "biobank":
         return <BiobankDashboard />;
       case "collectionsites":
         return <CollectionSideDashboard />;
       case "researcher":
         return <ResearcherDashboard />;
+        case "committeemember":
+          return <CommitteememberDashboard />;
       default:
         return <Loader />;
     }

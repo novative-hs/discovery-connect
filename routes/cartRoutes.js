@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cartController = require("../controller/cartController");
-
+router.get('/cart/getOrder',cartController.getAllOrder)
 router.post('/cart', cartController.createCart); // Add product to cart
 router.get('/cart/:id', cartController.getAllCart); // Get all cart items for a user
 router.get('/cart/getCount/:id', cartController.getCartCount); // Get count of cart items for a user
