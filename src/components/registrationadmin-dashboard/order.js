@@ -128,91 +128,65 @@ const OrderPage = () => {
                       <td>{order.quantity}</td>
                       <td>{order.status}</td>
                       <td>
-                        <div>
+                        <div className="d-flex align-items-center gap-2 position-relative">
+                          {/* {/ View Sample Button /} */}
                           <button
-                            className="btn btn-sm"
+                            className="btn btn-sm btn-outline-secondary"
                             onClick={() => {
                               setSelectedSample(order);
                               setSampleShowModal(true);
                             }}
                             title="View Sample Detail"
                           >
-                            <FontAwesomeIcon
-                              size="1x"
-                              className="text-dark"
-                              icon={faEye}
-                            />
-                          </button>
-                          <button
-                            className="btn btn-primary btn-sm py-0 px-1"
-                            onClick={() => handleToggleStatusOptions(order.id)}
-                            title="Edit Status"
-                          >
-                            <FontAwesomeIcon icon={faEllipsisV} size="xs" />
-                          </button>
-                          <button
-                            className="btn btn-primary btn-sm py-0 px-1"
-                            onClick={() =>
-                              handleToggleTransferOptions(order.id)
-                            }
-                            title="Send Approval to Committee member"
-                          >
-                            <FontAwesomeIcon icon={faExchangeAlt} size="xs" />
+                            <FontAwesomeIcon size="sm" className="text-dark" icon={faEye} />
                           </button>
 
-                          {transferOptionsVisibility[order.id] && (
-                            <div
-                              className="dropdown-menu show"
-                              style={{
-                                position: "absolute",
-                                top: "220px",
-                                left: "1100px",
-                              }}
+                          {/* {/ Edit Status Button /} */}
+                          <div className="position-relative">
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handleToggleStatusOptions(order.id)}
+                              title="Edit Status"
                             >
-                              <button
-                                className="dropdown-item"
-                                onClick={() => console.log("Accepted")}
-                              >
-                                Send for Approval Scientific
-                              </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={() => console.log("Refused")}
-                              >
-                                Send for Approval Ethical
-                              </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={() => console.log("Refused")}
-                              >
-                                Send for Approval Ethical and Scientific
-                              </button>
-                            </div>
-                          )}
+                              <FontAwesomeIcon icon={faEllipsisV} size="sm" />
+                            </button>
 
-                          {statusOptionsVisibility[order.id] && (
-                            <div
-                              className="dropdown-menu show"
-                              style={{
-                                position: "absolute",
-                                top: "220px",
-                                left: "1100px",
-                              }}
+                            {statusOptionsVisibility[order.id] && (
+                              <div className="dropdown-menu show position-absolute" style={{ minWidth: "200px" }}>
+                                <button className="dropdown-item" onClick={() => console.log("Accepted")}>
+                                  Accepted
+                                </button>
+                                <button className="dropdown-item" onClick={() => console.log("Refused")}>
+                                  Refused
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* {/ Send Approval Button /} */}
+                          <div className="position-relative">
+                            <button
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() => handleToggleTransferOptions(order.id)}
+                              title="Send Approval to Committee Member"
                             >
-                              <button
-                                className="dropdown-item"
-                                onClick={() => console.log("Accepted")}
-                              >
-                                Accepted
-                              </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={() => console.log("Refused")}
-                              >
-                                Refused
-                              </button>
-                            </div>
-                          )}
+                              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                            </button>
+
+                            {transferOptionsVisibility[order.id] && (
+                              <div className="dropdown-menu show position-absolute" style={{ minWidth: "250px" }}>
+                                <button className="dropdown-item" onClick={() => console.log("Scientific Approval")}>
+                                  Send for Approval Scientific
+                                </button>
+                                <button className="dropdown-item" onClick={() => console.log("Ethical Approval")}>
+                                  Send for Approval Ethical
+                                </button>
+                                <button className="dropdown-item" onClick={() => console.log("Both Approvals")}>
+                                  Send for Approval Ethical & Scientific
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>

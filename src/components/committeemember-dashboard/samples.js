@@ -277,54 +277,61 @@ const [showSampleModal, setSampleShowModal] = useState(false);
                       </td>
                     ))}
 
-                    <td className="text-center">
-                      <div className="d-flex justify-content-around gap-1">
-                      <button
-                                                 className="btn btn-sm"
-                                                 onClick={() => {
-                                                   setSelectedSample(sample);
-                                                   setSampleShowModal(true);
-                                                 }}
-                                                 title="View Sample Detail"
-                                               >
-                                                 <FontAwesomeIcon
-                                                   size="2x"
-                                                   className="text-dark"
-                                                   icon={faEye}
-                                                 />
-                                               </button>
+<td className="text-center">
+                      <div className="d-flex justify-content-center gap-2">
+                        
                         <button
-                          className="btn btn-sm"
+                          className="btn btn-outline-secondary btn-sm"
                           onClick={() => {
-                            console.log("Done");
+                            setSelectedSample(sample);
+                            setSampleShowModal(true);
+                          }}
+                          title="View Sample Detail"
+                        >
+                          <FontAwesomeIcon
+                            size="lg"
+                            className="text-dark"
+                            icon={faEye}
+                          />
+                        </button>
+
+                       
+                        <button
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={() => {
+                            console.log("View PDF");
                           }}
                           title="View PDF Documents"
                         >
                           <FontAwesomeIcon
-                            size="2x"
-                            className="text-dark"
+                            size="lg"
+                            className="text-primary"
                             icon={faFilePdf}
                           />
                         </button>
+
+                       
                         <button
-                          className="btn btn-sm"
+                          className="btn btn-outline-success btn-sm"
                           onClick={() => {}}
                           title="Approved Sample"
                         >
                           <FontAwesomeIcon
                             icon={faCheckCircle}
-                            size="2x"
-                            className="text-success me-1"
+                            size="lg"
+                            className="text-success"
                           />
                         </button>
+
+                       
                         <button
-                          className="btn btn-sm"
+                          className="btn btn-outline-danger btn-sm"
                           onClick={() => {}}
-                          title="UnApproved Sample"
+                          title="Unapproved Sample"
                         >
                           <FontAwesomeIcon
                             icon={faTimesCircle}
-                            size="2x"
+                            size="lg"
                             className="text-danger"
                           />
                         </button>
