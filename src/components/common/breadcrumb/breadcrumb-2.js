@@ -1,11 +1,11 @@
 import React from "react";
-import bg from "@assets/img/about/about-breadcrumb.jpg";
+// import bg from "@assets/img/about/about-breadcrumb.jpg";
 
 const BreadcrumbTwo = ({ subtitle, title }) => {
   return (
     <section
       className="about__heading about__heading-overlay about__spacing include-bg"
-      style={{ backgroundImage: `url(${bg.src})` }}
+      // style={{ backgroundImage: `url(${bg.src})` }}
     >
       <div className="container">
         <div className="row justify-content-center">

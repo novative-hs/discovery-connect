@@ -38,6 +38,7 @@ const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoute
 
 const samplefieldsRoutes = require("./routes/samplefieldsRoutes");
 const historyRoutes = require("./routes/historyRoutes");
+const contactusRoutes = require("./routes/contactusRoutes");
 
 
 // Routes
@@ -59,13 +60,11 @@ app.use("/api/collectionsite", collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', biobankRoutes);
-
-
 app.use("/api", cartRoutes);
 app.use("/api", biobankRoutes);
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);
-
 app.use("/api/samplefields", samplefieldsRoutes);
+app.use("/api", contactusRoutes);
 
 // Start the server
 app.listen(5000, () => {

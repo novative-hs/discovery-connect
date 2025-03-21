@@ -2,40 +2,29 @@ import React from "react";
 
 const TextArea = () => {
   return (
-    <section className="about__text pt-115 pb-100">
+    <section className="policy__area pb-120">
       <div className="container">
-        <div className="row">
-          <div className="col-xl-4 col-lg-4">
-            <div
-              className="about__text-wrapper wow fadeInUp"
-              data-wow-delay=".3s"
-              data-wow-duration="1s"
-            >
-              <h3 className="about__text-title">
-                It started with a <br /> bang now we are here.
-              </h3>
-            </div>
-          </div>
-          <div className="col-xl-8 col-lg-8">
-            <div
-              className="about__text wow fadeInUp"
-              data-wow-delay=".6s"
-              data-wow-duration="1s"
-            >
-              <p>
-                Ut at maximus magna. Vestibulum interdum sapien in facilisis
-                imperdiet. Pellentesque habitant morbi tristique senectus et
-                netus et malesuada fames ac turpis egestas. Proin ac placerat
-                risus. Nullam eget tortor felis. Nulla facilisi.Vestibulum
-                mattis diam non luctus elementum. Cras sollicitudin, nisi in
-                semper viverra, felis diam consequat mi, quis tincidunt ligula
-              </p>
-
-              <p>
-                Nam nibh diam, varius quis lectus eget, laoreet cursus metus.
-                morbi augue lectus, dapibus eget justo nec, consectetur auctor
-                nis luctus neque.!
-              </p>
+        <div className="row justify-content-center">
+          <div className="col-xl-10">
+            <div className="policy__wrapper policy__translate p-relative z-index-1">
+              <div className="policy__item mb-35">
+              <h3 className="policy__title">Who we are?</h3>
+                <p>
+                At Discovery-Connect, we are revolutionizing the way researchers access biological samples for their studies. Our platform serves as a bridge between researchers, biobanks, and collection sites, ensuring a seamless, secure, and efficient process for obtaining high-quality samples essential for groundbreaking research.
+                </p>
+              </div>
+              <div className="policy__item policy__item-2 mb-35">
+                <h3 className="policy__title">Our Mission</h3>
+                <p>
+                We aim to empower the scientific community by providing a reliable and structured platform where researchers can easily find, request, and acquire biological samples while ensuring data security and compliance. By streamlining sample accessibility, we accelerate research progress and innovation.
+                </p>
+              </div>   
+              <div className="policy__item policy__item-2 mb-35">
+                <h3 className="policy__title">Join Us Today!</h3>
+                <p>
+                Be part of a trusted platform dedicated to advancing scientific research. Sign up now and start discovering the right samples for your study!
+                </p>
+              </div>              
             </div>
           </div>
         </div>

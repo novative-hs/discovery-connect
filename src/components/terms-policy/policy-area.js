@@ -24,9 +24,6 @@ const PolicyArea = () => {
                 Stay tuned for the launch of our online database, revolutionizing the way disease research is conducted.
                 </p>
               </div>
-
-            
-              
             </div>
           </div>
         </div>

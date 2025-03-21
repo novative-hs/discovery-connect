@@ -10,14 +10,15 @@ const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
-const newtablefieldModel=require("../models/newtablefieldModel")
+const newtablefieldModel = require("../models/newtablefieldModel")
 
+
+// const newtablefieldsModel = require("../models/newtablefieldsModel");
 const sample_approvalModel = require("../models/sampleapprovalModel")
 const paymentModel = require('../models/paymentModals')
-
-
 const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
+const contactusModel = require("../models/contactusModel");
 // Function to initialize all tables
 function Database() {
 
@@ -51,10 +52,16 @@ function Database() {
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
- historyModel.RegistrationAdmin_History();
+  historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
- historyModel.create_samplehistoryTable();
- newtablefieldModel.createOrUpdateTables();
-//newtablefieldModel.updateAccountType();
+
+  historyModel.create_samplehistoryTable();
+  newtablefieldModel.createOrUpdateTables();
+  //newtablefieldModel.updateAccountType();
+
+
+  contactusModel.createContactUsTable();
+
+  // znewtablefieldModel.createOrUpdateTables();
 }
 Database();

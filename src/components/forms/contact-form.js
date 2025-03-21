@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
-// internal
+import axios from "axios"; // Import Axios
 import ErrorMessage from "@components/error-message/error";
 
 const schema = Yup.object().shape({
@@ -14,24 +14,47 @@ const schema = Yup.object().shape({
 });
 
 const ContactForm = () => {
-    // react hook form
-  const { register, handleSubmit, formState:{ errors },reset } = useForm({
+  const [serverMessage, setServerMessage] = useState(null);         // State to handle server response message
+  // react hook form
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema)
   });
 
-  const onSubmit = (data) => {
-    console.log(data)
-    reset();
+  // API Call
+  const onSubmit = async (data) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contactus`, // Ensure this is set in your .env.local
+        data
+      );
+      setServerMessage({
+        type: "success",
+        text: response.data.message || "Message sent successfully!",
+      });
+      reset(); // Reset form on success
+    } catch (error) {
+      setServerMessage({
+        type: "error",
+        text: error.response?.data?.message || "Something went wrong!",
+      });
+    }
   };
+
 
   return (
     <form id="contact-form" onSubmit={handleSubmit(onSubmit)}>
+       {/* Server Message Display */}
+       {serverMessage && (
+        <div className={`alert alert-${serverMessage.type === "success" ? "success" : "danger"}`}>
+          {serverMessage.text}
+        </div>
+      )}
       <div className="row">
         <div className="col-md-6">
           <div className="contact__input-2">
             <input
               name="name"
-              {...register("name",{required:`Name is required!`})}
+              {...register("name", { required: `Name is required!` })}
               type="text"
               placeholder="Enter your name"
               id="name"
@@ -43,7 +66,7 @@ const ContactForm = () => {
           <div className="contact__input-2">
             <input
               name="email"
-              {...register("email",{required:`Email is required!`})}
+              {...register("email", { required: `Email is required!` })}
               type="email"
               placeholder="Enter your email"
               id="email"
@@ -55,7 +78,7 @@ const ContactForm = () => {
           <div className="contact__input-2">
             <input
               name="phone"
-              {...register("phone",{required:`Phone is required!`})}
+              {...register("phone", { required: `Phone is required!` })}
               type="text"
               placeholder="Mobile no"
               id="phone"
@@ -67,7 +90,7 @@ const ContactForm = () => {
           <div className="contact__input-2">
             <input
               name="company"
-              {...register("company",{required:`Company is required!`})}
+              {...register("company", { required: `Company is required!` })}
               type="text"
               placeholder="Company"
               id="company"
@@ -79,7 +102,7 @@ const ContactForm = () => {
           <div className="contact__input-2">
             <textarea
               name="message"
-              {...register("message",{required:`Message is required!`})}
+              {...register("message", { required: `Message is required!` })}
               id="message"
               placeholder="Your message"
             ></textarea>
