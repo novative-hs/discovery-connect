@@ -89,14 +89,39 @@ export const authApi = apiSlice.injectEndpoints({
         }
       },
     }),
+
+    checkEmail: builder.mutation({
+      query: (email) => ({
+        url: "/api/user/check-email",
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ email }), 
+      }),
+    }),
+    sendOTP: builder.mutation({
+      query: (email) => ({
+        url: "/api/user/send-otp",
+        method: "POST",
+        body: { email },
+      }),
+    }),
+    verifyOTP: builder.mutation({
+      query: ({ email, otp }) => ({
+        url: "/api/user/verify-otp",
+        method: "POST",
+        body: { email, otp },
+      }),
+    }),
+    
     // reset password
     resetPassword: builder.mutation({
       query: (data) => ({
-        url: "api/user/forget-password",
-        method: "PATCH",
+        url: "/api/user/changepassword", 
+        method: "PUT",
         body: data,
       }),
     }),
+    
     // confirmForgotPassword
     confirmForgotPassword: builder.mutation({
       query: (data) => ({
@@ -154,4 +179,7 @@ export const {
   useConfirmForgotPasswordMutation,
   useChangePasswordMutation,
   useUpdateProfileMutation,
+  useCheckEmailMutation,
+  useSendOTPMutation,
+  useVerifyOTPMutation,
 } = authApi;

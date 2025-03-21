@@ -55,6 +55,7 @@ const DashboardArea = () => {
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area py-2 h-auto d-flex align-items-center my-4">
         <div className="container profile__inner position-relative">
+          
           {/* <ProfileShapes /> */}
           <div className=" row justify-content-center">
             <div className="col-xl-10 col-lg-7 col-md-9 col-sm-10 col-12">

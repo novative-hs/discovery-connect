@@ -1,90 +1,175 @@
 import React, { useState } from "react";
 import Link from "next/link";
-// internal
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
-import SingleCoupon from "./single-coupon";
-import { useGetOfferCouponsQuery } from "src/redux/features/coupon/couponApi";
+import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 
 const OfferPopularProduct = () => {
-  const [copiedCode, setCopiedCode] = useState("");
-  const [copied, setCopied] = useState(false);
+  const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
+  // ✅ Filter out categories where price is null
+  const filteredCategories = categories?.filter(category => category.price !== null).slice(0, 6) || [];
 
-  const handleCopied = (code) => {
-    setCopiedCode(code);
-    setCopied(true);
-    setTimeout(() => {
-      setCopied(false)
-    }, 3000);
+  // Shuffle categories to get a random selection of 6 items
+  const getShuffledCategories = () => {
+    const shuffledCategories = filteredCategories.sort(() => Math.random() - 0.5);
+    return shuffledCategories.slice(0, 6); // Return first 6 shuffled categories
   };
 
-  const { data: offerCoupons, isError, isLoading } = useGetOfferCouponsQuery();
-  // decide what to render
-  let content = null;
+  if (isLoading) return <ProductLoader loading={isLoading} />;
+  if (isError) return <ErrorMessage message="There was an error loading samples!" />;
+  if (filteredCategories.length === 0) return <ErrorMessage message="No samples found!" />;
 
-  if (isLoading) {
-    content = (
-      <div className="p-relative">
-        <ProductLoader loading={isLoading} />
-      </div>
-    );
-  }
-
-  if (!isLoading && isError) {
-    content = <ErrorMessage message="There was an error" />;
-  }
-
-  if (!isLoading && !isError && offerCoupons?.length === 0) {
-    content = <ErrorMessage message="No products found!" />;
-  }
-
-  if (!isLoading && !isError && offerCoupons?.length > 0) {
-    const coupon_items = offerCoupons;
-    content = (
-      <div className="row">
-        {coupon_items.map((coupon) => (
-          <SingleCoupon
-            key={coupon._id}
-            coupon={coupon}
-            handleCopied={handleCopied}
-            copied={copied}
-            copiedCode={copiedCode}
-          />
-        ))}
-      </div>
-    );
-  }
+  //const shuffledCategories = getShuffledCategories();
 
   return (
     <section className="product__coupon-area product__offer py-5">
-    <div className="container">
-      <div className="row align-items-end">
-        {/* Left Section - Title */}
-        <div className="col-lg-6 col-md-6">
-          <div className="mb-3">
-            <h3 className="fw-bold">Deal of The Day</h3>
+      <div className="container">
+        {/* Header Section: Centered Text */}
+        <div className="row text-center mb-4">
+          <div className="col">
+            <h3 className="fw-bold text-primary">High-Quality Lab Samples</h3>
           </div>
         </div>
-  
-        {/* Right Section - Button */}
-        <div className="col-xl-6 col-md-6">
-            <div className="product__offer-btn mb-30 text-md-end">
-              <Link href="/shop" className="tp-btn">
-                View All Products
-              </Link>
+
+        {/* Random Categories */}
+        <div className="row py-4">
+          {filteredCategories.map((category) => (
+            <div key={category.id} className="col-lg-4 col-md-6 col-sm-12 mb-4">
+              <div className="card border-0 shadow-lg p-3 h-100 text-center rounded-3">
+                <div className="product-image mb-3">
+                  <img
+                    src={category.imageUrl || "/placeholder.jpg"}
+                    alt={category.samplename}
+                    className="img-fluid rounded-2"
+                    style={{ width: "100%", height: "200px", objectFit: "cover" }}
+                  />
+                </div>
+                <h5 className="fw-bold text-primary">{category.samplename}</h5>
+                <p className="fs-5 text-dark fw-semibold">
+                  {category.price ? `${category.price} ${category.SamplePriceCurrency || ""}` : "Price not available"}
+                </p>
+                <button
+                  className="btn btn-outline-primary mt-2 w-100 fw-bold"
+                  onClick={() => {
+                    setSelectedProduct(category);
+                    setShowModal(true);
+                  }}
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer Section: Centered "View All Samples" Button */}
+        <div className="row text-center mt-4">
+          <div className="col">
+            <Link href="/shop" className="btn btn-primary fw-bold px-4 py-2">
+              Show More
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ Custom Modal (No Bootstrap) */}
+      {showModal && selectedProduct && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="modal-backdrop fade show"
+            style={{
+              backdropFilter: "blur(5px)",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 1040,
+            }}
+          ></div>
+
+          {/* Modal Container */}
+          <div
+            className="modal show d-block"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "#fff",
+              padding: "20px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+              width: "90vw",
+              maxWidth: "700px",
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+          >
+            {/* Modal Header */}
+            <div className="modal-header d-flex justify-content-between align-items-center">
+              <h5 className="fw-bold">{selectedProduct.samplename}</h5>
+              <button
+                type="button"
+                className="close"
+                onClick={() => setShowModal(false)}
+                style={{
+                  fontSize: "1.5rem",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="modal-body">
+              <div className="row">
+                {/* Left Side: Image & Basic Details */}
+                <div className="col-md-5 text-center">
+                  <img
+                    src={selectedProduct.imageUrl || "/placeholder.jpg"}
+                    alt={selectedProduct.samplename}
+                    className="img-fluid rounded"
+                    style={{ maxHeight: "200px", objectFit: "cover" }}
+                  />
+                  <div className="mt-3 p-2 bg-light rounded text-start">
+                    <p><strong>Sample Name:</strong> {selectedProduct.samplename}</p>
+                    <p><strong>Price:</strong> {selectedProduct.price} {selectedProduct.SamplePriceCurrency}</p>
+                    <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
+                    <p><strong>Country of Collection:</strong> {selectedProduct.CountryOfCollection}</p>
+                    <p><strong>Status:</strong> {selectedProduct.status}</p>
+                  </div>
+                </div>
+
+                {/* Right Side: Detailed Information */}
+                <div className="col-md-7">
+                  <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
+                  <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
+                  <p><strong>Storage Temp:</strong> {selectedProduct.storagetemp}</p>
+                  <p><strong>Sample Type:</strong> {selectedProduct.SampleTypeMatrix}</p>
+                  <p><strong>Diagnosis Test Parameter:</strong> {selectedProduct.DiagnosisTestParameter}</p>
+                  <p><strong>Test Result:</strong> {selectedProduct.TestResult} {selectedProduct.TestResultUnit}</p>
+                  <p><strong>Test Method:</strong> {selectedProduct.TestMethod}</p>
+                  <p><strong>Test Kit Manufacturer:</strong> {selectedProduct.TestKitManufacturer}</p>
+                  <p><strong>Concurrent Medical Conditions:</strong> {selectedProduct.ConcurrentMedicalConditions}</p>
+                  <p><strong>Infectious Disease Testing:</strong> {selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
+                </div>
+              </div>
             </div>
           </div>
-
-      </div>
-  
-      {/* Content Section */}
-      <div className="row py-4">
-        <div className="col-12">{content}</div>
-      </div>
-    </div>
-  </section>
-  
+        </>
+      )}
+    </section>
   );
 };
 

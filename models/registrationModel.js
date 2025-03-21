@@ -6,13 +6,14 @@ const { sendEmail } = require("../config/email")
 const createuser_accountTable = () => {
   const createuser_accountTable = `
     CREATE TABLE IF NOT EXISTS user_account (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      password VARCHAR(255) NOT NULL,
-      accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin','RegistrationAdmin', 'biobank','Committeememeber') NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`;
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember') NOT NULL,
+    OTP VARCHAR(4) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)`;
 
   mysqlConnection.query(createuser_accountTable, (err, results) => {
     if (err) {
@@ -876,6 +877,25 @@ const getUserEmail = (id, callback) => {
     callback(null, results); // Pass results to the controller
   });
 };
+const getEmail = (email, callback) => {
+  if (!email) {
+    return callback({ status: 400, error: "Email is required" }, null);
+  }
+
+  const query = `SELECT * FROM user_account WHERE email = ?`;
+
+  mysqlConnection.query(query, [email], (err, results) => {
+    if (err) {
+      console.error(" Database Error:", err);
+      return callback({ status: 500, error: "Database error" }, null);
+    }
+    callback(null, { exists: results.length > 0, user: results[0] || null });
+  });
+};
+
+
+
+
 
 function changepassword(data, callback) {
   const table = "user_account"; 
@@ -886,13 +906,22 @@ function changepassword(data, callback) {
       console.error("Error fetching password:", err);
       return callback({ status: 500, message: "Database error" }, null);
     }
-    const dbPassword = result[0].password; 
 
-    if (data.password !== dbPassword) {
+    // 🛑 Check if user exists
+    if (result.length === 0) {
+      return callback({ status: 404, message: "User not found" }, null);
+    }
+
+    const dbPassword = result[0].password;
+
+    // ✅ If password is NULL, empty, or not provided, allow password update
+    if (!dbPassword || !data.password || data.password === dbPassword) {
+      console.warn("Password not provided or no existing password found. Proceeding with update...");
+    } else {
       return callback({ status: 401, message: "Incorrect current password." }, null);
     }
 
-    // Step 4: Update the password in the database
+    // 🛠 Update the password in the database
     const updateQuery = `UPDATE ${table} SET password = ? WHERE email = ?`;
 
     mysqlConnection.query(updateQuery, [data.newPassword, data.email], (err) => {
@@ -906,6 +935,70 @@ function changepassword(data, callback) {
   });
 }
 
+const verifyOTP = (email, otp, callback) => {
+  const query = "SELECT OTP FROM user_account WHERE email = ?"; 
+
+  mysqlConnection.query(query, [email], (err, result) => {
+    if (err) {
+      console.error("❌ Error fetching OTP from DB:", err);
+      return callback(err, null);
+    }
+
+    if (result.length === 0) {
+      return callback(null, { message: "User not found" });
+    }
+
+    const storedOTP = result[0].OTP.toString();  // ✅ Convert to string
+    const inputOTP = otp.toString();  // ✅ Convert input to string
+
+    if (storedOTP !== inputOTP) {
+      return callback(null, { message: "Invalid OTP" });
+    }
+
+    callback(null, { message: "✅ OTP verified successfully!" });
+  });
+};
+
+
+const sendOTP = (req, callback) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return callback({ status: 400, message: "Email is required" }, null);
+  }
+
+  // Generate a 4-digit OTP
+  const query = `SELECT email FROM user_account WHERE email = ?`;
+  mysqlConnection.query(query, [email], (err, result) => {
+    if (err) {
+      return callback({ status: 500, message: "Database error" }, null);
+    }
+    if (result.length === 0) {
+      return callback({ status: 404, message: "User not found" }, null);
+    }
+  
+    // Now update the OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const updateQuery = `UPDATE user_account SET OTP = ? WHERE email = ?`;
+    mysqlConnection.query(updateQuery, [otp, email], (updateErr) => {
+      if (updateErr) {
+        return callback({ status: 500, message: "Error saving OTP" }, null);
+      }
+      
+      // Send email after successfully updating OTP
+      sendEmail(email, "Your OTP Code", `Your OTP code is: ${otp}`)
+      .then(() => {
+        console.log("✅ Email sent successfully to:", email);
+        callback(null, { message: "OTP sent successfully!", otp });
+      })
+      .catch((error) => {
+        console.error("❌ Email sending error:", error);
+        callback({ status: 500, message: error.message }, null);
+      });
+    
+    });
+  });
+};
 
 module.exports = {
   changepassword,
@@ -919,5 +1012,7 @@ module.exports = {
   createuser_accountTable,
   createAccount,
   updateAccount,
-
+  getEmail,
+  sendOTP,
+  verifyOTP
 };

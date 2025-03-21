@@ -200,12 +200,16 @@ const getAllOrder = (callback, res) => {
     o.user_id, 
     u.email AS user_email,
     r.ResearcherName AS researcher_name, 
+    org.OrganizationName AS organization_name, -- ✅ Added Organization Name
     o.sample_id, 
     s.samplename, 
-    s.age,s.gender,s.ethnicity,s.samplecondition,s.storagetemp,s.ContainerType,s.CountryofCollection,s.QuantityUnit,
-    s.SampleTypeMatrix,s.SmokingStatus,s.AlcoholOrDrugAbuse,s.InfectiousDiseaseTesting,s.InfectiousDiseaseResult,
-    s.FreezeThawCycles,s.DateofCollection,s.ConcurrentMedicalConditions,s.ConcurrentMedications,s.DiagnosisTestParameter,
-    s.TestResult,s.TestResultUnit,s.TestMethod,s.TestKitManufacturer,s.TestSystem,TestSystemManufacturer,s.SamplePriceCurrency,
+    s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
+    s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+    s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
+    s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
+    s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
+    s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
+    s.TestSystemManufacturer, s.SamplePriceCurrency,
     o.price, 
     o.quantity, 
     o.payment_method, 
@@ -214,6 +218,7 @@ const getAllOrder = (callback, res) => {
 FROM cart o
 JOIN user_account u ON o.user_id = u.id
 LEFT JOIN researcher r ON u.id = r.user_account_id 
+LEFT JOIN organization org ON r.nameofOrganization = org.id
 JOIN sample s ON o.sample_id = s.id
 ORDER BY o.created_at DESC;
 

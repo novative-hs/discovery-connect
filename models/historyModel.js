@@ -74,7 +74,7 @@ const getHistory = (filterType, id, callback) => {
       // If an error occurs or no results found, run the fallback query
       const fallbackQuery = `
         SELECT history.*, city.name AS city_name, district.name AS district_name,
-               country.name AS country_name, organization.OrganizationName AS organization_name,
+               country.name AS country_name, organization.OrganizationName AS organization_name,cnic,
                user_account.email AS added_by
         FROM history
         LEFT JOIN city ON history.city = city.id

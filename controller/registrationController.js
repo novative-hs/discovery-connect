@@ -1,12 +1,6 @@
 const accountModel = require("../models/registrationModel");
 const nodemailer = require("nodemailer");
-const transporter = nodemailer.createTransport({
-  service: "Gmail", // You can replace it with any service you are using
-  auth: {
-    user: "labhazr4@gmail.com",
-    pass: "phua sjvn btyl jiyk", // Your email password or app password
-  },
-});
+
 // Controller for creating the committe_member table
 const createuser_accountTable = (req, res) => {
   accountModel.createuser_accountTable();
@@ -52,6 +46,39 @@ const getAccountDetail = (req, res) => {
       return res.status(500).json({ status: "fail", error: err.message });
     }
     res.status(200).json(result);
+  });
+};
+
+const sendOTP = (req, res) => {
+  console.log("Received Account Data:", req.body);
+
+  accountModel.sendOTP(req, (err, result) => {
+    if (err) {
+      console.error("Error:", err);
+      return res.status(500).json({ message: "Failed to send OTP", error: err.message });
+    }
+
+    res.status(200).json({ message: "OTP sent successfully!", otp: result.otp });
+  });
+};
+const verifyOTP = (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ message: "Email and OTP are required!" });
+  }
+
+  accountModel.verifyOTP(email, otp, (err, isVerified) => { // 🔹 Change result to isVerified
+    if (err) {
+      console.error("❌ Error verifying OTP:", err);
+      return res.status(500).json({ message: "Failed to verify OTP", error: err.message });
+    }
+
+    if (!isVerified) { // 🔹 Use isVerified instead of result.otp
+      return res.status(401).json({ message: "Invalid OTP. Please try again." });
+    }
+
+    res.status(200).json({ message: "✅ OTP verified successfully!" });
   });
 };
 
@@ -129,22 +156,46 @@ const getUserEmail = (req, res) => {
   });
 };
 
+const getEmail = (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ status: "fail", error: "Email is required" });
+  }
+
+  accountModel.getEmail(email, (err, result) => {
+    if (err) {
+      console.error(" Error:", err);
+      return res.status(500).json({ status: "fail", error: "Internal server error" });
+    }
+
+    if (!result || !result.exists) {
+      return res.status(404).json({ status: "fail", error: "User not found" });
+    }
+
+    res.status(200).json({ status: "success", data: result.user });
+  });
+};
+
+
 const changepassword = (req, res) => {
   const { email, password, newPassword } = req.body;
 
-  if (!email || !password || !newPassword) {
-    return res.status(400).json({ message: "All fields are required" });
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: "Email and new password are required" });
   }
 
-  const userData = { email, password, newPassword };
+  const userData = { email, password: password || null, newPassword };
 
   accountModel.changepassword(userData, (err, result) => {
     if (err) {
+      console.error("Password Change Error:", err);
       return res.status(err.status || 500).json({ message: err.message });
     }
-    return res.status(200).json({ message: "Password updated successfully." }); 
+    return res.status(200).json({ message: "Password updated successfully." });
   });
 };
+
 
 const updateAccount = (req, res) => {
   console.log("Received Account Data:", req.body);
@@ -171,5 +222,8 @@ module.exports = {
   createAccount,
   getAccountDetail,
   updateAccount,
+  getEmail,
+  sendOTP,
+  verifyOTP
   
 };

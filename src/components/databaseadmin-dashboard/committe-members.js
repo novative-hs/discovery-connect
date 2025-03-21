@@ -186,6 +186,7 @@ const CommitteeMemberArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
+      console.log(data)
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -961,167 +962,51 @@ const CommitteeMemberArea = () => {
             </>
           )}
           {showHistoryModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
+  <>
+    {/* Backdrop */}
+    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "100px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog modal-md" role="document">
-                  <div className="modal-content">
-                    {/* Modal Header */}
-                    <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => setShowHistoryModal(false)}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
+    {/* Modal */}
+    <div className="modal show d-block" role="dialog" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}>
+      <div className="modal-dialog modal-md">
+        <div className="modal-content">
+          {/* Header */}
+          <div className="modal-header">
+            <h5 className="modal-title">History</h5>
+            <button type="button" className="close" onClick={() => setShowHistoryModal(false)} style={{ fontSize: "1.5rem", position: "absolute", right: "10px", cursor: "pointer" }}>
+              &times;
+            </button>
+          </div>
 
-                    {/* Chat-style Modal Body */}
-                    <div
-                      className="modal-body"
-                      style={{
-                        maxHeight: "500px",
-                        overflowY: "auto",
-                        backgroundColor: "#e5ddd5", // WhatsApp-style background
-                        padding: "15px",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      {historyData && historyData.length > 0 ? (
-                        historyData.map((log, index) => {
-                          const {
-                            CommitteeMemberName,
-                            phoneNumber,
-                            cnic,
-                            fullAddress,
-                            city,
-                            district,
-                            country,
-                            created_at,
-                            updated_at,
-                          } = log;
-
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              {/* Message for Committee Member Addition */}
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor: "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "75%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                }}
-                              >
-                                <b>Committee Member:</b> {CommitteeMemberName}{" "}
-                                was <b>added</b> by Registration Admin at{" "}
-                                {moment(created_at).format(
-                                  "DD MMM YYYY, h:mm A"
-                                )}
-                                <br />
-                                {cnic && (
-                                  <span>
-                                    <b>CNIC:</b> {cnic} <br />
-                                  </span>
-                                )}
-                                {phoneNumber && (
-                                  <span>
-                                    <b>Phone:</b> {phoneNumber} <br />
-                                  </span>
-                                )}
-                                {fullAddress && (
-                                  <span>
-                                    <b>Address:</b> {fullAddress} <br />
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Message for Committee Member Update */}
-                              {updated_at && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
-                                  }}
-                                >
-                                  <b>Committee Member:</b> {CommitteeMemberName}{" "}
-                                  was <b>updated</b> by Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                  <br />
-                                  {cnic && (
-                                    <span>
-                                      <b>CNIC:</b> {cnic} <br />
-                                    </span>
-                                  )}
-                                  {phoneNumber && (
-                                    <span>
-                                      <b>Phone:</b> {phoneNumber} <br />
-                                    </span>
-                                  )}
-                                  {fullAddress && (
-                                    <span>
-                                      <b>Address:</b> {fullAddress}, {city},{" "}
-                                      {district}, {country} <br />
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <p className="text-left">No history available.</p>
-                      )}
-                    </div>
-                  </div>
+          {/* Body */}
+          <div className="modal-body" style={{ maxHeight: "500px", overflowY: "auto", backgroundColor: "#e5ddd5", padding: "15px", borderRadius: "10px" }}>
+            {historyData?.length ? historyData.map(({ CommitteeMemberName, phoneNumber, cnic, fullAddress, city_name, district_name, country_name, organization_name, created_at, updated_at, status }, index) => (
+              <div key={index} style={{ marginBottom: "10px" }}>
+                {/* History Message */}
+                <div style={{
+                  padding: "10px 15px",
+                  borderRadius: "15px",
+                  backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
+                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                  maxWidth: "75%",
+                  fontSize: "14px",
+                }}>
+                  <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Registration Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
+                  <br />
+                  {cnic && <><b>CNIC:</b> {cnic} <br /></>}
+                  {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}
+                  {organization_name && <><b>Organization:</b> {organization_name} <br /></>}
+                  {fullAddress && <><b>Address:</b> {fullAddress}, {city_name}, {district_name}, {country_name} <br /></>}
                 </div>
               </div>
-            </>
-          )}
+            )) : <p className="text-left">No history available.</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
+
         </div>
       </div>
     </section>

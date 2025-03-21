@@ -9,11 +9,11 @@ import { notifyError, notifySuccess, ToastContainer } from "@utils/toast";
 import Shapes from "@components/login-register/shapes";
 import Lock from "@svg/lock";
 import EyeCut from "@svg/eye-cut";
-import { useConfirmForgotPasswordMutation } from "src/redux/features/auth/authApi";
+import { useConfirmForgotPasswordMutation, useResetPasswordMutation } from "src/redux/features/auth/authApi";
 
 // schema
 const schema = Yup.object().shape({
-  password: Yup.string().required().min(6).label("Password"),
+  password: Yup.string().required().min(6).label("New Password"),
   confirmPassword: Yup.string().oneOf(
     [Yup.ref("password"), null],
     "Passwords must match"
@@ -21,10 +21,11 @@ const schema = Yup.object().shape({
 });
 
 const ForgotPassword = ({ params }) => {
-  const token = params.token;
+  const email = params.token;
   const [showPass, setShowPass] = useState(false);
   const [showConPass, setShowConPass] = useState(false);
-  const [confirmForgotPassword, {}] = useConfirmForgotPasswordMutation();
+  const [resetPassword, {}] = useResetPasswordMutation();
+  const router = useRouter();
   // react hook form
   const {
     register,
@@ -34,24 +35,34 @@ const ForgotPassword = ({ params }) => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   // onSubmit
-  const onSubmit = (data) => {
-    console.log(data);
-    confirmForgotPassword({
-      password: data.password,
-      token,
-    }).then((result) => {
-      console.log(result?.data?.message);
-      console.log(result?.error?.data?.error);
-      if(result?.error){
-        notifyError(result?.error?.data?.error)
+  const onSubmit = async (data) => {
+    try {
+      const response = await resetPassword({
+        email,
+        newPassword: data.password,
+      });
+  
+      console.log("Reset Password Response:", response);
+  
+      if (response?.data?.message) { 
+        notifySuccess(response.data.message);
+        router.push("/login"); // Redirect after success
+      } else if (response?.error?.data?.message) {
+        notifyError(response.error.data.message);
+      } else {
+        notifyError("Something went wrong!");
       }
-      else {
-        notifySuccess(result?.data?.message);
-      }
-    });
+    } catch (error) {
+      console.error("Unexpected Error:", error);
+      notifyError("An unexpected error occurred.");
+    }
+  
     reset();
   };
+  
+
 
   return (
     <>
@@ -81,7 +92,7 @@ const ForgotPassword = ({ params }) => {
                               {...register("password")}
                               name="password"
                               type={showPass ? "text" : "password"}
-                              placeholder="Password"
+                              placeholder="New Password"
                               id="password"
                             />
                             <span>

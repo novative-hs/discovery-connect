@@ -72,8 +72,14 @@ const tablesAndColumns = [
         column: 'accountType',
         type: `ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember')`,
         nullable: false
-      }
+      },
+      {
+        column: 'OTP',
+        type: 'VARCHAR(4)',
+        nullable: true 
+    }
     ]
+    
   }
 ];
 
