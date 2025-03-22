@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
+import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faEllipsis,
+  faCheck,
   faEllipsisV,
-  faExchange,
   faExchangeAlt,
   faEye,
-  faQuestionCircle,
+  faTimes,
+  faTruck,
 } from "@fortawesome/free-solid-svg-icons";
 
 const OrderPage = () => {
@@ -18,10 +19,28 @@ const OrderPage = () => {
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const ordersPerPage = 10;
-  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
-  const [transferOptionsVisibility, setTransferOptionsVisibility] = useState(
-    {}
-  );
+  const [loading, setLoading] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [actionType, setActionType] = useState("");
+  const [user_id, setUserID] = useState(null);
+
+  const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
+  const [selectedShippedId, setSelectedShippedId] = useState(null);
+  const [orderStatus, setOrderStatus] = useState("");
+  const handleCloseModal = () => {
+    setSelectedOrderId(null);
+    setShowModal(false);
+  };
+  useEffect(() => {
+    const storedUserID = localStorage.getItem("userID");
+    if (storedUserID) {
+      setUserID(storedUserID);
+      console.log("Registration Admin site  ID:", storedUserID); // Verify storedUserID
+    }
+  }, []);
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -51,29 +70,110 @@ const OrderPage = () => {
     }
     setCurrentPage(1); // Reset pagination to first page
   };
+  const handleStatus = async (newStatus) => {
+    if (!selectedOrderId) return;
 
+    setLoading(true);
+
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/registration-status`,
+        { registration_admin_status: newStatus }
+      );
+
+      if (response.status === 200) {
+        setSuccessMessage(`Order status updated to ${newStatus} successfully!`);
+        fetchOrders();
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      setSuccessMessage("Failed to update order status.");
+    } finally {
+      setLoading(false);
+      setShowModal(false);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  };
+  const handleOrderStatusSubmit = async () => {
+    console.log(selectedShippedId,orderStatus)
+    if (!selectedShippedId || !orderStatus) {
+      alert("Please select a status.");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedShippedId}/cart-status`,
+        {
+          cartStatus: orderStatus, // Changed `cart-status` to `cartStatus`
+        }
+      );
+      
+
+      if (response.status === 200) {
+        alert("Order status updated successfully!");
+        setShowOrderStatusModal(false);
+        setOrderStatus(""); // Reset dropdown
+        fetchOrders(); // Refresh orders list
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      alert("Failed to update order status.");
+    }
+  };
   // Pagination Logic
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
 
   const handleToggleTransferOptions = (orderId) => {
-    setTransferOptionsVisibility((prev) => ({
-      ...prev,
-      [orderId]: !prev[orderId], // Toggle visibility for specific order
-    }));
+    setSelectedOrderId(orderId);
+    setShowTransferModal(true);
   };
 
-  const handleToggleStatusOptions = (orderId) => {
-    setStatusOptionsVisibility((prev) => ({
-      ...prev,
-      [orderId]: !prev[orderId], // Toggle visibility for specific order
-    }));
+  const handleSendApproval = (committeeType) => {
+    console.log("Sending Approval:", selectedOrderId, user_id, committeeType);
+
+    axios
+      .post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
+        {
+          cartId: selectedOrderId,
+          senderId: user_id,
+          committeeType: committeeType,
+        }
+      )
+      .then((response) => {
+        console.log("Approval request sent:", response.data);
+        setSuccessMessage("Approval request sent successfully!");
+
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
+
+        setSelectedOrderId(null);
+        setShowModal(false);
+        fetchOrders();
+        setShowTransferModal(false);
+      })
+      .catch((error) => {
+        console.error("Error sending approval request:", error);
+      });
+  };
+  const handleOpenModal = (orderId, type) => {
+    setSelectedOrderId(orderId);
+    setActionType(type); // ✅ Fix: Set action type properly
+    setShowModal(true);
   };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
+        {successMessage && (
+          <div className="alert alert-success w-100 text-start mb-2 small">
+            {successMessage}
+          </div>
+        )}
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
             Order Detail
@@ -85,13 +185,23 @@ const OrderPage = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    { label: "Order Id", field: "id" },
+                    { label: "Order Id", field: "order_id" },
                     { label: "Researcher Name", field: "researcher_name" },
                     { label: "Organization Name", field: "organization_name" },
                     { label: "Sample Name", field: "samplename" },
-                    { label: "Price", field: "price" },
-                    { label: "Quantity", field: "quantity" },
-                    { label: "Status", field: "status" },
+                    { label: "Order Status", field: "order_status" },
+                    {
+                      label: "Registration Admin Status",
+                      field: "registration_admin_status",
+                    },
+                    {
+                      label: "Committee Status",
+                      field: "final_committee_status",
+                    },
+                    {
+                      label: "Committee Comments",
+                      field: "committee_comments",
+                    },
                   ].map(({ label, field }, index) => (
                     <th key={index} className="p-2">
                       <div className="d-flex flex-column align-items-center">
@@ -117,83 +227,97 @@ const OrderPage = () => {
               <tbody className="table-light">
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td>{order.id}</td>
+                    <tr
+                      key={order.order_id}
+                      onClick={() => {
+                        setSelectedSample(order);
+                        setSampleShowModal(true);
+                      }}
+                      className="cursor-pointer"
+                      style={{ cursor: "pointer" }} // Make rows clickable
+                    >
+                      <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
                       <td>{order.organization_name}</td>
                       <td>{order.samplename}</td>
+                      <td>{order.order_status}</td>
+                      <td>{order.registration_admin_status}</td>
                       <td>
-                        {order.SamplePriceCurrency} {order.price}
+                        {order.final_committee_status
+                          ? order.final_committee_status
+                          : "N/A"}
                       </td>
-                      <td>{order.quantity}</td>
-                      <td>{order.status}</td>
+                      <td>{order.committee_comments?order.committee_comments:"N/A"}</td>
                       <td>
                         <div className="d-flex align-items-center gap-2 position-relative">
-                          {/* {/ View Sample Button /} */}
-                          <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => {
-                              setSelectedSample(order);
-                              setSampleShowModal(true);
-                            }}
-                            title="View Sample Detail"
-                          >
-                            <FontAwesomeIcon size="sm" className="text-dark" icon={faEye} />
-                          </button>
-
-                          {/* {/ Edit Status Button /} */}
-                          <div className="position-relative">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => handleToggleStatusOptions(order.id)}
-                              title="Edit Status"
-                            >
-                              <FontAwesomeIcon icon={faEllipsisV} size="sm" />
-                            </button>
-
-                            {statusOptionsVisibility[order.id] && (
-                              <div className="dropdown-menu show position-absolute" style={{ minWidth: "200px" }}>
-                                <button className="dropdown-item" onClick={() => console.log("Accepted")}>
-                                  Accepted
-                                </button>
-                                <button className="dropdown-item" onClick={() => console.log("Refused")}>
-                                  Refused
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* {/ Send Approval Button /} */}
-                          <div className="position-relative">
+                          {/* Edit Status Button */}
+                          <div className="d-flex align-items-center gap-2 position-relative">
+                            {/* ✅ Accept Button (Tick Icon) */}
                             <button
                               className="btn btn-sm btn-outline-success"
-                              onClick={() => handleToggleTransferOptions(order.id)}
-                              title="Send Approval to Committee Member"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click event from firing
+                                setSelectedOrderId(order.order_id);
+                                setShowModal(true);
+                                setActionType("Accepted"); // Track the action type
+                              }}
+                              title="Accept Order"
                             >
-                              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                              <FontAwesomeIcon icon={faCheck} size="sm" />
                             </button>
 
-                            {transferOptionsVisibility[order.id] && (
-                              <div className="dropdown-menu show position-absolute" style={{ minWidth: "250px" }}>
-                                <button className="dropdown-item" onClick={() => console.log("Scientific Approval")}>
-                                  Send for Approval Scientific
-                                </button>
-                                <button className="dropdown-item" onClick={() => console.log("Ethical Approval")}>
-                                  Send for Approval Ethical
-                                </button>
-                                <button className="dropdown-item" onClick={() => console.log("Both Approvals")}>
-                                  Send for Approval Ethical & Scientific
-                                </button>
-                              </div>
-                            )}
+                            {/* ❌ Reject Button (Cross Icon) */}
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOrderId(order.order_id);
+                                setShowModal(true);
+                                setActionType("Rejected"); // Track the action type
+                              }}
+                              title="Reject Order"
+                            >
+                              <FontAwesomeIcon icon={faTimes} size="sm" />
+                            </button>
                           </div>
+                          {/* Send Approval Button */}
+                          {order.registration_admin_status === "Accepted" && (
+                            <div className="position-relative">
+                              <button
+                                className="btn btn-sm btn-outline-success"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click event from firing
+                                  handleToggleTransferOptions(order.order_id);
+                                }}
+                                title="Send Approval to Committee Member"
+                              >
+                                <FontAwesomeIcon
+                                  icon={faExchangeAlt}
+                                  size="sm"
+                                />
+                              </button>
+                            </div>
+                          )}
+                           <button
+        className="btn btn-sm btn-outline-primary ms-2"
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedShippedId(order.order_id);
+          setShowOrderStatusModal(true);
+        }}
+        title="Update Order Status"
+      >
+        <FontAwesomeIcon icon={faTruck} size="sm" />
+      </button>
+
+    
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center p-2">
+                    <td colSpan="10" className="text-center p-2">
                       No researchers available
                     </td>
                   </tr>
@@ -201,6 +325,100 @@ const OrderPage = () => {
               </tbody>
             </table>
           </div>
+          {showModal && (
+            <Modal show={showModal} onHide={handleCloseModal}>
+              <Modal.Header closeButton>
+                <Modal.Title>Confirm Action</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <p>
+                  Are you sure you want to <strong>{actionType}</strong> Order
+                  ID: {selectedOrderId}?
+                </p>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  variant="secondary"
+                  onClick={handleCloseModal}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant={actionType === "Accepted" ? "success" : "danger"}
+                  onClick={() => handleStatus(actionType)}
+                  disabled={loading} // Disable button while processing
+                >
+                  {loading ? "Processing..." : `Confirm ${actionType}`}
+                </Button>
+              </Modal.Footer>
+            </Modal>
+          )}
+
+{showOrderStatusModal && (
+        <Modal show={showOrderStatusModal} onHide={() => setShowOrderStatusModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Update Order Status</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group>
+              <Form.Label>Select Order Status</Form.Label>
+              <Form.Select value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>
+                <option value="">Select status</option>
+                <option value="Pending">Pending</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </Form.Select>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowOrderStatusModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleOrderStatusSubmit}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+          {showTransferModal && (
+            <div className="modal show d-block" tabIndex="-1">
+              <div className="modal-dialog">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Send Approval</h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setShowTransferModal(false)}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <p>Select approval type:</p>
+                    <button
+                      className="btn btn-primary m-2"
+                      onClick={() => handleSendApproval("scientific")}
+                    >
+                      Send for Scientific Approval
+                    </button>
+                    <button
+                      className="btn btn-secondary m-2"
+                      onClick={() => handleSendApproval("ethical")}
+                    >
+                      Send for Ethical Approval
+                    </button>
+                    <button
+                      className="btn btn-success m-2"
+                      onClick={() => handleSendApproval("both")}
+                    >
+                      Send for Both Approvals
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Pagination Controls */}
           {orders.length >= 0 && (
@@ -249,7 +467,9 @@ const OrderPage = () => {
               >
                 {/* Modal Header */}
                 <div className="modal-header d-flex justify-content-between align-items-center">
-                  <h5 className="fw-bold">{selectedSample.samplename}</h5>
+                  <h5 className="fw-bold">
+                    {selectedSample.samplename} Details:
+                  </h5>
                   <button
                     type="button"
                     className="close"
@@ -280,15 +500,19 @@ const OrderPage = () => {
                           {selectedSample.SamplePriceCurrency}
                         </p>
                         <p>
+                          <strong>Quantity:</strong> {selectedSample.quantity}
+                        </p>
+                        <p>
                           <strong>Quantity unit:</strong>{" "}
                           {selectedSample.QuantityUnit}
                         </p>
                         <p>
                           <strong>Country of Collection:</strong>{" "}
-                          {selectedSample.CountryOfCollection}
+                          {selectedSample.CountryofCollection}
                         </p>
                         <p>
-                          <strong>Status:</strong> {selectedSample.status}
+                          <strong>Order Status:</strong>{" "}
+                          {selectedSample.order_status}
                         </p>
                       </div>
                     </div>
@@ -297,11 +521,10 @@ const OrderPage = () => {
                     <div className="col-md-7">
                       <p>
                         <strong>Age:</strong> {selectedSample.age} years |{" "}
-                        <strong>Gender:</strong> {selectedSample.gender}
-                      </p>
-                      <p>
+                        <strong>Gender:</strong> {selectedSample.gender} |{" "}
                         <strong>Ethnicity:</strong> {selectedSample.ethnicity}
                       </p>
+
                       <p>
                         <strong>Storage Temp:</strong>{" "}
                         {selectedSample.storagetemp}
@@ -333,8 +556,11 @@ const OrderPage = () => {
                       </p>
                       <p>
                         <strong>Infectious Disease Testing:</strong>{" "}
-                        {selectedSample.InfectiousDiseaseTesting} (
-                        {selectedSample.InfectiousDiseaseResult})
+                        {selectedSample.InfectiousDiseaseTesting}
+                      </p>
+                      <p>
+                        <strong>Infectious Disease Result:</strong>{" "}
+                        {selectedSample.InfectiousDiseaseResult}
                       </p>
                     </div>
                   </div>

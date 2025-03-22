@@ -19,6 +19,7 @@ const paymentModel = require('../models/paymentModals')
 const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
 const contactusModel = require("../models/contactusModel");
+const committeesampleapprovalModel=require("../models/committeesampleapproval")
 // Function to initialize all tables
 function Database() {
 
@@ -39,6 +40,7 @@ function Database() {
   wishlistModel.createWishlistTable();
   cartModel.createCartTable();
   sample_approvalModel.createSampleApprovalTable();
+  committeesampleapprovalModel.createcommitteesampleapprovalTable();
   paymentModel.createPaymentTable();
   samplefieldsModel.createEthnicityTable();
   samplefieldsModel.createSampleConditionTable();

@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
   faTimesCircle,
-  faEye,
+  
   faFilePdf,
-  faInfoCircle,
-  faListAlt,
-  faFileAlt,
-  faClipboardList,
-  faFileCircleCheck,
-  faFileCircleExclamation,
+  
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import { getLocalStorage } from "@utils/localstorage";
@@ -23,66 +19,36 @@ const SampleArea = () => {
   } else {
     console.log("Committee Member Id on sample page is:", id);
   }
-
+  const [showModal, setShowModal] = useState(false);
+  const [actionType, setActionType] = useState(""); // "Approved" or "Refused"
+  const [comment, setComment] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
   const tableHeaders = [
-    { label: "Order ID", key: "id" },
+    { label: "Order ID", key: "cart_id" },
     { label: "User Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "Status", key: "status" },
+    { label: "Status", key: "committee_status" },
+    {label:"Comments",key:"comments"}
   ];
-
-  const [formData, setFormData] = useState({
-    samplename: "",
-    age: "",
-    gender: "",
-    ethnicity: "",
-    samplecondition: "",
-    storagetemp: "",
-    ContainerType: "",
-    CountryOfCollection: "",
-    quantity: "",
-    QuantityUnit: "",
-    SampleTypeMatrix: "",
-    SmokingStatus: "",
-    AlcoholOrDrugAbuse: "",
-    InfectiousDiseaseTesting: "",
-    InfectiousDiseaseResult: "",
-    FreezeThawCycles: "",
-    DateOfCollection: "",
-    ConcurrentMedicalConditions: "",
-    ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
-    TestResult: "",
-    TestResultUnit: "",
-    TestMethod: "",
-    TestKitManufacturer: "",
-    TestSystem: "",
-    TestSystemManufacturer: "",
-    status: "In Stock",
-    user_account_id: id,
-  });
 
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [successMessage, setSuccessMessage] = useState("");
-  const [collectionSiteNames, setCollectionSiteNames] = useState([]);
+
   // Sample Dropdown Fields
 
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-const [showSampleModal, setSampleShowModal] = useState(false);
+  const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   // Fetch samples from backend when component loads
   useEffect(() => {
-    const storedUser = getLocalStorage("user");
-    console.log("Logged-in user:", storedUser);
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
@@ -94,9 +60,11 @@ const [showSampleModal, setSampleShowModal] = useState(false);
         console.error("ID is missing.");
         return;
       }
+
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}`
       );
+
       // Update state
       setSamples(response.data);
       console.log(response.data);
@@ -105,27 +73,6 @@ const [showSampleModal, setSampleShowModal] = useState(false);
       console.error("Error fetching samples:", error);
     }
   };
-
-  // get collectionsite names in collectionsite dashboard in stock transfer modal
-  useEffect(() => {
-    const fetchCollectionSiteNames = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/collectionsitenames/${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch collection site names");
-        }
-        const data = await response.json();
-        console.log("Fetched Site Names:", data);
-        setCollectionSiteNames(data.data);
-      } catch (error) {
-        console.error("Error fetching site names:", error);
-      }
-    };
-
-    fetchCollectionSiteNames();
-  }, [id]);
 
   useEffect(() => {
     const pages = Math.max(
@@ -193,9 +140,54 @@ const [showSampleModal, setSampleShowModal] = useState(false);
       );
     }
   };
-
+  const handleOpenModal = (type, sample) => {
+    if (!sample) {
+      alert("Sample data is missing.");
+      return;
+    }
+    setSelectedSample(sample); // Ensure the selected sample is set
+    setActionType(type);
+    setShowModal(true);
+  };
+  
+  // Close Modal
+  const handleCloseModal = () => {
+    setSelectedSample(null); // Ensure the selected sample is set
+    setActionType(null);
+    setShowModal(false);
+    setComment(""); // Clear comment
+  };
+  const handleSubmit = async () => {
+    const trimmedComment = comment.trim(); // Trim spaces and new lines
+  
+    if (!selectedSample || !trimmedComment) {
+      alert("Please enter a comment.");
+      return;
+    }
+  
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`, 
+        {
+          committee_status: actionType, // "Approved" or "Refused"
+          comments: trimmedComment, // Send trimmed comment
+        }
+      );
+  
+      if (response.status === 200) {
+        alert(`Sample ${actionType} successfully!`);
+        setShowModal(false);
+        setComment(""); // Clear the comment field
+        fetchSamples(); // Refresh the data
+      }
+    } catch (error) {
+      console.error("Error updating committee status:", error);
+      alert("Failed to update sample status.");
+    }
+  };
+  
   useEffect(() => {
-    if (showDeleteModal) {
+    if (showModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -204,7 +196,7 @@ const [showSampleModal, setSampleShowModal] = useState(false);
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal]);
+  }, [showModal]);
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -215,9 +207,9 @@ const [showSampleModal, setSampleShowModal] = useState(false);
             {successMessage}
           </div>
         )}
-         <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Samples for Approval
-          </h4>
+        <h4 className="tp-8 fw-bold text-success text-center pb-2">
+          Samples for Approval
+        </h4>
         {/* <div className="profile__main-content">
                 <h4 className="profile__main-title text-capitalize">Welcome Committee Member</h4>
               </div>
@@ -255,7 +247,14 @@ const [showSampleModal, setSampleShowModal] = useState(false);
             <tbody className="table-light">
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
-                  <tr>
+                  <tr
+                    key={sample.id} // Ensure unique key
+                    onClick={() => {
+                      setSelectedSample(sample);
+                      setSampleShowModal(true);
+                    }}
+                    style={{ cursor: "pointer" }} // Pointer cursor to indicate clickable row
+                  >
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -277,30 +276,19 @@ const [showSampleModal, setSampleShowModal] = useState(false);
                       </td>
                     ))}
 
-<td className="text-center">
-                      <div className="d-flex justify-content-center gap-2">
-                        
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={() => {
-                            setSelectedSample(sample);
-                            setSampleShowModal(true);
-                          }}
-                          title="View Sample Detail"
-                        >
-                          <FontAwesomeIcon
-                            size="lg"
-                            className="text-dark"
-                            icon={faEye}
-                          />
-                        </button>
-
-                       
+                    <td className="text-center">
+                      <div
+                        className="d-flex justify-content-center gap-2"
+                        onClick={(e) => e.stopPropagation()} // ✅ Prevent row click event from triggering when clicking buttons
+                      >
                         <button
                           className="btn btn-outline-primary btn-sm"
-                          onClick={() => {
-                            console.log("View PDF");
-                          }}
+                          onClick={() =>
+                            window.open(
+                              "https://example.com/sample.pdf",
+                              "_blank"
+                            )
+                          }
                           title="View PDF Documents"
                         >
                           <FontAwesomeIcon
@@ -310,31 +298,22 @@ const [showSampleModal, setSampleShowModal] = useState(false);
                           />
                         </button>
 
-                       
                         <button
-                          className="btn btn-outline-success btn-sm"
-                          onClick={() => {}}
-                          title="Approved Sample"
-                        >
-                          <FontAwesomeIcon
-                            icon={faCheckCircle}
-                            size="lg"
-                            className="text-success"
-                          />
-                        </button>
+  className="btn btn-outline-success btn-sm"
+  onClick={() => handleOpenModal("Approved", sample)} // Pass sample
+  title="Approve Sample"
+>
+  <FontAwesomeIcon icon={faCheckCircle} size="lg" className="text-success" />
+</button>
 
-                       
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => {}}
-                          title="Unapproved Sample"
-                        >
-                          <FontAwesomeIcon
-                            icon={faTimesCircle}
-                            size="lg"
-                            className="text-danger"
-                          />
-                        </button>
+<button
+  className="btn btn-outline-danger btn-sm"
+  onClick={() => handleOpenModal("Refused", sample)} // Pass sample
+  title="Refuse Sample"
+>
+  <FontAwesomeIcon icon={faTimesCircle} size="lg" className="text-danger" />
+</button>
+
                       </div>
                     </td>
                   </tr>
@@ -349,6 +328,35 @@ const [showSampleModal, setSampleShowModal] = useState(false);
             </tbody>
           </table>
         </div>
+       
+        {showModal && (
+  <Modal show={showModal} onHide={handleCloseModal}>
+    <Modal.Header closeButton>
+      <Modal.Title>{actionType} Sample</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Form.Group>
+        <Form.Label>Enter your comments</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={3}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Enter comments here..."
+        />
+      </Form.Group>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button variant="secondary" onClick={handleCloseModal}>
+        Cancel
+      </Button>
+      <Button variant={actionType === "Approved" ? "success" : "danger"} onClick={handleSubmit}>
+        Send
+      </Button>
+    </Modal.Footer>
+  </Modal>
+)}
+
 
         {/* Pagination */}
         {totalPages >= 0 && (
@@ -358,138 +366,136 @@ const [showSampleModal, setSampleShowModal] = useState(false);
             focusPage={currentPage}
           />
         )}
-  {showSampleModal && selectedSample && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="modal-backdrop fade show"
-                style={{
-                  backdropFilter: "blur(5px)",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  zIndex: 1040,
-                }}
-              ></div>
+        {showSampleModal && selectedSample && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="modal-backdrop fade show"
+              style={{
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                zIndex: 1040,
+              }}
+            ></div>
 
-              {/* Modal Container */}
-              <div
-                className="modal show d-block"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-                  width: "90vw",
-                  maxWidth: "700px",
-                  maxHeight: "80vh",
-                  overflowY: "auto",
-                }}
-              >
-                {/* Modal Header */}
-                <div className="modal-header d-flex justify-content-between align-items-center">
-                  <h5 className="fw-bold">{selectedSample.samplename}</h5>
-                  <button
-                    type="button"
-                    className="close"
-                    onClick={() => setSampleShowModal(false)}
-                    style={{
-                      fontSize: "1.5rem",
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    &times;
-                  </button>
-                </div>
+            {/* Modal Container */}
+            <div
+              className="modal show d-block"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                backgroundColor: "#fff",
+                padding: "20px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+                width: "90vw",
+                maxWidth: "700px",
+                maxHeight: "80vh",
+                overflowY: "auto",
+              }}
+            >
+              {/* Modal Header */}
+              <div className="modal-header d-flex justify-content-between align-items-center">
+                <h5 className="fw-bold">{selectedSample.samplename}</h5>
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setSampleShowModal(false)}
+                  style={{
+                    fontSize: "1.5rem",
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
 
-                {/* Modal Body */}
-                <div className="modal-body">
-                  <div className="row">
-                    {/* Left Side: Image & Basic Details */}
-                    <div className="col-md-5 text-center">
-                      <div className="mt-3 p-2 bg-light rounded text-start">
-                        <p>
-                          <strong>Sample Name:</strong>{" "}
-                          {selectedSample.samplename}
-                        </p>
-                        <p>
-                          <strong>Price:</strong> {selectedSample.price}{" "}
-                          {selectedSample.SamplePriceCurrency}
-                        </p>
-                        <p>
-                          <strong>Quantity unit:</strong>{" "}
-                          {selectedSample.QuantityUnit}
-                        </p>
-                        <p>
-                          <strong>Country of Collection:</strong>{" "}
-                          {selectedSample.CountryOfCollection}
-                        </p>
-                        <p>
-                          <strong>Status:</strong> {selectedSample.status}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Right Side: Detailed Information */}
-                    <div className="col-md-7">
+              {/* Modal Body */}
+              <div className="modal-body">
+                <div className="row">
+                  {/* Left Side: Image & Basic Details */}
+                  <div className="col-md-5 text-center">
+                    <div className="mt-3 p-2 bg-light rounded text-start">
                       <p>
-                        <strong>Age:</strong> {selectedSample.age} years |{" "}
-                        <strong>Gender:</strong> {selectedSample.gender}
+                        <strong>Sample Name:</strong>{" "}
+                        {selectedSample.samplename}
                       </p>
                       <p>
-                        <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                        <strong>Price:</strong> {selectedSample.price}{" "}
+                        {selectedSample.SamplePriceCurrency}
                       </p>
                       <p>
-                        <strong>Storage Temp:</strong>{" "}
-                        {selectedSample.storagetemp}
+                        <strong>Quantity unit:</strong>{" "}
+                        {selectedSample.QuantityUnit}
                       </p>
                       <p>
-                        <strong>Sample Type:</strong>{" "}
-                        {selectedSample.SampleTypeMatrix}
+                        <strong>Country of Collection:</strong>{" "}
+                        {selectedSample.CountryOfCollection}
                       </p>
                       <p>
-                        <strong>Diagnosis Test Parameter:</strong>{" "}
-                        {selectedSample.DiagnosisTestParameter}
-                      </p>
-                      <p>
-                        <strong>Test Result:</strong>{" "}
-                        {selectedSample.TestResult}{" "}
-                        {selectedSample.TestResultUnit}
-                      </p>
-                      <p>
-                        <strong>Test Method:</strong>{" "}
-                        {selectedSample.TestMethod}
-                      </p>
-                      <p>
-                        <strong>Test Kit Manufacturer:</strong>{" "}
-                        {selectedSample.TestKitManufacturer}
-                      </p>
-                      <p>
-                        <strong>Concurrent Medical Conditions:</strong>{" "}
-                        {selectedSample.ConcurrentMedicalConditions}
-                      </p>
-                      <p>
-                        <strong>Infectious Disease Testing:</strong>{" "}
-                        {selectedSample.InfectiousDiseaseTesting} (
-                        {selectedSample.InfectiousDiseaseResult})
+                        <strong>Status:</strong> {selectedSample.status}
                       </p>
                     </div>
                   </div>
+
+                  {/* Right Side: Detailed Information */}
+                  <div className="col-md-7">
+                    <p>
+                      <strong>Age:</strong> {selectedSample.age} years |{" "}
+                      <strong>Gender:</strong> {selectedSample.gender}
+                    </p>
+                    <p>
+                      <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                    </p>
+                    <p>
+                      <strong>Storage Temp:</strong>{" "}
+                      {selectedSample.storagetemp}
+                    </p>
+                    <p>
+                      <strong>Sample Type:</strong>{" "}
+                      {selectedSample.SampleTypeMatrix}
+                    </p>
+                    <p>
+                      <strong>Diagnosis Test Parameter:</strong>{" "}
+                      {selectedSample.DiagnosisTestParameter}
+                    </p>
+                    <p>
+                      <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
+                      {selectedSample.TestResultUnit}
+                    </p>
+                    <p>
+                      <strong>Test Method:</strong> {selectedSample.TestMethod}
+                    </p>
+                    <p>
+                      <strong>Test Kit Manufacturer:</strong>{" "}
+                      {selectedSample.TestKitManufacturer}
+                    </p>
+                    <p>
+                      <strong>Concurrent Medical Conditions:</strong>{" "}
+                      {selectedSample.ConcurrentMedicalConditions}
+                    </p>
+                    <p>
+                      <strong>Infectious Disease Testing:</strong>{" "}
+                      {selectedSample.InfectiousDiseaseTesting} (
+                      {selectedSample.InfectiousDiseaseResult})
+                    </p>
+                  </div>
                 </div>
               </div>
-            </>
-          )}
+            </div>
+          </>
+        )}
         {showDeleteModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
