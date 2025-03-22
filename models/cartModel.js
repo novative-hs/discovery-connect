@@ -38,58 +38,90 @@ const createCart = (data, callback) => {
     return callback(new Error("Missing required fields"));
   }
 
-  let insertCount = 0;
-  let errors = [];
+  // Query to get Registration Admin ID
+  const getAdminIdQuery = `
+    SELECT id FROM user_account WHERE accountType = 'RegistrationAdmin' LIMIT 1
+  `;
 
-  cart_items.forEach((item) => {
-    const insertQuery = `
-      INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    const insertValues = [
-      researcher_id,
-      item.sample_id || null,
-      item.price,
-      item.samplequantity,
-      payment_method,
-      item.total,
-    ];
+  mysqlConnection.query(getAdminIdQuery, (err, adminResults) => {
+    if (err) {
+      console.error("Error fetching Registration Admin ID:", err);
+      return callback(err);
+    }
 
-    mysqlConnection.query(insertQuery, insertValues, (err) => {
-      if (err) {
-        console.error("Error inserting into cart:", err);
-        errors.push(err);
-      }
+    if (adminResults.length === 0) {
+      return callback(new Error("No Registration Admin found"));
+    }
 
-      if (errors.length > 0) return callback(errors[0]); // Return first error
+    const registrationAdminId = adminResults[0].id; // Get the admin ID
 
-      // **Step 2: Update stock only if insert succeeds**
-      const updateQuery = `
-        UPDATE sample 
-        SET quantity = quantity - ? 
-        WHERE id = ? AND quantity >= ?
-      `;
-      const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+    let insertPromises = cart_items.map((item) => {
+      return new Promise((resolve, reject) => {
+        // Insert into cart
+        const insertCartQuery = `
+          INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        const cartValues = [
+          researcher_id,
+          item.sample_id || null,
+          item.price,
+          item.samplequantity,
+          payment_method,
+          item.total,
+        ];
 
-      mysqlConnection.query(updateQuery, updateValues, (err, result) => {
-        if (err || result.affectedRows === 0) {
-          console.error("Error updating sample quantity or insufficient stock:", err);
-          errors.push(err || new Error("Insufficient stock"));
-        }
+        mysqlConnection.query(insertCartQuery, cartValues, (err, cartResult) => {
+          if (err) {
+            console.error("Error inserting into cart:", err);
+            return reject(err);
+          }
 
-        insertCount++;
+          const cartId = cartResult.insertId; // Get the inserted cart ID
 
-        // **Final callback after all insertions & updates**
-        if (insertCount === cart_items.length && errors.length === 0) {
-          callback(null, { message: "Cart items added successfully and stock updated" });
-        } else if (insertCount === cart_items.length) {
-          callback(errors[0]); // Return first encountered error
-        }
+          // Insert into registrationadminsampleapproval
+          const insertApprovalQuery = `
+            INSERT INTO registrationadminsampleapproval (cart_id, registration_admin_id, registration_admin_status)
+            VALUES (?, ?, 'pending')
+          `;
+
+          mysqlConnection.query(
+            insertApprovalQuery,
+            [cartId, registrationAdminId],
+            (err, approvalResult) => {
+              if (err) {
+                console.error("Error inserting into registration approval:", err);
+                return reject(err);
+              }
+
+              // *Update stock only if cart insert & registration approval succeed*
+              const updateQuery = `
+                UPDATE sample 
+                SET quantity = quantity - ? 
+                WHERE id = ? AND quantity >= ?
+              `;
+              const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+
+              mysqlConnection.query(updateQuery, updateValues, (err, result) => {
+                if (err || result.affectedRows === 0) {
+                  console.error("Error updating sample quantity or insufficient stock:", err);
+                  return reject(err || new Error("Insufficient stock"));
+                }
+
+                resolve({ cartId, message: "Cart added and stock updated" });
+              });
+            }
+          );
+        });
       });
     });
+
+    // *Wait for all cart insertions, approvals, and stock updates to complete*
+    Promise.all(insertPromises)
+      .then((results) => callback(null, results))
+      .catch((error) => callback(error));
   });
 };
-
 
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
