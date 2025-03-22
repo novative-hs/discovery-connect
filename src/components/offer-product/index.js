@@ -114,7 +114,8 @@ const OfferPopularProduct = () => {
             }}
           >
             {/* Modal Header */}
-            <div className="modal-header d-flex justify-content-between align-items-center">
+            <div className="modal-header d-flex justify-content-between align-items-center"
+              style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
               <h5 className="fw-bold">{selectedProduct.samplename}</h5>
               <button
                 type="button"
@@ -143,9 +144,10 @@ const OfferPopularProduct = () => {
                     style={{ maxHeight: "200px", objectFit: "cover" }}
                   />
                   <div className="mt-3 p-2 bg-light rounded text-start">
-                    <p><strong>Sample Name:</strong> {selectedProduct.samplename}</p>
-                    <p><strong>Price:</strong> {selectedProduct.price} {selectedProduct.SamplePriceCurrency}</p>
+                    <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
                     <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
+                    <p><strong>Alcohol or Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</p>
+                    <p><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</p>
                     <p><strong>Country of Collection:</strong> {selectedProduct.CountryOfCollection}</p>
                     <p><strong>Status:</strong> {selectedProduct.status}</p>
                   </div>
@@ -153,16 +155,16 @@ const OfferPopularProduct = () => {
 
                 {/* Right Side: Detailed Information */}
                 <div className="col-md-7">
-                  <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
                   <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
-                  <p><strong>Storage Temp:</strong> {selectedProduct.storagetemp}</p>
-                  <p><strong>Sample Type:</strong> {selectedProduct.SampleTypeMatrix}</p>
+                  <p><strong>Sample Condition:</strong> {selectedProduct.samplecondition}</p>
+                  <p><strong>Storage Temperature:</strong> {selectedProduct.storagetemp}</p>
+                  <p><strong>Container Type:</strong> {selectedProduct.ContainerType}</p>
+                  <p><strong>Sample Type Matrix:</strong> {selectedProduct.SampleTypeMatrix}</p>
+                  <p><strong>Infectious Disease Testing:</strong> {selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
+                  <p><strong>Freeze Thaw Cycles:</strong> {selectedProduct.FreezeThawCycles}</p>
                   <p><strong>Diagnosis Test Parameter:</strong> {selectedProduct.DiagnosisTestParameter}</p>
                   <p><strong>Test Result:</strong> {selectedProduct.TestResult} {selectedProduct.TestResultUnit}</p>
                   <p><strong>Test Method:</strong> {selectedProduct.TestMethod}</p>
-                  <p><strong>Test Kit Manufacturer:</strong> {selectedProduct.TestKitManufacturer}</p>
-                  <p><strong>Concurrent Medical Conditions:</strong> {selectedProduct.ConcurrentMedicalConditions}</p>
-                  <p><strong>Infectious Disease Testing:</strong> {selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
                 </div>
               </div>
             </div>
