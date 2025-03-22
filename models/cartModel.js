@@ -1,5 +1,5 @@
 const mysqlConnection = require("../config/db");
-
+const { sendEmail } = require("../config/email");
 
 const createCartTable = () => {
   const cartTableQuery = `
@@ -11,6 +11,8 @@ const createCartTable = () => {
     quantity INT,
     payment_method VARCHAR(255),
     totalpayment DECIMAL(10, 2),
+     payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid',
+    order_status ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') DEFAULT 'Pending',  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user_account(id),
     FOREIGN KEY (sample_id) REFERENCES sample(id)
@@ -195,13 +197,13 @@ const updateCart = (id,data, callback, res) => {
 };
 const getAllOrder = (callback, res) => {
   const sqlQuery = `
-  SELECT 
-    o.id, 
-    o.user_id, 
+ SELECT 
+    c.id AS order_id, 
+    c.user_id, 
     u.email AS user_email,
     r.ResearcherName AS researcher_name, 
-    org.OrganizationName AS organization_name, -- ✅ Added Organization Name
-    o.sample_id, 
+    org.OrganizationName AS organization_name,
+    c.sample_id, 
     s.samplename, 
     s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
     s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
@@ -210,29 +212,176 @@ const getAllOrder = (callback, res) => {
     s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
     s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
     s.TestSystemManufacturer, s.SamplePriceCurrency,
-    o.price, 
-    o.quantity, 
-    o.payment_method, 
-    o.totalpayment, 
-    o.created_at
-FROM cart o
-JOIN user_account u ON o.user_id = u.id
+    c.price, 
+    c.quantity, 
+    c.payment_method, 
+    c.totalpayment, 
+    c.order_status,
+    c.created_at,
+    IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
+
+    -- Ensure proper handling of NULL values in committee status
+    CASE 
+        WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
+        WHEN SUM(CASE WHEN ca.committee_status = 'rejected' THEN 1 ELSE 0 END) > 0 
+            THEN 'rejected'
+        WHEN SUM(CASE WHEN ca.committee_status = 'pending' THEN 1 ELSE 0 END) > 0 
+            THEN 'pending'
+        ELSE 'accepted' 
+    END AS final_committee_status,
+
+    GROUP_CONCAT(DISTINCT ca.comments SEPARATOR ', ') AS committee_comments
+
+FROM cart c
+JOIN user_account u ON c.user_id = u.id
 LEFT JOIN researcher r ON u.id = r.user_account_id 
 LEFT JOIN organization org ON r.nameofOrganization = org.id
-JOIN sample s ON o.sample_id = s.id
-ORDER BY o.created_at DESC;
+JOIN sample s ON c.sample_id = s.id
+LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
+LEFT JOIN committeesampleapproval ca ON c.id = ca.cart_id 
 
-`;
+GROUP BY c.id, u.email, r.ResearcherName, org.OrganizationName, c.sample_id, s.samplename, 
+         s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
+         s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+         s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
+         s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
+         s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
+         s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
+         s.TestSystemManufacturer, s.SamplePriceCurrency, c.price, 
+         c.quantity, c.payment_method, c.totalpayment, c.order_status, c.created_at, 
+         ra.registration_admin_status
+
+ORDER BY c.created_at ASC;
+
+  `;
+
   mysqlConnection.query(sqlQuery, (err, results) => {
     if (err) {
       console.error("Error fetching cart data:", err);
       callback(err, null);
-    }
-    else{
+    } else {
       callback(null, results);
     }
   });
 };
+const getAllOrderByCommittee = (committeeMemberId, callback) => {
+  console.log(committeeMemberId)
+  const sqlQuery = `
+    SELECT 
+      c.id AS cart_id, 
+      c.user_id, 
+      u.email AS user_email,
+      r.ResearcherName AS researcher_name, 
+      org.OrganizationName AS organization_name,
+      s.id AS sample_id,
+      s.samplename, 
+      s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
+      s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+      s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
+      s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
+      s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
+      s.TestSystemManufacturer, s.SamplePriceCurrency,
+      c.price, 
+      c.quantity, 
+      c.payment_method, 
+      c.totalpayment, 
+      c.order_status,  
+      c.created_at,
+      ca.committee_status,  
+      ca.comments           
+    FROM committeesampleapproval ca
+    JOIN cart c ON ca.cart_id = c.id  
+    JOIN user_account u ON c.user_id = u.id
+    LEFT JOIN researcher r ON u.id = r.user_account_id 
+    LEFT JOIN organization org ON r.nameofOrganization = org.id
+    JOIN sample s ON c.sample_id = s.id  
+    WHERE ca.committee_member_id = ?  
+    ORDER BY c.created_at ASC;
+  `;
+
+  mysqlConnection.query(sqlQuery, [committeeMemberId], (err, results) => {
+    if (err) {
+      console.error("Error fetching committee member's orders:", err);
+      callback(err, null);
+    } else {
+      callback(null, results);
+    }
+  });
+};
+
+
+const updateRegistrationAdminStatus = (id, registration_admin_status, callback) => {
+  console.log("Received Body", registration_admin_status);
+
+  const sqlQuery = `
+    UPDATE registrationadminsampleapproval 
+    SET registration_admin_status = ? 
+    WHERE cart_id = ?
+  `;
+
+  mysqlConnection.query(sqlQuery, [registration_admin_status, id], (err, results) => {
+    if (err) {
+      console.error("Error updating registration admin status:", err);
+      return callback(err, null);
+    }
+
+    console.log("Registration Admin Status updated successfully!");
+
+    if (registration_admin_status === "Rejected") {
+      // Fetch user email correctly
+      const getEmailQuery = `
+        SELECT ua.email 
+        FROM user_account ua
+        JOIN cart c ON ua.id = c.user_id
+        JOIN registrationadminsampleapproval sa ON c.id = sa.cart_id
+        WHERE sa.cart_id = ?
+      `;
+
+      mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
+        if (emailErr) {
+          console.error("Error fetching email:", emailErr);
+          return callback(emailErr, null);
+        }
+
+        if (emailResults.length > 0) {
+          const userEmail = emailResults[0].email;
+          const subject = "Sample Request Rejected";
+          const text = `Dear User, your sample request for cart ID ${id} has been rejected. Please contact support for details.`;
+
+          sendEmail(userEmail, subject, text)
+            .then(() => console.log("Email notification sent."))
+            .catch((emailError) => console.error("Failed to send rejection email:", emailError));
+        }
+      });
+    }
+
+    callback(null, { message: "Registration Admin Status updated successfully!" });
+  });
+};
+
+const updateCartStatus = (id, cartStatus, callback) => {
+  console.log("Received Body", cartStatus);
+
+  const sqlQuery = `
+    UPDATE cart 
+    SET order_status = ? 
+    WHERE id = ?
+  `;
+
+  mysqlConnection.query(sqlQuery, [cartStatus, id], (err, results) => {
+    if (err) {
+      console.error("Error updating cart  status:", err);
+      return callback(err, null);
+    }
+
+    console.log("Cart Status updated successfully!");
+
+   
+    callback(null, { message: "Cart Status updated successfully!" });
+  });
+};
+
 module.exports = {
   createCartTable,
   getAllCart,
@@ -241,5 +390,8 @@ module.exports = {
   deleteCart,
   deleteSingleCartItem,
   updateCart,
-  getAllOrder
+  getAllOrder,
+  getAllOrderByCommittee,
+  updateRegistrationAdminStatus,
+  updateCartStatus
 };

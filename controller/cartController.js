@@ -83,6 +83,49 @@ const getAllOrder=(req,res)=>{
     res.status(200).json(results);
   })
 }
+const getAllOrderByCommittee = (req, res) => {
+  const { id } = req.params; // ✅ Extract from params
+
+  cartModel.getAllOrderByCommittee(id, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching cart list" });
+    }
+    res.status(200).json(results);
+  });
+};
+
+const updateRegistrationAdminStatus = (req, res) => {
+  const { id } = req.params;
+  const { registration_admin_status } = req.body;
+
+  if (!registration_admin_status) {
+    return res.status(400).json({ error: "Registration admin status is required" });
+  }
+console.log("Received Body",req.body)
+  cartModel.updateRegistrationAdminStatus(id, registration_admin_status, (err, result) => {
+    if (err) {
+      console.error("Error updating registration admin status:", err);
+      return res.status(500).json({ error: "Error in updating status" });
+    }
+    res.status(200).json({ message: "Registration admin status updated successfully" });
+  });
+};
+
+const updateCartStatus = (req, res) => {
+  const { id } = req.params;
+  const { cartStatus } = req.body;
+  if (!cartStatus) {
+    return res.status(400).json({ error: "Registration admin status is required" });
+  }
+console.log("Received Body",req.body)
+  cartModel.updateCartStatus(id, cartStatus, (err, result) => {
+    if (err) {
+      console.error("Error updating cart_status status:", err);
+      return res.status(500).json({ error: "Error in updating cart_status" });
+    }
+    res.status(200).json({ message: "Cart status status updated successfully" });
+  });
+}
 module.exports = {
   createCartTable,
   getAllCart,
@@ -91,5 +134,8 @@ module.exports = {
   updateCard,
   deleteCart,
   deleteSingleCartItem,
-  getAllOrder
+  getAllOrder,
+  getAllOrderByCommittee,
+  updateRegistrationAdminStatus,
+  updateCartStatus
 };
