@@ -89,7 +89,18 @@ const RegisterForm = () => {
   const [countryname, setCountryname] = useState([]);
   const [Org_name, setOrganizationname] = useState([]);
   const router = useRouter();
-  const [registerUser, { }] = useRegisterUserMutation();
+  const [registerUser, {}] = useRegisterUserMutation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCity, setSelectedCity] = useState(null); // Store selected city object
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const [searchDistrict, setSearchDistrict] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+
+  const [searchCountry, setSearchCountry] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
   const {
     register,
@@ -104,7 +115,29 @@ const RegisterForm = () => {
   const fileInputRef = useRef(null);
   const accountType = watch("accountType");
   const selectedAccountType = watch("accountType");
+
   // Dynamically change the "Choose Logo" label based on account type
+  const handleSelectCity = (city) => {
+    setSelectedCity(city);
+    setSearchTerm("");
+    setShowDropdown(false);
+    setValue("city", city.id);
+  };
+  const handleSelectDistrict = (district) => {
+    setSelectedDistrict(district);
+    setSearchDistrict("");
+    setShowDistrictDropdown(false);
+    setValue("district", district.id);
+  };
+
+  const handleSelectCountry = (country) => {
+    console.log("Country", country);
+    setSelectedCountry(country);
+    setSearchCountry("");
+    setShowCountryDropdown(false);
+    setValue("country", country.id);
+  };
+
   useEffect(() => {
     const labels = {
       Researcher: "Choose Researcher Logo",
@@ -125,7 +158,11 @@ const RegisterForm = () => {
       }
     };
 
-    fetchData(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`, setCityname, "City");
+    fetchData(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`,
+      setCityname,
+      "City"
+    );
     fetchData(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`,
       setDistrictname,
@@ -168,7 +205,7 @@ const RegisterForm = () => {
   };
 
   const onSubmit = (data) => {
-    console.log(data)
+    console.log(data);
     const formData = new FormData();
 
     // Append other form data
@@ -225,7 +262,7 @@ const RegisterForm = () => {
           setLogo("");
           setValue("logo", "");
           notifySuccess(
-            "You information is received, you'll get email once your account got approval from registration admin"
+            "Your information is received, you'll get email once your account got approval from registration admin"
           );
 
           router.push("/login");
@@ -241,7 +278,6 @@ const RegisterForm = () => {
 
     reset();
   };
-
 
   useEffect(() => {
     console.log(errors);
@@ -316,9 +352,9 @@ const RegisterForm = () => {
 
         {/* Account Type */}
         <div className="login__input-item">
-          <div className="login__input position-relative">
+          <div className="login__input position-relative ">
             <span className="position-absolute start-0 top-50 translate-middle-y ps-3">
-              <i className="fa-regular fa-user"></i>
+              <i className="fa-regular fa-user px-2"></i>
             </span>
             <select
               {...register("accountType", {
@@ -326,7 +362,7 @@ const RegisterForm = () => {
               })}
               name="accountType"
               id="accountType"
-              className="form-select ps-5 py-2 form-control-lg"
+              className="form-select ps-5 py-3 form-control-lg"
             >
               <option value="">Select Account Type</option>
               <option value="Researcher">Researcher</option>
@@ -491,7 +527,8 @@ const RegisterForm = () => {
                         paddingLeft: "50px",
                         borderColor: "#f0f0f0",
                         color: "#808080",
-                      }}>
+                      }}
+                    >
                       <option value="">Select Type</option>
                       <option value="Hospital">Hospital</option>
                       <option value="Independent Lab">Independent Lab</option>
@@ -513,7 +550,7 @@ const RegisterForm = () => {
                   {...register("phoneNumber")}
                   type="tel"
                   className="form-control"
-                  placeholder="XXXX-XXX-XXXX"
+                  placeholder="XXXX-XXXXXXX"
                 />
                 <span>
                   <i className="fa-solid fa-phone"></i>
@@ -524,14 +561,14 @@ const RegisterForm = () => {
 
             {/* Logo Upload */}
             <div className="login__input-item">
-              <div className="input-group form-control md-10">
-                <i className="fa-solid fa-image text-black mt-10 px-2"></i>
+              <div className="login-input form-control md-10 p-2">
+                <i className="fa-solid fa-image text-black px-3 mt-2"></i>
                 <label
-                  className="btn btn-outline-secondary bg-transparent border-0"
+                  className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
                   onClick={triggerFileInput}
                 >
                   {logo ? (
-                    <span className="form-label px-1">{logo}</span>
+                    <span className="form-label">{logo}</span>
                   ) : (
                     accountTypeLabel
                   )}
@@ -552,86 +589,178 @@ const RegisterForm = () => {
                 message={errors.logo?.message}
               />
             </div>
-
-            {/* City Fields */}
+            {/* {/ City Fields /} */}
             <div className="login__input-item">
-              <div className="login__input d-flex align-items-center w-100">
-                <select
+              <div className="login__input d-flex align-items-center w-100 position-relative">
+                <input
+                  type="text"
+                  placeholder="Type to search city..."
+                  className="form-control"
                   {...register("city")}
-                  className="form-select"
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    paddingLeft: "50px",
-                    borderColor: "#f0f0f0",
-                    color: "#808080",
+                  value={searchTerm || (selectedCity ? selectedCity.name : "")} // Only show selected city when not searching
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowDropdown(true);
+                    if (!e.target.value) setSelectedCity(null); // Clear selected city when user deletes input
                   }}
-                >
-                  <option value="">Select City</option>
-                  {cityname.map((city) => (
-                    <option key={city.id} value={city.id}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                />
                 <span>
-                  <i className="fa-solid fa-city"></i>
+                  <i className="fa-solid fa-city text-black"></i>
                 </span>
+
+                {/* Bootstrap Dropdown */}
+                {showDropdown && (
+                  <ul
+                    className="dropdown-menu show w-100 position-absolute bg-white shadow overflow-auto border-0 top-100"
+                    style={{ maxHeight: "350px" }}
+                  >
+                    {cityname
+                      .filter(
+                        (city) =>
+                          searchTerm
+                            ? city.name
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase())
+                            : true // Show all cities when searchTerm is empty
+                      )
+                      .map((city) => (
+                        <li key={city.id}>
+                          <button
+                            className="dropdown-item"
+                            type="button"
+                            onMouseDown={() => handleSelectCity(city)}
+                          >
+                            {city.name}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                )}
               </div>
+              <span className="ms-2">
+                <i className="fa-solid fa-angle-down"></i>
+              </span>
               <ErrorMessage message={errors.city?.message} />
             </div>
-            {/* District Fields */}
+            {/* District */}
             <div className="login__input-item">
-              <div className="login__input">
-                <select
+              <div className="login__input d-flex align-items-center w-100 position-relative">
+                <input
+                  type="text"
+                  placeholder="Type to search district..."
+                  className="form-control"
                   {...register("district")}
-                  className="form-select"
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    paddingLeft: "50px",
-                    borderColor: "#f0f0f0",
-                    color: "#808080",
+                  value={
+                    searchDistrict ||
+                    (selectedDistrict ? selectedDistrict.name : "")
+                  }
+                  onChange={(e) => {
+                    setSearchDistrict(e.target.value);
+                    setShowDistrictDropdown(true);
+                    if (!e.target.value) setSelectedDistrict(null);
                   }}
-                >
-                  <option value="">Select District</option>
-                  {districtname.map((district) => (
-                    <option key={district.id} value={district.id}>
-                      {district.name}
-                    </option>
-                  ))}
-                </select>
+                  onFocus={() => setShowDistrictDropdown(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowDistrictDropdown(false), 200)
+                  }
+                />
                 <span>
-                  <i className="fa-solid fa-map-marker-alt"></i>
+                  <i className="fa-solid fa-map-marker-alt text-black"></i>
                 </span>
+
+                {/* Bootstrap Dropdown for District */}
+                {showDistrictDropdown && (
+                  <ul
+                    className="dropdown-menu show w-100 position-absolute bg-white shadow overflow-auto border-0 top-100"
+                    style={{ maxHeight: "320px" }}
+                  >
+                    {districtname
+                      .filter((district) =>
+                        searchDistrict
+                          ? district.name
+                              .toLowerCase()
+                              .includes(searchDistrict.toLowerCase())
+                          : true
+                      )
+                      .map((district) => (
+                        <li key={district.id}>
+                          <button
+                            className="dropdown-item"
+                            type="button"
+                            onMouseDown={() => handleSelectDistrict(district)}
+                          >
+                            {district.name}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                )}
               </div>
+              <span className="ms-2">
+                <i className="fa-solid fa-angle-down"></i>
+              </span>
               <ErrorMessage message={errors.district?.message} />
             </div>
-            {/* Country Fields */}
+
+            {/* Country Field */}
             <div className="login__input-item">
-              <div className="login__input">
-                <select
+              <div className="login__input d-flex align-items-center w-100 position-relative">
+                <input
+                  type="text"
+                  placeholder="Type to search country..."
+                  className="form-control"
                   {...register("country")}
-                  className="form-select"
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    paddingLeft: "50px",
-                    borderColor: "#f0f0f0",
-                    color: "#808080",
+                  value={
+                    searchCountry ||
+                    (selectedCountry ? selectedCountry.name : "")
+                  }
+                  onChange={(e) => {
+                    setSearchCountry(e.target.value);
+                    setShowCountryDropdown(true);
+                    if (!e.target.value) setSelectedCountry(null);
                   }}
-                >
-                  <option value="">Select Country</option>
-                  {countryname.map((country) => (
-                    <option key={country.id} value={country.id}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
+                  onFocus={() => setShowCountryDropdown(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowCountryDropdown(false), 200)
+                  }
+                />
                 <span>
-                  <i className="fa-solid fa-globe"></i>
+                  <i className="fa-solid fa-globe text-black"></i>
                 </span>
+
+                {/* Bootstrap Dropdown for Country */}
+                {showCountryDropdown && (
+                  <ul
+                    className="dropdown-menu show w-100 position-absolute bg-white shadow overflow-auto border-0 top-100"
+                    style={{ maxHeight: "250px" }}
+                  >
+                    {countryname
+                      .filter((country) =>
+                        searchCountry
+                          ? country.name
+                              .toLowerCase()
+                              .includes(searchCountry.toLowerCase())
+                          : true
+                      )
+                      .map((country) => (
+                        <li key={country.id}>
+                          <button
+                            className="dropdown-item"
+                            type="button"
+                            onMouseDown={() => handleSelectCountry(country)}
+                          >
+                            {country.name}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                )}
               </div>
+              <span className="ms-2">
+                <i className="fa-solid fa-angle-down"></i>
+              </span>
               <ErrorMessage message={errors.country?.message} />
             </div>
             {/* Address Fields */}

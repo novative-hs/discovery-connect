@@ -25,7 +25,7 @@ const createDistrictTable = () => {
 
 // Function to get all City members
 const getAllDistricts = (callback) => {
-  const query = 'SELECT * FROM district WHERE status = "active"';
+  const query = 'SELECT * FROM district WHERE status = "active" ORDER BY name ASC';
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -11,87 +10,94 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
-const CountryArea = () => {
+import moment from "moment";
+const ConcurrentMedicalConditionsArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on country page is:", id);
+    console.log("account_id on ConcurrentMedicalConditions Area page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedcountrynameId, setselectedcountrynameId] = useState(null); // Store ID of Country to delete
+  const [selectedConcurrentMedicalnameId, setSelectedConcurrentMedicalnameId] =
+    useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
-    countryname: "",
+    name: "",
     added_by: id,
   });
-  const [editCountryname, setEditCountryname] = useState(null); // State for selected Country to edit
-  const [countryname, setCountryname] = useState([]); // State to hold fetched Country
-  const [filteredCountryname, setFilteredCountryname] = useState([]); // Store filtered cities
+  const [editConcurrentMedicalname, setEditConcurrentMedicalname] =
+    useState(null); // State for selected ConcurrentMedical to edit
+  const [concurrentmedicalname, setConcurrentMedicalname] = useState([]); // State to hold fetched TestKitManufacturer
+  const [successMessage, setSuccessMessage] = useState("");
+  const [filteredMedicalConditionname, setFilteredMedicalConditionname] =
+    useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-
-  const [successMessage, setSuccessMessage] = useState("");
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch Country from backend when component loads
+  // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    fetchcountryname(); // Call the function when the component mounts
+    fetchConcurrentMedicalname(); // Call the function when the component mounts
   }, []);
-  const fetchcountryname = async () => {
+  const fetchConcurrentMedicalname = async () => {
     try {
-      const response = await axios.get(`${url}/country/get-country`);
-      setFilteredCountryname(response.data);
-      setCountryname(response.data); // Store fetched Country in state
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/concurrentmedicalconditions`
+      );
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data); // Store fetched TestMethod in state
     } catch (error) {
-      console.error("Error fetching Country:", error);
+      console.error("Error fetching Concurrent Medical Conditions :", error);
     }
   };
+
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredCountryname.length / itemsPerPage)
+      Math.ceil(filteredMedicalConditionname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCountryname]);
+  }, [filteredMedicalConditionname]);
 
-  const currentData = filteredCountryname.slice(
+  const currentData = filteredMedicalConditionname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
+
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected); // React Paginate uses 0-based index
+    setCurrentPage(event.selected);
   };
+
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = countryname; // Show all if filter is empty
+      filtered = concurrentmedicalname; // Show all if filter is empty
     } else {
-      filtered = countryname.filter((country) =>
-        country[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = concurrentmedicalname.filter((concurrentmedicalconditions) =>
+        concurrentmedicalconditions[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
       );
     }
 
-    setFilteredCountryname(filtered);
+    setFilteredMedicalConditionname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
@@ -109,31 +115,45 @@ const CountryArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
 
+  const handleSubmit = async (e) => {
+    console.log(formData);
+    e.preventDefault();
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/country/post-country`,
+        `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
         formData
       );
-      console.log("Country added successfully:", response.data);
-      setSuccessMessage("Country added successfully.");
+      console.log(
+        "Concurrent Medical Conditions added successfully:",
+        response.data
+      );
+      setSuccessMessage(
+        "Concurrent Medical ConditionsRoutes Name deleted successfully."
+      );
 
+      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      fetchcountryname();
 
+      fetchConcurrentMedicalname();
       // Clear form after submission
       setFormData({
-        countryname: "",
+        name: "",
         added_by: id,
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding country:", error);
+      console.error("Error adding Concurrent Medical Conditions ", error);
     }
   };
 
@@ -141,32 +161,34 @@ const CountryArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
+        `${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`
       );
       console.log(
-        `countryname with ID ${selectedcountrynameId} deleted successfully.`
+        `Concurrent Medical ConditionsRoutes name with ID ${selectedConcurrentMedicalnameId} deleted successfully.`
       );
 
       // Set success message
-      setSuccessMessage("countryname deleted successfully.");
+      setSuccessMessage(
+        "Concurrent Medical Conditions Name deleted successfully."
+      );
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the countryname list after deletion
-      fetchcountryname();
+      fetchConcurrentMedicalname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setselectedcountrynameId(null);
+      setSelectedConcurrentMedicalnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting country with ID ${selectedcountrynameId}:`,
+        `Error deleting concurrent medical conditions  with ID ${selectedConcurrentMedicalnameId}:`,
         error
       );
     }
   };
+
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
@@ -179,15 +201,18 @@ const CountryArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (countryname) => {
-    console.log("data in case of update is", countryname);
-    setselectedcountrynameId(countryname.id);
-    setEditCountryname(countryname); // Store the Country data to edit
-    setShowEditModal(true); // Show the edit modal
+  const handleEditClick = (concurrentmedicalname) => {
+    console.log("data in case of update is", concurrentmedicalname);
+
+    setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
+    setEditConcurrentMedicalname(concurrentmedicalname);
+
     setFormData({
-      countryname: countryname.name, // Ensure it's 'countryname' and not 'name'
+      name: concurrentmedicalname.name,
       added_by: id,
     });
+
+    setShowEditModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -195,22 +220,26 @@ const CountryArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/country/put-country/${selectedcountrynameId}`,
+        `${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`,
         formData
       );
-      console.log("countryname updated successfully:", response.data);
+      console.log(
+        "Concurrent Medical Conditions Name updated successfully:",
+        response.data
+      );
 
-      fetchcountryname();
+      fetchConcurrentMedicalname();
 
       setShowEditModal(false);
-      setSuccessMessage("Country updated successfully.");
+      setSuccessMessage("Concurrent Medical Conditions updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating countryname with ID ${selectedcountrynameId}:`,
+        `Error updating Concurrent Medical Conditions name with ID ${selectedConcurrentMedicalnameId}:`,
         error
       );
     }
@@ -227,66 +256,61 @@ const CountryArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const resetFormData = () => {
-    setFormData({ countryname: "", added_by: id }); // Reset to empty state
-  };
   const handleFileUpload = async (e) => {
+    console.log("File upload triggered"); // Debugging
     const file = e.target.files[0];
     if (!file) return;
+    console.log("File selected:", file); // Debugging
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
+      // Add 'added_by' field (ensure 'id' is defined in the state)
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
+        added_by: id, // Ensure 'id' is defined in the component
       }));
 
+      console.log("Data with added_by", dataWithAddedBy);
+
       try {
-        // POST data to API
+        // POST request inside the same function
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/post-country`,
+          `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Countries added successfully:", response.data);
-        setSuccessMessage("Countries added successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
+        console.log(
+          "Concurrent Medical Conditions added successfully:",
+          response.data
         );
-        setFilteredCountryname(newResponse.data);
-        setCountryname(newResponse.data);
+
+        fetchConcurrentMedicalname();
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error adding Concurrent Medical Conditions :", error);
       }
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
+  };
+
+  const resetFormData = () => {
+    setFormData({
+      name: "",
+      added_by: id,
+    });
   };
 
   return (
-    <section className="policy__area pb-40 overflow-hidden p-3">
+    <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
+          
+            {/* Button Container */}
             <div className="d-flex flex-column w-100">
               {/* Success Message */}
               {successMessage && (
@@ -297,6 +321,7 @@ const CountryArea = () => {
                   {successMessage}
                 </div>
               )}
+
               {/* Button Container */}
               <div className="d-flex justify-content-end align-items-center gap-2 w-100">
                 {/* Add Storage Condition Button */}
@@ -304,12 +329,12 @@ const CountryArea = () => {
                   className="btn btn-primary mb-2"
                   onClick={() => setShowAddModal(true)}
                 >
-                  Add Country
+                  Add Concurrent Medical Conditions
                 </button>
 
                 {/* Upload Button (Styled as Label for Hidden Input) */}
                 <label className="btn btn-secondary mb-2">
-                  Upload Country List
+                  Upload Concurrent Medical Conditions List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -321,107 +346,125 @@ const CountryArea = () => {
                 </label>
               </div>
             </div>
-            {/* Table Section */}
-            <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
-                <tr className="text-center">
-  {[
-    { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
-    {
-      label: "Country Name",
-      placeholder: "Search Country Name",
-      field: "name",
-      width: "col-md-3",
-    },
-    {
-      label: "Added By",
-      placeholder: "Search Added by",
-      field: "added_by",
-      width: "col-md-2",
-    },
-    {
-      label: "Created At",
-      placeholder: "Search Created at",
-      field: "created_at",
-      width: "col-md-3",
-    },
-    {
-      label: "Updated At",
-      placeholder: "Search Updated at",
-      field: "updated_at",
-      width: "col-md-4", // Increased width
-    },
-  ].map(({ label, placeholder, field, width }) => (
-    <th key={field} className={`${width} px-2`}>
-      <input
-        type="text"
-        className="form-control w-100 px-2 py-1 mx-auto"
-        placeholder={placeholder}
-        onChange={(e) => handleFilterChange(field, e.target.value)}
-      />
-      {label}
-    </th>
-  ))}
-  <th className="col-md-2">Action</th>
-</tr>
 
+            {/* Table with responsive scroll */}
+            <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
+                    {[
+                      // {
+                      //   label: "ID",
+                      //   placeholder: "Search ID",
+                      //   field: "id",
+                      //   width: "col-md-2",
+                      // },
+                      {
+                        label: "Concurrent Medical Conditions",
+                        placeholder:
+                          "Search Concurrent Medical Conditions",
+                        field: "name",
+                        width: "col-md-1",
+                      },
+                      {
+                        label: "Added By",
+                        placeholder: "Search Added by",
+                        field: "added_by",
+                        width: "col-md-1",
+                      },
+                      {
+                        label: "Created At",
+                        placeholder: "Search Created at",
+                        field: "created_at",
+                        width: "col-md-1",
+                      },
+                      {
+                        label: "Updated At",
+                        placeholder: "Search Updated at",
+                        field: "updated_at",
+                        width: "col-md-1",
+                      },
+                    ].map(({ label, placeholder, field, width }) => (
+                      <th key={field} className={`${width} px-2`}>
+                        <input
+                          type="text"
+                          className="form-control w-100 px-2 py-1 mx-auto"
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
+                        {label}
+                      </th>
+                    ))}
+                    <th className="col-md-1">Action</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {currentData.length > 0 ? (
-                    currentData.map((countryname) => (
-                      <tr key={countryname.id}>
-                        <td>{countryname.id}</td>
-                        <td>{countryname.name}</td>
-                        <td>{countryname.added_by}</td>
-                        <td>{formatDate(countryname.created_at)}</td>
-                        <td>{formatDate(countryname.updated_at)}</td>
-                        <td>
-                          <div className="d-flex justify-content-around gap-2">
-                            <button
-                              className="btn btn-success btn-sm py-0 px-1"
-                              onClick={() => handleEditClick(countryname)}
-                              title="Edit Country" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="xs" />
-                            </button>{" "}
-                            <button
-                              className="btn btn-danger btn-sm py-0 px-1"
-                              onClick={() => {
-                                setselectedcountrynameId(countryname.id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete Country" // This is the text that will appear on hover
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                            <button
-                              className="btn btn-info btn-sm py-0 px-1"
-                              onClick={() =>
-                                handleShowHistory("country", countryname.id)
-                              }
-                              title="History Sample"
-                            >
-                              <FontAwesomeIcon icon={faHistory} size="sm" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    currentData.map(
+                      ({ id, name, added_by, created_at, updated_at }) => (
+                        <tr key={id}>
+                          {/* <td>{id}</td> */}
+                          <td>{name}</td>
+                          <td>{added_by}</td>
+                          <td>{formatDate(created_at)}</td>
+                          <td>{formatDate(updated_at)}</td>
+                          <td>
+                          <div className="d-flex justify-content-center gap-3">
+                              <button
+                                className="btn btn-success btn-sm py-0 px-1"
+                                onClick={() =>
+                                  handleEditClick({
+                                    id,
+                                    name,
+                                    added_by,
+                                    created_at,
+                                    updated_at,
+                                  })
+                                }
+                                title="Edit Concurrent Medical Conditions"
+                              >
+                                <FontAwesomeIcon icon={faEdit} size="xs" />
+                              </button>
+                              <button
+                                className="btn btn-danger btn-sm py-0 px-1"
+                                onClick={() => {
+                                  setSelectedConcurrentMedicalnameId(id);
+                                  setShowDeleteModal(true);
+                                }}
+                                title="Delete Concurrent Medical Conditions"
+                              >
+                                <FontAwesomeIcon icon={faTrash} size="sm" />
+                              </button>
+                              <button
+                                className="btn btn-info btn-sm py-0 px-1"
+                                onClick={() =>
+                                  handleShowHistory(
+                                    "concurrentmedicalconditions",
+                                    id
+                                  )
+                                }
+                                title="History Concurrent Medical Conditions"
+                              >
+                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    )
                   ) : (
                     <tr>
                       <td colSpan="6" className="text-center">
-                        No Country Available
+                        No Concurrent Medical Conditions Available
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
             {/* Pagination Controls */}
             {totalPages >= 0 && (
               <Pagination
@@ -431,7 +474,7 @@ const CountryArea = () => {
               />
             )}
 
-            {/* Modal for Adding countrys */}
+            {/* Modal for Adding Committe members */}
             {(showAddModal || showEditModal) && (
               <>
                 {/* Bootstrap Backdrop with Blur */}
@@ -457,7 +500,9 @@ const CountryArea = () => {
                     <div className="modal-content">
                       <div className="modal-header">
                         <h5 className="modal-title">
-                          {showAddModal ? "Add Country" : "Edit Country"}
+                          {showAddModal
+                            ? "Add Concurrent Medical Conditions"
+                            : "Edit Concurrent Medical Conditions"}
                         </h5>
                         <button
                           type="button"
@@ -465,7 +510,7 @@ const CountryArea = () => {
                           onClick={() => {
                             setShowAddModal(false);
                             setShowEditModal(false);
-                            resetFormData();
+                            resetFormData(); // Reset form data when closing the modal
                           }}
                           style={{
                             fontSize: "1.5rem",
@@ -485,12 +530,12 @@ const CountryArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>Country Name</label>
+                            <label>Concurrent Medical Conditions Name</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="countryname"
-                              value={formData.countryname}
+                              name="name" // Fix here
+                              value={formData.name}
                               onChange={handleInputChange}
                               required
                             />
@@ -499,7 +544,9 @@ const CountryArea = () => {
 
                         <div className="modal-footer">
                           <button type="submit" className="btn btn-primary">
-                            {showAddModal ? "Save" : "Update Country"}
+                            {showAddModal
+                              ? "Save"
+                              : "Update Concurrent Medical Conditions"}
                           </button>
                         </div>
                       </form>
@@ -509,6 +556,68 @@ const CountryArea = () => {
               </>
             )}
 
+            {/* Modal for Deleting cityname */}
+            {showDeleteModal && (
+              <>
+                {/* Bootstrap Backdrop with Blur */}
+                <div
+                  className="modal-backdrop fade show"
+                  style={{ backdropFilter: "blur(5px)" }}
+                ></div>
+
+                {/* Modal Content */}
+                <div
+                  className="modal show d-block"
+                  tabIndex="-1"
+                  role="dialog"
+                  style={{
+                    zIndex: 1050,
+                    position: "fixed",
+                    top: "120px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                      <div
+                        className="modal-header"
+                        style={{ backgroundColor: "transparent" }}
+                      >
+                        <h5 className="modal-title">
+                          Delete Concurrent Medical Conditions
+                        </h5>
+                        <button
+                          type="button"
+                          className="btn-close"
+                          onClick={() => setShowDeleteModal(false)}
+                        ></button>
+                      </div>
+                      <div className="modal-body">
+                        <p>
+                          Are you sure you want to delete this Concurrent
+                          Medical Conditions?
+                        </p>
+                      </div>
+                      <div className="modal-footer">
+                        <button
+                          className="btn btn-danger"
+                          onClick={handleDelete}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => setShowDeleteModal(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             {showHistoryModal && (
               <>
                 {/* Bootstrap Backdrop with Blur */}
@@ -594,8 +703,9 @@ const CountryArea = () => {
                                     textAlign: "left",
                                   }}
                                 >
-                                  <b>Country:</b> {created_name} was{" "}
-                                  <b>added</b> by Registration Admin at{" "}
+                                  <b>Concurrent Medical Condition:</b>{" "}
+                                  {created_name} was <b>added</b> by
+                                  Registration Admin at{" "}
                                   {moment(created_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -616,8 +726,9 @@ const CountryArea = () => {
                                       marginTop: "5px", // Spacing between messages
                                     }}
                                   >
-                                    <b>Country:</b> {updated_name} was{" "}
-                                    <b>updated</b> by Registration Admin at{" "}
+                                    <b>Concurrent Medical Condition:</b>{" "}
+                                    {updated_name} was <b>updated</b> by
+                                    Registration Admin at{" "}
                                     {moment(updated_at).format(
                                       "DD MMM YYYY, h:mm A"
                                     )}
@@ -635,65 +746,6 @@ const CountryArea = () => {
                 </div>
               </>
             )}
-            {/* Edit countryname Modal */}
-
-            {/* Modal for Deleting Countryname */}
-            {showDeleteModal && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
-
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div
-                        className="modal-header"
-                        style={{ backgroundColor: "transparent" }}
-                      >
-                        <h5 className="modal-title">Delete Country</h5>
-                        <button
-                          type="button"
-                          className="btn-close"
-                          onClick={() => setShowDeleteModal(false)}
-                        ></button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this Country?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
           
         </div>
       </div>
@@ -701,4 +753,4 @@ const CountryArea = () => {
   );
 };
 
-export default CountryArea;
+export default ConcurrentMedicalConditionsArea;

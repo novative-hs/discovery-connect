@@ -3,8 +3,8 @@ const mysqlConnection = require("../config/db");
 const createOrderItemTable = () => {
   const OrderItemTable = `
    CREATE TABLE IF NOT EXISTS order_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,  
-    sample_id INT NOT NULL,  
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sample_id VARCHAR(36),  
     price FLOAT NOT NULL,  
     quantity INT NOT NULL,  
     type VARCHAR(255),  

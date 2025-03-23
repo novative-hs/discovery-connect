@@ -5,33 +5,33 @@ import {
   faEdit,
   faTrash,
   faQuestionCircle,
-  faPlus,  faHistory
+  faPlus,
+  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const SampleTypeMatrixArea = () => {
+const QuantityUnitArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on SampleTypeMatrix page is:", id);
+    console.log("account_id on quantityunit page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-   const [showHistoryModal, setShowHistoryModal] = useState(false);
-    const [historyData, setHistoryData] = useState([]);
-  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] =useState(null); // Store ID of Plasma to delete
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  const [selectedquantityunitnameId, setSelectedquantityunitnameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] =
-    useState(null); // State for selected City to edit
-  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
+  const [editquantityunitname, setEditquantityunitname] = useState(null); // State for selected City to edit
+  const [quantityunitname, setquantityunitname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const[filteredSampletypematrixname,setFilteredSampletypematrixname]=useState([])
+  const [filteredQuantityunitname, setFilteredQuantityunitname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -39,32 +39,30 @@ const SampleTypeMatrixArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch ContainerType from backend when component loads
+  // Fetch quantityunit from backend when component loads
   useEffect(() => {
-    fetchSampleTypeMatrixname(); // Call the function when the component mounts
+    fetchQuantityunitname(); // Call the function when the component mounts
   }, []);
-  const fetchSampleTypeMatrixname = async () => {
+  const fetchQuantityunitname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/sampletypematrix`
-      );
-      setFilteredSampletypematrixname(response.data); // Initialize filtered list
-      setSampleTypeMatrixname(response.data); // Store fetched SampleTypeMatrix in state
+      const response = await axios.get(`${url}/samplefields/get-samplefields/quantityunit`);
+      setFilteredQuantityunitname(response.data); // Initialize filtered list
+      setquantityunitname(response.data); // Store fetched City in state
     } catch (error) {
-      console.error("Error fetching Sample Type Matrix :", error);
+      console.error("Error fetching Quantity Unit:", error);
     }
   };
  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredSampletypematrixname.length / itemsPerPage));
+    const pages = Math.max(1, Math.ceil(filteredQuantityunitname.length / itemsPerPage));
     setTotalPages(pages);
     
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSampletypematrixname]);
+  }, [filteredQuantityunitname]);
   
  
-   const currentData = filteredSampletypematrixname.slice(
+   const currentData = filteredQuantityunitname.slice(
      currentPage * itemsPerPage,
      (currentPage + 1) * itemsPerPage
    );
@@ -77,14 +75,14 @@ const SampleTypeMatrixArea = () => {
      let filtered = [];
  
      if (value.trim() === "") {
-       filtered = sampletypematrixname; // Show all if filter is empty
+       filtered = quantityunitname; // Show all if filter is empty
      } else {
-       filtered = sampletypematrixname.filter((sampletypematrix) =>
-        sampletypematrix[field]?.toString().toLowerCase().includes(value.toLowerCase())
+       filtered = quantityunitname.filter((quantityunit) =>
+        quantityunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
        );
      }
  
-     setFilteredSampletypematrixname(filtered);
+     setFilteredQuantityunitname(filtered);
      setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
      setCurrentPage(0); // Reset to first page after filtering
    };
@@ -107,7 +105,6 @@ const SampleTypeMatrixArea = () => {
      setShowHistoryModal(true);
    };
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -122,26 +119,19 @@ const SampleTypeMatrixArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/sampletypematrix`,
+        `${url}/samplefields/post-samplefields/quantityunit`,
         formData
       );
-      console.log("Sample Type Matrix added successfully:", response.data);
-      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
-
-      // Clear success message after 3 seconds
+      console.log("Quantityunit added successfully:", response.data);
+      setSuccessMessage("Quantityunit added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-
-      fetchSampleTypeMatrixname();
-      // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
+      fetchQuantityunitname();
+      resetFormData()
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding SampleTypeMatrix ", error);
+      console.error("Error adding quantityunit:", error);
     }
   };
 
@@ -149,29 +139,27 @@ const SampleTypeMatrixArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
+        `${url}/samplefields/delete-samplefields/quantityunit/${selectedquantityunitnameId}`
       );
       console.log(
-        `Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId} deleted successfully.`
+        `Quantity unit name with ID ${selectedquantityunitnameId} deleted successfully.`
       );
 
       // Set success message
-      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
+      setSuccessMessage("Quantity unit Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      fetchSampleTypeMatrixname();
-
+    fetchQuantityunitname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedSampleTypeMatrixnameId(null);
+      setSelectedquantityunitnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting SampleTypeMatrix  with ID ${selectedSampleTypeMatrixnameId}:`,
+        `Error deleting quantityunit with ID ${selectedquantityunitnameId}:`,
         error
       );
     }
@@ -189,14 +177,14 @@ const SampleTypeMatrixArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
-  const handleEditClick = (sampletypematrix) => {
-    console.log("data in case of update is", sampletypematrix);
+  const handleEditClick = (quantityunitname) => {
+    console.log("data in case of update is", quantityunitname);
 
-    setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
-    setEditSampleTypeMatrixname(sampletypematrix);
+    setSelectedquantityunitnameId(quantityunitname.id);
+    setEditquantityunitname(quantityunitname);
 
     setFormData({
-      name: sampletypematrix.name,
+      name: quantityunitname.name,
       added_by: id,
     });
 
@@ -208,26 +196,22 @@ const SampleTypeMatrixArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
+        `${url}/samplefields/put-samplefields/quantityunit/${selectedquantityunitnameId}`,
         formData
       );
-      console.log(
-        "Sample Type Matrix Name updated successfully:",
-        response.data
-      );
+      console.log("Quantity unit Name updated successfully:", response.data);
 
-      fetchSampleTypeMatrixname();
+      fetchQuantityunitname();
 
       setShowEditModal(false);
-      setSuccessMessage("Sample Type Matrix updated successfully.");
-
+      setSuccessMessage("Quantity unit updated successfully.");
+resetFormData()
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData()
     } catch (error) {
       console.error(
-        `Error updating Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId}:`,
+        `Error updating Quantity unit name with ID ${selectedquantityunitnameId}:`,
         error
       );
     }
@@ -249,7 +233,7 @@ const SampleTypeMatrixArea = () => {
     const file = e.target.files[0];
     if (!file) return;
     console.log("File selected:", file); // Debugging
-
+  
     const reader = new FileReader();
     reader.onload = async (event) => {
       const binaryStr = event.target.result;
@@ -257,31 +241,32 @@ const SampleTypeMatrixArea = () => {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
+  
       // Add 'added_by' field (ensure 'id' is defined in the state)
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
         added_by: id, // Ensure 'id' is defined in the component
       }));
-
+  
       console.log("Data with added_by", dataWithAddedBy);
-
+  
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/sampletypematrix`,
-          { bulkData: dataWithAddedBy }
+          `${url}/samplefields/post-samplefields/quantityunit`,
+          {bulkData: dataWithAddedBy},
         );
-        console.log("Sample Type Matrix added successfully:", response.data);
-
-        fetchSampleTypeMatrixname();
+        console.log("Quantity unit added successfully:", response.data);
+  
+        fetchQuantityunitname();
       } catch (error) {
-        console.error("Error adding Sample Type Matrix :", error);
+        console.error("Error adding Quantity unit:", error);
       }
     };
-
+  
     reader.readAsBinaryString(file);
   };
+  
 
   const resetFormData = () => {
     setFormData({
@@ -294,7 +279,7 @@ const SampleTypeMatrixArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
     <div className="container">
       <div className="row justify-content-center">
-       
+      
               {/* Button Container */}
               <div className="d-flex flex-column w-100">
                 {/* Success Message */}
@@ -309,22 +294,23 @@ const SampleTypeMatrixArea = () => {
 
                 {/* Button Container */}
                 <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Storage Condition Button */}
+                  {/* Add Ethnicity Button */}
                   <button
                     className="btn btn-primary mb-2"
                     onClick={() => setShowAddModal(true)}
                   >
-                    Add Sample Type Matrix
+                    Add Quantity Unit
                   </button>
 
                   {/* Upload Button (Styled as Label for Hidden Input) */}
                   <label className="btn btn-secondary mb-2">
-                    Upload Sample Type Matrix List
+                    Upload Quantity Unit List
                     <input
                       type="file"
                       accept=".xlsx, .xls"
                       style={{ display: "none" }}
                       onChange={(e) => {
+                        console.log("File input change triggered"); // Add this log to see if onChange is called
                         handleFileUpload(e);
                       }}
                     />
@@ -333,54 +319,50 @@ const SampleTypeMatrixArea = () => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
                 <tr className="text-center">
                       {[
-                        { label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
+                        //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                         {
-                          label: "Sample Type Matrix",
-                          placeholder: "Search Sample Type Matrix",
+                          label: "Quantity Unit",
+                          placeholder: "Search Quantity Unit",
                           field: "name",
-                          width: "col-md-4"
+                          width: "col-md-1"
                         },
                         {
                           label: "Added By",
                           placeholder: "Search Added by",
                           field: "added_by",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Created At",
                           placeholder: "Search Created at",
                           field: "created_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Updated At",
                           placeholder: "Search Updated at",
                           field: "updated_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
-                      ].map(({ label, placeholder, field ,width}) => (
+                      ].map(({ label, placeholder, field,width }) => (
                         <th key={field} className={`${width} px-2`}>
-                          <input
-                            type="text"
-                            className="form-control w-100 px-2 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
+                        <input
+                          type="text"
+                          className="form-control w-100 px-2 py-1 mx-auto"
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
                           {label}
                         </th>
                       ))}
-                      <th className="col-md--1">Action</th>
+                      <th className="col-md-1">Action</th>
                     </tr>
                   </thead>
 
@@ -389,13 +371,13 @@ const SampleTypeMatrixArea = () => {
                       currentData.map(
                         ({ id, name, added_by, created_at, updated_at }) => (
                           <tr key={id}>
-                            <td>{id}</td>
+                            {/* <td>{id}</td> */}
                             <td>{name}</td>
                             <td>{added_by}</td>
                             <td>{formatDate(created_at)}</td>
                             <td>{formatDate(updated_at)}</td>
                             <td>
-                              <div className="d-flex justify-content-around gap-2">
+                            <div className="d-flex justify-content-center gap-3">
                                 <button
                                   className="btn btn-success btn-sm py-0 px-1"
                                   onClick={() =>
@@ -407,26 +389,26 @@ const SampleTypeMatrixArea = () => {
                                       updated_at,
                                     })
                                   }
-                                  title="Edit SampleTypeMatrix"
+                                  title="Edit Quantity Unit"
                                 >
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
                                   className="btn btn-danger btn-sm py-0 px-1"
                                   onClick={() => {
-                                    setSelectedSampleTypeMatrixnameId(id);
+                                    setSelectedquantityunitnameId(id);
                                     setShowDeleteModal(true);
                                   }}
-                                  title="Delete Sample Type Matrix"
+                                  title="Delete Quantity Unit"
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
-                                <button
+                                 <button
                                                                                                 className="btn btn-info btn-sm py-0 px-1"
                                                                                                 onClick={() =>
-                                                                                                  handleShowHistory("sampletypematrix", id)
+                                                                                                  handleShowHistory("quantityunit", id)
                                                                                                 }
-                                                                                                title="History Sample type matrix"
+                                                                                                title="History Quantity unit"
                                                                                               >
                                                                                                 <FontAwesomeIcon icon={faHistory} size="sm" />
                                                                                               </button>
@@ -438,7 +420,7 @@ const SampleTypeMatrixArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center">
-                          No Sample Type Matrix Available
+                          No Quantity Unit Available
                         </td>
                       </tr>
                     )}
@@ -481,9 +463,7 @@ const SampleTypeMatrixArea = () => {
                       <div className="modal-content">
                         <div className="modal-header">
                           <h5 className="modal-title">
-                            {showAddModal
-                              ? "Add Sample Type Matrix"
-                              : "Edit Sample Type Matrix"}
+                            {showAddModal ? "Add Ethnicity" : "Edit Ethnicity"}
                           </h5>
                           <button
                             type="button"
@@ -511,7 +491,7 @@ const SampleTypeMatrixArea = () => {
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
-                              <label>Sample Type Matrix Name</label>
+                              <label>Quantity Unit Name</label>
                               <input
                                 type="text"
                                 className="form-control"
@@ -525,9 +505,7 @@ const SampleTypeMatrixArea = () => {
 
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              {showAddModal
-                                ? "Save"
-                                : "Update Sample Type Matrix"}
+                              {showAddModal ? "Save" : "Update Quantity Unit"}
                             </button>
                           </div>
                         </form>
@@ -565,9 +543,7 @@ const SampleTypeMatrixArea = () => {
                           className="modal-header"
                           style={{ backgroundColor: "transparent" }}
                         >
-                          <h5 className="modal-title">
-                            Delete Sample Type Matrix
-                          </h5>
+                          <h5 className="modal-title">Delete Quantity Unit</h5>
                           <button
                             type="button"
                             className="btn-close"
@@ -575,9 +551,7 @@ const SampleTypeMatrixArea = () => {
                           ></button>
                         </div>
                         <div className="modal-body">
-                          <p>
-                            Are you sure you want to delete this Sample Type Matrix?
-                          </p>
+                          <p>Are you sure you want to delete this Quantity Unit?</p>
                         </div>
                         <div className="modal-footer">
                           <button
@@ -684,7 +658,7 @@ const SampleTypeMatrixArea = () => {
                                                                   textAlign: "left",
                                                                 }}
                                                               >
-                                                                <b>Sample Type Matrix:</b> {created_name} was <b>added</b>{" "}
+                                                                <b>Quantity unit:</b> {created_name} was <b>added</b>{" "}
                                                                 by Registration Admin at{" "}
                                                                 {moment(created_at).format(
                                                                   "DD MMM YYYY, h:mm A"
@@ -706,7 +680,7 @@ const SampleTypeMatrixArea = () => {
                                                                     marginTop: "5px", // Spacing between messages
                                                                   }}
                                                                 >
-                                                                  <b>Sample Type Matrix:</b> {updated_name} was{" "}
+                                                                  <b>Quantity unit:</b> {updated_name} was{" "}
                                                                   <b>updated</b> by Registration Admin at{" "}
                                                                   {moment(updated_at).format(
                                                                     "DD MMM YYYY, h:mm A"
@@ -733,4 +707,4 @@ const SampleTypeMatrixArea = () => {
   );
 };
 
-export default SampleTypeMatrixArea;
+export default QuantityUnitArea;

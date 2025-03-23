@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       email VARCHAR(255) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
-      accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'RegistrationAdmin', 'biobank') NOT NULL,
+      accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin','RegistrationAdmin', 'biobank','Committeememeber') NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )`;
@@ -38,6 +38,7 @@ const create_researcherTable = () => {
       nameofOrganization INT,
       logo LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      added_by INT,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (nameofOrganization) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
@@ -160,6 +161,7 @@ const getAccountDetail = (id, callback) => {
       organization.id AS organization_id,
       organization.OrganizationName AS OrganizationName,
       user_account.email AS useraccount_email,
+      user_account.password AS useraccount_password,
       user_account.accountType 
   FROM 
       researcher
@@ -243,7 +245,52 @@ const getAccountDetail = (id, callback) => {
 
           }
         );
-      } else {
+      } 
+      else if (user.accountType === "Committeemember") {
+        const CommitteememberQuery = `
+        SELECT 
+    cm.*,
+   c.id AS cityid,
+      c.name AS cityname,
+      d.id AS districtid,
+      d.name AS districtname,
+      ctr.id AS countryid,
+      ctr.name AS countryname,
+    org.id AS organization_id,
+    org.OrganizationName AS OrganizationName,
+    ua.email AS useraccount_email,
+    ua.accountType
+FROM 
+    committee_member cm
+JOIN 
+    city c ON cm.city = c.id
+JOIN 
+    district d ON cm.district = d.id
+JOIN 
+    country ctr ON cm.country = ctr.id
+JOIN 
+    organization org ON cm.organization = org.id
+LEFT JOIN 
+    user_account ua ON cm.user_account_id = ua.id
+WHERE 
+    cm.user_account_id = ?;
+
+        `;
+
+        mysqlConnection.query(
+          CommitteememberQuery,
+          [user.id],
+          (err, CommitteememberResults) => {
+            if (err) {
+              return callback(err, null); // Pass error to the controller
+            }
+
+            return callback(null, CommitteememberResults); // Return collectiosite info 
+
+          }
+        );
+      } 
+      else {
         // For non-researcher accounts, return the user info
         callback(null, user);
       }
@@ -258,10 +305,13 @@ const updateAccount = (req, callback) => {
   const {
     user_account_id,
     useraccount_email,
+    password,
     accountType,
     ResearcherName,
     OrganizationName,
     CollectionSiteName,
+    CommitteeMemberName,
+    cnic,
     phoneNumber,
     fullAddress,
     city,
@@ -271,6 +321,7 @@ const updateAccount = (req, callback) => {
     type,
     HECPMDCRegistrationNo,
     ntnNumber,
+    committeetype,
     added_by
   } = req.body;
 
@@ -280,6 +331,7 @@ const updateAccount = (req, callback) => {
     // If a file was uploaded, convert it to a buffer
     logo = req.file.buffer;
   }
+  console.log(req.body)
   mysqlConnection.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting database connection:", err);
@@ -319,6 +371,8 @@ const updateAccount = (req, callback) => {
         UPDATE user_account SET email = ? WHERE id = ?
       `;
           const updateUserAccountValues = [useraccount_email, user_account_id];
+          console.log("Updating user_account with:", { useraccount_email, user_account_id });
+
 
           connection.query(
             updateUserAccountQuery,
@@ -365,6 +419,15 @@ const updateAccount = (req, callback) => {
                   `;
                   values = [CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
                   break;
+                  case "Committeemember":
+                  fetchQuery = "SELECT * FROM committee_member WHERE user_account_id = ?";
+                  updateQuery = `
+                    UPDATE committee_member SET 
+                      CommitteeMemberName = ?, cnic=?,phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                      country = ?,organization=?,committeetype=? WHERE user_account_id = ?
+                  `;
+                  values = [CommitteeMemberName, cnic,phoneNumber, fullAddress, city, district, country, OrganizationName,committeetype,user_account_id];
+                  break;
 
                 default:
                   return mysqlConnection.rollback(() => callback(new Error("Invalid account type"), null));
@@ -387,7 +450,7 @@ const updateAccount = (req, callback) => {
                   let organizationID = null;
                   let researcherID = null;
                   let collectionSiteID = null;
-                  
+                  let committeemember_id=null;
                   if (previousData.OrganizationName) {
                     organizationID = previousData.id; // Organization
                   } else if (previousData.ResearcherName) {
@@ -395,25 +458,31 @@ const updateAccount = (req, callback) => {
                   } else if (previousData.CollectionSiteName) {
                     collectionSiteID = previousData.id; // Collection Site
                   }
+                  else if (previousData.CommitteeMemberName) {
+                    committeemember_id = previousData.id; // Committee Member
+                  }
                   
                   const historyQuery = `
-                INSERT INTO history (
-                  email, password, ResearcherName, CollectionSiteName, OrganizationName, 
-                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
-                  fullAddress, city, district, country, logo, added_by, organization_id, 
-                  researcher_id, collectionsite_id, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `;
-
+                    INSERT INTO history (
+                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName, 
+                      HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
+                      fullAddress, city, district, country, logo, added_by, organization_id, 
+                      researcher_id, collectionsite_id, committeemember_id, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  `;
+                  
                   const historyValues = [
                     previousEmail,
                     previousPassword,
                     previousData.ResearcherName || null,
                     previousData.CollectionSiteName || null,
                     previousData.OrganizationName || null,
+                    previousData.CommitteeMemberName || null,
                     previousData.HECPMDCRegistrationNo || null,
+                    previousData.cnic || null,  
+                    previousData.committeetype || null,
                     previousData.ntnNumber || null,
-                    previousData.nameofOrganization || null,
+                    previousData.nameofOrganization ? previousData.nameofOrganization : previousData.organization || null,
                     previousData.type || null,
                     previousData.phoneNumber || null,
                     previousData.fullAddress || null,
@@ -421,17 +490,24 @@ const updateAccount = (req, callback) => {
                     previousData.district || null,
                     previousData.country || null,
                     previousData.logo || null,
-                    previousData.added_by || null, 
+                    previousData.added_by || null,
                     organizationID || null,
                     researcherID || null,
                     collectionSiteID || null,
+                    committeemember_id || null,  // Fix: Correct spelling
                     "updated",
                   ];
-
+                  
                   connection.query(historyQuery, historyValues, (err) => {
-                    if (err) return mysqlConnection.rollback(() => callback(err, null));
-
-                    // If everything is successful, commit the transaction
+                    if (err) {
+                      return connection.rollback(() => {
+                        connection.release();
+                        console.error("Error inserting into history:", err);
+                        callback(err, null);
+                      });
+                    }
+                  
+                    // Commit transaction if successful
                     connection.commit((err) => {
                       if (err) {
                         return connection.rollback(() => {
@@ -445,7 +521,7 @@ const updateAccount = (req, callback) => {
                         message: "Account updated successfully",
                         userId: user_account_id,
                       });
-                    });
+                    });                  
                   });
                 });
               });
@@ -765,6 +841,22 @@ const loginAccount = (data, callback) => {
             return callback({ status: "fail", message: "Account is not approved" }, null);
           }
         });
+      }
+      else if (user.accountType === 'Committeemember') {
+        const CommitteememberQuery =
+          `SELECT status FROM committee_member WHERE user_account_id = ?`;
+
+        mysqlConnection.query(CommitteememberQuery, [user.id], (err, CommitteememberResults) => {
+          if (err) {
+            return callback(err, null); // Pass error to the controller
+          }
+
+          if (CommitteememberResults.length > 0 &&  CommitteememberResults[0].status.toLowerCase() === "active") {
+            return callback(null, user); // Return user info if approved
+          } else {
+            return callback({ status: "fail", message: "Account is not active" }, null);
+          }
+        });
       } else {
         // For non-researcher accounts, return the user info
         callback(null, user);
@@ -786,63 +878,34 @@ const getUserEmail = (id, callback) => {
 };
 
 function changepassword(data, callback) {
-  const tables = [
-    "user_account",
-  ];
+  const table = "user_account"; 
+  const findUserQuery = `SELECT password FROM ${table} WHERE email = ?`;
 
-  const findUserQueries = tables.map(
-    (table) => `SELECT email FROM ${table} WHERE email = ?`
-  );
+  mysqlConnection.query(findUserQuery, [data.email], (err, result) => {
+    if (err) {
+      console.error("Error fetching password:", err);
+      return callback({ status: 500, message: "Database error" }, null);
+    }
+    const dbPassword = result[0].password; 
 
-  const updateQueries = tables.map(
-    (table) => `UPDATE ${table} SET password = ? WHERE email = ?`
-  );
+    if (data.password !== dbPassword) {
+      return callback({ status: 401, message: "Incorrect current password." }, null);
+    }
 
-  // First, find where the user exists
-  Promise.all(
-    findUserQueries.map((query) =>
-      new Promise((resolve, reject) => {
-        mysqlConnection.query(query, [data.email], (err, result) => {
-          if (err) {
-            reject(err);
-          } else if (result.length > 0) {
-            resolve(true); // User exists in this table
-          } else {
-            resolve(false); // User does not exist in this table
-          }
-        });
-      })
-    )
-  )
-    .then((exists) => {
-      const updatePromises = exists
-        .map((existsInTable, index) => {
-          if (existsInTable) {
-            return new Promise((resolve, reject) => {
-              mysqlConnection.query(
-                updateQueries[index],
-                [data.newPassword, data.email],
-                (err) => {
-                  if (err) reject(err);
-                  else resolve();
-                }
-              );
-            });
-          }
-          return Promise.resolve(); // Skip updates for tables where the user doesn't exist
-        })
-        .filter(Boolean); // Remove skipped promises
+    // Step 4: Update the password in the database
+    const updateQuery = `UPDATE ${table} SET password = ? WHERE email = ?`;
 
-      return Promise.all(updatePromises);
-    })
-    .then(() => {
-      callback(null, { message: "Password updated successfully" });
-    })
-    .catch((err) => {
-      console.error("Error updating password:", err);
-      callback({ status: 500, message: "Update error" }, null);
+    mysqlConnection.query(updateQuery, [data.newPassword, data.email], (err) => {
+      if (err) {
+        console.error("Error updating password:", err);
+        return callback({ status: 500, message: "Error updating password" }, null);
+      }
+
+      return callback(null, { message: "Password updated successfully." });
     });
+  });
 }
+
 
 module.exports = {
   changepassword,

@@ -113,6 +113,11 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);
+
+    if (userType === "biobank") {
+      return;
+    }
+
     if (userType === "organization") {
       setActiveTab("update-organization");
     } else if (userType === "researcher") {
@@ -121,6 +126,9 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-collectionsite");
     } else if (userType === "biobank") {
       setActiveTab("update-biobank");
+    } 
+    else if (userType === "committeemember") {
+      setActiveTab("update-committeemember");
     } else {
       setActiveTab("update-profile");
     }
@@ -151,7 +159,7 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Sample List", tab: "samples" },
           { label: "My Samples", tab: "my-samples" },
         ]
-      : userType == "registrationadmin"
+      : userType == "databaseadmin"
       ? [
           { label: "Profile", tab: "order-info" },
           { label: "City", tab: "city" },
@@ -196,6 +204,15 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Sample List", tab: "samples" },
           { label: "Sample Dispatch", tab: "sample-dispatch" },
         ]
+        : userType == "committeemember"
+        ? [
+            { label: "Sample List", tab: "samples" },
+          ]
+          : userType == "registrationadmin"
+        ? [
+          { label: "Profile", tab: "order-info" },
+            { label: "Order List", tab: "order" },
+          ]
       : [];
 
   return (
@@ -300,6 +317,14 @@ const Header = ({ setActiveTab, activeTab }) => {
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
+                  Welcome Registration Admin!
+                </span>
+              )}
+              {userType === "databaseadmin" && (
+                <span
+                  className="text-primary fw-bold fs-6"
+                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+                >
                   Welcome Admin!
                 </span>
               )}
@@ -332,7 +357,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   }`}
                   aria-labelledby="userDropdown"
                 >
-                  {userType !== "registrationadmin" && (
+                  {userType !== "registrationadmin" && userType !== "biobank" && (
                     <li>
                       <button
                         className="dropdown-item fs-7"

@@ -62,18 +62,18 @@ const DashboardArea = () => {
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-      <section className="profile__area pt-180 pb-120">
-        <div className="container mt-n5 w-100">
-          <div className="profile__inner position-relative">
-            <ProfileShapes />
-            <div className="row">
-              <div className="col-xxl-8 col-lg-8 w-100">
-                <div className="profile__tab-content">
-                  {/* Dynamically render content based on activeTab */}
-                  {renderContent()}
-                </div>
-              </div>
+      <section className="profile__area py-2 h-auto d-flex align-items-center my-4">
+        <div className="container profile__inner position-relative">
+          {/* <ProfileShapes /> */}
+          <div className=" row justify-content-center">
+            <div className="col-xl-10 col-lg-7 col-md-9 col-sm-10 col-12">
+            <div
+              className="profile__tab-content mx-auto w-60 p-3 my-1 h-auto"
+             // style={{ backgroundColor: " #EDF4F8" }}
+            >
+              {renderContent()}
             </div>
+          </div>
           </div>
         </div>
       </section>

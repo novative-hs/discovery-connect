@@ -26,7 +26,7 @@ const createCountryTable = () => {
 
 // Function to get all Country members
 const getAllCountries = (callback) => {
-  const query = 'SELECT * FROM country WHERE status = "active"';
+  const query = 'SELECT * FROM country WHERE status = "active" ORDER BY name ASC';
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);

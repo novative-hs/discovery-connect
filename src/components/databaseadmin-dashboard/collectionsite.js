@@ -250,16 +250,12 @@ const CollectionsiteArea = () => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100 p-2">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
-                    <tr className="text-center">
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
-                        { label: "ID", placeholder: "Search ID", field: "id" },
+                       // { label: "ID", placeholder: "Search ID", field: "id" },
                         {
                           label: "Name",
                           placeholder: "Search Name",
@@ -301,7 +297,7 @@ const CollectionsiteArea = () => {
                     {currentData.length > 0 ? (
                       currentData.map((collectionsite) => (
                         <tr key={collectionsite.id}>
-                          <td>{collectionsite.id}</td>
+                          {/* <td>{collectionsite.id}</td> */}
                           <td>{collectionsite.CollectionSiteName}</td>
                           <td>{collectionsite.email}</td>
                           <td>{collectionsite.phoneNumber}</td>

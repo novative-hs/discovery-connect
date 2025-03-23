@@ -2,7 +2,7 @@ const mysqlConnection = require("../config/db");
 const {sendEmail}=require("../config/email");
 // Function to fetch all organizations
 const getAllOrganizations = (callback) => {
-  const query = "SELECT organization.*, user_account.email AS email FROM organization JOIN user_account ON organization.user_account_id = user_account.id";
+  const query = "SELECT organization.*, user_account.email AS email FROM organization JOIN user_account ON organization.user_account_id = user_account.id ORDER BY OrganizationName ASC";
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });
@@ -19,45 +19,50 @@ function getOrganizationById(id, callback) {
 
 // Function to update organization status
 const updateOrganizationStatus = async (id, status) => {
-  return new Promise((resolve, reject) => {
-    const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
+  const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
+  const getEmailQuery = `
+    SELECT ua.email 
+    FROM organization o
+    JOIN user_account ua ON o.user_account_id = ua.id
+    WHERE o.id = ?
+  `;
 
-    mysqlConnection.query(updateQuery, [status, id], (err, results) => {
-      if (err) return reject(err);
-      if (results.affectedRows === 0) {
-        return reject(new Error("No organization found with the given ID."));
-      }
+  try {
+    // Update organization status
+    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    if (updateResult.affectedRows === 0) {
+      throw new Error("No organization found with the given ID.");
+    }
 
-      // Fetch organization's email
-      const getEmailQuery = `SELECT ua.email 
-       FROM organization o
-       JOIN user_account ua ON o.user_account_id = ua.id
-       WHERE o.id = ?`;
-      mysqlConnection.query(getEmailQuery, [id], async (err, emailResults) => {
-        if (err) return reject(err);
-        if (emailResults.length === 0) return reject(new Error("Organization email not found."));
+    // Fetch email in parallel
+    const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
 
-        const email = emailResults[0].email;
+    // Check if email exists
+    if (emailResults.length === 0) {
+      throw new Error("Organization email not found.");
+    }
 
-        let emailText = `Dear Collectionsite,\n\nYour account status is currently pending. 
-        Please wait for approval.\n\nBest regards,\nYour Company`;
+    const email = emailResults[0].email;
+    let emailText = `Dear Organization,\n\nYour account status is currently pending. 
+      Please wait for approval.\n\nBest regards,\nLab Hazir`;
 
-        if (status === "approved") {
-          emailText = `Dear Collectionsite,\n\nYour account has been approved! 
-          You can now log in and access your account.\n\nBest regards,\nYour Company`;
-        }
+    if (status === "approved") {
+      emailText = `Dear Organization,\n\nYour account has been approved! 
+        You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+    }
 
-        try {
-          await sendEmail(email, "Welcome to Discovery Connect", emailText);
-          resolve({ message: "Status updated and email sent" });
-        } catch (emailErr) {
-          console.error("Error sending email:", emailErr);
-          reject(emailErr);
-        }
-      });
-    });
-  });
+    // Send email asynchronously (does not block response)
+    sendEmail(email, "Welcome to Discovery Connect", emailText)
+      .then(() => console.log("Email sent successfully"))
+      .catch((emailErr) => console.error("Error sending email:", emailErr));
+
+    return { message: "Status updated and email sent" };
+  } catch (error) {
+    console.error("Error updating organization status:", error);
+    throw error;
+  }
 };
+
 
 
 const updateOrganization = (data, user_account_id, callback) => {

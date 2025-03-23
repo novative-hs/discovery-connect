@@ -5,35 +5,35 @@ import {
   faEdit,
   faTrash,
   faQuestionCircle,
-  faPlus,
+  faPlus, 
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX from "xlsx";
-const TestResultUnitArea = () => {
+const TestKitManufacturerArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Test ResultUnit page is:", id);
+    console.log("account_id on Test Kit Manufacturer Area page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
-  const [selectedTestResultUnitnameId, setSelectedTestResultUnitnameId] =
-    useState(null); // Store ID of Plasma to delete
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+  const [selectedTestKitManufacturernameId,setSelectedTestKitManufacturernameId,] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestResultUnitname, setEditTestResultUnitname] = useState(null); // State for selected TestMethod to edit
-  const [testResultUnitname, setTestResultUnitname] = useState([]); // State to hold fetched City
+  const [editTestKitManufacturername, setEditTestKitManufacturername] =
+    useState(null); // State for selected TestMethod to edit
+  const [testKitManufacturername, setTestKitManufacturername] = useState([]); // State to hold fetched TestKitManufacturer
   const [successMessage, setSuccessMessage] = useState("");
+  const[filteredTestkitmanufacturer,setFilteredTestkitmanufacturer]=useState([])
   const [currentPage, setCurrentPage] = useState(0);
-  const [filteredTestResultunit, setFilteredTestResultunit] = useState([]);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
@@ -42,76 +42,72 @@ const TestResultUnitArea = () => {
 
   // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    fetchTestResultUnitname(); // Call the function when the component mounts
+    fetchTestKitManufacturername(); // Call the function when the component mounts
   }, []);
-  const fetchTestResultUnitname = async () => {
+  const fetchTestKitManufacturername = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testresultunit`
+        `${url}/samplefields/get-samplefields/testkitmanufacturer`
       );
-      setFilteredTestResultunit(response.data);
-      setTestResultUnitname(response.data); // Store fetched TestMethod in state
+      setFilteredTestkitmanufacturer(response.data); // Initialize filtered list
+      setTestKitManufacturername(response.data); // Store fetched TestMethod in state
     } catch (error) {
-      console.error("Error fetching Test ResultUnit :", error);
+      console.error("Error fetching Test KitManufacturer :", error);
     }
   };
-  useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredTestResultunit.length / itemsPerPage)
-    );
-    setTotalPages(pages);
 
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturer.length / itemsPerPage));
+    setTotalPages(pages);
+    
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestResultunit]);
-
-  const currentData = filteredTestResultunit.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
-
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = testResultUnitname; // Show all if filter is empty
-    } else {
-      filtered = testResultUnitname.filter((testresultUnit) =>
-        testresultUnit[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-    }
-
-    setFilteredTestResultunit(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
-
-  const fetchHistory = async (filterType, id) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
-      const data = await response.json();
-      setHistoryData(data);
-    } catch (error) {
-      console.error("Error fetching history:", error);
-    }
-  };
-
-  // Call this function when opening the modal
-  const handleShowHistory = (filterType, id) => {
-    fetchHistory(filterType, id);
-    setShowHistoryModal(true);
-  };
+  }, [filteredTestkitmanufacturer]);
+  
+ 
+   const currentData = filteredTestkitmanufacturer.slice(
+     currentPage * itemsPerPage,
+     (currentPage + 1) * itemsPerPage
+   );
+ 
+   const handlePageChange = (event) => {
+     setCurrentPage(event.selected);
+   };
+ 
+   const handleFilterChange = (field, value) => {
+     let filtered = [];
+ 
+     if (value.trim() === "") {
+       filtered = testKitManufacturername; // Show all if filter is empty
+     } else {
+       filtered = testKitManufacturername.filter((testkitmanufacturer) =>
+        testkitmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
+       );
+     }
+ 
+     setFilteredTestkitmanufacturer(filtered);
+     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+     setCurrentPage(0); // Reset to first page after filtering
+   };
+ 
+   const fetchHistory = async (filterType, id) => {
+     try {
+       const response = await fetch(
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+       );
+       const data = await response.json();
+       setHistoryData(data);
+     } catch (error) {
+       console.error("Error fetching history:", error);
+     }
+   };
+ 
+   // Call this function when opening the modal
+   const handleShowHistory = (filterType, id) => {
+     fetchHistory(filterType, id);
+     setShowHistoryModal(true);
+   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -127,23 +123,23 @@ const TestResultUnitArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testresultunit`,
+        `${url}/samplefields/post-samplefields/testkitmanufacturer`,
         formData
       );
-      console.log("Test ResultUnit added successfully:", response.data);
-      setSuccessMessage("Test ResultUnit Name deleted successfully.");
+      console.log("Test Kit Manufacturer added successfully:", response.data);
+      setSuccessMessage("Test Kit Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestResultUnitname();
+      fetchTestKitManufacturername();
       // Clear form after submission
-      resetFormData();
+     resetFormData()
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Test ResultUnit ", error);
+      console.error("Error adding Test KitManufacturer ", error);
     }
   };
 
@@ -151,27 +147,28 @@ const TestResultUnitArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`
+        `${url}/samplefields/delete-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`
       );
       console.log(
-        `Test ResultUnit name with ID ${selectedTestResultUnitnameId} deleted successfully.`
+        `Test Kit Manufacturer name with ID ${selectedTestKitManufacturernameId} deleted successfully.`
       );
 
       // Set success message
-      setSuccessMessage("Test ResultUnit Name deleted successfully.");
+      setSuccessMessage("Test Kit Manufacturer  Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestResultUnitname();
+    fetchTestKitManufacturername();
+
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedTestResultUnitnameId(null)
+      setSelectedTestKitManufacturernameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test ResultUnit  with ID ${selectedTestResultUnitnameId}:`,
+        `Error deleting Test KitManufacturer  with ID ${selectedTestKitManufacturernameId}:`,
         error
       );
     }
@@ -187,16 +184,16 @@ const TestResultUnitArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+  }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
-  const handleEditClick = (testResultUnitname) => {
-    console.log("data in case of update is", testResultUnitname);
+  const handleEditClick = (testkitmanufacturername) => {
+    console.log("data in case of update is", testkitmanufacturername);
 
-    setSelectedTestResultUnitnameId(testResultUnitname.id);
-    setEditTestResultUnitname(testResultUnitname);
+    setSelectedTestKitManufacturernameId(testkitmanufacturername.id);
+    setEditTestKitManufacturername(testkitmanufacturername);
 
     setFormData({
-      name: testResultUnitname.name,
+      name: testkitmanufacturername.name,
       added_by: id,
     });
 
@@ -208,23 +205,26 @@ const TestResultUnitArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testresultUnit/${selectedTestResultUnitnameId}`,
+        `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
         formData
       );
-      console.log("Test ResultUnit Name updated successfully:", response.data);
+      console.log(
+        "Test Kit Manufacturer Name updated successfully:",
+        response.data
+      );
 
-      fetchTestResultUnitname();
+      fetchTestKitManufacturername();
 
       setShowEditModal(false);
-      setSuccessMessage("Test ResultUnit updated successfully.");
+      setSuccessMessage("Test Kit Manufacturer updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData()
+      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Test ResultUnit name with ID ${selectedTestResultUnitnameId}:`,
+        `Error updating Test Kit Manufacturer name with ID ${selectedTestKitManufacturernameId}:`,
         error
       );
     }
@@ -266,14 +266,14 @@ const TestResultUnitArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testresultunit`,
+          `${url}/samplefields/post-samplefields/testkitmanufacturer`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Test ResultUnit added successfully:", response.data);
+        console.log("Test Kit Manufacturer added successfully:", response.data);
 
-        fetchTestResultUnitname();
+        fetchTestKitManufacturername();
       } catch (error) {
-        console.error("Error adding Test ResultUnit :", error);
+        console.error("Error adding Test System :", error);
       }
     };
 
@@ -291,7 +291,7 @@ const TestResultUnitArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
     <div className="container">
       <div className="row justify-content-center">
-       
+      
               {/* Button Container */}
               <div className="d-flex flex-column w-100">
                 {/* Success Message */}
@@ -311,12 +311,12 @@ const TestResultUnitArea = () => {
                     className="btn btn-primary mb-2"
                     onClick={() => setShowAddModal(true)}
                   >
-                    Add Test Result Unit
+                    Add Test Kit Manufacturer
                   </button>
 
                   {/* Upload Button (Styled as Label for Hidden Input) */}
                   <label className="btn btn-secondary mb-2">
-                    Upload Test Result Unit List
+                    Upload Test Kit Manufacturer List
                     <input
                       type="file"
                       accept=".xlsx, .xls"
@@ -330,50 +330,47 @@ const TestResultUnitArea = () => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                  <thead className="thead-dark">
-                    <tr className="text-center">
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
-                        { label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                        //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                         {
-                          label: "Test Result Unit",
-                          placeholder: "Search Test Result Unit",
+                          label: "Test Kit Manufacturer",
+                          placeholder: "Search Test KitManufacturer",
                           field: "name",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Added By",
                           placeholder: "Search Added by",
                           field: "added_by",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Created At",
                           placeholder: "Search Created at",
                           field: "created_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Updated At",
                           placeholder: "Search Updated at",
                           field: "updated_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                       ].map(({ label, placeholder, field,width }) => (
                         <th key={field} className={`${width} px-2`}>
-                        <input
-                          type="text"
-                          className="form-control w-100 px-2 py-1 mx-auto"
-                          placeholder={placeholder}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
-                        />
-                        {label}
+                          <input
+                            type="text"
+                            className="form-control w-100 px-2 py-1 mx-auto"
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                          />
+                          {label}
                         </th>
                       ))}
                       <th className="col-md-1">Action</th>
@@ -385,13 +382,13 @@ const TestResultUnitArea = () => {
                       currentData.map(
                         ({ id, name, added_by, created_at, updated_at }) => (
                           <tr key={id}>
-                            <td>{id}</td>
+                            {/* <td>{id}</td> */}
                             <td>{name}</td>
                             <td>{added_by}</td>
                             <td>{formatDate(created_at)}</td>
                             <td>{formatDate(updated_at)}</td>
                             <td>
-                              <div className="d-flex justify-content-around gap-2">
+                            <div className="d-flex justify-content-center gap-3">
                                 <button
                                   className="btn btn-success btn-sm py-0 px-1"
                                   onClick={() =>
@@ -403,26 +400,26 @@ const TestResultUnitArea = () => {
                                       updated_at,
                                     })
                                   }
-                                  title="Edit Test Result Unit"
+                                  title="Edit Test KitManufacturer"
                                 >
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
                                   className="btn btn-danger btn-sm py-0 px-1"
                                   onClick={() => {
-                                    setSelectedTestResultUnitnameId(id);
+                                    setSelectedTestKitManufacturernameId(id);
                                     setShowDeleteModal(true);
                                   }}
-                                  title="Delete Test Result Unit"
+                                  title="Delete Test KitManufacturer"
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
                                 <button
-                                  className="btn btn-info btn-sm py-0 px-1"
+                                  className="btn btn-info btn-sm  py-0 px-1"
                                   onClick={() =>
-                                    handleShowHistory("testresultunit", id)
+                                    handleShowHistory("testkitmanufacturer", id)
                                   }
-                                  title="History Test Result Unit"
+                                  title="History Test kit manufacturer"
                                 >
                                   <FontAwesomeIcon icon={faHistory} size="sm" />
                                 </button>
@@ -434,7 +431,7 @@ const TestResultUnitArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center">
-                          No Test ResultUnit Available
+                          No Test KitManufacturer Available
                         </td>
                       </tr>
                     )}
@@ -478,8 +475,8 @@ const TestResultUnitArea = () => {
                         <div className="modal-header">
                           <h5 className="modal-title">
                             {showAddModal
-                              ? "Add Test Result Unit"
-                              : "Edit Test Result Unit"}
+                              ? "Add Test KitManufacturer"
+                              : "Edit Test KitManufacturer"}
                           </h5>
                           <button
                             type="button"
@@ -507,7 +504,7 @@ const TestResultUnitArea = () => {
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
-                              <label>Test Result Unit Name</label>
+                              <label>Test Kit Manufacturer Name</label>
                               <input
                                 type="text"
                                 className="form-control"
@@ -523,7 +520,7 @@ const TestResultUnitArea = () => {
                             <button type="submit" className="btn btn-primary">
                               {showAddModal
                                 ? "Save"
-                                : "Update Test Result Unit"}
+                                : "Update Test KitManufacturer"}
                             </button>
                           </div>
                         </form>
@@ -562,7 +559,7 @@ const TestResultUnitArea = () => {
                           style={{ backgroundColor: "transparent" }}
                         >
                           <h5 className="modal-title">
-                            Delete Test Result Unit
+                            Delete Test KitManufacturer
                           </h5>
                           <button
                             type="button"
@@ -572,8 +569,8 @@ const TestResultUnitArea = () => {
                         </div>
                         <div className="modal-body">
                           <p>
-                            Are you sure you want to delete this Test Result
-                            Unit?
+                            Are you sure you want to delete this Test
+                            KitManufacturer?
                           </p>
                         </div>
                         <div className="modal-footer">
@@ -681,8 +678,8 @@ const TestResultUnitArea = () => {
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>Test Result Unit:</b> {created_name} was{" "}
-                                    <b>added</b> by Registration Admin at{" "}
+                                    <b>Test Kit Manufacturer:</b> {created_name}{" "}
+                                    was <b>added</b> by Registration Admin at{" "}
                                     {moment(created_at).format(
                                       "DD MMM YYYY, h:mm A"
                                     )}
@@ -703,8 +700,9 @@ const TestResultUnitArea = () => {
                                         marginTop: "5px", // Spacing between messages
                                       }}
                                     >
-                                      <b>Test Result Unit:</b> {updated_name} was{" "}
-                                      <b>updated</b> by Registration Admin at{" "}
+                                      <b>Test Kit Manufacturer:</b>{" "}
+                                      {updated_name} was <b>updated</b> by
+                                      Registration Admin at{" "}
                                       {moment(updated_at).format(
                                         "DD MMM YYYY, h:mm A"
                                       )}
@@ -730,4 +728,4 @@ const TestResultUnitArea = () => {
   );
 };
 
-export default TestResultUnitArea;
+export default TestKitManufacturerArea;

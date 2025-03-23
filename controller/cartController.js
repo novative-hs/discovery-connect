@@ -75,7 +75,14 @@ const deleteSingleCartItem = (req, res) => {
     res.status(200).json({ message: "Cart Item deleted successfully" });
   });
 };
-
+const getAllOrder=(req,res)=>{
+  cartModel.getAllOrder((err,results)=>{
+    if(err){
+      return res.status(500).json({error:"Error fetching cart list"})
+    }
+    res.status(200).json(results);
+  })
+}
 module.exports = {
   createCartTable,
   getAllCart,
@@ -83,5 +90,6 @@ module.exports = {
   createCart,
   updateCard,
   deleteCart,
-  deleteSingleCartItem
+  deleteSingleCartItem,
+  getAllOrder
 };

@@ -13,9 +13,22 @@ const RegistrationAdmin_History = () => {
       city_id INT,
       country_id INT,
       district_id INT,
+      sample_id VARCHAR(36),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive', 'unapproved', 'approved') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      ethnicity_id INT,
+      samplecondition_id INT,
+      storagetemperature_id INT,
+      containertype_id INT,
+      quantityunit_id INT,
+      sampletypematrix_id INT,
+      testmethod_id INT,
+      testresultunit_id INT,
+      concurrentmedicalconditions_id INT,
+      testkitmanufacturer_id INT,
+      testsystem_id INT,
+      testsystemmanufacturer_id INT,
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
@@ -23,7 +36,19 @@ const RegistrationAdmin_History = () => {
       FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
       FOREIGN KEY (city_id) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
-      FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE
+      FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE,
+      FOREIGN KEY (ethnicity_id) REFERENCES ethnicity(id) ON DELETE CASCADE,
+      FOREIGN KEY (samplecondition_id) REFERENCES samplecondition(id) ON DELETE CASCADE,
+      FOREIGN KEY (storagetemperature_id) REFERENCES storagetemperature(id) ON DELETE CASCADE,
+      FOREIGN KEY (containertype_id) REFERENCES containertype(id) ON DELETE CASCADE,
+      FOREIGN KEY (quantityunit_id) REFERENCES quantityunit(id) ON DELETE CASCADE,
+      FOREIGN KEY (sampletypematrix_id) REFERENCES sampletypematrix(id) ON DELETE CASCADE,
+      FOREIGN KEY (testmethod_id) REFERENCES testmethod(id) ON DELETE CASCADE,
+      FOREIGN KEY (testresultunit_id) REFERENCES testresultunit(id) ON DELETE CASCADE,
+      FOREIGN KEY (concurrentmedicalconditions_id) REFERENCES concurrentmedicalconditions(id) ON DELETE CASCADE,
+      FOREIGN KEY (testkitmanufacturer_id) REFERENCES testkitmanufacturer(id) ON DELETE CASCADE,
+      FOREIGN KEY (testsystem_id) REFERENCES testsystem(id) ON DELETE CASCADE,
+      FOREIGN KEY (testsystemmanufacturer_id) REFERENCES testsystemmanufacturer(id) ON DELETE CASCADE
     )`;
 
 
@@ -81,8 +106,11 @@ const create_historyTable = () => {
     password VARCHAR(255),
     ResearcherName VARCHAR(100) NULL,
     CollectionSiteName VARCHAR(100) NULL,
+    CommitteeMemberName VARCHAR(100) NULL,
     OrganizationName VARCHAR(100) NULL,
     HECPMDCRegistrationNo VARCHAR(50),
+    cnic VARCHAR(50),
+    CommitteeType VARCHAR(50),
     ntnNumber VARCHAR(50),
     nameofOrganization INT,
     type VARCHAR(50),
@@ -95,8 +123,9 @@ const create_historyTable = () => {
     logo LONGBLOB,
     organization_id INT,
     collectionsite_id INT,
+    committeemember_id INT,
     researcher_id INT,
-    sample_id BIGINT,
+    sample_id VARCHAR(36),
     added_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -107,6 +136,7 @@ const create_historyTable = () => {
     FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
     FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
+    FOREIGN KEY (committeemember_id) REFERENCES committee_member(id) ON DELETE CASCADE,
     FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
   )`;
@@ -122,21 +152,22 @@ const create_historyTable = () => {
 
 const create_samplehistoryTable = () => {
   const create_historyTable = `
-  CREATE TABLE sample_history (
+  CREATE TABLE IF NOT EXISTS sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sample_id VARCHAR(36) NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
-)`;
+  )`;
 
   mysqlConnection.query(create_historyTable, (err, results) => {
     if (err) {
-      console.error("Error creating Sample History table: ", err);
+      console.error("Error creating Sample History table: ", err); 
     } else {
-      console.log("Sample History table created successfully");
+      console.log("Sample History table created or already exists"); 
     }
   });
-}
+};
+
 
 const getSampleHistory = (sampleId, callback) => {
   const query = `

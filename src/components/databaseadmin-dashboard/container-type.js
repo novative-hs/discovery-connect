@@ -5,112 +5,109 @@ import {
   faEdit,
   faTrash,
   faQuestionCircle,
-  faPlus,  faHistory
+  faPlus,
+  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const TestSystemManufacturerArea = () => {
+const ContainerTypeArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Test System Manufacturer page is:", id);
+    console.log("account_id on Container Type page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showHistoryModal,setShowHistoryModal]=useState(false);
-    const[historyData,setHistoryData]=useState()
-  const [selectedTestSystemManufacturernameId, setSelectedTestSystemManufacturernameId] =useState(null); // Store ID of Plasma to delete
+  const [selectedContainerTypenameId, setSelectedContainerTypenameId] =useState(null); // Store ID of ContainerType to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestSystemManufacturername, setEditTestSystemManufacturername] =
-    useState(null); // State for selected TestMethod to edit
-  const [testsystemmanufacturername, setTestSystemManufacturername] = useState([]); // State to hold fetched City
+  const [editContainerTypename, setEditContainerTypename] =
+    useState(null); // State for selected City to edit
+  const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestSystemmanufacturer,setFilteredTestSystemmanufacturer]=useState([])
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
   // Calculate total pages
-  const [totalPages,setTotalPages] = useState(0)
+   const [filteredContainertypename, setFilteredContainertypename] = useState([]); // Store filtered cities
+    const [currentPage, setCurrentPage] = useState(0);
+    const itemsPerPage = 10;
+    // Calculate total pages
+    const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // Fetch ContainerType from backend when component loads
   useEffect(() => {
-    fetchTestSystemManufacturername(); // Call the function when the component mounts
+    fetchContainerTypename(); // Call the function when the component mounts
   }, []);
-  const fetchTestSystemManufacturername = async () => {
+  const fetchContainerTypename = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testsystemmanufacturer`
+        `${url}/samplefields/get-samplefields/containertype`
       );
-      setFilteredTestSystemmanufacturer(response.data);
-      setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
+      setFilteredContainertypename(response.data); // Initialize filtered list
+      setContainerTypename(response.data); // Store fetched ContainerType in state
     } catch (error) {
-      console.error("Error fetching Test System :", error);
+      console.error("Error fetching Container Type :", error);
     }
   };
-useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredTestSystemmanufacturer.length / itemsPerPage)
-    );
+ useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredContainertypename.length / itemsPerPage));
     setTotalPages(pages);
-
+    
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestSystemmanufacturer]);
-
-  const currentData = filteredTestSystemmanufacturer.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
-
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = testsystemmanufacturername; // Show all if filter is empty
-    } else {
-      filtered = testsystemmanufacturername.filter((testsystemmanufacturer) =>
-        testsystemmanufacturer[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-    }
-
-    setFilteredTestSystemmanufacturer(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
-
-  const fetchHistory = async (filterType, id) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
-      const data = await response.json();
-      setHistoryData(data);
-    } catch (error) {
-      console.error("Error fetching history:", error);
-    }
-  };
-
-  // Call this function when opening the modal
-  const handleShowHistory = (filterType, id) => {
-    fetchHistory(filterType, id);
-    setShowHistoryModal(true);
-  };
+  }, [filteredContainertypename]);
+  
+ 
+   const currentData = filteredContainertypename.slice(
+     currentPage * itemsPerPage,
+     (currentPage + 1) * itemsPerPage
+   );
+ 
+   const handlePageChange = (event) => {
+     setCurrentPage(event.selected);
+   };
+ 
+   const handleFilterChange = (field, value) => {
+     let filtered = [];
+ 
+     if (value.trim() === "") {
+       filtered = containertypename; // Show all if filter is empty
+     } else {
+       filtered = containertypename.filter((containertype) =>
+        containertype[field]?.toString().toLowerCase().includes(value.toLowerCase())
+       );
+     }
+ 
+     setFilteredContainertypename(filtered);
+     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+     setCurrentPage(0); // Reset to first page after filtering
+   };
+ 
+   const fetchHistory = async (filterType, id) => {
+     try {
+       const response = await fetch(
+         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+       );
+       const data = await response.json();
+       setHistoryData(data);
+     } catch (error) {
+       console.error("Error fetching history:", error);
+     }
+   };
+ 
+   // Call this function when opening the modal
+   const handleShowHistory = (filterType, id) => {
+     fetchHistory(filterType, id);
+     setShowHistoryModal(true);
+   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -126,23 +123,26 @@ useEffect(() => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
+        `${url}/samplefields/post-samplefields/containertype`,
         formData
       );
-      console.log("Test System Manufacturer added successfully:", response.data);
-      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
+      console.log("Container Type  added successfully:", response.data);
+      setSuccessMessage("Container Type  Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestSystemManufacturername();
+      fetchContainerTypename();
       // Clear form after submission
-      resetFormData()
+      setFormData({
+        name: "",
+        added_by: id,
+      });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Test System Manufacturer", error);
+      console.error("Error adding ContainerType ", error);
     }
   };
 
@@ -150,27 +150,28 @@ useEffect(() => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`
+        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
       );
       console.log(
-        `Test System Manufacturer name with ID ${selectedTestSystemManufacturernameId} deleted successfully.`
+        `ContainerType name with ID ${selectedContainerTypenameId} deleted successfully.`
       );
 
       // Set success message
-      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
+      setSuccessMessage("Container Type Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-     fetchTestSystemManufacturername()
+    fetchContainerTypename();
+
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedTestSystemManufacturernameId(null);
+      setSelectedContainerTypenameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test System Manufacturer with ID ${selectedTestSystemManufacturernameId}:`,
+        `Error deleting Container Type with ID ${selectedContainerTypenameId}:`,
         error
       );
     }
@@ -188,14 +189,14 @@ useEffect(() => {
     }
   }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
-  const handleEditClick = (testsystemmanufacturername) => {
-    console.log("data in case of update is", testsystemmanufacturername);
+  const handleEditClick = (containertypename) => {
+    console.log("data in case of update is", containertypename);
 
-    setSelectedTestSystemManufacturernameId(testsystemmanufacturername.id);
-    setEditTestSystemManufacturername(testsystemmanufacturername);
+    setSelectedContainerTypenameId(containertypename.id);
+    setEditContainerTypename(containertypename);
 
     setFormData({
-      name: testsystemmanufacturername.name,
+      name: containertypename.name,
       added_by: id,
     });
 
@@ -207,26 +208,25 @@ useEffect(() => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`,
+        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
         formData
       );
       console.log(
-        "Test System Manufacturer Name updated successfully:",
+        "ContainerType Name updated successfully:",
         response.data
       );
 
-      fetchTestSystemManufacturername();
+      fetchContainerTypename();
 
       setShowEditModal(false);
-      setSuccessMessage("Test System Manufacturer updated successfully.");
-
+      setSuccessMessage("Container Type updated successfully.");
+resetFormData()
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData()
     } catch (error) {
       console.error(
-        `Error updating Test System Manufacturer name with ID ${selectedTestSystemManufacturernameId}:`,
+        `Error updating Container Type name with ID ${selectedContainerTypenameId}:`,
         error
       );
     }
@@ -268,14 +268,14 @@ useEffect(() => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
+          `${url}/samplefields/post-samplefields/containertype`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Test System Manufacturer added successfully:", response.data);
+        console.log("Container Type added successfully:", response.data);
 
-        fetchTestSystemManufacturername();
+        fetchContainerTypename();
       } catch (error) {
-        console.error("Error adding Test System  Manufacturer:", error);
+        console.error("Error adding Container Type:", error);
       }
     };
 
@@ -284,8 +284,8 @@ useEffect(() => {
 
   const resetFormData = () => {
     setFormData({
-      testsystemmanufacturername: "",
-      added_by:id,
+      name: "",
+      added_by: id,
     });
   };
 
@@ -313,12 +313,12 @@ useEffect(() => {
                     className="btn btn-primary mb-2"
                     onClick={() => setShowAddModal(true)}
                   >
-                    Add Test System Manufacturer
+                    Add Container Type
                   </button>
 
                   {/* Upload Button (Styled as Label for Hidden Input) */}
                   <label className="btn btn-secondary mb-2">
-                    Upload Test System Manufacturer List
+                    Upload Container Type List
                     <input
                       type="file"
                       accept=".xlsx, .xls"
@@ -332,41 +332,37 @@ useEffect(() => {
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                  <thead className="thead-dark">
-                    <tr className="text-center">
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
-                        { label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                        //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                         {
-                          label: "Test System Manufacturer",
-                          placeholder: "Search Test System Manufacturer",
+                          label: "Container Type",
+                          placeholder: "Search Container Type",
                           field: "name",
-                          width: "col-md-4"
+                          width: "col-md-1"
                         },
                         {
                           label: "Added By",
                           placeholder: "Search Added by",
                           field: "added_by",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
-
                         {
                           label: "Created At",
                           placeholder: "Search Created at",
                           field: "created_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Updated At",
                           placeholder: "Search Updated at",
                           field: "updated_at",
-                          width: "col-md-3"
+                          width: "col-md-1"
                         },
-                      ].map(({ label, placeholder, field ,width}) => (
+                      ].map(({ label, placeholder, field,width }) => (
                         <th key={field} className={`${width} px-2`}>
                           <input
                             type="text"
@@ -379,7 +375,7 @@ useEffect(() => {
                           {label}
                         </th>
                       ))}
-                      <th className="col-1">Action</th>
+                      <th className="col-md-1">Action</th>
                     </tr>
                   </thead>
 
@@ -388,13 +384,13 @@ useEffect(() => {
                       currentData.map(
                         ({ id, name, added_by, created_at, updated_at }) => (
                           <tr key={id}>
-                            <td>{id}</td>
+                            {/* <td>{id}</td> */}
                             <td>{name}</td>
                             <td>{added_by}</td>
                             <td>{formatDate(created_at)}</td>
                             <td>{formatDate(updated_at)}</td>
                             <td>
-                              <div className="d-flex justify-content-around gap-2">
+                            <div className="d-flex justify-content-center gap-3">
                                 <button
                                   className="btn btn-success btn-sm py-0 px-1"
                                   onClick={() =>
@@ -406,29 +402,29 @@ useEffect(() => {
                                       updated_at,
                                     })
                                   }
-                                  title="Edit Test System Manufacturer"
+                                  title="Edit ContainerType"
                                 >
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
                                   className="btn btn-danger btn-sm py-0 px-1"
                                   onClick={() => {
-                                    setSelectedTestSystemManufacturernameId(id);
+                                    setSelectedContainerTypenameId(id);
                                     setShowDeleteModal(true);
                                   }}
-                                  title="Delete Test System Manufacturer"
+                                  title="Delete Container Type"
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
-                                 <button
-                                                                                                  className="btn btn-info btn-sm"
-                                                                                                  onClick={() =>
-                                                                                                    handleShowHistory("testsystemmanufacturer", id)
-                                                                                                  }
-                                                                                                  title="History Test System Maufacturer"
-                                                                                                >
-                                                                                                  <FontAwesomeIcon icon={faHistory} size="sm" />
-                                                                                                </button>
+                                <button
+                                                                                                className="btn btn-info btn-sm py-0 px-1"
+                                                                                                onClick={() =>
+                                                                                                  handleShowHistory("containertype", id)
+                                                                                                }
+                                                                                                title="History Container Type"
+                                                                                              >
+                                                                                                <FontAwesomeIcon icon={faHistory} size="sm" />
+                                                                                              </button>
                               </div>
                             </td>
                           </tr>
@@ -437,7 +433,7 @@ useEffect(() => {
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center">
-                          No Test System Manufacturer Available
+                          No Container Type Available
                         </td>
                       </tr>
                     )}
@@ -446,13 +442,15 @@ useEffect(() => {
               </div>
 
               {/* Pagination Controls */}
-              {totalPages >= 0 && (
-                <Pagination
-                  handlePageClick={handlePageChange}
-                  pageCount={totalPages}
-                  focusPage={currentPage}
-                />
-              )}
+              { totalPages >=0 && (
+  <Pagination
+    handlePageClick={handlePageChange}
+    pageCount={totalPages}
+    focusPage={currentPage}
+  />
+)}
+
+
               {/* Modal for Adding Committe members */}
               {(showAddModal || showEditModal) && (
                 <>
@@ -480,8 +478,8 @@ useEffect(() => {
                         <div className="modal-header">
                           <h5 className="modal-title">
                             {showAddModal
-                              ? "Add Test System Manufacturer"
-                              : "Edit Test System Manufacturer"}
+                              ? "Add Container Type"
+                              : "Edit Container Type"}
                           </h5>
                           <button
                             type="button"
@@ -509,7 +507,7 @@ useEffect(() => {
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
-                              <label>Test System Manufacturer Name</label>
+                              <label>Container Type Name</label>
                               <input
                                 type="text"
                                 className="form-control"
@@ -525,7 +523,7 @@ useEffect(() => {
                             <button type="submit" className="btn btn-primary">
                               {showAddModal
                                 ? "Save"
-                                : "Update Test System Manufacturer"}
+                                : "Update Container Type"}
                             </button>
                           </div>
                         </form>
@@ -564,7 +562,7 @@ useEffect(() => {
                           style={{ backgroundColor: "transparent" }}
                         >
                           <h5 className="modal-title">
-                            Delete Test System Manufacturer
+                            Delete Container Type
                           </h5>
                           <button
                             type="button"
@@ -574,7 +572,7 @@ useEffect(() => {
                         </div>
                         <div className="modal-body">
                           <p>
-                            Are you sure you want to delete this Test System Manufacturer?
+                            Are you sure you want to delete this Container Type?
                           </p>
                         </div>
                         <div className="modal-footer">
@@ -596,7 +594,7 @@ useEffect(() => {
                   </div>
                 </>
               )}
-               {showHistoryModal && (
+              {showHistoryModal && (
                                             <>
                                               {/* Bootstrap Backdrop with Blur */}
                                               <div
@@ -682,8 +680,8 @@ useEffect(() => {
                                                                   textAlign: "left",
                                                                 }}
                                                               >
-                                                                <b>Test System Manufacturer:</b> {created_name} was{" "}
-                                                                <b>added</b> by Registration Admin at{" "}
+                                                                <b>Container type:</b> {created_name} was <b>added</b>{" "}
+                                                                by Registration Admin at{" "}
                                                                 {moment(created_at).format(
                                                                   "DD MMM YYYY, h:mm A"
                                                                 )}
@@ -704,7 +702,7 @@ useEffect(() => {
                                                                     marginTop: "5px", // Spacing between messages
                                                                   }}
                                                                 >
-                                                                  <b>Test System Manufacturer:</b> {updated_name} was{" "}
+                                                                  <b>Container type:</b> {updated_name} was{" "}
                                                                   <b>updated</b> by Registration Admin at{" "}
                                                                   {moment(updated_at).format(
                                                                     "DD MMM YYYY, h:mm A"
@@ -731,4 +729,4 @@ useEffect(() => {
   );
 };
 
-export default TestSystemManufacturerArea;
+export default ContainerTypeArea;

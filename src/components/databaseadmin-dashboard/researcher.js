@@ -175,7 +175,7 @@ const ResearcherArea = () => {
   }, [showDeleteModal, showEditModal, showHistoryModal]);
 
   return (
-    <section className="policy__area pb-40 overflow-hidden p-3">
+    <section className="policy__area pb-40 overflow-hidden p-4">
     <div className="container">
       <div className="row justify-content-center">
        
@@ -215,11 +215,11 @@ const ResearcherArea = () => {
 
               {/* Table */}
               <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
-                    <tr className="text-center">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
-                        { label: "ID", placeholder: "Search ID", field: "id" },
+                        //{ label: "ID", placeholder: "Search ID", field: "id" },
                         {
                           label: "Name",
                           placeholder: "Search Name",
@@ -246,22 +246,17 @@ const ResearcherArea = () => {
                           field: "status",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th
-                          key={field}
-                          className="px-3 align-middle"
-                          style={{ minWidth: "150px" }}
-                        >
-                          <div className="d-flex flex-column">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm w-100 px-2 py-1 mx-auto"
-                              placeholder={placeholder}
-                              onChange={(e) =>
-                                handleFilterChange(field, e.target.value)
-                              }
-                            />
-                            <small className="fw-bold">{label}</small>
-                          </div>
+                        <th key={field} className="col-md-1 px-2">
+                         
+                         <input
+                        type="text"
+                        className="form-control w-100 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
+                      />
+                            {label}
                         </th>
                       ))}
                       <th className="col-1">Action</th>
@@ -271,7 +266,7 @@ const ResearcherArea = () => {
                     {currentData.length > 0 ? (
                       currentData.map((researcher) => (
                         <tr key={researcher.id}>
-                          <td>{researcher.id}</td>
+                          {/* <td>{researcher.id}</td> */}
                           <td>{researcher.ResearcherName}</td>
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>
@@ -280,13 +275,13 @@ const ResearcherArea = () => {
                           <td>
                             <div className="d-flex justify-content-around gap-2">
                               <button
-                                className="btn btn-success btn-sm"
+                                className="btn btn-success btn-sm py-0 px-1"
                                 onClick={() => handleEditClick(researcher)}
                               >
                                 <FontAwesomeIcon icon={faEdit} />
                               </button>
                               <button
-                                className="btn btn-danger btn-sm"
+                                className="btn btn-danger btn-sm py-0 px-1"
                                 onClick={() => {
                                   setSelectedResearcherId(researcher.id);
                                   setShowDeleteModal(true);
@@ -295,7 +290,7 @@ const ResearcherArea = () => {
                                 <FontAwesomeIcon icon={faTrash} />
                               </button>
                               <button
-                                className="btn btn-info btn-sm"
+                                className="btn btn-info btn-sm py-0 px-1"
                                 onClick={() =>
                                   handleShowHistory("resaercher", researcher.id)
                                 }

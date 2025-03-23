@@ -5,68 +5,66 @@ import {
   faEdit,
   faTrash,
   faQuestionCircle,
-  faPlus,
-  faHistory
+  faPlus,  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const ContainerTypeArea = () => {
+const SampleTypeMatrixArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Container Type page is:", id);
+    console.log("account_id on SampleTypeMatrix page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedContainerTypenameId, setSelectedContainerTypenameId] =useState(null); // Store ID of ContainerType to delete
+   const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] =useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editContainerTypename, setEditContainerTypename] =
+  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] =
     useState(null); // State for selected City to edit
-  const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
+  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-    const [historyData, setHistoryData] = useState([]);
+  const[filteredSampletypematrixname,setFilteredSampletypematrixname]=useState([])
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   // Calculate total pages
-   const [filteredContainertypename, setFilteredContainertypename] = useState([]); // Store filtered cities
-    const [currentPage, setCurrentPage] = useState(0);
-    const itemsPerPage = 10;
-    // Calculate total pages
-    const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch ContainerType from backend when component loads
   useEffect(() => {
-    fetchContainerTypename(); // Call the function when the component mounts
+    fetchSampleTypeMatrixname(); // Call the function when the component mounts
   }, []);
-  const fetchContainerTypename = async () => {
+  const fetchSampleTypeMatrixname = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/containertype`
+        `${url}/samplefields/get-samplefields/sampletypematrix`
       );
-      setFilteredContainertypename(response.data); // Initialize filtered list
-      setContainerTypename(response.data); // Store fetched ContainerType in state
+      setFilteredSampletypematrixname(response.data); // Initialize filtered list
+      setSampleTypeMatrixname(response.data); // Store fetched SampleTypeMatrix in state
     } catch (error) {
-      console.error("Error fetching Container Type :", error);
+      console.error("Error fetching Sample Type Matrix :", error);
     }
   };
  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredContainertypename.length / itemsPerPage));
+    const pages = Math.max(1, Math.ceil(filteredSampletypematrixname.length / itemsPerPage));
     setTotalPages(pages);
     
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredContainertypename]);
+  }, [filteredSampletypematrixname]);
   
  
-   const currentData = filteredContainertypename.slice(
+   const currentData = filteredSampletypematrixname.slice(
      currentPage * itemsPerPage,
      (currentPage + 1) * itemsPerPage
    );
@@ -79,14 +77,14 @@ const ContainerTypeArea = () => {
      let filtered = [];
  
      if (value.trim() === "") {
-       filtered = containertypename; // Show all if filter is empty
+       filtered = sampletypematrixname; // Show all if filter is empty
      } else {
-       filtered = containertypename.filter((containertype) =>
-        containertype[field]?.toString().toLowerCase().includes(value.toLowerCase())
+       filtered = sampletypematrixname.filter((sampletypematrix) =>
+        sampletypematrix[field]?.toString().toLowerCase().includes(value.toLowerCase())
        );
      }
  
-     setFilteredContainertypename(filtered);
+     setFilteredSampletypematrixname(filtered);
      setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
      setCurrentPage(0); // Reset to first page after filtering
    };
@@ -109,6 +107,7 @@ const ContainerTypeArea = () => {
      setShowHistoryModal(true);
    };
 
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -123,18 +122,18 @@ const ContainerTypeArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/containertype`,
+        `${url}/samplefields/post-samplefields/sampletypematrix`,
         formData
       );
-      console.log("Container Type  added successfully:", response.data);
-      setSuccessMessage("Container Type  Name deleted successfully.");
+      console.log("Sample Type Matrix added successfully:", response.data);
+      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchContainerTypename();
+      fetchSampleTypeMatrixname();
       // Clear form after submission
       setFormData({
         name: "",
@@ -142,7 +141,7 @@ const ContainerTypeArea = () => {
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding ContainerType ", error);
+      console.error("Error adding SampleTypeMatrix ", error);
     }
   };
 
@@ -150,35 +149,36 @@ const ContainerTypeArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
+        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
       );
       console.log(
-        `ContainerType name with ID ${selectedContainerTypenameId} deleted successfully.`
+        `Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId} deleted successfully.`
       );
 
       // Set success message
-      setSuccessMessage("Container Type Name deleted successfully.");
+      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-    fetchContainerTypename();
+      // Refresh the cityname list after deletion
+      fetchSampleTypeMatrixname();
 
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedContainerTypenameId(null);
+      setSelectedSampleTypeMatrixnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Container Type with ID ${selectedContainerTypenameId}:`,
+        `Error deleting SampleTypeMatrix  with ID ${selectedSampleTypeMatrixnameId}:`,
         error
       );
     }
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal ||showHistoryModal) {
+    if (showDeleteModal || showAddModal || showEditModal|| showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -189,14 +189,14 @@ const ContainerTypeArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
-  const handleEditClick = (containertypename) => {
-    console.log("data in case of update is", containertypename);
+  const handleEditClick = (sampletypematrix) => {
+    console.log("data in case of update is", sampletypematrix);
 
-    setSelectedContainerTypenameId(containertypename.id);
-    setEditContainerTypename(containertypename);
+    setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
+    setEditSampleTypeMatrixname(sampletypematrix);
 
     setFormData({
-      name: containertypename.name,
+      name: sampletypematrix.name,
       added_by: id,
     });
 
@@ -208,25 +208,26 @@ const ContainerTypeArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
+        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
         formData
       );
       console.log(
-        "ContainerType Name updated successfully:",
+        "Sample Type Matrix Name updated successfully:",
         response.data
       );
 
-      fetchContainerTypename();
+      fetchSampleTypeMatrixname();
 
       setShowEditModal(false);
-      setSuccessMessage("Container Type updated successfully.");
-resetFormData()
+      setSuccessMessage("Sample Type Matrix updated successfully.");
+
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      resetFormData()
     } catch (error) {
       console.error(
-        `Error updating Container Type name with ID ${selectedContainerTypenameId}:`,
+        `Error updating Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId}:`,
         error
       );
     }
@@ -268,14 +269,14 @@ resetFormData()
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/containertype`,
+          `${url}/samplefields/post-samplefields/sampletypematrix`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Container Type added successfully:", response.data);
+        console.log("Sample Type Matrix added successfully:", response.data);
 
-        fetchContainerTypename();
+        fetchSampleTypeMatrixname();
       } catch (error) {
-        console.error("Error adding Container Type:", error);
+        console.error("Error adding Sample Type Matrix :", error);
       }
     };
 
@@ -313,12 +314,12 @@ resetFormData()
                     className="btn btn-primary mb-2"
                     onClick={() => setShowAddModal(true)}
                   >
-                    Add Container Type
+                    Add Sample Type Matrix
                   </button>
 
                   {/* Upload Button (Styled as Label for Hidden Input) */}
                   <label className="btn btn-secondary mb-2">
-                    Upload Container Type List
+                    Upload Sample Type Matrix List
                     <input
                       type="file"
                       accept=".xlsx, .xls"
@@ -332,41 +333,37 @@ resetFormData()
               </div>
 
               {/* Table with responsive scroll */}
-              <div className="table-responsive overflow-auto w-100">
-              {" "}
-              {/* Increased width & scrolling */}
-              <table className="table table-bordered table-hover table-striped w-100">
-                {" "}
-                {/* Added w-100 */}
-                <thead className="thead-dark">
-                    <tr className="text-center">
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
                       {[
-                        { label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
+                        //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                         {
-                          label: "Container Type",
-                          placeholder: "Search Container Type",
+                          label: "Sample Type Matrix",
+                          placeholder: "Search Sample Type Matrix",
                           field: "name",
-                          width: "col-md-3"
+                          width: "col-md-1"
                         },
                         {
                           label: "Added By",
                           placeholder: "Search Added by",
                           field: "added_by",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Created At",
                           placeholder: "Search Created at",
                           field: "created_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
                         {
                           label: "Updated At",
                           placeholder: "Search Updated at",
                           field: "updated_at",
-                          width: "col-md-2"
+                          width: "col-md-1"
                         },
-                      ].map(({ label, placeholder, field,width }) => (
+                      ].map(({ label, placeholder, field ,width}) => (
                         <th key={field} className={`${width} px-2`}>
                           <input
                             type="text"
@@ -388,13 +385,13 @@ resetFormData()
                       currentData.map(
                         ({ id, name, added_by, created_at, updated_at }) => (
                           <tr key={id}>
-                            <td>{id}</td>
+                            {/* <td>{id}</td> */}
                             <td>{name}</td>
                             <td>{added_by}</td>
                             <td>{formatDate(created_at)}</td>
                             <td>{formatDate(updated_at)}</td>
                             <td>
-                              <div className="d-flex justify-content-around gap-2">
+                            <div className="d-flex justify-content-center gap-3">
                                 <button
                                   className="btn btn-success btn-sm py-0 px-1"
                                   onClick={() =>
@@ -406,26 +403,26 @@ resetFormData()
                                       updated_at,
                                     })
                                   }
-                                  title="Edit ContainerType"
+                                  title="Edit SampleTypeMatrix"
                                 >
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
                                   className="btn btn-danger btn-sm py-0 px-1"
                                   onClick={() => {
-                                    setSelectedContainerTypenameId(id);
+                                    setSelectedSampleTypeMatrixnameId(id);
                                     setShowDeleteModal(true);
                                   }}
-                                  title="Delete Container Type"
+                                  title="Delete Sample Type Matrix"
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
                                 <button
                                                                                                 className="btn btn-info btn-sm py-0 px-1"
                                                                                                 onClick={() =>
-                                                                                                  handleShowHistory("containertype", id)
+                                                                                                  handleShowHistory("sampletypematrix", id)
                                                                                                 }
-                                                                                                title="History Container Type"
+                                                                                                title="History Sample type matrix"
                                                                                               >
                                                                                                 <FontAwesomeIcon icon={faHistory} size="sm" />
                                                                                               </button>
@@ -437,7 +434,7 @@ resetFormData()
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center">
-                          No Container Type Available
+                          No Sample Type Matrix Available
                         </td>
                       </tr>
                     )}
@@ -453,7 +450,6 @@ resetFormData()
     focusPage={currentPage}
   />
 )}
-
 
               {/* Modal for Adding Committe members */}
               {(showAddModal || showEditModal) && (
@@ -482,8 +478,8 @@ resetFormData()
                         <div className="modal-header">
                           <h5 className="modal-title">
                             {showAddModal
-                              ? "Add Container Type"
-                              : "Edit Container Type"}
+                              ? "Add Sample Type Matrix"
+                              : "Edit Sample Type Matrix"}
                           </h5>
                           <button
                             type="button"
@@ -511,7 +507,7 @@ resetFormData()
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
-                              <label>Container Type Name</label>
+                              <label>Sample Type Matrix Name</label>
                               <input
                                 type="text"
                                 className="form-control"
@@ -527,7 +523,7 @@ resetFormData()
                             <button type="submit" className="btn btn-primary">
                               {showAddModal
                                 ? "Save"
-                                : "Update Container Type"}
+                                : "Update Sample Type Matrix"}
                             </button>
                           </div>
                         </form>
@@ -566,7 +562,7 @@ resetFormData()
                           style={{ backgroundColor: "transparent" }}
                         >
                           <h5 className="modal-title">
-                            Delete Container Type
+                            Delete Sample Type Matrix
                           </h5>
                           <button
                             type="button"
@@ -576,7 +572,7 @@ resetFormData()
                         </div>
                         <div className="modal-body">
                           <p>
-                            Are you sure you want to delete this Container Type?
+                            Are you sure you want to delete this Sample Type Matrix?
                           </p>
                         </div>
                         <div className="modal-footer">
@@ -598,7 +594,7 @@ resetFormData()
                   </div>
                 </>
               )}
-              {showHistoryModal && (
+               {showHistoryModal && (
                                             <>
                                               {/* Bootstrap Backdrop with Blur */}
                                               <div
@@ -684,7 +680,7 @@ resetFormData()
                                                                   textAlign: "left",
                                                                 }}
                                                               >
-                                                                <b>Container type:</b> {created_name} was <b>added</b>{" "}
+                                                                <b>Sample Type Matrix:</b> {created_name} was <b>added</b>{" "}
                                                                 by Registration Admin at{" "}
                                                                 {moment(created_at).format(
                                                                   "DD MMM YYYY, h:mm A"
@@ -706,7 +702,7 @@ resetFormData()
                                                                     marginTop: "5px", // Spacing between messages
                                                                   }}
                                                                 >
-                                                                  <b>Container type:</b> {updated_name} was{" "}
+                                                                  <b>Sample Type Matrix:</b> {updated_name} was{" "}
                                                                   <b>updated</b> by Registration Admin at{" "}
                                                                   {moment(updated_at).format(
                                                                     "DD MMM YYYY, h:mm A"
@@ -733,4 +729,4 @@ resetFormData()
   );
 };
 
-export default ContainerTypeArea;
+export default SampleTypeMatrixArea;

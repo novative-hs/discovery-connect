@@ -22,38 +22,153 @@ const getSampleDispatchesInTransit = (req, res) => {
     });
   };
 
+
+
 // Controller to create a new sample dispatch
 const createSampleDispatch = (req, res) => {
-  const { id } = req.params; // ID of the sample being dispatched
-  const { dispatchVia, dispatcherName, dispatchReceiptNumber,biobankid } = req.body;
-  console.log( dispatchVia, dispatcherName, dispatchReceiptNumber,biobankid )
-  // Validate input data
-  if (!dispatchVia || !dispatcherName || !dispatchReceiptNumber) {
+  const { id } = req.params; // Sample ID
+  console.log("Sample Dispatch id is:", id);
+
+  const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = req.body;
+
+  if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber || !Quantity) {
     return res.status(400).json({ error: 'All required fields must be provided' });
   }
 
-  // Create the sample dispatch record
-  sampleDispatchModel.createSampleDispatch({ dispatchVia, dispatcherName, dispatchReceiptNumber,biobankid }, id, (err, result) => {
+  const parsedQuantity = parseInt(Quantity, 10);
+  if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+    return res.status(400).json({ error: 'Quantity must be a valid positive number' });
+  }
+
+  // Get TransferFrom, current quantity, and sample status
+  const getTransferFromQuery = `
+    SELECT user_account_id, Quantity AS currentQuantity, status 
+    FROM sample 
+    WHERE id = ?
+  `;
+
+  mysqlConnection.query(getTransferFromQuery, [id], (err, results) => {
     if (err) {
-      console.log(dispatchVia, dispatcherName, dispatchReceiptNumber )
-      console.error('Database error during INSERT:', err);
-      return res.status(500).json({ error: 'An error occurred while creating the dispatch' });
+      console.error('Database error fetching TransferFrom:', err);
+      return res.status(500).json({ error: 'Error fetching TransferFrom' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Sample not found' });
     }
 
-    // Update the sample's status to "In Transit"
-    const updateQuery = `
-      UPDATE sample
-      SET status = 'In Transit'
-      WHERE id = ?
+    const TransferFrom = results[0].user_account_id;
+    let currentQuantity = parseInt(results[0].currentQuantity, 10);
+    let sampleStatus = results[0].status;
+
+    if (currentQuantity < parsedQuantity) {
+      return res.status(400).json({ error: 'Insufficient quantity available for dispatch' });
+    }
+
+    // Check if the sample is already dispatched to TransferTo
+    const checkExistingDispatchQuery = `
+      SELECT id, Quantity, status 
+      FROM sampledispatch 
+      WHERE sampleID = ? AND TransferFrom = ? AND TransferTo = ?
     `;
 
-    mysqlConnection.query(updateQuery, [id], (updateErr) => {
-      if (updateErr) {
-        console.error('Database error during UPDATE:', updateErr);
-        return res.status(500).json({ error: 'An error occurred while updating the sample status' });
+    mysqlConnection.query(checkExistingDispatchQuery, [id, TransferFrom, TransferTo], (checkErr, dispatchResults) => {
+      if (checkErr) {
+        console.error('Database error checking existing dispatch:', checkErr);
+        return res.status(500).json({ error: 'Error checking existing dispatch' });
       }
 
-      res.status(201).json({ message: 'Sample Dispatch created successfully', id: result.insertId });
+      if (dispatchResults.length > 0) {
+        const existingDispatch = dispatchResults[0];
+        const newQuantity = parseInt(existingDispatch.Quantity, 10) + parsedQuantity;
+
+        // **Case 1: If status is 'In Transit', update quantity**
+        if (existingDispatch.status === 'In Transit') {
+          const updateDispatchQuery = `
+            UPDATE sampledispatch
+            SET Quantity = ?
+            WHERE id = ?
+          `;
+
+          mysqlConnection.query(updateDispatchQuery, [newQuantity, existingDispatch.id], (updateErr) => {
+            if (updateErr) {
+              console.error('Database error updating dispatch quantity:', updateErr);
+              return res.status(500).json({ error: 'An error occurred while updating the dispatch quantity' });
+            }
+
+            // Deduct the dispatched quantity from sample table
+            const updateSampleQuantityQuery = `
+              UPDATE sample
+              SET Quantity = Quantity - ?
+              WHERE id = ?
+            `;
+
+            mysqlConnection.query(updateSampleQuantityQuery, [parsedQuantity, id], (updateSampleErr) => {
+              if (updateSampleErr) {
+                console.error('Database error updating sample quantity:', updateSampleErr);
+                return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
+              }
+
+              res.status(200).json({ message: 'Sample quantity updated successfully' });
+            });
+          });
+        } else {
+          // **Case 2: If status is 'In Stock', insert a new dispatch record**
+          sampleDispatchModel.createSampleDispatch(
+            { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity: parsedQuantity },
+            id,
+            (insertErr, result) => {
+              if (insertErr) {
+                console.error('Database error during INSERT:', insertErr);
+                return res.status(500).json({ error: 'An error occurred while creating the dispatch' });
+              }
+
+              // Deduct dispatched quantity from sample table
+              const updateQuantityQuery = `
+                UPDATE sample
+                SET Quantity = Quantity - ?
+                WHERE id = ?
+              `;
+
+              mysqlConnection.query(updateQuantityQuery, [parsedQuantity, id], (updateErr) => {
+                if (updateErr) {
+                  console.error('Database error during quantity update:', updateErr);
+                  return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
+                }
+
+                res.status(201).json({ message: 'Sample Dispatch created successfully', id: result.insertId });
+              });
+            }
+          );
+        }
+      } else {
+        // **Case 3: No existing dispatch, insert new dispatch**
+        sampleDispatchModel.createSampleDispatch(
+          { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity: parsedQuantity },
+          id,
+          (insertErr, result) => {
+            if (insertErr) {
+              console.error('Database error during INSERT:', insertErr);
+              return res.status(500).json({ error: 'An error occurred while creating the dispatch' });
+            }
+
+            // Deduct dispatched quantity from sample table
+            const updateQuantityQuery = `
+              UPDATE sample
+              SET Quantity = Quantity - ?
+              WHERE id = ?
+            `;
+
+            mysqlConnection.query(updateQuantityQuery, [parsedQuantity, id], (updateErr) => {
+              if (updateErr) {
+                console.error('Database error during quantity update:', updateErr);
+                return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
+              }
+
+              res.status(201).json({ message: 'Sample Dispatch created successfully', id: result.insertId });
+            });
+          }
+        );
+      }
     });
   });
 };

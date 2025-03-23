@@ -126,7 +126,7 @@ const createSampleTypeMatrixTable = () => {
     }
   });
 };
-// TEST METHOD
+
 // Function to create the Test Method table
 const createTestMethodTable = () => {
   const createTestMethodTable = `
@@ -322,8 +322,6 @@ const createSampleFields = (tableName, data, callback) => {
     });
   });
 };
-
-
 
 
 // Function to update a record dynamically

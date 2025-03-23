@@ -193,7 +193,41 @@ const updateCart = (id,data, callback, res) => {
     }
   });
 };
+const getAllOrder = (callback, res) => {
+  const sqlQuery = `
+  SELECT 
+    o.id, 
+    o.user_id, 
+    u.email AS user_email,
+    r.ResearcherName AS researcher_name, 
+    o.sample_id, 
+    s.samplename, 
+    s.age,s.gender,s.ethnicity,s.samplecondition,s.storagetemp,s.ContainerType,s.CountryofCollection,s.QuantityUnit,
+    s.SampleTypeMatrix,s.SmokingStatus,s.AlcoholOrDrugAbuse,s.InfectiousDiseaseTesting,s.InfectiousDiseaseResult,
+    s.FreezeThawCycles,s.DateofCollection,s.ConcurrentMedicalConditions,s.ConcurrentMedications,s.DiagnosisTestParameter,
+    s.TestResult,s.TestResultUnit,s.TestMethod,s.TestKitManufacturer,s.TestSystem,TestSystemManufacturer,s.SamplePriceCurrency,
+    o.price, 
+    o.quantity, 
+    o.payment_method, 
+    o.totalpayment, 
+    o.created_at
+FROM cart o
+JOIN user_account u ON o.user_id = u.id
+LEFT JOIN researcher r ON u.id = r.user_account_id 
+JOIN sample s ON o.sample_id = s.id
+ORDER BY o.created_at DESC;
 
+`;
+  mysqlConnection.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching cart data:", err);
+      callback(err, null);
+    }
+    else{
+      callback(null, results);
+    }
+  });
+};
 module.exports = {
   createCartTable,
   getAllCart,
@@ -201,5 +235,6 @@ module.exports = {
   getCartCount,
   deleteCart,
   deleteSingleCartItem,
-  updateCart
+  updateCart,
+  getAllOrder
 };

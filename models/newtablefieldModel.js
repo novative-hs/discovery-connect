@@ -29,19 +29,52 @@ const tablesAndColumns = [
       { column: 'testsystemmanufacturer_id', type: 'INT', nullable: true, references: { table: "testsystemmanufacturer", column: "id" } }
     ]
   },
+  // {
+  //   table: "registrationadmin_history",
+  //   columnsToDelete: ['status'],
+  //   columnsToAdd: [
+  //     {
+  //       column: 'status',
+  //       type: `ENUM('active', 'inactive', 'unapproved', 'approved', 'pending')`,
+  //       nullable: false,
+  //       default: 'active'
+  //     }
+  //   ]
+
+  // },
   {
-    table: "registrationadmin_history",
-    columnsToDelete: ['status'],
+
+    table: "history",
     columnsToAdd: [
-      {
-        column: 'status',
-        type: `ENUM('active', 'inactive', 'unapproved', 'approved', 'pending')`,
-        nullable: false,
-        default: 'active'
-      }
+      { column: "CommitteeMemberName", type: "VARCHAR(255)", nullable: true },
+      { column: "committeemember_id", type: "INT", nullable: true, references: { table: "committee_member", column: "id" } },
+      { column: "CNIC", type: "VARCHAR(20)", nullable: true },
+      { column: "CommitteeType", type: "VARCHAR(20)", nullable: true },
     ]
 
   },
+  {
+    table: "committee_member",
+    columnsToDelete: ['email', 'password'],
+    columnsToAdd: [
+      {
+        column: 'user_account_id',
+        type: 'INT',
+        nullable: true,  // Change to true
+        references: { table: "user_account", column: "id" }
+      }
+    ]
+  },  
+  {
+    table: "user_account",
+    columnsToAdd: [
+      {
+        column: 'accountType',
+        type: `ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember')`,
+        nullable: false
+      }
+    ]
+  }
 ];
 
 // Function to check if column exists and add it if not
@@ -60,13 +93,18 @@ const ensureColumnsExist = (table, columns) => {
       }
 
       if (results[0].count === 0) {
-        let alterTableQuery = `ALTER TABLE ${table} ADD COLUMN ${column} ${type} ${nullable ? 'NULL' : 'NOT NULL'}`;
+        let alterTableQuery = `ALTER TABLE ${table} ADD COLUMN ${column} ${type}`;
 
-        // Only add DEFAULT if a default value is explicitly provided
+        if (nullable) {
+          alterTableQuery += ` NULL`;
+        } else {
+          alterTableQuery += ` NOT NULL`;
+        }
+
+        // Add DEFAULT value if provided
         if (defaultValue !== undefined) {
-          if (type.startsWith('ENUM')) {
-            // Wrap ENUM default value in quotes
-            alterTableQuery += ` DEFAULT '${defaultValue}'`;
+          if (type.startsWith('VARCHAR') || type.startsWith('ENUM')) {
+            alterTableQuery += ` DEFAULT '${defaultValue}'`; // Ensure strings are quoted
           } else {
             alterTableQuery += ` DEFAULT ${defaultValue}`;
           }
@@ -78,23 +116,25 @@ const ensureColumnsExist = (table, columns) => {
           } else {
             console.log(`Column ${column} added successfully to table ${table}.`);
 
-            // If the column has a foreign key reference, add the constraint
+            // Add Foreign Key Constraint after column creation
             if (references) {
               const fkName = `fk_${table}_${column}`;
               const addForeignKeyQuery = `
                 ALTER TABLE ${table} 
                 ADD CONSTRAINT ${fkName} 
                 FOREIGN KEY (${column}) REFERENCES ${references.table}(${references.column}) 
-                ON DELETE SET NULL
+                ON DELETE CASCADE
               `;
 
-              mysqlConnection.query(addForeignKeyQuery, (err) => {
-                if (err) {
-                  console.error(`Error adding foreign key ${fkName} on ${table}.${column}:`, err);
-                } else {
-                  console.log(`Foreign key ${fkName} added successfully on ${table}.${column}.`);
-                }
-              });
+              setTimeout(() => {
+                mysqlConnection.query(addForeignKeyQuery, (err) => {
+                  if (err) {
+                    console.error(`Error adding foreign key ${fkName} on ${table}.${column}:`, err);
+                  } else {
+                    console.log(`Foreign key ${fkName} added successfully on ${table}.${column}.`);
+                  }
+                });
+              }, 1000); // Adding slight delay to prevent deadlocks
             }
           }
         });
@@ -137,6 +177,20 @@ const deleteColumns = (table, columns) => {
     });
   });
 };
+const updateEnumColumn = (table, column, enumValues) => {
+  const alterEnumQuery = `
+    ALTER TABLE ${table} 
+    MODIFY COLUMN ${column} ENUM(${enumValues.map(value => `'${value}'`).join(", ")}) NOT NULL
+  `;
+
+  mysqlConnection.query(alterEnumQuery, (err) => {
+    if (err) {
+      console.error(`Error updating ENUM values for ${column} in ${table}:`, err);
+    } else {
+      console.log(`Updated ENUM values for ${column} in ${table} successfully.`);
+    }
+  });
+};
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = () => {
@@ -149,9 +203,28 @@ const createOrUpdateTables = () => {
       deleteColumns(table, columnsToDelete);
     }
   });
+  updateEnumColumn("user_account", "accountType", [
+    "Researcher", "Organization", "CollectionSites", "DatabaseAdmin",
+    "RegistrationAdmin", "biobank", "Committeemember"
+  ]);
 };
 
+const updateAccountType = () => {
+  const updateQuery = `
+    UPDATE user_account 
+    SET accountType = 'DatabaseAdmin' 
+    WHERE accountType = 'RegistrationAdmin'
+  `;
 
+  mysqlConnection.query(updateQuery, (err, results) => {
+    if (err) {
+      console.error("Error updating accountType: ", err);
+    } else {
+      console.log(`Updated ${results.affectedRows} rows: accountType 'RegistrationAdmin' → 'DatabaseAdmin'`);
+    }
+  });
+};
 module.exports = {
-  createOrUpdateTables
+  createOrUpdateTables,
+  updateAccountType
 };
