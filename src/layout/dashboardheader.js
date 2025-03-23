@@ -149,6 +149,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       ? [
           { label: "Profile", tab: "order-info" },
           { label: "Sample List", tab: "samples" },
+          { label: "My Samples", tab: "my-samples" },
         ]
       : userType == "registrationadmin"
       ? [
@@ -360,29 +361,17 @@ const Header = ({ setActiveTab, activeTab }) => {
                 </ul>
               </div>
               {userType === "researcher" && (
-                <div className="d-flex gap-2">
-                  <Link
-                    href="/wishlist"
-                    className="btn btn-sm position-relative"
-                  >
-                    <Heart className="fs-7 text-white" />
-                    {wishlist.length > 0 && (
-                      <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                        {wishlist.length}
-                      </span>
-                    )}
-                  </Link>
-
-                  <Link href="/cart" className="btn btn-sm position-relative">
-                    <Cart className="fs-6 text-white" />
-                    {cartCount > 0 && (
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Link>
-                </div>
-              )}
+  <div className="d-flex gap-0">
+    <Link href={`/cart`} className="btn btn-sm position-relative">
+      <Cart className="fs-7 text-white" />
+      {cartCount > 0 && (
+        <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+          {quantity}
+        </span>
+      )}
+    </Link>
+  </div>
+)}
             </div>
           </div>
         </div>

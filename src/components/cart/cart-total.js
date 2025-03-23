@@ -17,7 +17,7 @@ const CartTotal = () => {
         </li>
       </ul>
       <Link href="/checkout" className="tp-btn cursor-pointer">
-        Proceed to checkout
+        Proceed to checkoutssssssssssssssssssssss
       </Link>
     </div>
   );

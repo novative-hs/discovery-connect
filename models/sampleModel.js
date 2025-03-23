@@ -153,6 +153,77 @@ WHERE
     });
   });
 };
+
+const getResearcherSamples = (userId, callback) => {
+  const query = `
+    SELECT 
+      s.*,
+      sm.samplename,
+      sm.age,
+      sm.gender,
+      sm.ethnicity,
+      sm.samplecondition,
+      sm.storagetemp,
+      sm.ContainerType,
+      sm.CountryOfCollection,
+      country.name AS CountryName, -- Fetch country name if there's a country table
+      sm.price,
+      sm.SamplePriceCurrency,
+      sm.quantity,
+      sm.QuantityUnit,
+      sm.SampleTypeMatrix,
+      sm.SmokingStatus,
+      sm.AlcoholOrDrugAbuse,
+      sm.InfectiousDiseaseTesting,
+      sm.InfectiousDiseaseResult,
+      sm.FreezeThawCycles,
+      sm.DateOfCollection,
+      sm.ConcurrentMedicalConditions,
+      sm.ConcurrentMedications,
+      sm.DiagnosisTestParameter,
+      sm.TestResult,
+      sm.TestResultUnit,
+      sm.TestMethod,
+      sm.TestKitManufacturer,
+      sm.TestSystem,
+      sm.TestSystemManufacturer,
+      sm.status,
+      sm.logo,
+      cs.CollectionSiteName,
+      bb.Name AS BiobankName,
+      c.name AS CityName,
+      d.name AS DistrictName
+    FROM 
+      cart s
+    JOIN 
+      user_account ua ON s.user_id = ua.id
+    LEFT JOIN 
+      sample sm ON s.sample_id = sm.id -- Ensuring cart is linked to sample
+    LEFT JOIN 
+      collectionsite cs ON sm.user_account_id = cs.user_account_id -- Linking collection site with sample owner
+    LEFT JOIN 
+      biobank bb ON sm.user_account_id = bb.id
+    LEFT JOIN 
+      city c ON cs.city = c.id
+    LEFT JOIN 
+      district d ON cs.district = d.id
+    LEFT JOIN 
+      country ON sm.CountryOfCollection = country.id -- Assuming country table exists
+    WHERE 
+      s.user_id = ?;
+  `;
+
+  mysqlConnection.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return callback(err, null);
+    }
+    callback(null, results);
+  });
+};
+
+
+
 const getAllCSSamples = (callback) => {
   const query = `
 SELECT 
@@ -361,6 +432,7 @@ module.exports = {
   createSampleTable,
   getSamples,
   getAllSamples,
+  getResearcherSamples,
   getAllCSSamples,
   getSampleById,
   createSample,

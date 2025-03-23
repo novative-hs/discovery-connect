@@ -6,6 +6,7 @@ import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateUser from "./update-user";
 import SampleArea from './samples';
+import ResearcherSamplesArea from './ResearcherSamples';
 import Header from '../../layout/dashboardheader';
 import OrderInfo from "./order-info";
 const DashboardArea = () => {
@@ -46,7 +47,8 @@ const DashboardArea = () => {
         return <OrderInfo />; 
       case "samples":
         return <SampleArea />;
-     
+      case "my-samples":
+          return <ResearcherSamplesArea />;
       case "change-password":
         return <ChangePassword />;
       case "update-user":
