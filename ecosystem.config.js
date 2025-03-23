@@ -4,11 +4,11 @@ module.exports = {
       name: "discovery-backend",
       script: "server.js",
       env: {
-        DB_HOST: "discovery-database.c1e2goekmu67.ap-south-1.rds.amazonaws.com",
+        DB_HOST: "localhost",
         DB_PORT: "3306",
-        DB_USER: "discoveryadmin",
-        DB_PASSWORD: "discoverylive123",
-        DB_DATABASE: "DiscoveryConnect"
+        DB_USER: "root",
+        DB_PASSWORD: "123456789",
+        DB_DATABASE: "discovery_connect123"
       }
     },
     {

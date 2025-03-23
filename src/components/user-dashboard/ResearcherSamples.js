@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
-import { notifyError, notifySuccess } from "@utils/toast";
-import CartSidebar from "@components/common/sidebar/cart-sidebar";
-import { Cart } from "@svg/index";
-
+import Pagination from "@ui/Pagination";
 const SampleArea = () => {
   const id = localStorage.getItem("userID");
-  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
+    // { label: "Age", key: "age" },
+    // { label: "Gender", key: "gender" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -39,97 +32,18 @@ const SampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Status", key: "status" },
-    { label: "Payment Method", key: "payment_method" },
+    // { label: "Status", key: "status" },
+    { 
+      label: "Payment Method", 
+      key: "payment_method",
+      render: (value) => value === "DBT" ? "Bank Transfer" : value
+    },
   ];
-
-  const [formData, setFormData] = useState({
-    samplename: "",
-    age: "",
-    gender: "",
-    ethnicity: "",
-    samplecondition: "",
-    storagetemp: "",
-    ContainerType: "",
-    CountryOfCollection: "",
-    price: "",
-    SamplePriceCurrency: "",
-    quantity: "",
-    QuantityUnit: "",
-    SampleTypeMatrix: "",
-    SmokingStatus: "",
-    AlcoholOrDrugAbuse: "",
-    InfectiousDiseaseTesting: "",
-    InfectiousDiseaseResult: "",
-    FreezeThawCycles: "",
-    DateOfCollection: "",
-    ConcurrentMedicalConditions: "",
-    ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
-    TestResult: "",
-    TestResultUnit: "",
-    TestMethod: "",
-    TestKitManufacturer: "",
-    TestSystem: "",
-    TestSystemManufacturer: "",
-    status: "In Stock",
-    user_account_id: id,
-  });
-
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [quantity, setQuantity] = useState(0);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
-  const totalPages = Math.ceil(samples.length / itemsPerPage);
-  const incrementQuantity = (sample) => {
-    const updatedQuantity = quantity + 1;
-    setQuantity(updatedQuantity); // Update quantity
-
-    // Use a callback to ensure formData is set before making the API call
-    setFormData(prevData => {
-      const newFormData = {
-        ...prevData, // Preserve any existing data in formData
-        samplename: sample.samplename,
-        age: sample.age,
-        gender: sample.gender,
-        ethnicity: sample.ethnicity,
-        samplecondition: sample.samplecondition,
-        storagetemp: sample.storagetemp,
-        ContainerType: sample.ContainerType,
-        CountryOfCollection: sample.CountryOfCollection,
-        price: sample.price,
-        SamplePriceCurrency: sample.SamplePriceCurrency,
-        quantity: updatedQuantity, // Incremented quantity
-        QuantityUnit: sample.QuantityUnit,
-        SampleTypeMatrix: sample.SampleTypeMatrix,
-        SmokingStatus: sample.SmokingStatus,
-        AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
-        InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
-        InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-        status: sample.status,
-        FreezeThawCycles: sample.FreezeThawCycles,
-        DateOfCollection: sample.DateOfCollection,
-        ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
-        ConcurrentMedications: sample.ConcurrentMedications,
-        DiagnosisTestParameter: sample.DiagnosisTestParameter,
-        TestResult: sample.TestResult,
-        TestResultUnit: sample.TestResultUnit,
-        TestMethod: sample.TestMethod,
-        TestKitManufacturer: sample.TestKitManufacturer,
-        TestSystem: sample.TestSystem,
-        TestSystemManufacturer: sample.TestSystemManufacturer,
-        user_account_id: id
-      };
-
-      // Make API call directly after updating the form data
-      handleAddClick(newFormData); // Pass updated formData to the API call
-    });
-  };
-
-
+  const [totalPages, setTotalPages] = useState(0);
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
@@ -140,7 +54,6 @@ const SampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
-
   // Fetch samples from backend when component loads
   useEffect(() => {
     if (id === null) {
@@ -150,13 +63,26 @@ const SampleArea = () => {
     }
   }, []);
 
+    useEffect(() => {
+      const pages = Math.max(
+        1,
+        Math.ceil(samples.length / itemsPerPage)
+      );
+      setTotalPages(pages);
+  
+      if (currentPage >= pages) {
+        setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      }
+    }, [samples]);
   const currentData = samples.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
@@ -168,170 +94,70 @@ const SampleArea = () => {
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
       setSamples(filtered); // Update the state with filtered results
+      setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     }
   };
-  const handleAddClick = async (e) => {
-    console.log(e)
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/post`,
-        e
-      );
-      notifySuccess("Sample added to cart successfully");
-      console.log("Sample added to cart successfully:", response.data);
-
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get`
-      );
-      setSamples(newResponse.data);
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      notifyError("Error adding Sample to cart successfully");
-      console.error(
-
-        `Error to add sample cart with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  }
-
   return (
-    <section className="policy__area pb-10 overflow-hidden">
-      <div className="container-fluid mt-0">
-        <div className="row justify-content-center mt-5">
-          <div className="col-12 col-md-10">
-            <div className="policy__wrapper policy__translate position-relative mt-5">
-              {/* {Button} */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
-              </div>
-
-              {/* Table */}
+ 
+    <section className="policy__area pb-40 overflow-hidden p-3" >
+      <div className="container">
+        <div className="row justify-content-center">
               <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover">
-                  <thead className="thead-dark">
+                <table className="table table-bordered table-hover text-center align-middle w-auto border">
+                <thead className="table-primary text-dark">
                     <tr>
                       {tableHeaders.map(({ label, key }, index) => (
                         <th key={index} className="px-4 text-center">
                           <div className="d-flex flex-column align-items-center">
                             <input
                               type="text"
-                              className="form-control form-control-sm w-100"
+                               className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                               placeholder={label}
                               onChange={(e) =>
                                 handleFilterChange(key, e.target.value)
                               }
-                              style={{ minWidth: "120px" }}
+                              style={{ minWidth: "150px" }}
                             />
-                            <span className="fw-bold mt-1 d-block text-nowrap">
-                              {label}
-                            </span>
+ <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                        {label}
+                      </span>
                           </div>
                         </th>
                       ))}
-                      {/* <th className="px-3 align-middle text-center">Action</th> */}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((sample) => (
-                        <tr key={sample.id}>
-                          {tableHeaders.map(({ key }, index) => (
-                            <td key={index}>{sample[key] || "N/A"}</td>
-                          ))}
-                          {/* <td> */}
-                            {/* <div className="d-flex justify-content-around gap-2">
-                              <button className="btn btn-primary btn-sm" onClick={() => handleTransferClick(sample)}>
-                                <i className="fas fa-exchange-alt"></i>
-                              </button>
-                            </div> */}
-                          {/* </td> */}
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={tableHeaders.length + 1} className="text-center">
-                          No samples available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+  {currentData.length > 0 ? (
+    currentData.map((sample) => (
+      <tr key={sample.id}>
+        {tableHeaders.map(({ key, render }, index) => (
+          <td key={index}>
+            {render ? render(sample[key]) : sample[key] || "N/A"}
+          </td>
+        ))}
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={tableHeaders.length + 1} className="text-center">
+        No samples available
+      </td>
+    </tr>
+  )}
+</tbody>
                 </table>
               </div>
-              {/* Pagination Controls */}
-              <div className="pagination d-flex justify-content-end align-items-center mt-3">
-                <nav aria-label="Page navigation example">
-                  <ul className="pagination justify-content-end">
-                    <li
-                      className={`page-item ${currentPage === 1 ? "disabled" : ""
-                        }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Previous"
-                        onClick={() =>
-                          currentPage > 1 && handlePageChange(currentPage - 1)
-                        }
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                        <span className="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <li
-                          key={pageNumber}
-                          className={`page-item ${currentPage === pageNumber ? "active" : ""
-                            }`}
-                        >
-                          <a
-                            className="page-link"
-                            href="#"
-                            onClick={() => handlePageChange(pageNumber)}
-                          >
-                            {pageNumber}
-                          </a>
-                        </li>
-                      );
-                    })}
-                    <li
-                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                        }`}
-                    >
-                      <a
-                        className="page-link"
-                        href="#"
-                        aria-label="Next"
-                        onClick={() =>
-                          currentPage < totalPages &&
-                          handlePageChange(currentPage + 1)
-                        }
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                        <span className="sr-only">Next</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+                     {totalPages >= 0 && (
+                        <Pagination
+                          handlePageClick={handlePageChange}
+                          pageCount={totalPages}
+                          focusPage={currentPage}
+                        />
+                      )}
+             
             </div>
           </div>
-        </div>
-      </div>
-      <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} sample={formData} />
-
+    
     </section>
 
   );

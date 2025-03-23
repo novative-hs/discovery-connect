@@ -70,7 +70,7 @@ const CartArea = () => {
                             </Link>
                           </td>
                           <td className="product-price">
-                            <span className="amount">${item.price.toFixed(2)}</span>
+                            <span className="amount">{item.price.toFixed(2)}</span>
                           </td>
                           <td className="product-quantity">
                             <div className="tp-product-quantity mt-10 mb-10">
@@ -108,10 +108,10 @@ const CartArea = () => {
                       <h2>Cart Totals</h2>
                       <ul className="mb-20">
                         <li>
-                          Subtotal <span>${subtotal.toFixed(2)}</span>
+                          Subtotal <span>{subtotal.toFixed(2)}</span>
                         </li>
                         <li>
-                          Total <span>${subtotal.toFixed(2)}</span>
+                          Total <span>{subtotal.toFixed(2)}</span>
                         </li>
                       </ul>
                       <button className="tp-btn cursor-pointer" onClick={handleProceedToCheckout}>
