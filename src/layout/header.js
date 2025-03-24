@@ -17,7 +17,7 @@ const Header = ({ style_2 = false }) => {
   const { sticky } = useSticky();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOffCanvasOpen, setIsOffCanvasOpen] = useState(false);
-  const { quantity } = useCartInfo();
+  const { sampleCount } = useCartInfo();
   const { wishlist } = useSelector((state) => state.wishlist);
   const { user: userInfo } = useSelector((state) => state.auth);
   return (
@@ -95,7 +95,7 @@ const Header = ({ style_2 = false }) => {
                               onClick={() => setIsCartOpen(!isCartOpen)}
                             >
                               <Cart />
-                              <span className="tp-item-count">{quantity}</span>
+                              <span className="tp-item-count">{sampleCount}</span>
                             </button>
                           </li>
                         </ul>

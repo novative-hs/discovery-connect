@@ -72,8 +72,8 @@ const OrderArea = ({
           <thead>
             <tr>
               <th className="product-name">Sample</th>
-              <th className="product-quantity">quantity</th>
               <th className="product-price">Price</th>
+              <th className="product-quantity">quantity</th>
               <th className="product-total">Total</th>
             </tr>
           </thead>

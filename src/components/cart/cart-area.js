@@ -52,7 +52,7 @@ const CartArea = () => {
                     </p>
                   </div>
                   <table className="table">
-                    <thead>
+                    <thead className="table-light">
                       <tr>
                         <th className="product-thumbnail">Sample</th>
                         <th className="product-price">Price</th>
@@ -89,7 +89,7 @@ const CartArea = () => {
                             </div>
                           </td>
                           <td className="product-subtotal">
-                            <span className="amount">${(item.price * item.orderQuantity).toFixed(2)}</span>
+                            <span className="amount">{(item.price * item.orderQuantity).toFixed(2)}</span>
                           </td>
                           <td className="product-remove">
                             <button type="button" onClick={() => handleRemovePrd(item)}>
