@@ -15,14 +15,14 @@ const createCommitteeSample = (req, res) => {
   });
 };
 const updateCommitteeStatus = (req, res) => {
-  const { committee_status, comments } = req.body;
+  const { committee_status, comments ,committee_member_id} = req.body;
   const cartId = req.params.id; // ✅ Extract ID from params
 
-  if (!cartId || !committee_status || !comments) {
+  if (!cartId || !committee_status || !comments ||!committee_member_id) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  committeesampleapproval.updateCommitteeStatus(cartId, committee_status, comments, (err, result) => {
+  committeesampleapproval.updateCommitteeStatus(cartId, committee_member_id,committee_status, comments, (err, result) => {
     if (err) {
       console.error("Error updating committee status:", err);
       return res.status(500).json({ error: "Internal server error" });

@@ -28,13 +28,13 @@ const createcommitteesampleapprovalTable = () => {
 const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
   let getCommitteeMembersQuery = "";
 
-  // Determine which committee members to fetch
+  // Determine which committee members to fetch, excluding inactive members
   if (committeeType === "scientific") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Scientific'";
+      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Scientific' AND status != 'inactive'";
   } else if (committeeType === "ethical") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Ethical'";
+      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Ethical' AND status != 'inactive'";
   } else if (committeeType === "both") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical')";
+      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical') AND status != 'inactive'";
   } else {
       return callback(new Error("Invalid committee type"), null);
   }
@@ -47,7 +47,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
       }
 
       if (committeeMembers.length === 0) {
-          return callback(new Error("No committee members found for the given type"), null);
+          return callback(new Error("No active committee members found for the given type"), null);
       }
 
       // Insert into `committeesampleapproval` for each committee member
@@ -70,16 +70,17 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
       });
   });
 };
-const updateCommitteeStatus = (id, committee_status, comments, callback) => {
+
+const updateCommitteeStatus = (id, committee_member_id,committee_status, comments, callback) => {
   console.log("Received Body", committee_status);
 
   const sqlQuery = `
     UPDATE committeesampleapproval 
     SET committee_status = ?, comments = ?
-    WHERE cart_id = ?
+    WHERE committee_member_id = ? AND cart_id = ?
   `;
 
-  mysqlConnection.query(sqlQuery, [committee_status, comments, id], (err, results) => {
+  mysqlConnection.query(sqlQuery, [committee_status, comments,committee_member_id, id], (err, results) => {
     if (err) {
       console.error("Error updating committee status:", err);
       return callback(err, null);

@@ -3,8 +3,8 @@ import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCheckCircle,
-  faTimesCircle,
+  faCheck,
+  faTimes,
   
   faFilePdf,
   
@@ -23,7 +23,7 @@ const SampleArea = () => {
   const [actionType, setActionType] = useState(""); // "Approved" or "Refused"
   const [comment, setComment] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+const[showCommentModal,setShowCommentModal]=useState(false)
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
   const tableHeaders = [
@@ -160,7 +160,7 @@ const SampleArea = () => {
   const handleSubmit = async () => {
     const trimmedComment = comment.trim(); // Trim spaces and new lines
   
-    if (!selectedSample || !trimmedComment) {
+    if (!id|| !selectedSample || !trimmedComment) {
       alert("Please enter a comment.");
       return;
     }
@@ -169,6 +169,7 @@ const SampleArea = () => {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`, 
         {
+          committee_member_id:id,
           committee_status: actionType, // "Approved" or "Refused"
           comments: trimmedComment, // Send trimmed comment
         }
@@ -255,26 +256,60 @@ const SampleArea = () => {
                     }}
                     style={{ cursor: "pointer" }} // Pointer cursor to indicate clickable row
                   >
-                    {tableHeaders.map(({ key }, index) => (
-                      <td
-                        key={index}
-                        className="text-center text-truncate"
-                        style={{ maxWidth: "150px" }}
-                      >
-                        {/* Format Date of Collection */}
-                        {key === "DateofCollection" && sample[key]
-                          ? new Date(sample[key]).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : key === "price" && sample[key]
-                          ? `${sample["SamplePriceCurrency"] || "$"} ${
-                              sample[key]
-                            }`
-                          : sample[key] || "N/A"}
-                      </td>
-                    ))}
+                {tableHeaders.map(({ key }, index) => (
+  <td
+    key={index}
+    className="text-center text-truncate"
+    style={{ maxWidth: "150px" }}
+  >
+    {/* Format Date of Collection */}
+    {key === "DateofCollection" && sample[key]
+      ? new Date(sample[key]).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : key === "price" && sample[key]
+      ? `${sample["SamplePriceCurrency"] || "$"} ${sample[key]}`
+      : key === "comments" && sample[key]
+      ? sample[key].length > 50 ? (
+          <>
+            <span
+              className="text-primary"
+              style={{ cursor: "pointer", textDecoration: "underline" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedComment(sample[key]);
+                setShowCommentModal(true);
+              }}
+            >
+              Click to View
+            </span>
+          </>
+        ) : (
+          sample[key]
+        )
+      : sample[key] || "N/A"}
+  </td>
+))}
+
+{/* Comment Modal */}
+{showCommentModal && (
+  <div className="modal fade show d-block" tabIndex="-1">
+    <div className="modal-dialog">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Committee Comments</h5>
+          <button type="button" className="btn-close" onClick={() => setShowCommentModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          <p>{selectedComment}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
                     <td className="text-center">
                       <div
@@ -292,8 +327,7 @@ const SampleArea = () => {
                           title="View PDF Documents"
                         >
                           <FontAwesomeIcon
-                            size="lg"
-                            className="text-primary"
+                           size="sm"
                             icon={faFilePdf}
                           />
                         </button>
@@ -303,7 +337,7 @@ const SampleArea = () => {
   onClick={() => handleOpenModal("Approved", sample)} // Pass sample
   title="Approve Sample"
 >
-  <FontAwesomeIcon icon={faCheckCircle} size="lg" className="text-success" />
+  <FontAwesomeIcon icon={faCheck} size="sm" />
 </button>
 
 <button
@@ -311,7 +345,7 @@ const SampleArea = () => {
   onClick={() => handleOpenModal("Refused", sample)} // Pass sample
   title="Refuse Sample"
 >
-  <FontAwesomeIcon icon={faTimesCircle} size="lg" className="text-danger" />
+  <FontAwesomeIcon icon={faTimes} size="sm" />
 </button>
 
                       </div>
@@ -443,9 +477,9 @@ const SampleArea = () => {
                         <strong>Country of Collection:</strong>{" "}
                         {selectedSample.CountryOfCollection}
                       </p>
-                      <p>
+                      {/* <p>
                         <strong>Status:</strong> {selectedSample.status}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
 

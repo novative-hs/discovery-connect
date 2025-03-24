@@ -94,7 +94,11 @@ const createCart = (data, callback) => {
                 return reject(err);
               }
 
+<<<<<<< HEAD
               // *Update stock only if cart insert & registration approval succeed*
+=======
+              // **Update stock only if cart insert & registration approval succeed**
+>>>>>>> khollaqureshi
               const updateQuery = `
                 UPDATE sample 
                 SET quantity = quantity - ? 
@@ -116,13 +120,22 @@ const createCart = (data, callback) => {
       });
     });
 
+<<<<<<< HEAD
     // *Wait for all cart insertions, approvals, and stock updates to complete*
+=======
+    // **Wait for all cart insertions, approvals, and stock updates to complete**
+>>>>>>> khollaqureshi
     Promise.all(insertPromises)
       .then((results) => callback(null, results))
       .catch((error) => callback(error));
   });
 };
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> khollaqureshi
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
@@ -229,7 +242,7 @@ const updateCart = (id,data, callback, res) => {
 };
 const getAllOrder = (callback, res) => {
   const sqlQuery = `
- SELECT 
+SELECT 
     c.id AS order_id, 
     c.user_id, 
     u.email AS user_email,
@@ -252,17 +265,27 @@ const getAllOrder = (callback, res) => {
     c.created_at,
     IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
 
-    -- Ensure proper handling of NULL values in committee status
-    CASE 
-        WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
-        WHEN SUM(CASE WHEN ca.committee_status = 'rejected' THEN 1 ELSE 0 END) > 0 
-            THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'pending' THEN 1 ELSE 0 END) > 0 
-            THEN 'pending'
-        ELSE 'accepted' 
-    END AS final_committee_status,
+    -- Corrected committee status evaluation
+    (SELECT 
+        CASE 
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Pending') > 0 THEN 'pending'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+            ELSE NULL
+        END
+     FROM committeesampleapproval ca WHERE ca.cart_id = c.id
+    ) AS final_committee_status,
 
-    GROUP_CONCAT(DISTINCT ca.comments SEPARATOR ', ') AS committee_comments
+    -- Collect all comments from committee members
+   (SELECT GROUP_CONCAT(
+          DISTINCT CONCAT('Committee Member Name :', cm.CommitteeMemberName, ': ', ca.comments) 
+          SEPARATOR ' | ')
+ FROM committeesampleapproval ca
+ JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+ WHERE ca.cart_id = c.id
+) AS committee_comments
+
+
 
 FROM cart c
 JOIN user_account u ON c.user_id = u.id
@@ -270,18 +293,6 @@ LEFT JOIN researcher r ON u.id = r.user_account_id
 LEFT JOIN organization org ON r.nameofOrganization = org.id
 JOIN sample s ON c.sample_id = s.id
 LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
-LEFT JOIN committeesampleapproval ca ON c.id = ca.cart_id 
-
-GROUP BY c.id, u.email, r.ResearcherName, org.OrganizationName, c.sample_id, s.samplename, 
-         s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-         s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-         s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-         s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
-         s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
-         s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
-         s.TestSystemManufacturer, s.SamplePriceCurrency, c.price, 
-         c.quantity, c.payment_method, c.totalpayment, c.order_status, c.created_at, 
-         ra.registration_admin_status
 
 ORDER BY c.created_at ASC;
 
