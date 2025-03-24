@@ -20,7 +20,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const router = useRouter();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user: userInfo } = useSelector((state) => state.auth);
-  const { quantity } = useCartInfo();
+  const { sampleCount } = useCartInfo();
   const { wishlist } = useSelector((state) => state.wishlist);
   const [isProfileOpen, setIsProfileOpen] = useState(false); // Track if profile is open
   const [user, setUser] = useState();
@@ -391,7 +391,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       <Cart className="fs-7 text-white" />
       {cartCount > 0 && (
         <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-          {quantity}
+          {sampleCount}
         </span>
       )}
     </Link>
