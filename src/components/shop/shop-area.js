@@ -23,9 +23,10 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
 
   const handleReset = () => {
     setSelectedPrice(null);
-    setSelectedSmokingStatus("");
-    setSelectedGender("");
+    setSelectedSmokingStatus(null);
+    setSelectedGender(null);
     setSelectedSampleType([]);
+    
   };
 
   const filteredProducts = products.filter((product) => {

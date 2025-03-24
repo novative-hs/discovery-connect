@@ -8,11 +8,13 @@ import ShopBreadcrumb from "@components/common/breadcrumb/shop-breadcrumb";
 import ShopArea from "@components/shop/shop-area";
 import ErrorMessage from "@components/error-message/error";
 import ShopLoader from "@components/loader/shop-loader";
+import { useRouter } from "next/router"; 
 // Import API hook
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 
 export default function Shop({ query }) {
-  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery();
+  const router = useRouter();
+  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath); 
   const [shortValue, setShortValue] = useState("");
 
   useEffect(() => {

@@ -66,6 +66,21 @@ const ProfileNav = () => {
             </span>{" "}
             Samples List
           </button>
+          <button
+            className="nav-link"
+            id="nav-sample-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-sample"
+            type="button"
+            role="tab"
+            aria-controls="nav-sample"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            My Samples
+          </button>
 
           <button
             className="nav-link"

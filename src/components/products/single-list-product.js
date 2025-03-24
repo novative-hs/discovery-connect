@@ -24,10 +24,11 @@ const SingleListProduct = ({ product }) => {
   };
   return (
     <React.Fragment>
-   <div className="product__item p-relative transition-3 mb-50">
+      <div className="product__item p-relative transition-3 mb-50">
         <div className="row">
           <div className="col-xl-5 col-lg-5">
-          <div className="product__thumb w-img p-relative fix">
+            <div className="product__thumb w-img p-relative fix">
+            <div className="product-image-frame">
               {/* <Link href={`product-details/${_id}`}> */}
                  {/* <Image
                               src={product.imageUrl}
@@ -36,16 +37,15 @@ const SingleListProduct = ({ product }) => {
                               height={1125}
                               style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             /> */}
-            <div className="product-image-frame">
-                   <Image
-                     src={product.imageUrl}
-                     alt="product image"
-                     width={960}
-                     height={1125}
-                     style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                   />
-                 </div>
+                <Image
+                       src={product.imageUrl}
+                       alt="product image"
+                       width={960}
+                       height={1125}
+                       style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                     />
               {/* </Link> */}
+              </div>
               {discount > 0 && (
                 <div className="product__badge d-flex flex-column flex-wrap">
                   <span className={`product__badge-item has-new`}>sale</span>
@@ -54,8 +54,8 @@ const SingleListProduct = ({ product }) => {
             </div>
           </div>
           <div className="col-xl-7 col-lg-7">
-            {/* <div className="product__list-content">
-              <div className="product__rating product__rating-2 d-flex">
+            {/* <div className="product__list-content"> */}
+              {/* <div className="product__rating product__rating-2 d-flex">
                 <RatingFull />
                 <RatingFull />
                 <RatingFull />
@@ -101,8 +101,8 @@ const SingleListProduct = ({ product }) => {
                   <Eye />
                   <span className="product-action-tooltip">Quick view</span>
                 </button>
-{/* 
-                <Link href={`/product-details/${_id}`}>
+
+                {/* <Link href={`/product-details/${_id}`}>
                   <button
                     type="button"
                     className="product-action-btn product-action-btn-2"

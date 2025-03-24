@@ -32,6 +32,24 @@ const getAllSamples = (req, res) => {
     res.status(200).json(results);
   });
 };
+const getResearcherSamples = (req, res) => {
+  const { id } = req.params; // Get user ID from request parameters
+
+  if (!id) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  SampleModel.getResearcherSamples(id, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching sample", details: err.message });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No samples found" });
+    }
+    res.status(200).json(results);
+  });
+};
+
 
 const getAllCSSamples = (req, res) => {
   SampleModel.getAllCSSamples((err, results) => {
@@ -141,6 +159,7 @@ module.exports = {
   getFilteredSamples,
   getSamples,
   getAllSamples,
+  getResearcherSamples,
   getAllCSSamples,
   getSampleById,
   createSample,
