@@ -234,24 +234,24 @@ const SampleArea = () => {
 
           {/* Table */}
           <div className="table-responsive w-100">
-            <table className="table table-bordered table-hover">
-              <thead className="thead-dark">
+            <table className="table table-bordered table-hover text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
                 <tr>
                   {tableHeaders.map(({ label, key }, index) => (
                     <th key={index} className="px-4 text-center">
                       <div className="d-flex flex-column align-items-center">
                         <input
                           type="text"
-                          className="form-control form-control-sm w-100"
+                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={label}
                           onChange={(e) =>
                             handleFilterChange(key, e.target.value)
                           }
-                          style={{ minWidth: "120px" }}
+                          style={{ minWidth: "150px" }}
                         />
-                        <span className="fw-bold mt-1 d-block text-nowrap">
-                          {label}
-                        </span>
+                     <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                        {label}
+                      </span>
                       </div>
                     </th>
                   ))}

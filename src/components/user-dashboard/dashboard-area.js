@@ -6,6 +6,7 @@ import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateUser from "./update-user";
 import SampleArea from './samples';
+import ResearcherSamplesArea from './ResearcherSamples';
 import Header from '../../layout/dashboardheader';
 import OrderInfo from "./order-info";
 const DashboardArea = () => {
@@ -46,7 +47,8 @@ const DashboardArea = () => {
         return <OrderInfo />; 
       case "samples":
         return <SampleArea />;
-     
+      case "my-samples":
+          return <ResearcherSamplesArea />;
       case "change-password":
         return <ChangePassword />;
       case "update-user":
@@ -64,9 +66,9 @@ const DashboardArea = () => {
         <div className="container profile__inner position-relative">
           {/* <ProfileShapes /> */}
           <div className=" row justify-content-center">
-            <div className="col-xl-10 col-lg-7 col-md-9 col-sm-10 col-12">
+            <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
             <div
-              className="profile__tab-content mx-auto w-60 p-3 my-1 h-auto"
+              className="profile__tab-content mx-auto w-100 p-3 my-1 h-auto overflow-hidden"
              // style={{ backgroundColor: " #EDF4F8" }}
             >
               {renderContent()}

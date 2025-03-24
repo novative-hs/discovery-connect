@@ -1,40 +1,47 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import {Minus,Plus} from "@svg/index";
-// internal
+import { Minus, Plus } from "@svg/index";
+// Internal Imports
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
 import { remove_product, increment, decrement } from "src/redux/features/cartSlice";
 
-const CartArea = ({ product } ) => {
+const CartArea = () => {
+  const router = useRouter();
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
+  const userID = typeof window !== "undefined" ? localStorage.getItem("userID") : null;
 
-  // Handle remove product
-  const handleRemovePrd = (prd) => {
-    dispatch(remove_product(prd));
+  // Redirect based on userID
+  const handleProceedToCheckout = () => {
+    if (userID) {
+      router.push("/checkout");
+    } else {
+      router.push("/login?from=checkout");
+    }
   };
+  
 
-  // Calculate subtotal and total
+  // Handle Remove Product
+  const handleRemovePrd = (prd) => dispatch(remove_product(prd));
+
+  // Handle Quantity Increase/Decrease
+  const handleIncrease = (item) => dispatch(increment({ id: item.id }));
+  const handleDecrease = (item) => dispatch(decrement({ id: item.id }));
+
+  // Calculate subtotal
   const subtotal = cart_products.reduce(
     (acc, item) => acc + item.price * item.orderQuantity,
     0
   );
-  const handleIncrease = (item) => {
-    dispatch(increment({ id: item.id }));
-  };
-  
-  const handleDecrease = (item) => {
-    dispatch(decrement({ id: item.id }));
-    console.log("item after decreasing is", item.orderQuantity);
-  };
-  const handleChange = (e) => {}
+
   return (
     <section className="cart-area pt-100 pb-100">
       <div className="container">
         <div className="row">
           <div className="col-12">
-            {cart_products.length > 0 && (
+            {cart_products.length > 0 ? (
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="table-content table-responsive">
                   <div className="tp-continue-shopping">
@@ -55,54 +62,50 @@ const CartArea = ({ product } ) => {
                       </tr>
                     </thead>
                     <tbody>
-  {cart_products.map((item, i) => (
-    <tr key={i}>
-      <td className="product-name">
-        <Link href={`product-details/${item._id || item.id}`}>
-          {item.samplename}
-        </Link>
-      </td>
-      <td className="product-price">
-        <span className="amount">{item.price}</span>
-      </td>
-      {/* If you want to show the available stock somewhere, you can keep this */}
-      <td className="product-quantity">
-        <div className="tp-product-quantity mt-10 mb-10">
-          <span className="tp-cart-minus" onClick={() => handleDecrease(item)}>
-            <Minus />
-          </span>
-          <input
-            className="tp-cart-input"
-            type="text"
-            value={item.orderQuantity}  // <-- use orderQuantity here
-            onChange={handleChange}
-          />
-          <span className="tp-cart-plus" onClick={() => handleIncrease(item)}>
-            <Plus />
-          </span>
-        </div>
-      </td>
-      <td className="product-subtotal">
-        <span className="amount">
-          {(item.price * item.orderQuantity).toFixed(2)}  {/* use orderQuantity */}
-        </span>
-      </td>
-      <td className="product-remove">
-        <button type="button" onClick={() => handleRemovePrd(item)}>
-          <i className="fa fa-times"></i>
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+                      {cart_products.map((item, i) => (
+                        <tr key={i}>
+                          <td className="product-name">
+                            <Link href={`product-details/${item._id || item.id}`}>
+                              {item.samplename}
+                            </Link>
+                          </td>
+                          <td className="product-price">
+                            <span className="amount">{item.price.toFixed(2)}</span>
+                          </td>
+                          <td className="product-quantity">
+                            <div className="tp-product-quantity mt-10 mb-10">
+                              <span className="tp-cart-minus" onClick={() => handleDecrease(item)}>
+                                <Minus />
+                              </span>
+                              <input
+                                className="tp-cart-input"
+                                type="text"
+                                value={item.orderQuantity}
+                                readOnly
+                              />
+                              <span className="tp-cart-plus" onClick={() => handleIncrease(item)}>
+                                <Plus />
+                              </span>
+                            </div>
+                          </td>
+                          <td className="product-subtotal">
+                            <span className="amount">${(item.price * item.orderQuantity).toFixed(2)}</span>
+                          </td>
+                          <td className="product-remove">
+                            <button type="button" onClick={() => handleRemovePrd(item)}>
+                              <i className="fa fa-times"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
                   </table>
                 </div>
 
                 <div className="row justify-content-end">
                   <div className="col-md-5 mr-auto">
                     <div className="cart-page-total">
-                      <h2>Cart totals</h2>
+                      <h2>Cart Totals</h2>
                       <ul className="mb-20">
                         <li>
                           Subtotal <span>{subtotal.toFixed(2)}</span>
@@ -111,15 +114,16 @@ const CartArea = ({ product } ) => {
                           Total <span>{subtotal.toFixed(2)}</span>
                         </li>
                       </ul>
-                      <Link href={`/login?from=checkout`} className="tp-btn cursor-pointer">
-                        Proceed to checkout
-                      </Link>
+                      <button className="tp-btn cursor-pointer" onClick={handleProceedToCheckout}>
+  Proceed to Checkout
+</button>
                     </div>
                   </div>
                 </div>
               </form>
+            ) : (
+              <EmptyCart />
             )}
-            {cart_products.length === 0 && <EmptyCart />}
           </div>
         </div>
       </div>
