@@ -38,57 +38,91 @@ const createCart = (data, callback) => {
     return callback(new Error("Missing required fields"));
   }
 
-  let insertCount = 0;
-  let errors = [];
+  // Query to get Registration Admin ID
+  const getAdminIdQuery = `
+    SELECT id FROM user_account WHERE accountType = 'RegistrationAdmin' LIMIT 1
+  `;
 
-  cart_items.forEach((item) => {
-    const insertQuery = `
-      INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    const insertValues = [
-      researcher_id,
-      item.sample_id || null,
-      item.price,
-      item.samplequantity,
-      payment_method,
-      item.total,
-    ];
+  mysqlConnection.query(getAdminIdQuery, (err, adminResults) => {
+    if (err) {
+      console.error("Error fetching Registration Admin ID:", err);
+      return callback(err);
+    }
 
-    mysqlConnection.query(insertQuery, insertValues, (err) => {
-      if (err) {
-        console.error("Error inserting into cart:", err);
-        errors.push(err);
-      }
+    if (adminResults.length === 0) {
+      return callback(new Error("No Registration Admin found"));
+    }
 
-      if (errors.length > 0) return callback(errors[0]); // Return first error
+    const registrationAdminId = adminResults[0].id; // Get the admin ID
 
-      // **Step 2: Update stock only if insert succeeds**
-      const updateQuery = `
-        UPDATE sample 
-        SET quantity = quantity - ? 
-        WHERE id = ? AND quantity >= ?
-      `;
-      const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+    let insertPromises = cart_items.map((item) => {
+      return new Promise((resolve, reject) => {
+        // Insert into cart
+        const insertCartQuery = `
+          INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        const cartValues = [
+          researcher_id,
+          item.sample_id || null,
+          item.price,
+          item.samplequantity,
+          payment_method,
+          item.total,
+        ];
 
-      mysqlConnection.query(updateQuery, updateValues, (err, result) => {
-        if (err || result.affectedRows === 0) {
-          console.error("Error updating sample quantity or insufficient stock:", err);
-          errors.push(err || new Error("Insufficient stock"));
-        }
+        mysqlConnection.query(insertCartQuery, cartValues, (err, cartResult) => {
+          if (err) {
+            console.error("Error inserting into cart:", err);
+            return reject(err);
+          }
 
-        insertCount++;
+          const cartId = cartResult.insertId; // Get the inserted cart ID
 
-        // **Final callback after all insertions & updates**
-        if (insertCount === cart_items.length && errors.length === 0) {
-          callback(null, { message: "Cart items added successfully and stock updated" });
-        } else if (insertCount === cart_items.length) {
-          callback(errors[0]); // Return first encountered error
-        }
+          // Insert into registrationadminsampleapproval
+          const insertApprovalQuery = `
+            INSERT INTO registrationadminsampleapproval (cart_id, registration_admin_id, registration_admin_status)
+            VALUES (?, ?, 'pending')
+          `;
+
+          mysqlConnection.query(
+            insertApprovalQuery,
+            [cartId, registrationAdminId],
+            (err, approvalResult) => {
+              if (err) {
+                console.error("Error inserting into registration approval:", err);
+                return reject(err);
+              }
+
+              // **Update stock only if cart insert & registration approval succeed**
+              const updateQuery = `
+                UPDATE sample 
+                SET quantity = quantity - ? 
+                WHERE id = ? AND quantity >= ?
+              `;
+              const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+
+              mysqlConnection.query(updateQuery, updateValues, (err, result) => {
+                if (err || result.affectedRows === 0) {
+                  console.error("Error updating sample quantity or insufficient stock:", err);
+                  return reject(err || new Error("Insufficient stock"));
+                }
+
+                resolve({ cartId, message: "Cart added and stock updated" });
+              });
+            }
+          );
+        });
       });
     });
+
+    // **Wait for all cart insertions, approvals, and stock updates to complete**
+    Promise.all(insertPromises)
+      .then((results) => callback(null, results))
+      .catch((error) => callback(error));
   });
 };
+
 
 
 const getAllCart = (id, callback, res) => {
@@ -197,7 +231,7 @@ const updateCart = (id,data, callback, res) => {
 };
 const getAllOrder = (callback, res) => {
   const sqlQuery = `
- SELECT 
+SELECT 
     c.id AS order_id, 
     c.user_id, 
     u.email AS user_email,
@@ -220,17 +254,27 @@ const getAllOrder = (callback, res) => {
     c.created_at,
     IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
 
-    -- Ensure proper handling of NULL values in committee status
-    CASE 
-        WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
-        WHEN SUM(CASE WHEN ca.committee_status = 'rejected' THEN 1 ELSE 0 END) > 0 
-            THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'pending' THEN 1 ELSE 0 END) > 0 
-            THEN 'pending'
-        ELSE 'accepted' 
-    END AS final_committee_status,
+    -- Corrected committee status evaluation
+    (SELECT 
+        CASE 
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Pending') > 0 THEN 'pending'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+            ELSE NULL
+        END
+     FROM committeesampleapproval ca WHERE ca.cart_id = c.id
+    ) AS final_committee_status,
 
-    GROUP_CONCAT(DISTINCT ca.comments SEPARATOR ', ') AS committee_comments
+    -- Collect all comments from committee members
+   (SELECT GROUP_CONCAT(
+          DISTINCT CONCAT('Committee Member Name :', cm.CommitteeMemberName, ': ', ca.comments) 
+          SEPARATOR ' | ')
+ FROM committeesampleapproval ca
+ JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+ WHERE ca.cart_id = c.id
+) AS committee_comments
+
+
 
 FROM cart c
 JOIN user_account u ON c.user_id = u.id
@@ -238,18 +282,6 @@ LEFT JOIN researcher r ON u.id = r.user_account_id
 LEFT JOIN organization org ON r.nameofOrganization = org.id
 JOIN sample s ON c.sample_id = s.id
 LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
-LEFT JOIN committeesampleapproval ca ON c.id = ca.cart_id 
-
-GROUP BY c.id, u.email, r.ResearcherName, org.OrganizationName, c.sample_id, s.samplename, 
-         s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-         s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-         s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-         s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
-         s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
-         s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
-         s.TestSystemManufacturer, s.SamplePriceCurrency, c.price, 
-         c.quantity, c.payment_method, c.totalpayment, c.order_status, c.created_at, 
-         ra.registration_admin_status
 
 ORDER BY c.created_at ASC;
 

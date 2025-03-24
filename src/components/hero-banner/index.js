@@ -47,7 +47,7 @@ const HeroBanner = () => {
         spaceBetween={0}
         effect="slide"
         loop
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
+        autoplay={{ delay: 2000, disableOnInteraction: false }}
         modules={[Autoplay, Pagination]}
         pagination={{ clickable: true }}
         onSwiper={(swiper) => (swiperRef.current = swiper)} // Store Swiper instance

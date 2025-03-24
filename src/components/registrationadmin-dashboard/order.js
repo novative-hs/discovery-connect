@@ -95,7 +95,7 @@ const OrderPage = () => {
     }
   };
   const handleOrderStatusSubmit = async () => {
-    console.log(selectedShippedId,orderStatus)
+    console.log(selectedShippedId, orderStatus);
     if (!selectedShippedId || !orderStatus) {
       alert("Please select a status.");
       return;
@@ -108,7 +108,6 @@ const OrderPage = () => {
           cartStatus: orderStatus, // Changed `cart-status` to `cartStatus`
         }
       );
-      
 
       if (response.status === 200) {
         alert("Order status updated successfully!");
@@ -129,6 +128,14 @@ const OrderPage = () => {
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
     setShowTransferModal(true);
+  };
+  const [expandedComments, setExpandedComments] = useState({});
+
+  const toggleComments = (orderId) => {
+    setExpandedComments((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }));
   };
 
   const handleSendApproval = (committeeType) => {
@@ -233,8 +240,19 @@ const OrderPage = () => {
                         setSelectedSample(order);
                         setSampleShowModal(true);
                       }}
-                      className="cursor-pointer"
-                      style={{ cursor: "pointer" }} // Make rows clickable
+                      className={`cursor-pointer ${
+                        order.final_committee_status === "Refused"
+                          ? "table-danger"
+                          : order.final_committee_status === "Approved"
+                          ? "table-success"
+                          : order.final_committee_status === "pending"
+                          ? "table-warning"
+                          : order.registration_admin_status === "Rejected"
+                          ? "table-danger"
+                          : order.registration_admin_status === "Pending"
+                          ? "table-warning"
+                          : ""
+                      }`}
                     >
                       <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
@@ -245,9 +263,54 @@ const OrderPage = () => {
                       <td>
                         {order.final_committee_status
                           ? order.final_committee_status
-                          : "N/A"}
+                          : "Awaiting Admin Action"}
                       </td>
-                      <td>{order.committee_comments?order.committee_comments:"N/A"}</td>
+                      <td
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleComments(order.order_id);
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {expandedComments[order.order_id] ? (
+                          order.committee_comments ? (
+                            <div
+                              style={{
+                                background: "#f8f9fa",
+                                padding: "10px",
+                                borderRadius: "8px",
+                                boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+                                maxWidth: "300px",
+                                whiteSpace: "normal",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {order.committee_comments
+                                .split(" | ")
+                                .map((comment, index) => (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      marginBottom: "5px",
+                                      color: "#333",
+                                    }}
+                                  >
+                                    • {comment}
+                                  </div>
+                                ))}
+                            </div>
+                          ) : (
+                            <div style={{ color: "#888", fontStyle: "italic" }}>
+                              No comments available
+                            </div>
+                          )
+                        ) : (
+                          <span className="text-primary fw-bold">
+                            Click to View
+                          </span>
+                        )}
+                      </td>
+
                       <td>
                         <div className="d-flex align-items-center gap-2 position-relative">
                           {/* Edit Status Button */}
@@ -281,36 +344,35 @@ const OrderPage = () => {
                             </button>
                           </div>
                           {/* Send Approval Button */}
-                          {order.registration_admin_status === "Accepted" && (
-                            <div className="position-relative">
-                              <button
-                                className="btn btn-sm btn-outline-success"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent row click event from firing
-                                  handleToggleTransferOptions(order.order_id);
-                                }}
-                                title="Send Approval to Committee Member"
-                              >
-                                <FontAwesomeIcon
-                                  icon={faExchangeAlt}
-                                  size="sm"
-                                />
-                              </button>
-                            </div>
-                          )}
-                           <button
-        className="btn btn-sm btn-outline-primary ms-2"
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedShippedId(order.order_id);
-          setShowOrderStatusModal(true);
-        }}
-        title="Update Order Status"
-      >
-        <FontAwesomeIcon icon={faTruck} size="sm" />
-      </button>
-
-    
+                          {order.registration_admin_status === "Accepted" &&
+                            order.final_committee_status === null && (
+                              <div className="position-relative">
+                                <button
+                                  className="btn btn-sm btn-outline-success"
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Prevent row click event from firing
+                                    handleToggleTransferOptions(order.order_id);
+                                  }}
+                                  title="Send Approval to Committee Member"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={faExchangeAlt}
+                                    size="sm"
+                                  />
+                                </button>
+                              </div>
+                            )}
+                          <button
+                            className="btn btn-sm btn-outline-primary ms-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedShippedId(order.order_id);
+                              setShowOrderStatusModal(true);
+                            }}
+                            title="Update Order Status"
+                          >
+                            <FontAwesomeIcon icon={faTruck} size="sm" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -355,33 +417,42 @@ const OrderPage = () => {
             </Modal>
           )}
 
-{showOrderStatusModal && (
-        <Modal show={showOrderStatusModal} onHide={() => setShowOrderStatusModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Update Order Status</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form.Group>
-              <Form.Label>Select Order Status</Form.Label>
-              <Form.Select value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>
-                <option value="">Select status</option>
-                <option value="Pending">Pending</option>
-                <option value="Shipped">Shipped</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Cancelled">Cancelled</option>
-              </Form.Select>
-            </Form.Group>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowOrderStatusModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleOrderStatusSubmit}>
-              Save Changes
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      )}
+          {showOrderStatusModal && (
+            <Modal
+              show={showOrderStatusModal}
+              onHide={() => setShowOrderStatusModal(false)}
+            >
+              <Modal.Header closeButton>
+                <Modal.Title>Update Order Status</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Form.Group>
+                  <Form.Label>Select Order Status</Form.Label>
+                  <Form.Select
+                    value={orderStatus}
+                    onChange={(e) => setOrderStatus(e.target.value)}
+                  >
+                    <option value="">Select status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </Form.Select>
+                </Form.Group>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowOrderStatusModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleOrderStatusSubmit}>
+                  Save Changes
+                </Button>
+              </Modal.Footer>
+            </Modal>
+          )}
           {showTransferModal && (
             <div className="modal show d-block" tabIndex="-1">
               <div className="modal-dialog">
