@@ -94,11 +94,8 @@ const createCart = (data, callback) => {
                 return reject(err);
               }
 
-<<<<<<< HEAD
               // *Update stock only if cart insert & registration approval succeed*
-=======
               // **Update stock only if cart insert & registration approval succeed**
->>>>>>> khollaqureshi
               const updateQuery = `
                 UPDATE sample 
                 SET quantity = quantity - ? 
@@ -120,22 +117,16 @@ const createCart = (data, callback) => {
       });
     });
 
-<<<<<<< HEAD
     // *Wait for all cart insertions, approvals, and stock updates to complete*
-=======
     // **Wait for all cart insertions, approvals, and stock updates to complete**
->>>>>>> khollaqureshi
     Promise.all(insertPromises)
       .then((results) => callback(null, results))
       .catch((error) => callback(error));
   });
 };
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> khollaqureshi
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
