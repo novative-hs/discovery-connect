@@ -4,11 +4,11 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Provider } from "react-redux";
 import { store } from "src/redux/store";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import "../styles/index.scss";
 
 if (typeof window !== "undefined") {
   require("bootstrap/dist/js/bootstrap");
 }
-import "../styles/index.scss";
 
 // stripePromise
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY);

@@ -101,103 +101,103 @@ const OfferPopularProduct = () => {
             </Link>
           </div>
         </div>
-          {/* ✅ Custom Modal (No Bootstrap) */}
-      {showModal && selectedProduct && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="modal-backdrop fade show"
-            style={{
-              backdropFilter: "blur(5px)",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              zIndex: 1040,
-            }}
-          ></div>
+        {/* ✅ Custom Modal (No Bootstrap) */}
+        {showModal && selectedProduct && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="modal-backdrop fade show"
+              style={{
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                zIndex: 1040,
+              }}
+            ></div>
 
-          {/* Modal Container */}
-          <div
-            className="modal show d-block"
-            role="dialog"
-            style={{
-              zIndex: 1050,
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              backgroundColor: "#fff",
-              padding: "20px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-              width: "90vw",
-              maxWidth: "700px",
-              maxHeight: "80vh",
-              overflowY: "auto",
-            }}
-          >
-            {/* Modal Header */}
-            <div className="modal-header d-flex justify-content-between align-items-center"
-              style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
-              <h5 className="fw-bold">{selectedProduct.samplename}</h5>
-              <button
-                type="button"
-                className="close"
-                onClick={() => setShowModal(false)}
-                style={{
-                  fontSize: "1.5rem",
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                }}
-              >
-                &times;
-              </button>
-            </div>
+            {/* Modal Container */}
+            <div
+              className="modal show d-block"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                backgroundColor: "#fff",
+                padding: "20px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+                width: "90vw",
+                maxWidth: "700px",
+                maxHeight: "80vh",
+                overflowY: "auto",
+              }}
+            >
+              {/* Modal Header */}
+              <div className="modal-header d-flex justify-content-between align-items-center"
+                style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
+                <h5 className="fw-bold">{selectedProduct.samplename}</h5>
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    fontSize: "1.5rem",
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
 
-            {/* Modal Body */}
-            <div className="modal-body">
-              <div className="row">
-                {/* Left Side: Image & Basic Details */}
-                <div className="col-md-5 text-center">
-                  <img
-                    src={selectedProduct.imageUrl || "/placeholder.jpg"}
-                    alt={selectedProduct.samplename}
-                    className="img-fluid rounded"
-                    style={{ maxHeight: "200px", objectFit: "cover" }}
-                  />
-                  <div className="mt-3 p-2 bg-light rounded text-start">
-                    <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
-                    <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
-                    <p><strong>Alcohol or Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</p>
-                    <p><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</p>
-                    <p><strong>Country of Collection:</strong> {selectedProduct.CountryOfCollection}</p>
-                    <p><strong>Status:</strong> {selectedProduct.status}</p>
+              {/* Modal Body */}
+              <div className="modal-body">
+                <div className="row">
+                  {/* Left Side: Image & Basic Details */}
+                  <div className="col-md-5 text-center">
+                    <img
+                      src={selectedProduct.imageUrl || "/placeholder.jpg"}
+                      alt={selectedProduct.samplename}
+                      className="img-fluid rounded"
+                      style={{ maxHeight: "200px", objectFit: "cover" }}
+                    />
+                    <div className="mt-3 p-2 bg-light rounded text-start">
+                      <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
+                      <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
+                      <p><strong>Alcohol or Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</p>
+                      <p><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</p>
+                      <p><strong>Country of Collection:</strong> {selectedProduct.CountryOfCollection}</p>
+                      <p><strong>Status:</strong> {selectedProduct.status}</p>
+                    </div>
                   </div>
-                </div>
 
-                {/* Right Side: Detailed Information */}
-                <div className="col-md-7">
-                  <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
-                  <p><strong>Sample Condition:</strong> {selectedProduct.samplecondition}</p>
-                  <p><strong>Storage Temperature:</strong> {selectedProduct.storagetemp}</p>
-                  <p><strong>Container Type:</strong> {selectedProduct.ContainerType}</p>
-                  <p><strong>Sample Type Matrix:</strong> {selectedProduct.SampleTypeMatrix}</p>
-                  <p><strong>Infectious Disease Testing:</strong> {selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
-                  <p><strong>Freeze Thaw Cycles:</strong> {selectedProduct.FreezeThawCycles}</p>
-                  <p><strong>Diagnosis Test Parameter:</strong> {selectedProduct.DiagnosisTestParameter}</p>
-                  <p><strong>Test Result:</strong> {selectedProduct.TestResult} {selectedProduct.TestResultUnit}</p>
-                  <p><strong>Test Method:</strong> {selectedProduct.TestMethod}</p>
+                  {/* Right Side: Detailed Information */}
+                  <div className="col-md-7">
+                    <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
+                    <p><strong>Sample Condition:</strong> {selectedProduct.samplecondition}</p>
+                    <p><strong>Storage Temperature:</strong> {selectedProduct.storagetemp}</p>
+                    <p><strong>Container Type:</strong> {selectedProduct.ContainerType}</p>
+                    <p><strong>Sample Type Matrix:</strong> {selectedProduct.SampleTypeMatrix}</p>
+                    <p><strong>Infectious Disease Testing:</strong> {selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
+                    <p><strong>Freeze Thaw Cycles:</strong> {selectedProduct.FreezeThawCycles}</p>
+                    <p><strong>Diagnosis Test Parameter:</strong> {selectedProduct.DiagnosisTestParameter}</p>
+                    <p><strong>Test Result:</strong> {selectedProduct.TestResult} {selectedProduct.TestResultUnit}</p>
+                    <p><strong>Test Method:</strong> {selectedProduct.TestMethod}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
-   
+          </>
+        )}
+
       </div>
     </section>
   );
