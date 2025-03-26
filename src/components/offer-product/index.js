@@ -52,7 +52,7 @@ const OfferPopularProduct = () => {
                   {category.price ? `${category.price} ${category.SamplePriceCurrency || ""}` : "Price not available"}
                 </p>
                 <button
-                  className="btn btn-outline-primary mt-2 w-100 fw-bold"
+                  className="btn btn-outline-danger mt-2 w-100 fw-bold"
                   onClick={() => {
                     setSelectedProduct(category);
                     setShowModal(true);
@@ -68,7 +68,7 @@ const OfferPopularProduct = () => {
         {/* Footer Section: Centered "View All Samples" Button */}
         <div className="row text-center mt-4">
           <div className="col">
-            <Link href="/shop" className="btn btn-primary fw-bold px-4 py-2">
+            <Link href="/shop" className="btn btn-danger fw-bold px-4 py-2">
               Show More
             </Link>
           </div>

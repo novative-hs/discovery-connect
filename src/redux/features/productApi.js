@@ -15,10 +15,10 @@ export const authApi = apiSlice.injectEndpoints({
     }),
     // get single product
     getProduct: builder.query({
-      query: (id) => `api/products/${id}`,
-      providesTags: (result, error, arg) => [{ type: "Product", id: arg }],
+      query: (id) => `api/sample/${id}`,
+      providesTags: (result, error, arg) => [{ type: "sample", id: arg }],
       invalidatesTags: (result, error, arg) => [
-        { type: "RelatedProducts", id },
+        { type: "RelatedSamples", id },
       ],
     }),
     // getRelatedProducts

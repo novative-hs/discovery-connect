@@ -65,9 +65,9 @@ const CartArea = () => {
                       {cart_products.map((item, i) => (
                         <tr key={i}>
                           <td className="product-name">
-                            <Link href={`product-details/${item._id || item.id}`}>
+                            <span>
                               {item.samplename}
-                            </Link>
+                            </span>
                           </td>
                           <td className="product-price">
                             <span className="amount">{item.price.toFixed(2)}</span>

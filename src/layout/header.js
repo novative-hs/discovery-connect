@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSelector } from "react-redux";
-
+import { useRouter } from "next/router";
 // internal
 import Menus from "./menus";
 import logo from "@assets/img/logo/discoveryconnectlogo.png";
@@ -14,12 +14,16 @@ import useCartInfo from "@hooks/use-cart-info";
 import SearchForm from "@components/forms/search-form";
 
 const Header = ({ style_2 = false }) => {
+  const router = useRouter();
   const { sticky } = useSticky();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOffCanvasOpen, setIsOffCanvasOpen] = useState(false);
   const { sampleCount } = useCartInfo();
   const { wishlist } = useSelector((state) => state.wishlist);
   const { user: userInfo } = useSelector((state) => state.auth);
+  const handleProceedToCart = () => {
+      router.push("/cart");
+  };
   return (
     <>
       <header>
@@ -90,9 +94,16 @@ const Header = ({ style_2 = false }) => {
                             </li>
                           )}
                           <li>
-                            <button
+                            {/* <button
                               className="cartmini-open-btn"
                               onClick={() => setIsCartOpen(!isCartOpen)}
+                            >
+                              <Cart />
+                              <span className="tp-item-count">{sampleCount}</span>
+                            </button> */}
+                            <button
+                              className="cartmini-open-btn"
+                             onClick={handleProceedToCart}
                             >
                               <Cart />
                               <span className="tp-item-count">{sampleCount}</span>

@@ -44,7 +44,7 @@ const ShopSidebar = ({
                 Price
               </button>
             </h2>
-            <div id="price_widget_collapse" className="accordion-collapse collapse">
+            <div id="price_widget_collapse" className="accordion-collapse collapse show">
               <div className="accordion-body">
                 {priceRanges.map((range, index) => (
                   <div key={index} className="shop__widget-list-item">
@@ -80,7 +80,7 @@ const ShopSidebar = ({
             </h2>
             <div
               id="smoking_widget_collapse"
-              className="accordion-collapse collapse"
+              className="accordion-collapse collapse show"
               aria-labelledby="smoking__widget"
               data-bs-parent="#smoking"
             >
@@ -98,7 +98,7 @@ const ShopSidebar = ({
           </div>
         </div>
       </div>
-      <div className="shop__widget tp-accordion" >
+      <div className="shop__widget tp-accordion show" >
         <div className="accordion" id="gender">
           <div className="accordion-item">
             <h2 className="accordion-header" id="gender__widget">
@@ -115,7 +115,7 @@ const ShopSidebar = ({
             </h2>
             <div
               id="gender_widget_collapse"
-              className="accordion-collapse collapse"
+              className="accordion-collapse collapse show"
               aria-labelledby="gender__widget"
               data-bs-parent="#gender"
             >
@@ -150,9 +150,10 @@ const ShopSidebar = ({
             </h2>
             <div
               id="sample_widget_collapse"
-              className="accordion-collapse collapse"
+              className="accordion-collapse collapse show"
               aria-labelledby="sample__widget"
               data-bs-parent="#sample"
+              style={{ height: "200px", overflowY: "auto" }}
             >
               <div className="accordion-body">
                 <div className="shop__widget-list">
@@ -175,7 +176,7 @@ const ShopSidebar = ({
           </div>
         </div>
       </div>
-      <div className="shop__widget tp-accordion">
+      <div className="shop__widget tp-accordion mt-3">
         <button onClick={handleReset} className="tp-btn w-100">
           Reset Filters
         </button>
