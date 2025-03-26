@@ -2,15 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCheckCircle,
-  faTimesCircle,
-  
-  faFilePdf,
-  
-} from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
-import { getLocalStorage } from "@utils/localstorage";
 
 const SampleArea = () => {
   const id = localStorage.getItem("userID");
@@ -20,20 +13,25 @@ const SampleArea = () => {
     console.log("Committee Member Id on sample page is:", id);
   }
   const [showModal, setShowModal] = useState(false);
-  const [actionType, setActionType] = useState(""); // "Approved" or "Refused"
+  const [actionType, setActionType] = useState(""); 
   const [comment, setComment] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
+
+  const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
     { label: "User Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
+    { label: "Comments", key: "comments" },
+    { label: "Reporting Mechanism", key: "reporting_mechanism" },
+    { label: "Study Copy", key: "study_copy" },
+    { label: "IRB file", key: "irb_file" },
+    { label: "NBC file", key: "nbc_file" },
     { label: "Status", key: "committee_status" },
-    {label:"Comments",key:"comments"}
   ];
 
   const [samples, setSamples] = useState([]); // State to hold fetched samples
@@ -47,6 +45,7 @@ const SampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
+
   // Fetch samples from backend when component loads
   useEffect(() => {
     fetchSamples(); // Call the function when the component mounts
@@ -112,44 +111,59 @@ const SampleArea = () => {
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-      );
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
 
-      // Set success message
-      setSuccessMessage("Sample deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchSamples(); // This will refresh the samples list
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting sample with ID ${selectedSampleId}:`,
-        error
-      );
+  const handleViewDocument = (fileBuffer, fileName, sampleId) => {
+    if (!fileBuffer) {
+      alert("No document available.");
+      return;
     }
+
+    // Convert buffer to Blob
+    const blob = new Blob([new Uint8Array(fileBuffer.data)], {
+      type: "application/pdf",
+    });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+
+    // Track viewed status
+    setViewedDocuments((prev) => ({
+      ...prev,
+      [sampleId]: { ...(prev[sampleId] || {}), [fileName]: true },
+    }));
   };
+
+  // Check if all documents are viewed for a sample
+  const allDocumentsViewed = (cartId, sample) => {
+    if (!sample) return false; // Ensure sample exists before accessing properties
+
+    const requiredDocs = ["study_copy", "irb_file"];
+    const optionalDoc = "nbc_file"; // This is optional
+
+    // Ensure required documents are viewed
+    const hasViewedRequired = requiredDocs.every(
+      (doc) => viewedDocuments[cartId]?.[doc]
+    );
+
+    // Check if nbc_file exists in the sample; if it does, ensure it is viewed
+    const hasViewedOptional =
+      !sample.nbc_file || viewedDocuments[cartId]?.[optionalDoc];
+
+    return hasViewedRequired && hasViewedOptional;
+  };
+
   const handleOpenModal = (type, sample) => {
     if (!sample) {
       alert("Sample data is missing.");
+      return;
+    }
+    if (!allDocumentsViewed(sample.cart_id, sample)) {
+      alert("Please view all required documents before proceeding.");
       return;
     }
     setSelectedSample(sample); // Ensure the selected sample is set
     setActionType(type);
     setShowModal(true);
   };
-  
   // Close Modal
   const handleCloseModal = () => {
     setSelectedSample(null); // Ensure the selected sample is set
@@ -159,21 +173,22 @@ const SampleArea = () => {
   };
   const handleSubmit = async () => {
     const trimmedComment = comment.trim(); // Trim spaces and new lines
-  
-    if (!selectedSample || !trimmedComment) {
+
+    if (!id || !selectedSample || !trimmedComment) {
       alert("Please enter a comment.");
       return;
     }
-  
+
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`, 
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
         {
+          committee_member_id: id,
           committee_status: actionType, // "Approved" or "Refused"
           comments: trimmedComment, // Send trimmed comment
         }
       );
-  
+
       if (response.status === 200) {
         alert(`Sample ${actionType} successfully!`);
         setShowModal(false);
@@ -185,7 +200,7 @@ const SampleArea = () => {
       alert("Failed to update sample status.");
     }
   };
-  
+
   useEffect(() => {
     if (showModal) {
       // Prevent background scroll when modal is open
@@ -208,7 +223,7 @@ const SampleArea = () => {
           </div>
         )}
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
-          Samples for Approval
+        Sample Orders & Documents
         </h4>
         {/* <div className="profile__main-content">
                 <h4 className="profile__main-title text-capitalize">Welcome Committee Member</h4>
@@ -258,62 +273,81 @@ const SampleArea = () => {
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
-                        className="text-center text-truncate"
-                        style={{ maxWidth: "150px" }}
+                        className="text-center"
+                        style={{
+                          maxWidth: "200px",
+                          wordWrap: "break-word",
+                          whiteSpace: "normal",
+                        }}
                       >
-                        {/* Format Date of Collection */}
-                        {key === "DateofCollection" && sample[key]
-                          ? new Date(sample[key]).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : key === "price" && sample[key]
-                          ? `${sample["SamplePriceCurrency"] || "$"} ${
-                              sample[key]
-                            }`
-                          : sample[key] || "N/A"}
+                        {["study_copy", "irb_file", "nbc_file"].includes(
+                          key
+                        ) ? (
+                          <button
+                            className={`btn btn-sm ${
+                              viewedDocuments[sample.cart_id]?.[key]
+                                ? "btn-outline-primary"
+                                : "btn-outline-primary"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDocument(
+                                sample[key],
+                                key,
+                                sample.cart_id
+                              );
+                            }}
+                          >
+                            {viewedDocuments[sample.cart_id]?.[key]
+                              ? "Download Document"
+                              : "Download Document"}
+                          </button>
+                        ) : key === "reporting_mechanism" && sample[key] ? (
+                          sample[key].length > 50 ? (
+                            <span
+                              className="text-primary"
+                              style={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedComment(sample[key]);
+                                setShowCommentModal(true);
+                              }}
+                              title={sample[key]}
+                            >
+                              Click to View
+                            </span>
+                          ) : (
+                            <span title={sample[key]}>{sample[key]}</span>
+                          )
+                        ) : (
+                          sample[key] || "N/A"
+                        )}
                       </td>
                     ))}
 
                     <td className="text-center">
                       <div
                         className="d-flex justify-content-center gap-2"
-                        onClick={(e) => e.stopPropagation()} // ✅ Prevent row click event from triggering when clicking buttons
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() =>
-                            window.open(
-                              "https://example.com/sample.pdf",
-                              "_blank"
-                            )
-                          }
-                          title="View PDF Documents"
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleOpenModal("Approved", sample)}
+                          title="Approve Sample"
                         >
-                          <FontAwesomeIcon
-                            size="lg"
-                            className="text-primary"
-                            icon={faFilePdf}
-                          />
+                          <FontAwesomeIcon icon={faCheck} size="sm" />
                         </button>
 
                         <button
-  className="btn btn-outline-success btn-sm"
-  onClick={() => handleOpenModal("Approved", sample)} // Pass sample
-  title="Approve Sample"
->
-  <FontAwesomeIcon icon={faCheckCircle} size="lg" className="text-success" />
-</button>
-
-<button
-  className="btn btn-outline-danger btn-sm"
-  onClick={() => handleOpenModal("Refused", sample)} // Pass sample
-  title="Refuse Sample"
->
-  <FontAwesomeIcon icon={faTimesCircle} size="lg" className="text-danger" />
-</button>
-
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleOpenModal("Refused", sample)}
+                          title="Refuse Sample"
+                        >
+                          <FontAwesomeIcon icon={faTimes} size="sm" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -328,35 +362,37 @@ const SampleArea = () => {
             </tbody>
           </table>
         </div>
-       
-        {showModal && (
-  <Modal show={showModal} onHide={handleCloseModal}>
-    <Modal.Header closeButton>
-      <Modal.Title>{actionType} Sample</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      <Form.Group>
-        <Form.Label>Enter your comments</Form.Label>
-        <Form.Control
-          as="textarea"
-          rows={3}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Enter comments here..."
-        />
-      </Form.Group>
-    </Modal.Body>
-    <Modal.Footer>
-      <Button variant="secondary" onClick={handleCloseModal}>
-        Cancel
-      </Button>
-      <Button variant={actionType === "Approved" ? "success" : "danger"} onClick={handleSubmit}>
-        Send
-      </Button>
-    </Modal.Footer>
-  </Modal>
-)}
 
+        {showModal && (
+          <Modal show={showModal} onHide={handleCloseModal}>
+            <Modal.Header closeButton>
+              <Modal.Title>{actionType} Sample</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group>
+                <Form.Label>Enter your comments</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Enter comments here..."
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleCloseModal}>
+                Cancel
+              </Button>
+              <Button
+                variant={actionType === "Approved" ? "success" : "danger"}
+                onClick={handleSubmit}
+              >
+                Send
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        )}
 
         {/* Pagination */}
         {totalPages >= 0 && (
@@ -443,9 +479,9 @@ const SampleArea = () => {
                         <strong>Country of Collection:</strong>{" "}
                         {selectedSample.CountryOfCollection}
                       </p>
-                      <p>
+                      {/* <p>
                         <strong>Status:</strong> {selectedSample.status}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
 
@@ -490,67 +526,6 @@ const SampleArea = () => {
                       {selectedSample.InfectiousDiseaseTesting} (
                       {selectedSample.InfectiousDiseaseResult})
                     </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-        {showDeleteModal && (
-          <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
-
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-              <div className="modal-dialog" role="document">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Delete Sample</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowDeleteModal(false)}
-                      style={{
-                        // background: 'none',
-                        // border: 'none',
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
-                  <div className="modal-body">
-                    <p>Are you sure you want to unapproved this sample?</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="btn btn-danger" onClick={handleDelete}>
-                      Delete
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      Cancel
-                    </button>
                   </div>
                 </div>
               </div>

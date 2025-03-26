@@ -4,7 +4,7 @@ const sampledispatchModel = require("../models/sampledispatchModel");
 const samplereceiveModel = require("../models/samplereceiveModel")
 const sampleModel = require("../models/sampleModel");
 const signupModel = require("../models/registrationModel");
-const productModel = require("../models/productModel");
+
 const wishlistModel = require("../models/wishlistModel");
 const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
@@ -23,6 +23,7 @@ const committeesampleapprovalModel=require("../models/committeesampleapproval")
 // Function to initialize all tables
 function Database() {
 
+  paymentModel.createPaymentTable();
   cityModel.createCityTable();
   historyModel.RegistrationAdmin_History();
   countryModel.createCountryTable();
@@ -36,12 +37,12 @@ function Database() {
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
-  productModel.createProductsTable();
   wishlistModel.createWishlistTable();
+  
   cartModel.createCartTable();
   sample_approvalModel.createSampleApprovalTable();
+  sample_approvalModel.createSampleDocumentTable();
   committeesampleapprovalModel.createcommitteesampleapprovalTable();
-  paymentModel.createPaymentTable();
   samplefieldsModel.createEthnicityTable();
   samplefieldsModel.createSampleConditionTable();
   samplefieldsModel.createStorageTemperatureTable();

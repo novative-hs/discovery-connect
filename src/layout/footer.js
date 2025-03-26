@@ -21,7 +21,7 @@ const Footer = () => {
               {/* </div> */}
             </div>
 
-             {/* Learn More */}
+            {/* Learn More */}
 
             <div className="col-12 col-md-2">
               <div className="widget">
@@ -35,7 +35,7 @@ const Footer = () => {
               </div>
             </div>
 
-             {/* Quick Links */}
+            {/* Quick Links */}
 
             <div className="col-12 col-md-2">
               <div className="widget">
@@ -89,19 +89,20 @@ const Footer = () => {
       </section>
 
       {/* Copyright Section */}
-      <div className="bg-black py-2"> {/* Dark background for copyright section */}
-        <div className="container overflow-hidden p-3">
+      <div className="bg-black py-1"> {/* Dark background for copyright section */}
+        <div className="container w-75 mx-auto overflow-hidden p-2">
           <div className="row gy-1 align-items-center">
-            <div className="col-md-7 text-center text-md-start small text-light">
+            {/* Left-aligned copyright text */}
+            <div className="col-md-7 text-light small text-md-start text-center">
               &copy; {new Date().getFullYear()} Discovery Connect. All Rights Reserved.
             </div>
+            {/* Right-aligned social links */}
             <div className="col-md-5 d-flex justify-content-md-end">
               <SocialLinks />
             </div>
           </div>
         </div>
       </div>
-
     </footer>
   );
 };

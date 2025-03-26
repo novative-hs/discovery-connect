@@ -39,7 +39,7 @@ const SocialLinks = () => {
           key={i}
           href={l.link}
           target={l.target}
-          className="fs-5"
+          className="fs-6"
           style={{ color: l.color }} // Apply brand color
         >
           <i className={l.icon}></i>

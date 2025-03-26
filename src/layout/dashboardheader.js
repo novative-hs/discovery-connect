@@ -104,8 +104,8 @@ const Header = ({ setActiveTab, activeTab }) => {
       setUserLogo(
         user?.logo?.data
           ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-              "base64"
-            )}`
+            "base64"
+          )}`
           : null
       );
     }
@@ -126,7 +126,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-collectionsite");
     } else if (userType === "biobank") {
       setActiveTab("update-biobank");
-    } 
+    }
     else if (userType === "committeemember") {
       setActiveTab("update-committeemember");
     } else {
@@ -150,70 +150,70 @@ const Header = ({ setActiveTab, activeTab }) => {
   const menuItems =
     userType == "organization"
       ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "Researcher List", tab: "researchers" },
-        ]
+        { label: "Profile", tab: "order-info" },
+        { label: "Researcher List", tab: "researchers" },
+      ]
       : userType == "researcher"
-      ? [
+        ? [
           { label: "Profile", tab: "order-info" },
           { label: "Sample List", tab: "samples" },
           { label: "My Samples", tab: "my-samples" },
         ]
-      : userType == "databaseadmin"
-      ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "City", tab: "city" },
-          { label: "Country", tab: "country" },
-          { label: "District", tab: "district" },
-          { label: "Researcher List", tab: "researcher" },
-          { label: "Organization List", tab: "organization" },
-          { label: "Collection Site List", tab: "collectionsite" },
-          { label: "Committee Members List", tab: "committee-members" },
-          {
-            label: "Sample",
-            tab: "sample",
-            dropdown: [
-              { label: "Ethnicity", tab: "ethnicity" },
-              { label: "Sample Condition", tab: "sample-condition" },
-              { label: "Storage Temperature", tab: "storage-temperature" },
-              { label: "Container Type", tab: "container-type" },
-              { label: "Quantity Unit", tab: "quantity-unit" },
-              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
-              { label: "Test Method", tab: "test-method" },
-              { label: "Test Result Unit", tab: "test-result-unit" },
-              {
-                label: "Concurrent Medical Conditions",
-                tab: "concurrent-medical-conditions",
-              },
-              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
-              { label: "Test System", tab: "test-system" },
-              {
-                label: "Test System Manufacturer",
-                tab: "test-system-manufacturer",
-              },
-            ],
-          },
-        ]
-      : userType == "collectionsites"
-      ? [
-          { label: "Sample List", tab: "samples" },
-          { label: "Sample Dispatch", tab: "sample-dispatch" },
-        ]
-      : userType == "biobank"
-      ? [
-          { label: "Sample List", tab: "samples" },
-          { label: "Sample Dispatch", tab: "sample-dispatch" },
-        ]
-        : userType == "committeemember"
-        ? [
-            { label: "Sample List", tab: "samples" },
+        : userType == "databaseadmin"
+          ? [
+            { label: "Profile", tab: "order-info" },
+            { label: "City", tab: "city" },
+            { label: "Country", tab: "country" },
+            { label: "District", tab: "district" },
+            { label: "Researcher List", tab: "researcher" },
+            { label: "Organization List", tab: "organization" },
+            { label: "Collection Site List", tab: "collectionsite" },
+            { label: "Committee Members List", tab: "committee-members" },
+            {
+              label: "Sample",
+              tab: "sample",
+              dropdown: [
+                { label: "Ethnicity", tab: "ethnicity" },
+                { label: "Sample Condition", tab: "sample-condition" },
+                { label: "Storage Temperature", tab: "storage-temperature" },
+                { label: "Container Type", tab: "container-type" },
+                { label: "Quantity Unit", tab: "quantity-unit" },
+                { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+                { label: "Test Method", tab: "test-method" },
+                { label: "Test Result Unit", tab: "test-result-unit" },
+                {
+                  label: "Concurrent Medical Conditions",
+                  tab: "concurrent-medical-conditions",
+                },
+                { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+                { label: "Test System", tab: "test-system" },
+                {
+                  label: "Test System Manufacturer",
+                  tab: "test-system-manufacturer",
+                },
+              ],
+            },
           ]
-          : userType == "registrationadmin"
-        ? [
-          { label: "Profile", tab: "order-info" },
-            { label: "Order List", tab: "order" },
-          ]
-      : [];
+          : userType == "collectionsites"
+            ? [
+              { label: "Sample List", tab: "samples" },
+              { label: "Sample Dispatch", tab: "sample-dispatch" },
+            ]
+            : userType == "biobank"
+              ? [
+                { label: "Sample List", tab: "samples" },
+                { label: "Sample Dispatch", tab: "sample-dispatch" },
+              ]
+              : userType == "committeemember"
+                ? [
+                  { label: "Sample List", tab: "samples" },
+                ]
+                : userType == "registrationadmin"
+                  ? [
+                    { label: "Profile", tab: "order-info" },
+                    { label: "Order List", tab: "order" },
+                  ]
+                  : [];
 
   return (
     <>
@@ -246,9 +246,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
                 >
                   <button
-                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
-                      activeTab === tab ? "text-primary" : "text-dark"
-                    } fs-7`}
+                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ? "text-primary" : "text-dark"
+                      } fs-7`}
                     onClick={() => {
                       if (!dropdown) {
                         setActiveTab(tab);
@@ -258,11 +257,10 @@ const Header = ({ setActiveTab, activeTab }) => {
                     <small>{label}</small> {/* Makes text smaller */}
                     {label === "Sample" && (
                       <i
-                        className={`ms-2 fas ${
-                          showSampleDropdown === index
+                        className={`ms-2 fas ${showSampleDropdown === index
                             ? "fa-caret-up"
                             : "fa-caret-down"
-                        } text-black`}
+                          } text-black`}
                       ></i>
                     )}
                   </button>
@@ -352,9 +350,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   )}
                 </button>
                 <ul
-                  className={`dropdown-menu dropdown-menu-end ${
-                    showDropdown ? "show" : ""
-                  }`}
+                  className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""
+                    }`}
                   aria-labelledby="userDropdown"
                 >
                   {userType !== "registrationadmin" && userType !== "biobank" && (

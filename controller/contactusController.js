@@ -16,7 +16,16 @@ const submitContactForm = (req, res) => {
         return res.status(200).json(result);
     });
 };
+const getallContactus=(req,res)=>{
+    contactusModel.getAllContactus((err, results) => {
+        if (err) {
+          return res.status(500).json({ error: "Error fetching Contact us list" });
+        }
+        res.status(200).json(results);
+      });
+};
 
 module.exports = {
-    submitContactForm
+    submitContactForm,
+    getallContactus
 };

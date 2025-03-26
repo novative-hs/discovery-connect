@@ -9,13 +9,13 @@ const createCartTable = () => {
     sample_id VARCHAR(36),
     price FLOAT,
     quantity INT,
-    payment_method VARCHAR(255),
     totalpayment DECIMAL(10, 2),
-     payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid',
+    payment_id INT,
     order_status ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') DEFAULT 'Pending',  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user_account(id),
-    FOREIGN KEY (sample_id) REFERENCES sample(id)
+    FOREIGN KEY (sample_id) REFERENCES sample(id),
+    FOREIGN KEY (payment_id) REFERENCES payment(id) 
   )`;
 
   mysqlConnection.query(cartTableQuery, (err, result) => {
@@ -30,18 +30,16 @@ const createCartTable = () => {
 
 // cartModel.js
 const createCart = (data, callback) => {
-  console.log("Incoming request body:", data);
+ 
 
-  const { researcher_id, cart_items, payment_method } = data;
+  const { researcher_id, cart_items, payment_id, study_copy, reporting_mechanism, irb_file, nbc_file } = data;
 
-  if (!researcher_id || !cart_items || !payment_method) {
-    return callback(new Error("Missing required fields"));
+  if (!researcher_id || !cart_items || !payment_id || !study_copy || !reporting_mechanism || !irb_file) {
+    return callback(new Error("Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"));
   }
 
   // Query to get Registration Admin ID
-  const getAdminIdQuery = `
-    SELECT id FROM user_account WHERE accountType = 'RegistrationAdmin' LIMIT 1
-  `;
+  const getAdminIdQuery = `SELECT id FROM user_account WHERE accountType = 'RegistrationAdmin' LIMIT 1`;
 
   mysqlConnection.query(getAdminIdQuery, (err, adminResults) => {
     if (err) {
@@ -57,9 +55,9 @@ const createCart = (data, callback) => {
 
     let insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
-        // Insert into cart
+        // Insert into cart with payment_id
         const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity, payment_method, totalpayment)
+          INSERT INTO cart (user_id, sample_id, price, quantity, payment_id, totalpayment)
           VALUES (?, ?, ?, ?, ?, ?)
         `;
         const cartValues = [
@@ -67,7 +65,7 @@ const createCart = (data, callback) => {
           item.sample_id || null,
           item.price,
           item.samplequantity,
-          payment_method,
+          payment_id, // ✅ Added Payment ID
           item.total,
         ];
 
@@ -95,20 +93,35 @@ const createCart = (data, callback) => {
               }
 
               // *Update stock only if cart insert & registration approval succeed*
-              const updateQuery = `
-                UPDATE sample 
-                SET quantity = quantity - ? 
-                WHERE id = ? AND quantity >= ?
+              // **Insert into sampledocuments**
+              const insertDocumentsQuery = `
+                INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file)
+                VALUES (?, ?, ?, ?, ?)
               `;
-              const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+              const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null];
 
-              mysqlConnection.query(updateQuery, updateValues, (err, result) => {
-                if (err || result.affectedRows === 0) {
-                  console.error("Error updating sample quantity or insufficient stock:", err);
-                  return reject(err || new Error("Insufficient stock"));
+              mysqlConnection.query(insertDocumentsQuery, documentValues, (err, docResult) => {
+                if (err) {
+                  console.error("Error inserting into sampledocuments:", err);
+                  return reject(err);
                 }
 
-                resolve({ cartId, message: "Cart added and stock updated" });
+                // **Update stock only if all previous inserts succeed**
+                const updateQuery = `
+                  UPDATE sample 
+                  SET quantity = quantity - ? 
+                  WHERE id = ? AND quantity >= ?
+                `;
+                const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
+
+                mysqlConnection.query(updateQuery, updateValues, (err, result) => {
+                  if (err || result.affectedRows === 0) {
+                    console.error("Error updating sample quantity or insufficient stock:", err);
+                    return reject(err || new Error("Insufficient stock"));
+                  }
+
+                  resolve({ cartId, message: "Cart added, stock updated, and documents saved" });
+                });
               });
             }
           );
@@ -117,11 +130,13 @@ const createCart = (data, callback) => {
     });
 
     // *Wait for all cart insertions, approvals, and stock updates to complete*
+    // **Wait for all cart insertions, approvals, document inserts, and stock updates**
     Promise.all(insertPromises)
       .then((results) => callback(null, results))
       .catch((error) => callback(error));
   });
 };
+
 
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
@@ -229,7 +244,7 @@ const updateCart = (id,data, callback, res) => {
 };
 const getAllOrder = (callback, res) => {
   const sqlQuery = `
- SELECT 
+SELECT 
     c.id AS order_id, 
     c.user_id, 
     u.email AS user_email,
@@ -245,24 +260,33 @@ const getAllOrder = (callback, res) => {
     s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
     s.TestSystemManufacturer, s.SamplePriceCurrency,
     c.price, 
-    c.quantity, 
-    c.payment_method, 
+    c.quantity,  
     c.totalpayment, 
     c.order_status,
     c.created_at,
     IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
 
-    -- Ensure proper handling of NULL values in committee status
-    CASE 
-        WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
-        WHEN SUM(CASE WHEN ca.committee_status = 'rejected' THEN 1 ELSE 0 END) > 0 
-            THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'pending' THEN 1 ELSE 0 END) > 0 
-            THEN 'pending'
-        ELSE 'accepted' 
-    END AS final_committee_status,
+    -- Corrected committee status evaluation
+    (SELECT 
+        CASE 
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Pending') > 0 THEN 'pending'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+            ELSE NULL
+        END
+     FROM committeesampleapproval ca WHERE ca.cart_id = c.id
+    ) AS final_committee_status,
 
-    GROUP_CONCAT(DISTINCT ca.comments SEPARATOR ', ') AS committee_comments
+    -- Collect all comments from committee members
+   (SELECT GROUP_CONCAT(
+          DISTINCT CONCAT('Committee Member Name :', cm.CommitteeMemberName, ': ', ca.comments) 
+          SEPARATOR ' | ')
+ FROM committeesampleapproval ca
+ JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+ WHERE ca.cart_id = c.id
+) AS committee_comments
+
+
 
 FROM cart c
 JOIN user_account u ON c.user_id = u.id
@@ -270,18 +294,6 @@ LEFT JOIN researcher r ON u.id = r.user_account_id
 LEFT JOIN organization org ON r.nameofOrganization = org.id
 JOIN sample s ON c.sample_id = s.id
 LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
-LEFT JOIN committeesampleapproval ca ON c.id = ca.cart_id 
-
-GROUP BY c.id, u.email, r.ResearcherName, org.OrganizationName, c.sample_id, s.samplename, 
-         s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-         s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-         s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-         s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
-         s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
-         s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
-         s.TestSystemManufacturer, s.SamplePriceCurrency, c.price, 
-         c.quantity, c.payment_method, c.totalpayment, c.order_status, c.created_at, 
-         ra.registration_admin_status
 
 ORDER BY c.created_at ASC;
 
@@ -297,7 +309,7 @@ ORDER BY c.created_at ASC;
   });
 };
 const getAllOrderByCommittee = (committeeMemberId, callback) => {
-  console.log(committeeMemberId)
+  
   const sqlQuery = `
     SELECT 
       c.id AS cart_id, 
@@ -307,27 +319,35 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
       s.samplename, 
-      s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-      s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-      s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-      s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
-      s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
-      s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
+      s.age, s.gender, s.ethnicity, s.samplecondition, 
+      s.storagetemp, s.ContainerType, s.CountryofCollection, 
+      s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+      s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, 
+      s.InfectiousDiseaseResult, s.FreezeThawCycles, 
+      s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.ConcurrentMedications, s.DiagnosisTestParameter, 
+      s.TestResult, s.TestResultUnit, s.TestMethod, 
+      s.TestKitManufacturer, s.TestSystem, 
       s.TestSystemManufacturer, s.SamplePriceCurrency,
       c.price, 
       c.quantity, 
-      c.payment_method, 
       c.totalpayment, 
       c.order_status,  
       c.created_at,
       ca.committee_status,  
-      ca.comments           
+      ca.comments,
+      -- Sample Documents
+      sd.study_copy,
+      sd.reporting_mechanism,
+      sd.irb_file,
+      sd.nbc_file
     FROM committeesampleapproval ca
     JOIN cart c ON ca.cart_id = c.id  
     JOIN user_account u ON c.user_id = u.id
     LEFT JOIN researcher r ON u.id = r.user_account_id 
     LEFT JOIN organization org ON r.nameofOrganization = org.id
     JOIN sample s ON c.sample_id = s.id  
+    LEFT JOIN sampledocuments sd ON c.id = sd.cart_id 
     WHERE ca.committee_member_id = ?  
     ORDER BY c.created_at ASC;
   `;
@@ -341,6 +361,7 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
     }
   });
 };
+
 
 
 const updateRegistrationAdminStatus = (id, registration_admin_status, callback) => {

@@ -3,9 +3,11 @@ import axios from "axios";
 
 const OrderInfo = ({ setActiveTab }) => {
   const [userCount, setUserCount] = useState(null);
+  const [contactusCount, setContactusCount] = useState(null);
 
   useEffect(() => {
     fetchUserCount();
+    fetchContactusCount();
   }, []);
 
   // Function to fetch user count data
@@ -19,6 +21,16 @@ const OrderInfo = ({ setActiveTab }) => {
       console.error("Error fetching user count:", error);
     }
   };
+  const fetchContactusCount = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contactus/get-all`
+      );
+      setContactusCount(response.data.length); // Set the fetched counts in the state
+    } catch (error) {
+      console.error("Error fetching user count:", error);
+    }
+  };
 
   // If data is still loading or not fetched yet
   if (!userCount) {
@@ -27,6 +39,7 @@ const OrderInfo = ({ setActiveTab }) => {
 
   const stats = [
     { label: "Order List", count: userCount.totalOrders, icon: "fa-solid fa-clipboard-list", bg: "bg-success", tab: "order" },
+    { label: "Contact us List", count: contactusCount, icon: "fa-solid fa-envelope", bg: "bg-primary", tab: "contactus" },
   ];
 
   // Handle stat div click and set active tab
@@ -48,7 +61,7 @@ const OrderInfo = ({ setActiveTab }) => {
             >
               <div className="card-body">
                 <div
-                  className="bg-success text-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2"
+                  className="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2"
                   style={{ width: "50px", height: "50px" }}
                 >
                   <i className={`${stat.icon} fs-5`}></i>

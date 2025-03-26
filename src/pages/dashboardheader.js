@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import SEO from "@components/seo";
 
 import Wrapper from "@layout/wrapper";
-import Footer from "@layout/footer";
+import DashboardFooter from "@layout/dashboardfooter";
 import OrganizationDashboard from "@components/organization-dashboard/dashboard-area";
 import DatabaseAdminDashboard from "@components/databaseadmin-dashboard/dashboard-area";
 import RegistrationAdminDashboard from "@components/registrationadmin-dashboard/dashboard-area";
@@ -54,10 +54,12 @@ const UserOrdersPage = () => {
 
   return (
     <Wrapper>
+    <div className="d-flex flex-column min-vh-100">
       <SEO pageTitle={"Dashboard"} />
-      {renderDashboard()}
-      <Footer />
-    </Wrapper>
+      <main className="flex-grow-1">{renderDashboard()}</main>
+      <DashboardFooter />
+    </div>
+  </Wrapper>
   );
 };
 

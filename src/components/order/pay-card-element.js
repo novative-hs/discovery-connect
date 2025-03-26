@@ -7,7 +7,8 @@ const PaymentCardElement = ({
   cardError,
   cart_products,
   isCheckoutSubmit,
-}) => {
+  handleSubmit,  // ✅ Receive handleSubmit as a prop
+})  => {
   const router = useRouter();
   const id = localStorage.getItem("userID");
   const [formData, setFormData] = useState({
@@ -39,7 +40,6 @@ const PaymentCardElement = ({
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
   
-    // Basic validation check
     if (!formData.cardNumber || !formData.cvc || !formData.expirationDate || !formData.cardholderName) {
       notifyError("Please fill in all required fields.");
       return;
@@ -51,38 +51,34 @@ const PaymentCardElement = ({
       card_expiry: formData.expirationDate,
       card_cvc: formData.cvc,
       payment_type: formData.paymentType,
+      payment_status: "Paid",
     };
   
-    console.log("Payment", paymentData);
-  
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/${id}`, paymentData);
+      // 🔹 Step 1: Process Payment
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/createPayment`, paymentData);
   
-      if (response.data.status && response.data.status !== 200) {
-        // If the backend sends a custom status code in response.data, handle it as an error
-        notifyError(response.data.message || "Something went wrong.");
-      } else {
-        // Success case
-        notifySuccess(response.data.message);
-        reset();
+      if (!response.data.insertedId) {
+        notifyError(response.data.message || "Payment processing failed.");
+        return;
+      }
+  
+      const paymentId = response.data.insertedId; // ✅ Ensure this is not undefined
+      console.log("✅ Payment ID:", paymentId);
+  
+      notifySuccess("Payment successful! Proceeding to place order...");
+  
+      // 🔹 Step 2: Submit Order with paymentId
+      const orderPlaced = await handleSubmit(paymentId);
+  
+      if (orderPlaced) {
+        notifySuccess("Order placed successfully!");
       }
     } catch (error) {
-      console.error("Error placing order:", error);
-  
-      if (error.response) {
-        // Handle specific response errors
-        notifyError(error.response.data.message || "An unexpected error occurred.");
-      } else if (error.request) {
-        // Network error (no response received)
-        notifyError("Network error, please try again.");
-      } else {
-        // Other unexpected errors
-        notifyError("An unexpected error occurred. Please try again.");
-      }
+      console.error("Error processing payment:", error);
+      notifyError(error.response?.data?.message || "An unexpected error occurred.");
     }
   };
-  
-  
   
   
   

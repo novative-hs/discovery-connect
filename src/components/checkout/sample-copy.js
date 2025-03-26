@@ -1,51 +1,83 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { notifyError, notifySuccess } from "@utils/toast";
 
-const SampleCopy = () => {
+const SampleCopy = ({ setSampleCopyData }) => {
   const [studyCopy, setStudyCopy] = useState(null);
-  const [reportingMechanism, setReportingMechanism] = useState("");
-  const [irbApproval, setIrbApproval] = useState("");
-  const [nbcApproval, setNbcApproval] = useState("");
+  const [reportingMechanism, setReportingMechanism] = useState("")
   const [irbFile, setIrbFile] = useState(null);
   const [nbcFile, setNbcFile] = useState(null);
 
-  const handleFileChange = (e, setter) => {
+  const studyFileRef = useRef(null);
+  const irbFileRef = useRef(null);
+  const nbcFileRef = useRef(null);
+
+  const handleFileChange = (e, setter, field) => {
     const file = e.target.files[0];
-    setter(file); // This will update the state for the specific file input
+
+    if (!file) return; // No file selected
+    if (file.type !== "application/pdf") {
+      notifyError("Only PDF format is allowed.");
+      setter(null);
+      return;
+    }
+
+    setter(file);
+    updateParent(field, file);
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission logic (e.g., save data, upload files)
-  };
-
-  const renderFilePreview = (file) => {
-    if (!file) return null;
-    const fileUrl = URL.createObjectURL(file);
-    const fileType = file.type.split("/")[0];
-
-    if (fileType === "image") {
-      return <img src={fileUrl} alt="Preview" className="img-fluid mt-2" />;
-    } else if (file.type === "application/pdf") {
-      return (
-        <embed
-          src={fileUrl}
-          type="application/pdf"
-          width="100%"
-          height="400px"
-          className="mt-2"
-        />
-      );
-    } else {
-      return <p className="mt-2">Uploaded File: {file.name}</p>;
+    if (!studyCopy || !irbFile) {
+      notifyError("Please upload all required documents in PDF format.");
+      return;
     }
+    console.log("Sample Copy Data Submitted:", {
+      studyCopy,
+      reportingMechanism,
+      irbFile,
+      nbcFile,
+    });
   };
+
+  const updateParent = (field, value) => {
+    setSampleCopyData((prevData) => ({
+      ...prevData,
+      [field]: value,
+    }));
+  };
+
+  const renderFileUpload = (fileRef, setter, field, file) => (
+    <div>
+      <button
+        type="button"
+        className="btn btn-primary"
+        onClick={() => fileRef.current.click()}
+      >
+        Choose File
+      </button>
+      <input
+        type="file"
+        accept="application/pdf"
+        ref={fileRef}
+        style={{ display: "none" }}
+        onChange={(e) => handleFileChange(e, setter, field)}
+      />
+      {file && (
+        <p className="mt-2">
+          <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-primary underline-link">
+            {file.name}
+          </a>
+        </p>
+      )}
+    </div>
+  );
 
   return (
-    <div className="container mt-4">
-      {/* Form Section */}
+    <div className="your-order mb-30">
+      <h3>Sample Documents</h3>
       <form onSubmit={handleFormSubmit}>
+        {/* Study Copy */}
         <div className="row">
-          {/* Study Copy Upload Section */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Upload Copy of the Study
@@ -53,51 +85,21 @@ const SampleCopy = () => {
                 <span className="text-danger">*</span>
               </strong>
             </p>
-            <input
-              type="file"
-              className="form-control"
-              accept=".pdf,.docx"
-              onChange={(e) => {
-                setStudyCopy(e.target.files[0]); // Only update studyCopy
-              }}
-            />
-            {studyCopy && renderFilePreview(studyCopy)}
+            {renderFileUpload(studyFileRef, setStudyCopy, "studyCopy", studyCopy)}
           </div>
 
-          {/* Reporting Mechanism */}
-          <div className="col-12 mb-3">
-            <p className="text-muted h8">
-              Reporting Mechanism
-              <strong>
-                <span className="text-danger">*</span>
-              </strong>
-            </p>
-            <textarea
-              className="form-control"
-              value={reportingMechanism}
-              onChange={(e) => setReportingMechanism(e.target.value)}
-              placeholder="Enter reporting mechanism details"
-            ></textarea>
-          </div>
+         
 
-          {/* IRB Approval Section */}
+          {/* IRB Approval */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Institutional Review Board (IRB) Approval
               <span className="text-danger">*</span>
             </p>
-            <input
-              type="file"
-              className="form-control mt-2"
-              accept=".pdf,.docx"
-              onChange={(e) => {
-                handleFileChange(e, setIrbFile); // Only update irbFile
-              }}
-            />
-            {irbFile && renderFilePreview(irbFile)}
+            {renderFileUpload(irbFileRef, setIrbFile, "irbFile", irbFile)}
           </div>
 
-          {/* NBC Approval Section */}
+          {/* NBC Approval (optional) */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               NBC Approval Foreign Collaboration
@@ -105,25 +107,25 @@ const SampleCopy = () => {
                 <span className="text-danger">(optional)</span>
               </strong>
             </p>
-            <input
-              type="file"
-              className="form-control mt-2"
-              accept=".pdf,.docx"
+            {renderFileUpload(nbcFileRef, setNbcFile, "nbcFile", nbcFile)}
+          </div>
+           {/* Reporting Mechanism */}
+           <div className="col-12 mb-3">
+            <p className="text-muted h8">
+              Reporting Mechanism
+              <strong>
+                <span className="text-danger">*</span>
+              </strong>
+            </p>
+            <textarea
+              value={reportingMechanism}
               onChange={(e) => {
-                handleFileChange(e, setNbcFile); // Only update nbcFile
+                setReportingMechanism(e.target.value);
+                updateParent("reportingMechanism", e.target.value);
               }}
-            />
-            {nbcFile && renderFilePreview(nbcFile)}
+            ></textarea>
           </div>
         </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="btn btn-primary mt-3 w-100 py-2 fs-5 rounded-pill shadow-sm hover:shadow-lg"
-        >
-          Submit
-        </button>
       </form>
     </div>
   );
