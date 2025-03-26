@@ -157,18 +157,23 @@ const tablesAndColumns = [
     ],
   },
   {
-    table: "cart",
-    columnsToAdd: [
+    "table": "cart",
+    "columnsToAdd": [
       {
-        column: "order_status",
-        type: `ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'`,
+        "column": "order_status",
+        "type": "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'"
       },
       {
-        column: "payment_status",
-        type: `ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid'`,
+        column: "payment_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "payment", column: "id" },
       },
+
     ],
+    "columnsToDelete": ["payment_status","payment_method"]
   },
+  
 ];
 
 // Function to check if column exists and add it if not

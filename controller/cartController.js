@@ -27,21 +27,53 @@ const getCartCount = (req, res) => {
   });
 };
 const createCart = (req, res) => {
-  const newCartData = req.body;
+  const { researcher_id, payment_id, cart_items, reporting_mechanism } = req.body;
 
-  console.log("Incoming request body in controller:", newCartData);
+  // Read files from `req.files`
+  const study_copy = req.files?.["study_copy"] ? req.files["study_copy"][0].buffer : null;
+  const irb_file = req.files?.["irb_file"] ? req.files["irb_file"][0].buffer : null;
+  const nbc_file = req.files?.["nbc_file"] ? req.files["nbc_file"][0].buffer : null;
+
+  // Convert JSON string fields if necessary
+  let cartItems;
+  try {
+    cartItems = typeof cart_items === "string" ? JSON.parse(cart_items) : cart_items;
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+      return res.status(400).json({ error: "cart_items must be a non-empty array" });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: "Invalid cart_items format" });
+  }
+
+  // Check required fields
+  if (!researcher_id || !payment_id || !cartItems || !reporting_mechanism) {
+    return res.status(400).json({ error: "Missing required fields (Researcher ID, Payment ID, and Reporting Mechanism are required)" });
+  }
+
+  // Construct data object
+  const newCartData = {
+    researcher_id,
+    payment_id, // ✅ Added Payment ID
+    cart_items: cartItems,
+    reporting_mechanism,
+    study_copy,
+    irb_file,
+    nbc_file,
+  };
 
   // Pass data to the model
   cartModel.createCart(newCartData, (err, result) => {
     if (err) {
-      console.log("Error:", err); // Log the error for debugging
+      console.error("Error creating cart:", err);
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
-
-    console.log("Insert Result:", result); // Log the result for debugging
-    res.status(201).json(result); // Send the success response
+  
+    console.log("Insert Result:", result);
+    return res.status(201).json({ message: "Cart created successfully", result });
   });
+  
 };
+
 
 const updateCard = (req, res) => {
   const { id } = req.params;

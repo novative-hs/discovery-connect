@@ -12,17 +12,18 @@ const createPaymentTable = (req, res,callback) => {
 // Controller to create a payment detail
 const insertPaymentDetails = (req, res) => {
   const paymentData = req.body;
-  const { id } = req.params;
 
-  console.log("Controller Received data:", paymentData);
-
-  paymentModel.insertPaymentDetails(id, paymentData, (err, result) => {
+  paymentModel.insertPaymentDetails(paymentData, (err, result) => {
     if (err) {
       return res.status(result.status || 500).json({ message: result.message });
     }
-    res.status(200).json(result);
+    res.status(200).json({
+      message: result.message,
+      insertedId: result.insertedId,  // Returning the inserted payment ID
+    });
   });
 };
+
 
 
 

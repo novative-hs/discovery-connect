@@ -41,7 +41,6 @@ const SampleArea = () => {
     { 
       label: "Payment status", 
       key: "payment_status",
-      render: (value) => value === "Paid" ? "Unpaid" : value
     },
     { 
       label: "Order status", 

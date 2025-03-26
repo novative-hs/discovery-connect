@@ -22,6 +22,30 @@ const createSampleApprovalTable = () => {
     }
   });
 };
+
+const createSampleDocumentTable = () => {
+  const sampledocumentQuery = `
+CREATE TABLE IF NOT EXISTS sampledocuments( 
+  id INT AUTO_INCREMENT PRIMARY KEY, 
+  cart_id INT, 
+  study_copy LONGBLOB,  
+  reporting_mechanism TEXT,  
+  irb_file LONGBLOB,  
+  nbc_file LONGBLOB NULL, 
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+  FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE
+);
+`;
+
+  mysqlConnection.query(sampledocumentQuery, (err, result) => {
+    if (err) {
+      console.error("Error creating sample document table:", err);
+    } else {
+      console.log("Sample document  table created or already exists.");
+    }
+  });
+};
 module.exports = {
- createSampleApprovalTable
+ createSampleApprovalTable,
+ createSampleDocumentTable
 };

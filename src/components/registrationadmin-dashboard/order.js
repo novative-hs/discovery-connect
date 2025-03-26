@@ -240,19 +240,7 @@ const OrderPage = () => {
                         setSelectedSample(order);
                         setSampleShowModal(true);
                       }}
-                      className={`cursor-pointer ${
-                        order.final_committee_status === "Refused"
-                          ? "table-danger"
-                          : order.final_committee_status === "Approved"
-                          ? "table-success"
-                          : order.final_committee_status === "pending"
-                          ? "table-warning"
-                          : order.registration_admin_status === "Rejected"
-                          ? "table-danger"
-                          : order.registration_admin_status === "Pending"
-                          ? "table-warning"
-                          : ""
-                      }`}
+                      className={`cursor-pointer `}
                     >
                       <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
