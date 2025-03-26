@@ -37,8 +37,20 @@ function saveContactUs(data, callback) {
         return callback(null, { message: "Contact form submitted successfully." });
     });
 }
+const getAllContactus = (callback) => {
+    const query = 'SELECT * FROM contact_us ORDER BY id ASC';
+    mysqlConnection.query(query, (err, results) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, results);
+      }
+    });
+  };
+  
 
 module.exports = {
     saveContactUs,
-    createContactUsTable
+    createContactUsTable,
+    getAllContactus
 };

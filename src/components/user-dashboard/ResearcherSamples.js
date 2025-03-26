@@ -38,7 +38,26 @@ const SampleArea = () => {
       key: "payment_method",
       render: (value) => value === "DBT" ? "Bank Transfer" : value
     },
+    { 
+      label: "Payment status", 
+      key: "payment_status",
+    },
+    { 
+      label: "Order status", 
+      key: "order_status",
+    },
+    { 
+      label: "Registration Admin status", 
+      key: "registration_admin_status",
+    },
+    {
+      label: "Committee Member Status",
+      key: "committee_status",
+      render: (value) => 
+        value === null ? "Waiting for admin action" : value
+    }    
   ];
+
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -49,6 +68,7 @@ const SampleArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
       );
+      console.log(response.data)
       setSamples(response.data); // Store fetched samples in state
     } catch (error) {
       console.error("Error fetching samples:", error);

@@ -2,51 +2,60 @@ const mysqlConnection = require("../config/db");
 
 const createPaymentTable = () => {
   const paymentTable = `
-    CREATE TABLE payment (
+   CREATE TABLE IF NOT EXISTS payment (
     id INT PRIMARY KEY AUTO_INCREMENT, 
-    user_id INT NOT NULL, 
-    card_number VARCHAR(16) NOT NULL,  
-    card_expiry VARCHAR(7), 
-    card_cvc VARCHAR(3), 
+    cardholder_name VARCHAR(225),
+    cart_id INT NULL,
+    card_number VARCHAR(19) NOT NULL,
+    card_expiry DATE, 
+    card_cvc VARCHAR(4), 
     payment_type ENUM('Debit', 'Credit') NOT NULL,  
-    FOREIGN KEY (user_id) REFERENCES user_account(id) 
-)
+    payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid',
+    FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE SET NULL
+);
   `;
 
   mysqlConnection.query(paymentTable, (err, result) => {
     if (err) {
-      console.log("Already exist");
+      console.error("Error creating payment table:", err);
     } else {
       console.log("Payment table created or already exists.");
     }
   });
 };
 
-const insertPaymentDetails = (id, data, callback) => {
-  const findUserQuery = `SELECT COUNT(*) AS count FROM payment WHERE user_id = ?`;
-  const insertQuery = `INSERT INTO payment (user_id, card_number, card_expiry, card_cvc, payment_type) VALUES (?, ?, ?, ?, ?)`;
-  const values = [id, data.card_number, data.card_expiry, data.card_cvc, data.payment_type];
+const insertPaymentDetails = (data, callback) => {
+  console.log("Incoming Payment Data:", data);
 
-  mysqlConnection.query(findUserQuery, [id], (err, result) => {
+  // Ensure card_expiry is in valid DATE format (YYYY-MM-DD)
+  let formattedExpiry = `${data.card_expiry}-01`; // Adds "-01" to make it a full date
+
+  const insertQuery = `
+    INSERT INTO payment (cardholder_name, card_number, card_expiry, card_cvc, payment_type, payment_status)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  const values = [
+    data.cardholder_name,
+    data.card_number,
+    formattedExpiry,  // Fixed date format
+    data.card_cvc,
+    data.payment_type,
+    data.payment_status,
+  ];
+
+  mysqlConnection.query(insertQuery, values, (err, result) => {
     if (err) {
-      return callback(err, { status: 500, message: "Database query error" });
+      console.error("Error inserting payment details:", err);
+      return callback(err, { status: 500, message: "Error inserting payment details" });
     }
-
-    const userExists = result[0].count > 0;
-
-    if (userExists) {
-      return callback(err, { status: 400, message: "Payment details already exist" });
-    }
-
-    // Insert new payment details
-    mysqlConnection.query(insertQuery, values, (err) => {
-      if (err) {
-        return callback(err, { status: 500, message: "Error inserting payment details" });
-      }
-      callback(null, { status: 200, message: "Payment details inserted successfully" });
+    callback(null, { 
+      status: 200, 
+      message: "Payment details inserted successfully",
+      insertedId: result.insertId  
     });
   });
 };
+
 
 
 

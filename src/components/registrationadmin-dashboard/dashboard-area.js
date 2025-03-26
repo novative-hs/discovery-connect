@@ -4,6 +4,7 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 // internal
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
+import ContactUS from "./contactus";
 import OrderArea from './order';
 import Header from '../../layout/dashboardheader';
 import OrderInfo from "./order-info";
@@ -43,7 +44,8 @@ const DashboardArea = () => {
           return <OrderInfo setActiveTab={setActiveTab} />;
       case "order":
         return <OrderArea />;
-       
+       case "contactus":
+        return <ContactUS/>
       case "change-password":
         return <ChangePassword />;
       default:

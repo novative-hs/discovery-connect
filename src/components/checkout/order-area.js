@@ -4,16 +4,18 @@ import { useSelector } from "react-redux";
 import { clear_cart } from  "../../redux/features/cartSlice";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/router"; 
-const OrderArea = ({
-  stripe,
-  isCheckoutSubmit,
-}) => {
+import { notifyError,notifySuccess } from "@utils/toast";
+import PaymentCardElement from "@components/order/pay-card-element";
+const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
+  console.log("Received Sample Copy Data:", sampleCopyData);
+
+
   const { cart_products } = useSelector((state) => state.cart);
-  console.log("cart items are nnnn", cart_products)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  console.log("cart items are nnnn", cart_products)
   const dispatch = useDispatch();
   const router = useRouter(); 
-  // Calculate subtotal
+// Calculate subtotal
   // const calculateSubtotal = () =>
   //   cart_products?.reduce(
   //     (total, item) => total + (item.quantity || 0) * (item.price || 0),
@@ -22,47 +24,77 @@ const OrderArea = ({
   // const subtotal = calculateSubtotal();
 
   // Calculate subtotal and total
+
   const subtotal = cart_products.reduce(
     (acc, item) => acc + item.price * item.orderQuantity,
     0
   );
-  // Handle Payment Submission
-  const handleSubmit = async () => {
-    const userID = localStorage.getItem("userID"); // Retrieve user ID from local storage
-    const accountType = localStorage.getItem("accountType"); // Retrieve account type
+
+  const handleSubmit = async (paymentId) => {
+    const userID = localStorage.getItem("userID");
+    const accountType = localStorage.getItem("accountType");
+    let missingFields = [];
+    if (!sampleCopyData.studyCopy) missingFields.push("Study Copy");
+    if (!sampleCopyData.reportingMechanism) missingFields.push("Reporting Mechanism");
+    if (!sampleCopyData.irbFile) missingFields.push("IRB File");
   
-    const data = {
-      researcher_id: userID,
-      cart_items: cart_products.map((item) => ({
-        sample_id: item.id,
-        price: Number(item.price), // Ensure numeric conversion
-        samplequantity: Number(item.orderQuantity),
-        total: Number(item.orderQuantity) * Number(item.price), // Fix calculation
-      })),
-      payment_method: selectedPaymentMethod,
-    };
-    
+    if (missingFields.length > 0) {
+      notifyError(`Please upload the following: ${missingFields.join(", ")}`);
+      return false;
+    }
+  
+    const formData = new FormData();
+    formData.append("researcher_id", userID);
+    formData.append("payment_id", paymentId); // ✅ Pass payment ID to backend
+    formData.append(
+      "cart_items",
+      JSON.stringify(
+        cart_products.map((item) => ({
+          sample_id: item.id,
+          price: Number(item.price),
+          samplequantity: Number(item.orderQuantity),
+          total: Number(item.orderQuantity) * Number(item.price),
+        }))
+      )
+    );
+  
+    formData.append("study_copy", sampleCopyData.studyCopy);
+    formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
+    formData.append("irb_file", sampleCopyData.irbFile);
+  
+    if (sampleCopyData.nbcFile) {
+      formData.append("nbc_file", sampleCopyData.nbcFile);
+    }
   
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`, data);
-      console.log("Order Placed Successfully:", response.data);
-      alert("Order placed successfully!");
-      
-      dispatch(clear_cart());
-  
-      // Redirect to user-specific dashboard after 1 second
-      setTimeout(() => {
-        if (accountType) {
-          router.push(`/dashboardheader`);
-        } else {
-          router.push(`/default-dashboard`);
-        }
-      }, 1000); // 1-second delay
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+    
+      if (response.status === 201 && response.data.message === "Cart created successfully") {
+        dispatch(clear_cart());
+        setTimeout(() => {
+          if (accountType) {
+            router.push(`/dashboardheader`);
+          } else {
+            router.push(`/default-dashboard`);
+          }
+        }, 1000);
+        return true;
+      } else {
+        notifyError("Unexpected response from the server.");
+        return false;
+      }
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("Failed to place order. Please try again.");
+      notifyError(error.response?.data?.error || "Failed to place order. Please try again.");
+      return false;
     }
+    
   };
+  
   
   return (
     <div className="your-order mb-30">
@@ -108,9 +140,9 @@ const OrderArea = ({
           </tfoot>
         </table>
       </div>
-      <div className="payment-method faq__wrapper tp-accordion">
+      {/* <div className="payment-method faq__wrapper tp-accordion">
         <div className="accordion" id="checkoutAccordion">
-          {/* Direct Bank Transfer */}
+          
           <div className="accordion-item">
             <h2 className="accordion-header" id="checkoutDBT">
               <button
@@ -151,51 +183,46 @@ const OrderArea = ({
             </div>
           </div>
 
-          {/* Cash Payment */}
+        
+        </div>
+      </div> */}
+    <div className="payment-method faq__wrapper tp-accordion">
+        <div className="accordion" id="checkoutAccordion">
           <div className="accordion-item">
-            <h2 className="accordion-header" id="checkoutCash">
+            <h2 className="accordion-header" id="checkoutOne">
               <button
-                className={`accordion-button ${
-                  selectedPaymentMethod === "Cash" ? "" : "collapsed"
-                }`}
+                className="accordion-button"
                 type="button"
                 data-bs-toggle="collapse"
-                data-bs-target="#cashPayment"
-                aria-expanded={selectedPaymentMethod === "Cash"}
-                aria-controls="cashPayment"
-                onClick={() => setSelectedPaymentMethod("Cash")}
+                data-bs-target="#bankOne"
+                aria-expanded="true"
+                aria-controls="bankOne"
               >
-                Cash Payment
+                Direct Bank Transfer
                 <span className="accordion-btn"></span>
               </button>
             </h2>
             <div
-              id="cashPayment"
-              className={`accordion-collapse collapse ${
-                selectedPaymentMethod === "Cash" ? "show" : ""
-              }`}
-              aria-labelledby="checkoutCash"
+              id="bankOne"
+              className="accordion-collapse collapse show"
+              aria-labelledby="checkoutOne"
               data-bs-parent="#checkoutAccordion"
             >
               <div className="accordion-body">
-                <div className="order-button-payment mt-25">
-                  <button
-                    onClick={handleSubmit}
-                    type="button"
-                    className="tp-btn"
-                    disabled={!cart_products.length || isCheckoutSubmit}
-                  >
-                    Place order with Cash Payment
-                  </button>
-                </div>
-              </div>
-              <div>
-                
+              <PaymentCardElement
+  stripe={stripe}
+  cardError={error}
+  cart_products={cart_products}
+  isCheckoutSubmit={isCheckoutSubmit}
+  handleSubmit={handleSubmit} 
+/>
+
               </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 };
