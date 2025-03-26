@@ -14,8 +14,6 @@ const OfferPopularProduct = () => {
   const displayedCategories = filteredCategories.slice(0, 6);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -81,13 +79,6 @@ const OfferPopularProduct = () => {
                 <p className="fs-5 text-dark fw-semibold">
                   {category.price ? `${category.price} ${category.SamplePriceCurrency || ""}` : "Price not available"}
                 </p>
-                <button
-                  className="btn btn-outline-primary mt-2 w-100 fw-bold"
-                  onClick={() => {
-                    setSelectedProduct(category);
-                    setShowModal(true);
-                  }}
-                >
                 <button
                   className="btn btn-outline-primary mt-2 w-100 fw-bold"
                   onClick={() => {
