@@ -4,6 +4,6 @@ const paymentController = require('../controller/paymentController');
 
 // Sample Routes
 router.get('/create-table', paymentController.createPaymentTable);
-router.post('/:id', paymentController.insertPaymentDetails); 
+router.post('/createPayment', paymentController.insertPaymentDetails); 
 
 module.exports = router;
