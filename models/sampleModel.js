@@ -199,6 +199,7 @@ const getResearcherSamples = (userId, callback) => {
     d.name AS DistrictName,
     p.payment_status,
     p.payment_type AS payment_method,
+    s.quantity AS orderquantity, 
     
     -- Include Registration Admin Status
     ra.registration_admin_status,
@@ -234,6 +235,7 @@ WHERE s.user_id = ?
 GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.registration_admin_status
 
 ORDER BY s.id ASC;
+
   `;
 
   mysqlConnection.query(query, [userId], (err, results) => {

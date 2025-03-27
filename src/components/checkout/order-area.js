@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { clear_cart } from  "../../redux/features/cartSlice";
+import { clear_cart } from "../../redux/features/cartSlice";
 import { useDispatch } from "react-redux";
-import { useRouter } from "next/router"; 
-import { notifyError,notifySuccess } from "@utils/toast";
+import { useRouter } from "next/router";
+import { notifyError, notifySuccess } from "@utils/toast";
 import PaymentCardElement from "@components/order/pay-card-element";
-const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
+const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   console.log("Received Sample Copy Data:", sampleCopyData);
 
-
   const { cart_products } = useSelector((state) => state.cart);
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
-  console.log("cart items are nnnn", cart_products)
+  console.log("cart items are nnnn", cart_products);
   const dispatch = useDispatch();
-  const router = useRouter(); 
-// Calculate subtotal
+  const router = useRouter();
+  // Calculate subtotal
   // const calculateSubtotal = () =>
   //   cart_products?.reduce(
   //     (total, item) => total + (item.quantity || 0) * (item.price || 0),
@@ -35,14 +35,15 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
     const accountType = localStorage.getItem("accountType");
     let missingFields = [];
     if (!sampleCopyData.studyCopy) missingFields.push("Study Copy");
-    if (!sampleCopyData.reportingMechanism) missingFields.push("Reporting Mechanism");
+    if (!sampleCopyData.reportingMechanism)
+      missingFields.push("Reporting Mechanism");
     if (!sampleCopyData.irbFile) missingFields.push("IRB File");
-  
+
     if (missingFields.length > 0) {
       notifyError(`Please upload the following: ${missingFields.join(", ")}`);
       return false;
     }
-  
+
     const formData = new FormData();
     formData.append("researcher_id", userID);
     formData.append("payment_id", paymentId); // ✅ Pass payment ID to backend
@@ -57,23 +58,26 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
         }))
       )
     );
-  
+
     formData.append("study_copy", sampleCopyData.studyCopy);
     formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
     formData.append("irb_file", sampleCopyData.irbFile);
-  
+
     if (sampleCopyData.nbcFile) {
       formData.append("nbc_file", sampleCopyData.nbcFile);
     }
-  
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-    
-      if (response.status === 201 && response.data.message === "Cart created successfully") {
+
+      if (
+        response.status === 201 &&
+        response.data.message === "Cart created successfully"
+      ) {
         dispatch(clear_cart());
         setTimeout(() => {
           if (accountType) {
@@ -89,13 +93,14 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
       }
     } catch (error) {
       console.error("Error placing order:", error);
-      notifyError(error.response?.data?.error || "Failed to place order. Please try again.");
+      notifyError(
+        error.response?.data?.error ||
+          "Failed to place order. Please try again."
+      );
       return false;
     }
-    
   };
-  
-  
+
   return (
     <div className="your-order mb-30">
       <h3>Your order</h3>
@@ -115,8 +120,13 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
                 <tr key={i}>
                   <td>{item.samplename || "N/A"}</td>
                   <td>{(item.price || 0).toFixed(2)}</td>
+                  
+
                   <td>{item.orderQuantity || 0}</td>
-                  <td>{((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}</td>
+                  <td>
+                    {((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}{" "}
+                    {item.SamplePriceCurrency || "N/A"}
+                  </td>
                 </tr>
               ))
             ) : (
@@ -131,9 +141,15 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
           <tfoot>
             <tr className="shipping">
               <th>Sub Total</th>
+
               <td colSpan="2" className="text-end">
                 <strong>
-                  <span className="amount">{subtotal.toFixed(2)}</span>
+                  <span className="amount">
+                    {subtotal.toFixed(2)}{" "}
+                    {cart_products.length > 0
+                      ? cart_products[0].SamplePriceCurrency || "N/A"
+                      : "N/A"}
+                  </span>
                 </strong>
               </td>
             </tr>
@@ -186,7 +202,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
         
         </div>
       </div> */}
-    <div className="payment-method faq__wrapper tp-accordion">
+      <div className="payment-method faq__wrapper tp-accordion">
         <div className="accordion" id="checkoutAccordion">
           <div className="accordion-item">
             <h2 className="accordion-header" id="checkoutOne">
@@ -209,20 +225,18 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
               data-bs-parent="#checkoutAccordion"
             >
               <div className="accordion-body">
-              <PaymentCardElement
-  stripe={stripe}
-  cardError={error}
-  cart_products={cart_products}
-  isCheckoutSubmit={isCheckoutSubmit}
-  handleSubmit={handleSubmit} 
-/>
-
+                <PaymentCardElement
+                  stripe={stripe}
+                  cardError={error}
+                  cart_products={cart_products}
+                  isCheckoutSubmit={isCheckoutSubmit}
+                  handleSubmit={handleSubmit}
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 };
