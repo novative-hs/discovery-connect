@@ -1,6 +1,4 @@
 import React from "react";
-import PrdDetailsDescription from "./prd-details-description";
-import PrdDetailsTabNav from "./prd-details-tab-nav";
 
 const ProductDetailsTabArea = ({product}) => {
   return (
@@ -9,9 +7,6 @@ const ProductDetailsTabArea = ({product}) => {
         <div className="row">
           <div className="col-xl-12">
             <div className="product__details-tab-nav">
-              {/* nav tab */}
-              <PrdDetailsTabNav />
-              {/* nav tab */}
             </div>
             <div className="product__details-tab-content">
               <div className="tab-content" id="nav-tabContent-info">
@@ -19,7 +14,6 @@ const ProductDetailsTabArea = ({product}) => {
                   className="tab-pane active"
                   id="nav-desc"
                 >
-                  <PrdDetailsDescription product={product} />
                 </div>
               </div>
             </div>

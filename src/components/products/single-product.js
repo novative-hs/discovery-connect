@@ -36,7 +36,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
     <React.Fragment>
       <div className="product__item p-relative transition-3 mb-50">
         <div className="product__thumb w-img p-relative fix">
-          <Link href={id ? `/product-details/${id}` : "/product-not-found"}>
+          {/* <Link href={id ? `/product-details/${id}` : "/product-not-found"}> */}
             <div className="product-image-frame">
               <Image
                 src={product.imageUrl}
@@ -46,7 +46,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
             </div>
-          </Link>
+          {/* </Link> */}
 
           <div className="d-flex justify-content-between align-items-center gap-2 mt-2 product__add transition-3">
             <button

@@ -4,15 +4,10 @@ import { useRouter } from "next/router";
 // internal
 // import ShopCta from "@components/cta";
 import SEO from "@components/seo";
-import Footer from "@layout/footer";
 import Header from "@layout/header";
 import Wrapper from "@layout/wrapper";
-import ProductDetailsBreadcrumb from "@components/product-details/breadcrumb";
 import { useGetProductQuery } from "src/redux/features/productApi";
-import ProductDetailsArea from "@components/product-details/product-details-area";
 import ErrorMessage from "@components/error-message/error";
-import ProductDetailsTabArea from "@components/product-details/product-details-tab-area";
-import RelatedProducts from "@components/product-details/related-products";
 import { initialOrderQuantity } from "src/redux/features/cartSlice";
 import PrdDetailsLoader from "@components/loader/details-loader";
 // internal
@@ -50,24 +45,13 @@ export default function DynamicShopDetails({ query }) {
     content = <ErrorMessage message="There was an error" />;
   }
 
-  if (!isLoading && !isError) {
-    content = (
-      <>
-        <ProductDetailsBreadcrumb title={product.title} />
-        <ProductDetailsArea product={product} />
-        <ProductDetailsTabArea product={product} />
-        <RelatedProducts id={product._id} tags={product.tags} />
-      </>
-    );
-  }
-
   return (
     <Wrapper>
       <SEO pageTitle={"Shop Details"} />
       <Header style_2={true} />
       {content}
       {/* <ShopCta /> */}
-      <Footer />
+      {/* <Footer /> */}
     </Wrapper>
   );
 }
