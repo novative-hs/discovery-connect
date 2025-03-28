@@ -52,15 +52,15 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-  
+
     let cleanedValue = value;
     if (id === "cardNumber" || id === "cvc") {
       cleanedValue = value.replace(/\D/g, ""); // Only allow numbers
     }
-  
+
     setFormData({ ...formData, [id]: cleanedValue });
   };
-  
+
 
   const handleRadioChange = (e) => {
     setFormData({ ...formData, paymentType: e.target.value });
@@ -118,14 +118,14 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
 
               <div className="row mb-3">
                 <div className="col-md-6">
-                <label className="form-label">Expiration Date (MM-YYYY)</label>
+                  <label className="form-label">Expiration Date (MM-YYYY)</label>
 
                   <input id="expirationDate" placeholder="mm-yy" className="form-control p-2" type="month" value={formData.expirationDate} onChange={handleInputChange} />
                   {errors.expirationDate && <small className="text-danger">{errors.expirationDate}</small>}
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">CVC</label>
-                  <input id="cvc" placeholder="Enter 3 digit CVC Number" className="form-control" type="text" value={formData.cvc} onChange={handleInputChange} />
+                  <input id="cvc" placeholder="Enter 3 digit CVC Number" className="form-control" type="text" maxLength={3} value={formData.cvc} onChange={handleInputChange} />
                   {errors.cvc && <small className="text-danger">{errors.cvc}</small>}
                 </div>
               </div>

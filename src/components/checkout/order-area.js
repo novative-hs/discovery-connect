@@ -12,6 +12,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   const { cart_products } = useSelector((state) => state.cart);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
   console.log("cart items are nnnn", cart_products);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -112,66 +113,83 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       console.error("Error placing order:", error);
       notifyError(
         error.response?.data?.error ||
-          "Failed to place order. Please try again."
+        "Failed to place order. Please try again."
       );
       return false;
     }
   };
 
   return (
-    <div className="your-order mb-30">
-      <h3>Your order</h3>
-      <div className="your-order-table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th className="product-name">Sample</th>
-              <th className="product-price">Price</th>
-              <th className="product-quantity">quantity</th>
-              <th className="product-total">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart_products?.length > 0 ? (
-              cart_products.map((item, i) => (
-                <tr key={i}>
-                  <td>{item.samplename || "N/A"}</td>
-                  <td>{(item.price || 0).toFixed(2)}</td>
+    <div className="order-container" style={{ maxWidth: "700px", margin: "auto" }}>
+      <h3>
+        <button
+          className="order-toggle-btn"
+          onClick={() => setShowOrderDetails(!showOrderDetails)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "blue",
+            textDecoration: "underline",
+            cursor: "pointer",
+            fontSize: "18px",
+          }}
+        >
+          View your order
+        </button>
+      </h3>
 
-                  <td>{item.orderQuantity || 0}</td>
-                  <td>
-                    {((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}{" "}
-                    {item.SamplePriceCurrency || "N/A"}
+      {showOrderDetails && (
+        <div className="your-order-table table-responsive" style={{ marginBottom: "15px" }}>
+          <table>
+            <thead>
+              <tr>
+                <th className="product-name">Sample</th>
+                <th className="product-price">Price</th>
+                <th className="product-quantity">Quantity</th>
+                <th className="product-total">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cart_products?.length > 0 ? (
+                cart_products.map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.samplename || "N/A"}</td>
+                    <td>{(item.price || 0).toFixed(2)}</td>
+
+                    <td>{item.orderQuantity || 0}</td>
+                    <td>
+                      {((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}{" "}
+                      {item.SamplePriceCurrency || "N/A"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "center" }}>
+                    Your cart is empty.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="3" style={{ textAlign: "center" }}>
-                  Your cart is empty.
+              )}
+            </tbody>
+            {/* Uncomment this block if you want to include order details */}
+            <tfoot>
+              <tr className="shipping">
+                <th>Sub Total</th>
+
+                <td colSpan="2" className="text-end">
+                  <strong>
+                    <span className="amount">
+                      {subtotal.toFixed(2)}{" "}
+                      {cart_products.length > 0
+                        ? cart_products[0].SamplePriceCurrency || "N/A"
+                        : "N/A"}
+                    </span>
+                  </strong>
                 </td>
               </tr>
-            )}
-          </tbody>
-          {/* Uncomment this block if you want to include order details */}
-          <tfoot>
-            <tr className="shipping">
-              <th>Sub Total</th>
-
-              <td colSpan="2" className="text-end">
-                <strong>
-                  <span className="amount">
-                    {subtotal.toFixed(2)}{" "}
-                    {cart_products.length > 0
-                      ? cart_products[0].SamplePriceCurrency || "N/A"
-                      : "N/A"}
-                  </span>
-                </strong>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+            </tfoot>
+          </table>
+        </div>)}
       {/* <div className="payment-method faq__wrapper tp-accordion">
         <div className="accordion" id="checkoutAccordion">
           
@@ -213,12 +231,10 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
                 </div>
               </div>
             </div>
-          </div>
-
-        
+          </div>        
         </div>
       </div> */}
-      <div className="payment-method faq__wrapper tp-accordion">
+      <div className="payment-method faq__wrapper tp-accordion" style={{ marginTop: "15px" }}>
         <div className="accordion" id="checkoutAccordion">
           <div className="accordion-item">
             <h2 className="accordion-header" id="checkoutOne">
