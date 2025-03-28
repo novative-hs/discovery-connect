@@ -26,6 +26,7 @@ const OrderPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [actionType, setActionType] = useState("");
   const [user_id, setUserID] = useState(null);
+  const [selectedApprovalType, setSelectedApprovalType] = useState("");
 
   const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
   const [selectedShippedId, setSelectedShippedId] = useState(null);
@@ -245,7 +246,23 @@ const OrderPage = () => {
                       <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
                       <td>{order.organization_name}</td>
-                      <td>{order.samplename}</td>
+                      <td
+                        style={{
+                          cursor: "pointer",
+                          color: "inherit",
+                          transition: "color 0.2s ease-in-out, text-decoration 0.2s ease-in-out",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = "blue";
+                          e.target.style.textDecoration = "underline";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = "inherit";
+                          e.target.style.textDecoration = "none";
+                        }}
+                      >
+                        {order.samplename}
+                      </td>
                       <td>{order.order_status}</td>
                       <td>{order.registration_admin_status}</td>
                       <td>
@@ -441,6 +458,8 @@ const OrderPage = () => {
               </Modal.Footer>
             </Modal>
           )}
+          {/* Approval  */}
+
           {showTransferModal && (
             <div className="modal show d-block" tabIndex="-1">
               <div className="modal-dialog">
@@ -455,29 +474,31 @@ const OrderPage = () => {
                   </div>
                   <div className="modal-body">
                     <p>Select approval type:</p>
-                    <button
-                      className="btn btn-primary m-2"
-                      onClick={() => handleSendApproval("scientific")}
+                    <select
+                      className="form-select"
+                      value={selectedApprovalType}
+                      onChange={(e) => setSelectedApprovalType(e.target.value)}
                     >
-                      Send for Scientific Approval
-                    </button>
+                      <option value="">Select an option</option>
+                      <option value="scientific">Scientific Approval</option>
+                      <option value="ethical">Ethical Approval</option>
+                      <option value="both">Both Approvals</option>
+                    </select>
+                  </div>
+                  <div className="modal-footer">
                     <button
-                      className="btn btn-secondary m-2"
-                      onClick={() => handleSendApproval("ethical")}
+                      className="btn btn-primary"
+                      onClick={() => handleSendApproval(selectedApprovalType)}
+                      disabled={!selectedApprovalType} // Disables if no option is selected
                     >
-                      Send for Ethical Approval
-                    </button>
-                    <button
-                      className="btn btn-success m-2"
-                      onClick={() => handleSendApproval("both")}
-                    >
-                      Send for Both Approvals
+                      Save
                     </button>
                   </div>
                 </div>
               </div>
             </div>
           )}
+
 
           {/* Pagination Controls */}
           {orders.length >= 0 && (
@@ -487,6 +508,8 @@ const OrderPage = () => {
               focusPage={currentPage - 1}
             />
           )}
+
+          {/* Sample details Modal */}
           {showSampleModal && selectedSample && (
             <>
               {/* Backdrop */}
@@ -521,11 +544,11 @@ const OrderPage = () => {
                   width: "90vw",
                   maxWidth: "700px",
                   maxHeight: "80vh",
-                  overflowY: "auto",
+                  overflow: "hidden", // Prevent scrolling
                 }}
               >
                 {/* Modal Header */}
-                <div className="modal-header d-flex justify-content-between align-items-center">
+                <div className="modal-header d-flex justify-content-between align-items-center" style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
                   <h5 className="fw-bold">
                     {selectedSample.samplename} Details:
                   </h5>
@@ -545,15 +568,11 @@ const OrderPage = () => {
                 </div>
 
                 {/* Modal Body */}
-                <div className="modal-body">
+                <div className="modal-body" style={{ maxHeight: "90vh" }}>
                   <div className="row">
                     {/* Left Side: Image & Basic Details */}
                     <div className="col-md-5 text-center">
                       <div className="mt-3 p-2 bg-light rounded text-start">
-                        <p>
-                          <strong>Sample Name:</strong>{" "}
-                          {selectedSample.samplename}
-                        </p>
                         <p>
                           <strong>Price:</strong> {selectedSample.price}{" "}
                           {selectedSample.SamplePriceCurrency}
@@ -583,9 +602,8 @@ const OrderPage = () => {
                         <strong>Gender:</strong> {selectedSample.gender} |{" "}
                         <strong>Ethnicity:</strong> {selectedSample.ethnicity}
                       </p>
-
                       <p>
-                        <strong>Storage Temp:</strong>{" "}
+                        <strong>Storage Temperature:</strong>{" "}
                         {selectedSample.storagetemp}
                       </p>
                       <p>
