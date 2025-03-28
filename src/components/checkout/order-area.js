@@ -30,9 +30,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
     0
   );
 
-  const handleSubmit = async (paymentId) => {
-    const userID = localStorage.getItem("userID");
-    const accountType = localStorage.getItem("accountType");
+  const validateDocuments = () => {
     let missingFields = [];
     if (!sampleCopyData.studyCopy) missingFields.push("Study Copy");
     if (!sampleCopyData.reportingMechanism)
@@ -43,10 +41,18 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       notifyError(`Please upload the following: ${missingFields.join(", ")}`);
       return false;
     }
+    return true;
+  };
+
+  const handleSubmit = async (paymentId) => {
+    if (!validateDocuments()) return false; // Ensure documents are validated first
+
+    const userID = localStorage.getItem("userID");
+    const accountType = localStorage.getItem("accountType");
 
     const formData = new FormData();
     formData.append("researcher_id", userID);
-    formData.append("payment_id", paymentId); // ✅ Pass payment ID to backend
+    formData.append("payment_id", paymentId);
     formData.append(
       "cart_items",
       JSON.stringify(
@@ -71,21 +77,32 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
 
       if (
         response.status === 201 &&
         response.data.message === "Cart created successfully"
       ) {
+        const cartId = response.data.result?.[0]?.cartId; // Access the first item in the array
+        const created_at = response.data.result?.[0]?.created_at; // Access the first item in the array
+
+        if (!cartId) {
+          notifyError("Cart ID not found in response.");
+          return false;
+        }
+
+        // Store cart ID in local storage
+        localStorage.setItem("cartID", cartId);
+        localStorage.setItem("created_at", created_at);
+
         dispatch(clear_cart());
+
         setTimeout(() => {
-          if (accountType) {
-            router.push(`/dashboardheader`);
-          } else {
-            router.push(`/default-dashboard`);
-          }
-        }, 1000);
+          router.push(`/order-confirmation`); // Pass order ID as query param
+        }, 500);
         return true;
       } else {
         notifyError("Unexpected response from the server.");
@@ -120,7 +137,6 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
                 <tr key={i}>
                   <td>{item.samplename || "N/A"}</td>
                   <td>{(item.price || 0).toFixed(2)}</td>
-                  
 
                   <td>{item.orderQuantity || 0}</td>
                   <td>
@@ -231,6 +247,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
                   cart_products={cart_products}
                   isCheckoutSubmit={isCheckoutSubmit}
                   handleSubmit={handleSubmit}
+                  validateDocuments={validateDocuments}
                 />
               </div>
             </div>

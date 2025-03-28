@@ -101,7 +101,7 @@ export const cartSlice = createSlice({
     clear_cart: (state) => {
       state.cart_products = []; // Clear all items
       setLocalStorage("cart_products", state.cart_products); // Update local storage
-      notifySuccess("Cart has been cleared successfully!"); // Optional notification
+     // notifySuccess("Cart has been cleared successfully!"); // Optional notification
     },
     updateQuantity: (state, action) => {
       const item = state.cart_products.find((prod) => prod.id === action.payload.id);

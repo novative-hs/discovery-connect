@@ -79,7 +79,7 @@ const ProfileNav = () => {
             <span>
               <i className="fa-regular fa-circle-info"></i>
             </span>{" "}
-            My Samples
+            My Order Samples
           </button>
 
           <button
