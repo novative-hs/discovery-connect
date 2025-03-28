@@ -31,10 +31,15 @@ const OrderPage = () => {
   const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
   const [selectedShippedId, setSelectedShippedId] = useState(null);
   const [orderStatus, setOrderStatus] = useState("");
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
   const handleCloseModal = () => {
     setSelectedOrderId(null);
     setShowModal(false);
   };
+  const [registrationAdminStatus, setRegistrationAdminStatus] = useState("");
+const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
     if (storedUserID) {
@@ -71,7 +76,7 @@ const OrderPage = () => {
     }
     setCurrentPage(1); // Reset pagination to first page
   };
-  const handleStatus = async (newStatus) => {
+  const handleAdminStatus = async (newStatus) => {
     if (!selectedOrderId) return;
 
     setLoading(true);
@@ -96,20 +101,50 @@ const OrderPage = () => {
     }
   };
   const handleOrderStatusSubmit = async () => {
-    console.log(selectedShippedId, orderStatus);
+    console.log("Selected Order ID:", selectedShippedId, "Order Status:", orderStatus);
+  
     if (!selectedShippedId || !orderStatus) {
       alert("Please select a status.");
       return;
     }
-
+  
+    // Find the order from the orders list based on selectedShippedId
+    const selectedOrder = orders.find(order => order.order_id === selectedShippedId);
+  
+    if (!selectedOrder) {
+      alert("Error: Order not found.");
+      return;
+    }
+    // Extract registration admin and committee status
+    const { registration_admin_status, final_committee_status } = selectedOrder;
+  
+    // Check if registration admin or committee member status is pending
+    if (registration_admin_status === null || registration_admin_status.toLowerCase() === "pending") {
+      alert("Error: Registration admin approval is pending.");
+      return;
+    }
+    
+   
+    if (final_committee_status === null || final_committee_status.toLowerCase() === "pending") {
+      alert("Error: Committee member approval is pending.");
+      return;
+    }
+    if (
+      (registration_admin_status?.toLowerCase() === "rejected" || final_committee_status?.toLowerCase() === "refused") &&
+      orderStatus.toLowerCase() !== "cancelled"
+    ) {
+      return alert("Error: Order only cancelled");
+    }
+    
+    // Proceed with updating order status
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedShippedId}/cart-status`,
         {
-          cartStatus: orderStatus, // Changed `cart-status` to `cartStatus`
+          cartStatus: orderStatus, // Corrected field name
         }
       );
-
+  
       if (response.status === 200) {
         alert("Order status updated successfully!");
         setShowOrderStatusModal(false);
@@ -121,11 +156,8 @@ const OrderPage = () => {
       alert("Failed to update order status.");
     }
   };
-  // Pagination Logic
-  const indexOfLastOrder = currentPage * ordersPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
-
+  
+  
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
     setShowTransferModal(true);
@@ -139,7 +171,7 @@ const OrderPage = () => {
     }));
   };
 
-  const handleSendApproval = (committeeType) => {
+  const handleCommitteeApproval = (committeeType) => {
     console.log("Sending Approval:", selectedOrderId, user_id, committeeType);
 
     axios
@@ -167,11 +199,6 @@ const OrderPage = () => {
       .catch((error) => {
         console.error("Error sending approval request:", error);
       });
-  };
-  const handleOpenModal = (orderId, type) => {
-    setSelectedOrderId(orderId);
-    setActionType(type); // ✅ Fix: Set action type properly
-    setShowModal(true);
   };
 
   return (
@@ -413,7 +440,7 @@ const OrderPage = () => {
                 </Button>
                 <Button
                   variant={actionType === "Accepted" ? "success" : "danger"}
-                  onClick={() => handleStatus(actionType)}
+                  onClick={() => handleAdminStatus(actionType)}
                   disabled={loading} // Disable button while processing
                 >
                   {loading ? "Processing..." : `Confirm ${actionType}`}

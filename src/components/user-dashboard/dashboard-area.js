@@ -1,85 +1,88 @@
 import Link from "next/link";
-import { React, useState ,useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 // internal
 import ProfileShapes from "./profile-shapes";
-import ChangePassword from './change-password';
+import ChangePassword from "./change-password";
 import UpdateUser from "./update-user";
-import SampleArea from './samples';
-import ResearcherSamplesArea from './ResearcherSamples';
-import Header from '../../layout/dashboardheader';
+import SampleArea from "./samples";
+import ResearcherSamplesArea from "./ResearcherSamples";
+import Header from "../../layout/dashboardheader";
 import OrderInfo from "./order-info";
+
 const DashboardArea = () => {
-  const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("order-info");
   const [id, setUserID] = useState(null);
 
-    useEffect(() => {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("authToken="))
-        ?.split("=")[1];
-  
-      if (!token) {
-        router.push("/login"); // Redirect to login if token is missing
-      }
-    }, [router]);
-  
-    useEffect(() => {
-      const storedUserID = localStorage.getItem("userID");
-      if (storedUserID) {
-        setUserID(storedUserID);
-        console.log("Researcher is ID:", storedUserID); // Verify storedUserID
-      } else {
-        console.error("No userID found in localStorage");
-        router.push("/login");
-      }
-    }, [router]);
-  
-    if (!id) {
-      return <div>Loading...</div>; // Or redirect to login
-    }
+  // 🔹 Ensure hooks run in a stable order
+  useEffect(() => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("authToken="))
+      ?.split("=")[1];
 
-  
+    if (!token) {
+      router.push("/login"); // Redirect to login if token is missing
+    }
+  }, [router]);
+
+  useEffect(() => {
+    const storedUserID = localStorage.getItem("userID");
+    if (storedUserID) {
+      setUserID(storedUserID);
+      console.log("Researcher ID:", storedUserID);
+    } else {
+      console.error("No userID found in localStorage");
+      router.push("/login");
+    }
+  }, [router]);
+
+  useEffect(() => {
+    const { tab } = router.query;
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [router.query]); // ✅ Always runs in the same order
+
+  // 🚀 Move loading check after hooks
+  if (!id) {
+    return <div>Loading...</div>; // Or show a loader
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case "order-info":
-        return <OrderInfo />; 
+        return <OrderInfo />;
       case "samples":
         return <SampleArea />;
       case "my-samples":
-          return <ResearcherSamplesArea />;
+        return <ResearcherSamplesArea />;
       case "change-password":
         return <ChangePassword />;
       case "update-user":
         return <UpdateUser />;
       default:
-        return <order-info />;
+        return <OrderInfo />;
     }
   };
-  
 
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area py-2 h-auto d-flex align-items-center my-4">
         <div className="container profile__inner position-relative">
-          {/* <ProfileShapes /> */}
-          <div className=" row justify-content-center">
+          <div className="row justify-content-center">
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
-            <div
-              className="profile__tab-content mx-auto w-100 p-3 my-1 h-auto overflow-hidden"
-             // style={{ backgroundColor: " #EDF4F8" }}
-            >
-              {renderContent()}
+              <div className="profile__tab-content mx-auto w-100 p-3 my-1 h-auto overflow-hidden">
+                {renderContent()}
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </section>
     </>
   );
-  
 };
 
 export default DashboardArea;
