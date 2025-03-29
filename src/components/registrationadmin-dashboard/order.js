@@ -515,7 +515,7 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                   <div className="modal-footer">
                     <button
                       className="btn btn-primary"
-                      onClick={() => handleSendApproval(selectedApprovalType)}
+                      onClick={() => handleCommitteeApproval(selectedApprovalType)}
                       disabled={!selectedApprovalType} // Disables if no option is selected
                     >
                       Save

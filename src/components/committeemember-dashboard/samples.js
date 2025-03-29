@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 
 const SampleArea = () => {
@@ -298,10 +298,8 @@ const SampleArea = () => {
                               );
                             }}
                           >
-                            {viewedDocuments[sample.cart_id]?.[key]
-                              ? "Download Document"
-                              : "Download Document"}
-                          </button>
+                            Download  <FontAwesomeIcon icon={faDownload} size="sm" />
+                            </button>
                         ) : key === "reporting_mechanism" && sample[key] ? (
                           sample[key].length > 50 ? (
                             <span
