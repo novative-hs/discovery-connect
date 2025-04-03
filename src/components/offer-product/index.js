@@ -171,7 +171,7 @@ const OfferPopularProduct = () => {
                     />
                     <div className="mt-3 p-2 bg-light rounded text-start">
                       <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
-                      <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
+                      <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
                       <p><strong>Alcohol or Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</p>
                       <p><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</p>
                       <p><strong>Country of Collection:</strong> {selectedProduct.CountryOfCollection}</p>
@@ -181,7 +181,7 @@ const OfferPopularProduct = () => {
 
                   {/* Right Side: Detailed Information */}
                   <div className="col-md-7">
-                    <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
+                    <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
                     <p><strong>Sample Condition:</strong> {selectedProduct.samplecondition}</p>
                     <p><strong>Storage Temperature:</strong> {selectedProduct.storagetemp}</p>
                     <p><strong>Container Type:</strong> {selectedProduct.ContainerType}</p>

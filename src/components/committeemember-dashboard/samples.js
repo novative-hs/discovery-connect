@@ -434,11 +434,11 @@ const SampleArea = () => {
                 width: "90vw",
                 maxWidth: "700px",
                 maxHeight: "80vh",
-                overflowY: "auto",
+                overflow: "hidden", // Prevent scrolling
               }}
             >
               {/* Modal Header */}
-              <div className="modal-header d-flex justify-content-between align-items-center">
+              <div className="modal-header d-flex justify-content-between align-items-center" style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
                 <h5 className="fw-bold">{selectedSample.samplename}</h5>
                 <button
                   type="button"
@@ -461,10 +461,6 @@ const SampleArea = () => {
                   {/* Left Side: Image & Basic Details */}
                   <div className="col-md-5 text-center">
                     <div className="mt-3 p-2 bg-light rounded text-start">
-                      <p>
-                        <strong>Sample Name:</strong>{" "}
-                        {selectedSample.samplename}
-                      </p>
                       <p>
                         <strong>Price:</strong> {selectedSample.price}{" "}
                         {selectedSample.SamplePriceCurrency}
@@ -493,7 +489,7 @@ const SampleArea = () => {
                       <strong>Ethnicity:</strong> {selectedSample.ethnicity}
                     </p>
                     <p>
-                      <strong>Storage Temp:</strong>{" "}
+                      <strong>Storage Temperature:</strong>{" "}
                       {selectedSample.storagetemp}
                     </p>
                     <p>
