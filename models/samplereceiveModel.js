@@ -27,7 +27,6 @@ const getSampleReceiveInTransit = (id, callback) => {
   // Validate and parse `id`
   const user_account_id = parseInt(id);
   if (isNaN(user_account_id)) {
-    console.error("Invalid user_account_id:", id);
     return callback(new Error("Invalid user_account_id"), null);
   }
 
@@ -41,11 +40,9 @@ const getSampleReceiveInTransit = (id, callback) => {
   `;
   mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
-      console.error('Database error:', err);
       return callback(err, null);
     }
     callback(null, results);
-    console.log("data fetched:", results)
   });
 };
 

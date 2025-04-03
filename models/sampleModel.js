@@ -60,7 +60,6 @@ const getSamples = (id, callback) => {
   // Validate and parse `id`
   const user_account_id = parseInt(id);
   if (isNaN(user_account_id)) {
-    console.error("Invalid user_account_id:", id);
     return callback(new Error("Invalid user_account_id"), null);
   }
 
@@ -78,7 +77,6 @@ ORDER BY s.created_at ASC;
   `;
   mysqlConnection.query(query, [user_account_id], (err, results) => {
     if (err) {
-      console.error('Database error:', err);
       return callback(err, null);
     }
   
@@ -109,31 +107,21 @@ WHERE
 
   `;
 
-  // Log query being executed
-  console.log("Executing Query:", query);
-
   mysqlConnection.query(query, (err, results) => {
     if (err) {
-      console.error("MySQL Query Error:", err);
       callback(err, null); // Will send 500 if there's an error with the query
       return;
     }
-
-    // Log results
-    console.log("DB Query Results:", results);
-
     // Continue with image processing
     const imageFolder = path.join(__dirname, '../uploads/Images');
     fs.readdir(imageFolder, (fsErr, files) => {
       if (fsErr) {
-        console.error("Error reading image folder:", fsErr);
         callback(fsErr, null);
         return;
       }
 
-      console.log("Files in image folder:", files);
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-      console.log("Filtered Image Files:", imageFiles);
+
 
       const updatedResults = results.map(sample => {
         if (imageFiles.length > 0) {
@@ -150,9 +138,6 @@ WHERE
         }
         return sample;
       });
-
-      console.log("Updated Results with Images:", updatedResults);
-
       callback(null, updatedResults);
     });
   });
@@ -221,8 +206,7 @@ LEFT JOIN biobank bb ON sm.user_account_id = bb.id
 LEFT JOIN city c ON cs.city = c.id
 LEFT JOIN district d ON cs.district = d.id
 LEFT JOIN country ON sm.CountryOfCollection = country.id 
-JOIN payment p ON s.payment_id = p.id  -- ✅ Fixed alias for cart
-
+JOIN payment p ON s.payment_id = p.id 
 -- Join Registration Admin Sample Approval
 LEFT JOIN registrationadminsampleapproval ra ON s.id = ra.cart_id
 
@@ -281,9 +265,6 @@ WHERE
       return;
     }
 
-    // Log results
-    console.log("DB Query Results:", results);
-
     // Continue with image processing
     const imageFolder = path.join(__dirname, '../uploads/Images');
     fs.readdir(imageFolder, (fsErr, files) => {
@@ -293,9 +274,7 @@ WHERE
         return;
       }
 
-      console.log("Files in image folder:", files);
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-      console.log("Filtered Image Files:", imageFiles);
 
       const updatedResults = results.map(sample => {
         if (imageFiles.length > 0) {
@@ -312,9 +291,6 @@ WHERE
         }
         return sample;
       });
-
-      console.log("Updated Results with Images:", updatedResults);
-
       callback(null, updatedResults);
     });
   });
@@ -329,7 +305,6 @@ const getSampleById = (id, callback) => {
 
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-  console.log("Inserting data into database:", data);
 
   const id = uuidv4(); // Generate a secure unique ID
   const masterID = uuidv4(); // Secure Master ID
@@ -347,9 +322,6 @@ const createSample = (data, callback) => {
       return callback(err, null);
     }
 
-    console.log('Insert result:', results);
-
-     // Now update masterID
      const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
      mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
        if (err) {
@@ -367,7 +339,6 @@ const createSample = (data, callback) => {
           console.error('Error inserting into sample_history:', err);
           return callback(err, null);
         }
-        console.log('Sample history recorded.', historyResults);
       callback(null, { insertId: id, masterID: masterID });
     });
   });
@@ -376,7 +347,6 @@ const createSample = (data, callback) => {
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
-  console.log(data.status);
   const query = `
     UPDATE sample
     SET donorID = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
@@ -400,7 +370,6 @@ const updateSample = (id, data, callback) => {
        console.error('Error inserting into sample_history:', err);
        return callback(err, null);
      }
-     console.log('Sample history recorded.', historyResults);
     callback(err, result);
   });
 });

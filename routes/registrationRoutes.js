@@ -17,11 +17,6 @@ router.get('/getAccountDetail/:id', registrationController.getAccountDetail);
 router.put('/updateProfile/:id', upload.single('logo'), registrationController.updateAccount);
 
 router.put('/changepassword',registrationController.changepassword);
-router.put('/changepassword', (req, res) => {
-    console.log('Request received at /user/changepassword:', req.body);
-    res.send('Debugging endpoint reached');
-});
-
 router.post("/send-otp",registrationController.sendOTP);
 router.post("/verify-otp",registrationController.verifyOTP);
 module.exports = router;
