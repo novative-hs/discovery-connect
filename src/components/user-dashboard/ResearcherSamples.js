@@ -13,8 +13,8 @@ const SampleArea = () => {
     { label: "Container Type", key: "ContainerType" },
     { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Price", key: "price" },
-    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
-    { label: "Quantity", key: "quantity" },
+    { label: "Quantity", key: "orderquantity" },
+    { label: "Total Payment", key: "totalpayment" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Smoking Status", key: "SmokingStatus" },
@@ -23,7 +23,10 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -33,29 +36,28 @@ const SampleArea = () => {
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     // { label: "Status", key: "status" },
-    { 
-      label: "Payment Method", 
+    {
+      label: "Payment Method",
       key: "payment_method",
-      render: (value) => value === "DBT" ? "Bank Transfer" : value
+      render: (value) => (value === "DBT" ? "Bank Transfer" : value),
     },
-    { 
-      label: "Payment status", 
+    {
+      label: "Payment status",
       key: "payment_status",
     },
-    { 
-      label: "Order status", 
+    {
+      label: "Order status",
       key: "order_status",
     },
-    { 
-      label: "Registration Admin status", 
+    {
+      label: "Registration Admin status",
       key: "registration_admin_status",
     },
     {
       label: "Committee Member Status",
       key: "committee_status",
-      render: (value) => 
-        value === null ? "Waiting for admin action" : value
-    }    
+      render: (value) => (value === null ? "Waiting for admin action" : value),
+    },
   ];
 
   const [samples, setSamples] = useState([]); // State to hold fetched samples
@@ -68,7 +70,7 @@ const SampleArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
       );
-      console.log(response.data)
+      console.log(response.data);
       setSamples(response.data); // Store fetched samples in state
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -83,23 +85,18 @@ const SampleArea = () => {
     }
   }, []);
 
-    useEffect(() => {
-      const pages = Math.max(
-        1,
-        Math.ceil(samples.length / itemsPerPage)
-      );
-      setTotalPages(pages);
-  
-      if (currentPage >= pages) {
-        setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-      }
-    }, [samples]);
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(samples.length / itemsPerPage));
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [samples]);
   const currentData = samples.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
-
-
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -118,68 +115,123 @@ const SampleArea = () => {
     }
   };
   return (
- 
-    <section className="policy__area pb-40 overflow-hidden p-3" >
+    <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <div className="row justify-content-center">
-              <div className="table-responsive w-100">
-                <table className="table table-bordered table-hover text-center align-middle w-auto border">
-                <thead className="table-primary text-dark">
-                    <tr>
-                      {tableHeaders.map(({ label, key }, index) => (
+          <div className="table-responsive w-100">
+            <table className="table table-bordered table-hover text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr>
+                  {tableHeaders.map(({ label, key }, index) => {
+                    // Check if it's the "Price" column and merge it with "Sample Price Currency"
+                    if (key === "price") {
+                      return (
                         <th key={index} className="px-4 text-center">
                           <div className="d-flex flex-column align-items-center">
                             <input
                               type="text"
-                               className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                              placeholder={label}
+                              className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                              placeholder="Price (Currency)"
                               onChange={(e) =>
-                                handleFilterChange(key, e.target.value)
+                                handleFilterChange("price", e.target.value)
                               }
                               style={{ minWidth: "150px" }}
                             />
- <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
-                        {label}
-                      </span>
+                            <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                              Price (Currency)
+                            </span>
                           </div>
                         </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-  {currentData.length > 0 ? (
-    currentData.map((sample) => (
-      <tr key={sample.id}>
-        {tableHeaders.map(({ key, render }, index) => (
-          <td key={index}>
-            {render ? render(sample[key]) : sample[key] || "N/A"}
-          </td>
-        ))}
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={tableHeaders.length + 1} className="text-center">
-        No samples available
-      </td>
-    </tr>
-  )}
-</tbody>
-                </table>
-              </div>
-                     {totalPages >= 0 && (
-                        <Pagination
-                          handlePageClick={handlePageChange}
-                          pageCount={totalPages}
-                          focusPage={currentPage}
-                        />
-                      )}
-             
-            </div>
-          </div>
-    
-    </section>
+                      );
+                    }
 
+                    // Render other columns normally
+                    return (
+                      <th key={index} className="px-4 text-center">
+                        <div className="d-flex flex-column align-items-center">
+                          <input
+                            type="text"
+                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                            placeholder={label}
+                            onChange={(e) =>
+                              handleFilterChange(key, e.target.value)
+                            }
+                            style={{ minWidth: "150px" }}
+                          />
+                          <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                            {label}
+                          </span>
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((sample) => (
+                    <tr key={sample.id}>
+                      {tableHeaders.map(({ key, render }, index) => {
+                        // Check if it's the price column and merge currency
+                        if (key === "price") {
+                          return (
+                            <td key={index}>
+                              {sample.price
+                                ? `${sample.price} ${
+                                    sample.SamplePriceCurrency || ""
+                                  }`
+                                : "N/A"}
+                            </td>
+                          );
+                        }
+
+                        // Check if it's the total payment column and merge currency
+                        if (key === "totalpayment") {
+                          return (
+                            <td key={index}>
+                              {sample.totalpayment
+                                ? `${sample.totalpayment} ${
+                                    sample.SamplePriceCurrency || ""
+                                  }`
+                                : "N/A"}
+                            </td>
+                          );
+                        }
+
+                        // Default rendering for other columns
+                        return (
+                          <td key={index}>
+                            {render
+                              ? render(sample[key])
+                              : sample[key] || "N/A"}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={tableHeaders.length + 1}
+                      className="text-center"
+                    >
+                      No samples available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage}
+            />
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 

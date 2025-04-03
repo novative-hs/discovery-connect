@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 
 const SampleArea = () => {
@@ -298,10 +298,8 @@ const SampleArea = () => {
                               );
                             }}
                           >
-                            {viewedDocuments[sample.cart_id]?.[key]
-                              ? "Download Document"
-                              : "Download Document"}
-                          </button>
+                            Download  <FontAwesomeIcon icon={faDownload} size="sm" />
+                            </button>
                         ) : key === "reporting_mechanism" && sample[key] ? (
                           sample[key].length > 50 ? (
                             <span
@@ -436,11 +434,11 @@ const SampleArea = () => {
                 width: "90vw",
                 maxWidth: "700px",
                 maxHeight: "80vh",
-                overflowY: "auto",
+                overflow: "hidden", // Prevent scrolling
               }}
             >
               {/* Modal Header */}
-              <div className="modal-header d-flex justify-content-between align-items-center">
+              <div className="modal-header d-flex justify-content-between align-items-center" style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
                 <h5 className="fw-bold">{selectedSample.samplename}</h5>
                 <button
                   type="button"
@@ -463,10 +461,6 @@ const SampleArea = () => {
                   {/* Left Side: Image & Basic Details */}
                   <div className="col-md-5 text-center">
                     <div className="mt-3 p-2 bg-light rounded text-start">
-                      <p>
-                        <strong>Sample Name:</strong>{" "}
-                        {selectedSample.samplename}
-                      </p>
                       <p>
                         <strong>Price:</strong> {selectedSample.price}{" "}
                         {selectedSample.SamplePriceCurrency}
@@ -495,7 +489,7 @@ const SampleArea = () => {
                       <strong>Ethnicity:</strong> {selectedSample.ethnicity}
                     </p>
                     <p>
-                      <strong>Storage Temp:</strong>{" "}
+                      <strong>Storage Temperature:</strong>{" "}
                       {selectedSample.storagetemp}
                     </p>
                     <p>

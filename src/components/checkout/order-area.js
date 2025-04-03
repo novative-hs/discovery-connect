@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { clear_cart } from  "../../redux/features/cartSlice";
+import { clear_cart } from "../../redux/features/cartSlice";
 import { useDispatch } from "react-redux";
-import { useRouter } from "next/router"; 
-import { notifyError,notifySuccess } from "@utils/toast";
+import { useRouter } from "next/router";
+import { notifyError, notifySuccess } from "@utils/toast";
 import PaymentCardElement from "@components/order/pay-card-element";
-const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
+const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   console.log("Received Sample Copy Data:", sampleCopyData);
 
-
   const { cart_products } = useSelector((state) => state.cart);
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
-  console.log("cart items are nnnn", cart_products)
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
+  console.log("cart items are nnnn", cart_products);
   const dispatch = useDispatch();
-  const router = useRouter(); 
-// Calculate subtotal
+  const router = useRouter();
+  // Calculate subtotal
   // const calculateSubtotal = () =>
   //   cart_products?.reduce(
   //     (total, item) => total + (item.quantity || 0) * (item.price || 0),
@@ -30,22 +31,29 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
     0
   );
 
-  const handleSubmit = async (paymentId) => {
-    const userID = localStorage.getItem("userID");
-    const accountType = localStorage.getItem("accountType");
+  const validateDocuments = () => {
     let missingFields = [];
     if (!sampleCopyData.studyCopy) missingFields.push("Study Copy");
-    if (!sampleCopyData.reportingMechanism) missingFields.push("Reporting Mechanism");
+    if (!sampleCopyData.reportingMechanism)
+      missingFields.push("Reporting Mechanism");
     if (!sampleCopyData.irbFile) missingFields.push("IRB File");
-  
+
     if (missingFields.length > 0) {
       notifyError(`Please upload the following: ${missingFields.join(", ")}`);
       return false;
     }
-  
+    return true;
+  };
+
+  const handleSubmit = async (paymentId) => {
+    if (!validateDocuments()) return false; // Ensure documents are validated first
+
+    const userID = localStorage.getItem("userID");
+    const accountType = localStorage.getItem("accountType");
+
     const formData = new FormData();
     formData.append("researcher_id", userID);
-    formData.append("payment_id", paymentId); // ✅ Pass payment ID to backend
+    formData.append("payment_id", paymentId);
     formData.append(
       "cart_items",
       JSON.stringify(
@@ -57,31 +65,45 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
         }))
       )
     );
-  
+
     formData.append("study_copy", sampleCopyData.studyCopy);
     formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
     formData.append("irb_file", sampleCopyData.irbFile);
-  
+
     if (sampleCopyData.nbcFile) {
       formData.append("nbc_file", sampleCopyData.nbcFile);
     }
-  
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
-    
-      if (response.status === 201 && response.data.message === "Cart created successfully") {
+
+      if (
+        response.status === 201 &&
+        response.data.message === "Cart created successfully"
+      ) {
+        const cartId = response.data.result?.[0]?.cartId; // Access the first item in the array
+        const created_at = response.data.result?.[0]?.created_at; // Access the first item in the array
+
+        if (!cartId) {
+          notifyError("Cart ID not found in response.");
+          return false;
+        }
+
+        // Store cart ID in local storage
+        localStorage.setItem("cartID", cartId);
+        localStorage.setItem("created_at", created_at);
+
         dispatch(clear_cart());
+
         setTimeout(() => {
-          if (accountType) {
-            router.push(`/dashboardheader`);
-          } else {
-            router.push(`/default-dashboard`);
-          }
-        }, 1000);
+          router.push(`/order-confirmation`); // Pass order ID as query param
+        }, 500);
         return true;
       } else {
         notifyError("Unexpected response from the server.");
@@ -89,57 +111,85 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
       }
     } catch (error) {
       console.error("Error placing order:", error);
-      notifyError(error.response?.data?.error || "Failed to place order. Please try again.");
+      notifyError(
+        error.response?.data?.error ||
+        "Failed to place order. Please try again."
+      );
       return false;
     }
-    
   };
-  
-  
+
   return (
-    <div className="your-order mb-30">
-      <h3>Your order</h3>
-      <div className="your-order-table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th className="product-name">Sample</th>
-              <th className="product-price">Price</th>
-              <th className="product-quantity">quantity</th>
-              <th className="product-total">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart_products?.length > 0 ? (
-              cart_products.map((item, i) => (
-                <tr key={i}>
-                  <td>{item.samplename || "N/A"}</td>
-                  <td>{(item.price || 0).toFixed(2)}</td>
-                  <td>{item.orderQuantity || 0}</td>
-                  <td>{((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}</td>
-                </tr>
-              ))
-            ) : (
+    <div className="order-container" style={{ maxWidth: "700px", margin: "auto" }}>
+      <h3>
+        <button
+          className="order-toggle-btn"
+          onClick={() => setShowOrderDetails(!showOrderDetails)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "blue",
+            textDecoration: "underline",
+            cursor: "pointer",
+            fontSize: "18px",
+          }}
+        >
+          View your order
+        </button>
+      </h3>
+
+      {showOrderDetails && (
+        <div className="your-order-table table-responsive" style={{ marginBottom: "15px" }}>
+          <table>
+            <thead>
               <tr>
-                <td colSpan="3" style={{ textAlign: "center" }}>
-                  Your cart is empty.
+                <th className="product-name">Sample</th>
+                <th className="product-price">Price</th>
+                <th className="product-quantity">Quantity</th>
+                <th className="product-total">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cart_products?.length > 0 ? (
+                cart_products.map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.samplename || "N/A"}</td>
+                    <td>{(item.price || 0).toFixed(2)}</td>
+
+                    <td>{item.orderQuantity || 0}</td>
+                    <td>
+                      {((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}{" "}
+                      {item.SamplePriceCurrency || "N/A"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "center" }}>
+                    Your cart is empty.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {/* Uncomment this block if you want to include order details */}
+            <tfoot>
+              <tr className="shipping">
+                <th>Sub Total</th>
+
+                <td colSpan="2" className="text-end">
+                  <strong>
+                    <span className="amount">
+                      {subtotal.toFixed(2)}{" "}
+                      {cart_products.length > 0
+                        ? cart_products[0].SamplePriceCurrency || "N/A"
+                        : "N/A"}
+                    </span>
+                  </strong>
                 </td>
               </tr>
-            )}
-          </tbody>
-          {/* Uncomment this block if you want to include order details */}
-          <tfoot>
-            <tr className="shipping">
-              <th>Sub Total</th>
-              <td colSpan="2" className="text-end">
-                <strong>
-                  <span className="amount">{subtotal.toFixed(2)}</span>
-                </strong>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+            </tfoot>
+          </table>
+        </div>)}
       {/* <div className="payment-method faq__wrapper tp-accordion">
         <div className="accordion" id="checkoutAccordion">
           
@@ -181,12 +231,10 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
                 </div>
               </div>
             </div>
-          </div>
-
-        
+          </div>        
         </div>
       </div> */}
-    <div className="payment-method faq__wrapper tp-accordion">
+      <div className="payment-method faq__wrapper tp-accordion" style={{ marginTop: "15px" }}>
         <div className="accordion" id="checkoutAccordion">
           <div className="accordion-item">
             <h2 className="accordion-header" id="checkoutOne">
@@ -209,20 +257,19 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit , error,}) => {
               data-bs-parent="#checkoutAccordion"
             >
               <div className="accordion-body">
-              <PaymentCardElement
-  stripe={stripe}
-  cardError={error}
-  cart_products={cart_products}
-  isCheckoutSubmit={isCheckoutSubmit}
-  handleSubmit={handleSubmit} 
-/>
-
+                <PaymentCardElement
+                  stripe={stripe}
+                  cardError={error}
+                  cart_products={cart_products}
+                  isCheckoutSubmit={isCheckoutSubmit}
+                  handleSubmit={handleSubmit}
+                  validateDocuments={validateDocuments}
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 };

@@ -2,22 +2,23 @@ import React, { useState } from "react";
 import BillingDetails from "./billing-details";
 import OrderArea from "./order-area";
 import SampleCopy from "@components/checkout/sample-copy";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-const CheckoutArea = ({ handleSubmit, submitHandler, ...others }) => {
+const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...others }) => {
   const id = localStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>;
-  } else {
-    console.log("Researcher ID on checkout page is:", id);
-  }
-
-  // Store SampleCopy data in state
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [sampleCopyData, setSampleCopyData] = useState({
     studyCopy: null,
     reportingMechanism: "",
     irbFile: null,
     nbcFile: null,
   });
+
+  if (id === null) {
+    return <div>Loading...</div>;
+  } else {
+    console.log("Researcher ID on checkout page is:", id);
+  }
 
   return (
     <section className="checkout-area pb-85">
@@ -27,22 +28,44 @@ const CheckoutArea = ({ handleSubmit, submitHandler, ...others }) => {
             <div className="col-lg-6">
               <div className="checkbox-form">
                 <h3>Billing Details</h3>
-                {/* billing details start*/}
                 <BillingDetails {...others} />
-                {/* billing details end*/}
               </div>
             </div>
 
             <div className="col-lg-6">
-              {/* Sample Copy Component */}
-              <SampleCopy setSampleCopyData={setSampleCopyData} />
-              
-              {/* OrderArea receives SampleCopy data */}
-              <OrderArea {...others} sampleCopyData={sampleCopyData} />
+              <SampleCopy
+                setSampleCopyData={setSampleCopyData}
+                onComplete={() => setIsModalOpen(true)}
+              />
             </div>
           </div>
         </form>
       </div>
+
+      {/* Bootstrap Modal */}
+      <div
+  className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
+  tabIndex="-1"
+  role="dialog"
+  style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+>
+  <div className="modal-dialog modal-lg modal-md modal-sm" role="document">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title">Order Summary</h5>
+        <button
+          type="button"
+          className="btn-close"
+          onClick={() => setIsModalOpen(false)}
+        ></button>
+      </div>
+      <div className="modal-body">
+        <OrderArea {...others} sampleCopyData={sampleCopyData} />
+      </div>
+    </div>
+  </div>
+</div>
+
     </section>
   );
 };

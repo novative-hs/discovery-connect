@@ -26,14 +26,20 @@ const OrderPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [actionType, setActionType] = useState("");
   const [user_id, setUserID] = useState(null);
+  const [selectedApprovalType, setSelectedApprovalType] = useState("");
 
   const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
   const [selectedShippedId, setSelectedShippedId] = useState(null);
   const [orderStatus, setOrderStatus] = useState("");
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
   const handleCloseModal = () => {
     setSelectedOrderId(null);
     setShowModal(false);
   };
+  const [registrationAdminStatus, setRegistrationAdminStatus] = useState("");
+const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
     if (storedUserID) {
@@ -70,7 +76,7 @@ const OrderPage = () => {
     }
     setCurrentPage(1); // Reset pagination to first page
   };
-  const handleStatus = async (newStatus) => {
+  const handleAdminStatus = async (newStatus) => {
     if (!selectedOrderId) return;
 
     setLoading(true);
@@ -95,20 +101,50 @@ const OrderPage = () => {
     }
   };
   const handleOrderStatusSubmit = async () => {
-    console.log(selectedShippedId, orderStatus);
+    console.log("Selected Order ID:", selectedShippedId, "Order Status:", orderStatus);
+  
     if (!selectedShippedId || !orderStatus) {
       alert("Please select a status.");
       return;
     }
-
+  
+    // Find the order from the orders list based on selectedShippedId
+    const selectedOrder = orders.find(order => order.order_id === selectedShippedId);
+  
+    if (!selectedOrder) {
+      alert("Error: Order not found.");
+      return;
+    }
+    // Extract registration admin and committee status
+    const { registration_admin_status, final_committee_status } = selectedOrder;
+  
+    // Check if registration admin or committee member status is pending
+    if (registration_admin_status === null || registration_admin_status.toLowerCase() === "pending") {
+      alert("Error: Registration admin approval is pending.");
+      return;
+    }
+    
+   
+    if (final_committee_status === null || final_committee_status.toLowerCase() === "pending") {
+      alert("Error: Committee member approval is pending.");
+      return;
+    }
+    if (
+      (registration_admin_status?.toLowerCase() === "rejected" || final_committee_status?.toLowerCase() === "refused") &&
+      orderStatus.toLowerCase() !== "cancelled"
+    ) {
+      return alert("Error: Order only cancelled");
+    }
+    
+    // Proceed with updating order status
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedShippedId}/cart-status`,
         {
-          cartStatus: orderStatus, // Changed `cart-status` to `cartStatus`
+          cartStatus: orderStatus, // Corrected field name
         }
       );
-
+  
       if (response.status === 200) {
         alert("Order status updated successfully!");
         setShowOrderStatusModal(false);
@@ -120,11 +156,8 @@ const OrderPage = () => {
       alert("Failed to update order status.");
     }
   };
-  // Pagination Logic
-  const indexOfLastOrder = currentPage * ordersPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
-
+  
+  
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
     setShowTransferModal(true);
@@ -138,7 +171,7 @@ const OrderPage = () => {
     }));
   };
 
-  const handleSendApproval = (committeeType) => {
+  const handleCommitteeApproval = (committeeType) => {
     console.log("Sending Approval:", selectedOrderId, user_id, committeeType);
 
     axios
@@ -166,11 +199,6 @@ const OrderPage = () => {
       .catch((error) => {
         console.error("Error sending approval request:", error);
       });
-  };
-  const handleOpenModal = (orderId, type) => {
-    setSelectedOrderId(orderId);
-    setActionType(type); // ✅ Fix: Set action type properly
-    setShowModal(true);
   };
 
   return (
@@ -245,7 +273,23 @@ const OrderPage = () => {
                       <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
                       <td>{order.organization_name}</td>
-                      <td>{order.samplename}</td>
+                      <td
+                        style={{
+                          cursor: "pointer",
+                          color: "inherit",
+                          transition: "color 0.2s ease-in-out, text-decoration 0.2s ease-in-out",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = "blue";
+                          e.target.style.textDecoration = "underline";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = "inherit";
+                          e.target.style.textDecoration = "none";
+                        }}
+                      >
+                        {order.samplename}
+                      </td>
                       <td>{order.order_status}</td>
                       <td>{order.registration_admin_status}</td>
                       <td>
@@ -396,7 +440,7 @@ const OrderPage = () => {
                 </Button>
                 <Button
                   variant={actionType === "Accepted" ? "success" : "danger"}
-                  onClick={() => handleStatus(actionType)}
+                  onClick={() => handleAdminStatus(actionType)}
                   disabled={loading} // Disable button while processing
                 >
                   {loading ? "Processing..." : `Confirm ${actionType}`}
@@ -441,6 +485,8 @@ const OrderPage = () => {
               </Modal.Footer>
             </Modal>
           )}
+          {/* Approval  */}
+
           {showTransferModal && (
             <div className="modal show d-block" tabIndex="-1">
               <div className="modal-dialog">
@@ -455,29 +501,31 @@ const OrderPage = () => {
                   </div>
                   <div className="modal-body">
                     <p>Select approval type:</p>
-                    <button
-                      className="btn btn-primary m-2"
-                      onClick={() => handleSendApproval("scientific")}
+                    <select
+                      className="form-select"
+                      value={selectedApprovalType}
+                      onChange={(e) => setSelectedApprovalType(e.target.value)}
                     >
-                      Send for Scientific Approval
-                    </button>
+                      <option value="">Select an option</option>
+                      <option value="scientific">Scientific Approval</option>
+                      <option value="ethical">Ethical Approval</option>
+                      <option value="both">Both Approvals</option>
+                    </select>
+                  </div>
+                  <div className="modal-footer">
                     <button
-                      className="btn btn-secondary m-2"
-                      onClick={() => handleSendApproval("ethical")}
+                      className="btn btn-primary"
+                      onClick={() => handleCommitteeApproval(selectedApprovalType)}
+                      disabled={!selectedApprovalType} // Disables if no option is selected
                     >
-                      Send for Ethical Approval
-                    </button>
-                    <button
-                      className="btn btn-success m-2"
-                      onClick={() => handleSendApproval("both")}
-                    >
-                      Send for Both Approvals
+                      Save
                     </button>
                   </div>
                 </div>
               </div>
             </div>
           )}
+
 
           {/* Pagination Controls */}
           {orders.length >= 0 && (
@@ -487,6 +535,8 @@ const OrderPage = () => {
               focusPage={currentPage - 1}
             />
           )}
+
+          {/* Sample details Modal */}
           {showSampleModal && selectedSample && (
             <>
               {/* Backdrop */}
@@ -521,11 +571,11 @@ const OrderPage = () => {
                   width: "90vw",
                   maxWidth: "700px",
                   maxHeight: "80vh",
-                  overflowY: "auto",
+                  overflow: "hidden", // Prevent scrolling
                 }}
               >
                 {/* Modal Header */}
-                <div className="modal-header d-flex justify-content-between align-items-center">
+                <div className="modal-header d-flex justify-content-between align-items-center" style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
                   <h5 className="fw-bold">
                     {selectedSample.samplename} Details:
                   </h5>
@@ -545,15 +595,11 @@ const OrderPage = () => {
                 </div>
 
                 {/* Modal Body */}
-                <div className="modal-body">
+                <div className="modal-body" style={{ maxHeight: "90vh" }}>
                   <div className="row">
                     {/* Left Side: Image & Basic Details */}
                     <div className="col-md-5 text-center">
                       <div className="mt-3 p-2 bg-light rounded text-start">
-                        <p>
-                          <strong>Sample Name:</strong>{" "}
-                          {selectedSample.samplename}
-                        </p>
                         <p>
                           <strong>Price:</strong> {selectedSample.price}{" "}
                           {selectedSample.SamplePriceCurrency}
@@ -583,9 +629,8 @@ const OrderPage = () => {
                         <strong>Gender:</strong> {selectedSample.gender} |{" "}
                         <strong>Ethnicity:</strong> {selectedSample.ethnicity}
                       </p>
-
                       <p>
-                        <strong>Storage Temp:</strong>{" "}
+                        <strong>Storage Temperature:</strong>{" "}
                         {selectedSample.storagetemp}
                       </p>
                       <p>

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { notifyError, notifySuccess } from "@utils/toast";
 
-const SampleCopy = ({ setSampleCopyData }) => {
+const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
   const [studyCopy, setStudyCopy] = useState(null);
   const [reportingMechanism, setReportingMechanism] = useState("")
   const [irbFile, setIrbFile] = useState(null);
@@ -50,7 +50,7 @@ const SampleCopy = ({ setSampleCopyData }) => {
     <div>
       <button
         type="button"
-        className="btn btn-primary"
+        className="tp-btn"
         onClick={() => fileRef.current.click()}
       >
         Choose File
@@ -71,7 +71,15 @@ const SampleCopy = ({ setSampleCopyData }) => {
       )}
     </div>
   );
-
+  const handleNext = () => {
+    if (!studyCopy || !irbFile || !reportingMechanism) {
+      notifyError("Please upload all required fields before proceeding.");
+      return;
+    }
+    // Call onComplete to open modal in parent component
+    onComplete();
+  };
+  
   return (
     <div className="your-order mb-30">
       <h3>Sample Documents</h3>
@@ -127,6 +135,11 @@ const SampleCopy = ({ setSampleCopyData }) => {
           </div>
         </div>
       </form>
+      <div className="d-flex justify-content-end mt-3">
+  <button type="button" className="tp-btn" onClick={handleNext}>
+    Next
+  </button>
+</div>
     </div>
   );
 };
