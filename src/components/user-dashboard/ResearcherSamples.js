@@ -59,23 +59,35 @@ const SampleArea = () => {
       render: (value) => (value === null ? "Waiting for admin action" : value),
     },
   ];
-
+  const [loading, setLoading] = useState(false);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  const [error, setError] = useState(null);
   const fetchSamples = async () => {
+    setLoading(true);  // Set loading to true when fetching data
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
       );
       console.log(response.data);
-      setSamples(response.data); // Store fetched samples in state
+      
+      if (response.data.error) {
+        setError(response.data.error);  // Handle empty or error response
+        setSamples([]);  // Clear previous sample data
+      } else {
+        setSamples(response.data);  // Store fetched samples in state
+      }
     } catch (error) {
       console.error("Error fetching samples:", error);
+      setError("An error occurred while fetching the samples.");
+    } finally {
+      setLoading(false);  // Set loading to false when fetch is done
     }
   };
+
   // Fetch samples from backend when component loads
   useEffect(() => {
     if (id === null) {
@@ -115,9 +127,12 @@ const SampleArea = () => {
     }
   };
   return (
+    
     <section className="policy__area pb-40 overflow-hidden p-3">
+
       <div className="container">
         <div className="row justify-content-center">
+        
           <div className="table-responsive w-100">
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">

@@ -47,10 +47,9 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
   const handleSubmit = async (paymentId) => {
     if (!validateDocuments()) return false; // Ensure documents are validated first
-
+  
     const userID = localStorage.getItem("userID");
-    const accountType = localStorage.getItem("accountType");
-
+  
     const formData = new FormData();
     formData.append("researcher_id", userID);
     formData.append("payment_id", paymentId);
@@ -65,15 +64,15 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
         }))
       )
     );
-
+  
     formData.append("study_copy", sampleCopyData.studyCopy);
     formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
     formData.append("irb_file", sampleCopyData.irbFile);
-
+  
     if (sampleCopyData.nbcFile) {
       formData.append("nbc_file", sampleCopyData.nbcFile);
     }
-
+  
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
@@ -82,42 +81,36 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
-      if (
-        response.status === 201 &&
-        response.data.message === "Cart created successfully"
-      ) {
-        const cartId = response.data.result?.[0]?.cartId; // Access the first item in the array
-        const created_at = response.data.result?.[0]?.created_at; // Access the first item in the array
-
-        if (!cartId) {
-          notifyError("Cart ID not found in response.");
-          return false;
-        }
-
-        // Store cart ID in local storage
-        localStorage.setItem("cartID", cartId);
-        localStorage.setItem("created_at", created_at);
-
+ console.log(response.data.results)
+  // const cartIds = response.data.results[0]?.cartId;
+  // const created_at = response.data.results[0]?.created_at;
+  
+  
+  //       // Store cart IDs and created_at in local storage
+  //       localStorage.setItem("cartID", JSON.stringify(cartIds));
+  //       localStorage.setItem("created_at", JSON.stringify(created_at));
+  
+  
         dispatch(clear_cart());
-
+  
         setTimeout(() => {
           router.push(`/order-confirmation`); // Pass order ID as query param
         }, 500);
+  
         return true;
-      } else {
-        notifyError("Unexpected response from the server.");
-        return false;
-      }
+      
     } catch (error) {
       console.error("Error placing order:", error);
       notifyError(
         error.response?.data?.error ||
-        "Failed to place order. Please try again."
+          "Failed to place order. Please try again."
       );
       return false;
     }
   };
+  
+  
+  
 
   return (
     <div className="order-container" style={{ maxWidth: "700px", margin: "auto" }}>

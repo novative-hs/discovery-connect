@@ -175,6 +175,18 @@ const tablesAndColumns = [
   },
   
 ];
+const executeSequentially = async (tasks) => {
+  for (let task of tasks) {
+    try {
+      await task();
+    } catch (error) {
+      console.error("Error executing task:", error);
+    }
+  }
+};
+
+
+
 
 // Function to check if column exists and add it if not
 const ensureColumnsExist = (table, columns) => {
@@ -299,29 +311,23 @@ const deleteColumns = (table, columns) => {
   });
 };
 const updateEnumColumn = (table, column, enumValues) => {
+  const enumList = enumValues.map(value => `'${value}'`).join(", ");
   const alterEnumQuery = `
     ALTER TABLE ${table} 
-    MODIFY COLUMN ${column} ENUM(${enumValues
-    .map((value) => `'${value}'`)
-    .join(", ")}) NOT NULL
+    MODIFY COLUMN ${column} ENUM(${enumList}) NOT NULL DEFAULT '${enumValues[0]}'
   `;
 
   mysqlConnection.query(alterEnumQuery, (err) => {
     if (err) {
-      console.error(
-        `Error updating ENUM values for ${column} in ${table}:`,
-        err
-      );
+      console.error(`Error updating ENUM values for ${column} in ${table}:`, err);
     } else {
-      console.log(
-        `Updated ENUM values for ${column} in ${table} successfully.`
-      );
+      console.log(`Updated ENUM values for ${column} in ${table} successfully.`);
     }
   });
 };
 
 // Function to iterate through all tables and ensure columns exist or delete columns
-const createOrUpdateTables = () => {
+const createOrUpdateTables = async() => {
   tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
     // Ensure columns exist for each table
     ensureColumnsExist(table, columnsToAdd);
@@ -331,14 +337,31 @@ const createOrUpdateTables = () => {
       deleteColumns(table, columnsToDelete);
     }
   });
-  updateEnumColumn("user_account", "accountType", [
-    "Researcher",
-    "Organization",
-    "CollectionSites",
-    "DatabaseAdmin",
-    "RegistrationAdmin",
-    "biobank",
-    "Committeemember",
+  await executeSequentially([
+    () => ensureColumnsExist("user_account", [{ column: "OTP", type: "VARCHAR(4)", nullable: true }]),
+    () => updateEnumColumn("user_account", "accountType", [
+      "Researcher",
+      "Organization",
+      "CollectionSites",
+      "DatabaseAdmin",
+      "RegistrationAdmin",
+      "biobank",
+      "Committeemember",
+    ]),
+    () => updateEnumColumn("cart", "order_status", [
+      "Pending",
+      "Accepted",
+      "UnderReview",
+      "Rejected",
+      "Shipping",
+      "Dispatched",
+      "Completed",
+    ]),
+    () => updateEnumColumn("committeesampleapproval", "committee_status", [
+      "Review",
+      "Approved",
+      "Refused",
+    ]),
   ]);
 };
 

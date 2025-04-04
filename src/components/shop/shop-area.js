@@ -15,7 +15,10 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const [selectedSmokingStatus, setSelectedSmokingStatus] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedSampleType, setSelectedSampleType] = useState([]);
+  const [selectedSampleName, setSelectedSampleName] = useState([]);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleTab = (value) => {
     setActiveTab(value);
@@ -26,13 +29,15 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
     setSelectedSmokingStatus(null);
     setSelectedGender(null);
     setSelectedSampleType([]);
-    
+    setSelectedSampleName([]);
+    setSearchQuery(""); // Reset search query
   };
 
   const filteredProducts = products.filter((product) => {
     let matchesPrice =
       !selectedPrice ||
-      (product.price >= selectedPrice.min && product.price <= selectedPrice.max);
+      (product.price >= selectedPrice.min &&
+        product.price <= selectedPrice.max);
 
     let matchesSmoking =
       !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
@@ -41,11 +46,27 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
 
     let matchesSampleType =
       selectedSampleType.length === 0 ||
-      selectedSampleType.some((type) => product.SampleTypeMatrix.includes(type));
+      selectedSampleType.some((type) =>
+        product.SampleTypeMatrix.includes(type)
+      );
 
-    return matchesPrice && matchesSmoking && matchesGender && matchesSampleType;
+    let matchesSampleName =
+      selectedSampleName.length === 0 ||
+      selectedSampleName.some((name) => product.samplename.includes(name));
+
+    let matchesSearch =
+      searchQuery === "" ||
+      product.samplename.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return (
+      matchesPrice &&
+      matchesSmoking &&
+      matchesGender &&
+      matchesSampleType &&
+      matchesSampleName &&
+      matchesSearch
+    );
   });
-
 
   return (
     <section className="shop__area pb-40">
@@ -60,12 +81,30 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
                 total={filteredProducts.length}
               />
             </div>
+
+            {/* Search Input Field */}
             <div className="col-lg-6 col-md-7">
-              <div className="shop__sort d-flex flex-wrap justify-content-md-end align-items-center">
-                <ShopShortTab handleTab={handleTab} />
-                <ShopShortSelect shortHandler={shortHandler} />
-              </div>
-            </div>
+  <div className="shop__sort d-flex align-items-center justify-content-between">
+    {/* Search Input Field */}
+    <div className="input-group search-input-group me-3" style={{ maxWidth: "250px" }}>
+      <span className="input-group-text bg-white border-0">
+        <i className="bi bi-search text-muted"></i>
+      </span>
+      <input
+        type="text"
+        className="form-control border-0 shadow-sm"
+        placeholder="Search Sample Name..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+
+    {/* Sorting Options */}
+    <ShopShortTab handleTab={handleTab} />
+    <ShopShortSelect shortHandler={shortHandler} />
+  </div>
+</div>
+
           </div>
         </div>
 
