@@ -209,8 +209,8 @@ const getResearcherSamples = (userId, callback) => {
         WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
         WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 
             THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'pending' THEN 1 ELSE 0 END) > 0 
-            THEN 'pending'
+        WHEN SUM(CASE WHEN ca.committee_status = 'review' THEN 1 ELSE 0 END) > 0 
+            THEN 'review'
         ELSE 'accepted' 
     END AS committee_status
 
@@ -243,8 +243,18 @@ ORDER BY s.id ASC;
       console.error("Database error:", err);
       return callback(err, null);
     }
+    
+    console.log("Query Results:", results);
+  
+    // Check if no samples found
+    if (results.length === 0) {
+      return callback(null, { error: "No samples found" });
+    }
+  
+    // If samples exist, return the results
     callback(null, results);
   });
+  
 };
 
 

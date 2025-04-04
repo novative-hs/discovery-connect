@@ -48,7 +48,7 @@ const OfferPopularProduct = () => {
         {/* Header Section */}
         <div className="row text-center mb-4">
           <div className="col">
-            <h3 className="fw-bold text-primary">High-Quality Lab Samples</h3>
+            <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
           </div>
         </div>
 

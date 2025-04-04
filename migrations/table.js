@@ -60,11 +60,8 @@ function Database() {
 
   historyModel.create_samplehistoryTable();
   newtablefieldModel.createOrUpdateTables();
-  //newtablefieldModel.updateAccountType();
-
-
   contactusModel.createContactUsTable();
 
-  // znewtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 }
 Database();

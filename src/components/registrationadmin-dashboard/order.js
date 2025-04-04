@@ -39,7 +39,7 @@ const OrderPage = () => {
     setShowModal(false);
   };
   const [registrationAdminStatus, setRegistrationAdminStatus] = useState("");
-const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
+  const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
     if (storedUserID) {
@@ -48,7 +48,12 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
     }
   }, []);
   useEffect(() => {
-    fetchOrders();
+    const intervalId = setInterval(() => {
+      fetchOrders();
+    }, 500); // Fetch data every 5 seconds
+
+    // Cleanup interval when component is unmounted
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchOrders = async () => {
@@ -63,6 +68,7 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
       console.error("Error fetching orders:", error);
     }
   };
+
 
   const handleFilterChange = (field, value) => {
     if (value.trim() === "") {
@@ -101,41 +107,66 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
     }
   };
   const handleOrderStatusSubmit = async () => {
-    console.log("Selected Order ID:", selectedShippedId, "Order Status:", orderStatus);
-  
+    console.log(
+      "Selected Order ID:",
+      selectedShippedId,
+      "Order Status:",
+      orderStatus
+    );
+
     if (!selectedShippedId || !orderStatus) {
       alert("Please select a status.");
       return;
     }
-  
+
     // Find the order from the orders list based on selectedShippedId
-    const selectedOrder = orders.find(order => order.order_id === selectedShippedId);
-  
+    const selectedOrder = orders.find(
+      (order) => order.order_id === selectedShippedId
+    );
+
     if (!selectedOrder) {
       alert("Error: Order not found.");
       return;
     }
     // Extract registration admin and committee status
-    const { registration_admin_status, final_committee_status } = selectedOrder;
-  
+    const {
+      registration_admin_status,
+      scientific_committee_status,
+      ethical_committee_status,
+    } = selectedOrder;
+
     // Check if registration admin or committee member status is pending
-    if (registration_admin_status === null || registration_admin_status.toLowerCase() === "pending") {
+    if (
+      registration_admin_status === null ||
+      registration_admin_status.toLowerCase() === "pending"
+    ) {
       alert("Error: Registration admin approval is pending.");
       return;
     }
-    
-   
-    if (final_committee_status === null || final_committee_status.toLowerCase() === "pending") {
-      alert("Error: Committee member approval is pending.");
+
+    if (
+      scientific_committee_status === null ||
+      scientific_committee_status.toLowerCase() === "review"
+    ) {
+      alert("Error: Scientific Committee member approval is pending.");
       return;
     }
     if (
-      (registration_admin_status?.toLowerCase() === "rejected" || final_committee_status?.toLowerCase() === "refused") &&
+      ethical_committee_status === null ||
+      ethical_committee_status.toLowerCase() === "review"
+    ) {
+      alert("Error: Ethical Committee member approval is pending.");
+      return;
+    }
+    if (
+      (registration_admin_status?.toLowerCase() === "rejected" ||
+        scientific_committee_status?.toLowerCase() === "refused" ||
+        ethical_committee_status?.toLowerCase() === "refused") &&
       orderStatus.toLowerCase() !== "cancelled"
     ) {
       return alert("Error: Order only cancelled");
     }
-    
+
     // Proceed with updating order status
     try {
       const response = await axios.put(
@@ -144,7 +175,7 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
           cartStatus: orderStatus, // Corrected field name
         }
       );
-  
+
       if (response.status === 200) {
         alert("Order status updated successfully!");
         setShowOrderStatusModal(false);
@@ -156,8 +187,7 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
       alert("Failed to update order status.");
     }
   };
-  
-  
+
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
     setShowTransferModal(true);
@@ -172,8 +202,6 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
   };
 
   const handleCommitteeApproval = (committeeType) => {
-    console.log("Sending Approval:", selectedOrderId, user_id, committeeType);
-
     axios
       .post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
@@ -230,8 +258,12 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                       field: "registration_admin_status",
                     },
                     {
-                      label: "Committee Status",
-                      field: "final_committee_status",
+                      label: "Scientific Committee Member Status",
+                      field: "scientific_committee_status",
+                    },
+                    {
+                      label: "Ethical Committee Member Status",
+                      field: "ethical_committee_status",
                     },
                     {
                       label: "Committee Comments",
@@ -277,7 +309,8 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                         style={{
                           cursor: "pointer",
                           color: "inherit",
-                          transition: "color 0.2s ease-in-out, text-decoration 0.2s ease-in-out",
+                          transition:
+                            "color 0.2s ease-in-out, text-decoration 0.2s ease-in-out",
                         }}
                         onMouseEnter={(e) => {
                           e.target.style.color = "blue";
@@ -293,10 +326,23 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                       <td>{order.order_status}</td>
                       <td>{order.registration_admin_status}</td>
                       <td>
-                        {order.final_committee_status
-                          ? order.final_committee_status
-                          : "Awaiting Admin Action"}
+                        {order.scientific_committee_status === null
+                          ? "Awaiting Admin Action"
+                          : order.scientific_committee_status &&
+                            order.scientific_committee_status !== ""
+                          ? order.scientific_committee_status
+                          : "Awaiting Review"}
                       </td>
+
+                      <td>
+                        {order.ethical_committee_status === null
+                          ? "Awaiting Admin Action"
+                          : order.ethical_committee_status &&
+                            order.ethical_committee_status !== ""
+                          ? order.ethical_committee_status
+                          : "Awaiting Review"}
+                      </td>
+
                       <td
                         onClick={(e) => {
                           e.stopPropagation();
@@ -377,7 +423,8 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                           </div>
                           {/* Send Approval Button */}
                           {order.registration_admin_status === "Accepted" &&
-                            order.final_committee_status === null && (
+                            order.ethical_committee_status === null &&
+                            order.scientific_committee_status === null && (
                               <div className="position-relative">
                                 <button
                                   className="btn btn-sm btn-outline-success"
@@ -394,7 +441,7 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                                 </button>
                               </div>
                             )}
-                          <button
+                          {/* <button
                             className="btn btn-sm btn-outline-primary ms-2"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -404,7 +451,7 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                             title="Update Order Status"
                           >
                             <FontAwesomeIcon icon={faTruck} size="sm" />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -465,10 +512,9 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                     onChange={(e) => setOrderStatus(e.target.value)}
                   >
                     <option value="">Select status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
+                    <option value="Shipping">Shipping</option>
+                    <option value="Dispatched">Dispatched</option>
+                    <option value="Completed">Completed</option>
                   </Form.Select>
                 </Form.Group>
               </Modal.Body>
@@ -515,7 +561,9 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                   <div className="modal-footer">
                     <button
                       className="btn btn-primary"
-                      onClick={() => handleSendApproval(selectedApprovalType)}
+                      onClick={() =>
+                        handleCommitteeApproval(selectedApprovalType)
+                      }
                       disabled={!selectedApprovalType} // Disables if no option is selected
                     >
                       Save
@@ -525,7 +573,6 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
               </div>
             </div>
           )}
-
 
           {/* Pagination Controls */}
           {orders.length >= 0 && (
@@ -575,7 +622,10 @@ const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
                 }}
               >
                 {/* Modal Header */}
-                <div className="modal-header d-flex justify-content-between align-items-center" style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
+                <div
+                  className="modal-header d-flex justify-content-between align-items-center"
+                  style={{ backgroundColor: "#cfe2ff", color: "#000" }}
+                >
                   <h5 className="fw-bold">
                     {selectedSample.samplename} Details:
                   </h5>
