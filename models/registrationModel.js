@@ -37,7 +37,6 @@ const create_researcherTable = () => {
       district INT,
       country INT,
       nameofOrganization INT,
-      logo LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
       added_by INT,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
@@ -395,9 +394,9 @@ const updateAccount = (req, callback) => {
                   updateQuery = `
                     UPDATE researcher SET 
                       ResearcherName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
-                      country = ?, nameofOrganization = ?, logo = ? WHERE user_account_id = ?
+                      country = ?, nameofOrganization = ? WHERE user_account_id = ?
                   `;
-                  values = [ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, user_account_id];
+                  values = [ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, user_account_id];
                   break;
 
                 case "Organization":
@@ -605,8 +604,8 @@ const createAccount = (req, callback) => {
 
             switch (accountType) {
               case "Researcher":
-                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
@@ -616,7 +615,6 @@ const createAccount = (req, callback) => {
                   district,
                   country,
                   nameofOrganization,
-                  logo,
                   added_by,
                 ];
                 break;

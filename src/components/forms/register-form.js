@@ -89,7 +89,7 @@ const RegisterForm = () => {
   const [countryname, setCountryname] = useState([]);
   const [Org_name, setOrganizationname] = useState([]);
   const router = useRouter();
-  const [registerUser, {}] = useRegisterUserMutation();
+  const [registerUser, { }] = useRegisterUserMutation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState(null); // Store selected city object
   const [showDropdown, setShowDropdown] = useState(false);
@@ -116,7 +116,7 @@ const RegisterForm = () => {
   const accountType = watch("accountType");
   const selectedAccountType = watch("accountType");
 
-  // Dynamically change the "Choose Logo" label based on account type
+
   const handleSelectCity = (city) => {
     setSelectedCity(city);
     setSearchTerm("");
@@ -138,9 +138,9 @@ const RegisterForm = () => {
     setValue("country", country.id);
   };
 
+  // Dynamically change the "Choose Logo" label based on account type
   useEffect(() => {
     const labels = {
-      Researcher: "Choose Researcher Logo",
       Organization: "Choose Organization Logo",
       CollectionSites: "Choose Collection Site Logo",
     };
@@ -421,6 +421,7 @@ const RegisterForm = () => {
                 </div>
               </>
             )}
+
             {accountType === "Organization" && (
               <>
                 <div className="login__input-item">
@@ -560,35 +561,40 @@ const RegisterForm = () => {
             </div>
 
             {/* Logo Upload */}
-            <div className="login__input-item">
-              <div className="login-input form-control md-10 p-2">
-                <i className="fa-solid fa-image text-black px-3 mt-2"></i>
-                <label
-                  className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
-                  onClick={triggerFileInput}
-                >
-                  {logo ? (
-                    <span className="form-label">{logo}</span>
-                  ) : (
-                    accountTypeLabel
-                  )}
-                </label>
+            {accountType !== "Researcher" && (
+              <div className="login__input-item">
+                <div className="login-input form-control md-10 p-2">
+                  <i className="fa-solid fa-image text-black px-3 mt-2"></i>
+                  <label
+                    className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
+                    onClick={triggerFileInput}
+                  >
+                    {logo ? (
+                      <span className="form-label">{logo}</span>
+                    ) : (
+                      accountTypeLabel
+                    )}
+                  </label>
 
-                <input
-                  type="file"
-                  {...register("logo", { required: "Logo is required" })}
-                  className="d-none"
-                  ref={fileInputRef}
-                  onChange={handleLogoChange}
+                  <input
+                    type="file"
+                    {...register("logo", {
+                      required:
+                        accountType !== "Researcher" ? "Logo is required" : false,
+                    })}
+                    className="d-none"
+                    ref={fileInputRef}
+                    onChange={handleLogoChange}
+                  />
+                </div>
+                <ErrorMessage
+                  name="logo"
+                  component="div"
+                  className="error-message"
+                  message={errors.logo?.message}
                 />
               </div>
-              <ErrorMessage
-                name="logo"
-                component="div"
-                className="error-message"
-                message={errors.logo?.message}
-              />
-            </div>
+            )}
             {/* {/ City Fields /} */}
             <div className="login__input-item">
               <div className="login__input d-flex align-items-center w-100 position-relative">
@@ -621,8 +627,8 @@ const RegisterForm = () => {
                         (city) =>
                           searchTerm
                             ? city.name
-                                .toLowerCase()
-                                .includes(searchTerm.toLowerCase())
+                              .toLowerCase()
+                              .includes(searchTerm.toLowerCase())
                             : true // Show all cities when searchTerm is empty
                       )
                       .map((city) => (
@@ -680,8 +686,8 @@ const RegisterForm = () => {
                       .filter((district) =>
                         searchDistrict
                           ? district.name
-                              .toLowerCase()
-                              .includes(searchDistrict.toLowerCase())
+                            .toLowerCase()
+                            .includes(searchDistrict.toLowerCase())
                           : true
                       )
                       .map((district) => (
@@ -740,8 +746,8 @@ const RegisterForm = () => {
                       .filter((country) =>
                         searchCountry
                           ? country.name
-                              .toLowerCase()
-                              .includes(searchCountry.toLowerCase())
+                            .toLowerCase()
+                            .includes(searchCountry.toLowerCase())
                           : true
                       )
                       .map((country) => (
