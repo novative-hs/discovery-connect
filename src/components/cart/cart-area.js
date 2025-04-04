@@ -125,8 +125,8 @@ const CartArea = () => {
                     <tbody>
                       {cart_products.map((item, i) => (
                         <tr key={i}>
-                          <td>{item.samplename}</td>
-                          <td>{item.price.toFixed(2)}</td>
+                          <td className="text-start">{item.samplename}</td>
+                          <td className="text-end">{item.price.toFixed(2)}</td>
                           <td className="product-quantity">
                             <div className="tp-product-quantity mt-10 mb-10">
                               <span
@@ -154,7 +154,7 @@ const CartArea = () => {
                               <p className="text-danger">{errors[item.id]}</p>
                             )}
                           </td>
-                          <td className="product-subtotal">
+                          <td className="product-subtotal text-start">
                             <span className="amount">
                               {(
                                 item.price *

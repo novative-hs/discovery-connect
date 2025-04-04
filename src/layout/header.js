@@ -22,7 +22,7 @@ const Header = ({ style_2 = false }) => {
   const { wishlist } = useSelector((state) => state.wishlist);
   const { user: userInfo } = useSelector((state) => state.auth);
   const handleProceedToCart = () => {
-      router.push("/cart");
+    router.push("/cart");
   };
   return (
     <>
@@ -37,10 +37,10 @@ const Header = ({ style_2 = false }) => {
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
-                <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: '-20px', marginTop: '20px' }}>
+                  <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
+                    <div className="logo" style={{ marginLeft: '-50px', marginTop: '10px' }}>
                       <Link href="/">
-                        <Image src={logo} alt="logo" style={{ width: '150px', height: 'auto' }} />
+                        <Image src={logo} alt="logo" style={{ width: '200px', height: '100px' }} />
                       </Link>
                     </div>
                   </div>
@@ -59,7 +59,7 @@ const Header = ({ style_2 = false }) => {
                       <div className="header__action-13 d-none d-md-block">
                         <ul>
                           {/* <li className="d-xxl-none"> */}
-                            {/* <a href="#">
+                          {/* <a href="#">
                               <Search />
                             </a>
                           </li> */}
@@ -103,7 +103,7 @@ const Header = ({ style_2 = false }) => {
                             </button> */}
                             <button
                               className="cartmini-open-btn"
-                             onClick={handleProceedToCart}
+                              onClick={handleProceedToCart}
                             >
                               <Cart />
                               <span className="tp-item-count">{sampleCount}</span>
