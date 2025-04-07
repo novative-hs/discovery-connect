@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "@layout/footer";
+import moment from "moment";
 import {
   ProgressBar,
   Container,
@@ -16,12 +17,19 @@ const OrderConfirmation = () => {
   const router = useRouter();
   const [orderId, setOrderId] = useState("");
   const [created_at, setCreated_at] = useState("");
+  const [orderStatus, setOrderStatus] = useState("Placed"); // Default to "Placed", change as required
+
 
   useEffect(() => {
-    setOrderId(localStorage.getItem("cartID"));
-    setCreated_at(localStorage.getItem("created_at"));
+    const storedOrderId = localStorage.getItem("cartIDs");
+    const storedCreatedAt = localStorage.getItem("created_at");
+    
+    setOrderId(storedOrderId);
+    setCreated_at(storedCreatedAt);
+    
   }, []);
-
+  
+  
   const handleOrder = () => {
     setTimeout(() => {
       router.push(`/dashboardheader?tab=my-samples`);
@@ -30,18 +38,20 @@ const OrderConfirmation = () => {
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
+  
+    // Try parsing without .utc() first
+    const formattedDate = moment(dateString).format("MMMM Do YYYY, h:mm:ss a");
+  
+    // Check if the date is valid
+    if (moment(formattedDate).isValid()) {
+      return formattedDate;
+    } else {
+      console.error("Invalid date:", dateString);
+      return "Invalid Date";  // Return a fallback message if the date is invalid
+    }
   };
-
+  
+  
   return (
     <>
       <Container className="text-center mt-5">
@@ -51,7 +61,12 @@ const OrderConfirmation = () => {
             <h3 className="text-info">
               <i className="bi bi-check-circle-fill"></i> THANK YOU
             </h3>
-            <h2 className="fw-bold text-light">YOUR ORDER IS PLACED</h2>
+            {/* Conditionally Render Message Based on Order Status */}
+            {orderStatus === "Placed" ? (
+              <h2 className="fw-bold text-light">YOUR ORDER IS PLACED</h2>
+            ) : (
+              <h2 className="fw-bold text-light">YOUR ORDER IS {orderStatus}</h2>
+            )}
             <p className="text-white">
               We will be sending you an email confirmation shortly.
             </p>
@@ -62,7 +77,7 @@ const OrderConfirmation = () => {
         <Card className="mt-4 p-4 shadow-lg rounded-4 border-0 bg-light">
           <p className="text-dark fs-6">
             Order <strong>#{orderId || "N/A"}</strong> was placed on{" "}
-            <strong>{formatDateTime(created_at)}</strong> and is currently in
+            <strong>{created_at}</strong> and is currently in
             progress.
           </p>
 
@@ -185,7 +200,6 @@ const OrderConfirmation = () => {
       <Footer />
     </>
   );
-
 };
 
 export default OrderConfirmation;

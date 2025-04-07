@@ -28,9 +28,6 @@ const OrderPage = () => {
   const [user_id, setUserID] = useState(null);
   const [selectedApprovalType, setSelectedApprovalType] = useState("");
 
-  const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
-  const [selectedShippedId, setSelectedShippedId] = useState(null);
-  const [orderStatus, setOrderStatus] = useState("");
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -38,8 +35,7 @@ const OrderPage = () => {
     setSelectedOrderId(null);
     setShowModal(false);
   };
-  const [registrationAdminStatus, setRegistrationAdminStatus] = useState("");
-  const [committeeMemberStatus, setCommitteeMemberStatus] = useState("");
+  
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
     if (storedUserID) {
@@ -104,87 +100,6 @@ const OrderPage = () => {
       setLoading(false);
       setShowModal(false);
       setTimeout(() => setSuccessMessage(""), 3000);
-    }
-  };
-  const handleOrderStatusSubmit = async () => {
-    console.log(
-      "Selected Order ID:",
-      selectedShippedId,
-      "Order Status:",
-      orderStatus
-    );
-
-    if (!selectedShippedId || !orderStatus) {
-      alert("Please select a status.");
-      return;
-    }
-
-    // Find the order from the orders list based on selectedShippedId
-    const selectedOrder = orders.find(
-      (order) => order.order_id === selectedShippedId
-    );
-
-    if (!selectedOrder) {
-      alert("Error: Order not found.");
-      return;
-    }
-    // Extract registration admin and committee status
-    const {
-      registration_admin_status,
-      scientific_committee_status,
-      ethical_committee_status,
-    } = selectedOrder;
-
-    // Check if registration admin or committee member status is pending
-    if (
-      registration_admin_status === null ||
-      registration_admin_status.toLowerCase() === "pending"
-    ) {
-      alert("Error: Registration admin approval is pending.");
-      return;
-    }
-
-    if (
-      scientific_committee_status === null ||
-      scientific_committee_status.toLowerCase() === "review"
-    ) {
-      alert("Error: Scientific Committee member approval is pending.");
-      return;
-    }
-    if (
-      ethical_committee_status === null ||
-      ethical_committee_status.toLowerCase() === "review"
-    ) {
-      alert("Error: Ethical Committee member approval is pending.");
-      return;
-    }
-    if (
-      (registration_admin_status?.toLowerCase() === "rejected" ||
-        scientific_committee_status?.toLowerCase() === "refused" ||
-        ethical_committee_status?.toLowerCase() === "refused") &&
-      orderStatus.toLowerCase() !== "cancelled"
-    ) {
-      return alert("Error: Order only cancelled");
-    }
-
-    // Proceed with updating order status
-    try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedShippedId}/cart-status`,
-        {
-          cartStatus: orderStatus, // Corrected field name
-        }
-      );
-
-      if (response.status === 200) {
-        alert("Order status updated successfully!");
-        setShowOrderStatusModal(false);
-        setOrderStatus(""); // Reset dropdown
-        fetchOrders(); // Refresh orders list
-      }
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      alert("Failed to update order status.");
     }
   };
 
@@ -441,17 +356,7 @@ const OrderPage = () => {
                                 </button>
                               </div>
                             )}
-                          {/* <button
-                            className="btn btn-sm btn-outline-primary ms-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedShippedId(order.order_id);
-                              setShowOrderStatusModal(true);
-                            }}
-                            title="Update Order Status"
-                          >
-                            <FontAwesomeIcon icon={faTruck} size="sm" />
-                          </button> */}
+                         
                         </div>
                       </td>
                     </tr>
@@ -496,41 +401,6 @@ const OrderPage = () => {
             </Modal>
           )}
 
-          {showOrderStatusModal && (
-            <Modal
-              show={showOrderStatusModal}
-              onHide={() => setShowOrderStatusModal(false)}
-            >
-              <Modal.Header closeButton>
-                <Modal.Title>Update Order Status</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <Form.Group>
-                  <Form.Label>Select Order Status</Form.Label>
-                  <Form.Select
-                    value={orderStatus}
-                    onChange={(e) => setOrderStatus(e.target.value)}
-                  >
-                    <option value="">Select status</option>
-                    <option value="Shipping">Shipping</option>
-                    <option value="Dispatched">Dispatched</option>
-                    <option value="Completed">Completed</option>
-                  </Form.Select>
-                </Form.Group>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowOrderStatusModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button variant="primary" onClick={handleOrderStatusSubmit}>
-                  Save Changes
-                </Button>
-              </Modal.Footer>
-            </Modal>
-          )}
           {/* Approval  */}
 
           {showTransferModal && (
@@ -561,7 +431,7 @@ const OrderPage = () => {
                   <div className="modal-footer">
                     <button
                       className="btn btn-primary"
-                      onClick={() => handleSendApproval(selectedApprovalType)}
+                      onClick={() => handleCommitteeApproval(selectedApprovalType)}
                       disabled={!selectedApprovalType} // Disables if no option is selected
                     >
                       Save

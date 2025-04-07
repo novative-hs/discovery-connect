@@ -2,15 +2,15 @@ const mysqlConnection = require("../config/db");
 
 const createPaymentTable = () => {
   const paymentTable = `
-   CREATE TABLE IF NOT EXISTS payment (
-    id INT PRIMARY KEY AUTO_INCREMENT, 
-    cardholder_name VARCHAR(225),
-    card_number VARCHAR(19) NOT NULL,
-    card_expiry DATE, 
-    card_cvc VARCHAR(4), 
-    payment_type ENUM('Debit', 'Credit') NOT NULL,  
-    payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid',
-);
+    CREATE TABLE IF NOT EXISTS payment (
+      id INT PRIMARY KEY AUTO_INCREMENT, 
+      cardholder_name VARCHAR(225) NOT NULL,
+      card_number VARCHAR(19) NOT NULL, 
+      card_expiry DATE, 
+      card_cvc VARCHAR(4) NOT NULL, 
+      payment_type ENUM('Debit', 'Credit') NOT NULL,  
+      payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid'
+    );
   `;
 
   mysqlConnection.query(paymentTable, (err, result) => {
@@ -22,8 +22,8 @@ const createPaymentTable = () => {
   });
 };
 
+
 const insertPaymentDetails = (data, callback) => {
-  console.log("Incoming Payment Data:", data);
 
   // Ensure card_expiry is in valid DATE format (YYYY-MM-DD)
   let formattedExpiry = `${data.card_expiry}-01`; // Adds "-01" to make it a full date

@@ -15,7 +15,7 @@ const SampleArea = () => {
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState(""); 
   const [comment, setComment] = useState("");
-
+const[selectedComment,setSelectedComment]=useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
@@ -111,7 +111,11 @@ const SampleArea = () => {
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
-
+  const handleViewComment = (comment) => {
+    setSelectedComment(comment); // Set the comment to be viewed
+    setShowCommentModal(true); // Open the modal to display the comment
+  };
+  
   const handleViewDocument = (fileBuffer, fileName, sampleId) => {
     if (!fileBuffer) {
       alert("No document available.");
@@ -391,6 +395,16 @@ const SampleArea = () => {
             </Modal.Footer>
           </Modal>
         )}
+{showCommentModal && (
+  <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
+    <Modal.Header closeButton>
+      <Modal.Title>Comment</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <p>{selectedComment}</p>
+    </Modal.Body>
+  </Modal>
+)}
 
         {/* Pagination */}
         {totalPages >= 0 && (

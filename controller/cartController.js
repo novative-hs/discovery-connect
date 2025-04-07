@@ -64,13 +64,14 @@ const createCart = (req, res) => {
   // Pass data to the model
   cartModel.createCart(newCartData, (err, result) => {
     if (err) {
-      console.error("Error creating cart:", err);
+      console.error("Error creating cart:", err);  // This is where you'd see the error logs.
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
-  
-    console.log("Insert Result:", result);
+    
+    console.log("Insert Result:", result);  // This will log the successful insert result
     return res.status(201).json({ message: "Cart created successfully", result });
   });
+  
   
 };
 
@@ -125,23 +126,32 @@ const getAllOrderByCommittee = (req, res) => {
     res.status(200).json(results);
   });
 };
+const getAllOrderByOrderPacking = (req, res) => {
+  cartModel.getAllOrderByOrderPacking((err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching order packing list" });
+    }
+    res.status(200).json(results);
+  });
+};
 
-const updateRegistrationAdminStatus = (req, res) => {
+const updateRegistrationAdminStatus = async (req, res) => {
   const { id } = req.params;
   const { registration_admin_status } = req.body;
 
   if (!registration_admin_status) {
     return res.status(400).json({ error: "Registration admin status is required" });
   }
-console.log("Received Body",req.body)
-  cartModel.updateRegistrationAdminStatus(id, registration_admin_status, (err, result) => {
-    if (err) {
-      console.error("Error updating registration admin status:", err);
-      return res.status(500).json({ error: "Error in updating status" });
-    }
-    res.status(200).json({ message: "Registration admin status updated successfully" });
-  });
+
+  try {
+    const result = await cartModel.updateRegistrationAdminStatus(id, registration_admin_status);
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("Error in update:", err);
+    return res.status(500).json({ error: "Error in updating status" });
+  }
 };
+
 
 const updateCartStatus = (req, res) => {
   const { id } = req.params;
@@ -168,6 +178,7 @@ module.exports = {
   deleteSingleCartItem,
   getAllOrder,
   getAllOrderByCommittee,
+  getAllOrderByOrderPacking,
   updateRegistrationAdminStatus,
   updateCartStatus
 };

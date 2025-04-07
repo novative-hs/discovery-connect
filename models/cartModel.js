@@ -1,63 +1,56 @@
 const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 
-const notifyResearcher = (cartIds, message, subject, callback) => {
-  // Ensure cartIds is an array
-  const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
+const notifyResearcher = (cartIds, message, subject) => {
+  return new Promise((resolve, reject) => {
+    // Ensure cartIds is an array
+    const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
 
-  // Fetch all cart IDs and their corresponding created_at timestamps
-  const cartDetailsPromises = ids.map((cart_id) => {
-    return new Promise((resolve, reject) => {
-      const getResearcherEmailQuery = `
-        SELECT ua.email, c.created_at
-        FROM user_account ua
-        JOIN cart c ON ua.id = c.user_id
-        WHERE c.id = ?
-      `;
+    // Build a query that fetches emails and created_at for multiple cart IDs
+    const placeholders = ids.map(() => '?').join(',');
+    const getResearcherEmailQuery = `
+      SELECT ua.email, c.created_at, c.id AS cartId
+      FROM user_account ua
+      JOIN cart c ON ua.id = c.user_id
+      WHERE c.id IN (${placeholders})
+    `;
 
-      mysqlConnection.query(getResearcherEmailQuery, [cart_id], (emailErr, emailResults) => {
-        if (emailErr) {
-          return reject(emailErr);
-        }
+    // Fetch all cart details in one query
+    mysqlConnection.query(getResearcherEmailQuery, ids, (emailErr, emailResults) => {
+      if (emailErr) {
+        return reject(emailErr);
+      }
 
-        if (emailResults.length > 0) {
-          resolve({
-            email: emailResults[0].email,
-            createdAt: emailResults[0].created_at,
-            cartId: cart_id,
-          });
-        } else {
-          reject(new Error(`No email found for cart ID: ${cart_id}`));
-        }
-      });
-    });
-  });
+      if (emailResults.length === 0) {
+        return reject(new Error('No data found for provided cart IDs'));
+      }
 
-  // Wait for all cart details to be fetched
-  Promise.all(cartDetailsPromises)
-    .then((cartDetails) => {
-      const researcherEmail = cartDetails[0].email; // Assuming all cart items are for the same researcher
-      const cartIdsList = cartDetails.map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.createdAt})`).join("\n");
+      // Assuming all cart items belong to the same researcher, use the first result
+      const researcherEmail = emailResults[0].email;
+      const cartIdsList = emailResults
+        .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
+        .join("\n");
 
       // Build the message
       const emailMessage = `Dear Researcher,\n\n${message}\n\nDetails for the following carts:\n\n${cartIdsList}\n\nBest regards,\nYour Team`;
 
-      // Send email with dynamic message
-      sendEmail(researcherEmail, subject, emailMessage)
-        .then(() => {
-          console.log("Email notification sent to researcher for all cart IDs.");
-          callback(null);
-        })
-        .catch((emailError) => {
-          console.error("Failed to send researcher email:", emailError);
-          callback(emailError);
-        });
-    })
-    .catch((err) => {
-      console.error("Error fetching cart details:", err);
-      callback(err);
+      // Start email sending process in the background (non-blocking)
+      setImmediate(() => {
+        sendEmail(researcherEmail, subject, emailMessage)
+          .then(() => {
+            console.log("Email notification sent to researcher for all cart IDs.");
+            resolve(); // Resolve after email is sent successfully
+          })
+          .catch((emailError) => {
+            console.error("Failed to send researcher email:", emailError);
+            reject(emailError); // Reject if email fails
+          });
+      });
     });
+  });
 };
+
+
 
 const updateCartStatusToShipping = (cartId, callback) => {
   // SQL query to check if all committee statuses (Ethical & Scientific) are "Approved"
@@ -102,7 +95,6 @@ const updateCartStatusToShipping = (cartId, callback) => {
 
     // Ensure that there is data for either ethical or scientific committee before proceeding
     if (ethicalTotal === 0 && scientificTotal === 0) {
-      
       return callback(null, null); // No committees, no update to shipping
     }
 
@@ -112,8 +104,8 @@ const updateCartStatusToShipping = (cartId, callback) => {
 
     // If both committees' approvals are complete, or if the cart doesn't have one of the committees, we can proceed
     if (ethicalApprovedComplete && scientificApprovedComplete) {
-      // Only proceed if the status is not already 'Shipping'
-      if (currentOrderStatus !== 'Shipping') {
+      // Only proceed if the status is not already 'Shipping' or 'Dispatched'
+      if (currentOrderStatus !== 'Shipping' && currentOrderStatus !== 'Dispatched') {
         // All committee members approved, so update the cart status to "Shipping"
         const updateStatusQuery = `
           UPDATE cart 
@@ -138,28 +130,28 @@ const updateCartStatusToShipping = (cartId, callback) => {
         });
       }
     } else {
-      
       return callback(null, null); // No update performed
     }
   });
 };
 
 
+
 const createCartTable = () => {
   const cartTableQuery = `
   CREATE TABLE IF NOT EXISTS cart (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    sample_id VARCHAR(36),
-    price FLOAT,
-    quantity INT,
-    totalpayment DECIMAL(10, 2),
-    payment_id INT,
-    order_status ENUM('Pending', 'Accepted','UnderReview','Rejected','Shipping', 'Dispatched', 'Completed') DEFAULT 'Pending',  
+    user_id INT NOT NULL,
+    sample_id VARCHAR(36) NOT NULL,
+    price FLOAT NOT NULL,
+    quantity INT NOT NULL,
+    totalpayment DECIMAL(10, 2) NOT NULL,
+    payment_id INT DEFAULT NULL,
+    order_status ENUM('Pending', 'Accepted', 'UnderReview', 'Rejected', 'Shipping', 'Dispatched', 'Completed') DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES user_account(id),
-    FOREIGN KEY (sample_id) REFERENCES sample(id),
-    FOREIGN KEY (payment_id) REFERENCES payment(id) 
+    FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE SET NULL
   )`;
 
   mysqlConnection.query(cartTableQuery, (err, result) => {
@@ -170,6 +162,7 @@ const createCartTable = () => {
     }
   });
 };
+
 
 // cartModel.js
 const createCart = (data, callback) => {
@@ -213,7 +206,7 @@ const createCart = (data, callback) => {
 
     const registrationAdminId = adminResults[0].id; // Get the admin ID
 
-    let insertPromises = cart_items.map((item, index) => {
+    let insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
         const insertCartQuery = `
           INSERT INTO cart (user_id, sample_id, price, quantity, payment_id, totalpayment)
@@ -234,19 +227,16 @@ const createCart = (data, callback) => {
             return reject(err);
           }
 
-          const cartId = cartResult.insertId; // Get cart ID
-
-          // Fetch `created_at` inside this promise
+          const cartId = cartResult.insertId;
           const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
+
           mysqlConnection.query(getCreatedAtQuery, [cartId], (err, createdAtResult) => {
             if (err) {
-              console.error("Error fetching created_at timestamp:", err);
+              console.error("Error fetching created_at:", err);
               return reject(err);
             }
 
-            const created_at = createdAtResult?.[0]?.created_at; // Extract created_at properly
-
-            // Continue after fetching `created_at`
+            const created_at = createdAtResult?.[0]?.created_at;
             const insertApprovalQuery = `
               INSERT INTO registrationadminsampleapproval (cart_id, registration_admin_id, registration_admin_status)
               VALUES (?, ?, 'pending')
@@ -254,7 +244,7 @@ const createCart = (data, callback) => {
 
             mysqlConnection.query(insertApprovalQuery, [cartId, registrationAdminId], (err) => {
               if (err) {
-                console.error("Error inserting into registration approval:", err);
+                console.error("Error inserting into approval:", err);
                 return reject(err);
               }
 
@@ -266,28 +256,23 @@ const createCart = (data, callback) => {
 
               mysqlConnection.query(insertDocumentsQuery, documentValues, (err) => {
                 if (err) {
-                  console.error("Error inserting into sampledocuments:", err);
+                  console.error("Error inserting into documents:", err);
                   return reject(err);
                 }
 
                 const updateQuery = `
-                  UPDATE sample 
-                  SET quantity = quantity - ? 
+                  UPDATE sample SET quantity = quantity - ? 
                   WHERE id = ? AND quantity >= ?
                 `;
                 const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
 
-                mysqlConnection.query(updateQuery, updateValues, (err, result) => {
-                  if (err || result.affectedRows === 0) {
-                    console.error("Error updating sample quantity or insufficient stock:", err);
-                    return reject(err || new Error("Insufficient stock"));
+                mysqlConnection.query(updateQuery, updateValues, (err) => {
+                  if (err) {
+                    console.error("Error updating stock:", err);
+                    return reject(err);
                   }
 
-                  resolve({
-                    created_at, // Now properly assigned
-                    cartId,
-                    message: "Cart added, stock updated, and documents saved",
-                  });
+                  resolve({ cartId, message: "Cart created and stock updated." ,created_at});
                 });
               });
             });
@@ -296,26 +281,26 @@ const createCart = (data, callback) => {
       });
     });
 
-    // Wait for all insert operations to complete
+    // After all cart items are inserted, notify the researcher
     Promise.all(insertPromises)
       .then((results) => {
-        // Use the first cartId from the results
-        const firstResult = results[0]; // Only use the first result
-        const cartId = firstResult.cartId; // Store the single cartId value
-        const created_at = firstResult.created_at;
-const message='Your sample request has been successfully created. Please check your dashboard for more details.'
+        const cartIds = results.map(result => result.cartId);
+        const message = 'Your sample request has been successfully created. Please check your dashboard for more details.';
 
-        // Now we can notify researcher for the single cartId
-        notifyResearcher(cartId,message,"Sample Request Status Update", (emailErr) => {
-          if (emailErr) {
-            return callback(emailErr);
-          }
-          callback(null, { message: "Cart created successfully for the item.", results: [firstResult] });
-        });
+        notifyResearcher(cartIds, message, "Sample Request Status Update")
+          .then(() => {
+            callback(null, { message: 'Cart created successfully', results });
+          })
+          .catch((emailErr) => {
+            console.error("Error sending email:", emailErr);
+            callback(emailErr);
+          });
       })
       .catch((error) => callback(error));
   });
 };
+
+
 
 
 
@@ -416,6 +401,7 @@ const updateCart = (id, data, callback, res) => {
     }
   });
 };
+
 const getAllOrder = (callback, res) => {
   const sqlQuery = `
 SELECT 
@@ -462,9 +448,18 @@ SELECT
      WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
     ) AS ethical_committee_status,
 
-    -- ✅ Scientific Committee Status
-    (SELECT 
+    -- ✅ Scientific Committee Status (Handle the case where cart is not sent to Scientific)
+     (SELECT 
         CASE 
+            WHEN NOT EXISTS (
+                SELECT 1 FROM committeesampleapproval ca
+                JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
+            ) AND EXISTS (
+                SELECT 1 FROM committeesampleapproval ca
+                JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
+            ) THEN 'Not Sent'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Review') > 0 THEN 'Review'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
@@ -491,10 +486,7 @@ LEFT JOIN organization org ON r.nameofOrganization = org.id
 JOIN sample s ON c.sample_id = s.id
 LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
 
-ORDER BY c.created_at ASC;
-
-
-  `;
+ORDER BY c.created_at ASC  `;
 
   mysqlConnection.query(sqlQuery, (err, results) => {
     if (err) {
@@ -567,98 +559,147 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
     }
   });
 };
-
-const updateRegistrationAdminStatus = (id, registration_admin_status, callback) => {
-  console.log("Received Body", registration_admin_status);
-
+const getAllOrderByOrderPacking = (callback) => {
   const sqlQuery = `
-    UPDATE registrationadminsampleapproval 
-    SET registration_admin_status = ? 
-    WHERE cart_id = ?
+    SELECT 
+      c.id AS cart_id, 
+      c.user_id, 
+      u.email AS user_email,
+      r.ResearcherName AS researcher_name, 
+      org.OrganizationName AS organization_name,
+      s.id AS sample_id,
+      s.samplename, 
+      c.order_status,  
+      c.created_at
+    FROM  cart c
+    JOIN user_account u ON c.user_id = u.id
+    LEFT JOIN researcher r ON u.id = r.user_account_id 
+    LEFT JOIN organization org ON r.nameofOrganization = org.id
+    JOIN sample s ON c.sample_id = s.id  
+    
+    ORDER BY c.created_at DESC;
   `;
 
-  mysqlConnection.query(sqlQuery, [registration_admin_status, id], (err, results) => {
+  mysqlConnection.query(sqlQuery, (err, results) => {
     if (err) {
-      console.error("Error updating registration admin status:", err);
-      return callback(err, null);
-    }
-
-    console.log("Registration Admin Status updated successfully!");
-
-    // Determine new cart status based on registration admin status
-    const newCartStatus = registration_admin_status === 'Accepted' ? 'Accepted' :
-                          registration_admin_status === 'Rejected' ? 'Rejected' : null;
-
-    // If the status requires updating the cart
-    if (newCartStatus) {
-      updateCartStatus(id, newCartStatus, (cartErr) => {
-        if (cartErr) {
-          return callback(cartErr, null);
-        }
-
-        // After cart update, notify the researcher
-        const message = registration_admin_status === 'Accepted' 
-  ? "Your sample request has been approved by the Registration Admin." 
-  : registration_admin_status === 'Rejected'
-  ? "Your sample request has been rejected by the Registration Admin." 
-  : "Your sample request is still pending approval by the Registration Admin.";
-
-notifyResearcher(id, message,"Sample Request Status Update", (notifyErr) => {
-  if (notifyErr) {
-    return callback(notifyErr, null);
-  }
-  return callback(null, { message: "Registration Admin and Cart status updated. Researcher notified." });
-});
-
-      });
+      console.error("Error fetching orders:", err);
+      callback(err, null);
     } else {
-      // If no cart update needed, just notify the researcher
-      notifyResearcher(id, (notifyErr) => {
-        if (notifyErr) {
-          return callback(notifyErr, null);
-        }
-        return callback(null, { message: "Registration Admin status updated. Researcher notified." });
-      });
+      callback(null, results);
     }
   });
 };
 
 
+const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
+  try {
+    console.log("Received Body", registration_admin_status);
 
+    // Step 1: Update registration admin status
+    const sqlQuery = `
+      UPDATE registrationadminsampleapproval 
+      SET registration_admin_status = ? 
+      WHERE cart_id = ?
+    `;
 
-const updateCartStatus = (id, cartStatus, callback) => {
-  console.log("Received Body", cartStatus);
+    await queryAsync(sqlQuery, [registration_admin_status, id]);
 
-  const sqlQuery = `
-    UPDATE cart 
-    SET order_status = ? 
-    WHERE id = ?
-  `;
+    console.log("Registration Admin Status updated successfully!");
 
-  mysqlConnection.query(sqlQuery, [cartStatus, id], (err, results) => {
-    if (err) {
-      console.error("Error updating cart status:", err);
-      return callback(err, null);
+    // Step 2: Determine new cart status based on registration admin status
+    const newCartStatus = registration_admin_status === 'Accepted'
+      ? 'Accepted'
+      : registration_admin_status === 'Rejected'
+      ? 'Rejected'
+      : null;
+
+    // Step 3: Update cart status if required
+    if (newCartStatus) {
+      const cartStatusUpdateResult = await updateCartStatus(id, newCartStatus);
+      console.log("Cart Status Update Result:", cartStatusUpdateResult); // Log the result
     }
 
-    console.log("Cart Status updated successfully!");
+    // Step 4: Prepare the notification message
+    const message =
+      registration_admin_status === 'Accepted'
+        ? "Your sample request has been approved by the Registration Admin."
+        : registration_admin_status === 'Rejected'
+        ? "Your sample request has been rejected by the Registration Admin."
+        : "Your sample request is still pending approval by the Registration Admin.";
 
-    const message = cartStatus === 'Accepted' 
-  ? "Your sample request has been accepted and is now processing." 
-  : cartStatus === 'Rejected' 
-  ? "Your sample request has been rejected." 
-  : cartStatus === 'UnderReview' 
-  ? "Your sample documents has been review by committee member." 
-  : "Your sample request status has been updated.";
+    // Step 5: Notify the researcher asynchronously
+    await notifyResearcher(id, message, "Sample Request Status Update");
 
-notifyResearcher(id, message,"Sample Request Status Update", (notifyErr) => {
-  if (notifyErr) {
-    return callback(notifyErr, null);
+    return { message: "Registration Admin and Cart status updated. Researcher notified." };
+  } catch (err) {
+    console.error("Error updating registration admin status:", err);
+    throw new Error("Error updating status");
   }
-  return callback(null, "Cart status updated and researcher notified.");
-});
+};
 
+
+
+const queryAsync = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    mysqlConnection.query(sql, params, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
   });
+};
+const updateCartStatus = async (cartIds, cartStatus, callback) => {
+  try {
+    // Ensure cartIds is always an array
+    const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
+
+    const message =
+      cartStatus === 'Accepted'
+        ? "Your sample request has been accepted and is now processing."
+        : cartStatus === 'Rejected'
+        ? "Your sample request has been rejected."
+        : cartStatus === 'UnderReview'
+        ? "Your sample documents have been reviewed by a committee member."
+        : cartStatus === 'Dispatched'
+        ? "Your sample request has been dispatched and is on its way."
+        : "Your sample request status has been updated.";
+
+    console.log(ids);
+
+    // Run all updates and notifications in parallel
+    const tasks = ids.map(async (id) => {
+      const statusUpdate = queryAsync(
+        `UPDATE cart SET order_status = ? WHERE id = ?`,
+        [cartStatus, id]
+      );
+      const notification = notifyResearcher(
+        id,
+        message,
+        "Sample Request Status Update"
+      );
+      return Promise.all([statusUpdate, notification]);
+    });
+
+    // Wait for all tasks to complete
+    await Promise.all(tasks);
+    console.log("Cart status updated and researchers notified.");
+
+    if (callback && typeof callback === 'function') {
+      callback(null, "Cart status updated and researchers notified.");
+    } else {
+      return "Cart status updated and researchers notified."; // Return result if no callback
+    }
+  } catch (err) {
+    console.error("Error in update and notify:", err);
+
+    if (callback && typeof callback === 'function') {
+      callback(err, null); // Pass error to callback if it's provided
+    } else {
+      throw new Error("Error updating status and notifying researchers.");
+    }
+  }
 };
 
 
@@ -672,6 +713,7 @@ module.exports = {
   updateCart,
   getAllOrder,
   getAllOrderByCommittee,
+  getAllOrderByOrderPacking,
   updateRegistrationAdminStatus,
   updateCartStatus,
 };

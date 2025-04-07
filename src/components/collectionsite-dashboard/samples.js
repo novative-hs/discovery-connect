@@ -1197,7 +1197,7 @@ const SampleArea = () => {
                             </div>
                           </div>
                           <div className="form-group">
-                            <label>Infectious Disease Testing</label>
+                            <label>Infectious Disease Testing (HIV, HBV, HCV)</label>
                             <input
                               type="text"
                               className="form-control"
@@ -1222,7 +1222,7 @@ const SampleArea = () => {
                         <div className="col-md-2">
                           <div className="form-group">
                             <label className="form-label">
-                              Infectious Disease Result
+                              Infectious Disease Result 
                             </label>
                             <div>
                               <div
