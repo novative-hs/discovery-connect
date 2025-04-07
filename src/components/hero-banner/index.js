@@ -1,63 +1,78 @@
-import Services from "@components/offer-product/services";
-
 import React from "react";
 
 const HeroBanner = () => {
   return (
-    <section className="position-relative" style={{ height: "100vh",marginBottom:'150px' }}>
-      {/* ✅ Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="position-absolute top-0 start-0 w-100 h-100"
+    <section
+      className="d-flex flex-column flex-md-row"
+      style={{ height: "100vh", position: "relative" }}
+    >
+      {/* ✅ Left Side: Text Content */}
+      <div
+        className="d-flex flex-column justify-content-center align-items-start text-white px-4 py-5"
         style={{
-          objectFit: "cover",
-          zIndex: "-2", // Video is at the bottom
+          width: "100%",
+          maxWidth: "50%",
+          background:
+            "linear-gradient(135deg, rgba(180, 58, 58, 0.85), rgba(58, 54, 54, 0.95))",
+          zIndex: 2,
         }}
       >
-        <source src="/assets/img/slider/13/samplevideo3.mp4" type="video/mp4" />
-      </video>
-
-      {/* ✅ Dark Overlay */}
-      <div className="position-absolute top-0 start-0 w-100 bg-dark h-100 opacity-50" style={{ zIndex: "-1" }}></div>
-
-      {/* ✅ Text Content */}
-      <div className="container position-absolute top-50 start-50 translate-middle text-center text-white" style={{ zIndex: "1" }}>
-        <h1
-          className="fw-bold text-white"
-          style={{
-            fontFamily: '"Poppins", sans-serif',
-            fontSize: "2.8rem",
-            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-          }}
-        >
-          Hassle-Free Sample Collection
+        <h1 className="display-5 fw-bold mb-4 animate-bottom">
+          Discover High-Quality Research Samples
         </h1>
-        <h3
-          className="fw-bold text-white"
-          style={{
-            fontFamily: '"Playfair Display", serif',
-            fontSize: "2.3rem",
-            fontWeight: "700",
-            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-          }}
-        >
-          Order. Collect. Analyze.
-        </h3>
+        <p className="fs-5 mb-4 animate-bottom text-white">
+          Browse, order, and add samples to your cart with ease.
+        </p>
       </div>
 
-      {/* ✅ Services Below Center */}
+      {/* ✅ Right Side: Video Background */}
       <div
-        className="position-absolute top-60 start-50 translate-middle-x p-5"
-        style={{ zIndex: "2", width: "100%" ,marginTop:'600px'}}
+        style={{
+          width: "100%",
+          maxWidth: "50%",
+          position: "relative",
+          overflow: "hidden",
+        }}
       >
-        <Services />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-100 h-100"
+          style={{ objectFit: "cover" }}
+        >
+          <source
+            src="/assets/img/slider/13/samplevideo3.mp4"
+            type="video/mp4"
+          />
+        </video>
+        <div
+          className="position-absolute top-0 start-0 w-100 h-100"
+          style={{
+            background: "rgba(0, 0, 0, 0.25)",
+            zIndex: 1,
+          }}
+        ></div>
       </div>
-      
+
+      {/* ✅ CSS Animation for Bottom-to-Top */}
+      <style>{`
+        .animate-bottom {
+          opacity: 0;
+          transform: translateY(40px);
+          animation: slideUp 1s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </section>
-    
   );
 };
-export default HeroBanner
+
+export default HeroBanner;

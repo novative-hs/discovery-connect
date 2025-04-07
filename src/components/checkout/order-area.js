@@ -46,7 +46,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   };
 
   const handleSubmit = async (paymentId) => {
-    if (!validateDocuments()) return false; // Ensure documents are validated first
+    if (!validateDocuments()) return false;
   
     const userID = localStorage.getItem("userID");
   
@@ -81,37 +81,38 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
- console.log(response.data.results)
-  // const cartIds = response.data.results[0]?.cartId;
-  // const created_at = response.data.results[0]?.created_at;
   
+      const result = response.data;
   
-  //       // Store cart IDs and created_at in local storage
-  //       localStorage.setItem("cartID", JSON.stringify(cartIds));
-  //       localStorage.setItem("created_at", JSON.stringify(created_at));
+    console.log("res",result)
+        const cartIds = result.result.results.map((item) => item.cartId);
+        const created_at = result.result.results[0].created_at;
   
+        localStorage.setItem("cartIDs", JSON.stringify(cartIds));
+        localStorage.setItem("created_at", JSON.stringify(created_at));
   
         dispatch(clear_cart());
   
+        // ✅ Show success message before redirecting
+        notifySuccess("Order placed successfully!");
+  
         setTimeout(() => {
-          router.push(`/order-confirmation`); // Pass order ID as query param
-        }, 500);
+          router.push(`/order-confirmation`);
+        }, 1000); // Optional delay to let user see message
   
         return true;
-      
+     
     } catch (error) {
+      // If request failed completely
       console.error("Error placing order:", error);
       notifyError(
-        error.response?.data?.error ||
-          "Failed to place order. Please try again."
+        error.response?.data?.error || "Failed to place order. Please try again."
       );
       return false;
     }
   };
   
   
-  
-
   return (
     <div className="order-container" style={{ maxWidth: "700px", margin: "auto" }}>
       <h3>

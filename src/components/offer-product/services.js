@@ -1,118 +1,187 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router"; // Importing useRouter for redirect
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 const Services = () => {
-  const servicesRef = useRef([]);
-  const [visible, setVisible] = useState([false, false, false]);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
   const router = useRouter();
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const index = servicesRef.current.indexOf(entry.target);
-          if (entry.isIntersecting && index !== -1) {
-            setVisible((prev) => {
-              const updated = [...prev];
-              updated[index] = true;
-              return updated;
-            });
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
+    const timer = setTimeout(() => {
+      setAnimate(true); // Trigger the animation after the component mounts
+    }, 100); // You can adjust the delay as needed
 
-    servicesRef.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      servicesRef.current.forEach((el) => {
-        if (el) observer.unobserve(el);
-      });
-    };
+    return () => clearTimeout(timer); // Clean up the timer when the component unmounts
   }, []);
 
-  // Click handler function
-  const handleServiceClick = (service) => {
-    router.push(service.link);
-  };
-
-  // Background colors and text colors for hover effect
-  const hoverColors = ["bg-success", "bg-success", "bg-success"];
-  const hoverTextColors = ["text-white", "text-black", "text-white"];
-
   return (
-    <div className="d-flex flex-row justify-content-center text-center gap-6 p-4 bg-gradient-to-r from-indigo-900 to-blue-900 text-black w-full mt-5">
-      {[
-        {
-          title: "Find a Sample",
-          description: "Browse a vast collection of high-quality research samples.",
-          icon: "fa fa-flask",
-          link: "/shop",
-        },
-        {
-          title: "Order a Sample",
-          description: "Easily request and receive samples tailored to your research needs.",
-          icon: "fa fa-box",
-          link: "/shop",
-        },
-        {
-          title: "Add Sample to Cart",
-          description: "Select and add samples to your cart for easy checkout.",
-          icon: "fa fa-shopping-cart",
-          link: "/shop",
-        },
-      ].map((service, index) => (
-        <div
-          key={index}
-          ref={(el) => (servicesRef.current[index] = el)}
-          className={`flex flex-col items-center p-2 border border-black rounded shadow-md 
-                    h-48 w-75 cursor-pointer transition-all transform hover:scale-110 
-                    duration-300 ease-in-out ${
-                      hoveredIndex === index ? hoverColors[index] : "bg-white"
-                    }
-                    ${
-                      hoveredIndex === index
-                        ? hoverTextColors[index]
-                        : "text-black"
-                    }`}
-          style={{
-            width: "250px", // Fixed width
-            transition: "opacity 0.8s ease-out", // Only fade-in effect
-            opacity: visible[index] ? 1 : 0, // Fade-in effect only
-          }}
-          onClick={() => handleServiceClick(service)}
-          onMouseEnter={() => setHoveredIndex(index)}
-          onMouseLeave={() => setHoveredIndex(null)}
-        >
-          <div className="text-5xl mb-4">
-            <i
-              className={`${service.icon} ${
-                hoveredIndex === index ? "text-white" : "text-danger"
-              } fs-1`}
-            ></i>
+    <>
+      <div className="container-fluid bg-light text-white py-5">
+        <div className="row text-center">
+          {/* Column 1 */}
+          <div
+            className={`col-md-4 mb-4 ${
+              animate ? "animate-fade-up delay-1" : ""
+            } cursor-pointer`}
+            onClick={() => router.push("/shop")}
+          >
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="fa fa-flask fa-2x text-danger mb-3"></i>
+                <h3 className="fw-bold text-dark">Find a Sample</h3>
+                <ul className="list-unstyled mt-3 text-secondary">
+                  <li>
+                    Browse a vast collection of high-quality research samples.
+                  </li>
+                  <li>
+                    <a
+                      href="/shop"
+                      className="text-decoration-none mt-3 text-white tp-btn"
+                    >
+                      Search Sample
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <h3
-            className={`text-xl font-semibold fs-4 ${
-              hoveredIndex === index ? "text-white" : "text-black"
-            }`}
+
+          {/* Column 2 */}
+          <div
+            className={`col-md-4 mb-4 ${
+              animate ? "animate-fade-up delay-2" : ""
+            } cursor-pointer`}
+            onClick={() => router.push("/cart")}
           >
-            {service.title}
-          </h3>
-          <p
-            className={`mt-2 fs-6 ${
-              hoveredIndex === index ? "text-white" : "text-black"
-            } 
-   whitespace-nowrap overflow-hidden text-ellipsis`}
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="fa fa-box fa-2x text-danger mb-3"></i>
+                <h3 className="fw-bold text-dark">Order a Sample</h3>
+                <ul className="list-unstyled mt-3 text-secondary">
+                  <li>
+                    Easily request and receive samples tailored to your research
+                    needs.
+                  </li>
+                  <li>
+                    <a
+                      href="/cart"
+                      className="text-decoration-none mt-3 text-white tp-btn"
+                    >
+                     Order Now
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3 */}
+          <div
+            className={`col-md-4 mb-4 ${
+              animate ? "animate-fade-up delay-3" : ""
+            } cursor-pointer`}
+            onClick={() => router.push("/register")}
           >
-            {service.description}
-          </p>
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body text-center">
+                <i className="fa fa-flask fa-2x text-danger mb-3"></i>
+                <h3 className="fw-bold text-dark">
+                  Add a Sample
+                </h3>
+                <ul className="list-unstyled mt-3 text-secondary ">
+                  <li>
+                    Register your collection site to add and manage
+                    samples.
+                  </li>
+                  <li>
+                    <a
+                      href="/register"
+                      className="text-decoration-none mt-4 text-white tp-btn"
+                    >
+                      Click here to Register
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-up {
+          animation: fadeUp 0.8s ease forwards;
+          opacity: 0;
+        }
+
+        .delay-1 {
+          animation-delay: 0.2s;
+        }
+
+        .delay-2 {
+          animation-delay: 0.4s;
+        }
+
+        .delay-3 {
+          animation-delay: 0.6s;
+        }
+
+        .card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          background-color: white;
+          border-radius: 16px;
+          min-height: 320px; /* This helps match the height seen in the image */
+          padding: 30px 20px;
+        }
+
+        .card:hover {
+          transform: translateY(-10px) scale(1.03);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-body {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          height: 100%;
+        }
+
+        .card-body i {
+          color: #f7941d; /* Match orange icon color */
+          margin-bottom: 16px;
+        }
+
+        .card-body h3 {
+          font-weight: 700;
+          color: #000;
+          margin-bottom: 16px;
+        }
+
+        .list-unstyled li {
+          font-size: 16px;
+          color: #6c757d;
+          line-height: 1.6;
+        }
+
+        .container-fluid {
+          background: #f8f9fa !important;
+        }
+
+        .cursor-pointer {
+          cursor: pointer;
+        }
+      `}</style>
+    </>
   );
 };
 
