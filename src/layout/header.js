@@ -32,7 +32,7 @@ const Header = ({ style_2 = false }) => {
             className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"
               } header__sticky ${sticky ? "header-sticky" : ""}`}
             id="header-sticky"
-            style={{ height: '120px' }}
+            style={{ height: '100px', backgroundColor: '#e6f0fa'  }}
           >
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
@@ -40,7 +40,7 @@ const Header = ({ style_2 = false }) => {
                   <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
                     <div className="logo" style={{ marginLeft: '-50px', marginTop: '10px' }}>
                       <Link href="/">
-                        <Image src={logo} alt="logo" style={{ width: '200px', height: '100px' }} />
+                        <Image src={logo} alt="logo" style={{ width: '200px', height: '90px' }} />
                       </Link>
                     </div>
                   </div>

@@ -107,13 +107,19 @@ const CartArea = () => {
   return (
     <section className="cart-area pt-100 pb-100">
       <div className="container">
+        <div className="d-flex align-items-center mt-0 mb-4">
+          <a href="/shop" className="text-dark d-flex align-items-center">
+            <i className="fas fa-arrow-left me-2"></i>
+            <span>Back to Shop</span>
+          </a>
+        </div>
         <div className="row">
           <div className="col-12">
             {cart_products.length > 0 ? (
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="table-content table-responsive">
-                  <table className="table">
-                    <thead className="table-light">
+                <table className="table" style={{ width: '60%' }}>
+                    <thead style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
                       <tr>
                         <th>Sample</th>
                         <th>Price</th>
@@ -178,7 +184,7 @@ const CartArea = () => {
                 </div>
                 <div className="row justify-content-end">
                   <div className="col-md-5 mr-auto">
-                    <div className="cart-page-total">
+                  <div className="cart-page-total" style={{ width: '80%', margin: '0 auto', marginTop: '-210px'}}>
                       <h2>Cart Totals</h2>
                       <ul className="mb-20">
                         <li>
@@ -191,6 +197,7 @@ const CartArea = () => {
                       <button
                         className="tp-btn cursor-pointer"
                         onClick={handleProceedToCheckout}
+                        style={{ backgroundColor: '#003366', color: 'white' }}
                       >
                         Proceed to Checkout
                       </button>
