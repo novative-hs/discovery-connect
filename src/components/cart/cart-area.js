@@ -21,6 +21,7 @@ const CartArea = () => {
   // Local state to track quantity input and errors
   const [quantities, setQuantities] = useState({});
   const [errors, setErrors] = useState({});
+  const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
     setQuantities((prevQuantities) => {
@@ -107,10 +108,16 @@ const CartArea = () => {
   return (
     <section className="cart-area pt-100 pb-100">
       <div className="container">
-        <div className="d-flex align-items-center mt-0 mb-4">
-          <a href="/shop" className="text-dark d-flex align-items-center">
+        <div className="d-flex align-items-center mb-4" style={{ position: 'relative', top: '-30px' }}>
+          <a
+            href="/shop"
+            className="d-flex align-items-center"
+            onClick={() => setIsClicked(true)}
+          >
             <i className="fas fa-arrow-left me-2"></i>
-            <span>Back to Shop</span>
+            <span className={isClicked ? "text-danger" : "text-dark"}>
+              Back to Shop
+            </span>
           </a>
         </div>
         <div className="row">
@@ -118,8 +125,8 @@ const CartArea = () => {
             {cart_products.length > 0 ? (
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="table-content table-responsive">
-                <table className="table" style={{ width: '60%' }}>
-                    <thead style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
+                  <table className="table" style={{ width: '60%' }}>
+                    <thead style={{ backgroundColor: "#cfe2ff !important", color: "#000" }}>
                       <tr>
                         <th>Sample</th>
                         <th>Price</th>
@@ -184,7 +191,7 @@ const CartArea = () => {
                 </div>
                 <div className="row justify-content-end">
                   <div className="col-md-5 mr-auto">
-                  <div className="cart-page-total" style={{ width: '80%', margin: '0 auto', marginTop: '-210px'}}>
+                    <div className="cart-page-total" style={{ width: '80%', margin: '0 auto', marginTop: '-210px' }}>
                       <h2>Cart Totals</h2>
                       <ul className="mb-20">
                         <li>
@@ -197,7 +204,7 @@ const CartArea = () => {
                       <button
                         className="tp-btn cursor-pointer"
                         onClick={handleProceedToCheckout}
-                        style={{ backgroundColor: '#003366', color: 'white' }}
+                        style={{ backgroundColor: '#003366', color: 'white', border: 'none' }}
                       >
                         Proceed to Checkout
                       </button>

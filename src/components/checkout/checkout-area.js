@@ -7,6 +7,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...others }) => {
   const id = localStorage.getItem("userID");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
   const [sampleCopyData, setSampleCopyData] = useState({
     studyCopy: null,
     reportingMechanism: "",
@@ -25,9 +26,14 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
       <div className="container">
         <div className="container">
           <div className="d-flex align-items-center mt-3">
-            <a href="/cart" className="text-dark d-flex align-items-center">
+            <a href="/cart"
+              className="text-dark d-flex align-items-center"
+              onClick={() => setIsClicked(true)}
+              >
               <i className="fas fa-arrow-left me-2"></i>
-              <span>Back to Cart</span>
+              <span className={isClicked ? "text-danger" : "text-dark"}>
+              Back to Cart
+              </span>
             </a>
           </div>
         </div>
