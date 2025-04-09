@@ -561,23 +561,37 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
 };
 const getAllOrderByOrderPacking = (callback) => {
   const sqlQuery = `
-    SELECT 
-      c.id AS cart_id, 
-      c.user_id, 
-      u.email AS user_email,
-      r.ResearcherName AS researcher_name, 
-      org.OrganizationName AS organization_name,
-      s.id AS sample_id,
-      s.samplename, 
-      c.order_status,  
-      c.created_at
-    FROM  cart c
-    JOIN user_account u ON c.user_id = u.id
-    LEFT JOIN researcher r ON u.id = r.user_account_id 
-    LEFT JOIN organization org ON r.nameofOrganization = org.id
-    JOIN sample s ON c.sample_id = s.id  
-    
-    ORDER BY c.created_at DESC;
+   SELECT 
+  c.*, 
+  c.user_id, 
+  u.email AS user_email,
+  r.ResearcherName AS researcher_name,
+  r.phoneNumber,
+  r.fullAddress,
+  org.OrganizationName AS organization_name,
+  s.id AS sample_id,
+  s.samplename, 
+  c.order_status,  
+  c.created_at,
+  
+  -- Location info
+  city.name AS city_name,
+  country.name AS country_name,
+  district.name AS district_name
+  
+FROM cart c
+JOIN user_account u ON c.user_id = u.id
+LEFT JOIN researcher r ON u.id = r.user_account_id 
+LEFT JOIN organization org ON r.nameofOrganization = org.id
+JOIN sample s ON c.sample_id = s.id
+
+-- Location joins
+LEFT JOIN city ON r.city = city.id
+LEFT JOIN country ON r.country = country.id
+LEFT JOIN district ON r.district = district.id
+
+ORDER BY c.created_at ASC;
+
   `;
 
   mysqlConnection.query(sqlQuery, (err, results) => {

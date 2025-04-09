@@ -28,7 +28,6 @@ const ResearcherArea = () => {
     email: "",
     password: "",
     accountType: "Researcher",
-    logo: "",
     added_by: "",
   });
 
@@ -47,7 +46,6 @@ const ResearcherArea = () => {
   const [orgid, setorgId] = useState();
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  const [logoFile, setLogoFile] = useState(null);
 
   // Fetch researchers from backend when component loads
   useEffect(() => {
@@ -136,19 +134,12 @@ const ResearcherArea = () => {
       email: "",
       password: "",
       accountType: "Researcher",
-      logo: "",
       user_account_id: "",
     });
     setCurrentStep(1);
     setPreview(null);
   };
   const handleInputChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setLogoFile(file);
-      setPreview(URL.createObjectURL(file)); // Generate preview URL
-    }
-
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -177,12 +168,6 @@ const ResearcherArea = () => {
     formDataToSubmit.append("accountType", "Researcher");
     formDataToSubmit.append("added_by", organization.user_account_id); // Use organization ID
     // Append the logo file
-    if (logoFile) {
-      formDataToSubmit.append("logo", logoFile);
-    }
-
-    console.log("FormData to submit:", formDataToSubmit);
-
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/signup`,
@@ -246,7 +231,7 @@ const ResearcherArea = () => {
       phoneNumber: researcher.phoneNumber,
       nameofOrganization: researcher.nameofOrganization,
       fullAddress: researcher.fullAddress,
-      logo: researcher.logo,
+    //  logo: researcher.logo,
       city: researcher.city,
       district: researcher.district,
       country: researcher.country,
@@ -255,20 +240,7 @@ const ResearcherArea = () => {
       accountType: "Researcher",
       added_by: researcher.added_by,
     });
-    setPreview(
-      researcher.logo && researcher.logo.data
-        ? `data:image/jpeg;base64,${Buffer.from(researcher.logo.data).toString(
-          "base64"
-        )}`
-        : null
-    );
-    if (researcher.logo && researcher.logo.data) {
-      const blob = new Blob([new Uint8Array(researcher.logo.data)], {
-        type: "image/jpeg",
-      });
-      const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
-      setLogoFile(file);
-    }
+    
   };
 
   const handleUpdate = async (e) => {
@@ -280,9 +252,6 @@ const ResearcherArea = () => {
       newformData.append(key, value);
     });
 
-    if (logoFile) {
-      newformData.append("logo", logoFile); // Correctly append file
-    }
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/updateProfile/${selectedResearcherId}`,
@@ -607,43 +576,7 @@ const ResearcherArea = () => {
                           className="modal-body overflow-auto text-start"
                           style={{ maxHeight: "65vh" }}
                         >
-                          {/* Image Preview Section */}
-                          <div className="text-center mb-3">
-                            {preview ? (
-                              <img
-                                src={preview}
-                                alt="Preview"
-                                className="rounded-circle border"
-                                width="60"
-                                height="60"
-                              />
-                            ) : (
-                              <span
-                                className="d-inline-block rounded-circle bg-light text-muted text-center fs-4 border"
-                                style={{
-                                  width: "60px",
-                                  height: "60px",
-                                  lineHeight: "60px",
-                                }}
-                              >
-                                <i className="fa-solid fa-user"></i>
-                              </span>
-                            )}
-                          </div>
-  
-                          {/* File Upload */}
-                          <div className="mb-2">
-                            <label className="form-label">Profile Picture</label>
-                            <input
-                              type="file"
-                              className="form-control form-control-sm"
-                              name="logo"
-                              onChange={handleInputChange}
-                              accept="image/*"
-                              required={showAddModal}
-                            />
-                          </div>
-  
+                         
                           {/* Form Fields */}
                           <div className="row g-2">
                             <div className="col-md-12">
@@ -845,7 +778,7 @@ const ResearcherArea = () => {
                   style={{
                     zIndex: 1050,
                     position: "fixed",
-                    top: "100px",
+                    top: "50px",
                     left: "50%",
                     transform: "translateX(-50%)",
                   }}
@@ -863,7 +796,6 @@ const ResearcherArea = () => {
                             fontSize: "1.5rem",
                             position: "absolute",
                             right: "10px",
-                            top: "10px",
                             cursor: "pointer",
                           }}
                         >

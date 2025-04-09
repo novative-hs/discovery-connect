@@ -117,13 +117,18 @@ const ContactForm = () => {
             </label>
           </div>
         </div>
-        <div className="col-md-5">
-          <div className="contact__btn-2">
-            <button type="submit" className="tp-btn">
-              Send Message
-            </button>
-          </div>
-        </div>
+        <div className="col-md-5 justify-content-center align-items-center">
+  <div className="contact__btn-2">
+    <button 
+      type="submit" 
+      className="p-3" 
+      style={{ backgroundColor: '#003366', color: 'white' }}
+    >
+      Send Message
+    </button>
+  </div>
+</div>
+
       </div>
     </form>
   );

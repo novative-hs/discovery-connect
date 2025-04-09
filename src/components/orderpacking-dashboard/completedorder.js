@@ -20,7 +20,7 @@ const CompletedSampleArea = () => {
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const tableHeaders = [
-    { label: "Order ID", key: "cart_id" },
+    { label: "Order ID", key: "id" },
     { label: "User Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     { label: "Order Date", key: "created_at" },
@@ -139,8 +139,8 @@ const CompletedSampleArea = () => {
             <tbody className="table-light">
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
-                  <tr key={sample.cart_id}>
-                    <td>{sample.cart_id || "N/A"}</td>
+                  <tr key={sample.id}>
+                    <td>{sample.id || "N/A"}</td>
                     <td>{sample.researcher_name}</td>
                     <td>{sample.samplename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>

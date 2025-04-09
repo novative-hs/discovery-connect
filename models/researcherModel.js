@@ -15,7 +15,7 @@ function createResearcher(data, callback) {
 // Function to fetch all researchers
 function getAllResearchers(callback) {
   const query = `
-    SELECT researcher.id,researcher.added_by, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.logo, researcher.status,
+    SELECT researcher.id,researcher.added_by, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.status,
            user_account.email,
            organization.id AS organization_id, organization.OrganizationName
     FROM researcher

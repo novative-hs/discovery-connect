@@ -20,7 +20,7 @@ const DispatchSampleArea = () => {
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const tableHeaders = [
-    { label: "Order ID", key: "cart_id" },
+    { label: "Order ID", key: "id" },
     { label: "User Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     { label: "Order Date", key: "created_at" },
@@ -55,7 +55,7 @@ const DispatchSampleArea = () => {
       const shippingSamples = response.data.filter(
         (sample) => sample.order_status === "Dispatched"
       );
-
+console.log(shippingSamples)
       // Update state
       setSamples(shippingSamples);
       setFilteredSamplename(shippingSamples); // Assuming you want to use the filtered samples
@@ -139,8 +139,8 @@ const DispatchSampleArea = () => {
             <tbody className="table-light">
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
-                  <tr key={sample.cart_id}>
-                    <td>{sample.cart_id || "N/A"}</td>
+                  <tr key={sample.id}>
+                    <td>{sample.id || "N/A"}</td>
                     <td>{sample.researcher_name}</td>
                     <td>{sample.samplename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>
