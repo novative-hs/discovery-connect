@@ -5,7 +5,7 @@ import { faHandHoldingHeart } from '@fortawesome/free-solid-svg-icons';
 
 const ContactusFooter = () => {
   return (
-    <div className='bg-light style={{  color: 'white', padding: '4rem 0' }}>
+    <div className='bg-light' style={{ color: 'white', padding: '4rem 0' }}>
       <Container>
         <Row className="align-items-center">
           <Col md={8}>
@@ -33,7 +33,7 @@ const ContactusFooter = () => {
                 padding: '0.75rem 2rem',
                 fontSize: '1.25rem',
               }}
-              onClick={() => {router.push('/contact')}}
+              onClick={() => { router.push('/contact') }}
             >
               Contact us
             </Button>
