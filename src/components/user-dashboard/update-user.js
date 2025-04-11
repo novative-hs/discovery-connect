@@ -34,14 +34,11 @@ const schema = Yup.object().shape({
 
 const UpdateUser = () => {
   const id = localStorage.getItem("userID");
-  const { user } = useSelector((state) => state.auth);
   const [cityname, setcityname] = useState([]);
   const [researcher, setResearcher] = useState(null);
   const [organization, setOrganization] = useState(null); // Set initial state as null
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setcountryname] = useState([]);
-  const [logoFile, setLogoFile] = useState(null);
-  const [preview, setPreview] = useState(null);
   // React Hook Form
   const {
     register,
@@ -63,20 +60,6 @@ const UpdateUser = () => {
 
   useEffect(() => {
     if (researcher) {
-      setPreview(
-        researcher?.logo?.data
-          ? `data:image/jpeg;base64,${Buffer.from(
-              researcher?.logo.data
-            ).toString("base64")}`
-          : null
-      );
-      if (researcher.logo && researcher.logo.data) {
-        const blob = new Blob([new Uint8Array(researcher.logo.data)], {
-          type: "image/jpeg",
-        });
-        const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
-        setLogoFile(file);
-      }
       reset({
         ...researcher,
         OrganizationName: researcher.nameofOrganization, // Ensure correct mapping
@@ -145,33 +128,12 @@ const UpdateUser = () => {
     }
   };
 
-  const handleLogoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target.result);
-        e.target.result; // Update the preview with the Base64 string
-      };
-      reader.readAsDataURL(file); // Convert the file to a Base64 string
-    }
-  };
-
+ 
   const onSubmit = async (data) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, value);
     });
-
-    if (logoFile) {
-      formData.append("logo", logoFile);
-    }
-
-    // Debugging: log the FormData keys
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
 
     try {
       const response = await axios.put(
@@ -195,75 +157,7 @@ const UpdateUser = () => {
   return (
     <div className="profile__info-content">
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="col-xxl-12 col-md-12" style={{ marginBottom: "15px" }}>
-          <div className="profile__logo" style={{ textAlign: "center" }}>
-            {preview ? (
-              <img
-                src={preview}
-                alt="Researcher Logo"
-                style={{
-                  maxWidth: "150px",
-                  maxHeight: "150px",
-                  objectFit: "contain",
-                  marginBottom: "20px",
-                  borderColor: "black",
-                  borderWidth: "2px",
-                  borderStyle: "solid",
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  width: "70px",
-                  height: "70px",
-                  display: "inline-block",
-                  borderRadius: "50%",
-                  backgroundColor: "#eaeaea",
-                  color: "#aaa",
-                  fontSize: "30px",
-                  lineHeight: "70px",
-                  textAlign: "center",
-                }}
-              >
-                <i className="fa-solid fa-user"></i>
-              </span>
-            )}
-
-            <div
-              className="col-xxl-12 col-md-12"
-              style={{
-                marginBottom: "15px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <label
-                htmlFor="logo"
-                style={{
-                  fontWeight: "bold",
-                  width: "150px",
-                  marginRight: "20px",
-                  display: "inline-block", // Ensures label is inline
-                }}
-              >
-                Upload New Logo
-              </label>
-              <div className="profile__input" style={{ flexGrow: 1 }}>
-                <input
-                  {...register("logo")}
-                  name="logo"
-                  type="file"
-                  id="logo"
-                  onChange={handleLogoUpload}
-                  className="form-control form-control-sm"
-                  accept="image/*"
-                />
-
-                <ErrorMessage message={errors.logo?.message} />
-              </div>
-            </div>
-          </div>
-        </div>
+        
         <div className="row">
           {/* Email */}
           <div

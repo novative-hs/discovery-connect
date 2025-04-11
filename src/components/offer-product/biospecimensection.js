@@ -1,120 +1,77 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import { Container, Row, Col } from "react-bootstrap";
+import AOS from "aos";
+import "aos/dist/aos.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import Policy from "src/pages/policy";
+import bg from "@assets/img/contact/contact-bg.png";
 const BioSpecimenSection = () => {
-  const [bioVisible, setBioVisible] = useState(new Array(3).fill(false));
-  const bioRef = useRef([]);
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const index = bioRef.current.indexOf(entry.target);
-          if (entry.isIntersecting && index !== -1) {
-            setBioVisible((prev) => {
-              const updated = [...prev];
-              updated[index] = true;
-              return updated;
-            });
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    bioRef.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      bioRef.current.forEach((el) => {
-        if (el) observer.unobserve(el);
-      });
-    };
+    AOS.init({ duration: 1000, once: true });
   }, []);
 
+  const images = [
+    "/assets/img/slider/13/slider-9.png",
+    "/assets/img/slider/13/slider-6.png", 
+    "/assets/img/slider/13/slider-11.jpg",
+    "/assets/img/slider/13/slider-10.png",
+  ];
+
   return (
-    <Container fluid className="py-5 bg-light" id="bio-section">
-      <Row className="align-items-center">
-        {/* Text Section */}
-        <Col md={6}>
-          <div
-            ref={(el) => (bioRef.current[0] = el)}
-            className={`p-4 transition ${bioVisible[0] ? "visible slide-in-right" : "hidden"}`}
-            >
-              <h3 className="fw-bold text-danger">
-            Providing high-quality biospecimens to advance global healthcare and scientific research.
-          </h3>
-          
-          </div>
-        </Col>
+    <div
+      className="py-5"
+      style={{
+       // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
+        backgroundImage: `url(${bg.src})`
+      }}
+      id="bio-section"
+    >
+      <Container>
+      <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
+  Premium Human Biospecimens for Research
+</h2>
 
-        {/* Image Section in Zig-Zag Layout */}
-        <Col md={6} className="d-flex flex-column">
-          <Row ref={(el) => (bioRef.current[1] = el)} className="g-3">
-            <Col xs={6} className="text-end">
-              <img
-                src="/assets/img/slider/13/slider-10.png"
-                alt="Microscope"
-                className={`img-fluid rounded shadow transition ${bioVisible[1] ? "visible slide-in-left" : "hidden"}`}
-                style={{ width: "90%" }}
-              />
-            </Col>
-            <Col xs={6} className="text-start">
-              <img
-                src="/assets/img/slider/13/slider-9.png"
-                alt="Scientist"
-                className={`img-fluid rounded shadow transition ${bioVisible[1] ? "visible slide-in-left" : "hidden"}`}
-                style={{ width: "90%" }}
-              />
-            </Col>
-          </Row>
+        <Row className="align-items-center">
+          <Col md={6} className="mb-4 mb-md-0" data-aos="fade-right">
+          <h2 className="fw-bold mb-3" style={{ fontSize: "2.5rem" }}>
+  <span
+    style={{
+      background: "linear-gradient(to right, #007bff, #00b4d8)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+    }}
+  >
+    Explore Cutting-Edge Biobanking Solutions
+  </span>{" "}
+  for Advancing Medical and Scientific Innovation.
+</h2>
+<p className="text-secondary fs-5">
+  Access a diverse range of biospecimens for groundbreaking research.
+</p>
 
-          <Row ref={(el) => (bioRef.current[2] = el)} className="g-3 mt-3">
-            <Col xs={6} className="text-start">
-              <img
-                src="/assets/img/slider/13/slider-6.png"
-                alt="Lab"
-                className={`img-fluid rounded shadow transition ${bioVisible[2] ? "visible slide-in-left" : "hidden"}`}
-                style={{ width: "90%" }}
-              />
-            </Col>
-            <Col xs={6} className="text-end">
-              <img
-                src="/assets/img/slider/13/slider-3.png"
-                alt="Experiment"
-                className={`img-fluid rounded shadow transition ${bioVisible[2] ? "visible slide-in-left" : "hidden"}`}
-                style={{ width: "90%" }}
-              />
-            </Col>
-          </Row>
-        </Col>
-      </Row>
+          </Col>
 
-      <style>{`
-        .transition {
-          transition: all 1s ease-in-out;
-        }
-        .hidden {
-          opacity: 0;
-        }
-        .visible {
-          opacity: 1;
-        }
-        .slide-in-left {
-          transform: translateX(-100%);
-        }
-        .slide-in-right {
-          transform: translateX(100%);
-        }
-        .visible.slide-in-left,
-        .visible.slide-in-right {
-          transform: translateX(0);
-        }
-      `}</style>
-    </Container>
+          <Col md={6}>
+            <Row className="g-3">
+              {images.map((image, index) => (
+                <Col xs={6} key={index} data-aos="zoom-in">
+                  <div className="rounded overflow-hidden shadow-sm">
+                    <img
+                      src={image}
+                      alt={`Specimen ${index + 1}`}
+                      className="img-fluid"
+                      style={{ height: "100%", objectFit: "cover", borderRadius: "10px" }}
+                    />
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
+
 
 export default BioSpecimenSection;

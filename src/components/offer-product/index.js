@@ -3,7 +3,7 @@ import Link from "next/link";
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
-
+import bg from "@assets/img/contact/contact-bg.png";
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
   const [visible, setVisible] = useState({});
@@ -43,12 +43,15 @@ const OfferPopularProduct = () => {
   if (displayedCategories.length === 0) return <ErrorMessage message="No samples found!" />;
 
   return (
-    <section className="product__coupon-area product__offer py-5">
-      <div className="container">
+    <section className="product__coupon-area product__offer py-5" style={{
+       backgroundImage: `url(${bg.src})`
+      // background: "linear-gradient(135deg,rgb(244, 242, 242),rgba(255, 255, 255, 0.97))",
+      }}>
+      <div className="container" >
         {/* Header Section */}
         <div className="row text-center mb-4">
           <div className="col">
-            <h2 className="fw-bold text-danger">High-Quality Lab Samples</h2>
+            <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
           </div>
         </div>
 
@@ -95,11 +98,16 @@ const OfferPopularProduct = () => {
 
         {/* Footer Section */}
         <div className="row text-center mt-4">
-          <div className="col">
-            <Link href="/shop" className="btn btn-danger fw-bold px-4 py-2">
-              Show More
-            </Link>
-          </div>
+        <div className="col">
+  <Link
+    href="/shop"
+    className="fw-bold px-4 py-2 text-white text-decoration-none"
+    style={{ backgroundColor: "#003366" }}
+  >
+    Show More
+  </Link>
+</div>
+
         </div>
         {/* ✅ Custom Modal (No Bootstrap) */}
         {showModal && selectedProduct && (

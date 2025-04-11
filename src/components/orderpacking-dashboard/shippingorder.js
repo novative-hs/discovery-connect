@@ -1,49 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDownload,
-  faCheck,
-  faTimes,
-  faFilePdf,
-} from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
-import { notifySuccess,notifyError } from "@utils/toast";
+import { notifySuccess, notifyError } from "@utils/toast";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFile, faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 const ShippingSampleArea = () => {
   const id = localStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Order packaging Id on sample page is:", id);
-  }
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
+  if (id === null) return <div>Loading...</div>;
 
-  const tableHeaders = [
-    { label: "Order ID", key: "cart_id" },
-    { label: "User Name", key: "researcher_name" },
-    { label: "Sample Name", key: "samplename" },
-    { label: "Order Date", key: "created_at" },
-    { label: "Status", key: "order_status" },
-  ];
-
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
+  const [samples, setSamples] = useState([]);
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
-  const [selectedShippedId, setSelectedShippedId] = useState(null);
   const [orderStatus, setOrderStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
 
+  const [selectedUserSamples, setSelectedUserSamples] = useState([]);
+  const [selectedUserName, setSelectedUserName] = useState("");
+  const [showOrderStatusError, setShowOrderStatusError] = useState(false);
+
+  const tableHeaders = [
+    { label: "Order ID", key: "id" },
+    { label: "Researcher Name", key: "researcher_name" },
+    { label: "Sample Name", key: "samplename" },
+    { label: "Order Date", key: "created_at" },
+    { label: "Status", key: "order_status" },
+  ];
+
   useEffect(() => {
-    fetchSamples(); // Call the function initially when the component mounts
-
-    // Set an interval to refresh data every 5 seconds (5000ms)
-    const interval = setInterval(() => {
-      fetchSamples();
-    }, 5000);
-
-    // Clear the interval when the component unmounts to avoid memory leaks
+    fetchSamples();
+    const interval = setInterval(fetchSamples, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -52,16 +40,12 @@ const ShippingSampleArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`
       );
-
-      // Filter only the samples where order_status is 'Dispatched'
       const shippingSamples = response.data.filter(
         (sample) => sample.order_status === "Shipping"
       );
 
-      // Update state
       setSamples(shippingSamples);
-      setFilteredSamplename(shippingSamples); // Assuming you want to use the filtered samples
-      console.log(shippingSamples);
+      setFilteredSamplename(shippingSamples);
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
@@ -70,17 +54,20 @@ const ShippingSampleArea = () => {
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredSamplename.length / itemsPerPage)
+      Math.ceil(Object.keys(groupedSamples).length / itemsPerPage)
     );
     setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
+    if (currentPage >= pages) setCurrentPage(0);
   }, [filteredSamplename]);
 
-  // Get the current data for the table
-  const currentData = filteredSamplename.slice(
+  const groupedSamples = filteredSamplename.reduce((acc, sample) => {
+    const key = sample.researcher_name;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(sample);
+    return acc;
+  }, {});
+
+  const groupedList = Object.entries(groupedSamples).slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -89,71 +76,60 @@ const ShippingSampleArea = () => {
     setCurrentPage(event.selected);
   };
 
-  // Filter the researchers list
   const handleFilterChange = (field, value) => {
     let filtered = [];
-
     if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
+      filtered = samples;
     } else {
       filtered = samples.filter((sample) =>
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
-
     setFilteredSamplename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setCurrentPage(0);
   };
+
   const handleOrderStatusSubmit = async () => {
-    console.log(
-      "Selected Order IDs:",
-      selectedShippedId,
-      "Order Status:",
-      orderStatus
-    );
-  
-    if (!selectedShippedId || selectedShippedId.length === 0 || !orderStatus) {
-      alert("Please select a status.");
+    const orderIds = selectedUserSamples.map((s) => s.id);
+    if (!orderIds.length) {
+      notifyError("No items selected.");
       return;
     }
-  
-    const startTime = Date.now(); // Start time logging
-  
+
+    if (orderStatus !== "Dispatched") {
+      setShowOrderStatusError(true); // show the inline error message
+      return;
+    }
+
     try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedShippedId}/cart-status`,
-        {
-          cartStatus: orderStatus,
-        }
+      await Promise.all(
+        orderIds.map((id) =>
+          axios.put(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${id}/cart-status`,
+            { cartStatus: orderStatus }
+          )
+        )
       );
-  
-      const endTime = Date.now(); // End time logging
-      console.log(`API call took ${endTime - startTime}ms`);
-  
-      if (response.status === 200) {
-        notifySuccess("Order status updated successfully!");
-        setShowOrderStatusModal(false);
-        setOrderStatus(""); // Reset dropdown
-        fetchSamples(); // Refresh orders list
-      }
+      notifySuccess("Order status updated successfully!");
+      setShowOrderStatusModal(false);
+      setShowOrderStatusError(false);
+      setOrderStatus("");
+      fetchSamples();
     } catch (error) {
       console.error("Error updating order status:", error);
       notifyError("Failed to update order status.");
     }
   };
-  
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="tp-8 fw-bold text-danger text-center pb-2">
-          Orders Packaging
+        <h4 className="text-center text-dark fw-bold mb-4">
+          📦 Orders Ready for Packaging
         </h4>
-
-        {/* Table */}
         <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto">
-            <thead className="table-dark">
+          <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
+            <thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
@@ -173,32 +149,31 @@ const ShippingSampleArea = () => {
                     </div>
                   </th>
                 ))}
-                 <th className="p-2" style={{ minWidth: "120px" }}>
+                <th className="p-2" style={{ minWidth: "120px" }}>
                   Action
                 </th>
-
               </tr>
             </thead>
-            <tbody className="table-light">
-              {currentData.length > 0 ? (
-                currentData.map((sample) => (
-                  <tr key={sample.cart_id}>
-                    <td>{sample.cart_id || "N/A"}</td>
-                    <td>{sample.researcher_name}</td>
-                    <td>{sample.samplename}</td>
-                    <td>{new Date(sample.created_at).toLocaleString()}</td>
-                    <td>{sample.order_status}</td>
+            <tbody className="bg-light">
+              {groupedList.length > 0 ? (
+                groupedList.map(([researcher, records]) => (
+                  <tr key={researcher}>
+                    <td>{records[0].id}</td>
+                    <td>{researcher}</td>
+                    <td>{records.map((r) => r.samplename).join(", ")}</td>
+                    <td>{new Date(records[0].created_at).toLocaleString()}</td>
+                    <td>{records[0].order_status}</td>
                     <td>
                       <button
-                        className="btn btn-sm btn-warning"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedShippedId(sample.cart_id); // pass full array
+                        className="btn btn-outline-success btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow"
+                        onClick={() => {
+                          setSelectedUserSamples(records);
+                          setSelectedUserName(researcher);
                           setShowOrderStatusModal(true);
                         }}
-                        title="Update Order Status"
                       >
-                        <i className="bi bi-truck"></i> Mark as Dispatched
+                        <FontAwesomeIcon icon={faFileInvoice} />
+                        View
                       </button>
                     </td>
                   </tr>
@@ -213,53 +188,122 @@ const ShippingSampleArea = () => {
             </tbody>
           </table>
         </div>
+
         {showOrderStatusModal && (
           <Modal
-            show={showOrderStatusModal}
+            show
             onHide={() => setShowOrderStatusModal(false)}
+            size="lg"
+            centered
           >
-            <Modal.Header closeButton>
-              <Modal.Title>Update Order Status</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Form.Group>
-                <Form.Label>Has this order been dispatched?</Form.Label>
-                <div className="d-flex gap-3">
-                  <Form.Check
-                    type="radio"
-                    label="Yes"
-                    name="dispatch"
-                    onChange={() => setOrderStatus("Dispatched")}
-                    checked={orderStatus === "Dispatched"}
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="No"
-                    name="dispatch"
-                    onChange={() => setOrderStatus("")}
-                    checked={orderStatus === ""}
-                  />
+            <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
+              {/* Header: Name & Address */}
+              <div className="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h5 className="fw-bold text-dark mb-2">
+                    <span className="text-primary">👤 Name:</span>{" "}
+                    {selectedUserSamples[0]?.researcher_name}
+                  </h5>
                 </div>
+                <div className="text-end small text-secondary">
+                  <div>
+                    <span className="fw-bold text-primary">📍 Address:</span>
+                    <br />
+                    {selectedUserSamples[0]?.fullAddress},<br />
+                    {selectedUserSamples[0]?.district_name},{" "}
+                    {selectedUserSamples[0]?.city_name},{" "}
+                    {selectedUserSamples[0]?.country_name}
+                  </div>
+                  <div className="mt-2">
+                    <span className="fw-bold">🗓️ Created:</span>{" "}
+                    {new Date(
+                      selectedUserSamples[0]?.created_at
+                    ).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              <hr className="mb-4" />
+
+              {/* Table of Items */}
+              <div className="table-responsive">
+                <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
+                  <thead className="table-success text-dark">
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedUserSamples.map((sample, i) => (
+                      <tr key={i}>
+                        <td>{sample.samplename}</td>
+                        <td>{sample.quantity || "-"}</td>
+                        <td>{sample.price || "-"}</td>
+                        <td>{sample.totalpayment || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-light">
+                    <tr>
+                      <td colSpan="3" className="text-end fw-bold">
+                        Total
+                      </td>
+                      <td className="fw-bold text-success">
+                        {selectedUserSamples
+                          .reduce(
+                            (sum, s) => sum + Number(s.totalpayment || 0),
+                            0
+                          )
+                          .toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Status Selection */}
+              <Form.Group className="mt-4">
+                <Form.Check
+                  type="checkbox"
+                  label=" Mark all items as Dispatched"
+                  onChange={(e) => {
+                    setOrderStatus(e.target.checked ? "Dispatched" : "");
+                    if (e.target.checked) setShowOrderStatusError(false); // hide error if checked
+                  }}
+                  checked={orderStatus === "Dispatched"}
+                  className="fw-semibold"
+                />
+                {showOrderStatusError && (
+                  <div className="text-danger mt-2 small">
+                    Please check the box to mark items as dispatched.
+                  </div>
+                )}
               </Form.Group>
             </Modal.Body>
-            <Modal.Footer>
+
+            {/* Footer Buttons */}
+            <Modal.Footer className="bg-white border-0">
               <Button
-                variant="secondary"
+                variant="outline-secondary"
                 onClick={() => setShowOrderStatusModal(false)}
+                className="rounded-pill px-4"
               >
-                Cancel
+                ❌ Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="success"
                 onClick={handleOrderStatusSubmit}
-                disabled={!orderStatus}
+                className="rounded-pill px-4"
               >
-                Save Changes
+                🚚 Save & Dispatch
               </Button>
             </Modal.Footer>
           </Modal>
         )}
-        {/* Pagination */}
+
         {totalPages > 1 && (
           <Pagination
             handlePageClick={handlePageChange}

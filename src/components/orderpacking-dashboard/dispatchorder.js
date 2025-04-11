@@ -20,7 +20,7 @@ const DispatchSampleArea = () => {
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const tableHeaders = [
-    { label: "Order ID", key: "cart_id" },
+    { label: "Order ID", key: "id" },
     { label: "User Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     { label: "Order Date", key: "created_at" },
@@ -55,7 +55,7 @@ const DispatchSampleArea = () => {
       const shippingSamples = response.data.filter(
         (sample) => sample.order_status === "Dispatched"
       );
-
+console.log(shippingSamples)
       // Update state
       setSamples(shippingSamples);
       setFilteredSamplename(shippingSamples); // Assuming you want to use the filtered samples
@@ -107,14 +107,15 @@ const DispatchSampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="tp-8 fw-bold text-danger text-center pb-2">
-          Orders Packaging
-        </h4>
+      <h4 className="text-center text-dark fw-bold mb-4">
+      🚚 Orders Sample Dispatched
+</h4>
 
         {/* Table */}
         <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto">
-            <thead className="table-dark">
+        <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
+
+<thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
@@ -139,8 +140,8 @@ const DispatchSampleArea = () => {
             <tbody className="table-light">
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
-                  <tr key={sample.cart_id}>
-                    <td>{sample.cart_id || "N/A"}</td>
+                  <tr key={sample.id}>
+                    <td>{sample.id || "N/A"}</td>
                     <td>{sample.researcher_name}</td>
                     <td>{sample.samplename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>

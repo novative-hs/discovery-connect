@@ -15,11 +15,7 @@ export function middleware(req) {
 // Protect specific routes
 export const config = {
   matcher: [
-    "/biobank-dashboard",
-    "/registrationadmin-dashboard", 
-    "/user-dashboard", 
-    "/organization-dashboard", 
-    "/collectionsite-dashboard",
+    "/header",
     "/dashboardheader"
   ],
 };

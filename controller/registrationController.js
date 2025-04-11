@@ -113,7 +113,7 @@ const loginAccount = (req, res) => {
       if (err.message === "Invalid email or password") {
         return res.status(401).json({ status: "fail", error: err.message });
       }
-      if (err.message === "Account is not approved") {
+      if (err.message === "Account is not active"){
         return res.status(403).json({ status: "fail", error: err.message });
       }
       return res

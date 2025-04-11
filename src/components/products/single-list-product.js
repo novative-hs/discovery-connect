@@ -24,7 +24,7 @@ const SingleListProduct = ({ product }) => {
   };
   return (
     <React.Fragment>
-      <div className="product__item p-relative transition-3 mb-50">
+      <div className="product__item p-relative transition-3">
         <div className="row">
           <div className="col-xl-5 col-lg-5">
             <div className="product__thumb w-img p-relative fix">
