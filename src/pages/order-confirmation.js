@@ -56,7 +56,7 @@ const OrderConfirmation = () => {
     <>
       <Container className="text-center mt-5">
         {/* Confirmation Card */}
-        <Card className="p-4 text-white bg-dark shadow-lg rounded-4">
+        <Card className="p-4 text-white shadow-lg rounded-4" style={{ backgroundColor: "#0a1d4e"}}>
           <Card.Body>
             <h3 className="text-info">
               <i className="bi bi-check-circle-fill"></i> THANK YOU

@@ -144,7 +144,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                 </div>
               </div>
 
-              <button type="submit" className="tp-btn" onClick={handlePlaceOrder}>
+              <button type="submit" className="tp-btn" style={{backgroundColor: "#0a1d4e"}} onClick={handlePlaceOrder}>
                 Place Order
               </button>
             </form>
