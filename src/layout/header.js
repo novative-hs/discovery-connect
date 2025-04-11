@@ -131,16 +131,11 @@ const Header = ({ style_2 = false }) => {
         </div>
       </header>
 
-      {/* cart mini area start */}
       <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />
-      {/* cart mini area end */}
-
-      {/* off canvas start */}
       <OffCanvas
         isOffCanvasOpen={isOffCanvasOpen}
         setIsOffCanvasOpen={setIsOffCanvasOpen}
       />
-      {/* off canvas end */}
     </>
   );
 };

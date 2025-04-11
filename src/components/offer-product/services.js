@@ -89,7 +89,7 @@ const Services = () => {
                 </h3>
                 <ul className="list-unstyled mt-3 text-secondary ">
                   <li>
-                    Register your collection site to add and manage
+                    Register as a Collection Site to add and manage
                     samples.
                   </li>
                   <li>
