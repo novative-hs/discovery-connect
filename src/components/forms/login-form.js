@@ -37,36 +37,49 @@ const LoginForm = () => {
         password: data.password,
       });
   
+      console.log("Login result:", result); // ✅ TEMPORARY: Check what's coming back
+  
       if (result?.error) {
-        notifyError(result?.error?.data?.error);
+        // ✅ Try to get the most helpful error message
+        const errorData = result.error?.data;
+  
+        const errorMsg =
+          errorData?.message || // Backend custom message (e.g., 'Account is not active')
+          errorData?.error || // If backend sends it under `error`
+          result.error?.statusText || // Generic HTTP error
+          "Internal Server Error"; // Fallback
+  
+        notifyError(errorMsg);
       } else {
         const { id, accountType, authToken } = result?.data?.user || {};
         if (!id) {
           return notifyError("Unexpected error: User ID is missing.");
         }
-        localStorage.setItem("userID", id); // Store 'id' as userID
-        localStorage.setItem("accountType",accountType)
+  
+        localStorage.setItem("userID", id);
+        localStorage.setItem("accountType", accountType);
         notifySuccess("Login successfully");
+  
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-          // Check if the user came from the checkout page
-         
-          const fromPage = router.query.from;
-          if (fromPage === "checkout") {
-            router.push("/checkout"); // Redirect back to the checkout page
-          } else {
-            if (accountType) {
-              router.push("/dashboardheader");
-            }  else {
-              router.push("/default-dashboard");
-            }
-            }
-          } 
+  
+        const fromPage = router.query.from;
+        if (fromPage === "checkout") {
+          router.push("/checkout");
+        } else {
+          router.push(accountType ? "/dashboardheader" : "/default-dashboard");
+        }
       }
-     catch (error) {
-      console.error("Login error:", error);
-      notifyError("An unexpected error occurred.");
+    } catch (error) {
+      console.error("Catch Block Error:", error); // ✅ for debugging
+      const fallbackMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong. Please try again.";
+      notifyError(fallbackMessage);
     }
   };
+  
+  
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="login__input-wrapper">

@@ -109,9 +109,6 @@ WHERE
 
   `;
 
-  // Log query being executed
-  console.log("Executing Query:", query);
-
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
@@ -283,8 +280,6 @@ WHERE
 
   `;
 
-  // Log query being executed
-  console.log("Executing Query:", query);
 
   mysqlConnection.query(query, (err, results) => {
     if (err) {

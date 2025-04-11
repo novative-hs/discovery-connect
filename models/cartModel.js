@@ -34,18 +34,16 @@ const notifyResearcher = (cartIds, message, subject) => {
       // Build the message
       const emailMessage = `Dear Researcher,\n\n${message}\n\nDetails for the following carts:\n\n${cartIdsList}\n\nBest regards,\nYour Team`;
 
-      // Start email sending process in the background (non-blocking)
-      setImmediate(() => {
-        sendEmail(researcherEmail, subject, emailMessage)
-          .then(() => {
-            console.log("Email notification sent to researcher for all cart IDs.");
-            resolve(); // Resolve after email is sent successfully
-          })
-          .catch((emailError) => {
-            console.error("Failed to send researcher email:", emailError);
-            reject(emailError); // Reject if email fails
-          });
-      });
+      // Start email sending process concurrently (non-blocking)
+      sendEmail(researcherEmail, subject, emailMessage)
+        .then(() => {
+          console.log("Email notification sent to researcher for all cart IDs.");
+          resolve(); // Resolve after email is sent successfully
+        })
+        .catch((emailError) => {
+          console.error("Failed to send researcher email:", emailError);
+          reject(emailError); // Reject if email fails
+        });
     });
   });
 };
@@ -299,11 +297,6 @@ const createCart = (data, callback) => {
       .catch((error) => callback(error));
   });
 };
-
-
-
-
-
 
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `

@@ -281,40 +281,55 @@ useEffect(() => {
         <div className="row justify-content-center">
           
             {/* Button Container */}
-            <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              <h5 className="m-0 fw-bold ">District List</h5>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add City Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2", // soft blue
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add District
+                </button>
 
-                {/* Button Container */}
-                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add District Button */}
-
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add District
-                  </button>
-
-                  {/* Upload Button (Styled as Label for Hidden Input) */}
-                  <label className="btn btn-secondary mb-2">
-                    Upload District List
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      style={{ display: "none" }}
-                      onChange={handleFileUpload}
-                    />
-                  </label>
-                </div>
+                {/* Upload City List Button */}
+                <label
+                  style={{
+                    backgroundColor: "#f1f1f1", // soft gray
+                    color: "#333",
+                    border: "1px solid #ccc",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                    marginBottom: 0,
+                  }}
+                >
+                  <i className="fas fa-upload"></i> Upload District List
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    hidden
+                    onChange={(e) => handleFileUpload(e)}
+                  />
+                </label>
               </div>
+            </div>
 
               {/* Table with responsive scroll */}
               <div className="table-responsive w-80">
@@ -373,7 +388,7 @@ useEffect(() => {
                             <td>
                               <div className="d-flex justify-content-around gap-2">
                                 <button
-                                  className="btn btn-success btn-sm py-0 px-1"
+                                  className="btn btn-success btn-sm"
                                   onClick={() =>
                                     handleEditClick({
                                       id,
@@ -388,7 +403,7 @@ useEffect(() => {
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
-                                  className="btn btn-danger btn-sm py-0 px-1"
+                                  className="btn btn-danger btn-sm"
                                   onClick={() => {
                                     setSelecteddistrictnameId(id);
                                     setShowDeleteModal(true);
@@ -398,7 +413,7 @@ useEffect(() => {
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
                                 <button
-                                className="btn btn-info btn-sm  py-0 px-1"
+                                className="btn btn-info btn-sm"
                                 onClick={() =>
                                   handleShowHistory("district", id)
                                 }

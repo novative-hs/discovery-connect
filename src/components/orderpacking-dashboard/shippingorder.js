@@ -23,7 +23,7 @@ const ShippingSampleArea = () => {
 
   const tableHeaders = [
     { label: "Order ID", key: "id" },
-    { label: "User Name", key: "researcher_name" },
+    { label: "Researcher Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     { label: "Order Date", key: "created_at" },
     { label: "Status", key: "order_status" },
@@ -95,7 +95,7 @@ const ShippingSampleArea = () => {
       notifyError("No items selected.");
       return;
     }
-    
+
     if (orderStatus !== "Dispatched") {
       setShowOrderStatusError(true); // show the inline error message
       return;
@@ -124,16 +124,12 @@ const ShippingSampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-      <h4 className="text-center text-primary fw-bold mb-4">
-  📦 Orders Ready for Packaging
-</h4>
-
-
+        <h4 className="text-center text-dark fw-bold mb-4">
+          📦 Orders Ready for Packaging
+        </h4>
         <div className="table-responsive w-100">
-        <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
-
-        <thead className="table-primary text-white">
-
+          <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
+            <thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
@@ -159,7 +155,6 @@ const ShippingSampleArea = () => {
               </tr>
             </thead>
             <tbody className="bg-light">
-
               {groupedList.length > 0 ? (
                 groupedList.map(([researcher, records]) => (
                   <tr key={researcher}>
@@ -169,18 +164,17 @@ const ShippingSampleArea = () => {
                     <td>{new Date(records[0].created_at).toLocaleString()}</td>
                     <td>{records[0].order_status}</td>
                     <td>
-                    <button
-  className="btn btn-outline-success btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow"
-  onClick={() => {
-    setSelectedUserSamples(records);
-    setSelectedUserName(researcher);
-    setShowOrderStatusModal(true);
-  }}
->
-  <FontAwesomeIcon icon={faFileInvoice} />
-  View
-</button>
-
+                      <button
+                        className="btn btn-outline-success btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow"
+                        onClick={() => {
+                          setSelectedUserSamples(records);
+                          setSelectedUserName(researcher);
+                          setShowOrderStatusModal(true);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faFileInvoice} />
+                        View
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -196,106 +190,119 @@ const ShippingSampleArea = () => {
         </div>
 
         {showOrderStatusModal && (
-  <Modal show onHide={() => setShowOrderStatusModal(false)} size="lg" centered>
-    <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
-      {/* Header: Name & Address */}
-      <div className="d-flex justify-content-between align-items-start mb-3">
-        <div>
-          <h5 className="fw-bold text-dark mb-2">
-            <span className="text-primary">👤 Name:</span>{" "}
-            {selectedUserSamples[0]?.researcher_name}
-          </h5>
-        </div>
-        <div className="text-end small text-secondary">
-          <div>
-            <span className="fw-bold text-primary">📍 Address:</span><br />
-            {selectedUserSamples[0]?.fullAddress},<br />
-            {selectedUserSamples[0]?.district_name}, {selectedUserSamples[0]?.city_name}, {selectedUserSamples[0]?.country_name}
-          </div>
-          <div className="mt-2">
-            <span className="fw-bold">🗓️ Created:</span>{" "}
-            {new Date(selectedUserSamples[0]?.created_at).toLocaleDateString()}
-          </div>
-        </div>
-      </div>
+          <Modal
+            show
+            onHide={() => setShowOrderStatusModal(false)}
+            size="lg"
+            centered
+          >
+            <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
+              {/* Header: Name & Address */}
+              <div className="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h5 className="fw-bold text-dark mb-2">
+                    <span className="text-primary">👤 Name:</span>{" "}
+                    {selectedUserSamples[0]?.researcher_name}
+                  </h5>
+                </div>
+                <div className="text-end small text-secondary">
+                  <div>
+                    <span className="fw-bold text-primary">📍 Address:</span>
+                    <br />
+                    {selectedUserSamples[0]?.fullAddress},<br />
+                    {selectedUserSamples[0]?.district_name},{" "}
+                    {selectedUserSamples[0]?.city_name},{" "}
+                    {selectedUserSamples[0]?.country_name}
+                  </div>
+                  <div className="mt-2">
+                    <span className="fw-bold">🗓️ Created:</span>{" "}
+                    {new Date(
+                      selectedUserSamples[0]?.created_at
+                    ).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
 
-      <hr className="mb-4" />
+              <hr className="mb-4" />
 
-      {/* Table of Items */}
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
-          <thead className="table-success text-dark">
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Unit Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {selectedUserSamples.map((sample, i) => (
-              <tr key={i}>
-                <td>{sample.samplename}</td>
-                <td>{sample.quantity || "-"}</td>
-                <td>{sample.price || "-"}</td>
-                <td>{sample.totalpayment || "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot className="bg-light">
-            <tr>
-              <td colSpan="3" className="text-end fw-bold">Total</td>
-              <td className="fw-bold text-success">
-                {selectedUserSamples.reduce(
-                  (sum, s) => sum + Number(s.totalpayment || 0),
-                  0
-                ).toFixed(2)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+              {/* Table of Items */}
+              <div className="table-responsive">
+                <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
+                  <thead className="table-success text-dark">
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedUserSamples.map((sample, i) => (
+                      <tr key={i}>
+                        <td>{sample.samplename}</td>
+                        <td>{sample.quantity || "-"}</td>
+                        <td>{sample.price || "-"}</td>
+                        <td>{sample.totalpayment || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-light">
+                    <tr>
+                      <td colSpan="3" className="text-end fw-bold">
+                        Total
+                      </td>
+                      <td className="fw-bold text-success">
+                        {selectedUserSamples
+                          .reduce(
+                            (sum, s) => sum + Number(s.totalpayment || 0),
+                            0
+                          )
+                          .toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
 
-      {/* Status Selection */}
-      <Form.Group className="mt-4">
-        <Form.Check
-          type="checkbox"
-          label=" Mark all items as Dispatched"
-          onChange={(e) => {
-            setOrderStatus(e.target.checked ? "Dispatched" : "");
-            if (e.target.checked) setShowOrderStatusError(false); // hide error if checked
-          }}
-          checked={orderStatus === "Dispatched"}
-          className="fw-semibold"
-        />
-        {showOrderStatusError && (
-    <div className="text-danger mt-2 small">
-      Please check the box to mark items as dispatched.
-    </div>
-  )}
-      </Form.Group>
-    </Modal.Body>
+              {/* Status Selection */}
+              <Form.Group className="mt-4">
+                <Form.Check
+                  type="checkbox"
+                  label=" Mark all items as Dispatched"
+                  onChange={(e) => {
+                    setOrderStatus(e.target.checked ? "Dispatched" : "");
+                    if (e.target.checked) setShowOrderStatusError(false); // hide error if checked
+                  }}
+                  checked={orderStatus === "Dispatched"}
+                  className="fw-semibold"
+                />
+                {showOrderStatusError && (
+                  <div className="text-danger mt-2 small">
+                    Please check the box to mark items as dispatched.
+                  </div>
+                )}
+              </Form.Group>
+            </Modal.Body>
 
-    {/* Footer Buttons */}
-    <Modal.Footer className="bg-white border-0">
-      <Button
-        variant="outline-secondary"
-        onClick={() => setShowOrderStatusModal(false)}
-        className="rounded-pill px-4"
-      >
-        ❌ Cancel
-      </Button>
-      <Button
-        variant="success"
-        onClick={handleOrderStatusSubmit}
-        className="rounded-pill px-4"
-      >
-        🚚 Save & Dispatch
-      </Button>
-    </Modal.Footer>
-  </Modal>
-)}
-
+            {/* Footer Buttons */}
+            <Modal.Footer className="bg-white border-0">
+              <Button
+                variant="outline-secondary"
+                onClick={() => setShowOrderStatusModal(false)}
+                className="rounded-pill px-4"
+              >
+                ❌ Cancel
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleOrderStatusSubmit}
+                className="rounded-pill px-4"
+              >
+                🚚 Save & Dispatch
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        )}
 
         {totalPages > 1 && (
           <Pagination

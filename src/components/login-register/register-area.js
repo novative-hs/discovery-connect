@@ -3,10 +3,11 @@ import Link from "next/link";
 // internal
 import Shapes from "./shapes";
 import RegisterForm from "@components/forms/register-form";
-
+import bg from "@assets/img/contact/contact-bg.png";
 const RegisterArea = () => {
   return (
-    <section className="login__area pt-110 pb-110">
+    <section className="login__area pt-110 pb-110"
+    style={{backgroundImage: `url(${bg.src})`}}>
       <div className="container">
         <div className="login__inner p-relative z-index-1">
           <Shapes />

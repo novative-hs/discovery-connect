@@ -107,14 +107,15 @@ console.log(shippingSamples)
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="tp-8 fw-bold text-danger text-center pb-2">
-          Orders Packaging
-        </h4>
+      <h4 className="text-center text-dark fw-bold mb-4">
+      🚚 Orders Sample Dispatched
+</h4>
 
         {/* Table */}
         <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto">
-            <thead className="table-dark">
+        <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
+
+<thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">

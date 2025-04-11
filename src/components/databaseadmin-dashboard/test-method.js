@@ -388,7 +388,7 @@ const TestMethodArea = () => {
                         <td>
                           <div className="d-flex justify-content-around gap-2">
                             <button
-                              className="btn btn-success btn-sm py-0 px-1"
+                              className="btn btn-success btn-sm"
                               onClick={() =>
                                 handleEditClick({
                                   id,
@@ -403,7 +403,7 @@ const TestMethodArea = () => {
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
-                              className="btn btn-danger btn-sm py-0 px-1"
+                              className="btn btn-danger btn-sm "
                               onClick={() => {
                                 setSelectedTestMethodnameId(id);
                                 setShowDeleteModal(true);
@@ -413,7 +413,7 @@ const TestMethodArea = () => {
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
-                              className="btn btn-info btn-sm py-0 px-1"
+                              className="btn btn-info btn-sm "
                               onClick={() =>
                                 handleShowHistory("testmethod", id)
                               }

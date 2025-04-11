@@ -10,7 +10,7 @@ import useSticky from "@hooks/use-sticky";
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
 import OffCanvas from "@components/common/off-canvas";
 import useCartInfo from "@hooks/use-cart-info";
-
+import bg from "@assets/img/contact/contact-bg.png";
 const Header = ({ style_2 = false }) => {
   const router = useRouter();
   const { sticky } = useSticky();
@@ -29,7 +29,11 @@ const Header = ({ style_2 = false }) => {
         <div className={`header__area ${style_2 ? "" : "header__transparent"}`}>
           <div
             className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"} header__sticky ${sticky ? "header-sticky" : ""}`}
-            style={{ height: '100px', backgroundColor: '#e6f0fa' }}
+            style={{ height: '100px',
+              backgroundImage: `url(${bg.src})`
+              // backgroundColor: '#e6f0fa'
+               }}
+            
           >
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">

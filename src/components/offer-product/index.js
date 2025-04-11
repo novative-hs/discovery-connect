@@ -3,7 +3,7 @@ import Link from "next/link";
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
-
+import bg from "@assets/img/contact/contact-bg.png";
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
   const [visible, setVisible] = useState({});
@@ -43,7 +43,10 @@ const OfferPopularProduct = () => {
   if (displayedCategories.length === 0) return <ErrorMessage message="No samples found!" />;
 
   return (
-    <section className="product__coupon-area product__offer py-5" style={{background: "linear-gradient(135deg,rgb(212, 229, 246),rgba(255, 255, 255, 0.97))",}}>
+    <section className="product__coupon-area product__offer py-5" style={{
+       backgroundImage: `url(${bg.src})`
+      // background: "linear-gradient(135deg,rgb(244, 242, 242),rgba(255, 255, 255, 0.97))",
+      }}>
       <div className="container" >
         {/* Header Section */}
         <div className="row text-center mb-4">

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-
+import bg from "@assets/img/contact/contact-bg.png";
 const cards = [
   {
     icon: "fa-flask",
@@ -38,7 +38,13 @@ const Services = () => {
   }, []);
 
   return (
-    <div className="container-fluid py-5 p-4" style={{ background: "linear-gradient(135deg, #f8f9fa,rgb(212, 229, 246))" }}>
+    <div className="container-fluid py-5 p-4" style={{ 
+        
+             // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
+              backgroundImage: `url(${bg.src})`
+            
+      // background: "linear-gradient(135deg, #f8f9fa,rgb(212, 229, 246))" 
+      }}>
       <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
         Our Services
       </h2>

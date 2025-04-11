@@ -191,7 +191,7 @@ const ResearcherArea = () => {
                     {successMessage}
                   </div>
                 )}
-
+<h5 className="m-0 fw-bold ">Researcher List</h5>
                 {/* Status Filter */}
                 <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
                   <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
@@ -273,15 +273,15 @@ const ResearcherArea = () => {
                           <td>{researcher.OrganizationName}</td>
                           <td>{researcher.status}</td>
                           <td>
-                            <div className="d-flex justify-content-around gap-2">
+                          <div className="d-flex justify-content-center gap-2">
                               <button
-                                className="btn btn-success btn-sm py-0 px-1"
+                                className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(researcher)}
                               >
                                 <FontAwesomeIcon icon={faEdit} />
                               </button>
                               <button
-                                className="btn btn-danger btn-sm py-0 px-1"
+                                className="btn btn-danger btn-sm"
                                 onClick={() => {
                                   setSelectedResearcherId(researcher.id);
                                   setShowDeleteModal(true);
@@ -290,7 +290,7 @@ const ResearcherArea = () => {
                                 <FontAwesomeIcon icon={faTrash} />
                               </button>
                               <button
-                                className="btn btn-info btn-sm py-0 px-1"
+                                className="btn btn-info btn-sm"
                                 onClick={() =>
                                   handleShowHistory("resaercher", researcher.id)
                                 }

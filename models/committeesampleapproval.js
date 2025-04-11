@@ -30,11 +30,11 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 
   // Determine which committee members to fetch, excluding inactive members
   if (committeeType === "scientific") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Scientific' AND status != 'inactive'";
+      getCommitteeMembersQuery = "SELECT user_account_id, status FROM committee_member WHERE committeetype = 'Scientific'";
   } else if (committeeType === "ethical") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Ethical' AND status != 'inactive'";
+      getCommitteeMembersQuery = "SELECT user_account_id, status FROM committee_member WHERE committeetype = 'Ethical'";
   } else if (committeeType === "both") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical') AND status != 'inactive'";
+      getCommitteeMembersQuery = "SELECT user_account_id, status FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical')";
   } else {
       return callback(new Error("Invalid committee type"), null);
   }
@@ -47,18 +47,40 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
       }
 
       if (committeeMembers.length === 0) {
-          return callback(new Error("No active committee members found for the given type"), null);
+          // No members found for the given committee type
+          if (committeeType === "scientific") {
+              return callback(null, { message: "No scientific committee members found" });
+          } else if (committeeType === "ethical") {
+              return callback(null, { message: "No ethical committee members found" });
+          } else if (committeeType === "both") {
+              return callback(null, { message: "No committee members found for either type" });
+          }
       }
 
-      // Insert into `committeesampleapproval` for each committee member
+      // Filter out inactive members
+      const activeMembers = committeeMembers.filter(member => member.status !== 'inactive');
+
+      if (activeMembers.length === 0) {
+          // All members are inactive for the given type
+          if (committeeType === "scientific") {
+              return callback(null, { message: "All scientific committee members are inactive" });
+          } else if (committeeType === "ethical") {
+              return callback(null, { message: "All ethical committee members are inactive" });
+          } else if (committeeType === "both") {
+              return callback(null, { message: "All committee members are inactive" });
+          }
+      }
+
+      // Insert into `committeesampleapproval` for each active committee member
       const insertQuery = `
           INSERT INTO committeesampleapproval (cart_id, sender_id, committee_member_id, committee_status)
           VALUES ?
       `;
 
-      // Prepare the values for insertion
-      const values = committeeMembers.map(member => [cartId, senderId, member.user_account_id, "Review"]);
+      // Prepare the values for insertion (only for active members)
+      const values = activeMembers.map(member => [cartId, senderId, member.user_account_id, "Review"]);
 
+      // Insert active committee members into the database
       mysqlConnection.query(insertQuery, [values], (insertErr, result) => {
           if (insertErr) {
               console.error("Error inserting committee approval records:", insertErr);
@@ -86,7 +108,6 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
       });
   });
 };
-
 
 const updateCommitteeStatus = (id, committee_member_id, committee_status, comments, callback) => {
   console.log("Received Body", committee_status);

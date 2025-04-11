@@ -11,6 +11,7 @@ import {
   faTimes,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
+import { notifyError } from "@utils/toast";
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]); // Filtered orders
@@ -35,7 +36,7 @@ const OrderPage = () => {
     setSelectedOrderId(null);
     setShowModal(false);
   };
-  
+
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
     if (storedUserID) {
@@ -64,7 +65,6 @@ const OrderPage = () => {
       console.error("Error fetching orders:", error);
     }
   };
-
 
   const handleFilterChange = (field, value) => {
     if (value.trim() === "") {
@@ -128,6 +128,14 @@ const OrderPage = () => {
       )
       .then((response) => {
         console.log("Approval request sent:", response.data);
+
+        // Check if the response contains a specific message
+        if (response.data.message) {
+          // If the backend returns a message about no active committee members
+          notifyError(response.data.message);
+          return;
+        }
+
         setSuccessMessage("Approval request sent successfully!");
 
         setTimeout(() => {
@@ -140,7 +148,23 @@ const OrderPage = () => {
         setShowTransferModal(false);
       })
       .catch((error) => {
-        console.error("Error sending approval request:", error);
+        // Check if the error response contains a specific message about inactive committee members
+        if (
+          error.response &&
+          error.response.data.message ===
+            "No active committee members found for the given type"
+        ) {
+          notifyError(
+            "Some committee members are inactive. Please check the committee members."
+          );
+          setShowModal(false);
+          setSelectedOrderId(null);
+        } else {
+          console.error("Error sending approval request:", error);
+          notifyError("An error occurred while sending the approval request.");
+          setShowModal(false);
+          setSelectedOrderId(null);
+        }
       });
   };
 
@@ -181,7 +205,7 @@ const OrderPage = () => {
                       field: "ethical_committee_status",
                     },
                     {
-                      label: "Committee Comments",
+                      label: "Committee Members Comments",
                       field: "committee_comments",
                     },
                   ].map(({ label, field }, index) => (
@@ -241,7 +265,9 @@ const OrderPage = () => {
                       <td>{order.order_status}</td>
                       <td>{order.registration_admin_status}</td>
                       <td>
-                        {order.scientific_committee_status === null
+                        {order.registration_admin_status === "Rejected"
+                          ? "No further processing"
+                          : order.scientific_committee_status === null
                           ? "Awaiting Admin Action"
                           : order.scientific_committee_status &&
                             order.scientific_committee_status !== ""
@@ -250,7 +276,9 @@ const OrderPage = () => {
                       </td>
 
                       <td>
-                        {order.ethical_committee_status === null
+                        {order.registration_admin_status === "Rejected"
+                          ? "No further processing"
+                          : order.ethical_committee_status === null
                           ? "Awaiting Admin Action"
                           : order.ethical_committee_status &&
                             order.ethical_committee_status !== ""
@@ -356,7 +384,6 @@ const OrderPage = () => {
                                 </button>
                               </div>
                             )}
-                         
                         </div>
                       </td>
                     </tr>
@@ -431,7 +458,9 @@ const OrderPage = () => {
                   <div className="modal-footer">
                     <button
                       className="btn btn-primary"
-                      onClick={() => handleCommitteeApproval(selectedApprovalType)}
+                      onClick={() =>
+                        handleCommitteeApproval(selectedApprovalType)
+                      }
                       disabled={!selectedApprovalType} // Disables if no option is selected
                     >
                       Save
