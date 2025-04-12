@@ -1,8 +1,12 @@
 import Link from "next/link";
 import React from "react";
 import menu_data from "./menu-data";
+import { useRouter } from "next/router";
+
+// Inside the component:
 
 const Menus = ({ currentRoute }) => {
+  const router = useRouter();
   if (currentRoute === "/organization-dashboard") {
     return (
       <ul className="fs-7 small">
@@ -78,29 +82,51 @@ const Menus = ({ currentRoute }) => {
       </ul>
     );
   }
-
   return (
-    <ul className="fs-7 small">
+    <ul
+      className="fs-7 small"
+      style={{
+        listStyle: "none",
+        margin: 0,
+        padding: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "40px", // Increased spacing between menu titles
+      }}
+    >
       {" "}
       {/* Bootstrap font-size small */}
       {menu_data.map((menu, i) => (
         <li key={i} className={`${menu.hasDropdown ? "has-dropdown" : ""}`}>
-     <Link
-  href={`${menu.link}`}
-  className="fs-7 small"
-  style={{
-    fontSize: "0.85rem",
-    textDecoration: "none", // No underline initially
-    borderBottom: '2px solid transparent', // Initially set transparent border
-    lineHeight: -1, // Adjust line-height to bring the text and border closer
-    transition: 'border-bottom 0.3s ease', // Smooth transition for the underline effect
-  }}
-  onMouseEnter={(e) => e.target.style.borderBottom = '2px solid red'} // Show underline on hover
-  onMouseLeave={(e) => e.target.style.borderBottom = '2px solid transparent'} // Hide underline when not hovering
->
-  {menu.title}
-</Link>
-
+          <Link
+            href={`${menu.link}`}
+            className={`fs-7 small align-item-center text-dark ${
+              currentRoute === menu.link ? "active-link" : ""
+            }`} 
+            style={{
+              fontSize: "15px",
+              textTransform: "uppercase",
+              padding: "8px 16px", // Reduced padding
+              transition: "all 0.3s ease",
+              display: "inline-block",
+              textDecoration: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderBottom = "2px solid red";
+              e.target.style.color = "red";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderBottom =
+                currentRoute === menu.link
+                  ? "2px solid red"
+                  : "2px solid transparent";
+              e.target.style.color =
+                currentRoute === menu.link ? "#fff" : "#888";
+            }}
+          >
+            {menu.title}
+          </Link>
 
           {menu.hasDropdown && (
             <ul className="submenu fs-7 small">
@@ -109,7 +135,7 @@ const Menus = ({ currentRoute }) => {
                   <Link
                     href={`${sub.link}`}
                     className="fs-7 small"
-                    style={{ fontSize: "0.85rem" ,textDecoration: "none"}}
+                    style={{ fontSize: "0.85rem", textDecoration: "none" }}
                   >
                     {sub.title}
                   </Link>

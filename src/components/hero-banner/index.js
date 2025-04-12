@@ -31,7 +31,7 @@ const HeroBanner = () => {
         {/* ✅ Foreground Text */}
         <div
           className="position-relative "
-          style={{ maxWidth: "700px", zIndex: 2,marginTop:'200px' }}
+          style={{ maxWidth: "700px", zIndex: 2,marginTop:'150px' }}
         >
           <h1
             className="fw-bold mb-4 display-4 text-dark"
@@ -53,14 +53,14 @@ const HeroBanner = () => {
           </p>
 
           <a
-            href="/register"
-            className="btn btn-lg text-white p-3"
-            data-aos="fade-up"
-            data-aos-delay="500"
-            style={{ backgroundColor: "#003366" }}
-          >
-            Register Now
-          </a>
+  href="/register"
+  className="btn btn-lg text-white p-3"
+  data-aos="fade-up"
+  style={{ backgroundColor: "#003366" }}
+>
+  Register Now
+</a>
+
         </div>
       </div>
     </div>

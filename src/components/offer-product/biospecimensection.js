@@ -21,8 +21,8 @@ const BioSpecimenSection = () => {
     <div
       className="py-5"
       style={{
-       // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
-        backgroundImage: `url(${bg.src})`
+        background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
+       // backgroundImage: `url(${bg.src})`
       }}
       id="bio-section"
     >

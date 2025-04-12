@@ -40,8 +40,8 @@ const Services = () => {
   return (
     <div className="container-fluid py-5 p-4" style={{ 
         
-             // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
-              backgroundImage: `url(${bg.src})`
+             background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
+             // backgroundImage: `url(${bg.src})`
             
       // background: "linear-gradient(135deg, #f8f9fa,rgb(212, 229, 246))" 
       }}>
