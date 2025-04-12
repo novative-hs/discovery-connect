@@ -53,9 +53,9 @@ const DashboardArea = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "order-info":
-        return <OrderInfo />;
+        return <OrderInfo setActiveTab={setActiveTab} />;
       case "samples":
-        return <SampleArea />;
+        return <SampleArea setActiveTab={setActiveTab} />;
       case "my-samples":
         return <ResearcherSamplesArea />;
       case "change-password":
@@ -63,7 +63,7 @@ const DashboardArea = () => {
       case "update-user":
         return <UpdateUser />;
       default:
-        return <OrderInfo />;
+        return <OrderInfo setActiveTab={setActiveTab} />;
     }
   };
 

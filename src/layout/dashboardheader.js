@@ -158,6 +158,7 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Profile", tab: "order-info" },
           { label: "Sample List", tab: "samples" },
           { label: "My Order Samples", tab: "my-samples" },
+          { label: "Book Samples", tab: "Booksamples" },
         ]
         : userType == "databaseadmin"
           ? [

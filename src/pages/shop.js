@@ -3,36 +3,45 @@ import { useState, useEffect, useMemo } from "react";
 import Wrapper from "@layout/wrapper";
 import SEO from "@components/seo";
 import Header from "@layout/header";
+import DashboardHeader from "@layout/dashboardheader";
 import Footer from "@layout/footer";
 import ShopBreadcrumb from "@components/common/breadcrumb/shop-breadcrumb";
 import ShopArea from "@components/shop/shop-area";
 import ErrorMessage from "@components/error-message/error";
 import ShopLoader from "@components/loader/shop-loader";
-import { useRouter } from "next/router"; 
+import { useRouter } from "next/router";
 // Import API hook
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 
 export default function Shop({ query }) {
   const router = useRouter();
-  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath); 
+  const [userId, setUserId] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath);
   const [shortValue, setShortValue] = useState("");
 
+  // Check localStorage on mount
   useEffect(() => {
-  }, [samples, isLoading, isError, error]);
+    if (typeof window !== "undefined") {
+      const id = localStorage.getItem("userID");
+      setUserId(id);
+      setLoadingUser(false);
+      if (id) console.log("account_id on shop page is:", id);
+    }
+  }, []);
 
   // Select Short Handler
   const selectShortHandler = (e) => {
     setShortValue(e.value);
   };
 
-  // Filtering and Sorting Logic (Must be at the top level)
+  // Filtering and Sorting
   const filtered_samples = useMemo(() => {
     if (!samples) return [];
 
     let sortedSamples = [...samples];
-
-    // Apply filtering
     const { priceMin, priceMax } = query;
+
     if (priceMin || priceMax) {
       sortedSamples = sortedSamples.filter((sample) => {
         const price = Number(sample.price);
@@ -43,7 +52,6 @@ export default function Shop({ query }) {
       });
     }
 
-    // Apply sorting
     if (shortValue === "Price low to high") {
       sortedSamples.sort((a, b) => a.price - b.price);
     } else if (shortValue === "Price high to low") {
@@ -73,12 +81,14 @@ export default function Shop({ query }) {
     );
   }
 
+  // Prevent flicker before localStorage is read
+  if (loadingUser) return <div>Loading...</div>;
+
   return (
     <Wrapper>
       <SEO pageTitle={"Shop"} />
-      <Header style_2={true} />
+      {userId ? <DashboardHeader style_2={true} /> : <Header style_2={true} />}
       <ShopBreadcrumb />
-   
       {content}
       <Footer />
     </Wrapper>
@@ -89,4 +99,3 @@ export const getServerSideProps = async (context) => {
   const { query } = context;
   return { props: { query } };
 };
-

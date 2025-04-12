@@ -182,7 +182,6 @@ const getResearcherSamples = (userId, callback) => {
     bb.Name AS BiobankName,
     c.name AS CityName,
     d.name AS DistrictName,
-    p.payment_status,
     p.payment_type AS payment_method,
     s.quantity AS orderquantity, 
     

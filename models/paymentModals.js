@@ -5,11 +5,13 @@ const createPaymentTable = () => {
    CREATE TABLE IF NOT EXISTS payment (
     id INT PRIMARY KEY AUTO_INCREMENT, 
     cardholder_name VARCHAR(225),
+    cart_id INT NULL,
     card_number VARCHAR(19) NOT NULL,
     card_expiry DATE, 
     card_cvc VARCHAR(4), 
     payment_type ENUM('Debit', 'Credit') NOT NULL,  
     payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid',
+    FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE SET NULL
 );
   `;
 
@@ -35,7 +37,7 @@ const insertPaymentDetails = (data, callback) => {
   const values = [
     data.cardholder_name,
     data.card_number,
-    formattedExpiry,  // Fixed date format
+    formattedExpiry, 
     data.card_cvc,
     data.payment_type,
     data.payment_status,

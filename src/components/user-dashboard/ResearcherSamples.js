@@ -68,7 +68,7 @@ const SampleArea = () => {
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/sample/getResearcherSamples/${id}`
       );
       console.log(response.data);
       setSamples(response.data); // Store fetched samples in state

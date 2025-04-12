@@ -6,10 +6,20 @@ import { notifyError, notifySuccess } from "@utils/toast";
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
 import { Cart } from "@svg/index";
 import Pagination from "@ui/Pagination";
+import Link from "next/link";
+import { useSelector } from 'react-redux';
+import {
+  add_cart_product,
+  initialOrderQuantity,
+} from "../../redux/features/cartSlice";
+import { useDispatch } from "react-redux";
 const SampleArea = () => {
   const id = localStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-
+  const cartItems = useSelector((state) => state.cart?.cart_products || []);
+  const isInCart = (sampleId) => {
+    return cartItems.some((item) => item.id === sampleId);
+  };
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
@@ -81,6 +91,7 @@ const SampleArea = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  const dispatch = useDispatch();
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
@@ -128,7 +139,9 @@ const SampleArea = () => {
       handleAddClick(newFormData); // Pass updated formData to the API call
     });
   };
-
+  const handleAddToCart = (product) => {
+    dispatch(add_cart_product(product));
+  };
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
@@ -271,13 +284,19 @@ const SampleArea = () => {
                           {sample[key] || "N/A"}</td>
                       ))}
                       <td>
-                        <div className="d-flex justify-content-around gap-2">
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => handleTransferClick(sample)}
-                          >
-                            <i className="fas fa-exchange-alt"></i>
-                          </button>
+                        <div className="d-flex justify-content-around gap-3">
+                        {isInCart(sample.id) ? (
+  <button className="btn btn-secondary btn-sm" disabled>
+    Added
+  </button>
+) : (
+  <button
+    className="btn btn-primary btn-sm position-relative"
+    onClick={() => handleAddToCart(sample)}
+  >
+    <Cart className="fs-7 text-white" />
+  </button>
+)}
                         </div>
                       </td>
                     </tr>

@@ -1,61 +1,98 @@
-import React from "react";
-import {Box, Delivery, Processing, Truck} from "@svg/index";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useRouter } from "next/router";
+import { Box, Delivery, Processing, Truck, Cart } from "@svg/index";
 
-function SingleOrderInfo({ icon, info, title }) {
-  return (
-    <div className="col-md-3 col-sm-6">
-      <div className="profile__main-info-item">
-        <div className="profile__main-info-icon">
-          <span className="total-order">
-            <span className="profile-icon-count profile-download">{info}</span>
-            {icon}
-          </span>
-        </div>
-        <h4 className="profile__main-info-title">{title}</h4>
-      </div>
-    </div>
-  );
-}
+const OrderInfo = ({ setActiveTab }) => {
+  const [userCount, setUserCount] = useState(null);
+  const [contactusCount, setContactusCount] = useState(null);
+  const router = useRouter();
+  useEffect(() => {
+    fetchUserCount();
+    fetchContactusCount();
+  }, []);
 
-const OrderInfo = ({ orderData }) => {
-  const {user} = useSelector(state => state.auth);
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`
+      );
+      setUserCount(response.data);
+    } catch (error) {
+      console.error("Error fetching user count:", error);
+    }
+  };
+
+  const handleTabClick = (tab) => {
+    if (tab === "Booksamples") {
+      router.push("/shop"); // ⬅️ Navigate to shop page
+    } else if (setActiveTab) {
+      setActiveTab(tab); // ⬅️ For dashboard tabs
+    }
+  };
+
+  const fetchContactusCount = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contactus/get-all`
+      );
+      setContactusCount(response.data.length);
+    } catch (error) {
+      console.error("Error fetching contact us count:", error);
+    }
+  };
+
+  if (!userCount) {
+    return <div>Loading...</div>;
+  }
+
+  const stats = [
+    // { label: "Pending Orders", count: userCount.pendingOrders, icon: <Processing />, tab: "pending" },
+    // { label: "Processing Orders", count: userCount.processingOrders, icon: <Truck />, tab: "processing" },
+    // { label: "Delivered Orders", icon: <Delivery />, tab: "delivered" },
+    { label: "Book Samples", icon: <Cart />, tab: "Booksamples" },
+    { label: "Sample List", icon: <i className="fa-solid fa-envelope fs-4 text-white" />, tab: "samples" },
+    { label: "My Orders",  icon: <Box />, tab: "my-samples" },
+
+  ];
+
+
   return (
-    <div className="profile__main">
-      <div className="profile__main-top pb-80">
+    <div className="container">
+        <div className="profile__main-top pb-80">
         <div className="row align-items-center">
           <div className="col-md-6">
             <div className="profile__main-inner d-flex flex-wrap align-items-center">
               <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">Welcome Researcher</h4>
+                <h4 className="profile__main-title text-capitalize">Welcome To Researchers Dashboard</h4>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="profile__main-info">
-        <div className="row gx-3">
-          <SingleOrderInfo
-            info={orderData?.totalDoc}
-            icon={<Box/>}
-            title="Total Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.pending}
-            icon={<Processing/>}
-            title="Pending Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.processing}
-            icon={<Truck/>}
-            title="Processing Order"
-          />
-          <SingleOrderInfo
-            info={orderData?.delivered}
-            icon={<Delivery/>}
-            title="Complete Order"
-          />
-        </div>
+      <div className="row gx-3">
+        {stats.map((stat, index) => (
+          <div key={index} className="col-md-3 col-sm-6 mb-4">
+            <div
+              className="profile__main-info-item shadow-sm p-3 text-center"
+              onClick={() => handleTabClick(stat.tab)}
+              style={{
+                cursor: "pointer",
+                transition: "transform 0.3s ease-in-out",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              <div className="profile__main-info-icon mb-2">
+                <span className="total-order d-flex justify-content-center align-items-center">
+                  <span className="profile-icon-count profile-download fs-4 me-2">{stat.count}</span>
+                  {stat.icon}
+                </span>
+              </div>
+              <h6 className="profile__main-info-title">{stat.label}</h6>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
