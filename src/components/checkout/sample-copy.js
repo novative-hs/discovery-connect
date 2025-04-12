@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { notifyError, notifySuccess } from "@utils/toast";
 
-const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
+const SampleCopy = ({ setSampleCopyData, onComplete }) => {
   const [studyCopy, setStudyCopy] = useState(null);
   const [reportingMechanism, setReportingMechanism] = useState("")
   const [irbFile, setIrbFile] = useState(null);
@@ -47,10 +47,18 @@ const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
   };
 
   const renderFileUpload = (fileRef, setter, field, file) => (
-    <div>
+    <div style={{ backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "5px" }}>
       <button
         type="button"
         className="tp-btn"
+        style={{
+          backgroundColor: "#0a1d4e", // Dark Navy Blue
+          color: "white", // White text
+          border: "none",
+          padding: "8px 16px",
+          borderRadius: "4px",
+          cursor: "pointer"
+        }}
         onClick={() => fileRef.current.click()}
       >
         Choose File
@@ -79,7 +87,7 @@ const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
     // Call onComplete to open modal in parent component
     onComplete();
   };
-  
+
   return (
     <div className="your-order mb-30">
       <h3>Sample Documents</h3>
@@ -95,8 +103,6 @@ const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
             </p>
             {renderFileUpload(studyFileRef, setStudyCopy, "studyCopy", studyCopy)}
           </div>
-
-         
 
           {/* IRB Approval */}
           <div className="col-12 mb-3">
@@ -117,8 +123,8 @@ const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
             </p>
             {renderFileUpload(nbcFileRef, setNbcFile, "nbcFile", nbcFile)}
           </div>
-           {/* Reporting Mechanism */}
-           <div className="col-12 mb-3">
+          {/* Reporting Mechanism */}
+          <div className="col-12 mb-3">
             <p className="text-muted h8">
               Any Additional Mechanism
               <strong>
@@ -136,10 +142,10 @@ const SampleCopy = ({ setSampleCopyData ,onComplete}) => {
         </div>
       </form>
       <div className="d-flex justify-content-end mt-3">
-  <button type="button" className="tp-btn" onClick={handleNext}>
-    Next
-  </button>
-</div>
+        <button type="button" className="tp-btn" onClick={handleNext}>
+          Next
+        </button>
+      </div>
     </div>
   );
 };
