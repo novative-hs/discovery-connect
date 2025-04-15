@@ -27,7 +27,7 @@ const SingleListProduct = ({ product }) => {
       <div className="product__item p-relative transition-3">
         <div className="row">
           <div className="col-xl-5 col-lg-5">
-            <div className="product__thumb w-img p-relative fix">
+            <div className="product__thumb w-img p-relative fix mb-3">
             <div className="product-image-frame">
               {/* <Link href={`product-details/${_id}`}> */}
                  {/* <Image

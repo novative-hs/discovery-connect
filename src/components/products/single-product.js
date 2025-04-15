@@ -11,7 +11,6 @@ import { setProduct } from "src/redux/features/productSlice";
 import ProductModal from "@components/common/modals/product-modal";
 
 const SingleProduct = ({ product, discountPrd = false }) => {
-  console.log("Product data:", product);
   const { id, image_url, title, price, discount, originalPrice } = product || {};
   const dispatch = useDispatch();
   useEffect(() => {

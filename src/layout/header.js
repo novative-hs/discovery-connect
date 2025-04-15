@@ -14,6 +14,7 @@ import bg from "@assets/img/contact/contact-bg.png";
 const Header = ({ style_2 = false }) => {
   const router = useRouter();
   const { sticky } = useSticky();
+  const [isHovered, setIsHovered] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOffCanvasOpen, setIsOffCanvasOpen] = useState(false);
   const { sampleCount } = useCartInfo();
@@ -22,7 +23,22 @@ const Header = ({ style_2 = false }) => {
   const handleProceedToCart = () => {
     router.push("/cart");
   };
+
   const currentRoute = router.pathname;
+
+  const headerStyle = {
+    height: "90px",
+    backgroundColor: isHovered ? "#ffffff" : "#08048c",
+    color: isHovered ? "black" : "white",
+    boxShadow: sticky ? "0 4px 8px rgba(0, 0, 0, 0.05)" : "none",
+    transition: "all 0.3s ease-in-out",
+  };
+
+  const navLinkStyle = {
+    color: isHovered ? "black" : "white",
+    transition: "color 0.3s ease-in-out",
+  };
+
   return (
     <>
       <header>
@@ -31,13 +47,9 @@ const Header = ({ style_2 = false }) => {
             className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
               style_2 ? "header__bottom-13-white" : "grey-bg-17"
             } header__sticky ${sticky ? "header-sticky" : ""}`}
-            style={{
-              height: "90px",
-              backgroundColor: "#f8fbff", // lighter blue for a softer feel
-              boxShadow: sticky ? "0 4px 8px rgba(0, 0, 0, 0.05)" : "none",
-              transition: "box-shadow 0.3s ease-in-out",
-            }}
-            
+            style={headerStyle}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
@@ -50,14 +62,19 @@ const Header = ({ style_2 = false }) => {
                         marginTop: "5px",
                         maxWidth: "180px",
                       }}
-                      
                     >
                       <Link href="/">
-                        <Image
-                          src={logo}
-                          alt="logo"
-                          style={{ width: "200px", height: "90px" }}
-                        />
+                      <Image
+  src={logo}
+  alt="logo"
+  style={{
+    width: "200px",
+    height: "90px",
+    filter: isHovered ? "none" : "brightness(200%)",
+    
+  }}
+/>
+
                       </Link>
                     </div>
                   </div>
@@ -71,7 +88,10 @@ const Header = ({ style_2 = false }) => {
                       }}
                     >
                       <nav id="mobile-menu-3">
-                        <Menus />
+                        <div style={navLinkStyle}>
+                        <Menus  isHovered={isHovered} />
+
+                        </div>
                       </nav>
                     </div>
                   </div>
@@ -97,7 +117,10 @@ const Header = ({ style_2 = false }) => {
                           ) : userInfo?.name ? (
                             <li>
                               <Link href="/user-dashboard">
-                                <h2 className="text-uppercase tp-user-login-avater">
+                                <h2
+                                  className="text-uppercase tp-user-login-avater"
+                                  style={{ color: isHovered ? "#08048c" : "#ffffff" }}
+                                >
                                   {userInfo.name[0]}
                                 </h2>
                               </Link>
@@ -105,7 +128,9 @@ const Header = ({ style_2 = false }) => {
                           ) : (
                             <li>
                               <Link href="/login">
-                                <User />
+                                <span style={{ color: isHovered ? "#08048c" : "#ffffff" }}>
+                                  <User />
+                                </span>
                               </Link>
                             </li>
                           )}
@@ -113,11 +138,12 @@ const Header = ({ style_2 = false }) => {
                             <button
                               className="cartmini-open-btn"
                               onClick={handleProceedToCart}
+                              style={{
+                                color: isHovered ? "#08048c" : "#ffffff",
+                              }}
                             >
                               <Cart />
-                              <span className="tp-item-count">
-                                {sampleCount}
-                              </span>
+                              <span className="tp-item-count">{sampleCount}</span>
                             </button>
                           </li>
                         </ul>
@@ -128,9 +154,9 @@ const Header = ({ style_2 = false }) => {
                           type="button"
                           className="hamburger-btn hamburger-btn-black offcanvas-open-btn"
                         >
-                          <span></span>
-                          <span></span>
-                          <span></span>
+                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
+                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
+                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
                         </button>
                       </div>
                     </div>
@@ -143,10 +169,7 @@ const Header = ({ style_2 = false }) => {
       </header>
 
       <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />
-      <OffCanvas
-        isOffCanvasOpen={isOffCanvasOpen}
-        setIsOffCanvasOpen={setIsOffCanvasOpen}
-      />
+      <OffCanvas isOffCanvasOpen={isOffCanvasOpen} setIsOffCanvasOpen={setIsOffCanvasOpen} />
     </>
   );
 };

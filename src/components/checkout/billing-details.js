@@ -88,13 +88,15 @@ const BillingDetails = () => {
             </label>
           )}
           <input
-            {...register(`${name}`, {
-              required: isRequired && `${label} is required!`,
-            })}
-            type={type}
-            placeholder={placeholder}
-            defaultValue="" // Default value is controlled by `reset`
-          />
+  {...register(`${name}`, {
+    required: isRequired && `${label} is required!`,
+  })}
+  type={type}
+  placeholder={placeholder}
+  defaultValue=""
+  readOnly
+/>
+
           {error && <ErrorMessage message={error} />}
         </div>
       </div>

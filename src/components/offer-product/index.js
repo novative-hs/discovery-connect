@@ -2,30 +2,30 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
-import { useGetAllSamplesQuery } from "src/redux/features/productApi";
+import { useGetAllSamplesQuery, useGetSampleFieldsQuery } from "src/redux/features/productApi";
 import bg from "@assets/img/contact/contact-bg.png";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import {
-  add_cart_product,
-  
-} from "src/redux/features/cartSlice";
+import { add_cart_product } from "src/redux/features/cartSlice";
 import { useDispatch } from "react-redux";
+
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
+  const { data: sampleFieldsData, isLoading: sampleFieldsLoading, isError: sampleFieldsError } = useGetSampleFieldsQuery("sampletypematrix"); // Pass your actual table name here
+
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
-const dispatch = useDispatch();
+  const dispatch = useDispatch();
+
   // ✅ Always call hooks at the top
   useEffect(() => {
     AOS.init({ duration: 500 });
   }, []);
 
   // ✅ Filter valid categories
-  const filteredCategories =
-    categories?.filter((category) => category.price !== null) || [];
+  const filteredCategories = categories?.filter((category) => category.price !== null) || [];
   const displayedCategories = filteredCategories.slice(0, 6);
 
   // ✅ Setup Intersection Observer
@@ -54,28 +54,27 @@ const dispatch = useDispatch();
   }, [displayedCategories]);
 
   // ✅ Conditional rendering AFTER hooks
-  if (isLoading) return <ProductLoader loading={isLoading} />;
-  if (isError)
-    return <ErrorMessage message="There was an error loading samples!" />;
-  if (displayedCategories.length === 0)
-    return <ErrorMessage message="No samples found!" />;
- const handleAddToCart = (product) => {
+  if (isLoading || sampleFieldsLoading) return <ProductLoader loading={isLoading || sampleFieldsLoading} />;
+  if (isError) return <ErrorMessage message="There was an error loading samples!" />;
+  if (sampleFieldsError) return <ErrorMessage message="Error loading sample fields!" />;
+  if (displayedCategories.length === 0) return <ErrorMessage message="No samples found!" />;
+
+  const handleAddToCart = (product) => {
     dispatch(add_cart_product(product));
   };
 
   return (
-    <section
-      className="product__coupon-area product__offer py-5"
-      style={{
-        background:
-          "linear-gradient(135deg,rgb(244, 242, 242),rgba(255, 255, 255, 0.97))",
-      }}
-    >
+    <section className="product__coupon-area product__offer py-5" style={{}}>
       <div className="container">
         {/* Header */}
         <div className="row text-center mb-4">
           <div className="col">
             <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
+            {sampleFieldsData && sampleFieldsData.SampleTypeMatrix && (
+              <p className="text-secondary mt-2">
+                {sampleFieldsData.SampleTypeMatrix.join(" | ")}
+              </p>
+            )}
           </div>
         </div>
 
@@ -108,9 +107,7 @@ const dispatch = useDispatch();
                     }}
                   />
                 </div>
-                <h5 className="fw-bold text-primary">
-                  {category.samplename}
-                </h5>
+                <h5 className="fw-bold text-primary">{category.samplename}</h5>
                 <p className="fs-5 text-dark fw-semibold">
                   {category.price
                     ? `${category.price} ${category.SamplePriceCurrency || ""}`
@@ -176,7 +173,8 @@ const dispatch = useDispatch();
                 width: "100vw",
                 maxWidth: "800px",
                 maxHeight: "90vh",
-                overflow: "hidden",}}
+                overflow: "hidden",
+              }}
             >
               {/* Header */}
               <div
@@ -242,8 +240,7 @@ const dispatch = useDispatch();
                   {/* Right */}
                   <div className="col-md-8" data-aos="fade-left">
                     <div className="row g-2">
-                      {[
-                        {
+                      {[{
                           label: "Sample Type Matrix",
                           value: selectedProduct.SampleTypeMatrix,
                         },
@@ -296,20 +293,17 @@ const dispatch = useDispatch();
                             </small>
                             <strong>{item.value || "N/A"}</strong>
                           </div>
-                          
                         </div>
-                        
                       ))}
                     </div>
                     <button
-              type="button"
-              onClick={() => handleAddToCart(selectedProduct)}
-              className="product-add-cart-btn w-75 mt-3 "
-            >
-              Add to Cart
-            </button>
+                      type="button"
+                      onClick={() => handleAddToCart(selectedProduct)}
+                      className="product-add-cart-btn w-75 mt-3"
+                    >
+                      Add to Cart
+                    </button>
                   </div>
-                 
                 </div>
               </div>
             </div>
