@@ -303,7 +303,7 @@ useEffect(() => {
                   <i className="fas fa-plus"></i> Add District
                 </button>
 
-                {/* Upload City List Button */}
+                {/* Upload District List Button */}
                 <label
                   style={{
                     backgroundColor: "#f1f1f1", // soft gray

@@ -44,9 +44,8 @@ const Header = ({ style_2 = false }) => {
       <header>
         <div className={`header__area ${style_2 ? "" : "header__transparent"}`}>
           <div
-            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
-              style_2 ? "header__bottom-13-white" : "grey-bg-17"
-            } header__sticky ${sticky ? "header-sticky" : ""}`}
+            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"
+              } header__sticky ${sticky ? "header-sticky" : ""}`}
             style={headerStyle}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -64,17 +63,16 @@ const Header = ({ style_2 = false }) => {
                       }}
                     >
                       <Link href="/">
-                      <Image
-  src={logo}
-  alt="logo"
-  style={{
-    width: "200px",
-    height: "90px",
-    filter: isHovered ? "none" : "brightness(200%)",
-    
-  }}
-/>
+                        <Image
+                          src={logo}
+                          alt="logo"
+                          style={{
+                            width: "200px",
+                            height: "90px",
+                            filter: isHovered ? "none" : "brightness(200%)",
 
+                          }}
+                        />
                       </Link>
                     </div>
                   </div>
@@ -89,7 +87,7 @@ const Header = ({ style_2 = false }) => {
                     >
                       <nav id="mobile-menu-3">
                         <div style={navLinkStyle}>
-                        <Menus  isHovered={isHovered} />
+                          <Menus isHovered={isHovered} />
 
                         </div>
                       </nav>

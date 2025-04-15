@@ -308,7 +308,7 @@ const createSampleFields = (tableName, data, callback) => {
         // Insert history
         const idColumn = `${tableName}_id`;
         const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
-        const historyQuery = `INSERT INTO RegistrationAdmin_History (created_name, added_by, ${idColumn}, status) VALUES ?;`;
+        const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, ${idColumn}, status) VALUES ?;`;
         await connection.promise().query(historyQuery, [historyValues]);
 
         connection.commit();
@@ -351,7 +351,7 @@ const updateSampleFields = (tableName, id, data, callback) => {
       if (err) return callback(err, null);
 
       const updateHistoryQuery = `
-        UPDATE RegistrationAdmin_History
+        UPDATE registrationadmin_history
         SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
         WHERE ${idColumn} = ?
       `;
@@ -381,7 +381,7 @@ const deleteSampleFields = (tableName, id, callback) => {
     const idColumn = `${tableName}_id`;
 
     const updateHistoryStatusQuery = `
-      UPDATE RegistrationAdmin_History
+      UPDATE registrationadmin_history
       SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
       WHERE ${idColumn} = ?
     `;

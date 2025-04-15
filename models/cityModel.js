@@ -84,7 +84,7 @@ const createCity = (data, callback) => {
             const historyValues = cities.map(({ id, name }) => [name, added_by, id, "active"]);
 
             const historyQuery = `
-              INSERT INTO RegistrationAdmin_History (created_name, added_by, city_id, status)
+              INSERT INTO registrationadmin_history (created_name, added_by, city_id, status)
               VALUES ?;
             `;
 
@@ -139,7 +139,7 @@ const createCity = (data, callback) => {
             const cityId = cityRows[0].id;
 
             const historyQuery = `
-              INSERT INTO RegistrationAdmin_History (created_name, added_by, city_id, status)
+              INSERT INTO registrationadmin_history (created_name, added_by, city_id, status)
               VALUES (?, ?, ?, ?);
             `;
 
@@ -216,7 +216,7 @@ const updateCity = (id, data, callback) => {
           });
         }
         const updateHistoryQuery = `
-          UPDATE RegistrationAdmin_History
+          UPDATE registrationadmin_history
           SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
           WHERE city_id = ?
         `;
@@ -264,9 +264,9 @@ const deleteCity = (id, callback) => {
           callback(err, null);
         });
       }
-      // Step 2: Update the status in RegistrationAdmin_History
+      // Step 2: Update the status in registrationadmin_history
       const updateHistoryStatusQuery = `
-        UPDATE RegistrationAdmin_History
+        UPDATE registrationadmin_history
         SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
         WHERE city_id = ?
       `;
