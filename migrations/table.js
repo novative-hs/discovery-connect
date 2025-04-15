@@ -19,11 +19,11 @@ const paymentModel = require('../models/paymentModals')
 const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
 const contactusModel = require("../models/contactusModel");
-const committeesampleapprovalModel=require("../models/committeesampleapproval")
+const committeesampleapprovalModel = require("../models/committeesampleapproval")
 // Function to initialize all tables
 function Database() {
 
-  
+
   cityModel.createCityTable();
   historyModel.RegistrationAdmin_History();
   countryModel.createCountryTable();
@@ -55,7 +55,7 @@ function Database() {
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
- historyModel.RegistrationAdmin_History();
+  historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();

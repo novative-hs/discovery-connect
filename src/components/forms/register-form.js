@@ -30,11 +30,11 @@ const schema = Yup.object().shape({
     )
     .required("Phone number is required")
     .label("Phone number is required"),
-    logo: Yup.mixed().when('accountType', {
-      is: (accountType) => accountType !== 'Researcher',
-      then: Yup.mixed().required("Logo is required"),   
-      otherwise: Yup.mixed().notRequired(),             
-    }),
+  logo: Yup.mixed().when('accountType', {
+    is: (accountType) => accountType !== 'Researcher',
+    then: Yup.mixed().required("Logo is required"),
+    otherwise: Yup.mixed().notRequired(),
+  }),
   fullAddress: Yup.string().required("Full Address is required"),
   city: Yup.string().required("City is required"),
   district: Yup.string().required("District is required"),
@@ -566,39 +566,39 @@ const RegisterForm = () => {
 
             {/* Logo Upload */}
             {
-  accountType !== "Researcher" && (
-    <div className="login__input-item">
-      <div className="login-input form-control md-10 p-2">
-        <i className="fa-solid fa-image text-black px-3 mt-2"></i>
-        <label
-          className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
-          onClick={triggerFileInput}
-        >
-          {logo ? (
-            <span className="form-label">{logo}</span>
-          ) : (
-            accountTypeLabel
-          )}
-        </label>
+              accountType !== "Researcher" && (
+                <div className="login__input-item">
+                  <div className="login-input form-control md-10 p-2">
+                    <i className="fa-solid fa-image text-black px-3 mt-2"></i>
+                    <label
+                      className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
+                      onClick={triggerFileInput}
+                    >
+                      {logo ? (
+                        <span className="form-label">{logo}</span>
+                      ) : (
+                        accountTypeLabel
+                      )}
+                    </label>
 
-        <input
-          type="file"
-          {...register("logo", {
-            required: accountType !== "Researcher" ? "Logo is required" : false,
-          })}
-          className="d-none"
-          ref={fileInputRef}
-          onChange={handleLogoChange}
-        />
-      </div>
-      <ErrorMessage
-        name="logo"
-        component="div"
-        className="error-message"
-        message={errors.logo?.message}
-      />
-    </div>
-  )}
+                    <input
+                      type="file"
+                      {...register("logo", {
+                        required: accountType !== "Researcher" ? "Logo is required" : false,
+                      })}
+                      className="d-none"
+                      ref={fileInputRef}
+                      onChange={handleLogoChange}
+                    />
+                  </div>
+                  <ErrorMessage
+                    name="logo"
+                    component="div"
+                    className="error-message"
+                    message={errors.logo?.message}
+                  />
+                </div>
+              )}
 
 
             {/* {/ City Fields /} */}

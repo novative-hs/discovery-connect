@@ -7,6 +7,7 @@ import {
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
+import InputMask from 'react-input-mask';
 import { getLocalStorage } from "@utils/localstorage";
 
 const SampleArea = () => {
@@ -42,10 +43,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -58,6 +56,7 @@ const SampleArea = () => {
   ];
 
   const [formData, setFormData] = useState({
+    locationids: "",
     samplename: "",
     age: "",
     gender: "",
@@ -205,10 +204,6 @@ const SampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
-
-
-
-
 
   // get collectionsite names in collectionsite dashboard in stock transfer modal
   useEffect(() => {
@@ -489,7 +484,11 @@ const SampleArea = () => {
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setShowEditModal(true);
+
+    // Combine the location parts into "room-box-freezer" format
+    const formattedLocationId = `${String(sample.room_number).padStart(2, '0')}-${String(sample.freezer_id).padStart(2, '0')}-${String(sample.box_id).padStart(2, '0')}`;
     setFormData({
+      locationids: formattedLocationId,
       samplename: sample.samplename,
       age: sample.age,
       gender: sample.gender,
@@ -522,6 +521,7 @@ const SampleArea = () => {
   };
   const resetFormData = () => {
     setFormData({
+      locationids: "",
       samplename: "",
       age: "",
       gender: "",
@@ -570,6 +570,7 @@ const SampleArea = () => {
 
       // Reset formData after update
       setFormData({
+        locationids: "",
         samplename: "",
         age: "",
         gender: "",
@@ -649,7 +650,7 @@ const SampleArea = () => {
         <div className="d-flex justify-content-end align-items-center gap-2 w-100">
           {/* Add Sample Button */}
           <button
-            className="tp-btn-8 mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
+            className="btn btn-primary mb-3 px-4 py-2 rounded shadow-sm fw-semibold text-white"
             onClick={() => setShowAddModal(true)}
           >
             <span> Add Sample</span>
@@ -786,7 +787,7 @@ const SampleArea = () => {
                 <div className="modal-content">
                   <div
                     className="modal-header"
-                  // style={{ backgroundColor: "#ADD8E6" }}
+                    style={{ backgroundColor: "#cfe2ff" }}
                   >
                     <h5 className="modal-title">
                       {showAddModal ? "Add Sample" : "Edit Sample"}
@@ -836,7 +837,32 @@ const SampleArea = () => {
                               />
                             </div>
                           )}
-
+                          <div className="form-group">
+                            <label>Location (IDs)</label>
+                            <InputMask
+                              mask="99-99-99"
+                              maskChar={null}
+                              value={formData.locationids}
+                              onChange={handleInputChange}
+                            >
+                              {(inputProps) => (
+                                <input
+                                  {...inputProps}
+                                  type="text"
+                                  className="form-control"
+                                  name="locationids"
+                                  placeholder="00-00-00"
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                  required
+                                />
+                              )}
+                            </InputMask>
+                          </div>
                           <div className="form-group">
                             <label>Sample Name</label>
                             <input
@@ -899,6 +925,9 @@ const SampleArea = () => {
                               <option value="Female">Female</option>
                             </select>
                           </div>
+                        </div>
+                        {/* Column 2 */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Ethnicity</label>
                             <select
@@ -926,9 +955,6 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                        </div>
-                        {/* Column 2 */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Sample Condition</label>
                             <select
@@ -1029,6 +1055,9 @@ const SampleArea = () => {
                               }}
                             />
                           </div>
+                        </div>
+                        {/* {Column 3} */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Quantity</label>
                             <input
@@ -1048,9 +1077,6 @@ const SampleArea = () => {
                               }}
                             />
                           </div>
-                        </div>
-                        {/* {Column 3} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Quantity Unit</label>
                             <select
@@ -1196,6 +1222,9 @@ const SampleArea = () => {
                               </div>
                             </div>
                           </div>
+                        </div>
+                        {/* Column 4 */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Infectious Disease Testing (HIV, HBV, HCV)</label>
                             <input
@@ -1216,13 +1245,9 @@ const SampleArea = () => {
                               }}
                             />
                           </div>
-
-                        </div>
-                        {/* Column 4 */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label className="form-label">
-                              Infectious Disease Result 
+                              Infectious Disease Result
                             </label>
                             <div>
                               <div
@@ -1350,6 +1375,9 @@ const SampleArea = () => {
                               )}
                             </select>
                           </div>
+                        </div>
+                        {/* {Column 5} */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Concurrent Medications</label>
                             <input
@@ -1369,9 +1397,6 @@ const SampleArea = () => {
                               }}
                             />
                           </div>
-                        </div>
-                        {/* {Column 5} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Diagnosis Test Parameter</label>
                             <input
@@ -1464,6 +1489,9 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
+                        </div>
+                        {/* {Column 6} */}
+                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test Kit Manufacturer</label>
                             <select
@@ -1491,9 +1519,6 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                        </div>
-                        {/* {Column 6} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test System</label>
                             <select
@@ -1553,7 +1578,10 @@ const SampleArea = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="modal-footer">
+                    <div className="modal-footer d-flex justify-content-between w-100">
+                      <div className="text-start text-muted fs-6">
+                        <strong>Note:</strong> <code> Location ID's = Room Number, Freezer ID and Box ID</code>
+                      </div>
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}
                       </button>
