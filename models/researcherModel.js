@@ -1,5 +1,5 @@
 const mysqlConnection = require("../config/db");
-const {sendEmail}=require("../config/email");
+const { sendEmail } = require("../config/email");
 
 function createResearcher(data, callback) {
   console.log("Researcher Model", data)
@@ -189,25 +189,29 @@ const updateResearcherStatus = async (id, status) => {
     WHERE r.id = ?
   `;
 
+  const conn = await mysqlConnection.promise().getConnection();
+
   try {
-    // Update researcher status
-    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    // Start transaction
+    await conn.beginTransaction();
+
+    const [updateResult] = await conn.query(updateQuery, [status, id]);
     if (updateResult.affectedRows === 0) {
       throw new Error("No researcher found with the given ID.");
     }
 
-    // Insert history and fetch email simultaneously (Parallel Execution)
-    const [_, emailResults] = await Promise.all([
-      mysqlConnection.promise().query(insertHistoryQuery, [id, status]),
-      mysqlConnection.promise().query(getEmailQuery, [id])
-    ]);
+    const [insertResult] = await conn.query(insertHistoryQuery, [id, status]);
+    const [emailResults] = await conn.query(getEmailQuery, [id]);
 
-    // Check if email exists
-    if (emailResults[0].length === 0) {
+    if (emailResults.length === 0) {
       throw new Error("Researcher email not found.");
     }
 
-    const email = emailResults[0][0].email;
+    await conn.commit();
+    conn.release(); // Release the connection
+
+    const email = emailResults[0].email;
+
     let emailText = `Dear Researcher,\n\nYour account status is currently pending. 
       Please wait for approval.\n\nBest regards,\nLab Hazir`;
 
@@ -216,17 +220,19 @@ const updateResearcherStatus = async (id, status) => {
         You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
     }
 
-    // Send email asynchronously (Does not block response)
     sendEmail(email, "Welcome to Discovery Connect", emailText)
       .then(() => console.log("Email sent successfully"))
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
     return { message: "Status updated and email sent" };
   } catch (error) {
+    await conn.rollback();
+    conn.release();
     console.error("Error updating researcher status:", error);
     throw error;
   }
 };
+
 
 module.exports = {
   createResearcher,
