@@ -2,23 +2,38 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
-import { useGetAllSamplesQuery } from "src/redux/features/productApi";
+import { useGetAllSamplesQuery, useGetSampleFieldsQuery } from "src/redux/features/productApi";
 import bg from "@assets/img/contact/contact-bg.png";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import { add_cart_product } from "src/redux/features/cartSlice";
+import { useDispatch } from "react-redux";
+
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
+  const { data: sampleFieldsData, isLoading: sampleFieldsLoading, isError: sampleFieldsError } = useGetSampleFieldsQuery("sampletypematrix"); // Pass your actual table name here
+
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const dispatch = useDispatch();
+
+  // ✅ Always call hooks at the top
+  useEffect(() => {
+    AOS.init({ duration: 500 });
+  }, []);
 
   // ✅ Filter valid categories
   const filteredCategories = categories?.filter((category) => category.price !== null) || [];
   const displayedCategories = filteredCategories.slice(0, 6);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+
+  // ✅ Setup Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          const index = entry.target.dataset.index; // Get index from dataset
+          const index = entry.target.dataset.index;
           if (entry.isIntersecting) {
             setVisible((prev) => ({ ...prev, [index]: true }));
           }
@@ -36,36 +51,46 @@ const OfferPopularProduct = () => {
         if (el) observer.unobserve(el);
       });
     };
-  }, [displayedCategories]); // ✅ Re-run when categories change
+  }, [displayedCategories]);
 
-  if (isLoading) return <ProductLoader loading={isLoading} />;
+  // ✅ Conditional rendering AFTER hooks
+  if (isLoading || sampleFieldsLoading) return <ProductLoader loading={isLoading || sampleFieldsLoading} />;
   if (isError) return <ErrorMessage message="There was an error loading samples!" />;
+  if (sampleFieldsError) return <ErrorMessage message="Error loading sample fields!" />;
   if (displayedCategories.length === 0) return <ErrorMessage message="No samples found!" />;
 
+  const handleAddToCart = (product) => {
+    dispatch(add_cart_product(product));
+  };
+
   return (
-    <section className="product__coupon-area product__offer py-5" style={{
-       backgroundImage: `url(${bg.src})`
-      // background: "linear-gradient(135deg,rgb(244, 242, 242),rgba(255, 255, 255, 0.97))",
-      }}>
-      <div className="container" >
-        {/* Header Section */}
+    <section className="product__coupon-area product__offer py-5" style={{}}>
+      <div className="container">
+        {/* Header */}
         <div className="row text-center mb-4">
           <div className="col">
             <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
+            {sampleFieldsData && sampleFieldsData.SampleTypeMatrix && (
+              <p className="text-secondary mt-2">
+                {sampleFieldsData.SampleTypeMatrix.join(" | ")}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Product Cards */}
+        {/* Products */}
         <div className="row py-4">
           {displayedCategories.map((category, index) => (
             <div
               key={category.id}
               ref={(el) => (productRefs.current[index] = el)}
-              data-index={index} // ✅ Add index to dataset for tracking
+              data-index={index}
               className="col-lg-4 col-md-6 col-sm-12 mb-4"
               style={{
                 opacity: visible[index] ? 1 : 0,
-                transform: visible[index] ? "translateX(0)" : "translateX(-150px)",
+                transform: visible[index]
+                  ? "translateX(0)"
+                  : "translateX(-150px)",
                 transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
               }}
             >
@@ -75,12 +100,18 @@ const OfferPopularProduct = () => {
                     src={category.imageUrl || "/placeholder.jpg"}
                     alt={category.samplename}
                     className="img-fluid rounded-2"
-                    style={{ width: "100%", height: "200px", objectFit: "cover" }}
+                    style={{
+                      width: "100%",
+                      height: "200px",
+                      objectFit: "cover",
+                    }}
                   />
                 </div>
                 <h5 className="fw-bold text-primary">{category.samplename}</h5>
                 <p className="fs-5 text-dark fw-semibold">
-                  {category.price ? `${category.price} ${category.SamplePriceCurrency || ""}` : "Price not available"}
+                  {category.price
+                    ? `${category.price} ${category.SamplePriceCurrency || ""}`
+                    : "Price not available"}
                 </p>
                 <button
                   className="btn btn-outline-danger mt-2 w-100 fw-bold"
@@ -96,26 +127,22 @@ const OfferPopularProduct = () => {
           ))}
         </div>
 
-        {/* Footer Section */}
+        {/* Footer */}
         <div className="row text-center mt-4">
-        <div className="col">
-  <Link
-    href="/shop"
-    className="fw-bold px-4 py-2 text-white text-decoration-none"
-    style={{ backgroundColor: "#003366" }}
-  >
-    Show More
-  </Link>
-</div>
-
+          <div className="col">
+            <Link
+              href="/shop"
+              className="fw-bold px-4 py-2 text-white text-decoration-none"
+              style={{ backgroundColor: "#003366" }}
+            >
+              Show More
+            </Link>
+          </div>
         </div>
-        {/* ✅ Custom Modal (No Bootstrap) */}
+
+        {/* Modal */}
         {showModal && selectedProduct && (
           <>
-            {/* Disable scrolling on the background */}
-            {document.body.style.overflow = "hidden"}
-
-            {/* Backdrop */}
             <div
               className="modal-backdrop fade show"
               style={{
@@ -130,10 +157,9 @@ const OfferPopularProduct = () => {
               }}
             ></div>
 
-            {/* Modal Container */}
             <div
-              className="modal show d-block"
-              role="dialog"
+              className="modal d-block"
+              data-aos="zoom-in"
               style={{
                 zIndex: 1050,
                 position: "fixed",
@@ -144,83 +170,145 @@ const OfferPopularProduct = () => {
                 padding: "20px",
                 borderRadius: "10px",
                 boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-                width: "90vw",
-                maxWidth: "700px",
-                maxHeight: "80vh",
-                overflow: "hidden", // Prevent scrollbar
+                width: "100vw",
+                maxWidth: "800px",
+                maxHeight: "90vh",
+                overflow: "hidden",
               }}
             >
-              {/* Modal Header */}
+              {/* Header */}
               <div
-                className="modal-header d-flex justify-content-between align-items-center"
-                style={{ backgroundColor: "#cfe2ff", color: "#000" }}
+                className="modal-header bg-info text-white"
+                data-aos="fade-down"
               >
-                <h5 className="fw-bold">{selectedProduct.samplename}</h5>
+                <h5 className="modal-title fw-bold">
+                  {selectedProduct.samplename}
+                </h5>
                 <button
                   type="button"
-                  className="close"
+                  className="btn-close btn-close-white"
+                  aria-label="Close"
                   onClick={() => {
                     setShowModal(false);
-                    document.body.style.overflow = ""; // Restore scrolling
+                    document.body.style.overflow = "";
                   }}
-                  style={{
-                    fontSize: "1.5rem",
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  &times;
-                </button>
+                ></button>
               </div>
 
-              {/* Modal Body */}
-              <div
-                className="modal-body"
-                style={{
-                  maxHeight: "70vh", // Restrict height instead of making the whole modal scrollable
-                  overflowY: "auto", // Only allow internal scrolling
-                }}
-              >
+              {/* Body */}
+              <div className="modal-body">
                 <div className="row">
-                  {/* Left Side: Image & Basic Details */}
-                  <div className="col-md-5 text-center mb-0">
+                  {/* Left */}
+                  <div className="col-md-4 text-center" data-aos="fade-right">
                     <img
                       src={selectedProduct.imageUrl || "/placeholder.jpg"}
-                      alt={selectedProduct.samplename}
-                      className="img-fluid rounded"
-                      style={{ maxHeight: "200px", objectFit: "cover" }}
+                      alt="Sample"
+                      className="img-fluid rounded shadow mb-3"
+                      style={{
+                        maxHeight: "200px",
+                        objectFit: "cover",
+                      }}
                     />
-                    <div className="mt-3 p-1 bg-light rounded text-start">
-                      <p><strong>Age:</strong> {selectedProduct.age} years |{" "} <strong>Gender:</strong> {selectedProduct.gender}</p>
-                      <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
-                      <p><strong>Alcohol or Drug Abuse:</strong>{" "} {selectedProduct.AlcoholOrDrugAbuse}</p>
-                      <p><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</p>
-                      <p><strong>Country of Collection:</strong>{" "}{selectedProduct.CountryOfCollection}</p>
-                      <p> <strong>Status:</strong> {selectedProduct.status}</p>
-                    </div>
+                    <ul className="list-group text-start small">
+                      <li className="list-group-item">
+                        <strong>Age:</strong> {selectedProduct.age}
+                      </li>
+                      <li className="list-group-item">
+                        <strong>Gender:</strong> {selectedProduct.gender}
+                      </li>
+                      <li className="list-group-item">
+                        <strong>Ethnicity:</strong> {selectedProduct.ethnicity}
+                      </li>
+                      <li className="list-group-item">
+                        <strong>Alcohol/Drug Abuse:</strong>{" "}
+                        {selectedProduct.AlcoholOrDrugAbuse}
+                      </li>
+                      <li className="list-group-item">
+                        <strong>Smoking Status:</strong>{" "}
+                        {selectedProduct.SmokingStatus}
+                      </li>
+                      <li className="list-group-item">
+                        <strong>Country:</strong>{" "}
+                        {selectedProduct.CountryOfCollection}
+                      </li>
+                      <li className="list-group-item">
+                        <strong>Status:</strong> {selectedProduct.status}
+                      </li>
+                    </ul>
                   </div>
 
-                  {/* Right Side: Detailed Information */}
-                  <div className="col-md-7">
-                    <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
-                    <p><strong>Sample Condition:</strong>{" "}{selectedProduct.samplecondition}</p>
-                    <p><strong>Storage Temperature:</strong> {selectedProduct.storagetemp}</p>
-                    <p><strong>Container Type:</strong> {selectedProduct.ContainerType}</p>
-                    <p><strong>Sample Type Matrix:</strong>{" "}{selectedProduct.SampleTypeMatrix}</p>
-                    <p><strong>Infectious Disease Testing:</strong>{" "}{selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
-                    <p><strong>Freeze Thaw Cycles:</strong>{" "}{selectedProduct.FreezeThawCycles}</p>
-                    <p><strong>Diagnosis Test Parameter:</strong>{" "}{selectedProduct.DiagnosisTestParameter}</p>
-                    <p><strong>Test Result:</strong> {selectedProduct.TestResult}{" "}{selectedProduct.TestResultUnit}</p>
-                    <p><strong>Test Method:</strong> {selectedProduct.TestMethod}</p>
+                  {/* Right */}
+                  <div className="col-md-8" data-aos="fade-left">
+                    <div className="row g-2">
+                      {[{
+                          label: "Sample Type Matrix",
+                          value: selectedProduct.SampleTypeMatrix,
+                        },
+                        {
+                          label: "Quantity Unit",
+                          value: selectedProduct.QuantityUnit,
+                        },
+                        {
+                          label: "Sample Condition",
+                          value: selectedProduct.samplecondition,
+                        },
+                        {
+                          label: "Storage Temp",
+                          value: selectedProduct.storagetemp,
+                        },
+                        {
+                          label: "Container Type",
+                          value: selectedProduct.ContainerType,
+                        },
+                        {
+                          label: "Freeze Thaw Cycles",
+                          value: selectedProduct.FreezeThawCycles,
+                        },
+                        {
+                          label: "Infectious Disease Testing",
+                          value: `${selectedProduct.InfectiousDiseaseTesting} ${selectedProduct.InfectiousDiseaseResult}`,
+                        },
+                        {
+                          label: "Diagnosis Test Parameter",
+                          value: selectedProduct.DiagnosisTestParameter,
+                        },
+                        {
+                          label: "Test Result Unit",
+                          value: selectedProduct.TestResultUnit,
+                        },
+                        {
+                          label: "Test Method",
+                          value: selectedProduct.TestMethod,
+                        },
+                      ].map((item, index) => (
+                        <div
+                          className="col-6"
+                          key={index}
+                          data-aos="zoom-in"
+                          data-aos-delay={index * 100}
+                        >
+                          <div className="border rounded p-2 h-100 bg-light">
+                            <small className="text-muted d-block">
+                              {item.label}
+                            </small>
+                            <strong>{item.value || "N/A"}</strong>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(selectedProduct)}
+                      className="product-add-cart-btn w-75 mt-3"
+                    >
+                      Add to Cart
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </>
         )}
-
-
       </div>
     </section>
   );

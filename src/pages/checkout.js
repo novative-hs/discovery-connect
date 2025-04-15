@@ -15,6 +15,7 @@ import OrderSummary from "@components/order/order-summary";
 
 export default function Checkout() {
   const [userId, setUserId] = useState(null);
+  const[activeTab,setActiveTab]=useState('samples')
   const router = useRouter();
   useEffect(() => {
     // Access localStorage safely on the client side
@@ -31,6 +32,7 @@ export default function Checkout() {
   return (
     <Wrapper>
       <SEO pageTitle={"Checkout"} />
+      <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <CartBreadcrumb title="Checkout" subtitle="Checkout" />
       {/* <CouponArea {...checkout_data} /> */}
       <CheckoutArea {...checkout_data} />

@@ -14,6 +14,7 @@ import bg from "@assets/img/contact/contact-bg.png";
 const Header = ({ style_2 = false }) => {
   const router = useRouter();
   const { sticky } = useSticky();
+  const [isHovered, setIsHovered] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOffCanvasOpen, setIsOffCanvasOpen] = useState(false);
   const { sampleCount } = useCartInfo();
@@ -23,36 +24,78 @@ const Header = ({ style_2 = false }) => {
     router.push("/cart");
   };
 
+  const currentRoute = router.pathname;
+
+  const headerStyle = {
+    height: "90px",
+    backgroundColor: isHovered ? "#ffffff" : "#08048c",
+    color: isHovered ? "black" : "white",
+    boxShadow: sticky ? "0 4px 8px rgba(0, 0, 0, 0.05)" : "none",
+    transition: "all 0.3s ease-in-out",
+  };
+
+  const navLinkStyle = {
+    color: isHovered ? "black" : "white",
+    transition: "color 0.3s ease-in-out",
+  };
+
   return (
     <>
       <header>
         <div className={`header__area ${style_2 ? "" : "header__transparent"}`}>
           <div
-            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"} header__sticky ${sticky ? "header-sticky" : ""}`}
-            style={{ height: '100px',
-              backgroundImage: `url(${bg.src})`
-              // backgroundColor: '#e6f0fa'
-               }}
-            
+            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
+              style_2 ? "header__bottom-13-white" : "grey-bg-17"
+            } header__sticky ${sticky ? "header-sticky" : ""}`}
+            style={headerStyle}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
             <div className="container-fluid">
               <div className="mega-menu-wrapper p-relative">
                 <div className="row align-items-center">
                   <div className="col-xxl-1 col-xl-2 col-lg-4 col-md-4 col-sm-5 col-8">
-                    <div className="logo" style={{ marginLeft: '-50px', marginTop: '10px' }}>
+                    <div
+                      className="logo"
+                      style={{
+                        marginLeft: "-30px",
+                        marginTop: "5px",
+                        maxWidth: "180px",
+                      }}
+                    >
                       <Link href="/">
-                        <Image src={logo} alt="logo" style={{ width: '200px', height: '90px' }} />
+                      <Image
+  src={logo}
+  alt="logo"
+  style={{
+    width: "200px",
+    height: "90px",
+    filter: isHovered ? "none" : "brightness(200%)",
+    
+  }}
+/>
+
                       </Link>
                     </div>
                   </div>
-                  <div className="col-xxl-6 col-xl-7 d-none d-xl-block">
-                    <div className="main-menu main-menu-13 pl-45 main-menu-ff-space">
+                  <div className="col-xxl-8 col-xl-7 d-none d-xl-block">
+                    <div
+                      className="main-menu main-menu-13 pl-45 main-menu-ff-space"
+                      style={{
+                        display: "flex",
+                        justifyContent: "end",
+                        alignItems: "center",
+                      }}
+                    >
                       <nav id="mobile-menu-3">
-                        <Menus />
+                        <div style={navLinkStyle}>
+                        <Menus  isHovered={isHovered} />
+
+                        </div>
                       </nav>
                     </div>
                   </div>
-                  <div className="col-xxl-5 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
+                  <div className="col-xxl-3 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
                     <div className="header__bottom-right-13 d-flex justify-content-end align-items-center pl-30">
                       <div className="header__action-13 d-none d-md-block">
                         <ul>
@@ -64,14 +107,20 @@ const Header = ({ style_2 = false }) => {
                                   alt="user img"
                                   width={35}
                                   height={35}
-                                  style={{ objectFit: "cover", borderRadius: "50%" }}
+                                  style={{
+                                    objectFit: "cover",
+                                    borderRadius: "50%",
+                                  }}
                                 />
                               </Link>
                             </li>
                           ) : userInfo?.name ? (
                             <li>
                               <Link href="/user-dashboard">
-                                <h2 className="text-uppercase tp-user-login-avater">
+                                <h2
+                                  className="text-uppercase tp-user-login-avater"
+                                  style={{ color: isHovered ? "#08048c" : "#ffffff" }}
+                                >
                                   {userInfo.name[0]}
                                 </h2>
                               </Link>
@@ -79,12 +128,20 @@ const Header = ({ style_2 = false }) => {
                           ) : (
                             <li>
                               <Link href="/login">
-                                <User />
+                                <span style={{ color: isHovered ? "#08048c" : "#ffffff" }}>
+                                  <User />
+                                </span>
                               </Link>
                             </li>
                           )}
                           <li>
-                            <button className="cartmini-open-btn" onClick={handleProceedToCart}>
+                            <button
+                              className="cartmini-open-btn"
+                              onClick={handleProceedToCart}
+                              style={{
+                                color: isHovered ? "#08048c" : "#ffffff",
+                              }}
+                            >
                               <Cart />
                               <span className="tp-item-count">{sampleCount}</span>
                             </button>
@@ -92,10 +149,14 @@ const Header = ({ style_2 = false }) => {
                         </ul>
                       </div>
                       <div className="header__hamburger ml-30 d-xl-none">
-                        <button onClick={() => setIsOffCanvasOpen(true)} type="button" className="hamburger-btn hamburger-btn-black offcanvas-open-btn">
-                          <span></span>
-                          <span></span>
-                          <span></span>
+                        <button
+                          onClick={() => setIsOffCanvasOpen(true)}
+                          type="button"
+                          className="hamburger-btn hamburger-btn-black offcanvas-open-btn"
+                        >
+                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
+                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
+                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
                         </button>
                       </div>
                     </div>

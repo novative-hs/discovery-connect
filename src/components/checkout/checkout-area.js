@@ -24,19 +24,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
   return (
     <section className="checkout-area pb-85">
       <div className="container">
-        <div className="container">
-          <div className="d-flex align-items-center mt-3">
-            <a href="/cart"
-              className="text-dark d-flex align-items-center"
-              onClick={() => setIsClicked(true)}
-              >
-              <i className="fas fa-arrow-left me-2"></i>
-              <span className={isClicked ? "text-danger" : "text-dark"}>
-              Back to Cart
-              </span>
-            </a>
-          </div>
-        </div>
+        
         <form>
           <div className="row mt-3">
             <div className="col-lg-6">

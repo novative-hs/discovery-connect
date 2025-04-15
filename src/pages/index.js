@@ -13,6 +13,8 @@ import OfferPopularProduct from "@components/offer-product";
 import Footer from "@layout/footer";
 import BioSpecimenSection from "@components/offer-product/biospecimensection";
 import Services from "@components/offer-product/services";
+import BackToTopCom from "@components/common/scroll-to-top";
+import StepFlow from "@components/offer-product/stepflow";
 
 
 const HomeShop = () => {
@@ -21,15 +23,18 @@ const HomeShop = () => {
       <SEO pageTitle={"Home Shop"} />
       <Header />
       <HeroBanner />
+      
       <Services/>
+
       <BioSpecimenSection/>
+      <StepFlow/>
       {/* <ShopCategoryArea />
       <ShopProducts /> */}
       <OfferPopularProduct />
       {/* <ShopBanner /> */}
       {/* <ShopFeature /> */}
       {/* <ShopCta /> */}
-      
+      <BackToTopCom/>
       <Footer />
     </Wrapper>
   );
