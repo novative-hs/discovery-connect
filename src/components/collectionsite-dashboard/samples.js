@@ -44,10 +44,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -847,8 +844,6 @@ const SampleArea = () => {
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
-
-
                           {showAddModal && (
                             <div className="form-group">
                               <label>Donor ID</label>
