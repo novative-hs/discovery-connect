@@ -455,11 +455,13 @@ const CommitteeMemberArea = () => {
                 {successMessage}
               </div>
             )}
-<h5 className="m-0 fw-bold ">Committee Member List</h5>
-            {/* Button Container */}
-            <div className="d-flex justify-content-end align-items-center gap-2 w-100">
             
-            <button
+            {/* Button Container */}
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              <h5 className="m-0 fw-bold ">Committee Member List</h5>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add Committee Member Button */}
+                <button
                   onClick={() => setShowAddModal(true)}
                   style={{
                     backgroundColor: "#4a90e2", // soft blue
@@ -472,11 +474,11 @@ const CommitteeMemberArea = () => {
                     alignItems: "center",
                     gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    marginBottom:'10px'
                   }}
                 >
                   <i className="fas fa-plus"></i> Add Committee Member
-                </button>
+                </button>        
+              </div>
             </div>
           </div>
           {/* Table */}
@@ -728,10 +730,10 @@ const CommitteeMemberArea = () => {
                           {!/^[A-Za-z\s]*$/.test(
                             formData.CommitteeMemberName
                           ) && (
-                            <small className="text-danger">
-                              Only letters and spaces are allowed.
-                            </small>
-                          )}
+                              <small className="text-danger">
+                                Only letters and spaces are allowed.
+                              </small>
+                            )}
                         </div>
 
                         <div className="form-group">
@@ -975,50 +977,50 @@ const CommitteeMemberArea = () => {
             </>
           )}
           {showHistoryModal && (
-  <>
-    {/* Backdrop */}
-    <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+            <>
+              {/* Backdrop */}
+              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-    {/* Modal */}
-    <div className="modal show d-block" role="dialog" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}>
-      <div className="modal-dialog modal-md">
-        <div className="modal-content">
-          {/* Header */}
-          <div className="modal-header">
-            <h5 className="modal-title">History</h5>
-            <button type="button" className="close" onClick={() => setShowHistoryModal(false)} style={{ fontSize: "1.5rem", position: "absolute", right: "10px", cursor: "pointer" }}>
-              &times;
-            </button>
-          </div>
+              {/* Modal */}
+              <div className="modal show d-block" role="dialog" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}>
+                <div className="modal-dialog modal-md">
+                  <div className="modal-content">
+                    {/* Header */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">History</h5>
+                      <button type="button" className="close" onClick={() => setShowHistoryModal(false)} style={{ fontSize: "1.5rem", position: "absolute", right: "10px", cursor: "pointer" }}>
+                        &times;
+                      </button>
+                    </div>
 
-          {/* Body */}
-          <div className="modal-body" style={{ maxHeight: "500px", overflowY: "auto", backgroundColor: "#e5ddd5", padding: "15px", borderRadius: "10px" }}>
-            {historyData?.length ? historyData.map(({ CommitteeMemberName, phoneNumber, cnic, fullAddress, city_name, district_name, country_name, organization_name, created_at, updated_at, status }, index) => (
-              <div key={index} style={{ marginBottom: "10px" }}>
-                {/* History Message */}
-                <div style={{
-                  padding: "10px 15px",
-                  borderRadius: "15px",
-                  backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
-                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                  maxWidth: "75%",
-                  fontSize: "14px",
-                }}>
-                  <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Registration Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
-                  <br />
-                  {cnic && <><b>CNIC:</b> {cnic} <br /></>}
-                  {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}
-                  {organization_name && <><b>Organization:</b> {organization_name} <br /></>}
-                  {fullAddress && <><b>Address:</b> {fullAddress}, {city_name}, {district_name}, {country_name} <br /></>}
+                    {/* Body */}
+                    <div className="modal-body" style={{ maxHeight: "500px", overflowY: "auto", backgroundColor: "#e5ddd5", padding: "15px", borderRadius: "10px" }}>
+                      {historyData?.length ? historyData.map(({ CommitteeMemberName, phoneNumber, cnic, fullAddress, city_name, district_name, country_name, organization_name, created_at, updated_at, status }, index) => (
+                        <div key={index} style={{ marginBottom: "10px" }}>
+                          {/* History Message */}
+                          <div style={{
+                            padding: "10px 15px",
+                            borderRadius: "15px",
+                            backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
+                            boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                            maxWidth: "75%",
+                            fontSize: "14px",
+                          }}>
+                            <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Registration Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
+                            <br />
+                            {cnic && <><b>CNIC:</b> {cnic} <br /></>}
+                            {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}
+                            {organization_name && <><b>Organization:</b> {organization_name} <br /></>}
+                            {fullAddress && <><b>Address:</b> {fullAddress}, {city_name}, {district_name}, {country_name} <br /></>}
+                          </div>
+                        </div>
+                      )) : <p className="text-left">No history available.</p>}
+                    </div>
+                  </div>
                 </div>
               </div>
-            )) : <p className="text-left">No history available.</p>}
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-)}
+            </>
+          )}
 
         </div>
       </div>

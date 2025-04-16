@@ -35,6 +35,11 @@ export const authApi = apiSlice.injectEndpoints({
         { type: "Product", id: arg.id },
       ],
     }),
+    getSampleFields: builder.query({
+      query: (tableName) => `api/samplefields/get-samplefields/${tableName}`,
+      keepUnusedDataFor: 600,
+    }),
+    
   }),
 });
 
@@ -44,4 +49,5 @@ export const {
   useGetProductQuery,
   useGetAllSamplesQuery,
   useGetRelatedProductsQuery,
+  useGetSampleFieldsQuery
 } = authApi;

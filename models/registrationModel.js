@@ -877,6 +877,7 @@ const getUserEmail = (id, callback) => {
     callback(null, results); // Pass results to the controller
   });
 };
+
 const getEmail = (email, callback) => {
   if (!email) {
     return callback({ status: 400, error: "Email is required" }, null);
@@ -892,10 +893,6 @@ const getEmail = (email, callback) => {
     callback(null, { exists: results.length > 0, user: results[0] || null });
   });
 };
-
-
-
-
 
 function changepassword(data, callback) {
   const table = "user_account"; 

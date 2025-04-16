@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { Minus, Plus } from "@svg/index";
@@ -16,10 +15,10 @@ const CartArea = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
+
   const userID =
     typeof window !== "undefined" ? localStorage.getItem("userID") : null;
 
-  // Local state to track quantity input and errors
   const [quantities, setQuantities] = useState({});
   const [errors, setErrors] = useState({});
   const [isClicked, setIsClicked] = useState(false);
@@ -29,7 +28,7 @@ const CartArea = () => {
       const newQuantities = { ...prevQuantities };
       cart_products.forEach((item) => {
         if (!newQuantities[item.id]) {
-          newQuantities[item.id] = item.orderQuantity || 1; // Ensure default is 1
+          newQuantities[item.id] = item.orderQuantity || 1;
         }
       });
       return newQuantities;
@@ -44,7 +43,9 @@ const CartArea = () => {
     }
   };
 
-  const handleRemovePrd = (prd) => dispatch(remove_product(prd));
+  const handleRemoveProduct = (item) => {
+    dispatch(remove_product(item));
+  };
 
   const handleIncrease = (item) => {
     setQuantities((prev) => {
@@ -69,15 +70,14 @@ const CartArea = () => {
   };
 
   const handleQuantityChange = (e, item) => {
-    let value = e.target.value.trim();
-
+    const value = e.target.value.trim();
     if (value === "") {
       setQuantities((prev) => ({ ...prev, [item.id]: "" }));
       return;
     }
 
     if (/^\d+$/.test(value)) {
-      let quantity = parseInt(value, 10);
+      const quantity = parseInt(value, 10);
       if (quantity > item.quantity) {
         setErrors((prev) => ({
           ...prev,
@@ -93,7 +93,6 @@ const CartArea = () => {
 
   const handleQuantityBlur = (item) => {
     let quantity = quantities[item.id];
-
     if (!quantity || quantity < 1) {
       quantity = 1;
       setQuantities((prev) => ({ ...prev, [item.id]: 1 }));
@@ -107,119 +106,140 @@ const CartArea = () => {
   );
 
   return (
-    <section className="cart-area pt-100 pb-100">
+    <section
+      className="cart-area py-5"
+      style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}
+    >
       <div className="container">
         <div className="d-flex align-items-center mb-4" style={{ position: 'relative', top: '-30px' }}>
-        <a
-  className="d-flex align-items-center"
-  onClick={() => {
-    setIsClicked(true);
-    if (userID) {
-      router.push("/dashboardheader?tab=Booksamples"); // 👈 update to the actual route
-    } else {
-      router.push("/shop");
-    }
-  }}
-  style={{ cursor: "pointer" }}
->
-  <i className="fas fa-arrow-left me-2"></i>
-  <span className={isClicked ? "text-danger" : "text-dark"}>
-    Back to Shop
-  </span>
-</a>
+          <a
+            href="/shop"
+            className="d-flex align-items-center"
+            onClick={() => setIsClicked(true)}
+          >
+            <i className="fas fa-arrow-left me-2"></i>
+            <span className={isClicked ? "text-danger" : "text-dark"}>
+              Back to Shop
+            </span>
+          </a>
         </div>
         <div className="row">
           <div className="col-12">
             {cart_products.length > 0 ? (
-              <form onSubmit={(e) => e.preventDefault()}>
-                <div className="table-content table-responsive">
-                  <table className="table" style={{ width: '60%' }}>
-                    <thead style={{ backgroundColor: "#cfe2ff !important", color: "#000" }}>
-                      <tr>
-                        <th>Sample</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                        <th>Remove</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cart_products.map((item, i) => (
-                        <tr key={i}>
-                          <td className="text-start">{item.samplename}</td>
-                          <td className="text-end">{item.price.toFixed(2)}</td>
-                          <td className="product-quantity">
-                            <div className="tp-product-quantity mt-10 mb-10">
-                              <span
-                                className="tp-cart-minus"
-                                onClick={() => handleDecrease(item)}
-                              >
-                                <Minus />
-                              </span>
-                              <input
-                                className="tp-cart-input"
-                                type="text"
-                                value={quantities[item.id] ?? 1} // Always fallback to 1
-                                onChange={(e) => handleQuantityChange(e, item)}
-                                onBlur={() => handleQuantityBlur(item)}
-                              />
+              <div className="row">
+                {/* Left side: Cart Table */}
+                <div className="col-md-8">
+                  <div className="table-responsive">
+                    <table className="table table-bordered rounded shadow-sm bg-white">
+                    <thead className="table-light text-dark text-center">
+  <tr>
+    <th colSpan="5" className="text-center fs-6 py-3">
+      Sample Cart Detail
+    </th>
+  </tr>
+  <tr>
+    <th>Product</th>
+    <th>Price</th>
+    <th>Quantity</th>
+    <th>Total</th>
+    <th>Remove</th>
+  </tr>
+</thead>
 
-                              <span
-                                className="tp-cart-plus"
-                                onClick={() => handleIncrease(item)}
+                      <tbody>
+                        {cart_products.map((item, i) => (
+                          <tr key={i} className="text-center align-middle">
+                            <td className="text-start">
+                              <div className="d-flex align-items-center gap-3">
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.samplename}
+                                  style={{ width: "60px", borderRadius: "8px" }}
+                                />
+                                <span>{item.samplename}</span>
+                              </div>
+                            </td>
+  
+                            <td>{item.price.toFixed(2)}</td>
+                            <td>
+                              <div className="d-flex justify-content-center align-items-center gap-2">
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => handleDecrease(item)}
+                                >
+                                  <Minus />
+                                </button>
+                                <input
+                                  className="form-control text-center text-dark"
+                                  type="text"
+                                  value={quantities[item.id] ?? 1}
+                                  onChange={(e) => handleQuantityChange(e, item)}
+                                  onBlur={() => handleQuantityBlur(item)}
+                                  style={{ width: "80px", fontWeight: "bold" }}
+                                />
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => handleIncrease(item)}
+                                >
+                                  <Plus />
+                                </button>
+                              </div>
+                              {errors[item.id] && (
+                                <small className="text-danger">
+                                  {errors[item.id]}
+                                </small>
+                              )}
+                            </td>
+                            <td>
+                              {(item.price * (quantities[item.id] ?? 1)).toFixed(
+                                2
+                              )}
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-outline-danger rounded-circle"
+                                onClick={() => handleRemoveProduct(item)}
                               >
-                                <Plus />
-                              </span>
-                            </div>
-                            {errors[item.id] && (
-                              <p className="text-danger">{errors[item.id]}</p>
-                            )}
-                          </td>
-                          <td className="product-subtotal text-start">
-                            <span className="amount">
-                              {(
-                                item.price *
-                                (quantities[item.id] ?? item.orderQuantity)
-                              ).toFixed(2)}
-                            </span>
-                          </td>
-
-                          <td className="product-remove">
-                            <button
-                              type="button"
-                              onClick={() => handleRemovePrd(item)}
-                            >
-                              <i className="fa fa-times"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                                <i className="fas fa-trash-alt"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div className="row justify-content-end">
-                  <div className="col-md-5 mr-auto">
-                    <div className="cart-page-total" style={{ width: '80%', margin: '0 auto', marginTop: '-210px' }}>
-                      <h2>Cart Totals</h2>
-                      <ul className="mb-20">
-                        <li>
-                          Subtotal <span>{subtotal.toFixed(2)}</span>
+  
+                {/* Right side: Cart Totals */}
+                <div className="col-md-4">
+                  <div className="card shadow-sm">
+                    <div className="card-body">
+                      <h5 className="card-title">Cart Totals</h5>
+                      <ul className="list-group list-group-flush mb-3">
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Subtotal</strong>
+                          <span>{subtotal.toFixed(2)}</span>
                         </li>
-                        <li>
-                          Total <span>{subtotal.toFixed(2)}</span>
+                        <li className="list-group-item d-flex justify-content-between">
+                          <strong>Total</strong>
+                          <span>{subtotal.toFixed(2)}</span>
                         </li>
                       </ul>
                       <button
-                        className="tp-btn cursor-pointer"
+                        className="tp-btn cursor-pointer w-100"
                         onClick={handleProceedToCheckout}
-                        style={{ backgroundColor: '#003366', color: 'white', border: 'none' }}
+                        style={{
+                          backgroundColor: "#003366",
+                          color: "white",
+                          border: "none",
+                        }}
                       >
                         Proceed to Checkout
                       </button>
                     </div>
                   </div>
                 </div>
-              </form>
+              </div>
             ) : (
               <EmptyCart />
             )}
@@ -228,6 +248,7 @@ const CartArea = () => {
       </div>
     </section>
   );
+  
 };
 
 export default CartArea;

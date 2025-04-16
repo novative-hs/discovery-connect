@@ -101,50 +101,122 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
   return (
     <div className="my-2">
       <div className="col-12">
-        <div className="card shadow-sm">
-          <div className="card-body">
+        <div className="card shadow border-0">
+          <div className="card-body p-4">
             <form>
+              {/* Cardholder Name */}
               <div className="mb-3">
-                <label className="form-label">Cardholder Name</label>
-                <input id="cardholderName" placeholder="Enter Cardholder Name" className="form-control" type="text" value={formData.cardholderName} onChange={handleInputChange} />
-                {errors.cardholderName && <small className="text-danger">{errors.cardholderName}</small>}
+                <label className="form-label fw-semibold">Cardholder Name</label>
+                <input
+                  id="cardholderName"
+                  placeholder="Enter Cardholder Name"
+                  className="form-control"
+                  type="text"
+                  value={formData.cardholderName}
+                  onChange={handleInputChange}
+                />
+                {errors.cardholderName && (
+                  <small className="text-danger">{errors.cardholderName}</small>
+                )}
               </div>
-
+  
+              {/* Card Number */}
               <div className="mb-3">
-                <label className="form-label">Card Number</label>
-                <input id="cardNumber" placeholder="378282246310005" className="form-control" type="text" value={formData.cardNumber} onChange={handleInputChange} />
-                {errors.cardNumber && <small className="text-danger">{errors.cardNumber}</small>}
+                <label className="form-label fw-semibold">Card Number</label>
+                <input
+                  id="cardNumber"
+                  placeholder="378282246310005"
+                  className="form-control"
+                  type="text"
+                  value={formData.cardNumber}
+                  onChange={handleInputChange}
+                />
+                {errors.cardNumber && (
+                  <small className="text-danger">{errors.cardNumber}</small>
+                )}
               </div>
-
+  
+              {/* Expiration and CVC */}
               <div className="row mb-3">
                 <div className="col-md-6">
-                  <label className="form-label">Expiration Date (MM-YYYY)</label>
-
-                  <input id="expirationDate" placeholder="mm-yy" className="form-control p-2" type="month" value={formData.expirationDate} onChange={handleInputChange} />
-                  {errors.expirationDate && <small className="text-danger">{errors.expirationDate}</small>}
+                  <label className="form-label fw-semibold">Expiration Date (MM-YYYY)</label>
+                  <input
+                    id="expirationDate"
+                    placeholder="mm-yy"
+                    className="form-control"
+                    type="month"
+                    value={formData.expirationDate}
+                    onChange={handleInputChange}
+                  />
+                  {errors.expirationDate && (
+                    <small className="text-danger">{errors.expirationDate}</small>
+                  )}
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">CVC</label>
-                  <input id="cvc" placeholder="Enter 3 digit CVC Number" className="form-control" type="text" maxLength={3} value={formData.cvc} onChange={handleInputChange} />
-                  {errors.cvc && <small className="text-danger">{errors.cvc}</small>}
+                  <label className="form-label fw-semibold">CVC</label>
+                  <input
+                    id="cvc"
+                    placeholder="Enter 3 digit CVC Number"
+                    className="form-control"
+                    type="text"
+                    maxLength={3}
+                    value={formData.cvc}
+                    onChange={handleInputChange}
+                  />
+                  {errors.cvc && (
+                    <small className="text-danger">{errors.cvc}</small>
+                  )}
                 </div>
               </div>
+  
+              {/* Payment Type */}
+              <div className="mb-4">
+  <label className="form-label fw-semibold fs-5">Payment Type</label>
+  <div className="d-flex gap-4">
+    {["Credit", "Debit"].map((type) => (
+      <div
+        key={type}
+        className={`border rounded p-3 d-flex align-items-center gap-3 ${
+          formData.paymentType === type ? "border-primary" : ""
+        }`}
+        style={{ cursor: "pointer" }}
+        onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
+      >
+        <input
+          type="radio"
+          name="paymentType"
+          value={type}
+          checked={formData.paymentType === type}
+          onChange={handleRadioChange}
+          id={`${type}Radio`}
+          className="form-check-input m-0"
+        />
+        <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+          alt="Visa"
+          width="30"
+        />
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
+          alt="MasterCard"
+          width="30"
+        />
+      </div>
+    ))}
+  </div>
+</div>
 
-              <div className="mb-3">
-                <label className="form-label">Payment Type</label>
-                <div className="d-flex">
-                  <div className="form-check me-3">
-                    <input className="form-check-input" type="radio" name="paymentType" value="Credit" checked={formData.paymentType === "Credit"} onChange={handleRadioChange} />
-                    <label className="form-check-label">Credit</label>
-                  </div>
-                  <div className="form-check">
-                    <input className="form-check-input" type="radio" name="paymentType" value="Debit" checked={formData.paymentType === "Debit"} onChange={handleRadioChange} />
-                    <label className="form-check-label">Debit</label>
-                  </div>
-                </div>
-              </div>
 
-              <button type="submit" className="tp-btn" style={{backgroundColor: "#0a1d4e"}} onClick={handlePlaceOrder}>
+
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="btn w-100 text-white"
+                style={{ backgroundColor: "#0a1d4e" }}
+                onClick={handlePlaceOrder}
+              >
                 Place Order
               </button>
             </form>
@@ -153,6 +225,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
       </div>
     </div>
   );
+  
 };
 
 export default PaymentCardElement;

@@ -10,9 +10,9 @@ import {
   initialOrderQuantity,
 } from "src/redux/features/cartSlice";
 import { setProduct } from "src/redux/features/productSlice";
+import ProductModal from "@components/common/modals/product-modal";
 
 const SingleProduct = ({ product, discountPrd = false }) => {
-  console.log("Product data:", product);
   const { id, image_url, title, price, discount, originalPrice } = product || {};
   const dispatch = useDispatch();
   useEffect(() => {
@@ -40,6 +40,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   return (
     <React.Fragment>
       <div className="product__item p-relative transition-3 mb-50">
+        
         <div className="product__thumb w-img p-relative fix">
           {/* <Link href={id ? `/product-details/${id}` : "/product-not-found"}> */}
           <div className="product-image-frame">

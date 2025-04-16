@@ -320,7 +320,7 @@ const CountryArea = () => {
                   <i className="fas fa-plus"></i> Add Country
                 </button>
 
-                {/* Upload City List Button */}
+                {/* Upload Country List Button */}
                 <label
                   style={{
                     backgroundColor: "#f1f1f1", // soft gray

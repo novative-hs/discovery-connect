@@ -326,7 +326,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
-                  Welcome Admin!
+                  Welcome Database Admin!
                 </span>
               )}
 

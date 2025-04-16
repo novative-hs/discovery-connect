@@ -1,8 +1,8 @@
 const mysqlConnection = require("../config/db");
 
-const RegistrationAdmin_History = () => {
-  const createRegistrationAdmin_HistoryTable = `
-    CREATE TABLE IF NOT EXISTS RegistrationAdmin_History (
+const registrationadmin_history = () => {
+  const createregistrationadmin_historyTable = `
+    CREATE TABLE IF NOT EXISTS registrationadmin_history (
       id INT AUTO_INCREMENT PRIMARY KEY,
       created_name VARCHAR(255),
       updated_name VARCHAR(255),
@@ -52,7 +52,7 @@ const RegistrationAdmin_History = () => {
     )`;
 
 
-  mysqlConnection.query(createRegistrationAdmin_HistoryTable, (err, results) => {
+  mysqlConnection.query(createregistrationadmin_historyTable, (err, results) => {
     if (err) {
       console.error("Error creating History table: ", err);
     } else {
@@ -67,7 +67,7 @@ const getHistory = (filterType, id, callback) => {
   column = `${filterType}_id`;
   if (!column) return callback(new Error("Invalid filter type"), null);
 
-  const query = `SELECT * FROM RegistrationAdmin_History WHERE ${column} = ?`;
+  const query = `SELECT * FROM registrationadmin_history WHERE ${column} = ?`;
 
   mysqlConnection.query(query, [id], (err, results) => {
     if (err || results.length === 0) {
@@ -221,7 +221,7 @@ const getSampleHistory = (sampleId, callback) => {
 
 
 module.exports = {
-  RegistrationAdmin_History,
+  registrationadmin_history,
   getHistory,
   create_historyTable,
   create_samplehistoryTable,

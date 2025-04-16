@@ -8,6 +8,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getLocalStorage } from "@utils/localstorage";
 import Pagination from "@ui/Pagination";
+import NiceSelect from "@ui/NiceSelect";
+import InputMask from "react-input-mask";
 const BioBankSampleArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -44,10 +46,7 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions"},
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -60,6 +59,7 @@ const BioBankSampleArea = () => {
   ];
 
   const [formData, setFormData] = useState({
+    locationids: "",
     samplename: "",
     age: "",
     gender: "",
@@ -90,6 +90,7 @@ const BioBankSampleArea = () => {
     TestSystemManufacturer: "",
     status: "In Stock",
     user_account_id: id,
+    logo: ""
   });
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
@@ -169,7 +170,7 @@ const BioBankSampleArea = () => {
 
       // Combine both responses
       const combinedSamples = [...ownSamples, ...receivedSamples];
-setFilteredSamples(combinedSamples)
+      setFilteredSamples(combinedSamples)
       // Update state with the combined list
       setSamples(combinedSamples);
     } catch (error) {
@@ -325,19 +326,19 @@ setFilteredSamples(combinedSamples)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-  
+
     // Ensure both states update correctly
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
-  
+
     setTransferDetails((prevDetails) => ({
       ...prevDetails,
       [name]: value,
     }));
   };
-  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -346,7 +347,12 @@ setFilteredSamples(combinedSamples)
       // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/postBBsample`,
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       console.log("Sample added successfully:", response.data);
 
@@ -391,6 +397,7 @@ setFilteredSamples(combinedSamples)
         TestSystemManufacturer: "",
         status: "",
         user_account_id: id,
+        logo: ""
       });
 
       setShowAddModal(false); // Close modal after submission
@@ -436,14 +443,14 @@ setFilteredSamples(combinedSamples)
       );
       console.log("Sample dispatched successfully:", response.data);
       alert("Sample dispatched successfully!");
-     fetchSamples()
-     setTransferDetails({
-      TransferTo: "",
-      dispatchVia: "",
-      dispatcherName: "",
-      dispatchReceiptNumber: "",
-      Quantity: "",
-    });
+      fetchSamples()
+      setTransferDetails({
+        TransferTo: "",
+        dispatchVia: "",
+        dispatcherName: "",
+        dispatchReceiptNumber: "",
+        Quantity: "",
+      });
       setShowTransferModal(false); // Close the modal after submission
     } catch (error) {
       if (error.response) {
@@ -518,7 +525,17 @@ setFilteredSamples(combinedSamples)
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setShowEditModal(true);
+
+    // Combine the location parts into "room-box-freezer" format
+    const formattedLocationId = `${String(sample.room_number).padStart(
+      2,
+      "0"
+    )}-${String(sample.freezer_id).padStart(2, "0")}-${String(
+      sample.box_id
+    ).padStart(2, "0")}`;
+
     setFormData({
+      locationids: formattedLocationId,
       samplename: sample.samplename,
       age: sample.age,
       gender: sample.gender,
@@ -549,6 +566,7 @@ setFilteredSamples(combinedSamples)
       TestSystemManufacturer: sample.TestSystemManufacturer,
       status: sample.status,
       user_account_id: sample.user_account_id,
+      logo: sample.logo
     });
   };
 
@@ -558,7 +576,12 @@ setFilteredSamples(combinedSamples)
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/editBBsample/${selectedSampleId}`,
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       console.log("Sample updated successfully:", response.data);
 
@@ -569,6 +592,7 @@ setFilteredSamples(combinedSamples)
 
       // Reset formData after update
       setFormData({
+        locationids: "",
         samplename: "",
         age: "",
         gender: "",
@@ -599,6 +623,7 @@ setFilteredSamples(combinedSamples)
         TestSystemManufacturer: "",
         status: "In Stock",
         user_account_id: id,
+        logo: ""
       });
 
       setTimeout(() => {
@@ -635,8 +660,9 @@ setFilteredSamples(combinedSamples)
     showTransferModal,
     showHistoryModal,
   ]);
-  const resetFormData=()=>{
+  const resetFormData = () => {
     setFormData({
+      locationids: "",
       samplename: "",
       age: "",
       gender: "",
@@ -665,9 +691,26 @@ setFilteredSamples(combinedSamples)
       TestSystemManufacturer: "",
       status: "In Stock",
       user_account_id: id,
+      logo: ""
     });
-  
+
   }
+  function bufferToBase64(bufferObj, mimeType) {
+    if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
+
+    const binary = bufferObj.data
+      .map((byte) => String.fromCharCode(byte))
+      .join("");
+
+    const base64String = btoa(binary);
+    return `data:image/${mimeType};base64,${base64String}`;
+  }
+  const logoHandler = (file) => {
+    setFormData((prev) => ({
+      ...prev,
+      logo: file,
+    }));
+  };
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -677,21 +720,33 @@ setFilteredSamples(combinedSamples)
             {successMessage}
           </div>
         )}
+        <div
+          className="text-danger fw-bold"
+          style={{ marginTop: "-40px" }}>
+          <h6>Note: Click on Edit Icon to Add Price and Currency for Sample.</h6>
+
+        </div>
 
         {/* Header Section with Filter and Button */}
         <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
           {/* Filter Dropdown */}
-          <div className="d-flex align-items-center">
-            <label className="fw-bold me-2">Filter: </label>
-            <select
-              className="form-select form-select-sm"
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="priceAdded">Price Added</option>
-              <option value="priceNotAdded">Price Not Added</option>
-            </select>
+
+
+          <div className="d-flex align-items-center gap-2">
+            <label className="fw-bold">Filter:</label>
+
+            <NiceSelect
+              options={[
+                { value: "", text: "All" },
+                { value: "priceAdded", text: "Price Added" },
+                { value: "priceNotAdded", text: "Price Not Added" },
+              ]}
+              defaultCurrent={0}
+              onChange={(item) => setFilter(item.value)}
+              name="filter-by-price"
+            />
           </div>
+
 
           {/* Add Samples Button */}
           <div className="d-flex justify-content-end align-items-center gap-2 w-100">
@@ -707,32 +762,32 @@ setFilteredSamples(combinedSamples)
 
         {/* Table */}
         <div className="table-responsive w-100">
-            <table className="table table-bordered table-hover text-center align-middle w-auto border">
-              <thead className="table-primary text-dark">
-                <tr className="text-center">
+          <table className="table table-bordered table-hover text-center align-middle w-auto border">
+            <thead className="table-primary text-dark">
+              <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
-                <th key={index} className="col-md-1 px-2">
-                 
-                <div className="d-flex flex-column align-items-center">
-                   <input
-                           type="text"
-                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                           placeholder={`Search ${label}`}
-                           onChange={(e) =>
-                             handleFilterChange(key, e.target.value)
-                           }
-                           style={{ minWidth: "150px" }}
-                         />
-                     <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-  {label}
-</span>
+                  <th key={index} className="col-md-1 px-2">
 
-                   </div>
-                 </th>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) =>
+                          handleFilterChange(key, e.target.value)
+                        }
+                        style={{ minWidth: "150px" }}
+                      />
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
+
+                    </div>
+                  </th>
                 ))}
-              <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-                      Action
-                    </th>
+                <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="table-light">
@@ -820,7 +875,7 @@ setFilteredSamples(combinedSamples)
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "80px",
+                top: "50px",
                 left: "50%",
                 transform: "translateX(-50%)",
               }}
@@ -833,9 +888,11 @@ setFilteredSamples(combinedSamples)
                 <div className="modal-content">
                   <div
                     className="modal-header"
-                    // style={{ backgroundColor: "#ADD8E6" }}
+                    style={{ backgroundColor: "#cfe2ff" }}
                   >
-                   {showAddModal ? "Add Sample" : "Edit Sample"}
+                    <h5 className="modal-title">
+                      {showAddModal ? "Add Sample" : "Edit Sample"}
+                    </h5>
                     <button
                       type="button"
                       className="close"
@@ -861,24 +918,52 @@ setFilteredSamples(combinedSamples)
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
+                          {showAddModal && (
+                            <div className="form-group">
+                              <label>Donor ID</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="donorID"
+                                value={formData.donorID}
+                                onChange={handleInputChange}
+                                required
+                                style={{
+                                  height: "45px",
+                                  fontSize: "14px",
+                                  backgroundColor: formData.donorID
+                                    ? "#f0f0f0"
+                                    : "#f0f0f0",
+                                  color: "black",
+                                }}
+                              />
+                            </div>
+                          )}
                           <div className="form-group">
-                            <label>Donor ID</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="donorID"
-                              value={formData.donorID}
+                            <label>Location (IDs)</label>
+                            <InputMask
+                              mask="99-99-99"
+                              maskChar={null}
+                              value={formData.locationids}
                               onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.donorID
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
+                            >
+                              {(inputProps) => (
+                                <input
+                                  {...inputProps}
+                                  type="text"
+                                  className="form-control"
+                                  name="locationids"
+                                  placeholder="00-00-00"
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                  required
+                                />
+                              )}
+                            </InputMask>
                           </div>
                           <div className="form-group">
                             <label>Sample Name</label>
@@ -1088,7 +1173,7 @@ setFilteredSamples(combinedSamples)
                                   ? "#f0f0f0"
                                   : "#f0f0f0",
                                 color: "black",
-                                
+
                               }}
                             />
                           </div>
@@ -1236,7 +1321,7 @@ setFilteredSamples(combinedSamples)
                         </div>
                         {/* Column 4 */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label className="form-label">
                               Alcohol Or Drug Abuse
                             </label>
@@ -1631,12 +1716,31 @@ setFilteredSamples(combinedSamples)
                               )}
                             </select>
                           </div>
+                          <div className="form-group">
+                            <label>Sample Logo</label>
+                            <div className="d-flex align-items-center">
+                              <input
+                                name="logo"
+                                type="file"
+                                id="logo"
+                                accept="image/*"
+                                onChange={(e) => logoHandler(e.target.files[0])}
+                                className="form-control"
+                                style={{
+                                  fontSize: "14px",
+                                  height: "45px",
+                                  backgroundColor: "#f0f0f0",
+                                  color: "black",
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     <div className="modal-footer">
                       <button type="submit" className="btn btn-primary">
-                      {showAddModal ? "Save" : "Update"}
+                        {showAddModal ? "Save" : "Update"}
                       </button>
                     </div>
                   </form>

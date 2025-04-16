@@ -1,33 +1,35 @@
 import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import bg from "@assets/img/contact/contact-bg.png";
+import bg from "@assets/img/contact/contact-bg.png";  // You can uncomment the background image if you want it
+
 const cards = [
   {
-    icon: "fa-flask",
+    icon: "fa-file-alt",
     title: "Find a Sample",
-    text: "Browse a vast collection of high-quality research samples.",
+    text: "Researchers can submit requests for specific biospecimens needed in their studies.",
     link: "/shop",
-    button: "Search Sample",
+    button: "Submit Request",
     delay: "100"
   },
   {
-    icon: "fa-box",
-    title: "Order a Sample",
-    text: "Easily request and receive samples tailored to your research needs.",
-    link: "/cart",
-    button: "Order Now",
+    icon: "fa-clipboard-check",
+    title: "Get Approval from Committee",
+    text: "All requests are reviewed by an ethics or scientific committee before samples are released.",
+    link: "/login",
+    button: "Review by Committee",
     delay: "200"
   },
   {
-    icon: "fa-flask",
-    title: "Add a Sample",
-    text: "Register your collection site to add and manage samples.",
+    icon: "fa-hospital",
+    title: "Register as a Collection Site",
+    text: "Biobanks or hospitals can register to provide biospecimens to verified researchers.",
     link: "/register",
-    button: "Click here to Register",
+    button: "Register Collection Site",
     delay: "300"
-  },
+  }
 ];
+
 
 const Services = () => {
   useEffect(() => {
@@ -38,32 +40,40 @@ const Services = () => {
   }, []);
 
   return (
-    <div className="container-fluid py-5 p-4" style={{ 
-        
-             // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
-              backgroundImage: `url(${bg.src})`
-            
-      // background: "linear-gradient(135deg, #f8f9fa,rgb(212, 229, 246))" 
+    <div 
+      className="container-fluid py-5 p-4" 
+      style={{ 
+        // backgroundImage: `url(${bg.src})`, // Uncomment to use background image
+        backgroundColor: "#f2f4f7",
+        borderRadius: "8px",
       }}>
       <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
         Our Services
       </h2>
       <div className="row g-5 text-center">
         {cards.map((card, index) => (
-          <div className="col-md-4" key={index} data-aos="fade-up" data-aos-delay={card.delay}>
+          <div 
+            className="col-md-4" 
+            key={index} 
+            data-aos="fade-up" 
+            data-aos-delay={card.delay}
+          >
             <div
-  className="card border-0 shadow-sm h-100 rounded-4"
-  style={{
-    transition: "transform 0.3s ease",
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = "scale(1.05)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = "scale(1)";
-  }}
->
-
+              className="card border-0 shadow-lg h-100 rounded-4"
+              style={{
+                transition: "transform 0.3s ease",
+                backgroundColor: "#ffffff",
+                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.boxShadow = "0px 12px 24px rgba(0, 0, 0, 0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "0px 10px 20px rgba(0, 0, 0, 0.1)";
+              }}
+            >
               <div className="card-body p-4 d-flex flex-column justify-content-between">
                 <div>
                   <div className="mb-3">
@@ -72,10 +82,16 @@ const Services = () => {
                   <h4 className="fw-bold text-dark">{card.title}</h4>
                   <p className="text-secondary">{card.text}</p>
                 </div>
-                <a
-                  href={card.link}
-                  className="btn btn-primary mt-3 px-4 py-2"
-                  style={{ backgroundColor: '#003366', border: 'none' }}
+                <a 
+                  href={card.link} 
+                  className="btn btn-primary mt-3 px-4 py-2" 
+                  style={{ 
+                    backgroundColor: "#003366", 
+                    border: "none", 
+                    transition: "background-color 0.3s" 
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#002244"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#003366"}
                 >
                   {card.button}
                 </a>
@@ -87,6 +103,5 @@ const Services = () => {
     </div>
   );
 };
-
 
 export default Services;

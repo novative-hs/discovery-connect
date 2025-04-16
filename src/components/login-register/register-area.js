@@ -7,7 +7,9 @@ import bg from "@assets/img/contact/contact-bg.png";
 const RegisterArea = () => {
   return (
     <section className="login__area pt-110 pb-110"
-    style={{backgroundImage: `url(${bg.src})`}}>
+    style={{
+     // backgroundImage: `url(${bg.src})`
+      }}>
       <div className="container">
         <div className="login__inner p-relative z-index-1">
           <Shapes />
