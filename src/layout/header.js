@@ -24,11 +24,11 @@ const Header = ({ style_2 = false }) => {
     router.push("/cart");
   };
 
-  const currentRoute = router.pathname;
+  //const currentRoute = router.pathname;
 
   const headerStyle = {
     height: "90px",
-    backgroundColor: isHovered ? "#ffffff" : "#e5eaf5",
+    backgroundColor:"#ffffff",
     boxShadow: sticky ? "0 4px 8px rgba(0, 0, 0, 0.05)" : "none",
     transition: "all 0.3s ease-in-out",
   };
@@ -62,17 +62,15 @@ const Header = ({ style_2 = false }) => {
                       }}
                     >
                       <Link href="/">
-                      <Image
-  src={logo}
-  alt="logo"
-  style={{
-    width: "200px",
-    height: "90px",
-    filter: isHovered ? "none" : "brightness(200%)",
-    
-  }}
-/>
-
+                        <Image
+                          src={logo}
+                          alt="logo"
+                          style={{
+                            width: "200px",
+                            height: "90px",
+                          
+                          }}
+                        />
                       </Link>
                     </div>
                   </div>
@@ -87,8 +85,7 @@ const Header = ({ style_2 = false }) => {
                     >
                       <nav id="mobile-menu-3">
                         <div style={navLinkStyle}>
-                        <Menus  isHovered={isHovered} />
-
+                          <Menus isHovered={isHovered} />
                         </div>
                       </nav>
                     </div>
@@ -115,10 +112,7 @@ const Header = ({ style_2 = false }) => {
                           ) : userInfo?.name ? (
                             <li>
                               <Link href="/user-dashboard">
-                                <h2
-                                  className="text-uppercase tp-user-login-avater text-dark"
-                                  
-                                >
+                                <h2 className="text-uppercase tp-user-login-avater text-dark">
                                   {userInfo.name[0]}
                                 </h2>
                               </Link>
@@ -136,10 +130,11 @@ const Header = ({ style_2 = false }) => {
                             <button
                               className="cartmini-open-btn"
                               onClick={handleProceedToCart}
-                            
                             >
                               <Cart />
-                              <span className="tp-item-count">{sampleCount}</span>
+                              <span className="tp-item-count">
+                                {sampleCount}
+                              </span>
                             </button>
                           </li>
                         </ul>
@@ -150,9 +145,21 @@ const Header = ({ style_2 = false }) => {
                           type="button"
                           className="hamburger-btn hamburger-btn-black offcanvas-open-btn"
                         >
-                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
-                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
-                          <span style={{ background: isHovered ? "#08048c" : "#ffffff" }}></span>
+                          <span
+                            style={{
+                              background: isHovered ? "#08048c" : "#ffffff",
+                            }}
+                          ></span>
+                          <span
+                            style={{
+                              background: isHovered ? "#08048c" : "#ffffff",
+                            }}
+                          ></span>
+                          <span
+                            style={{
+                              background: isHovered ? "#08048c" : "#ffffff",
+                            }}
+                          ></span>
                         </button>
                       </div>
                     </div>
@@ -165,7 +172,10 @@ const Header = ({ style_2 = false }) => {
       </header>
 
       <CartSidebar isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />
-      <OffCanvas isOffCanvasOpen={isOffCanvasOpen} setIsOffCanvasOpen={setIsOffCanvasOpen} />
+      <OffCanvas
+        isOffCanvasOpen={isOffCanvasOpen}
+        setIsOffCanvasOpen={setIsOffCanvasOpen}
+      />
     </>
   );
 };

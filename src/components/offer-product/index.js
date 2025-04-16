@@ -96,7 +96,7 @@ const router = useRouter();
               key={category.id}
               ref={(el) => (productRefs.current[index] = el)}
               data-index={index}
-              className="col-lg-4 col-md-6 col-sm-12 mb-4"
+              className="col-lg-4 col-md-6 col-sm-12"
               style={{
                 opacity: visible[index] ? 1 : 0,
                 transform: visible[index]
@@ -183,7 +183,7 @@ const router = useRouter();
                 boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
                 width: "100vw",
                 maxWidth: "800px",
-                maxHeight: "90vh",
+                maxHeight: "70vh",
                 overflow: "hidden",
               }}
             >

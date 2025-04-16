@@ -14,7 +14,7 @@ const HeroBanner = () => {
           className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover z-0"
         >
           <source
-            src="/assets/img/slider/13/samplevideo3.mp4"
+            src="/assets/img/slider/13/sample-3.mp4"
             type="video/mp4"
           />
         </video>
@@ -23,7 +23,7 @@ const HeroBanner = () => {
         <div
           className="position-absolute top-0 start-0 w-100 h-100"
           style={{
-            background: "rgba(0, 0, 0, 0.5)", // Dark semi-transparent overlay for better contrast
+            background: "rgba(57, 55, 55, 0.5)", // Dark semi-transparent overlay for better contrast
             zIndex: 1,
           }}
         />
@@ -33,13 +33,13 @@ const HeroBanner = () => {
           className="position-relative"
           style={{ maxWidth: "700px", zIndex: 2, marginTop: "150px" }}
         >
-          <h1
-            className="fw-bold mb-4 display-4 text-light"
+          <h4
+            className="fw-bold mb-4 display-5 text-light"
             data-aos="fade-right"
             style={{ color: "#fff" }}
           >
             Advancing Research with Quality Biospecimens
-          </h1>
+          </h4>
 
           <p
             className="fs-5 mb-4 text-light"
