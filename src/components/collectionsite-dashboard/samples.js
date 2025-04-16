@@ -7,7 +7,7 @@ import {
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
-import InputMask from 'react-input-mask';
+import InputMask from "react-input-mask";
 import { getLocalStorage } from "@utils/localstorage";
 
 const SampleArea = () => {
@@ -25,6 +25,7 @@ const SampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
+
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
@@ -43,7 +44,10 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -85,7 +89,9 @@ const SampleArea = () => {
     TestSystemManufacturer: "",
     status: "In Stock",
     user_account_id: id,
+    logo: "",
   });
+  const [logo, setLogo] = useState("");
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
@@ -131,7 +137,10 @@ const SampleArea = () => {
     { name: "sampletypematrix", setter: setSampleTypeMatrixNames },
     { name: "testmethod", setter: setTestMethodNames },
     { name: "testresultunit", setter: setTestResultUnitNames },
-    { name: "concurrentmedicalconditions", setter: setConcurrentMedicalConditionsNames },
+    {
+      name: "concurrentmedicalconditions",
+      setter: setConcurrentMedicalConditionsNames,
+    },
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
@@ -140,6 +149,12 @@ const SampleArea = () => {
     console.log("Transfer action for:", sample);
     setSelectedSampleId(sample.id);
     setShowTransferModal(true);
+  };
+  const logoHandler = (file) => {
+    setFormData((prev) => ({
+      ...prev,
+      logo: file,
+    }));
   };
 
   // Fetch samples from backend when component loads
@@ -159,15 +174,19 @@ const SampleArea = () => {
       }
 
       // Fetch own samples
-      const ownResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`);
-      const ownSamples = ownResponse.data.map(sample => ({
+      const ownResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
+      );
+      const ownSamples = ownResponse.data.map((sample) => ({
         ...sample,
         quantity: Number(sample.quantity) || 0, // Ensure it's a number
       }));
       console.log("Own samples...", ownSamples);
       // Fetch received samples
-      const receivedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`);
-      const receivedSamples = receivedResponse.data.map(sample => ({
+      const receivedResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
+      );
+      const receivedSamples = receivedResponse.data.map((sample) => ({
         ...sample,
         quantity: Number(sample.Quantity) || 0, // Ensure it's a number
       }));
@@ -175,7 +194,7 @@ const SampleArea = () => {
       // Use a Map to merge and sum quantities of duplicate samples
       const sampleMap = new Map();
 
-      [...ownSamples, ...receivedSamples].forEach(sample => {
+      [...ownSamples, ...receivedSamples].forEach((sample) => {
         const sampleId = sample.id;
 
         if (sampleMap.has(sampleId)) {
@@ -192,14 +211,14 @@ const SampleArea = () => {
       let combinedSamples = Array.from(sampleMap.values());
 
       // **Filter out samples with quantity = 0**
-      combinedSamples = combinedSamples.filter(sample => sample.quantity > 0);
+      combinedSamples = combinedSamples.filter((sample) => sample.quantity > 0);
 
       console.log("Final filtered samples:", combinedSamples);
 
       // Update state
       setSamples(combinedSamples);
+      console.log(combinedSamples);
       setFilteredSamplename(combinedSamples);
-
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
@@ -304,59 +323,48 @@ const SampleArea = () => {
     e.preventDefault();
 
     try {
-      // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      console.log("Sample added successfully:", response.data);
 
-      fetchSamples(); // This will refresh the samples list
+      console.log("Sample added successfully:", response.data);
+      fetchSamples();
 
       setSuccessMessage("Sample added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Clear the success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Clear form after submission
+      // Reset form
       setFormData({
         samplename: "",
         age: "",
         gender: "",
-        ethnicity: "",
-        samplecondition: "",
-        storagetemp: "",
-        ContainerType: "",
-        CountryOfCollection: "",
-        quantity: "",
-        QuantityUnit: "",
-        SampleTypeMatrix: "",
-        SmokingStatus: "",
-        AlcoholOrDrugAbuse: "",
-        InfectiousDiseaseTesting: "",
-        InfectiousDiseaseResult: "",
-        FreezeThawCycles: "",
-        DateOfCollection: "",
-        ConcurrentMedicalConditions: "",
-        ConcurrentMedications: "",
-        DiagnosisTestParameter: "",
-        TestResult: "",
-        TestResultUnit: "",
-        TestMethod: "",
-        TestKitManufacturer: "",
-        TestSystem: "",
-        TestSystemManufacturer: "",
-        status: "",
+        // ...other fields
         user_account_id: id,
+        logo: "",
       });
 
-      setShowAddModal(false); // Close modal after submission
+      setShowAddModal(false);
     } catch (error) {
       console.error("Error adding sample:", error);
     }
   };
+
+  function bufferToBase64(bufferObj, mimeType = "jpeg") {
+    if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
+
+    const binary = bufferObj.data
+      .map((byte) => String.fromCharCode(byte))
+      .join("");
+
+    const base64String = btoa(binary);
+    return `data:image/${mimeType};base64,${base64String}`;
+  }
 
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
@@ -486,7 +494,12 @@ const SampleArea = () => {
     setShowEditModal(true);
 
     // Combine the location parts into "room-box-freezer" format
-    const formattedLocationId = `${String(sample.room_number).padStart(2, '0')}-${String(sample.freezer_id).padStart(2, '0')}-${String(sample.box_id).padStart(2, '0')}`;
+    const formattedLocationId = `${String(sample.room_number).padStart(
+      2,
+      "0"
+    )}-${String(sample.freezer_id).padStart(2, "0")}-${String(
+      sample.box_id
+    ).padStart(2, "0")}`;
     setFormData({
       locationids: formattedLocationId,
       samplename: sample.samplename,
@@ -517,6 +530,7 @@ const SampleArea = () => {
       TestSystemManufacturer: sample.TestSystemManufacturer,
       status: sample.status,
       user_account_id: sample.user_account_id,
+      logo: sample.logo,
     });
   };
   const resetFormData = () => {
@@ -550,16 +564,21 @@ const SampleArea = () => {
       TestSystemManufacturer: "",
       status: "In Stock",
       user_account_id: id,
+      logo: "",
     });
-
-  }
+  };
   const handleUpdate = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data", // Make sure it's set to multipart/form-data
+          },
+        }
       );
       console.log("Sample updated successfully:", response.data);
 
@@ -599,6 +618,7 @@ const SampleArea = () => {
         TestSystemManufacturer: "",
         status: "In Stock",
         user_account_id: id,
+        logo: "",
       });
 
       setTimeout(() => {
@@ -635,6 +655,19 @@ const SampleArea = () => {
     showTransferModal,
     showHistoryModal,
   ]);
+  const handleLogoChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prevData) => ({
+          ...prevData,
+          logo: reader.result, // Store the image preview URL
+        }));
+      };
+      reader.readAsDataURL(file); // Convert the image file to a data URL
+    }
+  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -657,15 +690,13 @@ const SampleArea = () => {
           </button>
         </div>
 
-
         {/* Table */}
         <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto border" >
+          <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-
                     <div className="d-flex flex-column align-items-center">
                       <input
                         type="text"
@@ -679,7 +710,6 @@ const SampleArea = () => {
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
                         {label}
                       </span>
-
                     </div>
                   </th>
                 ))}
@@ -791,7 +821,6 @@ const SampleArea = () => {
                   >
                     <h5 className="modal-title">
                       {showAddModal ? "Add Sample" : "Edit Sample"}
-
                     </h5>
                     <button
                       type="button"
@@ -818,6 +847,53 @@ const SampleArea = () => {
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
+                          <div
+                            className="profile__logo d-flex justify-content-center p-2 align-items-center border border-2 border-black rounded-circle"
+                            style={{
+                              width: "150px",
+                              height: "150px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {formData.logo instanceof File ||
+                            formData.logo?.data ? (
+                              <img
+                                src={
+                                  formData.logo instanceof File
+                                    ? URL.createObjectURL(formData.logo)
+                                    : bufferToBase64(
+                                        formData.logo,
+                                        formData.logo.mimetype?.split("/")[1] ||
+                                          "jpeg"
+                                      )
+                                }
+                                alt="Sample Logo"
+                                className="w-100 h-100 rounded-circle"
+                                style={{ objectFit: "cover" }}
+                              />
+                            ) : (
+                              <i className="fas fa-vial fa-3x text-muted"></i>
+                            )}
+                          </div>
+
+                          <div className="mt-2">
+                            <label
+                              htmlFor="logo"
+                              className="btn btn-outline-success btn-sm justify-content-center"
+                            >
+                              Upload Sample Logo
+                            </label>
+                            {/* ✅ Restrict to image files */}
+                            <input
+                              name="logo"
+                              type="file"
+                              id="logo"
+                              accept="image/*"
+                              onChange={(e) => logoHandler(e.target.files[0])}
+                              className="d-none"
+                            />
+                          </div>
+
                           {showAddModal && (
                             <div className="form-group">
                               <label>Donor ID</label>
@@ -831,7 +907,9 @@ const SampleArea = () => {
                                 style={{
                                   height: "45px",
                                   fontSize: "14px",
-                                  backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
+                                  backgroundColor: formData.donorID
+                                    ? "#f0f0f0"
+                                    : "#f0f0f0",
                                   color: "black",
                                 }}
                               />
@@ -1226,7 +1304,9 @@ const SampleArea = () => {
                         {/* Column 4 */}
                         <div className="col-md-2">
                           <div className="form-group">
-                            <label>Infectious Disease Testing (HIV, HBV, HCV)</label>
+                            <label>
+                              Infectious Disease Testing (HIV, HBV, HCV)
+                            </label>
                             <input
                               type="text"
                               className="form-control"
@@ -1580,7 +1660,11 @@ const SampleArea = () => {
                     </div>
                     <div className="modal-footer d-flex justify-content-between w-100">
                       <div className="text-start text-muted fs-6">
-                        <strong>Note:</strong> <code> Location ID's = Room Number, Freezer ID and Box ID</code>
+                        <strong>Note:</strong>{" "}
+                        <code>
+                          {" "}
+                          Location ID's = Room Number, Freezer ID and Box ID
+                        </code>
                       </div>
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}

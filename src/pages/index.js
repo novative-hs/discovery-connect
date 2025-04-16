@@ -25,9 +25,9 @@ const HomeShop = () => {
       <HeroBanner />
       
       <Services/>
-
-      <BioSpecimenSection/>
       <StepFlow/>
+      <BioSpecimenSection/>
+      
       {/* <ShopCategoryArea />
       <ShopProducts /> */}
       <OfferPopularProduct />

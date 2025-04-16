@@ -76,12 +76,19 @@ const getSampleById = (req, res) => {
 
 // Controller to create a sample
 const createSample = (req, res) => {
+  
   const sampleData = req.body;
-  console.log("Controller Received data:", sampleData);
+  const file = req.file;
 
+  console.log("Controller Received fields:", sampleData);
+  console.log("Controller Received file:", file);
+
+  // Attach file buffer to the sampleData
+  sampleData.logo = file?.buffer;
   // Required fields validation
   const requiredFields = [
     'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer'
+  ,'logo'
   ];
 
   for (const field of requiredFields) {
@@ -114,7 +121,10 @@ const createSample = (req, res) => {
 const updateSample = (req, res) => {
   const { id } = req.params;
   const sampleData = req.body;
+  const file = req.file;
 
+  // Attach file buffer to the sampleData
+  sampleData.logo = file?.buffer;
   if (sampleData.DateOfCollection) {
     sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
   }

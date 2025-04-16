@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getLocalStorage } from "@utils/localstorage";
 import Pagination from "@ui/Pagination";
+import NiceSelect from "@ui/NiceSelect";
 const BioBankSampleArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -90,6 +91,7 @@ const BioBankSampleArea = () => {
     TestSystemManufacturer: "",
     status: "In Stock",
     user_account_id: id,
+    logo:""
   });
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
@@ -346,7 +348,12 @@ setFilteredSamples(combinedSamples)
       // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/postBBsample`,
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       console.log("Sample added successfully:", response.data);
 
@@ -391,6 +398,7 @@ setFilteredSamples(combinedSamples)
         TestSystemManufacturer: "",
         status: "",
         user_account_id: id,
+        logo:""
       });
 
       setShowAddModal(false); // Close modal after submission
@@ -549,6 +557,7 @@ setFilteredSamples(combinedSamples)
       TestSystemManufacturer: sample.TestSystemManufacturer,
       status: sample.status,
       user_account_id: sample.user_account_id,
+      logo:sample.logo
     });
   };
 
@@ -558,7 +567,12 @@ setFilteredSamples(combinedSamples)
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/editBBsample/${selectedSampleId}`,
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       console.log("Sample updated successfully:", response.data);
 
@@ -599,6 +613,7 @@ setFilteredSamples(combinedSamples)
         TestSystemManufacturer: "",
         status: "In Stock",
         user_account_id: id,
+        logo:""
       });
 
       setTimeout(() => {
@@ -665,9 +680,26 @@ setFilteredSamples(combinedSamples)
       TestSystemManufacturer: "",
       status: "In Stock",
       user_account_id: id,
+      logo:""
     });
   
   }
+  function bufferToBase64(bufferObj, mimeType) {
+    if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
+
+    const binary = bufferObj.data
+      .map((byte) => String.fromCharCode(byte))
+      .join("");
+
+    const base64String = btoa(binary);
+    return `data:image/${mimeType};base64,${base64String}`;
+  }
+  const logoHandler = (file) => {
+    setFormData((prev) => ({
+      ...prev,
+      logo: file,
+    }));
+  };
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -677,21 +709,33 @@ setFilteredSamples(combinedSamples)
             {successMessage}
           </div>
         )}
+         <div
+                className="text-danger fw-bold"
+                style={{ marginTop: "-40px" }}>
+                  <h6>Note: Click on Edit Icon to Add Price and Currency for Sample.</h6>
+                
+              </div>
 
         {/* Header Section with Filter and Button */}
         <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
           {/* Filter Dropdown */}
-          <div className="d-flex align-items-center">
-            <label className="fw-bold me-2">Filter: </label>
-            <select
-              className="form-select form-select-sm"
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="priceAdded">Price Added</option>
-              <option value="priceNotAdded">Price Not Added</option>
-            </select>
-          </div>
+          
+
+<div className="d-flex align-items-center gap-2">
+  <label className="fw-bold">Filter:</label>
+
+  <NiceSelect
+    options={[
+      { value: "", text: "All" },
+      { value: "priceAdded", text: "Price Added" },
+      { value: "priceNotAdded", text: "Price Not Added" },
+    ]}
+    defaultCurrent={0}
+    onChange={(item) => setFilter(item.value)}
+    name="filter-by-price"
+  />
+</div>
+
 
           {/* Add Samples Button */}
           <div className="d-flex justify-content-end align-items-center gap-2 w-100">
@@ -861,6 +905,53 @@ setFilteredSamples(combinedSamples)
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
+                        <div
+                            className="profile__logo d-flex justify-content-center p-2 align-items-center border border-2 border-black rounded-circle"
+                            style={{
+                              width: "150px",
+                              height: "150px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {formData.logo instanceof File ||
+                            formData.logo?.data ? (
+                              <img
+  src={
+    formData.logo instanceof File
+      ? URL.createObjectURL(formData.logo)
+      : bufferToBase64(
+          formData.logo,
+          formData.logo?.mimetype?.split("/")[1] || "jpeg"
+        )
+  }
+  alt="Sample Logo"
+  className="w-100 h-100 rounded-circle"
+  style={{ objectFit: "cover" }}
+/>
+
+                            ) : (
+                              <i className="fas fa-vial fa-3x text-muted"></i>
+                            )}
+                          </div>
+
+                          <div className="mt-2">
+                            <label
+                              htmlFor="logo"
+                              className="btn btn-outline-success btn-sm justify-content-center"
+                            >
+                              Upload Sample Logo
+                            </label>
+                            {/* ✅ Restrict to image files */}
+                            <input
+                              name="logo"
+                              type="file"
+                              id="logo"
+                              accept="image/*"
+                              onChange={(e) => logoHandler(e.target.files[0])}
+                              className="d-none"
+                            />
+                          </div>
+                          {showAddModal && (
                           <div className="form-group">
                             <label>Donor ID</label>
                             <input
@@ -880,6 +971,7 @@ setFilteredSamples(combinedSamples)
                               }}
                             />
                           </div>
+                          )}
                           <div className="form-group">
                             <label>Sample Name</label>
                             <input

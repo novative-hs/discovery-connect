@@ -63,11 +63,7 @@ const DashboardArea = () => {
           <div className="profile__inner p-relative">
             <ProfileShapes />
             <div className="row">
-              <div
-                className="text-danger fw-bold"
-                style={{ marginTop: "-40px",marginLeft:"10px" }}>
-                Note: Click on Edit Icon to Add Price and Currency for Sample.
-              </div>
+             
               <div className="col-xxl-8 col-lg-8" style={{ width: '100%' }}>
                 <div className="profile__tab-content">
                   {/* Dynamically render content based on activeTab */}

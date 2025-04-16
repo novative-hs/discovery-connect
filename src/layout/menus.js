@@ -13,7 +13,7 @@ const Menus = ({ currentRoute, isHovered }) => {
     transition: "all 0.3s ease",
     display: "inline-block",
     textDecoration: "none",
-    color: isHovered ? "black" : "white",  // Change text color based on hover
+    
   };
 
   const activeLinkStyle = {
@@ -132,7 +132,6 @@ const Menus = ({ currentRoute, isHovered }) => {
                         style={{
                           fontSize: "0.85rem",
                           textDecoration: "none",
-                          color: isHovered ? "black" : "white", // Add hover color change for submenus
                         }}
                       >
                         {sub.title}
