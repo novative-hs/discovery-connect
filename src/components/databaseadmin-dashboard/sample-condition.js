@@ -391,7 +391,7 @@ const SampleConditionArea = () => {
                             <td>
                             <div className="d-flex justify-content-center gap-3">
                                 <button
-                                  className="btn btn-success btn-sm py-0 px-1"
+                                  className="btn btn-success btn-sm"
                                   onClick={() =>
                                     handleEditClick({
                                       id,
@@ -406,7 +406,7 @@ const SampleConditionArea = () => {
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
-                                  className="btn btn-danger btn-sm py-0 px-1"
+                                  className="btn btn-danger btn-sm"
                                   onClick={() => {
                                     setSelectedSampleConditionnameId(id);
                                     setShowDeleteModal(true);
@@ -416,7 +416,7 @@ const SampleConditionArea = () => {
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
                                 <button
-                                  className="btn btn-info btn-sm py-0 px-1"
+                                  className="btn btn-info btn-sm"
                                   onClick={() =>
                                     handleShowHistory("samplecondition", id)
                                   }

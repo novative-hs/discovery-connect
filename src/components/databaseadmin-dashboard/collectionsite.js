@@ -227,7 +227,7 @@ const CollectionsiteArea = () => {
                     {successMessage}
                   </div>
                 )}
-
+<h5 className="m-0 fw-bold ">Collection Site List</h5>
                 {/* Status Filter */}
                 <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
                   <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
@@ -304,9 +304,9 @@ const CollectionsiteArea = () => {
                           {/* <td>{collectionsite.created_at}</td> */}
                           <td>{collectionsite.status}</td>
                           <td>
-                            <div className="d-flex justify-content-around gap-2">
+                            <div className="d-flex justify-content-center gap-2">
                               <button
-                                className="btn btn-success btn-sm py-0 px-1"
+                                className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(collectionsite)}
                                 title="Edit collectionsite"
                               >
@@ -314,7 +314,7 @@ const CollectionsiteArea = () => {
                               </button>
 
                               <button
-                                className="btn btn-danger btn-sm py-0 px-1"
+                                className="btn btn-danger btn-sm"
                                 onClick={() => {
                                   setSelectedCollectionsiteId(
                                     collectionsite.id

@@ -23,7 +23,7 @@ const committeesampleapprovalModel=require("../models/committeesampleapproval")
 // Function to initialize all tables
 function Database() {
 
-  paymentModel.createPaymentTable();
+  
   cityModel.createCityTable();
   historyModel.RegistrationAdmin_History();
   countryModel.createCountryTable();
@@ -37,9 +37,9 @@ function Database() {
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
-  wishlistModel.createWishlistTable();
-  
+  //wishlistModel.createWishlistTable();
   cartModel.createCartTable();
+  paymentModel.createPaymentTable();
   sample_approvalModel.createSampleApprovalTable();
   sample_approvalModel.createSampleDocumentTable();
   committeesampleapprovalModel.createcommitteesampleapprovalTable();
@@ -55,16 +55,10 @@ function Database() {
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
-  historyModel.RegistrationAdmin_History();
+ historyModel.RegistrationAdmin_History();
   historyModel.create_historyTable();
-
   historyModel.create_samplehistoryTable();
-  newtablefieldModel.createOrUpdateTables();
-  //newtablefieldModel.updateAccountType();
-
-
   contactusModel.createContactUsTable();
-
-  // znewtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 }
 Database();

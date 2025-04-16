@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 // internal
 import SEO from "@components/seo";
-import Header from "@layout/dashboardheader";
+import Header from "@layout/header"; // <-- make sure both headers are imported
+import DashbaordHeader from "@layout/dashboardheader";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import Wrapper from "@layout/wrapper";
 import CouponArea from "@components/checkout/coupon-area";
@@ -10,31 +11,48 @@ import CheckoutArea from "@components/checkout/checkout-area";
 import Footer from "@layout/footer";
 // import ShopCta from "@components/cta";
 import useCheckoutSubmit from "@hooks/use-checkout-submit";
-import { getLocalStorage } from "@utils/localstorage";
-import OrderSummary from "@components/order/order-summary";
 
 export default function Checkout() {
   const [userId, setUserId] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const router = useRouter();
+
   useEffect(() => {
-    // Access localStorage safely on the client side
-    const id = localStorage.getItem("userID");
-    if (!id) {
-      // Redirect to login if user is not authenticated
-      router.push("/login");
-    } else {
-      setUserId(id);
-      console.log("Researcher ID on checkout page is:", id);
+    if (typeof window !== "undefined") {
+      const id = localStorage.getItem("userID");
+      if (!id) {
+        router.push("/login");
+      } else {
+        setUserId(id);
+        console.log("Researcher ID on checkout page is:", id);
+      }
+      setLoadingUser(false);
     }
   }, [router]);
+
   const checkout_data = useCheckoutSubmit();
+
+  if (loadingUser) return <div>Loading...</div>;
+
   return (
     <Wrapper>
       <SEO pageTitle={"Checkout"} />
+            {userId ? (
+        <>
+          <CartBreadcrumb title="Checkout" subtitle="Checkout" />
+          <CheckoutArea {...checkout_data} />
+        </>
+      ) : (
+        <>
+          <Header style_2={true} />
+          <CartBreadcrumb title="Checkout" subtitle="Checkout" />
+          <CheckoutArea {...checkout_data} />
+          <Footer />
+        </>
+      )}  
+      {/* {userId ? <DashbaordHeader style_2={true} /> : <Header style_2={true} />}
       <CartBreadcrumb title="Checkout" subtitle="Checkout" />
-      {/* <CouponArea {...checkout_data} /> */}
-      <CheckoutArea {...checkout_data} />
-      {/* <ShopCta /> */}
+      <CheckoutArea {...checkout_data} /> */}
       <Footer />
     </Wrapper>
   );

@@ -277,11 +277,12 @@ const SampleArea = () => {
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
                         <td
-                          key={index}
-                          className={key === "price" ? "text-end" : "text-center text-truncate"}
-                          style={{ maxWidth: "150px" }}
-                        >
-                          {sample[key] || "N/A"}</td>
+                        key={index}
+                        className={key === "price" ? "text-end" : "text-center text-truncate"}
+                        style={{ maxWidth: "150px" }}
+                      >
+                        {key === "price" ? sample.price?.toLocaleString() : sample[key]}
+                      </td>
                       ))}
                       <td>
                         <div className="d-flex justify-content-around gap-3">

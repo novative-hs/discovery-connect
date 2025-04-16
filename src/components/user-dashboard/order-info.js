@@ -7,6 +7,7 @@ const OrderInfo = ({ setActiveTab }) => {
   const [userCount, setUserCount] = useState(null);
   const [contactusCount, setContactusCount] = useState(null);
   const router = useRouter();
+
   useEffect(() => {
     fetchUserCount();
     fetchContactusCount();
@@ -23,14 +24,6 @@ const OrderInfo = ({ setActiveTab }) => {
     }
   };
 
-  const handleTabClick = (tab) => {
-    if (tab === "Booksamples") {
-      router.push("/shop"); // ⬅️ Navigate to shop page
-    } else if (setActiveTab) {
-      setActiveTab(tab); // ⬅️ For dashboard tabs
-    }
-  };
-
   const fetchContactusCount = async () => {
     try {
       const response = await axios.get(
@@ -41,35 +34,37 @@ const OrderInfo = ({ setActiveTab }) => {
       console.error("Error fetching contact us count:", error);
     }
   };
-
+  const handleTabClick = (tab) => {
+    if (setActiveTab) {
+      setActiveTab(tab); // Just switch the tab, no navigation needed!
+    }
+  };
   if (!userCount) {
     return <div>Loading...</div>;
   }
 
   const stats = [
-    // { label: "Pending Orders", count: userCount.pendingOrders, icon: <Processing />, tab: "pending" },
-    // { label: "Processing Orders", count: userCount.processingOrders, icon: <Truck />, tab: "processing" },
-    // { label: "Delivered Orders", icon: <Delivery />, tab: "delivered" },
     { label: "Book Samples", icon: <Cart />, tab: "Booksamples" },
     { label: "Sample List", icon: <i className="fa-solid fa-envelope fs-4 text-white" />, tab: "samples" },
-    { label: "My Orders",  icon: <Box />, tab: "my-samples" },
-
+    { label: "My Orders", icon: <Box />, tab: "my-samples" },
   ];
-
 
   return (
     <div className="container">
-        <div className="profile__main-top pb-80">
+      <div className="profile__main-top pb-80">
         <div className="row align-items-center">
           <div className="col-md-6">
             <div className="profile__main-inner d-flex flex-wrap align-items-center">
               <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">Welcome To Researchers Dashboard</h4>
+                <h4 className="profile__main-title text-capitalize">
+                  Welcome To Researchers Dashboard
+                </h4>
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <div className="row gx-3">
         {stats.map((stat, index) => (
           <div key={index} className="col-md-3 col-sm-6 mb-4">
@@ -85,7 +80,9 @@ const OrderInfo = ({ setActiveTab }) => {
             >
               <div className="profile__main-info-icon mb-2">
                 <span className="total-order d-flex justify-content-center align-items-center">
-                  <span className="profile-icon-count profile-download fs-4 me-2">{stat.count}</span>
+                  <span className="profile-icon-count profile-download fs-4 me-2">
+                    {stat.count}
+                  </span>
                   {stat.icon}
                 </span>
               </div>

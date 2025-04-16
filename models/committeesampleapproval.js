@@ -1,5 +1,5 @@
 const mysqlConnection = require("../config/db");
-
+const { sendEmail } = require("../config/email");
 const createcommitteesampleapprovalTable = () => {
   const committeesampleapprovalableQuery = `
  CREATE TABLE IF NOT EXISTS committeesampleapproval (
@@ -7,7 +7,7 @@ const createcommitteesampleapprovalTable = () => {
   cart_id INT NOT NULL,  
   sender_id INT NOT NULL,  -- Registration admin
   committee_member_id INT NOT NULL, -- Committee member
-  committee_status ENUM('Pending', 'Approved', 'Refused') NOT NULL DEFAULT 'Pending',
+  committee_status ENUM('Review', 'Approved', 'Refused') NOT NULL DEFAULT 'Review',
   comments TEXT NULL, 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
@@ -30,11 +30,11 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 
   // Determine which committee members to fetch, excluding inactive members
   if (committeeType === "scientific") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Scientific' AND status != 'inactive'";
+      getCommitteeMembersQuery = "SELECT user_account_id, status FROM committee_member WHERE committeetype = 'Scientific'";
   } else if (committeeType === "ethical") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype = 'Ethical' AND status != 'inactive'";
+      getCommitteeMembersQuery = "SELECT user_account_id, status FROM committee_member WHERE committeetype = 'Ethical'";
   } else if (committeeType === "both") {
-      getCommitteeMembersQuery = "SELECT user_account_id FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical') AND status != 'inactive'";
+      getCommitteeMembersQuery = "SELECT user_account_id, status FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical')";
   } else {
       return callback(new Error("Invalid committee type"), null);
   }
@@ -47,18 +47,40 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
       }
 
       if (committeeMembers.length === 0) {
-          return callback(new Error("No active committee members found for the given type"), null);
+          // No members found for the given committee type
+          if (committeeType === "scientific") {
+              return callback(null, { message: "No scientific committee members found" });
+          } else if (committeeType === "ethical") {
+              return callback(null, { message: "No ethical committee members found" });
+          } else if (committeeType === "both") {
+              return callback(null, { message: "No committee members found for either type" });
+          }
       }
 
-      // Insert into `committeesampleapproval` for each committee member
+      // Filter out inactive members
+      const activeMembers = committeeMembers.filter(member => member.status !== 'inactive');
+
+      if (activeMembers.length === 0) {
+          // All members are inactive for the given type
+          if (committeeType === "scientific") {
+              return callback(null, { message: "All scientific committee members are inactive" });
+          } else if (committeeType === "ethical") {
+              return callback(null, { message: "All ethical committee members are inactive" });
+          } else if (committeeType === "both") {
+              return callback(null, { message: "All committee members are inactive" });
+          }
+      }
+
+      // Insert into `committeesampleapproval` for each active committee member
       const insertQuery = `
           INSERT INTO committeesampleapproval (cart_id, sender_id, committee_member_id, committee_status)
           VALUES ?
       `;
 
-      // Use the correct property: `user_account_id`
-      const values = committeeMembers.map(member => [cartId, senderId, member.user_account_id, "Pending"]);
+      // Prepare the values for insertion (only for active members)
+      const values = activeMembers.map(member => [cartId, senderId, member.user_account_id, "Review"]);
 
+      // Insert active committee members into the database
       mysqlConnection.query(insertQuery, [values], (insertErr, result) => {
           if (insertErr) {
               console.error("Error inserting committee approval records:", insertErr);
@@ -66,12 +88,28 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
           }
 
           console.log(`Inserted ${result.affectedRows} records into committeesampleapproval.`);
-          callback(null, result);
+
+          // Update cart order status to "UnderReview"
+          const updateCartStatusQuery = `
+              UPDATE cart
+              SET order_status = 'UnderReview'
+              WHERE id = ?
+          `;
+
+          mysqlConnection.query(updateCartStatusQuery, [cartId], (updateErr, updateResult) => {
+              if (updateErr) {
+                  console.error("Error updating cart status:", updateErr);
+                  return callback(updateErr, null);
+              }
+
+              console.log("Cart order status updated to 'UnderReview'");
+              callback(null, result);
+          });
       });
   });
 };
 
-const updateCommitteeStatus = (id, committee_member_id,committee_status, comments, callback) => {
+const updateCommitteeStatus = (id, committee_member_id, committee_status, comments, callback) => {
   console.log("Received Body", committee_status);
 
   const sqlQuery = `
@@ -80,16 +118,47 @@ const updateCommitteeStatus = (id, committee_member_id,committee_status, comment
     WHERE committee_member_id = ? AND cart_id = ?
   `;
 
-  mysqlConnection.query(sqlQuery, [committee_status, comments,committee_member_id, id], (err, results) => {
+  mysqlConnection.query(sqlQuery, [committee_status, comments, committee_member_id, id], (err, results) => {
     if (err) {
       console.error("Error updating committee status:", err);
       return callback(err, null);
     }
 
     console.log("Committee Status updated successfully!");
-    callback(null, { message: "Committee status updated successfully!" });
+
+    // ✅ Fetch user email after status update
+    const getEmailQuery = `
+      SELECT ua.email 
+      FROM user_account ua
+      JOIN cart c ON ua.id = c.user_id
+      WHERE c.id = ?
+    `;
+
+    mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
+      if (emailErr) {
+        console.error("Error fetching user email:", emailErr);
+        return callback(emailErr, null);
+      }
+
+      if (emailResults.length > 0) {
+        const userEmail = emailResults[0].email;
+        const subject = `Committee Status Update`;
+        const text = `Dear User, your sample request for cart ID ${id} has been updated by a committee member.\n\nStatus: ${committee_status}\nComments: ${comments}\n\nPlease check your dashboard for details.`;
+
+        // ✅ Send email notification
+        sendEmail(userEmail, subject, text)
+          .then(() => console.log("Email notification sent successfully."))
+          .catch((emailError) => console.error("Failed to send email:", emailError));
+      } else {
+        console.log("No email found for user associated with this cart.");
+      }
+
+      // ✅ Callback after email operation
+      callback(null, { message: "Committee status updated successfully!" });
+    });
   });
 };
+
 
   
 module.exports = {

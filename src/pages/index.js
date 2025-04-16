@@ -10,8 +10,9 @@ import OfferPopularProduct from "@components/offer-product";
 // import ShopBanner from "@components/shop-banner";
 // import ShopFeature from "@components/shop-feature";
 // import ShopCta from "@components/cta";
-import Services from "@components/offer-product/services";
 import Footer from "@layout/footer";
+import BioSpecimenSection from "@components/offer-product/biospecimensection";
+import Services from "@components/offer-product/services";
 
 
 const HomeShop = () => {
@@ -20,13 +21,9 @@ const HomeShop = () => {
       <SEO pageTitle={"Home Shop"} />
       <Header />
       <HeroBanner />
-      <Services />
-      {/* <ShopCategoryArea />
-      <ShopProducts /> */}
-      <OfferPopularProduct />
-      {/* <ShopBanner /> */}
-      {/* <ShopFeature /> */}
-      {/* <ShopCta /> */}
+      <Services/>
+      <BioSpecimenSection/>
+      <OfferPopularProduct />      
       <Footer />
     </Wrapper>
   );

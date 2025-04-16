@@ -209,7 +209,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                   {successMessage}
                 </div>
               )}
-
+<h5 className="m-0 fw-bold ">Organization List</h5>
               {/* Status Filter */}
               <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
                 <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
@@ -284,34 +284,35 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                           <td>{organization.phoneNumber}</td>
                           {/* <td>{organization.created_at}</td> */}
                           <td>{organization.status}</td>
+                          
                           <td>
-                          <div className="d-flex justify-content-around gap-2">
-                              <button
-                                className="btn btn-success btn-sm py-0 px-1"
-                                onClick={() => handleEditClick(organization)}
-                                title="Edit Organization"
-                              >
-                                <FontAwesomeIcon icon={faEdit} size="sm" />
-                              </button>{" "}
-                              <button
-                                className="btn btn-danger btn-sm py-0 px-1"
-                                onClick={() => {
-                                  setSelectedOrganizationId(organization.id);
-                                  setShowDeleteModal(true);
-                                }}
-                                title="Delete Organization"
-                              >
-                                <FontAwesomeIcon icon={faTrash} size="sm" />
-                              </button>
-                              <button
-                                className="btn btn-info btn-sm py-0 px-1"
-                                onClick={() => handleShowHistory("organization", organization.id)}
-                                title="History"
-                              >
-                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                              </button>
-                            </div>
-                          </td>
+                <div className="d-flex justify-content-center gap-2">
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={() => handleEditClick(organization)}
+                    title="Edit"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => {
+                      setSelectedOrganizationId(organization.id);
+                      setShowDeleteModal(true);
+                    }}
+                    title="Delete"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                  <button
+                    className="btn btn-info btn-sm"
+                    onClick={() => handleShowHistory("organization", organization.id)}
+                    title="History"
+                  >
+                    <FontAwesomeIcon icon={faHistory} />
+                  </button>
+                </div>
+              </td>
                         </tr>
                       ))
                     ) : (

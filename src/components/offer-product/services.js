@@ -1,80 +1,92 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import bg from "@assets/img/contact/contact-bg.png";
+const cards = [
+  {
+    icon: "fa-flask",
+    title: "Find a Sample",
+    text: "Browse a vast collection of high-quality research samples.",
+    link: "/shop",
+    button: "Search Sample",
+    delay: "100"
+  },
+  {
+    icon: "fa-box",
+    title: "Order a Sample",
+    text: "Easily request and receive samples tailored to your research needs.",
+    link: "/cart",
+    button: "Order Now",
+    delay: "200"
+  },
+  {
+    icon: "fa-flask",
+    title: "Add a Sample",
+    text: "Register your collection site to add and manage samples.",
+    link: "/register",
+    button: "Click here to Register",
+    delay: "300"
+  },
+];
 
 const Services = () => {
-  const servicesRef = useRef([]);
-  const [visible, setVisible] = useState([false, false, false]);
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const index = servicesRef.current.indexOf(entry.target);
-          if (entry.isIntersecting && index !== -1) {
-            setVisible((prev) => {
-              const updated = [...prev];
-              updated[index] = true;
-              return updated;
-            });
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    servicesRef.current.forEach((el) => {
-      if (el) observer.observe(el);
+    AOS.init({
+      duration: 800,
+      once: true,
     });
-
-    return () => {
-      servicesRef.current.forEach((el) => {
-        if (el) observer.unobserve(el);
-      });
-    };
   }, []);
 
   return (
-    <div
-      className="d-flex flex-row justify-content-center text-center gap-6 p-6 bg-gradient-to-r from-indigo-900 to-blue-900 text-white w-full"
-    >
-      {[
-        {
-          title: "Find a Sample",
-          description: "Browse a vast collection of high-quality research samples.",
-          icon: "fa fa-flask",
-          bg: "bg-info",
-        },
-        {
-          title: "Order a Sample",
-          description: "Easily request and receive samples tailored to your research needs.",
-          icon: "fa fa-box",
-          bg: "bg-success",
-        },
-        {
-          title: "Verify an Order",
-          description: "Check and approve orders with detailed tracking and documentation.",
-          icon: "fa fa-file-alt",
-          bg: "bg-secondary",
-        },
-      ].map((service, index) => (
-        <div
-          key={index}
-          ref={(el) => (servicesRef.current[index] = el)}
-          className={`flex flex-col items-center p-4 ${service.bg} rounded-2xl shadow-lg w-100 md:w-1/3 min-h-[250px]`}
-          style={{
-            transition: "transform 0.8s ease-out, opacity 0.8s ease-out",
-            transform: visible[index] ? "translateX(0)" : "translateX(-200px)",
-            opacity: visible[index] ? 1 : 0,
-          }}
-        >
-          <div className="text-5xl mb-4">
-            <i className={`${service.icon} text-white fs-1`}></i>
+    <div className="container-fluid py-5 p-4" style={{ 
+        
+             // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
+              backgroundImage: `url(${bg.src})`
+            
+      // background: "linear-gradient(135deg, #f8f9fa,rgb(212, 229, 246))" 
+      }}>
+      <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
+        Our Services
+      </h2>
+      <div className="row g-5 text-center">
+        {cards.map((card, index) => (
+          <div className="col-md-4" key={index} data-aos="fade-up" data-aos-delay={card.delay}>
+            <div
+  className="card border-0 shadow-sm h-100 rounded-4"
+  style={{
+    transition: "transform 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "scale(1.05)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "scale(1)";
+  }}
+>
+
+              <div className="card-body p-4 d-flex flex-column justify-content-between">
+                <div>
+                  <div className="mb-3">
+                    <i className={`fa ${card.icon} fa-2x`} style={{ color: "#003366" }} />
+                  </div>
+                  <h4 className="fw-bold text-dark">{card.title}</h4>
+                  <p className="text-secondary">{card.text}</p>
+                </div>
+                <a
+                  href={card.link}
+                  className="btn btn-primary mt-3 px-4 py-2"
+                  style={{ backgroundColor: '#003366', border: 'none' }}
+                >
+                  {card.button}
+                </a>
+              </div>
+            </div>
           </div>
-          <h3 className="text-xl font-semibold fs-2">{service.title}</h3>
-          <p className="mt-2 text-white fs-6">{service.description}</p>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
+
 
 export default Services;

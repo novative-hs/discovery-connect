@@ -145,11 +145,6 @@ const tablesAndColumns = [
     table: "user_account",
     columnsToAdd: [
       {
-        column: "accountType",
-        type: `ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember')`,
-        nullable: false,
-      },
-      {
         column: "OTP",
         type: "VARCHAR(4)",
         nullable: true,
@@ -157,11 +152,11 @@ const tablesAndColumns = [
     ],
   },
   {
-    "table": "cart",
-    "columnsToAdd": [
+    table: "cart",
+    columnsToAdd: [
       {
-        "column": "order_status",
-        "type": "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'"
+        column: "order_status",
+        type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
       },
       {
         column: "payment_id",
@@ -169,12 +164,19 @@ const tablesAndColumns = [
         nullable: true, // Change to true
         references: { table: "payment", column: "id" },
       },
-
     ],
-    "columnsToDelete": ["payment_status","payment_method"]
+    columnsToDelete: ["payment_status", "payment_method"],
   },
-  
 ];
+const executeSequentially = async (tasks) => {
+  for (let task of tasks) {
+    try {
+      await task();
+    } catch (error) {
+      console.error("Error executing task:", error);
+    }
+  }
+};
 
 // Function to check if column exists and add it if not
 const ensureColumnsExist = (table, columns) => {
@@ -298,30 +300,78 @@ const deleteColumns = (table, columns) => {
     });
   });
 };
-const updateEnumColumn = (table, column, enumValues) => {
+const updateEnumColumn = (table, column, enumValues, retries = 3) => {
+  const enumList = enumValues.map((value) => `'${value}'`).join(", ");
   const alterEnumQuery = `
     ALTER TABLE ${table} 
-    MODIFY COLUMN ${column} ENUM(${enumValues
-    .map((value) => `'${value}'`)
-    .join(", ")}) NOT NULL
+    MODIFY COLUMN ${column} ENUM(${enumList}) NOT NULL DEFAULT '${enumValues[0]}'
   `;
 
-  mysqlConnection.query(alterEnumQuery, (err) => {
-    if (err) {
-      console.error(
-        `Error updating ENUM values for ${column} in ${table}:`,
-        err
-      );
-    } else {
-      console.log(
-        `Updated ENUM values for ${column} in ${table} successfully.`
-      );
+  const attemptQuery = (retriesRemaining) => {
+    mysqlConnection.query(alterEnumQuery, (err) => {
+      if (err) {
+        if (err.code === 'ER_LOCK_DEADLOCK' && retriesRemaining > 0) {
+          console.log(`Deadlock detected, retrying... (${retriesRemaining} attempts left)`);
+          setTimeout(() => attemptQuery(retriesRemaining - 1), 1000); // Retry after 1 second
+        } else {
+          console.error(`Error updating ENUM values for ${column} in ${table}:`, err);
+        }
+      } else {
+        console.log(`Updated ENUM values for ${column} in ${table} successfully.`);
+      }
+    });
+  };
+
+  attemptQuery(retries);
+};
+
+const checkIfExists = (tableName, email) => {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT * FROM ${tableName} WHERE email = ?`;
+    mysqlConnection.query(query, [email], (err, results) => {
+      if (err) {
+        reject('Error checking record: ' + err);
+      } else {
+        resolve(results.length > 0); // true if exists
+      }
+    });
+  });
+};
+
+const insertRecord = (tableName, record) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log(`Checking if record exists for: ${record.email}`);
+      const exists = await checkIfExists(tableName, record.email);
+      if (exists) {
+        resolve(`Record already exists for email: ${record.email}`);
+        return;
+      }
+
+      console.log(`Inserting record for: ${record.email}`);
+      const query = `
+        INSERT INTO ${tableName} (email, password, accountType)
+        VALUES (?, ?, ?)
+      `;
+      const values = [record.email, record.password, record.accountType];
+
+      mysqlConnection.query(query, values, (err, result) => {
+        if (err) {
+          console.error('Insert error:', err);
+          reject('Error inserting record: ' + err);
+        } else {
+          resolve(`Record inserted: ${result.insertId}`);
+        }
+      });
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      reject(err);
     }
   });
 };
 
 // Function to iterate through all tables and ensure columns exist or delete columns
-const createOrUpdateTables = () => {
+const createOrUpdateTables = async () => {
   tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
     // Ensure columns exist for each table
     ensureColumnsExist(table, columnsToAdd);
@@ -331,15 +381,82 @@ const createOrUpdateTables = () => {
       deleteColumns(table, columnsToDelete);
     }
   });
-  updateEnumColumn("user_account", "accountType", [
-    "Researcher",
-    "Organization",
-    "CollectionSites",
-    "DatabaseAdmin",
-    "RegistrationAdmin",
-    "biobank",
-    "Committeemember",
+  await executeSequentially([
+    () =>
+      ensureColumnsExist("user_account", [
+        { column: "OTP", type: "VARCHAR(4)", nullable: true },
+      ]),
+    () =>
+      updateEnumColumn("user_account", "accountType", [
+        "Researcher",
+        "Organization",
+        "CollectionSites",
+        "DatabaseAdmin",
+        "RegistrationAdmin",
+        "biobank",
+        "Committeemember",
+        "Order_packager"
+      ]),
+    () =>
+      updateEnumColumn("cart", "order_status", [
+        "Pending",
+        "Accepted",
+        "UnderReview",
+        "Rejected",
+        "Shipping",
+        "Dispatched",
+        "Completed",
+      ]),
+    () =>
+      updateEnumColumn("committeesampleapproval", "committee_status", [
+        "Review",
+        "Approved",
+        "Refused",
+      ]),
   ]);
+  const records = [
+    {
+      email: 'databaseadmin123@gmail.com',
+      password: 'databaseadmin123@',
+      accountType: 'DatabaseAdmin'
+    },
+    {
+      email: 'registrationadmin123@gmail.com',
+      password: 'registrationadmin123@',
+      accountType: 'RegistrationAdmin'
+    },
+    {
+      email: 'biobank123@gmail.com',
+      password: 'biobank123@',
+      accountType: 'biobank'
+    },
+    {
+      email: 'orderpackager123@gmail.com',
+      password: 'orderpackager123@',
+      accountType: 'Order_packager'
+    },
+    {
+      email: 'orderpackager13@gmail.com',
+      password: 'orderpackager13@',
+      accountType: 'Order_packager'
+    },
+    
+  ];
+  
+  const insertAllRecords = async () => {
+    for (let record of records) {
+      try {
+        const message = await insertRecord("user_account", record);
+        console.log(message);
+      } catch (error) {
+        console.error('Error processing record:', record.email, error);
+      }
+    }
+  };
+  
+  insertAllRecords()
+  
+
 };
 
 const updateAccountType = () => {

@@ -6,7 +6,7 @@ import {
   faTrash,
   faQuestionCircle,
   faPlus,
-  faHistory
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
@@ -23,7 +23,8 @@ const QuantityUnitArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedquantityunitnameId, setSelectedquantityunitnameId] = useState(null); // Store ID of City to delete
+  const [selectedquantityunitnameId, setSelectedquantityunitnameId] =
+    useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
@@ -45,65 +46,72 @@ const QuantityUnitArea = () => {
   }, []);
   const fetchQuantityunitname = async () => {
     try {
-      const response = await axios.get(`${url}/samplefields/get-samplefields/quantityunit`);
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/quantityunit`
+      );
       setFilteredQuantityunitname(response.data); // Initialize filtered list
       setquantityunitname(response.data); // Store fetched City in state
     } catch (error) {
       console.error("Error fetching Quantity Unit:", error);
     }
   };
- useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredQuantityunitname.length / itemsPerPage));
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredQuantityunitname.length / itemsPerPage)
+    );
     setTotalPages(pages);
-    
+
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
   }, [filteredQuantityunitname]);
-  
- 
-   const currentData = filteredQuantityunitname.slice(
-     currentPage * itemsPerPage,
-     (currentPage + 1) * itemsPerPage
-   );
- 
-   const handlePageChange = (event) => {
-     setCurrentPage(event.selected);
-   };
- 
-   const handleFilterChange = (field, value) => {
-     let filtered = [];
- 
-     if (value.trim() === "") {
-       filtered = quantityunitname; // Show all if filter is empty
-     } else {
-       filtered = quantityunitname.filter((quantityunit) =>
-        quantityunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
-       );
-     }
- 
-     setFilteredQuantityunitname(filtered);
-     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-     setCurrentPage(0); // Reset to first page after filtering
-   };
- 
-   const fetchHistory = async (filterType, id) => {
-     try {
-       const response = await fetch(
-         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-       );
-       const data = await response.json();
-       setHistoryData(data);
-     } catch (error) {
-       console.error("Error fetching history:", error);
-     }
-   };
- 
-   // Call this function when opening the modal
-   const handleShowHistory = (filterType, id) => {
-     fetchHistory(filterType, id);
-     setShowHistoryModal(true);
-   };
+
+  const currentData = filteredQuantityunitname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
+
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = quantityunitname; // Show all if filter is empty
+    } else {
+      filtered = quantityunitname.filter((quantityunit) =>
+        quantityunit[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
+      );
+    }
+
+    setFilteredQuantityunitname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
+  };
+
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -128,7 +136,7 @@ const QuantityUnitArea = () => {
         setSuccessMessage("");
       }, 3000);
       fetchQuantityunitname();
-      resetFormData()
+      resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding quantityunit:", error);
@@ -153,7 +161,7 @@ const QuantityUnitArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-    fetchQuantityunitname();
+      fetchQuantityunitname();
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedquantityunitnameId(null);
@@ -166,7 +174,7 @@ const QuantityUnitArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal|| showHistoryModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -175,7 +183,7 @@ const QuantityUnitArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (quantityunitname) => {
     console.log("data in case of update is", quantityunitname);
@@ -205,7 +213,7 @@ const QuantityUnitArea = () => {
 
       setShowEditModal(false);
       setSuccessMessage("Quantity unit updated successfully.");
-resetFormData()
+      resetFormData();
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -233,7 +241,7 @@ resetFormData()
     const file = e.target.files[0];
     if (!file) return;
     console.log("File selected:", file); // Debugging
-  
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       const binaryStr = event.target.result;
@@ -241,32 +249,31 @@ resetFormData()
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-  
+
       // Add 'added_by' field (ensure 'id' is defined in the state)
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
         added_by: id, // Ensure 'id' is defined in the component
       }));
-  
+
       console.log("Data with added_by", dataWithAddedBy);
-  
+
       try {
         // POST request inside the same function
         const response = await axios.post(
           `${url}/samplefields/post-samplefields/quantityunit`,
-          {bulkData: dataWithAddedBy},
+          { bulkData: dataWithAddedBy }
         );
         console.log("Quantity unit added successfully:", response.data);
-  
+
         fetchQuantityunitname();
       } catch (error) {
         console.error("Error adding Quantity unit:", error);
       }
     };
-  
+
     reader.readAsBinaryString(file);
   };
-  
 
   const resetFormData = () => {
     setFormData({
@@ -277,432 +284,424 @@ resetFormData()
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
-    <div className="container">
-      <div className="row justify-content-center">
-      
-              {/* Button Container */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
-
-                {/* Button Container */}
-                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Ethnicity Button */}
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add Quantity Unit
-                  </button>
-
-                  {/* Upload Button (Styled as Label for Hidden Input) */}
-                  <label className="btn btn-secondary mb-2">
-                    Upload Quantity Unit List
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      style={{ display: "none" }}
-                      onChange={(e) => {
-                        console.log("File input change triggered"); // Add this log to see if onChange is called
-                        handleFileUpload(e);
-                      }}
-                    />
-                  </label>
-                </div>
+      <div className="container">
+        <div className="row justify-content-center">
+          {/* Button Container */}
+          <div className="d-flex flex-column w-100">
+            {/* Success Message */}
+            {successMessage && (
+              <div
+                className="alert alert-success w-100 text-start mb-2"
+                role="alert"
+              >
+                {successMessage}
               </div>
+            )}
 
-              {/* Table with responsive scroll */}
-              <div className="table-responsive w-100">
+            {/* Button Container */}
+            <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+              {/* Add Ethnicity Button */}
+              <button
+                className="btn btn-primary mb-2"
+                onClick={() => setShowAddModal(true)}
+              >
+                Add Quantity Unit
+              </button>
+
+              {/* Upload Button (Styled as Label for Hidden Input) */}
+              <label className="btn btn-secondary mb-2">
+                Upload Quantity Unit List
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    console.log("File input change triggered"); // Add this log to see if onChange is called
+                    handleFileUpload(e);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Table with responsive scroll */}
+          <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
-                      {[
-                        //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
-                        {
-                          label: "Quantity Unit",
-                          placeholder: "Search Quantity Unit",
-                          field: "name",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Added By",
-                          placeholder: "Search Added by",
-                          field: "added_by",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Created At",
-                          placeholder: "Search Created at",
-                          field: "created_at",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Updated At",
-                          placeholder: "Search Updated at",
-                          field: "updated_at",
-                          width: "col-md-1"
-                        },
-                      ].map(({ label, placeholder, field,width }) => (
-                        <th key={field} className={`${width} px-2`}>
-                        <input
-                          type="text"
-                          className="form-control w-100 px-2 py-1 mx-auto"
-                          placeholder={placeholder}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
-                        />
-                          {label}
-                        </th>
-                      ))}
-                      <th className="col-md-1">Action</th>
-                    </tr>
-                  </thead>
+                  {[
+                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                    {
+                      label: "Quantity Unit",
+                      placeholder: "Search Quantity Unit",
+                      field: "name",
+                      width: "col-md-1",
+                    },
+                    {
+                      label: "Added By",
+                      placeholder: "Search Added by",
+                      field: "added_by",
+                      width: "col-md-1",
+                    },
+                    {
+                      label: "Created At",
+                      placeholder: "Search Created at",
+                      field: "created_at",
+                      width: "col-md-1",
+                    },
+                    {
+                      label: "Updated At",
+                      placeholder: "Search Updated at",
+                      field: "updated_at",
+                      width: "col-md-1",
+                    },
+                  ].map(({ label, placeholder, field, width }) => (
+                    <th key={field} className={`${width} px-2`}>
+                      <input
+                        type="text"
+                        className="form-control w-100 px-2 py-1 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
+                      />
+                      {label}
+                    </th>
+                  ))}
+                  <th className="col-md-1">Action</th>
+                </tr>
+              </thead>
 
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map(
-                        ({ id, name, added_by, created_at, updated_at }) => (
-                          <tr key={id}>
-                            {/* <td>{id}</td> */}
-                            <td>{name}</td>
-                            <td>{added_by}</td>
-                            <td>{formatDate(created_at)}</td>
-                            <td>{formatDate(updated_at)}</td>
-                            <td>
-                            <div className="d-flex justify-content-center gap-3">
-                                <button
-                                  className="btn btn-success btn-sm py-0 px-1"
-                                  onClick={() =>
-                                    handleEditClick({
-                                      id,
-                                      name,
-                                      added_by,
-                                      created_at,
-                                      updated_at,
-                                    })
-                                  }
-                                  title="Edit Quantity Unit"
-                                >
-                                  <FontAwesomeIcon icon={faEdit} size="xs" />
-                                </button>
-                                <button
-                                  className="btn btn-danger btn-sm py-0 px-1"
-                                  onClick={() => {
-                                    setSelectedquantityunitnameId(id);
-                                    setShowDeleteModal(true);
-                                  }}
-                                  title="Delete Quantity Unit"
-                                >
-                                  <FontAwesomeIcon icon={faTrash} size="sm" />
-                                </button>
-                                 <button
-                                                                                                className="btn btn-info btn-sm py-0 px-1"
-                                                                                                onClick={() =>
-                                                                                                  handleShowHistory("quantityunit", id)
-                                                                                                }
-                                                                                                title="History Quantity unit"
-                                                                                              >
-                                                                                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                                                                                              </button>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      )
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="text-center">
-                          No Quantity Unit Available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination Controls */}
-              { totalPages >=0 && (
-  <Pagination
-    handlePageClick={handlePageChange}
-    pageCount={totalPages}
-    focusPage={currentPage}
-  />
-)}
-
-              {/* Modal for Adding Committe members */}
-              {(showAddModal || showEditModal) && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">
-                            {showAddModal ? "Add Ethnicity" : "Edit Ethnicity"}
-                          </h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => {
-                              setShowAddModal(false);
-                              setShowEditModal(false);
-                              resetFormData(); // Reset form data when closing the modal
-                            }}
-                            style={{
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-
-                        <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
-                        >
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>Quantity Unit Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="name" // Fix here
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              {showAddModal ? "Save" : "Update Quantity Unit"}
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map(
+                    ({ id, name, added_by, created_at, updated_at }) => (
+                      <tr key={id}>
+                        {/* <td>{id}</td> */}
+                        <td>{name}</td>
+                        <td>{added_by}</td>
+                        <td>{formatDate(created_at)}</td>
+                        <td>{formatDate(updated_at)}</td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-3">
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() =>
+                                handleEditClick({
+                                  id,
+                                  name,
+                                  added_by,
+                                  created_at,
+                                  updated_at,
+                                })
+                              }
+                              title="Edit Quantity Unit"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                setSelectedquantityunitnameId(id);
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete Quantity Unit"
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() =>
+                                handleShowHistory("quantityunit", id)
+                              }
+                              title="History Quantity unit"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
                           </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Modal for Deleting cityname */}
-              {showDeleteModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div
-                          className="modal-header"
-                          style={{ backgroundColor: "transparent" }}
-                        >
-                          <h5 className="modal-title">Delete Quantity Unit</h5>
-                          <button
-                            type="button"
-                            className="btn-close"
-                            onClick={() => setShowDeleteModal(false)}
-                          ></button>
-                        </div>
-                        <div className="modal-body">
-                          <p>Are you sure you want to delete this Quantity Unit?</p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-               {showHistoryModal && (
-                                            <>
-                                              {/* Bootstrap Backdrop with Blur */}
-                                              <div
-                                                className="modal-backdrop fade show"
-                                                style={{ backdropFilter: "blur(5px)" }}
-                                              ></div>
-                            
-                                              {/* Modal Content */}
-                                              <div
-                                                className="modal show d-block"
-                                                tabIndex="-1"
-                                                role="dialog"
-                                                style={{
-                                                  zIndex: 1050,
-                                                  position: "fixed",
-                                                  top: "100px",
-                                                  left: "50%",
-                                                  transform: "translateX(-50%)",
-                                                }}
-                                              >
-                                                <div className="modal-dialog modal-md" role="document">
-                                                  <div className="modal-content">
-                                                    {/* Modal Header */}
-                                                    <div className="modal-header">
-                                                      <h5 className="modal-title">History</h5>
-                                                      <button
-                                                        type="button"
-                                                        className="close"
-                                                        onClick={() => setShowHistoryModal(false)}
-                                                        style={{
-                                                          fontSize: "1.5rem",
-                                                          position: "absolute",
-                                                          right: "10px",
-                                                          top: "10px",
-                                                          cursor: "pointer",
-                                                        }}
-                                                      >
-                                                        <span>&times;</span>
-                                                      </button>
-                                                    </div>
-                            
-                                                    {/* Chat-style Modal Body */}
-                                                    <div
-                                                      className="modal-body"
-                                                      style={{
-                                                        maxHeight: "500px",
-                                                        overflowY: "auto",
-                                                        backgroundColor: "#e5ddd5", // WhatsApp-style background
-                                                        padding: "15px",
-                                                        borderRadius: "10px",
-                                                      }}
-                                                    >
-                                                      {historyData && historyData.length > 0 ? (
-                                                        historyData.map((log, index) => {
-                                                          const {
-                                                            created_name,
-                                                            updated_name,
-                                                            added_by,
-                                                            created_at,
-                                                            updated_at,
-                                                          } = log;
-                            
-                                                          return (
-                                                            <div
-                                                              key={index}
-                                                              style={{
-                                                                display: "flex",
-                                                                flexDirection: "column",
-                                                                alignItems: "flex-start",
-                                                                marginBottom: "10px",
-                                                              }}
-                                                            >
-                                                              {/* Message for City Addition */}
-                                                              <div
-                                                                style={{
-                                                                  padding: "10px 15px",
-                                                                  borderRadius: "15px",
-                                                                  backgroundColor: "#ffffff",
-                                                                  boxShadow:
-                                                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                                                  maxWidth: "75%",
-                                                                  fontSize: "14px",
-                                                                  textAlign: "left",
-                                                                }}
-                                                              >
-                                                                <b>Quantity unit:</b> {created_name} was <b>added</b>{" "}
-                                                                by Registration Admin at{" "}
-                                                                {moment(created_at).format(
-                                                                  "DD MMM YYYY, h:mm A"
-                                                                )}
-                                                              </div>
-                            
-                                                              {/* Message for City Update (Only if it exists) */}
-                                                              {updated_name && updated_at && (
-                                                                <div
-                                                                  style={{
-                                                                    padding: "10px 15px",
-                                                                    borderRadius: "15px",
-                                                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                                                    boxShadow:
-                                                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                                                    maxWidth: "75%",
-                                                                    fontSize: "14px",
-                                                                    textAlign: "left",
-                                                                    marginTop: "5px", // Spacing between messages
-                                                                  }}
-                                                                >
-                                                                  <b>Quantity unit:</b> {updated_name} was{" "}
-                                                                  <b>updated</b> by Registration Admin at{" "}
-                                                                  {moment(updated_at).format(
-                                                                    "DD MMM YYYY, h:mm A"
-                                                                  )}
-                                                                </div>
-                                                              )}
-                                                            </div>
-                                                          );
-                                                        })
-                                                      ) : (
-                                                        <p className="text-left">No history available.</p>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </>
-                                          )}
-            
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center">
+                      No Quantity Unit Available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage}
+            />
+          )}
+
+          {/* Modal for Adding Committe members */}
+          {(showAddModal || showEditModal) && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">
+                        {showAddModal ? "Add Ethnicity" : "Edit Ethnicity"}
+                      </h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => {
+                          setShowAddModal(false);
+                          setShowEditModal(false);
+                          resetFormData(); // Reset form data when closing the modal
+                        }}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    <form
+                      onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                    >
+                      <div className="modal-body">
+                        {/* Form Fields */}
+                        <div className="form-group">
+                          <label>Quantity Unit Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="name" // Fix here
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="modal-footer">
+                        <button type="submit" className="btn btn-primary">
+                          {showAddModal ? "Save" : "Update Quantity Unit"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Modal for Deleting cityname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">Delete Quantity Unit</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this Quantity Unit?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button className="btn btn-danger" onClick={handleDelete}>
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          {showHistoryModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "100px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog modal-md" role="document">
+                  <div className="modal-content">
+                    {/* Modal Header */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">History</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowHistoryModal(false)}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    {/* Chat-style Modal Body */}
+                    <div
+                      className="modal-body"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        padding: "15px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            created_name,
+                            updated_name,
+                            added_by,
+                            created_at,
+                            updated_at,
+                          } = log;
+
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Message for City Addition */}
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                <b>Quantity unit:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
+                                {moment(created_at).format(
+                                  "DD MMM YYYY, h:mm A"
+                                )}
+                              </div>
+
+                              {/* Message for City Update (Only if it exists) */}
+                              {updated_name && updated_at && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                    marginTop: "5px", // Spacing between messages
+                                  }}
+                                >
+                                  <b>Quantity unit:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
+                                  {moment(updated_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      
+      </div>
     </section>
   );
 };

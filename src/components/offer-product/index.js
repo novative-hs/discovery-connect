@@ -3,7 +3,7 @@ import Link from "next/link";
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
-
+import bg from "@assets/img/contact/contact-bg.png";
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
   const [visible, setVisible] = useState({});
@@ -43,12 +43,15 @@ const OfferPopularProduct = () => {
   if (displayedCategories.length === 0) return <ErrorMessage message="No samples found!" />;
 
   return (
-    <section className="product__coupon-area product__offer py-5">
-      <div className="container">
+    <section className="product__coupon-area product__offer py-5" style={{
+       backgroundImage: `url(${bg.src})`
+      // background: "linear-gradient(135deg,rgb(244, 242, 242),rgba(255, 255, 255, 0.97))",
+      }}>
+      <div className="container" >
         {/* Header Section */}
         <div className="row text-center mb-4">
           <div className="col">
-            <h3 className="fw-bold text-primary">High-Quality Lab Samples</h3>
+            <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
           </div>
         </div>
 
@@ -95,15 +98,23 @@ const OfferPopularProduct = () => {
 
         {/* Footer Section */}
         <div className="row text-center mt-4">
-          <div className="col">
-            <Link href="/shop" className="btn btn-danger fw-bold px-4 py-2">
-              Show More
-            </Link>
-          </div>
+        <div className="col">
+  <Link
+    href="/shop"
+    className="fw-bold px-4 py-2 text-white text-decoration-none"
+    style={{ backgroundColor: "#003366" }}
+  >
+    Show More
+  </Link>
+</div>
+
         </div>
         {/* ✅ Custom Modal (No Bootstrap) */}
         {showModal && selectedProduct && (
           <>
+            {/* Disable scrolling on the background */}
+            {document.body.style.overflow = "hidden"}
+
             {/* Backdrop */}
             <div
               className="modal-backdrop fade show"
@@ -136,17 +147,22 @@ const OfferPopularProduct = () => {
                 width: "90vw",
                 maxWidth: "700px",
                 maxHeight: "80vh",
-                overflowY: "auto",
+                overflow: "hidden", // Prevent scrollbar
               }}
             >
               {/* Modal Header */}
-              <div className="modal-header d-flex justify-content-between align-items-center"
-                style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
+              <div
+                className="modal-header d-flex justify-content-between align-items-center"
+                style={{ backgroundColor: "#cfe2ff", color: "#000" }}
+              >
                 <h5 className="fw-bold">{selectedProduct.samplename}</h5>
                 <button
                   type="button"
                   className="close"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    document.body.style.overflow = ""; // Restore scrolling
+                  }}
                   style={{
                     fontSize: "1.5rem",
                     border: "none",
@@ -159,37 +175,43 @@ const OfferPopularProduct = () => {
               </div>
 
               {/* Modal Body */}
-              <div className="modal-body">
+              <div
+                className="modal-body"
+                style={{
+                  maxHeight: "70vh", // Restrict height instead of making the whole modal scrollable
+                  overflowY: "auto", // Only allow internal scrolling
+                }}
+              >
                 <div className="row">
                   {/* Left Side: Image & Basic Details */}
-                  <div className="col-md-5 text-center">
+                  <div className="col-md-5 text-center mb-0">
                     <img
                       src={selectedProduct.imageUrl || "/placeholder.jpg"}
                       alt={selectedProduct.samplename}
                       className="img-fluid rounded"
                       style={{ maxHeight: "200px", objectFit: "cover" }}
                     />
-                    <div className="mt-3 p-2 bg-light rounded text-start">
-                      <p><strong>Age:</strong> {selectedProduct.age} years | <strong>Gender:</strong> {selectedProduct.gender}</p>
+                    <div className="mt-3 p-1 bg-light rounded text-start">
+                      <p><strong>Age:</strong> {selectedProduct.age} years |{" "} <strong>Gender:</strong> {selectedProduct.gender}</p>
                       <p><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</p>
-                      <p><strong>Alcohol or Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</p>
+                      <p><strong>Alcohol or Drug Abuse:</strong>{" "} {selectedProduct.AlcoholOrDrugAbuse}</p>
                       <p><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</p>
-                      <p><strong>Country of Collection:</strong> {selectedProduct.CountryOfCollection}</p>
-                      <p><strong>Status:</strong> {selectedProduct.status}</p>
+                      <p><strong>Country of Collection:</strong>{" "}{selectedProduct.CountryOfCollection}</p>
+                      <p> <strong>Status:</strong> {selectedProduct.status}</p>
                     </div>
                   </div>
 
                   {/* Right Side: Detailed Information */}
                   <div className="col-md-7">
                     <p><strong>Quantity unit:</strong> {selectedProduct.QuantityUnit}</p>
-                    <p><strong>Sample Condition:</strong> {selectedProduct.samplecondition}</p>
+                    <p><strong>Sample Condition:</strong>{" "}{selectedProduct.samplecondition}</p>
                     <p><strong>Storage Temperature:</strong> {selectedProduct.storagetemp}</p>
                     <p><strong>Container Type:</strong> {selectedProduct.ContainerType}</p>
-                    <p><strong>Sample Type Matrix:</strong> {selectedProduct.SampleTypeMatrix}</p>
-                    <p><strong>Infectious Disease Testing:</strong> {selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
-                    <p><strong>Freeze Thaw Cycles:</strong> {selectedProduct.FreezeThawCycles}</p>
-                    <p><strong>Diagnosis Test Parameter:</strong> {selectedProduct.DiagnosisTestParameter}</p>
-                    <p><strong>Test Result:</strong> {selectedProduct.TestResult} {selectedProduct.TestResultUnit}</p>
+                    <p><strong>Sample Type Matrix:</strong>{" "}{selectedProduct.SampleTypeMatrix}</p>
+                    <p><strong>Infectious Disease Testing:</strong>{" "}{selectedProduct.InfectiousDiseaseTesting} ({selectedProduct.InfectiousDiseaseResult})</p>
+                    <p><strong>Freeze Thaw Cycles:</strong>{" "}{selectedProduct.FreezeThawCycles}</p>
+                    <p><strong>Diagnosis Test Parameter:</strong>{" "}{selectedProduct.DiagnosisTestParameter}</p>
+                    <p><strong>Test Result:</strong> {selectedProduct.TestResult}{" "}{selectedProduct.TestResultUnit}</p>
                     <p><strong>Test Method:</strong> {selectedProduct.TestMethod}</p>
                   </div>
                 </div>
@@ -197,6 +219,7 @@ const OfferPopularProduct = () => {
             </div>
           </>
         )}
+
 
       </div>
     </section>

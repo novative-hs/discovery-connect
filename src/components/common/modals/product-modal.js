@@ -105,7 +105,7 @@ const ProductModal = ({ product, discountPrd = false }) => {
               />
               <div className="mt-3 p-2 bg-light rounded text-start">
                 <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
-                <p><strong>Quantity unit:</strong> {product.QuantityUnit}</p>
+                <p><strong>Ethnicity:</strong> {product.ethnicity}</p>
                 <p><strong>Alcohol or Drug Abuse:</strong> {product.AlcoholOrDrugAbuse}</p>
                 <p><strong>Smoking Status:</strong> {product.SmokingStatus}</p>
                 <p><strong>Country of Collection:</strong> {product.CountryOfCollection}</p>
@@ -115,7 +115,7 @@ const ProductModal = ({ product, discountPrd = false }) => {
 
             {/* Right Side: Detailed Information */}
             <div className="col-md-7">
-              <p><strong>Ethnicity:</strong> {product.ethnicity}</p>
+              <p><strong>Quantity unit:</strong> {product.QuantityUnit}</p>
               <p><strong>Sample Condition:</strong> {product.samplecondition}</p>
               <p><strong>Storage Temperature:</strong> {product.storagetemp}</p>
               <p><strong>Container Type:</strong> {product.ContainerType}</p>

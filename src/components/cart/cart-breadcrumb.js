@@ -2,7 +2,7 @@ import React from "react";
 
 const CartBreadcrumb = ({title,subtitle}) => {
   return (
-    <section className="breadcrumb__area grey-bg p-relative include-bg pt-100 pb-100">
+    <section className="breadcrumb__area light-bg p-relative include-bg pt-40 pb-40">
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-xxl-8 col-xl-8 col-lg-10">

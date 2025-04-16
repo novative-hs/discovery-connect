@@ -107,8 +107,8 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-      <div className="d-flex justify-content-end me-3 mt-2">
+      <Header setActiveTab={setActiveTab} activeTab={activeTab}/>
+      <div className="d-flex justify-content-end me-3 mt-2 bg-light">
         <p className="fs-7">
           {`Admin Dashboard / ${
             activeTab === "order-info"
@@ -133,13 +133,13 @@ const DashboardArea = () => {
         </p>
       </div>
 
-      <section className="profile__area pt-20 pb-80">
+      <section className="profile__area pt-20 pb-80 bg-light">
         <div className="container mt-n5">
           <div className="profile__inner position-relative min-vh-50">
             <ProfileShapes />
             <div className="row justify-content-center">
-              <div className="col-xxl-10 col-lg-10 col-md-10 col-sm-12">
-                <div className="profile__tab-content p-3">
+              <div className="col-xxl-10 col-lg-12 col-md-10 col-sm-12">
+              <div className="container p-4 rounded shadow-sm bg-white">
                   {/* Dynamically render content based on activeTab */}
                   {renderContent()}
                 </div>

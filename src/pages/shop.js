@@ -7,6 +7,7 @@ import DashboardHeader from "@layout/dashboardheader";
 import Footer from "@layout/footer";
 import ShopBreadcrumb from "@components/common/breadcrumb/shop-breadcrumb";
 import ShopArea from "@components/shop/shop-area";
+import DashboardArea from "@components/user-dashboard/dashboard-area";
 import ErrorMessage from "@components/error-message/error";
 import ShopLoader from "@components/loader/shop-loader";
 import { useRouter } from "next/router";
@@ -19,7 +20,7 @@ export default function Shop({ query }) {
   const [loadingUser, setLoadingUser] = useState(true);
   const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath);
   const [shortValue, setShortValue] = useState("");
-
+const [activeTab, setActiveTab] = useState("order-info");
   // Check localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -40,8 +41,8 @@ export default function Shop({ query }) {
     if (!samples) return [];
 
     let sortedSamples = [...samples];
-    const { priceMin, priceMax } = query;
-
+    const { priceMin, priceMax } = router.query || {};
+  
     if (priceMin || priceMax) {
       sortedSamples = sortedSamples.filter((sample) => {
         const price = Number(sample.price);
@@ -85,12 +86,23 @@ export default function Shop({ query }) {
   if (loadingUser) return <div>Loading...</div>;
 
   return (
-    <Wrapper>
+    <Wrapper >
+      
       <SEO pageTitle={"Shop"} />
-      {userId ? <DashboardHeader style_2={true} /> : <Header style_2={true} />}
-      <ShopBreadcrumb />
-      {content}
-      <Footer />
+      {userId ? (
+  <>
+{content}
+  </>
+) : (
+  <>
+    <Header style_2={true} />
+    <ShopBreadcrumb />
+    {content}
+    <Footer/>
+  </>
+)}      
+      
+
     </Wrapper>
   );
 }

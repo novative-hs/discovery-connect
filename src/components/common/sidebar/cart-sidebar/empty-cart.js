@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React from "react";
-import { useRouter } from "next/router"; // Import Next.js router
+import { useRouter } from "next/router";
 // internal
 import empty_img from "@assets/img/product/cartmini/empty-cart.png";
 
@@ -9,7 +9,12 @@ const EmptyCart = ({ search_prd = false }) => {
 
   const handleRedirect = (e) => {
     e.preventDefault();
-    router.push("/shop");
+    const id = localStorage.getItem("userID");
+    if (id) {
+      router.push("/dashboardheader?tab=Booksamples");
+    } else {
+      router.push("/shop");
+    }
   };
 
   return (

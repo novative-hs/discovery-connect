@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { CartTwo, Eye } from "@svg/index";
+import { useSelector } from 'react-redux';
+import { Cart } from "@svg/index";
 import {
   add_cart_product,
   initialOrderQuantity,
@@ -24,7 +26,10 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   const handleAddToCart = (product) => {
     dispatch(add_cart_product(product));
   };
-
+  const cartItems = useSelector((state) => state.cart?.cart_products || []);
+  const isInCart = (sampleId) => {
+    return cartItems.some((item) => item.id === sampleId);
+  };
 
   // Handle quick view
   const handleQuickView = (prd) => {
@@ -37,25 +42,32 @@ const SingleProduct = ({ product, discountPrd = false }) => {
       <div className="product__item p-relative transition-3 mb-50">
         <div className="product__thumb w-img p-relative fix">
           {/* <Link href={id ? `/product-details/${id}` : "/product-not-found"}> */}
-            <div className="product-image-frame">
-              <Image
-                src={product.imageUrl}
-                alt="product image"
-                width={960}
-                height={1125}
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-              />
-            </div>
+          <div className="product-image-frame">
+            <Image
+              src={product.imageUrl}
+              alt="product image"
+              width={960}
+              height={1125}
+              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+            />
+          </div>
           {/* </Link> */}
 
           <div className="d-flex justify-content-between align-items-center gap-2 mt-2 product__add transition-3">
-            <button
-              type="button"
-              onClick={() => handleAddToCart(product)}
-              className="product-add-cart-btn w-75"
-            >
-              Add to Cart
-            </button>
+          {isInCart(product.id) ? (
+  <button className="product-add-cart-btn w-75 disabled-btn" disabled>
+    Added
+  </button>
+) : (
+  <button
+    className="product-add-cart-btn w-75"
+    onClick={() => handleAddToCart(product)}
+  >
+    Add to Cart
+  </button>
+)}
+
+
 
             {/* Quick View Button with Bootstrap Tooltip */}
             <button
@@ -64,12 +76,19 @@ const SingleProduct = ({ product, discountPrd = false }) => {
               data-bs-toggle="tooltip"
               data-bs-placement="top"
               title="Quick View"
+              style={{ backgroundColor: 'white', color: '#dc3545', borderColor: '#dc3545' }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#dc3545';
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'white';
+                e.target.style.color = '#dc3545';
+              }}
             >
               <Eye product={product} />
             </button>
           </div>
-
-
         </div>
         <div className="product__content"></div>
         <h3 className="product__list-title">

@@ -46,10 +46,9 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   };
 
   const handleSubmit = async (paymentId) => {
-    if (!validateDocuments()) return false; // Ensure documents are validated first
+    if (!validateDocuments()) return false;
 
     const userID = localStorage.getItem("userID");
-    const accountType = localStorage.getItem("accountType");
 
     const formData = new FormData();
     formData.append("researcher_id", userID);
@@ -83,41 +82,36 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
         }
       );
 
-      if (
-        response.status === 201 &&
-        response.data.message === "Cart created successfully"
-      ) {
-        const cartId = response.data.result?.[0]?.cartId; // Access the first item in the array
-        const created_at = response.data.result?.[0]?.created_at; // Access the first item in the array
+      const result = response.data;
 
-        if (!cartId) {
-          notifyError("Cart ID not found in response.");
-          return false;
-        }
+      console.log("res", result)
+      const cartIds = result.result.results.map((item) => item.cartId);
+      const created_at = result.result.results[0].created_at;
 
-        // Store cart ID in local storage
-        localStorage.setItem("cartID", cartId);
-        localStorage.setItem("created_at", created_at);
+      localStorage.setItem("cartIDs", JSON.stringify(cartIds));
+      localStorage.setItem("created_at", JSON.stringify(created_at));
 
-        dispatch(clear_cart());
+      dispatch(clear_cart());
 
-        setTimeout(() => {
-          router.push(`/order-confirmation`); // Pass order ID as query param
-        }, 500);
-        return true;
-      } else {
-        notifyError("Unexpected response from the server.");
-        return false;
-      }
+      // ✅ Show success message before redirecting
+      notifySuccess("Order placed successfully!");
+
+      setTimeout(() => {
+        router.push(`/order-confirmation`);
+      }, 1000); // Optional delay to let user see message
+
+      return true;
+
     } catch (error) {
+      // If request failed completely
       console.error("Error placing order:", error);
       notifyError(
-        error.response?.data?.error ||
-        "Failed to place order. Please try again."
+        error.response?.data?.error || "Failed to place order. Please try again."
       );
       return false;
     }
   };
+
 
   return (
     <div className="order-container" style={{ maxWidth: "700px", margin: "auto" }}>
@@ -141,12 +135,12 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       {showOrderDetails && (
         <div className="your-order-table table-responsive" style={{ marginBottom: "15px" }}>
           <table>
-            <thead>
+            <thead style={{ backgroundColor: "#cfe2ff" }}>
               <tr>
-                <th className="product-name">Sample</th>
-                <th className="product-price">Price</th>
-                <th className="product-quantity">Quantity</th>
-                <th className="product-total">Total</th>
+                <th className="product-name fw-bold">Sample</th>
+                <th className="product-price fw-bold">Price</th>
+                <th className="product-quantity fw-bold">Quantity</th>
+                <th className="product-total fw-bold">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +149,6 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
                   <tr key={i}>
                     <td>{item.samplename || "N/A"}</td>
                     <td>{(item.price || 0).toFixed(2)}</td>
-
                     <td>{item.orderQuantity || 0}</td>
                     <td>
                       {((item.orderQuantity || 0) * (item.price || 0)).toFixed(2)}{" "}
@@ -174,8 +167,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
             {/* Uncomment this block if you want to include order details */}
             <tfoot>
               <tr className="shipping">
-                <th>Sub Total</th>
-
+              <th style={{ backgroundColor: "#0a1d4e", color: "white", textAlign: "center" }}>Sub Total</th>
                 <td colSpan="2" className="text-end">
                   <strong>
                     <span className="amount">

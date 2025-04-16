@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember') NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember','Order_packager') NOT NULL,
     OTP VARCHAR(4) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -37,9 +37,10 @@ const create_researcherTable = () => {
       district INT,
       country INT,
       nameofOrganization INT,
-      logo LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
       added_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (nameofOrganization) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
@@ -395,9 +396,9 @@ const updateAccount = (req, callback) => {
                   updateQuery = `
                     UPDATE researcher SET 
                       ResearcherName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
-                      country = ?, nameofOrganization = ?, logo = ? WHERE user_account_id = ?
+                      country = ?, nameofOrganization = ? WHERE user_account_id = ?
                   `;
-                  values = [ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, user_account_id];
+                  values = [ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, user_account_id];
                   break;
 
                 case "Organization":
@@ -605,8 +606,8 @@ const createAccount = (req, callback) => {
 
             switch (accountType) {
               case "Researcher":
-                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, logo, added_by) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
@@ -616,7 +617,6 @@ const createAccount = (req, callback) => {
                   district,
                   country,
                   nameofOrganization,
-                  logo,
                   added_by,
                 ];
                 break;

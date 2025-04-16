@@ -6,7 +6,7 @@ import {
   faTrash,
   faQuestionCircle,
   faPlus,
-  faHistory
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
@@ -21,22 +21,22 @@ const TestSystemArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showHistoryModal,setShowHistoryModal]=useState(false);
-  const[historyData,setHistoryData]=useState()
-  const [selectedTestSystemnameId, setSelectedTestSystemnameId] =useState(null); // Store ID of Plasma to delete
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState();
+  const [selectedTestSystemnameId, setSelectedTestSystemnameId] =
+    useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestSystemname, setEditTestSystemname] =
-    useState(null); // State for selected TestMethod to edit
+  const [editTestSystemname, setEditTestSystemname] = useState(null); // State for selected TestMethod to edit
   const [testsystemname, setTestSystemname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestSystem,setFilteredTestSystem]=useState([])
+  const [filteredTestSystem, setFilteredTestSystem] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
-  const [totalPages,setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
@@ -49,13 +49,13 @@ const TestSystemArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testsystem`
       );
-      setFilteredTestSystem(response.data)
+      setFilteredTestSystem(response.data);
       setTestSystemname(response.data); // Store fetched TestMethod in state
     } catch (error) {
       console.error("Error fetching Test System :", error);
     }
   };
- useEffect(() => {
+  useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredTestSystem.length / itemsPerPage)
@@ -140,7 +140,7 @@ const TestSystemArea = () => {
 
       fetchTestSystemname();
       // Clear form after submission
-     resetFormData()
+      resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding Test System ", error);
@@ -165,7 +165,7 @@ const TestSystemArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-     fetchTestSystemname();
+      fetchTestSystemname();
       // Close modal after deletion
       setShowDeleteModal(false);
       setSelectedTestSystemnameId(null);
@@ -178,7 +178,7 @@ const TestSystemArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal ||showHistoryModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -187,7 +187,7 @@ const TestSystemArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testsystemname) => {
     console.log("data in case of update is", testsystemname);
@@ -211,10 +211,7 @@ const TestSystemArea = () => {
         `${url}/samplefields/put-samplefields/testsystem/${selectedTestSystemnameId}`,
         formData
       );
-      console.log(
-        "Test System Name updated successfully:",
-        response.data
-      );
+      console.log("Test System Name updated successfully:", response.data);
 
       fetchTestSystemname();
 
@@ -286,443 +283,428 @@ const TestSystemArea = () => {
   const resetFormData = () => {
     setFormData({
       name: "",
-      added_by:id
+      added_by: id,
     });
   };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
-    <div className="container">
-      <div className="row justify-content-center">
-              {/* Button Container */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
-
-                {/* Button Container */}
-                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Storage Condition Button */}
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add Test System
-                  </button>
-
-                  {/* Upload Button (Styled as Label for Hidden Input) */}
-                  <label className="btn btn-secondary mb-2">
-                    Upload Test System List
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      style={{ display: "none" }}
-                      onChange={(e) => {
-                        handleFileUpload(e);
-                      }}
-                    />
-                  </label>
-                </div>
+      <div className="container">
+        <div className="row justify-content-center">
+          {/* Button Container */}
+          <div className="d-flex flex-column w-100">
+            {/* Success Message */}
+            {successMessage && (
+              <div
+                className="alert alert-success w-100 text-start mb-2"
+                role="alert"
+              >
+                {successMessage}
               </div>
+            )}
 
-              {/* Table with responsive scroll */}
-              <div className="table-responsive w-100">
+            {/* Button Container */}
+            <div className="d-flex justify-content-end align-items-center gap-2 w-100">
+              {/* Add Storage Condition Button */}
+              <button
+                className="btn btn-primary mb-2"
+                onClick={() => setShowAddModal(true)}
+              >
+                Add Test System
+              </button>
+
+              {/* Upload Button (Styled as Label for Hidden Input) */}
+              <label className="btn btn-secondary mb-2">
+                Upload Test System List
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    handleFileUpload(e);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Table with responsive scroll */}
+          <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
-                      {[
-                        //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
-                        {
-                          label: "Test System Name",
-                          placeholder: "Search Test System Name",
-                          field: "name",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Added By",
-                          placeholder: "Search Added by",
-                          field: "added_by",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Created At",
-                          placeholder: "Search Created at",
-                          field: "created_at",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Updated At",
-                          placeholder: "Search Updated at",
-                          field: "updated_at",
-                          width: "col-md-1"
-                        },
-                      ].map(({ label, placeholder, field,width }) => (
-                        <th key={field} className={`${width} px-2`}>
-                          <input
-                            type="text"
-                            className="form-control w-100 px-2 py-1 mx-auto"
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                          />
-                          {label}
-                        </th>
-                      ))}
-                      <th className="col-md-1">Action</th>
-                    </tr>
-                  </thead>
+                  {[
+                    //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
+                    {
+                      label: "Test System Name",
+                      placeholder: "Search Test System Name",
+                      field: "name",
+                      width: "col-md-1",
+                    },
+                    {
+                      label: "Added By",
+                      placeholder: "Search Added by",
+                      field: "added_by",
+                      width: "col-md-1",
+                    },
+                    {
+                      label: "Created At",
+                      placeholder: "Search Created at",
+                      field: "created_at",
+                      width: "col-md-1",
+                    },
+                    {
+                      label: "Updated At",
+                      placeholder: "Search Updated at",
+                      field: "updated_at",
+                      width: "col-md-1",
+                    },
+                  ].map(({ label, placeholder, field, width }) => (
+                    <th key={field} className={`${width} px-2`}>
+                      <input
+                        type="text"
+                        className="form-control w-100 px-2 py-1 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
+                      />
+                      {label}
+                    </th>
+                  ))}
+                  <th className="col-md-1">Action</th>
+                </tr>
+              </thead>
 
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map(
-                        ({ id, name, added_by, created_at, updated_at }) => (
-                          <tr key={id}>
-                            {/* <td>{id}</td> */}
-                            <td>{name}</td>
-                            <td>{added_by}</td>
-                            <td>{formatDate(created_at)}</td>
-                            <td>{formatDate(updated_at)}</td>
-                            <td>
-                            <div className="d-flex justify-content-center gap-3">
-                                <button
-                                  className="btn btn-success btn-sm py-0 px-1"
-                                  onClick={() =>
-                                    handleEditClick({
-                                      id,
-                                      name,
-                                      added_by,
-                                      created_at,
-                                      updated_at,
-                                    })
-                                  }
-                                  title="Edit Test System"
-                                >
-                                  <FontAwesomeIcon icon={faEdit} size="xs" />
-                                </button>
-                                <button
-                                  className="btn btn-danger btn-sm py-0 px-1"
-                                  onClick={() => {
-                                    setSelectedTestSystemnameId(id);
-                                    setShowDeleteModal(true);
-                                  }}
-                                  title="Delete Test System"
-                                >
-                                  <FontAwesomeIcon icon={faTrash} size="sm" />
-                                </button>
-                                 <button
-                                                                  className="btn btn-info btn-sm py-0 px-1"
-                                                                  onClick={() =>
-                                                                    handleShowHistory("testsystem", id)
-                                                                  }
-                                                                  title="History Test System"
-                                                                >
-                                                                  <FontAwesomeIcon icon={faHistory} size="sm" />
-                                                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      )
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="text-center">
-                          No Test System Available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination Controls */}
-              {totalPages >= 0 && (
-                <Pagination
-                  handlePageClick={handlePageChange}
-                  pageCount={totalPages}
-                  focusPage={currentPage}
-                />
-              )}
-              {/* Modal for Adding Committe members */}
-              {(showAddModal || showEditModal) && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">
-                            {showAddModal
-                              ? "Add Test System"
-                              : "Edit Test System"}
-                          </h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => {
-                              setShowAddModal(false);
-                              setShowEditModal(false);
-                              resetFormData(); // Reset form data when closing the modal
-                            }}
-                            style={{
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-
-                        <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
-                        >
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>Test System Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="name" // Fix here
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              {showAddModal
-                                ? "Save"
-                                : "Update Test System"}
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map(
+                    ({ id, name, added_by, created_at, updated_at }) => (
+                      <tr key={id}>
+                        {/* <td>{id}</td> */}
+                        <td>{name}</td>
+                        <td>{added_by}</td>
+                        <td>{formatDate(created_at)}</td>
+                        <td>{formatDate(updated_at)}</td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-3">
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() =>
+                                handleEditClick({
+                                  id,
+                                  name,
+                                  added_by,
+                                  created_at,
+                                  updated_at,
+                                })
+                              }
+                              title="Edit Test System"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                setSelectedTestSystemnameId(id);
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete Test System"
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() =>
+                                handleShowHistory("testsystem", id)
+                              }
+                              title="History Test System"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
                           </div>
-                        </form>
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center">
+                      No Test System Available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage}
+            />
+          )}
+          {/* Modal for Adding Committe members */}
+          {(showAddModal || showEditModal) && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">
+                        {showAddModal ? "Add Test System" : "Edit Test System"}
+                      </h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => {
+                          setShowAddModal(false);
+                          setShowEditModal(false);
+                          resetFormData(); // Reset form data when closing the modal
+                        }}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    <form
+                      onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                    >
+                      <div className="modal-body">
+                        {/* Form Fields */}
+                        <div className="form-group">
+                          <label>Test System Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="name" // Fix here
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
                       </div>
+
+                      <div className="modal-footer">
+                        <button type="submit" className="btn btn-primary">
+                          {showAddModal ? "Save" : "Update Test System"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Modal for Deleting cityname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">Delete Test System</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this Test System?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button className="btn btn-danger" onClick={handleDelete}>
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
-                </>
-              )}
+                </div>
+              </div>
+            </>
+          )}
+          {showHistoryModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
 
-              {/* Modal for Deleting cityname */}
-              {showDeleteModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div
-                          className="modal-header"
-                          style={{ backgroundColor: "transparent" }}
-                        >
-                          <h5 className="modal-title">
-                            Delete Test System
-                          </h5>
-                          <button
-                            type="button"
-                            className="btn-close"
-                            onClick={() => setShowDeleteModal(false)}
-                          ></button>
-                        </div>
-                        <div className="modal-body">
-                          <p>
-                            Are you sure you want to delete this Test System?
-                          </p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "100px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog modal-md" role="document">
+                  <div className="modal-content">
+                    {/* Modal Header */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">History</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowHistoryModal(false)}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
                     </div>
-                  </div>
-                </>
-              )}
-               {showHistoryModal && (
-                              <>
-                                {/* Bootstrap Backdrop with Blur */}
+
+                    {/* Chat-style Modal Body */}
+                    <div
+                      className="modal-body"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        padding: "15px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            created_name,
+                            updated_name,
+                            added_by,
+                            created_at,
+                            updated_at,
+                          } = log;
+
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Message for City Addition */}
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                <b>Test System:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
+                                {moment(created_at).format(
+                                  "DD MMM YYYY, h:mm A"
+                                )}
+                              </div>
+
+                              {/* Message for City Update (Only if it exists) */}
+                              {updated_name && updated_at && (
                                 <div
-                                  className="modal-backdrop fade show"
-                                  style={{ backdropFilter: "blur(5px)" }}
-                                ></div>
-              
-                                {/* Modal Content */}
-                                <div
-                                  className="modal show d-block"
-                                  tabIndex="-1"
-                                  role="dialog"
                                   style={{
-                                    zIndex: 1050,
-                                    position: "fixed",
-                                    top: "100px",
-                                    left: "50%",
-                                    transform: "translateX(-50%)",
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                    marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <div className="modal-dialog modal-md" role="document">
-                                    <div className="modal-content">
-                                      {/* Modal Header */}
-                                      <div className="modal-header">
-                                        <h5 className="modal-title">History</h5>
-                                        <button
-                                          type="button"
-                                          className="close"
-                                          onClick={() => setShowHistoryModal(false)}
-                                          style={{
-                                            fontSize: "1.5rem",
-                                            position: "absolute",
-                                            right: "10px",
-                                            top: "10px",
-                                            cursor: "pointer",
-                                          }}
-                                        >
-                                          <span>&times;</span>
-                                        </button>
-                                      </div>
-              
-                                      {/* Chat-style Modal Body */}
-                                      <div
-                                        className="modal-body"
-                                        style={{
-                                          maxHeight: "500px",
-                                          overflowY: "auto",
-                                          backgroundColor: "#e5ddd5", // WhatsApp-style background
-                                          padding: "15px",
-                                          borderRadius: "10px",
-                                        }}
-                                      >
-                                        {historyData && historyData.length > 0 ? (
-                                          historyData.map((log, index) => {
-                                            const {
-                                              created_name,
-                                              updated_name,
-                                              added_by,
-                                              created_at,
-                                              updated_at,
-                                            } = log;
-              
-                                            return (
-                                              <div
-                                                key={index}
-                                                style={{
-                                                  display: "flex",
-                                                  flexDirection: "column",
-                                                  alignItems: "flex-start",
-                                                  marginBottom: "10px",
-                                                }}
-                                              >
-                                                {/* Message for City Addition */}
-                                                <div
-                                                  style={{
-                                                    padding: "10px 15px",
-                                                    borderRadius: "15px",
-                                                    backgroundColor: "#ffffff",
-                                                    boxShadow:
-                                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                                    maxWidth: "75%",
-                                                    fontSize: "14px",
-                                                    textAlign: "left",
-                                                  }}
-                                                >
-                                                  <b>Test System:</b> {created_name} was{" "}
-                                                  <b>added</b> by Registration Admin at{" "}
-                                                  {moment(created_at).format(
-                                                    "DD MMM YYYY, h:mm A"
-                                                  )}
-                                                </div>
-              
-                                                {/* Message for City Update (Only if it exists) */}
-                                                {updated_name && updated_at && (
-                                                  <div
-                                                    style={{
-                                                      padding: "10px 15px",
-                                                      borderRadius: "15px",
-                                                      backgroundColor: "#dcf8c6", // Light green for updates
-                                                      boxShadow:
-                                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                                      maxWidth: "75%",
-                                                      fontSize: "14px",
-                                                      textAlign: "left",
-                                                      marginTop: "5px", // Spacing between messages
-                                                    }}
-                                                  >
-                                                    <b>Test System:</b> {updated_name} was{" "}
-                                                    <b>updated</b> by Registration Admin at{" "}
-                                                    {moment(updated_at).format(
-                                                      "DD MMM YYYY, h:mm A"
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          })
-                                        ) : (
-                                          <p className="text-left">No history available.</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
+                                  <b>Test System:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
+                                  {moment(updated_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
                                 </div>
-                              </>
-                            )}
-            
-          </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      
+      </div>
     </section>
   );
 };

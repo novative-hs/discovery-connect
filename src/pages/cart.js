@@ -29,11 +29,19 @@ export default function Cart({ query }) {
   return (
     <Wrapper>
       <SEO pageTitle={"Cart"} />
-      {userId ? <DashbaordHeader style_2={true} style={{ overflowX: "hidden" }} /> : <Header style_2={true} />}
-      <CartBreadcrumb title='My Cart' subtitle='Cart' />
-      <CartArea product={product} />
-      {/* <ShopCta /> */}
-      <Footer />
+      {userId ? (
+  <>
+    <CartBreadcrumb title='My Cart' subtitle='Cart' />
+<CartArea product={product} /> 
+  </>
+) : (
+  <>
+    <Header style_2={true} />
+    <CartBreadcrumb title='My Cart' subtitle='Cart' />
+    <CartArea product={product} />
+    <Footer />
+  </>
+)}   
     </Wrapper>
   );
 }

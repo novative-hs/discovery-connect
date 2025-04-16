@@ -104,44 +104,50 @@ LEFT JOIN
   district d ON cs.district = d.id
 WHERE 
   s.status = 'In Stock' and s.price > 0 ;
-
   `;
 
   mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      callback(err, null); // Will send 500 if there's an error with the query
-      return;
-    }
-    // Continue with image processing
+    if (err) return callback(err, null);
+
     const imageFolder = path.join(__dirname, '../uploads/Images');
+
     fs.readdir(imageFolder, (fsErr, files) => {
-      if (fsErr) {
-        callback(fsErr, null);
-        return;
-      }
-
+      if (fsErr) return callback(fsErr, null);
+    
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-
-
-      const updatedResults = results.map(sample => {
-        if (imageFiles.length > 0) {
-          const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
-          const imagePath = path.join(imageFolder, randomImage);
-
-          // Read the image file as binary data and convert to base64
-          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
-
-          // Set the base64 encoded image in the sample object
-          sample.imageUrl = `data:image/${path.extname(randomImage).slice(1)};base64,${base64Image}`;
-        } else {
-          sample.imageUrl = null;
+    
+      const totalSamples = results.length;
+      const totalImages = imageFiles.length;
+    
+      let selectedImages = [];
+    
+      if (totalImages >= totalSamples) {
+        // Shuffle images and assign one per sample (no repeat)
+        selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
+      } else {
+        // More samples than images – allow repetition
+        for (let i = 0; i < totalSamples; i++) {
+          const img = imageFiles[i % totalImages]; // cycle through
+          selectedImages.push(img);
         }
+      }
+    
+      const updatedResults = results.map((sample, index) => {
+        const selectedImage = selectedImages[index];
+        const imagePath = path.join(imageFolder, selectedImage);
+        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+        sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
+    
       callback(null, updatedResults);
     });
+    
   });
 };
+
+
+
 
 const getResearcherSamples = (userId, callback) => {
   const query = `
@@ -193,8 +199,8 @@ const getResearcherSamples = (userId, callback) => {
         WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
         WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 
             THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'pending' THEN 1 ELSE 0 END) > 0 
-            THEN 'pending'
+        WHEN SUM(CASE WHEN ca.committee_status = 'review' THEN 1 ELSE 0 END) > 0 
+            THEN 'review'
         ELSE 'accepted' 
     END AS committee_status
 
@@ -226,8 +232,18 @@ ORDER BY s.id ASC;
       console.error("Database error:", err);
       return callback(err, null);
     }
+    
+    console.log("Query Results:", results);
+  
+    // Check if no samples found
+    if (results.length === 0) {
+      return callback(null, { error: "No samples found" });
+    }
+  
+    // If samples exist, return the results
     callback(null, results);
   });
+  
 };
 
 
@@ -256,8 +272,6 @@ WHERE
 
   `;
 
-  // Log query being executed
-  console.log("Executing Query:", query);
 
   mysqlConnection.query(query, (err, results) => {
     if (err) {
@@ -269,31 +283,39 @@ WHERE
     // Continue with image processing
     const imageFolder = path.join(__dirname, '../uploads/Images');
     fs.readdir(imageFolder, (fsErr, files) => {
-      if (fsErr) {
-        console.error("Error reading image folder:", fsErr);
-        callback(fsErr, null);
-        return;
-      }
-
+      if (fsErr) return callback(fsErr, null);
+    
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-
-      const updatedResults = results.map(sample => {
-        if (imageFiles.length > 0) {
-          const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
-          const imagePath = path.join(imageFolder, randomImage);
-
-          // Read the image file as binary data and convert to base64
-          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
-
-          // Set the base64 encoded image in the sample object
-          sample.imageUrl = `data:image/${path.extname(randomImage).slice(1)};base64,${base64Image}`;
-        } else {
-          sample.imageUrl = null;
+    
+      const totalSamples = results.length;
+      const totalImages = imageFiles.length;
+    
+      let selectedImages = [];
+    
+      if (totalImages >= totalSamples) {
+        // Shuffle images and assign one per sample (no repeat)
+        selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
+        console.log("Shuffled selected images:", selectedImages);
+      } else {
+        // More samples than images – allow repetition
+        for (let i = 0; i < totalSamples; i++) {
+          const img = imageFiles[i % totalImages]; // cycle through
+          selectedImages.push(img);
         }
+        console.log("Repeated selected images:", selectedImages);
+      }
+    
+      const updatedResults = results.map((sample, index) => {
+        const selectedImage = selectedImages[index];
+        const imagePath = path.join(imageFolder, selectedImage);
+        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+        sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
+    
       callback(null, updatedResults);
     });
+    
   });
 };
 // Function to get a sample by its ID

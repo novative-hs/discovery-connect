@@ -455,15 +455,28 @@ const CommitteeMemberArea = () => {
                 {successMessage}
               </div>
             )}
-
+<h5 className="m-0 fw-bold ">Committee Member List</h5>
             {/* Button Container */}
             <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-              <button
-                className="btn btn-primary mb-2"
-                onClick={() => setShowAddModal(true)}
-              >
-                Add Committee Member
-              </button>
+            
+            <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2", // soft blue
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    marginBottom:'10px'
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add Committee Member
+                </button>
             </div>
           </div>
           {/* Table */}
