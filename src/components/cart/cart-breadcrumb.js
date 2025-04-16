@@ -3,10 +3,15 @@ import { useRouter } from "next/router";
 
 const CartBreadcrumb = ({ title, subtitle }) => {
   const router = useRouter();
-
-  const handleBackToShop = () => {
-    router.push("/shop");
-  };
+  const userID =
+    typeof window !== "undefined" ? localStorage.getItem("userID") : null;
+    const handleBackToShop = () => {
+      if (userID) {
+        router.push("/dashboardheader?tab=Booksamples");
+      } else {
+        router.push("/shop");
+      }
+    };
 
   return (
     <section

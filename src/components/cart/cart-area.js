@@ -112,16 +112,23 @@ const CartArea = () => {
     >
       <div className="container">
         <div className="d-flex align-items-center mb-4" style={{ position: 'relative', top: '-30px' }}>
-          <a
-            href="/shop"
-            className="d-flex align-items-center"
-            onClick={() => setIsClicked(true)}
-          >
-            <i className="fas fa-arrow-left me-2"></i>
-            <span className={isClicked ? "text-danger" : "text-dark"}>
-              Back to Shop
-            </span>
-          </a>
+    <a
+  className="d-flex align-items-center"
+  onClick={() => {
+    setIsClicked(true);
+    if (userID) {
+      router.push("/dashboardheader?tab=Booksamples");
+    } else {
+      router.push("/shop");
+    }
+  }}
+  style={{ cursor: "pointer" }}
+>
+  <i className="fas fa-arrow-left me-2"></i>
+  <span className={isClicked ? "text-danger" : "text-dark"}>
+    Back to Shop
+  </span>
+</a>
         </div>
         <div className="row">
           <div className="col-12">

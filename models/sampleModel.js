@@ -328,63 +328,14 @@ const getSampleById = (id, callback) => {
 
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-
-  const id = uuidv4(); // Generate a secure unique ID
-  const masterID = uuidv4(); // Secure Master ID
-
-  let room_number = null;
-  let freezer_id = null;
-  let box_id = null;
-
-  if (data.locationids) {
-    const parts = data.locationids.split("-");
-    room_number = parts[0] || null;
-    freezer_id = parts[1] || null;
-    box_id = parts[2] || null;
-  }
-
-  const query = `
-    INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-  mysqlConnection.query(query, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
-  ], (err, results) => {
-    if (err) {
-      console.error('Error in MySQL query:', err);
-      return callback(err, null);
-    }
-
-
-    // Now update masterID
-    const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
-    mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
-      if (err) {
-        console.error('Error updating masterID:', err);
-        return callback(err, null);
-      }
-
-      // Insert into sample_history
-      const historyQuery = `
-        INSERT INTO sample_history (sample_id) VALUES (?)`;
-
-      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
-        if (err) {
-          console.error('Error inserting into sample_history:', err);
-          return callback(err, null);
-        }
-        console.log('Sample history recorded.', historyResults);
-        callback(null, { insertId: id, masterID: masterID });
-      });
-    });
-  });
 };
 
 // Function to update a sample by its ID (in Collectionsite)
+const updateSample = (id, data, callback) => {
   console.log(data.status);
 
   let room_number = null;
+  let freezer_id = null;
   let box_id = null;
 
   if (data.locationids) {
@@ -423,7 +374,7 @@ const createSample = (data, callback) => {
       callback(err, result);
     });
   });
-
+};
 
 // Function to update a sample's status
 const updateSampleStatus = (id, status, callback) => {

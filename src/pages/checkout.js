@@ -50,10 +50,6 @@ export default function Checkout() {
           <Footer />
         </>
       )}  
-      {/* {userId ? <DashbaordHeader style_2={true} /> : <Header style_2={true} />}
-      <CartBreadcrumb title="Checkout" subtitle="Checkout" />
-      <CheckoutArea {...checkout_data} /> */}
-      <Footer />
     </Wrapper>
   );
 }

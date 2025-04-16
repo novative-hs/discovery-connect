@@ -74,7 +74,6 @@ const getSampleById = (req, res) => {
   });
 };
 
-// Controller to create a sample
 const createSample = (req, res) => {
   
   const sampleData = req.body;
