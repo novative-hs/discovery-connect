@@ -19,7 +19,13 @@ const getBiobankSamples = (req, res) => {
 // Controller to create a sample
 const createBiobankSample = (req, res) => {
   const sampleData = req.body;
-  console.log("Controller Received data:", sampleData);
+  const file = req.file;
+
+  console.log("Controller Received fields:", sampleData);
+  console.log("Controller Received file:", file);
+
+  // Attach file buffer to the sampleData
+  sampleData.logo = file?.buffer;
 
   // Required fields validation
   const requiredFields = [
@@ -56,7 +62,10 @@ const createBiobankSample = (req, res) => {
 const updateBiobankSample = (req, res) => {
   const { id } = req.params;
   const sampleData = req.body;
+  const file = req.file;
 
+  // Attach file buffer to the sampleData
+  sampleData.logo = file?.buffer;
   if (sampleData.DateOfCollection) {
     sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
   }

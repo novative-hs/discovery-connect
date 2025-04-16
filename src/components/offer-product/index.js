@@ -8,11 +8,11 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { add_cart_product } from "src/redux/features/cartSlice";
 import { useDispatch } from "react-redux";
-
+import { useRouter } from "next/router"; 
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
   const { data: sampleFieldsData, isLoading: sampleFieldsLoading, isError: sampleFieldsError } = useGetSampleFieldsQuery("sampletypematrix"); // Pass your actual table name here
-
+const router = useRouter();
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -21,6 +21,7 @@ const OfferPopularProduct = () => {
 
   // ✅ Always call hooks at the top
   useEffect(() => {
+    console.log("Field",sampleFieldsData)
     AOS.init({ duration: 500 });
   }, []);
 
@@ -70,11 +71,21 @@ const OfferPopularProduct = () => {
         <div className="row text-center mb-4">
           <div className="col">
             <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
-            {sampleFieldsData && sampleFieldsData.SampleTypeMatrix && (
-              <p className="text-secondary mt-2">
-                {sampleFieldsData.SampleTypeMatrix.join(" | ")}
-              </p>
-            )}
+            {/* {Array.isArray(sampleFieldsData) && sampleFieldsData.length > 0 && (
+  <div className="mt-2 d-flex flex-wrap gap-2">
+    {sampleFieldsData.map((item, index) => (
+      <button
+        key={index}
+        className="btn btn-outline-primary btn-sm"
+        onClick={() => router.push(`/shop?type=${encodeURIComponent(item.name)}`)}
+         
+      >
+        {item.name}
+      </button>
+    ))}
+  </div>
+)} */}
+
           </div>
         </div>
 

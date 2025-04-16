@@ -28,14 +28,12 @@ const Header = ({ style_2 = false }) => {
 
   const headerStyle = {
     height: "90px",
-    backgroundColor: isHovered ? "#ffffff" : "#08048c",
-    color: isHovered ? "black" : "white",
+    backgroundColor: isHovered ? "#ffffff" : "#e5eaf5",
     boxShadow: sticky ? "0 4px 8px rgba(0, 0, 0, 0.05)" : "none",
     transition: "all 0.3s ease-in-out",
   };
 
   const navLinkStyle = {
-    color: isHovered ? "black" : "white",
     transition: "color 0.3s ease-in-out",
   };
 
@@ -116,8 +114,8 @@ const Header = ({ style_2 = false }) => {
                             <li>
                               <Link href="/user-dashboard">
                                 <h2
-                                  className="text-uppercase tp-user-login-avater"
-                                  style={{ color: isHovered ? "#08048c" : "#ffffff" }}
+                                  className="text-uppercase tp-user-login-avater text-dark"
+                                  
                                 >
                                   {userInfo.name[0]}
                                 </h2>
@@ -126,7 +124,7 @@ const Header = ({ style_2 = false }) => {
                           ) : (
                             <li>
                               <Link href="/login">
-                                <span style={{ color: isHovered ? "#08048c" : "#ffffff" }}>
+                                <span>
                                   <User />
                                 </span>
                               </Link>
@@ -136,9 +134,7 @@ const Header = ({ style_2 = false }) => {
                             <button
                               className="cartmini-open-btn"
                               onClick={handleProceedToCart}
-                              style={{
-                                color: isHovered ? "#08048c" : "#ffffff",
-                              }}
+                            
                             >
                               <Cart />
                               <span className="tp-item-count">{sampleCount}</span>
