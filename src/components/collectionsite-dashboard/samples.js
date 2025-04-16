@@ -44,10 +44,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -847,53 +844,6 @@ const SampleArea = () => {
                       <div className="row">
                         {/* Column 1 */}
                         <div className="col-md-2">
-                          <div
-                            className="profile__logo d-flex justify-content-center p-2 align-items-center border border-2 border-black rounded-circle"
-                            style={{
-                              width: "150px",
-                              height: "150px",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {formData.logo instanceof File ||
-                            formData.logo?.data ? (
-                              <img
-                                src={
-                                  formData.logo instanceof File
-                                    ? URL.createObjectURL(formData.logo)
-                                    : bufferToBase64(
-                                        formData.logo,
-                                        formData.logo.mimetype?.split("/")[1] ||
-                                          "jpeg"
-                                      )
-                                }
-                                alt="Sample Logo"
-                                className="w-100 h-100 rounded-circle"
-                                style={{ objectFit: "cover" }}
-                              />
-                            ) : (
-                              <i className="fas fa-vial fa-3x text-muted"></i>
-                            )}
-                          </div>
-
-                          <div className="mt-2">
-                            <label
-                              htmlFor="logo"
-                              className="btn btn-outline-success btn-sm justify-content-center"
-                            >
-                              Upload Sample Logo
-                            </label>
-                            {/* ✅ Restrict to image files */}
-                            <input
-                              name="logo"
-                              type="file"
-                              id="logo"
-                              accept="image/*"
-                              onChange={(e) => logoHandler(e.target.files[0])}
-                              className="d-none"
-                            />
-                          </div>
-
                           {showAddModal && (
                             <div className="form-group">
                               <label>Donor ID</label>
@@ -1654,6 +1604,25 @@ const SampleArea = () => {
                                 )
                               )}
                             </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Sample Logo</label>
+                            <div className="d-flex align-items-center">
+                              <input
+                                name="logo"
+                                type="file"
+                                id="logo"
+                                accept="image/*"
+                                onChange={(e) => logoHandler(e.target.files[0])}
+                                className="form-control"
+                                style={{
+                                  fontSize: "14px",
+                                  height: "45px",
+                                  backgroundColor: "#f0f0f0",
+                                  color: "black",
+                                }}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>

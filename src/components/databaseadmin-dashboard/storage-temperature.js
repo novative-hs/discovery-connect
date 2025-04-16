@@ -303,28 +303,55 @@ const StorageTemperatureArea = () => {
                 )}
 
                 {/* Button Container */}
-                <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-                  {/* Add Storage Condition Button */}
-                  <button
-                    className="btn btn-primary mb-2"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    Add Storage temperature
-                  </button>
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              <h5 className="m-0 fw-bold ">Storage Temperature List</h5>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add Storage Temperature Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2", // soft blue
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add Storage Temperature
+                </button>
 
-                  {/* Upload Button (Styled as Label for Hidden Input) */}
-                  <label className="btn btn-secondary mb-2">
-                    Upload Storage temperature List
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      style={{ display: "none" }}
-                      onChange={(e) => {
-                        handleFileUpload(e);
-                      }}
-                    />
-                  </label>
-                </div>
+                {/* Upload Storage Temperature List Button */}
+                <label
+                  style={{
+                    backgroundColor: "#f1f1f1", // soft gray
+                    color: "#333",
+                    border: "1px solid #ccc",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                    marginBottom: 0,
+                  }}
+                >
+                  <i className="fas fa-upload"></i> Upload Storage Temperature List
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    hidden
+                    onChange={(e) => handleFileUpload(e)}
+                  />
+                </label>
+              </div>
+            </div>
               </div>
 
               {/* Table with responsive scroll */}
