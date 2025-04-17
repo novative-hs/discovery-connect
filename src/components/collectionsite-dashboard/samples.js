@@ -134,10 +134,7 @@ const SampleArea = () => {
     { name: "sampletypematrix", setter: setSampleTypeMatrixNames },
     { name: "testmethod", setter: setTestMethodNames },
     { name: "testresultunit", setter: setTestResultUnitNames },
-    {
-      name: "concurrentmedicalconditions",
-      setter: setConcurrentMedicalConditionsNames,
-    },
+    { name: "concurrentmedicalconditions", setter: setConcurrentMedicalConditionsNames },
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
