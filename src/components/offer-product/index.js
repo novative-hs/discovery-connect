@@ -178,12 +178,12 @@ const router = useRouter();
                 left: "50%",
                 transform: "translate(-50%, -50%)",
                 backgroundColor: "#fff",
-                padding: "20px",
+                padding: "0",
                 borderRadius: "10px",
                 boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
                 width: "100vw",
                 maxWidth: "800px",
-                maxHeight: "70vh",
+                maxHeight: "80vh",
                 overflow: "hidden",
               }}
             >
@@ -307,13 +307,15 @@ const router = useRouter();
                         </div>
                       ))}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(selectedProduct)}
-                      className="product-add-cart-btn w-75 mt-3"
-                    >
-                      Add to Cart
-                    </button>
+                    <div className="text-end mt-5">
+                      <button
+                        type="button"
+                        onClick={() => handleAddToCart(selectedProduct)}
+                        className="product-add-cart-btn w-40"
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

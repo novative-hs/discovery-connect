@@ -40,7 +40,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   return (
     <React.Fragment>
       <div className="product__item p-relative transition-3 mb-50">
-        
+
         <div className="product__thumb w-img p-relative fix">
           {/* <Link href={id ? `/product-details/${id}` : "/product-not-found"}> */}
           <div className="product-image-frame">
@@ -55,21 +55,18 @@ const SingleProduct = ({ product, discountPrd = false }) => {
           {/* </Link> */}
 
           <div className="d-flex justify-content-between align-items-center gap-2 mt-2 product__add transition-3">
-          {isInCart(product.id) ? (
-  <button className="product-add-cart-btn w-75 disabled-btn" disabled>
-    Added
-  </button>
-) : (
-  <button
-    className="product-add-cart-btn w-75"
-    onClick={() => handleAddToCart(product)}
-  >
-    Add to Cart
-  </button>
-)}
-
-
-
+            {isInCart(product.id) ? (
+              <button className="product-add-cart-btn w-75 disabled-btn" disabled>
+                Added
+              </button>
+            ) : (
+              <button
+                className="product-add-cart-btn w-75"
+                onClick={() => handleAddToCart(product)}
+              >
+                Add to Cart
+              </button>
+            )}
             {/* Quick View Button with Bootstrap Tooltip */}
             <button
               onClick={() => handleQuickView(product)}
