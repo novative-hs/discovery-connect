@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { CartTwo, Eye } from "@svg/index";
+import { useSelector } from 'react-redux';
+import { Cart } from "@svg/index";
 import {
   add_cart_product,
   initialOrderQuantity,
@@ -24,7 +26,10 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   const handleAddToCart = (product) => {
     dispatch(add_cart_product(product));
   };
-
+  const cartItems = useSelector((state) => state.cart?.cart_products || []);
+  const isInCart = (sampleId) => {
+    return cartItems.some((item) => item.id === sampleId);
+  };
 
   // Handle quick view
   const handleQuickView = (prd) => {
@@ -50,13 +55,20 @@ const SingleProduct = ({ product, discountPrd = false }) => {
           {/* </Link> */}
 
           <div className="d-flex justify-content-between align-items-center gap-2 mt-2 product__add transition-3">
-            <button
-              type="button"
-              onClick={() => handleAddToCart(product)}
-              className="product-add-cart-btn w-75"
-            >
-              Add to Cart
-            </button>
+          {isInCart(product.id) ? (
+  <button className="product-add-cart-btn w-75 disabled-btn" disabled>
+    Added
+  </button>
+) : (
+  <button
+    className="product-add-cart-btn w-75"
+    onClick={() => handleAddToCart(product)}
+  >
+    Add to Cart
+  </button>
+)}
+
+
 
             {/* Quick View Button with Bootstrap Tooltip */}
             <button

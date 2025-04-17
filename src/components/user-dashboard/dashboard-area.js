@@ -9,7 +9,9 @@ import SampleArea from "./samples";
 import ResearcherSamplesArea from "./ResearcherSamples";
 import Header from "../../layout/dashboardheader";
 import OrderInfo from "./order-info";
-
+import Shop from "../../pages/shop"
+import Cart from "../../pages/cart";
+import Checkout from "../../pages/checkout";
 const DashboardArea = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("order-info");
@@ -53,9 +55,15 @@ const DashboardArea = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "order-info":
-        return <OrderInfo />;
+        return <OrderInfo setActiveTab={setActiveTab} />;
+      case "Booksamples":
+        return <Shop setActiveTab={setActiveTab} />;
+      case "Cart":
+        return <Cart setActiveTab={setActiveTab} />;
+      case "Checkout":
+          return <Checkout setActiveTab={setActiveTab} />;
       case "samples":
-        return <SampleArea />;
+        return <SampleArea setActiveTab={setActiveTab} />;
       case "my-samples":
         return <ResearcherSamplesArea />;
       case "change-password":
@@ -63,7 +71,7 @@ const DashboardArea = () => {
       case "update-user":
         return <UpdateUser />;
       default:
-        return <OrderInfo />;
+        return <OrderInfo setActiveTab={setActiveTab} />;
     }
   };
 

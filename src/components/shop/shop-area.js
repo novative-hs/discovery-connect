@@ -9,6 +9,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const [showingGridItems, setShowingGridItems] = useState(0);
   const [showingListItems, setShowingListItems] = useState(0);
   const [tabActive, setActiveTab] = useState("grid");
+  const id = localStorage.getItem("userID");
 
   // New filter states
   const [selectedPrice, setSelectedPrice] = useState(null);
@@ -70,8 +71,22 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
 
   return (
     <section className="shop__area pb-40">
+       
       <div className="container">
+      {!id && (
+  <p
+    style={{
+      color: "red",
+      fontWeight: "bold",
+      fontSize: "16px",
+      marginBottom: "20px",
+    }}
+  >
+    You must register before adding any samples to your cart. Please sign up or log in to continue.
+  </p>
+)}
         <div className="shop__top mb-50">
+         
           <div className="row align-items-center">
             <div className="col-lg-6 col-md-5">
               <ShowingResult

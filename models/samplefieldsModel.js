@@ -272,7 +272,6 @@ const getAllSampleFields = (tableName, callback) => {
 
 // Function to create all SampleFields
 const createSampleFields = (tableName, data, callback) => {
-  console.log("Received Request Body:", data);
   const { bulkData, name, added_by } = data || {};
   if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
 

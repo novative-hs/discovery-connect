@@ -9,20 +9,14 @@ import { Heart, Cart } from "@svg/index"; // Replace with actual paths to icons
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
 import axios from "axios";
 import useCartInfo from "@hooks/use-cart-info";
-import CartArea from "@components/cart/cart-area";
 
 const Header = ({ setActiveTab, activeTab }) => {
   const id = localStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
-  const [hovered, setHovered] = useState(null);
   const dispatch = useDispatch();
   const router = useRouter();
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const { user: userInfo } = useSelector((state) => state.auth);
   const { sampleCount } = useCartInfo();
-  const { wishlist } = useSelector((state) => state.wishlist);
-  const [isProfileOpen, setIsProfileOpen] = useState(false); // Track if profile is open
   const [user, setUser] = useState();
   const [userlogo, setUserLogo] = useState(null);
   const [userType, setUserType] = useState(null);
@@ -393,14 +387,20 @@ const Header = ({ setActiveTab, activeTab }) => {
               </div>
               {userType === "researcher" && (
   <div className="d-flex gap-0">
-    <Link href={`/cart`} className="btn btn-sm position-relative">
-      <Cart className="fs-7 text-white" />
-      {cartCount > 0 && (
-        <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-          {sampleCount}
-        </span>
-      )}
-    </Link>
+<Link
+  href={{
+    pathname: router.pathname, // stays on the same dashboard route
+    query: { ...router.query, tab: "Cart" },
+  }}
+  className="btn btn-sm position-relative"
+>
+  <Cart className="fs-7 text-white" />
+  {cartCount > 0 && (
+    <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+      {sampleCount}
+    </span>
+  )}
+</Link>
   </div>
 )}
             </div>

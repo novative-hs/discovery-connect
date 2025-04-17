@@ -3,10 +3,15 @@ import { useRouter } from "next/router";
 
 const CartBreadcrumb = ({ title, subtitle }) => {
   const router = useRouter();
-
-  const handleBackToShop = () => {
-    router.push("/shop");
-  };
+  const userID =
+    typeof window !== "undefined" ? localStorage.getItem("userID") : null;
+    const handleBackToShop = () => {
+      if (userID) {
+        router.push("/dashboardheader?tab=Booksamples");
+      } else {
+        router.push("/shop");
+      }
+    };
 
   return (
     <section
@@ -20,7 +25,7 @@ const CartBreadcrumb = ({ title, subtitle }) => {
               <h3 className="breadcrumb__title">{title}</h3>
               <div className="breadcrumb__list">
                 <span>
-                  <a href="/" className="breadcrumb__link">Home</a>
+                  <a href="#">Home</a>
                 </span>
                 <span className="dvdr">
                   <i className="fa-solid fa-circle-small"></i>

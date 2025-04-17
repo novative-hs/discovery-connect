@@ -57,7 +57,6 @@ function changepassword(data, callback) {
       callback(null, { message: "Password updated successfully" });
     })
     .catch((err) => {
-      console.error("Error updating password:", err);
       callback({ status: 500, message: "Update error" }, null);
     });
 }

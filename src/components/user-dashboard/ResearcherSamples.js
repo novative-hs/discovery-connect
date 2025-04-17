@@ -70,7 +70,7 @@ const SampleArea = () => {
     setLoading(true);  // Set loading to true when fetching data
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/sample/getResearcherSamples/${id}`
       );
       console.log(response.data);
       

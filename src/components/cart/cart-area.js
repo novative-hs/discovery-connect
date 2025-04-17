@@ -3,7 +3,13 @@ import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { Minus, Plus } from "@svg/index";
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
-import { remove_product, updateQuantity } from "src/redux/features/cartSlice";
+import dashboardheader from "@components/user-dashboard/dashboard-area";
+import {
+  remove_product,
+  increment,
+  decrement,
+  updateQuantity,
+} from "src/redux/features/cartSlice";
 
 const CartArea = () => {
   const router = useRouter();
@@ -30,7 +36,11 @@ const CartArea = () => {
   }, [cart_products]);
 
   const handleProceedToCheckout = () => {
-    router.push(userID ? "/checkout" : "/login?from=checkout");
+    if (userID) {
+      router.push("/dashboardheader?tab=Checkout");
+    } else {
+      router.push("/login?from=checkout");
+    }
   };
 
   const handleRemoveProduct = (item) => {
@@ -101,6 +111,25 @@ const CartArea = () => {
       style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}
     >
       <div className="container">
+        <div className="d-flex align-items-center mb-4" style={{ position: 'relative', top: '-30px' }}>
+    <a
+  className="d-flex align-items-center"
+  onClick={() => {
+    setIsClicked(true);
+    if (userID) {
+      router.push("/dashboardheader?tab=Booksamples");
+    } else {
+      router.push("/shop");
+    }
+  }}
+  style={{ cursor: "pointer" }}
+>
+  <i className="fas fa-arrow-left me-2"></i>
+  <span className={isClicked ? "text-danger" : "text-dark"}>
+    Back to Shop
+  </span>
+</a>
+        </div>
         <div className="row">
           <div className="col-12">
             {cart_products.length > 0 ? (

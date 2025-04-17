@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
+import dashboardheader from "@components/user-dashboard/dashboard-area";
 import axios from "axios";
 // internal
 import { EyeCut, Lock, UserTwo } from "@svg/index";
@@ -64,13 +65,12 @@ const LoginForm = () => {
   
         const fromPage = router.query.from;
         if (fromPage === "checkout") {
-          router.push("/checkout");
+          router.push("/dashboardheader?tab=Checkout");
         } else {
           router.push(accountType ? "/dashboardheader" : "/default-dashboard");
         }
       }
     } catch (error) {
-      console.error("Catch Block Error:", error); // ✅ for debugging
       const fallbackMessage =
         error?.response?.data?.message ||
         error?.message ||
