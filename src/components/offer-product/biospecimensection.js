@@ -12,7 +12,7 @@ const BioSpecimenSection = () => {
 
   const images = [
     "/assets/img/slider/13/slider-9.png",
-    "/assets/img/slider/13/slider-6.png", 
+    "/assets/img/slider/13/slider-6.png",
     "/assets/img/slider/13/slider-11.jpg",
     "/assets/img/slider/13/slider-10.png",
   ];
@@ -20,35 +20,37 @@ const BioSpecimenSection = () => {
   return (
     <div
       className="py-5"
-      style={{
-       // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
-       // backgroundImage: `url(${bg.src})`
-      }}
+      style={
+        {
+          // background: "linear-gradient(135deg, #f8f9fa, rgb(212, 229, 246))"
+          // backgroundImage: `url(${bg.src})`
+        }
+      }
       id="bio-section"
     >
       <Container>
-      <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
-  Premium Human Biospecimens for Research
-</h2>
+        <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
+          Premium Human Biospecimens for Research
+        </h2>
 
         <Row className="align-items-center">
           <Col md={6} className="mb-4 mb-md-0" data-aos="fade-right">
-          <h2 className="fw-bold mb-3" style={{ fontSize: "2.5rem" }}>
-  <span
-    style={{
-      background: "linear-gradient(to right, #007bff, #00b4d8)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
-    }}
-  >
-    Explore Cutting-Edge Biobanking Solutions
-  </span>{" "}
-  for Advancing Medical and Scientific Innovation.
-</h2>
-<p className="text-secondary fs-5">
-  Access a diverse range of biospecimens for groundbreaking research.
-</p>
-
+            <h3 className="fw-bold mb-3" style={{ fontSize: "2.5rem" }}>
+              <span
+                style={{
+                  background: "linear-gradient(to right, #007bff, #00b4d8)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Explore Cutting-Edge Biobanking Solutions
+              </span>{" "}
+              for Advancing Medical and Scientific Innovation.
+            </h3>
+            <p className="text-secondary fs-5">
+              Access a diverse range of biospecimens for groundbreaking
+              research.
+            </p>
           </Col>
 
           <Col md={6}>
@@ -60,7 +62,11 @@ const BioSpecimenSection = () => {
                       src={image}
                       alt={`Specimen ${index + 1}`}
                       className="img-fluid"
-                      style={{ height: "100%", objectFit: "cover", borderRadius: "10px" }}
+                      style={{
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "10px",
+                      }}
                     />
                   </div>
                 </Col>
@@ -72,6 +78,5 @@ const BioSpecimenSection = () => {
     </div>
   );
 };
-
 
 export default BioSpecimenSection;

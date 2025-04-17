@@ -26,7 +26,8 @@ const StepFlow = () => {
     {
       number: "2.",
       icon: faCreditCard,
-      description: "Enter personal info, upload documents, payment, and place order.",
+      description:
+        "Enter personal info, upload documents, payment, and place order.",
       bgColor: "#4CAF50",
     },
     {
@@ -58,22 +59,29 @@ const StepFlow = () => {
   return (
     <div className="container-fluid my-5">
       {/* Heading */}
-      <h1
+      <h4
         className="text-center mb-5"
         style={{
-          fontSize: "2.5rem",
+          fontSize: "1.5rem",
           fontWeight: "bold",
           color: "#2b2c7f",
           fontFamily: "sans-serif",
         }}
       >
         Process for Requesting Samples for Research
-      </h1>
+      </h4>
 
       <div
-        className="d-flex justify-content-center align-items-center flex-wrap gap-4"
-        style={{ flexDirection: "row" }} // Make sure steps are in a row
-      >
+  className="d-flex justify-content-between align-items-start flex-nowrap w-100"
+  style={{
+    gap: "1rem",
+    overflow: "hidden", // prevents scroll
+    flexWrap: "nowrap",
+    flexShrink: 1,
+  }}
+>
+
+
         {steps.map((step, index) => (
           <React.Fragment key={index}>
             <div
@@ -103,8 +111,8 @@ const StepFlow = () => {
             {/* Arrow between steps */}
             {index !== steps.length - 1 && (
               <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ fontSize: "20px", color: "#333", margin: "0 10px" }}
+                className="d-flex align-items-center justify-content-center mt-5"
+                style={{ fontSize: "20px", color: "#333"}}
               >
                 <FontAwesomeIcon icon={faArrowRight} />
               </div>
