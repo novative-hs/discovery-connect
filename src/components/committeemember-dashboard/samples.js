@@ -63,7 +63,7 @@ const[selectedComment,setSelectedComment]=useState("");
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}`
       );
-
+console.log(response.data)
       // Update state
       setSamples(response.data);
       console.log(response.data);
@@ -474,7 +474,8 @@ const[selectedComment,setSelectedComment]=useState("");
                       </p>
                       <p>
                         <strong>Country of Collection:</strong>{" "}
-                        {selectedSample.CountryOfCollection}
+                        {selectedSample.CountryofCollection
+                        }
                       </p>
                       {/* <p>
                         <strong>Status:</strong> {selectedSample.status}

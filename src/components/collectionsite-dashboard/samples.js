@@ -677,16 +677,32 @@ const SampleArea = () => {
         )}
 
         {/* Button */}
-        <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-          {/* Add Sample Button */}
-          <button
-            className="btn btn-primary mb-3 px-4 py-2 rounded shadow-sm fw-semibold text-white"
-            onClick={() => setShowAddModal(true)}
-          >
-            <span> Add Sample</span>
-          </button>
-        </div>
+        <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
+             
+              <div className="d-flex flex-wrap gap-3 ">
+                {/* Add City Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2", // soft blue
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-vial"></i> Add Sample
+                </button>
 
+                
+               
+              </div>
+            </div>
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle w-auto border">

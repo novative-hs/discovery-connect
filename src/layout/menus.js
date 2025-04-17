@@ -9,7 +9,7 @@ const Menus = ({ currentRoute, isHovered }) => {
   const linkStyle = {
     fontSize: "0.85rem",
     textTransform: "uppercase",
-    padding: "8px 20px", // reduced padding
+    padding: "10px 30px", // reduced padding
     transition: "all 0.3s ease",
     display: "inline-block",
     textDecoration: "none",
@@ -30,8 +30,8 @@ const Menus = ({ currentRoute, isHovered }) => {
         margin: 0,
         padding: 0,
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems: "start",
+        justifyContent: "start",
       }}
     >
       {menu_data.map((menu, i) => (

@@ -79,8 +79,8 @@ const Header = ({ style_2 = false }) => {
                       className="main-menu main-menu-13 pl-45 main-menu-ff-space"
                       style={{
                         display: "flex",
-                        justifyContent: "end",
-                        alignItems: "center",
+                        justifyContent: "center",
+                        alignItems: "start",
                       }}
                     >
                       <nav id="mobile-menu-3">

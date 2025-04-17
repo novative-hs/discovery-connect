@@ -111,8 +111,8 @@ const StepFlow = () => {
             {/* Arrow between steps */}
             {index !== steps.length - 1 && (
               <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ fontSize: "20px", color: "#333", margin: "0 10px" }}
+                className="d-flex align-items-center justify-content-center mt-5"
+                style={{ fontSize: "20px", color: "#333"}}
               >
                 <FontAwesomeIcon icon={faArrowRight} />
               </div>
