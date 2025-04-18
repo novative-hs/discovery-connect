@@ -29,6 +29,7 @@ const cityRoutes = require("./routes/cityRoutes");
 const DistrictRoutes = require("./routes/districtRoutes");
 const CountryRoutes = require("./routes/countryRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
+const orderpackagerRoutes=require("./routes/orderpackagerRoutes")
 const {
   fetchProducts,
   getProductById,
@@ -66,7 +67,7 @@ app.use("/api", biobankRoutes);
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);
 app.use("/api/samplefields", samplefieldsRoutes);
 app.use("/api", contactusRoutes);
-
+app.use("/api/orderpackager",orderpackagerRoutes)
 // Start the server
 app.listen(5000, () => {
   console.log("Server running on port 5000");

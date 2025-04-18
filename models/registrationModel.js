@@ -55,6 +55,33 @@ const create_researcherTable = () => {
     }
   });
 };
+const create_orderpackager=()=>{
+  const create_orderpackager = `
+  CREATE TABLE IF NOT EXISTS orderpackager (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_account_id INT,
+    OrderpackagerName VARCHAR(100),
+    phoneNumber VARCHAR(15),
+    fullAddress TEXT,
+    city INT,
+    district INT,
+    country INT,
+    status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
+    FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
+    FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+)`;
+mysqlConnection.query(create_orderpackager, (err, results) => {
+  if (err) {
+    console.error("Error creating orderpackager table: ", err);
+  } else {
+    console.log("Order Packager table created Successfully");
+  }
+});
+}
 
 const create_organizationTable = () => {
   const create_organizationTable = `
@@ -292,6 +319,47 @@ WHERE
           }
         );
       } 
+      else if (user.accountType === "Order_packager") {
+        const orderpackagerQuery = `
+        SELECT 
+    o.*,
+   c.id AS cityid,
+      c.name AS cityname,
+      d.id AS districtid,
+      d.name AS districtname,
+      ctr.id AS countryid,
+      ctr.name AS countryname,
+    ua.email AS useraccount_email,
+    ua.accountType
+FROM 
+    orderpackager o
+JOIN 
+    city c ON o.city = c.id
+JOIN 
+    district d ON o.district = d.id
+JOIN 
+    country ctr ON o.country = ctr.id
+
+LEFT JOIN 
+    user_account ua ON o.user_account_id = ua.id
+WHERE 
+    o.user_account_id = ?;
+
+        `;
+
+        mysqlConnection.query(
+          orderpackagerQuery,
+          [user.id],
+          (err, orderpackagerResults) => {
+            if (err) {
+              return callback(err, null); // Pass error to the controller
+            }
+
+            return callback(null, orderpackagerResults); // Return collectiosite info 
+
+          }
+        );
+      } 
       else {
         // For non-researcher accounts, return the user info
         callback(null, user);
@@ -313,6 +381,7 @@ const updateAccount = (req, callback) => {
     OrganizationName,
     CollectionSiteName,
     CommitteeMemberName,
+    OrderPackagerName,
     cnic,
     phoneNumber,
     fullAddress,
@@ -430,7 +499,16 @@ const updateAccount = (req, callback) => {
                   `;
                   values = [CommitteeMemberName, cnic,phoneNumber, fullAddress, city, district, country, OrganizationName,committeetype,user_account_id];
                   break;
-
+                  case "Order_packager":
+                    fetchQuery = "SELECT * FROM orderpackager WHERE user_account_id = ?";
+                    updateQuery = `
+                      UPDATE researcher SET 
+                        OrderpackagerName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                        country = ? WHERE user_account_id = ?
+                    `;
+                    values = [OrderPackagerName, phoneNumber, fullAddress, city, district, country, user_account_id];
+                    break;
+  
                 default:
                   return mysqlConnection.rollback(() => callback(new Error("Invalid account type"), null));
               }
@@ -453,6 +531,7 @@ const updateAccount = (req, callback) => {
                   let researcherID = null;
                   let collectionSiteID = null;
                   let committeemember_id=null;
+                  let orderpackager_id=null
                   if (previousData.OrganizationName) {
                     organizationID = previousData.id; // Organization
                   } else if (previousData.ResearcherName) {
@@ -460,17 +539,20 @@ const updateAccount = (req, callback) => {
                   } else if (previousData.CollectionSiteName) {
                     collectionSiteID = previousData.id; // Collection Site
                   }
+                  else if (previousData.OrderPackagerName) {
+                    orderpackager_id = previousData.id; // Collection Site
+                  }
                   else if (previousData.CommitteeMemberName) {
                     committeemember_id = previousData.id; // Committee Member
                   }
                   
                   const historyQuery = `
                     INSERT INTO history (
-                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName, 
+                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName,OrderpackagerName,
                       HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
-                      researcher_id, collectionsite_id, committeemember_id, status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      researcher_id, collectionsite_id, committeemember_id, orderpackager_id,status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
                   
                   const historyValues = [
@@ -480,6 +562,7 @@ const updateAccount = (req, callback) => {
                     previousData.CollectionSiteName || null,
                     previousData.OrganizationName || null,
                     previousData.CommitteeMemberName || null,
+                    previousData.OrderPackagerName||null,
                     previousData.HECPMDCRegistrationNo || null,
                     previousData.cnic || null,  
                     previousData.committeetype || null,
@@ -497,6 +580,7 @@ const updateAccount = (req, callback) => {
                     researcherID || null,
                     collectionSiteID || null,
                     committeemember_id || null,  // Fix: Correct spelling
+                    orderpackager_id||null,
                     "updated",
                   ];
                   
@@ -542,6 +626,7 @@ const createAccount = (req, callback) => {
     email,
     password,
     ResearcherName,
+    OrderPackagerName,
     OrganizationName,
     CollectionSiteName,
     CollectionSiteType,
@@ -655,6 +740,21 @@ const createAccount = (req, callback) => {
                 ];
                 break;
 
+                case "Order_packager":
+                  query = `INSERT INTO orderpackager (user_account_id, OrderpackagerName, phoneNumber, fullAddress, city, district, country) 
+                           VALUES ( ?, ?, ?, ?, ?, ?, ?)`;
+                  values = [
+                    userAccountId,
+                    OrderPackagerName,
+                    phoneNumber,
+                    fullAddress,
+                    city,
+                    district,
+                    country,
+                  
+                  ];
+                  break;
+  
               case "RegistrationAdmin":
               case "biobank":
                 return callback(null, {
@@ -682,6 +782,7 @@ const createAccount = (req, callback) => {
               // Identify correct ID for history table
               let organizationId = null,
                 researcherId = null,
+                order_packagerId=null,
                 collectionsiteId = null;
 
               if (accountType === "Organization") {
@@ -696,14 +797,18 @@ const createAccount = (req, callback) => {
                 collectionsiteId = userId;
                 name = CollectionSiteName
               }
+              if (accountType === "Order_packager") {
+                order_packagerId = userId;
+                name = OrderPackagerName
+              }
 
               const historyQuery = `
                 INSERT INTO history (
-                  email, password, ResearcherName, CollectionSiteName, OrganizationName, 
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, OrderpackagerName,
                   HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
-                  researcher_id, collectionsite_id, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                  researcher_id, collectionsite_id, orderpackager_id,status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?)`;
 
               const historyValues = [
                 email,
@@ -711,6 +816,7 @@ const createAccount = (req, callback) => {
                 ResearcherName || null,
                 CollectionSiteName || null,
                 OrganizationName || null,
+                OrderPackagerName||null,
                 HECPMDCRegistrationNo || null,
                 ntnNumber || null,
                 nameofOrganization || null,
@@ -726,6 +832,7 @@ const createAccount = (req, callback) => {
                 organizationId,
                 researcherId,
                 collectionsiteId,
+                order_packagerId,
                 "added",
               ];
 
@@ -812,7 +919,9 @@ const loginAccount = (data, callback) => {
             return callback({ status: "fail", message: "Account is not approved" }, null);
           }
         });
-      } else if (user.accountType === 'Organization') {
+      } 
+      
+      else if (user.accountType === 'Organization') {
         const OrganizationQuery =
           `SELECT status FROM organization WHERE user_account_id = ?`;
 
@@ -858,7 +967,24 @@ const loginAccount = (data, callback) => {
             return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
-      } else {
+      } 
+      else  if (user.accountType === 'Order_packager') {
+        const orderpackagerQuery =
+          `SELECT status FROM orderpackager WHERE user_account_id = ?`;
+
+        mysqlConnection.query(orderpackagerQuery, [user.id], (err ,orderpackagerResults) => {
+          if (err) {
+            return callback(err, null); // Pass error to the controller
+          }
+
+          if (orderpackagerResults.length > 0 && orderpackagerResults[0].status === 'approved') {
+            return callback(null, user); // Return user info if approved
+          } else {
+            return callback({ status: "fail", message: "Account is not approved" }, null);
+          }
+        });
+      }
+      else {
         // For non-researcher accounts, return the user info
         callback(null, user);
       }
@@ -1007,6 +1133,7 @@ module.exports = {
   create_organizationTable,
   create_researcherTable,
   createuser_accountTable,
+  create_orderpackager,
   createAccount,
   updateAccount,
   getEmail,

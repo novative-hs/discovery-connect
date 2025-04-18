@@ -32,6 +32,7 @@ function Database() {
   signupModel.create_biobankTable();
   signupModel.create_organizationTable();
   signupModel.create_researcherTable();
+  signupModel.create_orderpackager();
   signupModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();

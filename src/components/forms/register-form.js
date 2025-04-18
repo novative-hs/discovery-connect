@@ -30,8 +30,9 @@ const schema = Yup.object().shape({
     )
     .required("Phone number is required")
     .label("Phone number is required"),
-  logo: Yup.mixed().when('accountType', {
-    is: (accountType) => accountType !== 'Researcher',
+  logo: Yup.mixed().when("accountType", {
+    is: (accountType) =>
+      accountType !== "Researcher" && accountType !== "Order_packager",
     then: Yup.mixed().required("Logo is required"),
     otherwise: Yup.mixed().notRequired(),
   }),
@@ -39,6 +40,10 @@ const schema = Yup.object().shape({
   city: Yup.string().required("City is required"),
   district: Yup.string().required("District is required"),
   country: Yup.string().required("Country is required"),
+  OrderPackagerName: Yup.string().when("accountType", {
+    is: "Order_packager",
+    then: Yup.string().required("Order Packager Name is required!"),
+  }),
   ResearcherName: Yup.string().when("accountType", {
     is: "Researcher",
     then: Yup.string()
@@ -93,7 +98,7 @@ const RegisterForm = () => {
   const [countryname, setCountryname] = useState([]);
   const [Org_name, setOrganizationname] = useState([]);
   const router = useRouter();
-  const [registerUser, { }] = useRegisterUserMutation();
+  const [registerUser, {}] = useRegisterUserMutation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState(null); // Store selected city object
   const [showDropdown, setShowDropdown] = useState(false);
@@ -119,7 +124,6 @@ const RegisterForm = () => {
   const fileInputRef = useRef(null);
   const accountType = watch("accountType");
   const selectedAccountType = watch("accountType");
-
 
   const handleSelectCity = (city) => {
     setSelectedCity(city);
@@ -209,7 +213,7 @@ const RegisterForm = () => {
   };
 
   const onSubmit = (data) => {
-    console.log(data);
+    console.log("submit", data);
     const formData = new FormData();
 
     // Append other form data
@@ -226,6 +230,14 @@ const RegisterForm = () => {
       formData.append("district", data.district);
       formData.append("country", data.country);
       formData.append("nameofOrganization", data.nameofOrganization);
+    }
+    if (data.accountType === "Order_packager") {
+      formData.append("OrderPackagerName", data.OrderPackagerName);
+      formData.append("phoneNumber", data.phoneNumber);
+      formData.append("fullAddress", data.fullAddress);
+      formData.append("city", data.city);
+      formData.append("district", data.district);
+      formData.append("country", data.country);
     }
 
     // Append Organization-specific fields
@@ -253,7 +265,11 @@ const RegisterForm = () => {
     }
 
     // Append logo (if a file is selected)
-    if (data.accountType !== "Researcher" && data.logo) {
+    if (
+      data.accountType !== "Researcher" &&
+      data.accountType !== "Order_packager" &&
+      data.logo
+    ) {
       formData.append("logo", data.logo);
     }
     // Send the formData to the backend
@@ -372,6 +388,7 @@ const RegisterForm = () => {
               <option value="Researcher">Researcher</option>
               <option value="Organization">Organization</option>
               <option value="CollectionSites">Collection Site</option>
+              <option value="Order_packager">Order Packager </option>
             </select>
           </div>
           <ErrorMessage message={errors.accountType?.message} />
@@ -422,6 +439,25 @@ const RegisterForm = () => {
                     </span>
                   </div>
                   <ErrorMessage message={errors.nameofOrganization?.message} />
+                </div>
+              </>
+            )}
+            {accountType === "Order_packager" && (
+              <>
+                <div className="login__input-item">
+                  <div className="login__input">
+                    <input
+                      {...register("OrderPackagerName")}
+                      name="OrderPackagerName"
+                      type="text"
+                      placeholder="Order Packager Name"
+                      id="OrderPackagerName"
+                    />
+                    <span>
+                      <i className="fa-solid fa-user"></i>
+                    </span>
+                  </div>
+                  <ErrorMessage message={errors.OrderPackagerName?.message} />
                 </div>
               </>
             )}
@@ -565,40 +601,42 @@ const RegisterForm = () => {
             </div>
 
             {/* Logo Upload */}
-            {
-              accountType !== "Researcher" && (
-                <div className="login__input-item">
-                  <div className="login-input form-control md-10 p-2">
-                    <i className="fa-solid fa-image text-black px-3 mt-2"></i>
-                    <label
-                      className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
-                      onClick={triggerFileInput}
-                    >
-                      {logo ? (
-                        <span className="form-label">{logo}</span>
-                      ) : (
-                        accountTypeLabel
-                      )}
-                    </label>
+            {accountType !== "Researcher" && accountType !== "Order_packager" && (
+  <div className="login__input-item">
+    <div className="login-input form-control md-10 p-2">
+      <i className="fa-solid fa-image text-black px-3 mt-2"></i>
+      <label
+        className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
+        onClick={triggerFileInput}
+      >
+        {logo ? (
+          <span className="form-label">{logo}</span>
+        ) : (
+          accountTypeLabel
+        )}
+      </label>
 
-                    <input
-                      type="file"
-                      {...register("logo", {
-                        required: accountType !== "Researcher" ? "Logo is required" : false,
-                      })}
-                      className="d-none"
-                      ref={fileInputRef}
-                      onChange={handleLogoChange}
-                    />
-                  </div>
-                  <ErrorMessage
-                    name="logo"
-                    component="div"
-                    className="error-message"
-                    message={errors.logo?.message}
-                  />
-                </div>
-              )}
+      <input
+        type="file"
+        {...register("logo", {
+          required:
+            accountType !== "Researcher" && accountType !== "Order_packager"
+              ? "Logo is required"
+              : false,
+        })}
+        className="d-none"
+        ref={fileInputRef}
+        onChange={handleLogoChange}
+      />
+    </div>
+    <ErrorMessage
+      name="logo"
+      component="div"
+      className="error-message"
+      message={errors.logo?.message}
+    />
+  </div>
+)}
 
 
             {/* {/ City Fields /} */}
@@ -633,8 +671,8 @@ const RegisterForm = () => {
                         (city) =>
                           searchTerm
                             ? city.name
-                              .toLowerCase()
-                              .includes(searchTerm.toLowerCase())
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase())
                             : true // Show all cities when searchTerm is empty
                       )
                       .map((city) => (
@@ -692,8 +730,8 @@ const RegisterForm = () => {
                       .filter((district) =>
                         searchDistrict
                           ? district.name
-                            .toLowerCase()
-                            .includes(searchDistrict.toLowerCase())
+                              .toLowerCase()
+                              .includes(searchDistrict.toLowerCase())
                           : true
                       )
                       .map((district) => (
@@ -752,8 +790,8 @@ const RegisterForm = () => {
                       .filter((country) =>
                         searchCountry
                           ? country.name
-                            .toLowerCase()
-                            .includes(searchCountry.toLowerCase())
+                              .toLowerCase()
+                              .includes(searchCountry.toLowerCase())
                           : true
                       )
                       .map((country) => (

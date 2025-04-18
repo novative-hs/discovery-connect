@@ -9,6 +9,29 @@ const tablesAndColumns = [
     ],
   },
   {
+    table:"registrationadmin_history",
+    columnsToAdd:[
+      {
+        column: "orderpackager_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "user_account", column: "id" },
+      },
+    ],
+  },
+  {
+    table: "history",
+    columnsToAdd: [
+      { column: "OrderpackagerName", type: "VARCHAR(20)", nullable: true },
+      {
+        column: "orderpackager_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "user_account", column: "id" },
+      },
+    ],
+  },
+  {
     table: "sample",
     columnsToAdd: [
       { column: "room_number", type: "INT", nullable: true },
@@ -301,49 +324,7 @@ const createOrUpdateTables = async () => {
         "Refused",
       ]),
   ]);
-  const records = [
-    {
-      email: 'databaseadmin123@gmail.com',
-      password: 'databaseadmin123@',
-      accountType: 'DatabaseAdmin'
-    },
-    {
-      email: 'registrationadmin123@gmail.com',
-      password: 'registrationadmin123@',
-      accountType: 'RegistrationAdmin'
-    },
-    {
-      email: 'biobank123@gmail.com',
-      password: 'biobank123@',
-      accountType: 'biobank'
-    },
-    {
-      email: 'orderpackager123@gmail.com',
-      password: 'orderpackager123@',
-      accountType: 'Order_packager'
-    },
-    {
-      email: 'orderpackager13@gmail.com',
-      password: 'orderpackager13@',
-      accountType: 'Order_packager'
-    },
-    
-  ];
   
-  const insertAllRecords = async () => {
-    for (let record of records) {
-      try {
-        const message = await insertRecord("user_account", record);
-        console.log(message);
-      } catch (error) {
-        console.error('Error processing record:', record.email, error);
-      }
-    }
-  };
-  
-  insertAllRecords()
-  
-
 };
 
 const updateAccountType = () => {

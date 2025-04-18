@@ -30,6 +30,7 @@ const OrderInfo = ({ setActiveTab }) => {
     { label: "Organizations", count: userCount.totalOrganizations, icon: "fa-building", color: "danger", tab: "organization" },
     { label: "Collection Sites", count: userCount.totalCollectionSites, icon: "fa-map-marker-alt", color: "dark", tab: "collectionsite" },
     { label: "Committee Members", count: userCount.totalCommitteeMembers, icon: "fa-users", color: "secondary", tab: "committee-members" },
+    { label: "Order Packager", count: userCount.totalOrderpackager, icon: "fa-box", color: "success", tab: "orderpackager" },
   ];
 
   return (
