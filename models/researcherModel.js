@@ -213,11 +213,11 @@ const updateResearcherStatus = async (id, status) => {
     const email = emailResults[0].email;
 
     let emailText = `Dear Researcher,\n\nYour account status is currently pending. 
-      Please wait for approval.\n\nBest regards,\nLab Hazir`;
+      Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
 
     if (status === "approved") {
       emailText = `Dear Researcher,\n\nYour account has been approved! 
-        You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+        You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
     }
 
     sendEmail(email, "Welcome to Discovery Connect", emailText)

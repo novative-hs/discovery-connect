@@ -73,11 +73,11 @@ const updateCollectionSiteStatus = async (id, status) => {
 
     // Prepare email content
     let emailText = `Dear Collectionsite,\n\nYour account status is currently pending. 
-    Please wait for approval.\n\nBest regards,\nLab Hazir`;
+    Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
 
     if (status === "approved") {
       emailText = `Dear Collectionsite,\n\nYour account has been approved! 
-      You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+      You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
     }
 
     // Send email asynchronously (does not block function execution)

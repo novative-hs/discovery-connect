@@ -320,11 +320,11 @@ const updateCommitteeMemberStatus = async (id, status) => {
 
     // Prepare the email content
     let emailText = `Dear Committee Member,\n\nYour account status is currently inactive. 
-    Please wait for approval.\n\nBest regards,\nLab Hazir`;
+    Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
 
     if (status === "active") {
       emailText = `Dear Committee Member,\n\nYour account is now active! 
-      You can now log in and access your account.\n\nBest regards,\nLab Hazir`;
+      You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
     }
 
     // Send email asynchronously (Don't block status update)
