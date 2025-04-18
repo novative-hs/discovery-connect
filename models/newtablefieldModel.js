@@ -22,7 +22,7 @@ const tablesAndColumns = [
   {
     table: "history",
     columnsToAdd: [
-      { column: "CSRName", type: "VARCHAR(20)", nullable: true },
+      { column: "CSRName", type: "VARCHAR(100)", nullable: true },
       {
         column: "CSR_id",
         type: "INT",
