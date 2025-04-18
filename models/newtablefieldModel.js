@@ -15,7 +15,7 @@ const tablesAndColumns = [
         column: "CSR_id",
         type: "INT",
         nullable: true, // Change to true
-        references: { table: "user_account", column: "id" },
+        references: { table: "CSR", column: "id" },
       },
     ],
   },
@@ -27,7 +27,7 @@ const tablesAndColumns = [
         column: "CSR_id",
         type: "INT",
         nullable: true, // Change to true
-        references: { table: "user_account", column: "id" },
+        references: { table: "CSR", column: "id" },
       },
     ],
   },
