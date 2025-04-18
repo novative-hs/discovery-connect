@@ -12,7 +12,7 @@ import BiobankDashboard from "@components/biobank-dashboard/dashboard-area";
 import CollectionSideDashboard from "@components/collectionsite-dashboard/dashboard-area";
 import ResearcherDashboard from "@components/user-dashboard/dashboard-area";
 import CommitteememberDashboard from "@components/committeemember-dashboard/dashboard-area";
-import OrderPackingDashboard from "@components/orderpacking-dashboard/dashboard-area"
+import CSRDashboard from "@components/CSR-dashboard/dashboard-area"
 import Loader from "@components/loader/loader";
 
 const UserOrdersPage = () => {
@@ -47,8 +47,8 @@ const UserOrdersPage = () => {
         return <ResearcherDashboard />;
         case "committeemember":
           return <CommitteememberDashboard />;
-          case "order_packager":
-          return <OrderPackingDashboard />;
+          case "csr":
+          return <CSRDashboard />;
       default:
         return <Loader />;
     }

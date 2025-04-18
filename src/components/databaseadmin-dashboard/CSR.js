@@ -4,23 +4,23 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const OrderpackagerArea = () => {
+const CSRArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const[historyData,setHistoryData]=useState([])
-  const [editOrderpackager, setEditOrderpackager] = useState(null);
-  const [selectedOrderpackagerId, setSelectedOrderpackagerId] = useState(null);
-  const [allOrderpackager, setAllOrderpackager] = useState([]);
-  const [orderpackager, setOrderpackager] = useState([]);
-  const [filteredOrderpackager, setFilteredOrderpackager] = useState([]);
+  const [editCSR, setEditCSR] = useState(null);
+  const [selectedCSRId, setSelectedCSRId] = useState(null);
+  const [allCSR, setAllCSR] = useState([]);
+  const [CSR, setCSR] = useState([]);
+  const [filteredCSR, setFilteredCSR] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [formData, setFormData] = useState({
-    OrderpackagerName: "",
+    CSRName: "",
     email: "",
     phoneNumber: "",
     // created_at: "",
@@ -29,18 +29,18 @@ const OrderpackagerArea = () => {
   });
 
   useEffect(() => {
-    fetchOrderpackager();
+    fetchCSR();
   }, []);
 
-  const fetchOrderpackager = async () => {
+  const fetchCSR = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orderpackager/get`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/get`
       );
-      setOrderpackager(response.data);
-      setAllOrderpackager(response.data);
+      setCSR(response.data);
+      setAllCSR(response.data);
     } catch (error) {
-      console.error("Error fetching Orderpackager:", error);
+      console.error("Error fetching CSR:", error);
     }
   };
 
@@ -48,31 +48,31 @@ const OrderpackagerArea = () => {
     setSearchTerm(value);
 
     if (!value) {
-      setOrderpackager(allOrderpackager);
+      setCSR(allCSR);
     } else {
-      const filtered = allOrderpackager.filter((orderpackager) => {
-        return orderpackager[field]
+      const filtered = allCSR.filter((CSR) => {
+        return CSR[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase());
       });
-      setOrderpackager(filtered);
+      setCSR(filtered);
     }
 
     setCurrentPage(0); // Reset to first page when filtering
   };
 
   useEffect(() => {
-    const updatedFilteredOrderpackager = orderpackager.filter((orderpackager) => {
+    const updatedFilteredCSR = CSR.filter((CSR) => {
       if (!statusFilter) return true;
-      return orderpackager.status.toLowerCase() === statusFilter.toLowerCase();
+      return CSR.status.toLowerCase() === statusFilter.toLowerCase();
     });
 
-    setFilteredOrderpackager(updatedFilteredOrderpackager);
+    setFilteredCSR(updatedFilteredCSR);
     setCurrentPage(0); // Reset to first page when filtering
-  }, [orderpackager, statusFilter]);
+  }, [CSR, statusFilter]);
 
-  const currentData = filteredOrderpackager.slice(
+  const currentData = filteredCSR.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -84,31 +84,31 @@ const OrderpackagerArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orderpackager/delete/${selectedOrderpackagerId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/delete/${selectedCSRId}`
       );
-      setSuccessMessage("orderpackager deleted successfully.");
+      setSuccessMessage("CSR deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
-      fetchOrderpackager(); // Refresh data after delete
+      fetchCSR(); // Refresh data after delete
       setShowDeleteModal(false);
-      setSelectedOrderpackagerId(null);
+      setSelectedCSRId(null);
     } catch (error) {
       console.error(
-        `Error deleting orderpackager with ID ${selectedOrderpackagerId}:`,
+        `Error deleting CSR with ID ${selectedCSRId}:`,
         error
       );
     }
   };
 
-  const handleEditClick = (orderpackager) => {
-    setSelectedOrderpackagerId(orderpackager.id);
-    setEditOrderpackager(orderpackager); // Store the researcher data to edit
+  const handleEditClick = (CSR) => {
+    setSelectedCSRId(CSR.id);
+    setEditCSR(CSR); // Store the researcher data to edit
     setShowEditModal(true); // Show the edit modal
     setFormData({
-      OrderpackagerName: orderpackager.OrderpackagerName,
-      email: orderpackager.email,
-      phoneNumber: orderpackager.phoneNumber,
+      CSRName: CSR.CSRName,
+      email: CSR.email,
+      phoneNumber: CSR.phoneNumber,
       
-      status: orderpackager.status,
+      status: CSR.status,
     });
   };
   const handleUpdate = async (e) => {
@@ -116,22 +116,22 @@ const OrderpackagerArea = () => {
 
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orderpackager/edit/${selectedOrderpackagerId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/edit/${selectedCSRId}`,
         formData
       );
-      console.log("orderpackager updated successfully:", response.data);
+      console.log("CSR updated successfully:", response.data);
 
-      fetchOrderpackager()
+      fetchCSR()
 
       setShowEditModal(false);
-      setSuccessMessage("orderpackager updated successfully.");
+      setSuccessMessage("CSR updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
       console.error(
-        `Error updating orderpackager with ID ${selectedOrderpackagerId}:`,
+        `Error updating CSR with ID ${selectedCSRId}:`,
         error
       );
     }
@@ -186,7 +186,7 @@ const OrderpackagerArea = () => {
                     {successMessage}
                   </div>
                 )}
-<h5 className="m-0 fw-bold ">Order Packager List</h5>
+<h5 className="m-0 fw-bold ">CSR List</h5>
                 {/* Status Filter */}
                 <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
                   <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
@@ -218,7 +218,7 @@ const OrderpackagerArea = () => {
                         {
                           label: "Name",
                           placeholder: "Search Name",
-                          field: "OrderpackagerName",
+                          field: "CSRName",
                         },
                         {
                           label: "Email",
@@ -255,25 +255,25 @@ const OrderpackagerArea = () => {
                   </thead>
                   <tbody>
                     {currentData.length > 0 ? (
-                      currentData.map((orderpackager) => (
-                        <tr key={orderpackager.id}>
+                      currentData.map((CSR) => (
+                        <tr key={CSR.id}>
                           {/* <td>{researcher.id}</td> */}
-                          <td>{orderpackager.OrderpackagerName}</td>
-                          <td>{orderpackager.email}</td>
-                          <td>{orderpackager.phoneNumber}</td>
-                          <td>{orderpackager.status}</td>
+                          <td>{CSR.CSRName}</td>
+                          <td>{CSR.email}</td>
+                          <td>{CSR.phoneNumber}</td>
+                          <td>{CSR.status}</td>
                           <td>
                           <div className="d-flex justify-content-center gap-2">
                               <button
                                 className="btn btn-success btn-sm"
-                                onClick={() => handleEditClick(orderpackager)}
+                                onClick={() => handleEditClick(CSR)}
                               >
                                 <FontAwesomeIcon icon={faEdit} />
                               </button>
                               <button
                                 className="btn btn-danger btn-sm"
                                 onClick={() => {
-                                  setSelectedOrderpackagerId(orderpackager.id);
+                                  setSelectedCSRId(CSR.id);
                                   setShowDeleteModal(true);
                                 }}
                               >
@@ -282,7 +282,7 @@ const OrderpackagerArea = () => {
                               <button
                                 className="btn btn-info btn-sm"
                                 onClick={() =>
-                                  handleShowHistory("orderpackager", orderpackager.id)
+                                  handleShowHistory("CSR", CSR.id)
                                 }
                                 title="History"
                               >
@@ -295,7 +295,7 @@ const OrderpackagerArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="7" className="text-center">
-                          No researchers available
+                          No CSR available
                         </td>
                       </tr>
                     )}
@@ -304,15 +304,15 @@ const OrderpackagerArea = () => {
               </div>
 
               {/* Pagination */}
-              {filteredOrderpackager.length >= 0 && (
+              {filteredCSR.length >= 0 && (
   <Pagination
     handlePageClick={handlePageChange}
-    pageCount={Math.max(1, Math.ceil(filteredOrderpackager.length / itemsPerPage))}
+    pageCount={Math.max(1, Math.ceil(filteredCSR.length / itemsPerPage))}
     focusPage={currentPage}
   />
 )}
             </div>
-            {/* Edit Researcher Modal */}
+            {/* Edit CSR Modal */}
             {showEditModal && (
                 <>
                   {/* Bootstrap Backdrop with Blur */}
@@ -336,7 +336,7 @@ const OrderpackagerArea = () => {
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Edit Order Packager</h5>
+                        <h5 className="modal-title">Edit CSR</h5>
                         <button
                           type="button"
                           className="close"
@@ -358,12 +358,12 @@ const OrderpackagerArea = () => {
                         <div className="modal-body">
                           {/* Form Fields */}
                           <div className="form-group">
-                            <label>Order packager name</label>
+                            <label>CSR name</label>
                             <input
                               type="text"
                               className="form-control"
-                              name="OrderpackagerName"
-                              value={formData.OrderpackagerName}
+                              name="CSRName"
+                              value={formData.CSRName}
                               onChange={handleInputChange}
                               disabled
                             />
@@ -408,7 +408,7 @@ const OrderpackagerArea = () => {
                         </div>
                         <div className="modal-footer">
                           <button type="submit" className="btn btn-primary">
-                            Update Order packager
+                            Update CSR
                           </button>
                         </div>
                       </form>
@@ -502,7 +502,7 @@ const OrderpackagerArea = () => {
                                     textAlign: "left",
                                   }}
                                 >
-                                  <b>orderpackager:</b> {created_name} was{" "}
+                                  <b>CSR:</b> {created_name} was{" "}
                                   <b>added</b> by Registration Admin at{" "}
                                   {moment(created_at).format(
                                     "DD MMM YYYY, h:mm A"
@@ -524,7 +524,7 @@ const OrderpackagerArea = () => {
                                       marginTop: "5px", // Spacing between messages
                                     }}
                                   >
-                                    <b>orderpackager:</b> {updated_name} was{" "}
+                                    <b>CSR:</b> {updated_name} was{" "}
                                     <b>updated</b> by Registration Admin at{" "}
                                     {moment(updated_at).format(
                                       "DD MMM YYYY, h:mm A"
@@ -568,7 +568,7 @@ const OrderpackagerArea = () => {
                   <div className="modal-dialog" role="document">
                     <div className="modal-content">
                       <div className="modal-header">
-                        <h5 className="modal-title">Delete Order Packager</h5>
+                        <h5 className="modal-title">Delete CSR</h5>
                         <button
                           type="button"
                           className="close"
@@ -587,7 +587,7 @@ const OrderpackagerArea = () => {
                         </button>
                       </div>
                       <div className="modal-body">
-                        <p>Are you sure you want to delete this researcher?</p>
+                        <p>Are you sure you want to delete this CSR?</p>
                       </div>
                       <div className="modal-footer">
                         <button
@@ -615,4 +615,4 @@ const OrderpackagerArea = () => {
   );
 };
 
-export default OrderpackagerArea;
+export default CSRArea;

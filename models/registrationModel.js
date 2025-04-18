@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember','Order_packager') NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -55,12 +55,12 @@ const create_researcherTable = () => {
     }
   });
 };
-const create_orderpackager=()=>{
-  const create_orderpackager = `
-  CREATE TABLE IF NOT EXISTS orderpackager (
+const create_CSR=()=>{
+  const create_CSR = `
+  CREATE TABLE IF NOT EXISTS CSR (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_account_id INT,
-    OrderpackagerName VARCHAR(100),
+    CSRName VARCHAR(100),
     phoneNumber VARCHAR(15),
     fullAddress TEXT,
     city INT,
@@ -74,11 +74,11 @@ const create_orderpackager=()=>{
     FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 )`;
-mysqlConnection.query(create_orderpackager, (err, results) => {
+mysqlConnection.query(create_CSR, (err, results) => {
   if (err) {
-    console.error("Error creating orderpackager table: ", err);
+    console.error("Error creating CSR table: ", err);
   } else {
-    console.log("Order Packager table created Successfully");
+    console.log("CSR table created Successfully");
   }
 });
 }
@@ -319,8 +319,8 @@ WHERE
           }
         );
       } 
-      else if (user.accountType === "Order_packager") {
-        const orderpackagerQuery = `
+      else if (user.accountType === "CSR") {
+        const CSRQuery = `
         SELECT 
     o.*,
    c.id AS cityid,
@@ -332,7 +332,7 @@ WHERE
     ua.email AS useraccount_email,
     ua.accountType
 FROM 
-    orderpackager o
+    CSR o
 JOIN 
     city c ON o.city = c.id
 JOIN 
@@ -348,14 +348,14 @@ WHERE
         `;
 
         mysqlConnection.query(
-          orderpackagerQuery,
+          CSRQuery,
           [user.id],
-          (err, orderpackagerResults) => {
+          (err, CSRResults) => {
             if (err) {
               return callback(err, null); // Pass error to the controller
             }
 
-            return callback(null, orderpackagerResults); // Return collectiosite info 
+            return callback(null, CSRResults); // Return collectiosite info 
 
           }
         );
@@ -381,7 +381,7 @@ const updateAccount = (req, callback) => {
     OrganizationName,
     CollectionSiteName,
     CommitteeMemberName,
-    OrderPackagerName,
+    CSRName,
     cnic,
     phoneNumber,
     fullAddress,
@@ -499,14 +499,14 @@ const updateAccount = (req, callback) => {
                   `;
                   values = [CommitteeMemberName, cnic,phoneNumber, fullAddress, city, district, country, OrganizationName,committeetype,user_account_id];
                   break;
-                  case "Order_packager":
-                    fetchQuery = "SELECT * FROM orderpackager WHERE user_account_id = ?";
+                  case "CSR":
+                    fetchQuery = "SELECT * FROM CSR WHERE user_account_id = ?";
                     updateQuery = `
-                      UPDATE researcher SET 
-                        OrderpackagerName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                      UPDATE CSR SET 
+                        CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                         country = ? WHERE user_account_id = ?
                     `;
-                    values = [OrderPackagerName, phoneNumber, fullAddress, city, district, country, user_account_id];
+                    values = [CSRName, phoneNumber, fullAddress, city, district, country, user_account_id];
                     break;
   
                 default:
@@ -531,7 +531,7 @@ const updateAccount = (req, callback) => {
                   let researcherID = null;
                   let collectionSiteID = null;
                   let committeemember_id=null;
-                  let orderpackager_id=null
+                  let CSR_id=null
                   if (previousData.OrganizationName) {
                     organizationID = previousData.id; // Organization
                   } else if (previousData.ResearcherName) {
@@ -539,8 +539,8 @@ const updateAccount = (req, callback) => {
                   } else if (previousData.CollectionSiteName) {
                     collectionSiteID = previousData.id; // Collection Site
                   }
-                  else if (previousData.OrderPackagerName) {
-                    orderpackager_id = previousData.id; // Collection Site
+                  else if (previousData.CSRName) {
+                    CSR_id = previousData.id; // Collection Site
                   }
                   else if (previousData.CommitteeMemberName) {
                     committeemember_id = previousData.id; // Committee Member
@@ -548,10 +548,10 @@ const updateAccount = (req, callback) => {
                   
                   const historyQuery = `
                     INSERT INTO history (
-                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName,OrderpackagerName,
+                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName,CSRName,
                       HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
-                      researcher_id, collectionsite_id, committeemember_id, orderpackager_id,status
+                      researcher_id, collectionsite_id, committeemember_id, CSR_id,status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
                   
@@ -562,7 +562,7 @@ const updateAccount = (req, callback) => {
                     previousData.CollectionSiteName || null,
                     previousData.OrganizationName || null,
                     previousData.CommitteeMemberName || null,
-                    previousData.OrderPackagerName||null,
+                    previousData.CSRName||null,
                     previousData.HECPMDCRegistrationNo || null,
                     previousData.cnic || null,  
                     previousData.committeetype || null,
@@ -580,7 +580,7 @@ const updateAccount = (req, callback) => {
                     researcherID || null,
                     collectionSiteID || null,
                     committeemember_id || null,  // Fix: Correct spelling
-                    orderpackager_id||null,
+                    CSR_id||null,
                     "updated",
                   ];
                   
@@ -626,7 +626,7 @@ const createAccount = (req, callback) => {
     email,
     password,
     ResearcherName,
-    OrderPackagerName,
+    CSRName,
     OrganizationName,
     CollectionSiteName,
     CollectionSiteType,
@@ -740,12 +740,12 @@ const createAccount = (req, callback) => {
                 ];
                 break;
 
-                case "Order_packager":
-                  query = `INSERT INTO orderpackager (user_account_id, OrderpackagerName, phoneNumber, fullAddress, city, district, country) 
+                case "CSR":
+                  query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country) 
                            VALUES ( ?, ?, ?, ?, ?, ?, ?)`;
                   values = [
                     userAccountId,
-                    OrderPackagerName,
+                    CSRName,
                     phoneNumber,
                     fullAddress,
                     city,
@@ -782,7 +782,7 @@ const createAccount = (req, callback) => {
               // Identify correct ID for history table
               let organizationId = null,
                 researcherId = null,
-                order_packagerId=null,
+                CSRId=null,
                 collectionsiteId = null;
 
               if (accountType === "Organization") {
@@ -797,17 +797,17 @@ const createAccount = (req, callback) => {
                 collectionsiteId = userId;
                 name = CollectionSiteName
               }
-              if (accountType === "Order_packager") {
-                order_packagerId = userId;
-                name = OrderPackagerName
+              if (accountType === "CSR") {
+                CSRId = userId;
+                name = CSRName
               }
 
               const historyQuery = `
                 INSERT INTO history (
-                  email, password, ResearcherName, CollectionSiteName, OrganizationName, OrderpackagerName,
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, CSRName,
                   HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
-                  researcher_id, collectionsite_id, orderpackager_id,status
+                  researcher_id, collectionsite_id, CSR_id,status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?)`;
 
               const historyValues = [
@@ -816,7 +816,7 @@ const createAccount = (req, callback) => {
                 ResearcherName || null,
                 CollectionSiteName || null,
                 OrganizationName || null,
-                OrderPackagerName||null,
+                CSRName||null,
                 HECPMDCRegistrationNo || null,
                 ntnNumber || null,
                 nameofOrganization || null,
@@ -832,7 +832,7 @@ const createAccount = (req, callback) => {
                 organizationId,
                 researcherId,
                 collectionsiteId,
-                order_packagerId,
+                CSRId,
                 "added",
               ];
 
@@ -968,16 +968,16 @@ const loginAccount = (data, callback) => {
           }
         });
       } 
-      else  if (user.accountType === 'Order_packager') {
-        const orderpackagerQuery =
-          `SELECT status FROM orderpackager WHERE user_account_id = ?`;
+      else  if (user.accountType === 'CSR') {
+        const CSRQuery =
+          `SELECT status FROM CSR WHERE user_account_id = ?`;
 
-        mysqlConnection.query(orderpackagerQuery, [user.id], (err ,orderpackagerResults) => {
+        mysqlConnection.query(CSRQuery, [user.id], (err ,CSRResults) => {
           if (err) {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (orderpackagerResults.length > 0 && orderpackagerResults[0].status === 'approved') {
+          if (CSRResults.length > 0 && CSRResults[0].status === 'approved') {
             return callback(null, user); // Return user info if approved
           } else {
             return callback({ status: "fail", message: "Account is not approved" }, null);
@@ -1133,7 +1133,7 @@ module.exports = {
   create_organizationTable,
   create_researcherTable,
   createuser_accountTable,
-  create_orderpackager,
+  create_CSR,
   createAccount,
   updateAccount,
   getEmail,

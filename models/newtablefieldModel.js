@@ -12,7 +12,7 @@ const tablesAndColumns = [
     table:"registrationadmin_history",
     columnsToAdd:[
       {
-        column: "orderpackager_id",
+        column: "CSR_id",
         type: "INT",
         nullable: true, // Change to true
         references: { table: "user_account", column: "id" },
@@ -22,9 +22,9 @@ const tablesAndColumns = [
   {
     table: "history",
     columnsToAdd: [
-      { column: "OrderpackagerName", type: "VARCHAR(20)", nullable: true },
+      { column: "CSRName", type: "VARCHAR(20)", nullable: true },
       {
-        column: "orderpackager_id",
+        column: "CSR_id",
         type: "INT",
         nullable: true, // Change to true
         references: { table: "user_account", column: "id" },
@@ -305,7 +305,7 @@ const createOrUpdateTables = async () => {
         "RegistrationAdmin",
         "biobank",
         "Committeemember",
-        "Order_packager"
+        "CSR"
       ]),
     () =>
       updateEnumColumn("cart", "order_status", [

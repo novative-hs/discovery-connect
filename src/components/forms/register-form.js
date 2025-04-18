@@ -32,7 +32,7 @@ const schema = Yup.object().shape({
     .label("Phone number is required"),
   logo: Yup.mixed().when("accountType", {
     is: (accountType) =>
-      accountType !== "Researcher" && accountType !== "Order_packager",
+      accountType !== "Researcher" && accountType !== "CSR",
     then: Yup.mixed().required("Logo is required"),
     otherwise: Yup.mixed().notRequired(),
   }),
@@ -40,9 +40,9 @@ const schema = Yup.object().shape({
   city: Yup.string().required("City is required"),
   district: Yup.string().required("District is required"),
   country: Yup.string().required("Country is required"),
-  OrderPackagerName: Yup.string().when("accountType", {
-    is: "Order_packager",
-    then: Yup.string().required("Order Packager Name is required!"),
+  CSRName: Yup.string().when("accountType", {
+    is: "CSR",
+    then: Yup.string().required("CSR Name is required!"),
   }),
   ResearcherName: Yup.string().when("accountType", {
     is: "Researcher",
@@ -231,8 +231,8 @@ const RegisterForm = () => {
       formData.append("country", data.country);
       formData.append("nameofOrganization", data.nameofOrganization);
     }
-    if (data.accountType === "Order_packager") {
-      formData.append("OrderPackagerName", data.OrderPackagerName);
+    if (data.accountType === "CSR") {
+      formData.append("CSRName", data.CSRName);
       formData.append("phoneNumber", data.phoneNumber);
       formData.append("fullAddress", data.fullAddress);
       formData.append("city", data.city);
@@ -267,7 +267,7 @@ const RegisterForm = () => {
     // Append logo (if a file is selected)
     if (
       data.accountType !== "Researcher" &&
-      data.accountType !== "Order_packager" &&
+      data.accountType !== "CSR" &&
       data.logo
     ) {
       formData.append("logo", data.logo);
@@ -388,7 +388,7 @@ const RegisterForm = () => {
               <option value="Researcher">Researcher</option>
               <option value="Organization">Organization</option>
               <option value="CollectionSites">Collection Site</option>
-              <option value="Order_packager">Order Packager </option>
+              <option value="CSR">CSR </option>
             </select>
           </div>
           <ErrorMessage message={errors.accountType?.message} />
@@ -442,22 +442,22 @@ const RegisterForm = () => {
                 </div>
               </>
             )}
-            {accountType === "Order_packager" && (
+            {accountType === "CSR" && (
               <>
                 <div className="login__input-item">
                   <div className="login__input">
                     <input
-                      {...register("OrderPackagerName")}
-                      name="OrderPackagerName"
+                      {...register("CSRName")}
+                      name="CSRName"
                       type="text"
-                      placeholder="Order Packager Name"
-                      id="OrderPackagerName"
+                      placeholder="CSR Name"
+                      id="CSRName"
                     />
                     <span>
                       <i className="fa-solid fa-user"></i>
                     </span>
                   </div>
-                  <ErrorMessage message={errors.OrderPackagerName?.message} />
+                  <ErrorMessage message={errors.CSRName?.message} />
                 </div>
               </>
             )}
@@ -601,7 +601,7 @@ const RegisterForm = () => {
             </div>
 
             {/* Logo Upload */}
-            {accountType !== "Researcher" && accountType !== "Order_packager" && (
+            {accountType !== "Researcher" && accountType !== "CSR" && (
   <div className="login__input-item">
     <div className="login-input form-control md-10 p-2">
       <i className="fa-solid fa-image text-black px-3 mt-2"></i>
@@ -620,7 +620,7 @@ const RegisterForm = () => {
         type="file"
         {...register("logo", {
           required:
-            accountType !== "Researcher" && accountType !== "Order_packager"
+            accountType !== "Researcher" && accountType !== "CSR"
               ? "Logo is required"
               : false,
         })}
