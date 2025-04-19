@@ -455,7 +455,7 @@ const CommitteeMemberArea = () => {
                 {successMessage}
               </div>
             )}
-            
+
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Committee Member List</h5>
@@ -477,7 +477,7 @@ const CommitteeMemberArea = () => {
                   }}
                 >
                   <i className="fas fa-plus"></i> Add Committee Member
-                </button>        
+                </button>
               </div>
             </div>
           </div>
@@ -1006,7 +1006,7 @@ const CommitteeMemberArea = () => {
                             maxWidth: "75%",
                             fontSize: "14px",
                           }}>
-                            <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Registration Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
+                            <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Database Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
                             <br />
                             {cnic && <><b>CNIC:</b> {cnic} <br /></>}
                             {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}

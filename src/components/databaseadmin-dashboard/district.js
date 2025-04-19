@@ -382,7 +382,8 @@ useEffect(() => {
                           <tr key={id}>
                             {/* <td>{id}</td> */}
                             <td>{name}</td>
-                            <td>{added_by}</td>
+                            {/* <td>{added_by}</td> */}
+                            <td>DB Admin</td>
                             <td>{formatDate(created_at)}</td>
                             <td>{formatDate(updated_at)}</td>
                             <td>
@@ -648,7 +649,7 @@ useEffect(() => {
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>District:</b> {created_name} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    <b>District:</b> {created_name} was <b>added</b> by Database Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
                                   </div>
 
                                   {/* Message for City Update (Only if it exists) */}
@@ -665,7 +666,7 @@ useEffect(() => {
                                         marginTop: "5px", // Spacing between messages
                                       }}
                                     >
-                                      <b>District:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                      <b>District:</b> {updated_name} was <b>updated</b> by Database Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                                     </div>
                                   )}
                                 </div>

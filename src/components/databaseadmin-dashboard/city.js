@@ -383,7 +383,8 @@ const CityArea = () => {
                     <tr key={cityname.id}>
                       {/* <td>{cityname.id}</td> */}
                       <td>{cityname.name}</td>
-                      <td>{cityname.added_by}</td>
+                      {/* <td>{cityname.added_by}</td> */}
+                      <td>DB Admin</td>
                       <td>{formatDate(cityname.created_at)}</td>
                       <td>{formatDate(cityname.updated_at)}</td>
                       <td>
@@ -460,7 +461,7 @@ const CityArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add Country" : "Edit Country"}
+                        {showAddModal ? "Add City" : "Edit City"}
                       </h5>
                       <button
                         type="button"
@@ -505,7 +506,7 @@ const CityArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Country"}
+                          {showAddModal ? "Save" : "Update City"}
                         </button>
                       </div>
                     </form>
@@ -601,7 +602,7 @@ const CityArea = () => {
                                 }}
                               >
                                 <b>City:</b> {created_name} was <b>added</b> by
-                                Registration Admin at{" "}
+                                Database Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -622,7 +623,7 @@ const CityArea = () => {
                                   }}
                                 >
                                   <b>City:</b> {updated_name} was <b>updated</b>{" "}
-                                  by Registration Admin at{" "}
+                                  by Database Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

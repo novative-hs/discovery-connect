@@ -400,7 +400,8 @@ const CountryArea = () => {
                     <tr key={countryname.id}>
                       {/* <td>{countryname.id}</td> */}
                       <td>{countryname.name}</td>
-                      <td>{countryname.added_by}</td>
+                      {/* <td>{countryname.added_by}</td> */}
+                      <td>DB Admin</td>
                       <td>{formatDate(countryname.created_at)}</td>
                       <td>{formatDate(countryname.updated_at)}</td>
                       <td>
@@ -618,7 +619,7 @@ const CountryArea = () => {
                                 }}
                               >
                                 <b>Country:</b> {created_name} was{" "}
-                                <b>added</b> by Registration Admin at{" "}
+                                <b>added</b> by Database Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -640,7 +641,7 @@ const CountryArea = () => {
                                   }}
                                 >
                                   <b>Country:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Registration Admin at{" "}
+                                  <b>updated</b> by Database Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

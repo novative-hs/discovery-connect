@@ -55,7 +55,7 @@ const create_researcherTable = () => {
     }
   });
 };
-const create_CSR=()=>{
+const create_CSR = () => {
   const create_CSR = `
   CREATE TABLE IF NOT EXISTS CSR (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -74,13 +74,13 @@ const create_CSR=()=>{
     FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 )`;
-mysqlConnection.query(create_CSR, (err, results) => {
-  if (err) {
-    console.error("Error creating CSR table: ", err);
-  } else {
-    console.log("CSR table created Successfully");
-  }
-});
+  mysqlConnection.query(create_CSR, (err, results) => {
+    if (err) {
+      console.error("Error creating CSR table: ", err);
+    } else {
+      console.log("CSR table created Successfully");
+    }
+  });
 }
 
 const create_organizationTable = () => {
@@ -274,7 +274,7 @@ const getAccountDetail = (id, callback) => {
 
           }
         );
-      } 
+      }
       else if (user.accountType === "Committeemember") {
         const CommitteememberQuery = `
         SELECT 
@@ -318,7 +318,7 @@ WHERE
 
           }
         );
-      } 
+      }
       else if (user.accountType === "CSR") {
         const CSRQuery = `
         SELECT 
@@ -359,7 +359,7 @@ WHERE
 
           }
         );
-      } 
+      }
       else {
         // For non-researcher accounts, return the user info
         callback(null, user);
@@ -490,25 +490,25 @@ const updateAccount = (req, callback) => {
                   `;
                   values = [CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
                   break;
-                  case "Committeemember":
+                case "Committeemember":
                   fetchQuery = "SELECT * FROM committee_member WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE committee_member SET 
                       CommitteeMemberName = ?, cnic=?,phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                       country = ?,organization=?,committeetype=? WHERE user_account_id = ?
                   `;
-                  values = [CommitteeMemberName, cnic,phoneNumber, fullAddress, city, district, country, OrganizationName,committeetype,user_account_id];
+                  values = [CommitteeMemberName, cnic, phoneNumber, fullAddress, city, district, country, OrganizationName, committeetype, user_account_id];
                   break;
-                  case "CSR":
-                    fetchQuery = "SELECT * FROM CSR WHERE user_account_id = ?";
-                    updateQuery = `
+                case "CSR":
+                  fetchQuery = "SELECT * FROM CSR WHERE user_account_id = ?";
+                  updateQuery = `
                       UPDATE CSR SET 
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                         country = ? WHERE user_account_id = ?
                     `;
-                    values = [CSRName, phoneNumber, fullAddress, city, district, country, user_account_id];
-                    break;
-  
+                  values = [CSRName, phoneNumber, fullAddress, city, district, country, user_account_id];
+                  break;
+
                 default:
                   return mysqlConnection.rollback(() => callback(new Error("Invalid account type"), null));
               }
@@ -526,12 +526,12 @@ const updateAccount = (req, callback) => {
 
                 connection.query(updateQuery, values, (err) => {
                   if (err) return mysqlConnection.rollback(() => callback(err, null));
-                  
+
                   let organizationID = null;
                   let researcherID = null;
                   let collectionSiteID = null;
-                  let committeemember_id=null;
-                  let CSR_id=null
+                  let committeemember_id = null;
+                  let CSR_id = null
                   if (previousData.OrganizationName) {
                     organizationID = previousData.id; // Organization
                   } else if (previousData.ResearcherName) {
@@ -545,7 +545,7 @@ const updateAccount = (req, callback) => {
                   else if (previousData.CommitteeMemberName) {
                     committeemember_id = previousData.id; // Committee Member
                   }
-                  
+
                   const historyQuery = `
                     INSERT INTO history (
                       email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName,CSRName,
@@ -554,7 +554,7 @@ const updateAccount = (req, callback) => {
                       researcher_id, collectionsite_id, committeemember_id, CSR_id,status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
-                  
+
                   const historyValues = [
                     previousEmail,
                     previousPassword,
@@ -562,9 +562,9 @@ const updateAccount = (req, callback) => {
                     previousData.CollectionSiteName || null,
                     previousData.OrganizationName || null,
                     previousData.CommitteeMemberName || null,
-                    previousData.CSRName||null,
+                    previousData.CSRName || null,
                     previousData.HECPMDCRegistrationNo || null,
-                    previousData.cnic || null,  
+                    previousData.cnic || null,
                     previousData.committeetype || null,
                     previousData.ntnNumber || null,
                     previousData.nameofOrganization ? previousData.nameofOrganization : previousData.organization || null,
@@ -580,10 +580,10 @@ const updateAccount = (req, callback) => {
                     researcherID || null,
                     collectionSiteID || null,
                     committeemember_id || null,  // Fix: Correct spelling
-                    CSR_id||null,
+                    CSR_id || null,
                     "updated",
                   ];
-                  
+
                   connection.query(historyQuery, historyValues, (err) => {
                     if (err) {
                       return connection.rollback(() => {
@@ -592,7 +592,7 @@ const updateAccount = (req, callback) => {
                         callback(err, null);
                       });
                     }
-                  
+
                     // Commit transaction if successful
                     connection.commit((err) => {
                       if (err) {
@@ -607,7 +607,7 @@ const updateAccount = (req, callback) => {
                         message: "Account updated successfully",
                         userId: user_account_id,
                       });
-                    });                  
+                    });
                   });
                 });
               });
@@ -740,21 +740,21 @@ const createAccount = (req, callback) => {
                 ];
                 break;
 
-                case "CSR":
-                  query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country) 
+              case "CSR":
+                query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country) 
                            VALUES ( ?, ?, ?, ?, ?, ?, ?)`;
-                  values = [
-                    userAccountId,
-                    CSRName,
-                    phoneNumber,
-                    fullAddress,
-                    city,
-                    district,
-                    country,
-                  
-                  ];
-                  break;
-  
+                values = [
+                  userAccountId,
+                  CSRName,
+                  phoneNumber,
+                  fullAddress,
+                  city,
+                  district,
+                  country,
+
+                ];
+                break;
+
               case "RegistrationAdmin":
               case "biobank":
                 return callback(null, {
@@ -782,7 +782,7 @@ const createAccount = (req, callback) => {
               // Identify correct ID for history table
               let organizationId = null,
                 researcherId = null,
-                CSRId=null,
+                CSRId = null,
                 collectionsiteId = null;
 
               if (accountType === "Organization") {
@@ -816,7 +816,7 @@ const createAccount = (req, callback) => {
                 ResearcherName || null,
                 CollectionSiteName || null,
                 OrganizationName || null,
-                CSRName||null,
+                CSRName || null,
                 HECPMDCRegistrationNo || null,
                 ntnNumber || null,
                 nameofOrganization || null,
@@ -919,8 +919,8 @@ const loginAccount = (data, callback) => {
             return callback({ status: "fail", message: "Account is not approved" }, null);
           }
         });
-      } 
-      
+      }
+
       else if (user.accountType === 'Organization') {
         const OrganizationQuery =
           `SELECT status FROM organization WHERE user_account_id = ?`;
@@ -961,18 +961,18 @@ const loginAccount = (data, callback) => {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (CommitteememberResults.length > 0 &&  CommitteememberResults[0].status.toLowerCase() === "active") {
+          if (CommitteememberResults.length > 0 && CommitteememberResults[0].status.toLowerCase() === "active") {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not active" }, null);
+            return callback({ status: "fail", message: "Account is not approved" }, null);
           }
         });
-      } 
-      else  if (user.accountType === 'CSR') {
+      }
+      else if (user.accountType === 'CSR') {
         const CSRQuery =
           `SELECT status FROM CSR WHERE user_account_id = ?`;
 
-        mysqlConnection.query(CSRQuery, [user.id], (err ,CSRResults) => {
+        mysqlConnection.query(CSRQuery, [user.id], (err, CSRResults) => {
           if (err) {
             return callback(err, null); // Pass error to the controller
           }
@@ -1021,7 +1021,7 @@ const getEmail = (email, callback) => {
 };
 
 function changepassword(data, callback) {
-  const table = "user_account"; 
+  const table = "user_account";
   const findUserQuery = `SELECT password FROM ${table} WHERE email = ?`;
 
   mysqlConnection.query(findUserQuery, [data.email], (err, result) => {
@@ -1059,7 +1059,7 @@ function changepassword(data, callback) {
 }
 
 const verifyOTP = (email, otp, callback) => {
-  const query = "SELECT OTP FROM user_account WHERE email = ?"; 
+  const query = "SELECT OTP FROM user_account WHERE email = ?";
 
   mysqlConnection.query(query, [email], (err, result) => {
     if (err) {
@@ -1099,7 +1099,7 @@ const sendOTP = (req, callback) => {
     if (result.length === 0) {
       return callback({ status: 404, message: "User not found" }, null);
     }
-  
+
     // Now update the OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const updateQuery = `UPDATE user_account SET OTP = ? WHERE email = ?`;
@@ -1107,18 +1107,18 @@ const sendOTP = (req, callback) => {
       if (updateErr) {
         return callback({ status: 500, message: "Error saving OTP" }, null);
       }
-      
+
       // Send email after successfully updating OTP
       sendEmail(email, "Your OTP Code", `Your OTP code is: ${otp}`)
-      .then(() => {
-        console.log("✅ Email sent successfully to:", email);
-        callback(null, { message: "OTP sent successfully!", otp });
-      })
-      .catch((error) => {
-        console.error("❌ Email sending error:", error);
-        callback({ status: 500, message: error.message }, null);
-      });
-    
+        .then(() => {
+          console.log("✅ Email sent successfully to:", email);
+          callback(null, { message: "OTP sent successfully!", otp });
+        })
+        .catch((error) => {
+          console.error("❌ Email sending error:", error);
+          callback({ status: 500, message: error.message }, null);
+        });
+
     });
   });
 };
