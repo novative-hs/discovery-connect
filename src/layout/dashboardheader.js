@@ -11,6 +11,8 @@ import axios from "axios";
 import useCartInfo from "@hooks/use-cart-info";
 
 const Header = ({ setActiveTab, activeTab }) => {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   const id = localStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
@@ -126,7 +128,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     } else {
       setActiveTab("update-profile");
     }
-    setIsProfileOpen(true); // Set profile open state to true
+    setIsProfileOpen(true); 
   };
 
   const handleChangePassword = () => {

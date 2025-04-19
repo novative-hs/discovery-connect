@@ -84,21 +84,22 @@ const ResearcherArea = () => {
   };
   const handleDelete = async () => {
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/delete/${selectedResearcherId}`
       );
-      setSuccessMessage("Researcher deleted successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      if (response.data && response.data.message) {
+        setSuccessMessage(response.data.message);
+        setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
+      }
+  
       fetchResearchers(); // Refresh data after delete
       setShowDeleteModal(false);
       setSelectedResearcherId(null);
     } catch (error) {
-      console.error(
-        `Error deleting researcher with ID ${selectedResearcherId}:`,
-        error
-      );
+      console.error(`Error deleting researcher with ID ${selectedResearcherId}:`, error);
     }
   };
+  
 
   const handleEditClick = (researcher) => {
     setSelectedResearcherId(researcher.id);
@@ -173,7 +174,29 @@ const ResearcherArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showEditModal, showHistoryModal]);
-
+  const formatDate = (date) => {
+    const options = {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+    };
+  
+    const formatted = new Date(date).toLocaleString("en-GB", options);
+  
+    const [datePart, timePart] = formatted.split(", ");
+    const [day, month, year] = datePart.split(" ");
+  
+    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  
+    return `${day}-${formattedMonth}-${year} ${timePart}`;
+  };
+  
+  
+  
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -213,66 +236,72 @@ const ResearcherArea = () => {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="table-responsive w-100">
-              <table className="table table-hover table-bordered text-center align-middle w-auto border">
-                <thead className="table-primary text-dark">
-                  <tr className="text-center">
-                    {[
-                      //{ label: "ID", placeholder: "Search ID", field: "id" },
-                      {
-                        label: "Name",
-                        placeholder: "Search Name",
-                        field: "ResearcherName",
-                      },
-                      {
-                        label: "Email",
-                        placeholder: "Search Email",
-                        field: "email",
-                      },
-                      {
-                        label: "Contact",
-                        placeholder: "Search Contact",
-                        field: "phoneNumber",
-                      },
-                      {
-                        label: "Organization",
-                        placeholder: "Search Organization",
-                        field: "OrganizationName",
-                      },
-                      {
-                        label: "Status",
-                        placeholder: "Search Status",
-                        field: "status",
-                      },
-                    ].map(({ label, placeholder, field }) => (
-                      <th key={field} className="col-md-1 px-2">
-
-                        <input
-                          type="text"
-                          className="form-control w-100 mx-auto"
-                          placeholder={placeholder}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
-                        />
-                        {label}
-                      </th>
-                    ))}
-                    <th className="col-1">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentData.length > 0 ? (
-                    currentData.map((researcher) => (
-                      <tr key={researcher.id}>
-                        {/* <td>{researcher.id}</td> */}
-                        <td>{researcher.ResearcherName}</td>
-                        <td>{researcher.email}</td>
-                        <td>{researcher.phoneNumber}</td>
-                        <td>{researcher.OrganizationName}</td>
-                        <td>{researcher.status}</td>
-                        <td>
+              {/* Table */}
+              <div className="table-responsive w-100">
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
+                      {[
+                        //{ label: "ID", placeholder: "Search ID", field: "id" },
+                        {
+                          label: "Name",
+                          placeholder: "Search Name",
+                          field: "ResearcherName",
+                        },
+                        {
+                          label: "Email",
+                          placeholder: "Search Email",
+                          field: "email",
+                        },
+                        {
+                          label: "Contact",
+                          placeholder: "Search Contact",
+                          field: "phoneNumber",
+                        },
+                        {
+                          label: "Organization",
+                          placeholder: "Search Organization",
+                          field: "OrganizationName",
+                        },
+                        {
+                          label: "Register At",
+                          placeholder: "Search Register At",
+                          field: "created_at",
+                        },
+                        {
+                          label: "Status",
+                          placeholder: "Search Status",
+                          field: "status",
+                        },
+                      ].map(({ label, placeholder, field }) => (
+                        <th key={field} className="col-md-1 px-2">
+                         
+                         <input
+                        type="text"
+                        className="form-control w-100 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
+                      />
+                            {label}
+                        </th>
+                      ))}
+                      <th className="col-1">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentData.length > 0 ? (
+                      currentData.map((researcher) => (
+                        <tr key={researcher.id}>
+                          {/* <td>{researcher.id}</td> */}
+                          <td>{researcher.ResearcherName}</td>
+                          <td>{researcher.email}</td>
+                          <td>{researcher.phoneNumber}</td>
+                          <td>{researcher.OrganizationName}</td>
+                          <td>{formatDate(researcher.created_at)}</td>
+                          <td>{researcher.status}</td>
+                          <td>
                           <div className="d-flex justify-content-center gap-2">
                             <button
                               className="btn btn-success btn-sm"

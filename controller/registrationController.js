@@ -102,7 +102,7 @@ const createAccount = (req, res) => {
 const loginAccount = (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Received Login Data:", { email, password });
+  console.log("Login request:", { email, password });
 
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
@@ -129,6 +129,7 @@ const loginAccount = (req, res) => {
         id: result.id,
         accountType: result.accountType,
         email: result.email,
+        authToken: "mockAuthToken", // Replace with JWT or real token logic
       },
     });
   });

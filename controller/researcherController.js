@@ -129,18 +129,20 @@ function updateResearcher(req, res) {
 }
 
 // Controller to handle deleting a researcher
-function deleteResearcher(req, res) {
-  const { id } = req.params;
-  researcherModel.deleteResearcher(id, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error deleting researcher" });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Researcher not found" });
-    }
-    res.status(200).json({ message: "Researcher deleted successfully" });
-  });
-}
+const deleteResearcher = async (req, res) => {
+  const { id } = req.params;  // Get the id from request parameters
+
+  try {
+    // Call the model method and wait for the response
+    const result = await researcherModel.deleteResearcher(id);
+    
+    // Return the success message after the status update
+    res.status(200).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in deleting researcher:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+};
 
 // Registration Admin
 // Controller to handle fetching all researchers for the admin dashboard

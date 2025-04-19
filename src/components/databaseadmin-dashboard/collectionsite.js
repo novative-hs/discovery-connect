@@ -75,7 +75,7 @@ const CollectionsiteArea = () => {
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(
+      const response =await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/delete/${selectedCollectionsiteId}`
       );
       console.log(
@@ -83,7 +83,7 @@ const CollectionsiteArea = () => {
       );
 
       // Set success message
-      setSuccessMessage("Collectionsite deleted successfully.");
+      setSuccessMessage(response.data.message);
 
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -210,7 +210,27 @@ const CollectionsiteArea = () => {
       status: "",
     });
   };
-
+  const formatDate = (date) => {
+    const options = {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+    };
+  
+    const formatted = new Date(date).toLocaleString("en-GB", options);
+    console.log("Formatted:", formatted); // debug output
+  
+    const [datePart, timePart] = formatted.split(", ");
+    const [day, month, year] = datePart.split(" ");
+  
+    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  
+    return `${day}-${formattedMonth}-${year} ${timePart}`;
+  };
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
     <div className="container">
@@ -272,10 +292,16 @@ const CollectionsiteArea = () => {
                           field: "phoneNumber",
                         },
                         {
+                          label: "Register At",
+                          placeholder: "Search Register At",
+                          field: "created_at",
+                        },
+                        {
                           label: "Status",
                           placeholder: "Search Status",
                           field: "status",
                         },
+                        
                       ].map(({ label, placeholder, field }) => (
                         <th key={field} className="col-md-2 px-1">
                         <input
@@ -301,7 +327,7 @@ const CollectionsiteArea = () => {
                           <td>{collectionsite.CollectionSiteName}</td>
                           <td>{collectionsite.email}</td>
                           <td>{collectionsite.phoneNumber}</td>
-                          {/* <td>{collectionsite.created_at}</td> */}
+                          <td>{formatDate(collectionsite.created_at)}</td>
                           <td>{collectionsite.status}</td>
                           <td>
                             <div className="d-flex justify-content-center gap-2">

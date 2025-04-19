@@ -99,6 +99,8 @@ const create_organizationTable = () => {
       fullAddress TEXT,
       logo LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -128,6 +130,8 @@ const create_collectionsiteTable = () => {
       logo LONGBLOB,
       phoneNumber VARCHAR(15),
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -884,24 +888,24 @@ const createAccount = (req, callback) => {
 const loginAccount = (data, callback) => {
   const { email, password } = data;
 
-  // Check if all fields are provided
+  // Validate input
   if (!email || !password) {
-    return callback({ status: "fail", message: "Email and password are required" });
+    return callback({ message: "Email and password are required" }, null);
   }
 
-  // Query to verify email and password for any account type
-  const query =
-    `SELECT id, email, accountType 
-     FROM user_account 
-     WHERE email = ? AND password = ?`;
+  // Base user check
+  const query = `
+    SELECT id, email, accountType 
+    FROM user_account 
+    WHERE email = ? AND password = ?`;
 
   mysqlConnection.query(query, [email, password], (err, results) => {
-    if (err) {
-      return callback(err, null); // Pass error to the controller
+    if (err) return callback(err, null);
+    if (results.length === 0) {
+      return callback({ message: "Invalid email or password" }, null);
     }
 
-    if (results.length > 0) {
-      const user = results[0];
+    const user = results[0];
 
       // If account type is Researcher, check the status in researcher table
       if (user.accountType === 'Researcher') {

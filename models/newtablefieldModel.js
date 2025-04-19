@@ -9,6 +9,40 @@ const tablesAndColumns = [
     ],
   },
   {
+    table: "organization",
+    columnsToAdd: [
+      {
+        column: "created_at",
+        type: "TIMESTAMP",
+        default: "CURRENT_TIMESTAMP",
+        nullable: true,
+      },
+      {
+        column: "updated_at",
+        type: "TIMESTAMP",
+        default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+        nullable: true,
+      },
+    ]
+    },
+    {
+      table: "collectionsite",
+      columnsToAdd: [
+        {
+          column: "created_at",
+          type: "TIMESTAMP",
+          default: "CURRENT_TIMESTAMP",
+          nullable: true,
+        },
+        {
+          column: "updated_at",
+          type: "TIMESTAMP",
+          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          nullable: true,
+        },
+      ]
+      },
+  {
     table:"registrationadmin_history",
     columnsToAdd:[
       {

@@ -75,18 +75,22 @@ const getOrganizationById = (req, res) => {
   });
 };
 
-const deleteOrganization = (req, res) => {
+const deleteOrganization = async (req, res) => {
   const { id } = req.params;  // Get the id from request parameters
 
-  // Pass the id to the model function
-  organizationModel.deleteOrganization(id, (err, results) => {
-    if (err) {
-      console.error('Error in deleting organization:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json({ message: 'Organization status updated to unapproved' });
-  });
+  try {
+    // Call the model method and wait for the response
+    const result = await organizationModel.deleteOrganization(id);
+    
+    // Return the success message after the status update
+    res.status(200).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in deleting organization:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
 };
+
+
 module.exports = {
   getOrganizationById,
   updateOrganization,

@@ -71,10 +71,13 @@ const LoginForm = () => {
         }
       }
     } catch (error) {
+      console.error("Login request failed:", error);
+  
       const fallbackMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong. Please try again.";
+        error?.response?.data?.error ||  // Custom backend error
+        error?.message ||                // JS error
+        "Something went wrong. Please try again."; // Fallback
+  
       notifyError(fallbackMessage);
     }
   };
