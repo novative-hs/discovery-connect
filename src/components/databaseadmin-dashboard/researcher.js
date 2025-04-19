@@ -264,8 +264,8 @@ const ResearcherArea = () => {
                           field: "OrganizationName",
                         },
                         {
-                          label: "Register At",
-                          placeholder: "Search Register At",
+                          label: "Created at",
+                          placeholder: "Search Created at",
                           field: "created_at",
                         },
                         {

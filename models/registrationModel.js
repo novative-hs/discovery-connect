@@ -888,24 +888,24 @@ const createAccount = (req, callback) => {
 const loginAccount = (data, callback) => {
   const { email, password } = data;
 
-  // Validate input
+  // Check if all fields are provided
   if (!email || !password) {
-    return callback({ message: "Email and password are required" }, null);
+    return callback({ status: "fail", message: "Email and password are required" });
   }
 
-  // Base user check
-  const query = `
-    SELECT id, email, accountType 
-    FROM user_account 
-    WHERE email = ? AND password = ?`;
+  // Query to verify email and password for any account type
+  const query =
+    `SELECT id, email, accountType 
+     FROM user_account 
+     WHERE email = ? AND password = ?`;
 
   mysqlConnection.query(query, [email, password], (err, results) => {
-    if (err) return callback(err, null);
-    if (results.length === 0) {
-      return callback({ message: "Invalid email or password" }, null);
+    if (err) {
+      return callback(err, null); // Pass error to the controller
     }
 
-    const user = results[0];
+    if (results.length > 0) {
+      const user = results[0];
 
       // If account type is Researcher, check the status in researcher table
       if (user.accountType === 'Researcher') {
