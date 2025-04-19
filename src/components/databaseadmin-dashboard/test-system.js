@@ -410,7 +410,8 @@ const TestSystemArea = () => {
                       <tr key={id}>
                         {/* <td>{id}</td> */}
                         <td>{name}</td>
-                        <td>{added_by}</td>
+                        {/* <td>{added_by}</td> */}
+                        <td>DB Admin</td>
                         <td>{formatDate(created_at)}</td>
                         <td>{formatDate(updated_at)}</td>
                         <td>
@@ -691,7 +692,7 @@ const TestSystemArea = () => {
                                 }}
                               >
                                 <b>Test System:</b> {created_name} was{" "}
-                                <b>added</b> by Registration Admin at{" "}
+                                <b>added</b> by Database Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -712,7 +713,7 @@ const TestSystemArea = () => {
                                   }}
                                 >
                                   <b>Test System:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Registration Admin at{" "}
+                                  <b>updated</b> by Database Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

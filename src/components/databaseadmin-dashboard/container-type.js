@@ -311,7 +311,7 @@ const ContainerTypeArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Test Kit Manufacturer List</h5>
+              <h5 className="m-0 fw-bold ">Container Type List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Add Container Type Button */}
                 <button
@@ -416,7 +416,8 @@ const ContainerTypeArea = () => {
                       <tr key={id}>
                         {/* <td>{id}</td> */}
                         <td>{name}</td>
-                        <td>{added_by}</td>
+                        {/* <td>{added_by}</td> */}
+                        <td>DB Admin</td>
                         <td>{formatDate(created_at)}</td>
                         <td>{formatDate(updated_at)}</td>
                         <td>
@@ -702,7 +703,7 @@ const ContainerTypeArea = () => {
                                 }}
                               >
                                 <b>Container type:</b> {created_name} was{" "}
-                                <b>added</b> by Registration Admin at{" "}
+                                <b>added</b> by Database Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -723,7 +724,7 @@ const ContainerTypeArea = () => {
                                   }}
                                 >
                                   <b>Container type:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Registration Admin at{" "}
+                                  <b>updated</b> by Database Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

@@ -8,7 +8,7 @@ const ResearcherArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const[historyData,setHistoryData]=useState([])
+  const [historyData, setHistoryData] = useState([])
   const [editResearcher, setEditResearcher] = useState(null);
   const [selectedResearcherId, setSelectedResearcherId] = useState(null);
   const [allResearchers, setAllResearchers] = useState([]);
@@ -199,42 +199,42 @@ const ResearcherArea = () => {
   
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
-    <div className="container">
-      <div className="row justify-content-center">
-       
-          <div className="d-flex flex-column w-100">
-              {/* Button Container */}
-              <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
-<h5 className="m-0 fw-bold ">Researcher List</h5>
-                {/* Status Filter */}
-                <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
-                  <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
-                    Status:
-                  </label>
+      <div className="container">
+        <div className="row justify-content-center">
 
-                  <select
-                    id="statusFilter"
-                    className="form-control mb-2"
-                    style={{ width: "auto" }}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    } // Pass "status" as the field
-                  >
-                    <option value="">All</option>
-                    <option value="pending">pending</option>
-                    <option value="approved">approved</option>
-                  </select>
+          <div className="d-flex flex-column w-100">
+            {/* Button Container */}
+            <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
+              {/* Success Message */}
+              {successMessage && (
+                <div
+                  className="alert alert-success w-100 text-start"
+                  role="alert"
+                >
+                  {successMessage}
                 </div>
+              )}
+              <h5 className="m-0 fw-bold ">Researcher List</h5>
+              {/* Status Filter */}
+              <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
+                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                  Status:
+                </label>
+
+                <select
+                  id="statusFilter"
+                  className="form-control mb-2"
+                  style={{ width: "auto" }}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value)
+                  } // Pass "status" as the field
+                >
+                  <option value="">All</option>
+                  <option value="pending">pending</option>
+                  <option value="approved">approved</option>
+                </select>
               </div>
+            </div>
 
               {/* Table */}
               <div className="table-responsive w-100">
@@ -264,8 +264,8 @@ const ResearcherArea = () => {
                           field: "OrganizationName",
                         },
                         {
-                          label: "Register At",
-                          placeholder: "Search Register At",
+                          label: "Created at",
+                          placeholder: "Search Created at",
                           field: "created_at",
                         },
                         {
@@ -303,361 +303,361 @@ const ResearcherArea = () => {
                           <td>{researcher.status}</td>
                           <td>
                           <div className="d-flex justify-content-center gap-2">
-                              <button
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleEditClick(researcher)}
-                              >
-                                <FontAwesomeIcon icon={faEdit} />
-                              </button>
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => {
-                                  setSelectedResearcherId(researcher.id);
-                                  setShowDeleteModal(true);
-                                }}
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </button>
-                              <button
-                                className="btn btn-info btn-sm"
-                                onClick={() =>
-                                  handleShowHistory("resaercher", researcher.id)
-                                }
-                                title="History"
-                              >
-                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="7" className="text-center">
-                          No researchers available
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() => handleEditClick(researcher)}
+                            >
+                              <FontAwesomeIcon icon={faEdit} />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                setSelectedResearcherId(researcher.id);
+                                setShowDeleteModal(true);
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faTrash} />
+                            </button>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() =>
+                                handleShowHistory("resaercher", researcher.id)
+                              }
+                              title="History"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {filteredResearchers.length >= 0 && (
-  <Pagination
-    handlePageClick={handlePageChange}
-    pageCount={Math.max(1, Math.ceil(filteredResearchers.length / itemsPerPage))}
-    focusPage={currentPage}
-  />
-)}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center">
+                        No researchers available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-            {/* Edit Researcher Modal */}
-            {showEditModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
 
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Edit Researcher</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowEditModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleUpdate}>
-                        <div className="modal-body">
-                          {/* Form Fields */}
-                          <div className="form-group">
-                            <label>Researcher name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="ResearcherName"
-                              value={formData.ResearcherName}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Email</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Name Of Organization</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="OrganizationName"
-                              value={formData.OrganizationName}
-                              onChange={handleInputChange}
-                              disabled
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Status</label>
-                            <select
-                              className="form-control"
-                              name="status"
-                              value={formData.status}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="pending">pending</option>
-                              <option value="approved">approved</option>
-                              {/* <option value="unapproved">unapproved</option> */}
-                            </select>
-                          </div>
-                        </div>
-                        <div className="modal-footer">
-                          <button type="submit" className="btn btn-primary">
-                            Update Researcher
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </>
+            {/* Pagination */}
+            {filteredResearchers.length >= 0 && (
+              <Pagination
+                handlePageClick={handlePageChange}
+                pageCount={Math.max(1, Math.ceil(filteredResearchers.length / itemsPerPage))}
+                focusPage={currentPage}
+              />
             )}
-            {showHistoryModal && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
+          </div>
+          {/* Edit Researcher Modal */}
+          {showEditModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
 
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "100px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog modal-md" role="document">
-                    <div className="modal-content">
-                      {/* Modal Header */}
-                      <div className="modal-header">
-                        <h5 className="modal-title">History</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowHistoryModal(false)}
-                          style={{
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-
-                      {/* Chat-style Modal Body */}
-                      <div
-                        className="modal-body"
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">Edit Researcher</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowEditModal(false)}
                         style={{
-                          maxHeight: "500px",
-                          overflowY: "auto",
-                          backgroundColor: "#e5ddd5", // WhatsApp-style background
-                          padding: "15px",
-                          borderRadius: "10px",
+                          // background: 'none',
+                          // border: 'none',
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
                         }}
                       >
-                        {historyData && historyData.length > 0 ? (
-                          historyData.map((log, index) => {
-                            const {
-                              created_name,
-                              updated_name,
-                              added_by,
-                              created_at,
-                              updated_at,
-                            } = log;
+                        <span>&times;</span>
+                      </button>
+                    </div>
+                    <form onSubmit={handleUpdate}>
+                      <div className="modal-body">
+                        {/* Form Fields */}
+                        <div className="form-group">
+                          <label>Researcher name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="ResearcherName"
+                            value={formData.ResearcherName}
+                            onChange={handleInputChange}
+                            disabled
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Email</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            disabled
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Phone Number</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleInputChange}
+                            disabled
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Name Of Organization</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="OrganizationName"
+                            value={formData.OrganizationName}
+                            onChange={handleInputChange}
+                            disabled
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Status</label>
+                          <select
+                            className="form-control"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="pending">pending</option>
+                            <option value="approved">approved</option>
+                            {/* <option value="unapproved">unapproved</option> */}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="modal-footer">
+                        <button type="submit" className="btn btn-primary">
+                          Update Researcher
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          {showHistoryModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
 
-                            return (
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "100px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog modal-md" role="document">
+                  <div className="modal-content">
+                    {/* Modal Header */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">History</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowHistoryModal(false)}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    {/* Chat-style Modal Body */}
+                    <div
+                      className="modal-body"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        padding: "15px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            created_name,
+                            updated_name,
+                            added_by,
+                            created_at,
+                            updated_at,
+                          } = log;
+
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Message for City Addition */}
                               <div
-                                key={index}
                                 style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "flex-start",
-                                  marginBottom: "10px",
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
                                 }}
                               >
-                                {/* Message for City Addition */}
+                                <b>Researcher:</b> {created_name} was{" "}
+                                <b>added</b> by Database Admin at{" "}
+                                {moment(created_at).format(
+                                  "DD MMM YYYY, h:mm A"
+                                )}
+                              </div>
+
+                              {/* Message for City Update (Only if it exists) */}
+                              {updated_name && updated_at && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
                                     borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
+                                    marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Researcher:</b> {created_name} was{" "}
-                                  <b>added</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
+                                  <b>Researcher:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Database Admin at{" "}
+                                  {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
                                 </div>
-
-                                {/* Message for City Update (Only if it exists) */}
-                                {updated_name && updated_at && (
-                                  <div
-                                    style={{
-                                      padding: "10px 15px",
-                                      borderRadius: "15px",
-                                      backgroundColor: "#dcf8c6", // Light green for updates
-                                      boxShadow:
-                                        "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                      maxWidth: "75%",
-                                      fontSize: "14px",
-                                      textAlign: "left",
-                                      marginTop: "5px", // Spacing between messages
-                                    }}
-                                  >
-                                    <b>Researcher:</b> {updated_name} was{" "}
-                                    <b>updated</b> by Registration Admin at{" "}
-                                    {moment(updated_at).format(
-                                      "DD MMM YYYY, h:mm A"
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <p className="text-left">No history available.</p>
-                        )}
-                      </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
                     </div>
                   </div>
                 </div>
-              </>
-            )}
-            {/* Modal for Deleting Researchers */}
-            {showDeleteModal && (
-              <>
-                {/* Bootstrap Backdrop with Blur */}
-                <div
-                  className="modal-backdrop fade show"
-                  style={{ backdropFilter: "blur(5px)" }}
-                ></div>
+              </div>
+            </>
+          )}
+          {/* Modal for Deleting Researchers */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
 
-                {/* Modal Content */}
-                <div
-                  className="modal show d-block"
-                  tabIndex="-1"
-                  role="dialog"
-                  style={{
-                    zIndex: 1050,
-                    position: "fixed",
-                    top: "120px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Delete Researcher</h5>
-                        <button
-                          type="button"
-                          className="close"
-                          onClick={() => setShowDeleteModal(false)}
-                          style={{
-                            // background: 'none',
-                            // border: 'none',
-                            fontSize: "1.5rem",
-                            position: "absolute",
-                            right: "10px",
-                            top: "10px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>&times;</span>
-                        </button>
-                      </div>
-                      <div className="modal-body">
-                        <p>Are you sure you want to delete this researcher?</p>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          className="btn btn-danger"
-                          onClick={handleDelete}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowDeleteModal(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">Delete Researcher</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowDeleteModal(false)}
+                        style={{
+                          // background: 'none',
+                          // border: 'none',
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this researcher?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 </div>
-              </>
-            )}
-          
+              </div>
+            </>
+          )}
+
         </div>
       </div>
     </section>

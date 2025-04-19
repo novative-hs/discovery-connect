@@ -536,7 +536,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>Organization:</b> {OrganizationName} was <b>added</b> by Registration Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    <b>Organization:</b> {OrganizationName} was <b>added</b> by Database Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
                                   </div>
 
                                   {/* Message for City Update (Only if it exists) */}
@@ -553,7 +553,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                                         marginTop: "5px", // Spacing between messages
                                       }}
                                     >
-                                      <b>Organization:</b> {updated_name} was <b>updated</b> by Registration Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                      <b>Organization:</b> {updated_name} was <b>updated</b> by Database Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                                     </div>
                                   )}
                                 </div>

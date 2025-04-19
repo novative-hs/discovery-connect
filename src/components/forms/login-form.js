@@ -30,53 +30,46 @@ const LoginForm = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  
+
   const onSubmit = async (data) => {
     try {
       const result = await loginUser({
         email: data.email,
         password: data.password,
       });
-  
-      console.log("Login result:", result); // 🔍 Log to see success structure
-  
-      // If login failed, result will contain .error
+
+      console.log("Login result:", result); // ✅ TEMPORARY: Check what's coming back
+
       if (result?.error) {
-        console.log("Login error object:", result.error); // 🔍 Log to see error structure
-  
-        // Try to extract the actual message from server response
+        // ✅ Try to get the most helpful error message
+        const errorData = result.error?.data;
+
         const errorMsg =
-          result.error.data?.error ||    // Custom error message from backend
-          result.error.statusText ||     // Fallback if above is missing
-          "Internal Server Error";       // Final fallback
-  
-        notifyError(errorMsg);           // Show message on frontend
-        return;
-      }
-  
-      // ✅ Login success - get data from server response
-      const { id, accountType, authToken } = result?.data?.user || {};
-  
-      if (!id) {
-        return notifyError("Unexpected error: User ID is missing.");
-      }
-  
-      // Store data
-      localStorage.setItem("userID", id);
-      localStorage.setItem("accountType", accountType);
-      notifySuccess("Login successfully");
-  
-      // Set token in cookie
-      document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-  
-      // Redirect after login
-      const fromPage = router.query.from;
-      if (fromPage === "checkout") {
-        router.push("/dashboardheader?tab=Checkout");
+          errorData?.message || // Backend custom message (e.g., 'Account is not approved')
+          errorData?.error || // If backend sends it under `error`
+          result.error?.statusText || // Generic HTTP error
+          "Internal Server Error"; // Fallback
+
+        notifyError(errorMsg);
       } else {
-        router.push(accountType ? "/dashboardheader" : "/default-dashboard");
+        const { id, accountType, authToken } = result?.data?.user || {};
+        if (!id) {
+          return notifyError("Unexpected error: User ID is missing.");
+        }
+
+        localStorage.setItem("userID", id);
+        localStorage.setItem("accountType", accountType);
+        notifySuccess("Login successfully");
+
+        document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
+
+        const fromPage = router.query.from;
+        if (fromPage === "checkout") {
+          router.push("/dashboardheader?tab=Checkout");
+        } else {
+          router.push(accountType ? "/dashboardheader" : "/default-dashboard");
+        }
       }
-  
     } catch (error) {
       console.error("Login request failed:", error);
   
@@ -88,10 +81,8 @@ const LoginForm = () => {
       notifyError(fallbackMessage);
     }
   };
-  
-  
-  
-  
+
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="login__input-wrapper">
@@ -149,9 +140,9 @@ const LoginForm = () => {
       </div>
       <div className="login__btn">
         {/* <Link href="/user-dashboard"> */}
-          <button type="submit" className="tp-btn w-100">
-            Sign In
-          </button>
+        <button type="submit" className="tp-btn w-100">
+          Sign In
+        </button>
         {/* </Link> */}
       </div>
     </form>

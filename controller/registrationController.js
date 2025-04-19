@@ -106,23 +106,22 @@ const loginAccount = (req, res) => {
 
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
-
-      // Handle custom error messages
-      const errorMsg = err.message || "Internal server error";
-      let statusCode = 500;
-
-      if (errorMsg === "Email and password are required") statusCode = 400;
-      else if (errorMsg === "Invalid email or password") statusCode = 401;
-      else if (errorMsg === "Account is not approved" || errorMsg === "Account is not active") statusCode = 403;
-
-      return res.status(statusCode).json({
-        status: "fail",
-        error: errorMsg,
-      });
+      console.error("Error:", err);
+      if (err.message === "Email and password are required") {
+        return res.status(400).json({ status: "fail", error: err.message });
+      }
+      if (err.message === "Invalid email or password") {
+        return res.status(401).json({ status: "fail", error: err.message });
+      }
+      if (err.message === "Account is not approved") {
+        return res.status(403).json({ status: "fail", error: err.message });
+      }
+      return res
+        .status(500)
+        .json({ status: "fail", error: "Internal server error" });
     }
 
-    // If successful login
-    console.log("Login successful:", result);
+    console.log("Login Successful:", result);
     res.status(200).json({
       status: "success",
       message: "Login successful",
@@ -227,5 +226,5 @@ module.exports = {
   getEmail,
   sendOTP,
   verifyOTP
-  
+
 };
