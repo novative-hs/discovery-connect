@@ -64,7 +64,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
-
+      console.log("User", response.data[0])
       setUser(response.data[0]); // Store fetched organization data
     } catch (error) {
       console.error("Error fetching Organization:", error);
@@ -165,7 +165,7 @@ const Header = ({ setActiveTab, activeTab }) => {
             { label: "Organization List", tab: "organization" },
             { label: "Collection Site List", tab: "collectionsite" },
             { label: "Committee Members List", tab: "committee-members" },
-            {label:"Order packager List",tab:"orderpackager"},
+            { label: "CSR List", tab: "CSR" },
             {
               label: "Sample",
               tab: "sample",
@@ -211,15 +211,15 @@ const Header = ({ setActiveTab, activeTab }) => {
                     { label: "Order List", tab: "order" },
                     { label: "Contact us List", tab: "contactus" },
                   ]
-                  : userType == "order_packager"
-        ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "Order Packaging List", tab: "shippingorder" },
-          { label: "Order Dispatch List", tab: "dispatchorder" },
-          { label: "Order Completed List", tab: "completedorder" },
-        ]
-                  : [];
-                  
+                  : userType == "csr"
+                    ? [
+                      { label: "Profile", tab: "order-info" },
+                      { label: "Order Packaging List", tab: "shippingorder" },
+                      { label: "Order Dispatch List", tab: "dispatchorder" },
+                      { label: "Order Completed List", tab: "completedorder" },
+                    ]
+                    : [];
+
 
   return (
     <>
@@ -264,8 +264,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                     {label === "Sample" && (
                       <i
                         className={`ms-2 fas ${showSampleDropdown === index
-                            ? "fa-caret-up"
-                            : "fa-caret-down"
+                          ? "fa-caret-up"
+                          : "fa-caret-down"
                           } text-black`}
                       ></i>
                     )}
@@ -389,23 +389,23 @@ const Header = ({ setActiveTab, activeTab }) => {
                 </ul>
               </div>
               {userType === "researcher" && (
-  <div className="d-flex gap-0">
-<Link
-  href={{
-    pathname: router.pathname, // stays on the same dashboard route
-    query: { ...router.query, tab: "Cart" },
-  }}
-  className="btn btn-sm position-relative"
->
-  <Cart className="fs-7 text-white" />
-  {cartCount > 0 && (
-    <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-      {sampleCount}
-    </span>
-  )}
-</Link>
-  </div>
-)}
+                <div className="d-flex gap-0">
+                  <Link
+                    href={{
+                      pathname: router.pathname, // stays on the same dashboard route
+                      query: { ...router.query, tab: "Cart" },
+                    }}
+                    className="btn btn-sm position-relative"
+                  >
+                    <Cart className="fs-7 text-white" />
+                    {cartCount > 0 && (
+                      <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                        {sampleCount}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

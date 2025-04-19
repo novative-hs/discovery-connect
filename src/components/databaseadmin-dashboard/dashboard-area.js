@@ -24,7 +24,7 @@ import ConcurrentMedicalConditionsArea from "./concurrent-medical-conditions";
 import TestKitManufacturerArea from "./test-kit-manufacturer";
 import TestSystemArea from "./test-system";
 import TestSystemManufacturerArea from "./test-system-manufacturer";
-import OrderpackagerArea from './orderpakager'
+import CSRArea from './CSR'
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
@@ -72,8 +72,8 @@ const DashboardArea = () => {
         return <CommitteeMemberArea />;
       case "organization":
         return <Organization />;
-        case "orderpackager":
-          return <OrderpackagerArea/>;
+        case "CSR":
+          return <CSRArea/>;
       case "collectionsite":
         return <CollectionsiteArea />;
       case "ethnicity":
