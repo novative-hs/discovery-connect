@@ -102,26 +102,27 @@ const createAccount = (req, res) => {
 const loginAccount = (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Received Login Data:", { email, password });
+  console.log("Login request:", { email, password });
 
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
-      console.error("Error:", err);
-      if (err.message === "Email and password are required") {
-        return res.status(400).json({ status: "fail", error: err.message });
-      }
-      if (err.message === "Invalid email or password") {
-        return res.status(401).json({ status: "fail", error: err.message });
-      }
-      if (err.message === "Account is not active"){
-        return res.status(403).json({ status: "fail", error: err.message });
-      }
-      return res
-        .status(500)
-        .json({ status: "fail", error: "Internal server error" });
+
+      // Handle custom error messages
+      const errorMsg = err.message || "Internal server error";
+      let statusCode = 500;
+
+      if (errorMsg === "Email and password are required") statusCode = 400;
+      else if (errorMsg === "Invalid email or password") statusCode = 401;
+      else if (errorMsg === "Account is not approved" || errorMsg === "Account is not active") statusCode = 403;
+
+      return res.status(statusCode).json({
+        status: "fail",
+        error: errorMsg,
+      });
     }
 
-    console.log("Login Successful:", result);
+    // If successful login
+    console.log("Login successful:", result);
     res.status(200).json({
       status: "success",
       message: "Login successful",
@@ -129,6 +130,7 @@ const loginAccount = (req, res) => {
         id: result.id,
         accountType: result.accountType,
         email: result.email,
+        authToken: "mockAuthToken", // Replace with JWT or real token logic
       },
     });
   });

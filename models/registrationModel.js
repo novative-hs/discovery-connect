@@ -99,6 +99,8 @@ const create_organizationTable = () => {
       fullAddress TEXT,
       logo LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -128,6 +130,8 @@ const create_collectionsiteTable = () => {
       logo LONGBLOB,
       phoneNumber VARCHAR(15),
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -884,115 +888,59 @@ const createAccount = (req, callback) => {
 const loginAccount = (data, callback) => {
   const { email, password } = data;
 
-  // Check if all fields are provided
+  // Validate input
   if (!email || !password) {
-    return callback({ status: "fail", message: "Email and password are required" });
+    return callback({ message: "Email and password are required" }, null);
   }
 
-  // Query to verify email and password for any account type
-  const query =
-    `SELECT id, email, accountType 
-     FROM user_account 
-     WHERE email = ? AND password = ?`;
+  // Base user check
+  const query = `
+    SELECT id, email, accountType 
+    FROM user_account 
+    WHERE email = ? AND password = ?`;
 
   mysqlConnection.query(query, [email, password], (err, results) => {
-    if (err) {
-      return callback(err, null); // Pass error to the controller
+    if (err) return callback(err, null);
+    if (results.length === 0) {
+      return callback({ message: "Invalid email or password" }, null);
     }
 
-    if (results.length > 0) {
-      const user = results[0];
+    const user = results[0];
 
-      // If account type is Researcher, check the status in researcher table
-      if (user.accountType === 'Researcher') {
-        const researcherQuery =
-          `SELECT status FROM researcher WHERE user_account_id = ?`;
+    // Helper to check status
+    const checkStatus = (tableName, activeStatus = "approved") => {
+      const statusQuery = `SELECT status FROM ${tableName} WHERE user_account_id = ?`;
+      mysqlConnection.query(statusQuery, [user.id], (err, statusResults) => {
+        if (err) return callback(err, null);
+        if (
+          statusResults.length > 0 &&
+          statusResults[0].status.toLowerCase() === activeStatus.toLowerCase()
+        ) {
+          return callback(null, user);
+        } else {
+          return callback({ message: "Account is not approved" }, null);
+        }
+      });
+    };
 
-        mysqlConnection.query(researcherQuery, [user.id], (err, researcherResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (researcherResults.length > 0 && researcherResults[0].status === 'approved') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
-          }
-        });
-      } 
-      
-      else if (user.accountType === 'Organization') {
-        const OrganizationQuery =
-          `SELECT status FROM organization WHERE user_account_id = ?`;
-
-        mysqlConnection.query(OrganizationQuery, [user.id], (err, OrganizationResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (OrganizationResults.length > 0 && OrganizationResults[0].status === 'approved') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
-          }
-        });
-      } else if (user.accountType === 'CollectionSites') {
-        const collectionsiteQuery =
-          `SELECT status FROM collectionsite WHERE user_account_id = ?`;
-
-        mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsiteResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (collectionsiteResults.length > 0 && collectionsiteResults[0].status === 'approved') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
-          }
-        });
-      }
-      else if (user.accountType === 'Committeemember') {
-        const CommitteememberQuery =
-          `SELECT status FROM committee_member WHERE user_account_id = ?`;
-
-        mysqlConnection.query(CommitteememberQuery, [user.id], (err, CommitteememberResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (CommitteememberResults.length > 0 &&  CommitteememberResults[0].status.toLowerCase() === "active") {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not active" }, null);
-          }
-        });
-      } 
-      else  if (user.accountType === 'CSR') {
-        const CSRQuery =
-          `SELECT status FROM CSR WHERE user_account_id = ?`;
-
-        mysqlConnection.query(CSRQuery, [user.id], (err ,CSRResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (CSRResults.length > 0 && CSRResults[0].status === 'approved') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
-          }
-        });
-      }
-      else {
-        // For non-researcher accounts, return the user info
-        callback(null, user);
-      }
-    } else {
-      callback({ status: "fail", message: "Invalid email or password" }, null);
+    switch (user.accountType) {
+      case "Researcher":
+        return checkStatus("researcher");
+      case "Organization":
+        return checkStatus("organization");
+      case "CollectionSites":
+        return checkStatus("collectionsite");
+      case "CSR":
+        return checkStatus("CSR");
+      case "Committeemember":
+        return checkStatus("committee_member", "active");
+      default:
+        return callback(null, user); // Allow login if no special status check
     }
   });
 };
+
+
 
 const getUserEmail = (id, callback) => {
   const query = `SELECT * FROM user_account WHERE id = ?`;

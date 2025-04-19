@@ -828,7 +828,7 @@ const ResearcherArea = () => {
                             "organization_id",
                             "collectionsite_id",
                             "CommitteeType",
-                            "CNIC",
+                            "cnic",
                             "CSRName",
                             "CSRName",
                             "CSR_id",

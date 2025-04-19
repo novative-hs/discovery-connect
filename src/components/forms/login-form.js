@@ -38,46 +38,58 @@ const LoginForm = () => {
         password: data.password,
       });
   
-      console.log("Login result:", result); // ✅ TEMPORARY: Check what's coming back
+      console.log("Login result:", result); // 🔍 Log to see success structure
   
+      // If login failed, result will contain .error
       if (result?.error) {
-        // ✅ Try to get the most helpful error message
-        const errorData = result.error?.data;
+        console.log("Login error object:", result.error); // 🔍 Log to see error structure
   
+        // Try to extract the actual message from server response
         const errorMsg =
-          errorData?.message || // Backend custom message (e.g., 'Account is not active')
-          errorData?.error || // If backend sends it under `error`
-          result.error?.statusText || // Generic HTTP error
-          "Internal Server Error"; // Fallback
+          result.error.data?.error ||    // Custom error message from backend
+          result.error.statusText ||     // Fallback if above is missing
+          "Internal Server Error";       // Final fallback
   
-        notifyError(errorMsg);
-      } else {
-        const { id, accountType, authToken } = result?.data?.user || {};
-        if (!id) {
-          return notifyError("Unexpected error: User ID is missing.");
-        }
-  
-        localStorage.setItem("userID", id);
-        localStorage.setItem("accountType", accountType);
-        notifySuccess("Login successfully");
-  
-        document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-  
-        const fromPage = router.query.from;
-        if (fromPage === "checkout") {
-          router.push("/dashboardheader?tab=Checkout");
-        } else {
-          router.push(accountType ? "/dashboardheader" : "/default-dashboard");
-        }
+        notifyError(errorMsg);           // Show message on frontend
+        return;
       }
+  
+      // ✅ Login success - get data from server response
+      const { id, accountType, authToken } = result?.data?.user || {};
+  
+      if (!id) {
+        return notifyError("Unexpected error: User ID is missing.");
+      }
+  
+      // Store data
+      localStorage.setItem("userID", id);
+      localStorage.setItem("accountType", accountType);
+      notifySuccess("Login successfully");
+  
+      // Set token in cookie
+      document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
+  
+      // Redirect after login
+      const fromPage = router.query.from;
+      if (fromPage === "checkout") {
+        router.push("/dashboardheader?tab=Checkout");
+      } else {
+        router.push(accountType ? "/dashboardheader" : "/default-dashboard");
+      }
+  
     } catch (error) {
+      console.error("Login request failed:", error);
+  
       const fallbackMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong. Please try again.";
+        error?.response?.data?.error ||  // Custom backend error
+        error?.message ||                // JS error
+        "Something went wrong. Please try again."; // Fallback
+  
       notifyError(fallbackMessage);
     }
   };
+  
+  
   
   
   return (

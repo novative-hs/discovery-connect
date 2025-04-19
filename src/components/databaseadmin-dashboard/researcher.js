@@ -84,21 +84,22 @@ const ResearcherArea = () => {
   };
   const handleDelete = async () => {
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researchers/delete/${selectedResearcherId}`
       );
-      setSuccessMessage("Researcher deleted successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      if (response.data && response.data.message) {
+        setSuccessMessage(response.data.message);
+        setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
+      }
+  
       fetchResearchers(); // Refresh data after delete
       setShowDeleteModal(false);
       setSelectedResearcherId(null);
     } catch (error) {
-      console.error(
-        `Error deleting researcher with ID ${selectedResearcherId}:`,
-        error
-      );
+      console.error(`Error deleting researcher with ID ${selectedResearcherId}:`, error);
     }
   };
+  
 
   const handleEditClick = (researcher) => {
     setSelectedResearcherId(researcher.id);
@@ -173,7 +174,29 @@ const ResearcherArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showEditModal, showHistoryModal]);
-
+  const formatDate = (date) => {
+    const options = {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+    };
+  
+    const formatted = new Date(date).toLocaleString("en-GB", options);
+  
+    const [datePart, timePart] = formatted.split(", ");
+    const [day, month, year] = datePart.split(" ");
+  
+    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  
+    return `${day}-${formattedMonth}-${year} ${timePart}`;
+  };
+  
+  
+  
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
     <div className="container">
@@ -241,6 +264,11 @@ const ResearcherArea = () => {
                           field: "OrganizationName",
                         },
                         {
+                          label: "Register At",
+                          placeholder: "Search Register At",
+                          field: "created_at",
+                        },
+                        {
                           label: "Status",
                           placeholder: "Search Status",
                           field: "status",
@@ -271,6 +299,7 @@ const ResearcherArea = () => {
                           <td>{researcher.email}</td>
                           <td>{researcher.phoneNumber}</td>
                           <td>{researcher.OrganizationName}</td>
+                          <td>{formatDate(researcher.created_at)}</td>
                           <td>{researcher.status}</td>
                           <td>
                           <div className="d-flex justify-content-center gap-2">

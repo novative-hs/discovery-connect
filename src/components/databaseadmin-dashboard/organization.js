@@ -111,31 +111,35 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
 
 
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${selectedOrganizationId}`);
-      console.log(`Organization with ID ${selectedOrganizationId} deleted successfully.`);
-
-      // Set success message
-      setSuccessMessage('Organization deleted successfully.');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-
-      // Refresh the organization list after deletion
-      const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`);
-      setOrganizations(newResponse.data);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedOrganizationId(null);
-    } catch (error) {
-      console.error(`Error deleting organization with ID ${selectedOrganizationId}:`, error);
-    }
-  };
+    const handleDelete = async () => {
+      try {
+        // Send delete request to backend
+        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${selectedOrganizationId}`);
+        
+        // Log the response to ensure you get the correct message
+        console.log(`Response: ${response.data.message}`);
+        
+        // Set success message
+        setSuccessMessage(response.data.message);
+    
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 3000);
+    
+        // Refresh the organization list after deletion
+        const newResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`);
+        setOrganizations(newResponse.data);
+    
+        // Close modal after deletion
+        setShowDeleteModal(false);
+        setSelectedOrganizationId(null);
+      } catch (error) {
+        console.error(`Error deleting organization with ID ${selectedOrganizationId}:`, error);
+      }
+    };
+    
+    
   const handleEditClick = (organization) => {
     setSelectedOrganizationId(organization.id);
     setEditOrganization(organization); // Store the organization data to edit
@@ -193,7 +197,27 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
     }
   }, [showDeleteModal, showEditModal, showHistoryModal]);
 
-
+  const formatDate = (date) => {
+    const options = {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+    };
+  
+    const formatted = new Date(date).toLocaleString("en-GB", options);
+    console.log("Formatted:", formatted); // debug output
+  
+    const [datePart, timePart] = formatted.split(", ");
+    const [day, month, year] = datePart.split(" ");
+  
+    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  
+    return `${day}-${formattedMonth}-${year} ${timePart}`;
+  };
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
     <div className="container">
@@ -254,6 +278,11 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                           field: "phoneNumber",
                         },
                         {
+                          label: "Register At",
+                          placeholder: "Search Register At",
+                          field: "created_at",
+                        },
+                        {
                           label: "Status",
                           placeholder: "Search Status",
                           field: "status",
@@ -282,7 +311,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                           <td>{organization.OrganizationName}</td>
                           <td>{organization.email}</td>
                           <td>{organization.phoneNumber}</td>
-                          {/* <td>{organization.created_at}</td> */}
+                          <td>{formatDate(organization.created_at)}</td>
                           <td>{organization.status}</td>
                           
                           <td>
