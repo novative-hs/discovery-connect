@@ -128,7 +128,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     } else {
       setActiveTab("update-profile");
     }
-    setIsProfileOpen(true); 
+    setIsProfileOpen(true);
   };
 
   const handleChangePassword = () => {
@@ -360,13 +360,13 @@ const Header = ({ setActiveTab, activeTab }) => {
                     }`}
                   aria-labelledby="userDropdown"
                 >
-                  {userType !== "registrationadmin" && userType !== "biobank" && (
+                  {userType !== "registrationadmin" && userType !== "biobank" && userType !== "databaseadmin" && (
                     <li>
                       <button
                         className="dropdown-item fs-7"
                         onClick={handleUpdateProfile}
                       >
-                        Update Profile
+                        Update Profilee
                       </button>
                     </li>
                   )}
