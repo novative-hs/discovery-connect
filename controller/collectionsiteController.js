@@ -48,17 +48,19 @@ const updateCollectionSiteStatus = async (req, res) => {
 };
 
 //Controller to delete a collection site
-const deleteCollectionSite = (req, res) => {
+const deleteCollectionSite = async (req, res) => {
   const { id } = req.params;  // Get the id from request parameters
 
-  // Pass the id to the model function
-  collectionsiteModel.deleteCollectionSite(id, (err, results) => {
-    if (err) {
-      console.error('Error in deleting collection site:', err);
-      return res.status(500).json({ error: 'An error occurred' });
-    }
-    res.status(200).json({ message: 'Collection site status updated to unapproved' });
-  });
+  try {
+    // Call the model method and wait for the response
+    const result = await collectionsiteModel.deleteCollectionSite(id);
+    
+    // Return the success message after the status update
+    res.status(200).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in deleting collectionsite:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
 };
 
 // Controller to fetch collection site names in collectionsite dashboard

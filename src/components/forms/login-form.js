@@ -30,39 +30,39 @@ const LoginForm = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  
+
   const onSubmit = async (data) => {
     try {
       const result = await loginUser({
         email: data.email,
         password: data.password,
       });
-  
+
       console.log("Login result:", result); // ✅ TEMPORARY: Check what's coming back
-  
+
       if (result?.error) {
         // ✅ Try to get the most helpful error message
         const errorData = result.error?.data;
-  
+
         const errorMsg =
-          errorData?.message || // Backend custom message (e.g., 'Account is not active')
+          errorData?.message || // Backend custom message (e.g., 'Account is not approved')
           errorData?.error || // If backend sends it under `error`
           result.error?.statusText || // Generic HTTP error
           "Internal Server Error"; // Fallback
-  
+
         notifyError(errorMsg);
       } else {
         const { id, accountType, authToken } = result?.data?.user || {};
         if (!id) {
           return notifyError("Unexpected error: User ID is missing.");
         }
-  
+
         localStorage.setItem("userID", id);
         localStorage.setItem("accountType", accountType);
         notifySuccess("Login successfully");
-  
+
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-  
+
         const fromPage = router.query.from;
         if (fromPage === "checkout") {
           router.push("/dashboardheader?tab=Checkout");
@@ -71,15 +71,18 @@ const LoginForm = () => {
         }
       }
     } catch (error) {
+      console.error("Login request failed:", error);
+  
       const fallbackMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong. Please try again.";
+        error?.response?.data?.error ||  // Custom backend error
+        error?.message ||                // JS error
+        "Something went wrong. Please try again."; // Fallback
+  
       notifyError(fallbackMessage);
     }
   };
-  
-  
+
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="login__input-wrapper">
@@ -137,9 +140,9 @@ const LoginForm = () => {
       </div>
       <div className="login__btn">
         {/* <Link href="/user-dashboard"> */}
-          <button type="submit" className="tp-btn w-100">
-            Sign In
-          </button>
+        <button type="submit" className="tp-btn w-100">
+          Sign In
+        </button>
         {/* </Link> */}
       </div>
     </form>

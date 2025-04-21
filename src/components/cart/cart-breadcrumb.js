@@ -5,13 +5,13 @@ const CartBreadcrumb = ({ title, subtitle }) => {
   const router = useRouter();
   const userID =
     typeof window !== "undefined" ? localStorage.getItem("userID") : null;
-    const handleBackToShop = () => {
-      if (userID) {
-        router.push("/dashboardheader?tab=Booksamples");
-      } else {
-        router.push("/shop");
-      }
-    };
+  const handleBackToShop = () => {
+    if (userID) {
+      router.push("/dashboardheader?tab=Booksamples");
+    } else {
+      router.push("/shop");
+    }
+  };
 
   return (
     <section
@@ -37,26 +37,7 @@ const CartBreadcrumb = ({ title, subtitle }) => {
               <div className="mt-4 d-flex justify-content-center">
                 <button
                   onClick={handleBackToShop}
-                  className="btn btn-link text-decoration-none"
-                  style={{
-                    color: "#ffffff", // White text
-                    fontWeight: "600",
-                    fontSize: "18px",
-                    border: "2px solid #0056b3", // Blue border
-                    backgroundColor: "#0056b3", // Blue background
-                    padding: "12px 24px", // Added padding for a larger button
-                    cursor: "pointer",
-                    borderRadius: "25px", // Rounded corners for a smoother look
-                    transition: "all 0.3s ease", // Smooth transition for hover effect
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = "#0d6efd"; // Darker blue on hover
-                    e.target.style.borderColor = "#0d6efd"; // Darker border on hover
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = "#0056b3"; // Original blue on leave
-                    e.target.style.borderColor = "#0056b3"; // Original border on leave
-                  }}
+                  className="btn btn-primary fw-semibold fs-5 px-4 py-2 rounded-pill d-flex align-items-center"
                 >
                   <i className="fas fa-arrow-left me-2" style={{ fontSize: "18px" }}></i>
                   <span>Continue Shopping</span>

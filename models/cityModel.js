@@ -302,7 +302,8 @@ const getCount = (callback) => {
     totalOrganizations: 'SELECT COUNT(*) AS count FROM organization',
     totalCommitteeMembers: 'SELECT COUNT(*) AS count FROM committee_member',
     totalCollectionSites: 'SELECT COUNT(*) AS count FROM collectionsite',
-    totalOrders: 'SELECT COUNT(*) AS count FROM cart'
+    totalOrders: 'SELECT COUNT(*) AS count FROM cart',
+   totalCSR: 'SELECT COUNT(*) AS count FROM CSR' 
   };
 
   let results = {};

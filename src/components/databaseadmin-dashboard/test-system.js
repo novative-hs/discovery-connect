@@ -311,39 +311,40 @@ const TestSystemArea = () => {
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2", // soft blue
+                    backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "10px 20px",
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
                   <i className="fas fa-plus"></i> Add Test System
                 </button>
 
-                {/* Upload Test System List Button */}
                 <label
                   style={{
-                    backgroundColor: "#f1f1f1", // soft gray
+                    backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "10px 20px",
+                    padding: "8px 16px", 
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload Test System List
+                  <i className="fas fa-upload"></i> Upload List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -410,7 +411,8 @@ const TestSystemArea = () => {
                       <tr key={id}>
                         {/* <td>{id}</td> */}
                         <td>{name}</td>
-                        <td>{added_by}</td>
+                        {/* <td>{added_by}</td> */}
+                        <td>DB Admin</td>
                         <td>{formatDate(created_at)}</td>
                         <td>{formatDate(updated_at)}</td>
                         <td>
@@ -691,7 +693,7 @@ const TestSystemArea = () => {
                                 }}
                               >
                                 <b>Test System:</b> {created_name} was{" "}
-                                <b>added</b> by Registration Admin at{" "}
+                                <b>added</b> by Database Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -712,7 +714,7 @@ const TestSystemArea = () => {
                                   }}
                                 >
                                   <b>Test System:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Registration Admin at{" "}
+                                  <b>updated</b> by Database Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

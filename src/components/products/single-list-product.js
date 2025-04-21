@@ -92,7 +92,7 @@ const SingleListProduct = ({ product }) => {
 
           <div className="d-flex gap-2">
           {isInCart(product.id) ? (
-      <button className="btn btn-secondary w-75" disabled>Added</button>
+      <button className="btn btn-secondary w-50" disabled>Added</button>
     ) : (
       <button className="btn btn-danger w-50" onClick={() => handleAddToCart(product)}>
         Add to Cart

@@ -11,6 +11,8 @@ import axios from "axios";
 import useCartInfo from "@hooks/use-cart-info";
 
 const Header = ({ setActiveTab, activeTab }) => {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   const id = localStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
@@ -62,7 +64,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
-
+      console.log("User", response.data[0])
       setUser(response.data[0]); // Store fetched organization data
     } catch (error) {
       console.error("Error fetching Organization:", error);
@@ -138,7 +140,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     } else {
       setActiveTab("update-profile");
     }
-    setIsProfileOpen(true); // Set profile open state to true
+    setIsProfileOpen(true);
   };
 
   const handleChangePassword = () => {
@@ -175,6 +177,7 @@ const Header = ({ setActiveTab, activeTab }) => {
             { label: "Organization List", tab: "organization" },
             { label: "Collection Site List", tab: "collectionsite" },
             { label: "Committee Members List", tab: "committee-members" },
+            { label: "CSR List", tab: "CSR" },
             {
               label: "Sample",
               tab: "sample",
@@ -220,15 +223,15 @@ const Header = ({ setActiveTab, activeTab }) => {
                     { label: "Order List", tab: "order" },
                     { label: "Contact us List", tab: "contactus" },
                   ]
-                  : userType == "order_packager"
-        ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "Order Packaging List", tab: "shippingorder" },
-          { label: "Order Dispatch List", tab: "dispatchorder" },
-          { label: "Order Completed List", tab: "completedorder" },
-        ]
-                  : [];
-                  
+                  : userType == "csr"
+                    ? [
+                      { label: "Profile", tab: "order-info" },
+                      { label: "Order Packaging List", tab: "shippingorder" },
+                      { label: "Order Dispatch List", tab: "dispatchorder" },
+                      { label: "Order Completed List", tab: "completedorder" },
+                    ]
+                    : [];
+
 
   return (
     <>
@@ -273,8 +276,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                     {label === "Sample" && (
                       <i
                         className={`ms-2 fas ${showSampleDropdown === index
-                            ? "fa-caret-up"
-                            : "fa-caret-down"
+                          ? "fa-caret-up"
+                          : "fa-caret-down"
                           } text-black`}
                       ></i>
                     )}
@@ -380,7 +383,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                         className="dropdown-item fs-7"
                         onClick={handleUpdateProfile}
                       >
-                        Update Profile
+                        Update Profilee
                       </button>
                     </li>
                   )}

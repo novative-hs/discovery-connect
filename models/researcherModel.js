@@ -15,7 +15,7 @@ function createResearcher(data, callback) {
 // Function to fetch all researchers
 function getAllResearchers(callback) {
   const query = `
-    SELECT researcher.id,researcher.added_by, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.status,
+    SELECT researcher.id,researcher.added_by,researcher.created_at, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.status,
            user_account.email,
            organization.id AS organization_id, organization.OrganizationName
     FROM researcher
@@ -168,12 +168,69 @@ function updateResearcherDetail(id, data, callback) {
   });
 }
 
-const deleteResearcher = (id, callback) => {
-  const query = 'UPDATE researcher SET status = ? WHERE id = ?';
-  mysqlConnection.query(query, ['unapproved', id], (err, result) => {
-    callback(err, result);
-  });
+const deleteResearcher = async (id) => {
+  const updateQuery = 'UPDATE researcher SET status = ? WHERE id = ?';
+  const getEmailQuery = `
+    SELECT ua.email ,r.ResearcherName
+    FROM researcher r
+    JOIN user_account ua ON r.user_account_id = ua.id
+    WHERE r.id = ?
+  `;
+
+  try {
+    // Set the status here (e.g., 'unapproved' for deletion)
+    const status = 'unapproved';
+
+    // Update researcher status
+    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    if (updateResult.affectedRows === 0) {
+      throw new Error("No researcher found with the given ID.");
+    }
+
+    // Fetch email in parallel
+    const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
+
+    // Check if email exists
+    if (emailResults.length === 0) {
+      throw new Error("Researcher email not found.");
+    }
+
+    const email = emailResults[0].email;
+    const name = emailResults[0].ResearcherName;
+
+    // Construct the email content based on the status
+    let emailText = `
+    Dear ${name},
+
+    Thank you for registering with Discovery Connect! 
+
+    We appreciate your interest in our platform. However, we regret to inform you that your account is currently **unapproved**. This means that you will not be able to log in or access the platform until the admin completes the review and approval process.
+
+    We understand this might be disappointing, but rest assured, we are working hard to process your registration as quickly as possible.
+
+    Once your account is approved, you'll be able to explore all the exciting features and resources that Discovery Connect has to offer!
+
+    We will notify you via email as soon as your account is approved. In the meantime, if you have any questions or need further assistance, feel free to reach out to us.
+
+    We appreciate your patience and look forward to having you on board soon!
+
+    Best regards,
+    The Discovery Connect Team
+    `;
+
+    // Send email asynchronously (does not block response)
+    sendEmail(email, "Account Status Update", emailText)
+      .then(() => console.log("Email sent successfully"))
+      .catch((emailErr) => console.error("Error sending email:", emailErr));
+
+    // Final response (status update and email sent)
+    return { message: "Researcher status updated and email sent successfully." };
+  } catch (error) {
+    console.error("Error updating researcher status:", error);
+    throw error;
+  }
 };
+
 
 // (Registration Admin) Function to update researcher status
 const updateResearcherStatus = async (id, status) => {
@@ -183,7 +240,7 @@ const updateResearcherStatus = async (id, status) => {
     VALUES (?, ?, NOW())
   `;
   const getEmailQuery = `
-    SELECT ua.email 
+    SELECT ua.email ,r.ResearcherName
     FROM researcher r
     JOIN user_account ua ON r.user_account_id = ua.id
     WHERE r.id = ?
@@ -211,14 +268,44 @@ const updateResearcherStatus = async (id, status) => {
     conn.release(); // Release the connection
 
     const email = emailResults[0].email;
+    const name = emailResults[0].ResearcherName;
 
-    let emailText = `Dear Researcher,\n\nYour account status is currently pending. 
-      Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
-
-    if (status === "approved") {
-      emailText = `Dear Researcher,\n\nYour account has been approved! 
-        You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
-    }
+    let emailText = `
+    Dear ${name},
+  
+    We hope this message finds you well! 
+  
+    We would like to update you about the status of your Researcher account. 
+  
+    - **Status:** Pending Approval
+  
+    Your account is currently pending approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
+  
+    Thank you for your patience and cooperation.
+  
+    Best regards,
+    The Discovery Connect Team
+  `;
+  
+  if (status === "approved") {
+    emailText = `
+    Dear ${name},
+  
+    Congratulations! 🎉
+  
+    We are thrilled to inform you that your Researcher account has been successfully approved! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
+  
+    Here are a few next steps:
+    - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).
+    - Get in touch with our support team if you have any questions or need assistance.
+  
+    We are excited to have you on board and look forward to seeing how you’ll benefit from our platform!
+  
+    Best regards,
+    The Discovery Connect Team
+  `;
+  
+  }
 
     sendEmail(email, "Welcome to Discovery Connect", emailText)
       .then(() => console.log("Email sent successfully"))

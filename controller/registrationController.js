@@ -102,7 +102,7 @@ const createAccount = (req, res) => {
 const loginAccount = (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Received Login Data:", { email, password });
+  console.log("Login request:", { email, password });
 
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
@@ -113,7 +113,7 @@ const loginAccount = (req, res) => {
       if (err.message === "Invalid email or password") {
         return res.status(401).json({ status: "fail", error: err.message });
       }
-      if (err.message === "Account is not active"){
+      if (err.message === "Account is not approved") {
         return res.status(403).json({ status: "fail", error: err.message });
       }
       return res
@@ -129,6 +129,7 @@ const loginAccount = (req, res) => {
         id: result.id,
         accountType: result.accountType,
         email: result.email,
+        authToken: "mockAuthToken", // Replace with JWT or real token logic
       },
     });
   });
@@ -225,5 +226,5 @@ module.exports = {
   getEmail,
   sendOTP,
   verifyOTP
-  
+
 };

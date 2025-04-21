@@ -120,20 +120,20 @@ const CartArea = () => {
                 <div className="col-md-8">
                   <div className="table-responsive">
                     <table className="table table-bordered rounded shadow-sm bg-white">
-                    <thead className="table-light text-dark text-center">
-  <tr>
-    <th colSpan="5" className="text-center fs-6 py-3">
-      Sample Cart Detail
-    </th>
-  </tr>
-  <tr>
-    <th>Product</th>
-    <th>Price</th>
-    <th>Quantity</th>
-    <th>Total</th>
-    <th>Remove</th>
-  </tr>
-</thead>
+                      <thead className="table-light text-dark text-center">
+                        <tr>
+                          <th colSpan="5" className="text-center fs-6 py-3">
+                            Sample Cart Detail
+                          </th>
+                        </tr>
+                        <tr>
+                          <th>Product</th>
+                          <th>Price</th>
+                          <th>Quantity</th>
+                          <th>Total</th>
+                          <th>Remove</th>
+                        </tr>
+                      </thead>
 
                       <tbody>
                         {cart_products.map((item, i) => (
@@ -148,7 +148,7 @@ const CartArea = () => {
                                 <span>{item.samplename}</span>
                               </div>
                             </td>
-  
+
                             <td>{item.price.toFixed(2)}</td>
                             <td>
                               <div className="d-flex justify-content-center align-items-center gap-2">
@@ -198,7 +198,7 @@ const CartArea = () => {
                     </table>
                   </div>
                 </div>
-  
+
                 {/* Right side: Cart Totals */}
                 <div className="col-md-4">
                   <div className="card shadow-sm">
@@ -237,7 +237,7 @@ const CartArea = () => {
       </div>
     </section>
   );
-  
+
 };
 
 export default CartArea;

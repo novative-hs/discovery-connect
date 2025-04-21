@@ -9,6 +9,80 @@ const tablesAndColumns = [
     ],
   },
   {
+    table: "researcher",
+    columnsToAdd: [
+      {
+        column: "created_at",
+        type: "TIMESTAMP",
+        default: "CURRENT_TIMESTAMP",
+        nullable: true,
+      },
+      {
+        column: "updated_at",
+        type: "TIMESTAMP",
+        default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+        nullable: true,
+      },
+    ]
+    },
+    {
+      table: "organization",
+      columnsToAdd: [
+        {
+          column: "created_at",
+          type: "TIMESTAMP",
+          default: "CURRENT_TIMESTAMP",
+          nullable: true,
+        },
+        {
+          column: "updated_at",
+          type: "TIMESTAMP",
+          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          nullable: true,
+        },
+      ]
+      },
+    {
+      table: "collectionsite",
+      columnsToAdd: [
+        {
+          column: "created_at",
+          type: "TIMESTAMP",
+          default: "CURRENT_TIMESTAMP",
+          nullable: true,
+        },
+        {
+          column: "updated_at",
+          type: "TIMESTAMP",
+          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          nullable: true,
+        },
+      ]
+      },
+  {
+    table:"registrationadmin_history",
+    columnsToAdd:[
+      {
+        column: "CSR_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "CSR", column: "id" },
+      },
+    ],
+  },
+  {
+    table: "history",
+    columnsToAdd: [
+      { column: "CSRName", type: "VARCHAR(100)", nullable: true },
+      {
+        column: "CSR_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "CSR", column: "id" },
+      },
+    ],
+  },
+  {
     table: "sample",
     columnsToAdd: [
       { column: "room_number", type: "INT", nullable: true },
@@ -283,7 +357,7 @@ const createOrUpdateTables = async () => {
         "RegistrationAdmin",
         "biobank",
         "Committeemember",
-        "Order_packager"
+        "CSR"
       ]),
     () =>
       updateEnumColumn("cart", "order_status", [
@@ -302,49 +376,7 @@ const createOrUpdateTables = async () => {
         "Refused",
       ]),
   ]);
-  const records = [
-    {
-      email: 'databaseadmin123@gmail.com',
-      password: 'databaseadmin123@',
-      accountType: 'DatabaseAdmin'
-    },
-    {
-      email: 'registrationadmin123@gmail.com',
-      password: 'registrationadmin123@',
-      accountType: 'RegistrationAdmin'
-    },
-    {
-      email: 'biobank123@gmail.com',
-      password: 'biobank123@',
-      accountType: 'biobank'
-    },
-    {
-      email: 'orderpackager123@gmail.com',
-      password: 'orderpackager123@',
-      accountType: 'Order_packager'
-    },
-    {
-      email: 'orderpackager13@gmail.com',
-      password: 'orderpackager13@',
-      accountType: 'Order_packager'
-    },
-    
-  ];
   
-  const insertAllRecords = async () => {
-    for (let record of records) {
-      try {
-        const message = await insertRecord("user_account", record);
-        console.log(message);
-      } catch (error) {
-        console.error('Error processing record:', record.email, error);
-      }
-    }
-  };
-  
-  insertAllRecords()
-  
-
 };
 
 const updateAccountType = () => {
