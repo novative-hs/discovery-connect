@@ -114,16 +114,20 @@ const CityArea = () => {
       const response = await axios.post(`${url}/city/post-city`, formData);
       console.log("City added successfully:", response.data);
 
+      setSuccessMessage("City added successfully.");
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
       fetchcityname();
+
       // Clear form after submission
       setFormData({
         cityname: "",
         added_by: id,
       });
-      setSuccessMessage("City Name added successfully.");
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Committe Member:", error);
+      console.error("Error adding city:", error);
     }
   };
 
@@ -229,33 +233,47 @@ const CityArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const arrayBuffer = event.target.result;
+      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
+        type: "array",
+      });
+
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Add 'added_by' field from state (assumes 'id' is available in state)
+      // Ensure 'id' is available
+      if (!id) {
+        console.error("Error: 'id' is not defined.");
+        return;
+      }
+
+      // Add 'added_by' field
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Make sure `id` is defined
+        added_by: id, // Ensure `id` is defined in the state
       }));
 
       try {
-        // POST data to your existing API
+        // POST data to API
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/post-city`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Cities added successfully:", response.data);
+        console.log("Cities uploaded successfully:", response.data);
+        setSuccessMessage("Cities uploaded successfully");
 
-        // Refresh the city list
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
+        // Refresh the country list
         const newResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
         );
@@ -266,7 +284,7 @@ const CityArea = () => {
       }
     };
 
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   return (

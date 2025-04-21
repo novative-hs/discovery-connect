@@ -231,48 +231,58 @@ useEffect(() => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const arrayBuffer = event.target.result;
+      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
+        type: "array",
+      });
+
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Add 'added_by' field from state (assumes 'id' is available in state)
+      // Ensure 'id' is available
+      if (!id) {
+        console.error("Error: 'id' is not defined.");
+        return;
+      }
+
+      // Add 'added_by' field
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Make sure `id` is defined
+        added_by: id, // Ensure `id` is defined in the state
       }));
 
       try {
-        // POST data to your existing API
+        // POST data to API
         const response = await axios.post(
-          "http://localhost:5000/api/district/post-district",
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("District added successfully:", response.data);
-        setSuccessMessage("District added successfully.");
+        console.log("Districts Uploaded Successfully:", response.data);
+        setSuccessMessage("Districts Uploaded Successfully");
 
         setTimeout(() => {
           setSuccessMessage("");
         }, 3000);
-        // Refresh the District list
+        // Refresh the country list
         const newResponse = await axios.get(
-          "http://localhost:5000/api/district/get-district"
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
         );
-        setFilteredDistrictname(newResponse.data)
+        setFilteredDistrictname(newResponse.data);
         setdistrictname(newResponse.data);
       } catch (error) {
         console.error("Error uploading file:", error);
       }
     };
 
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   return (
