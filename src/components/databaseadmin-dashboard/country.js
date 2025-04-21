@@ -263,8 +263,8 @@ const CountryArea = () => {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/post-country`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Countries added successfully:", response.data);
-        setSuccessMessage("Countries added successfully");
+        console.log("Countries Uploaded Successfully:", response.data);
+        setSuccessMessage("Countries Uploaded Successfully");
 
         setTimeout(() => {
           setSuccessMessage("");

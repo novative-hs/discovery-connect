@@ -44,7 +44,7 @@ const getResearcherSamples = (req, res) => {
       return res.status(500).json({ error: "Error fetching sample", details: err.message });
     }
     if (results.length === 0) {
-      return res.status(404).json({ error: "No samples found" });
+      return res.status(404).json({ error: "No samplesdddddd found" });
     }
     res.status(200).json(results);
   });

@@ -316,6 +316,7 @@ const SampleArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,

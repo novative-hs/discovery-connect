@@ -39,63 +39,49 @@ const SingleProduct = ({ product, discountPrd = false }) => {
 
   return (
     <React.Fragment>
-      <div className="product__item p-relative transition-3 mb-50">
+  <div className="product__item p-relative transition-3 mb-50 shadow rounded border bg-white overflow-hidden" style={{ transition: '0.3s ease', padding: '1rem' }}>
+  <div className="product__thumb w-img p-relative mb-3 rounded overflow-hidden">
+    <Image
+      src={product.imageUrl}
+      alt="product image"
+      width={960}
+      height={1125}
+      style={{ objectFit: 'cover', width: '100%', height: '250px', borderRadius: '12px' }}
+    />
+  </div>
 
-        <div className="product__thumb w-img p-relative fix">
-          {/* <Link href={id ? `/product-details/${id}` : "/product-not-found"}> */}
-          <div className="product-image-frame">
-            <Image
-              src={product.imageUrl}
-              alt="product image"
-              width={960}
-              height={1125}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-            />
-          </div>
-          {/* </Link> */}
+  <h5 className="mb-2 fw-bold text-dark">{product.samplename}</h5>
 
-          <div className="d-flex justify-content-between align-items-center gap-2 mt-2 product__add transition-3">
-            {isInCart(product.id) ? (
-              <button className="product-add-cart-btn w-75 disabled-btn" disabled>
-                Added
-              </button>
-            ) : (
-              <button
-                className="product-add-cart-btn w-75"
-                onClick={() => handleAddToCart(product)}
-              >
-                Add to Cart
-              </button>
-            )}
-            {/* Quick View Button with Bootstrap Tooltip */}
-            <button
-              onClick={() => handleQuickView(product)}
-              className="btn btn-outline-danger w-25 position-relative"
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              title="Quick View"
-              style={{ backgroundColor: 'white', color: '#dc3545', borderColor: '#dc3545' }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#dc3545';
-                e.target.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'white';
-                e.target.style.color = '#dc3545';
-              }}
-            >
-              <Eye product={product} />
-            </button>
-          </div>
-        </div>
-        <div className="product__content"></div>
-        <h3 className="product__list-title">
-          <span className="product__list-ammount">{product.samplename}</span>
-        </h3>
-        <h3 className="product__list-title">
-          <span className="product__list-ammount">RS: {product.price}</span>
-        </h3>
-      </div>
+  <div className="d-flex justify-content-between text-muted small mb-1">
+  <span>Price: <strong className="text-dark">₨ {product.price}</strong></span>
+  <span>Stock: <strong>{product.quantity}</strong></span>
+</div>
+
+<div className="text-muted small mb-3">
+  Allocated: <strong>{product.quantity_allocated ?? 0}</strong>
+</div>
+
+  <div className="d-flex gap-2">
+    {isInCart(product.id) ? (
+      <button className="btn btn-secondary w-75" disabled>Added</button>
+    ) : (
+      <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+        Add to Cart
+      </button>
+    )}
+
+    <button
+      onClick={() => handleQuickView(product)}
+      className="btn btn-outline-danger w-25"
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title="Quick View"
+    >
+      <Eye product={product} />
+    </button>
+  </div>
+</div>
+
 
     </React.Fragment>
   );

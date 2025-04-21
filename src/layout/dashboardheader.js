@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
@@ -36,7 +36,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   }, []);
 
   const handleToggleDropdown = (index) => {
-    setShowDropdown(showDropdown === index ? null : index); // Toggle only the clicked dropdown
+    setShowDropdown(showDropdown === index ? null : index);
   };
 
   useEffect(() => {
@@ -48,7 +48,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       router.push("/login");
     }
   }, [router]);
-
+  const dropdownRef = useRef(null);
   useEffect(() => {
     if (id === null) {
       return <div>Loading...</div>; // Or redirect to login
@@ -94,7 +94,19 @@ const Header = ({ setActiveTab, activeTab }) => {
       console.error("Error fetching cart:", error);
     }
   };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+        setShowSampleDropdown(null); // Also close sub-dropdowns if needed
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   useEffect(() => {
     if (user) {
       setUserLogo(
@@ -128,7 +140,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     } else {
       setActiveTab("update-profile");
     }
-    setIsProfileOpen(true); 
+    setIsProfileOpen(true);
   };
 
   const handleChangePassword = () => {
@@ -151,7 +163,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       ]
       : userType == "researcher"
         ? [
-          { label: "Profile", tab: "order-info" },
+          { label: "Book Samples", tab: "Booksamples" },
           { label: "Sample List", tab: "samples" },
           { label: "My Order Samples", tab: "my-samples" },
         ]
@@ -333,63 +345,68 @@ const Header = ({ setActiveTab, activeTab }) => {
                 </span>
               )}
 
-              {/* User Dropdown */}
-              <div className="dropdown">
-                <button
-                  className="btn btn-sm dropdown-toggle d-flex align-items-center"
-                  type="button"
-                  id="userDropdown"
-                  data-bs-toggle="dropdown"
-                  aria-expanded={showDropdown}
-                  onClick={handleToggleDropdown}
-                >
-                  {userlogo ? (
-                    <Image
-                      src={userlogo}
-                      alt="User Logo"
-                      width={35}
-                      height={35}
-                      className="rounded-circle border"
-                    />
-                  ) : (
-                    <i className="fa fa-user fs-6 text-dark"></i>
-                  )}
-                </button>
-                <ul
-                  className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""
-                    }`}
-                  aria-labelledby="userDropdown"
-                >
-                  {userType !== "registrationadmin" && userType !== "biobank" && userType !== "databaseadmin" && (
+              <div className="d-flex  align-items-center gap-0">
+                <div className="dropdown me-3" ref={dropdownRef}>
+                  <button
+                    className="btn btn-sm dropdown-toggle d-flex align-items-center"
+                    type="button"
+                    id="userDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded={showDropdown}
+                    onClick={handleToggleDropdown}
+                  >
+                    {userlogo ? (
+                      <Image
+                        src={userlogo}
+                        alt="User Logo"
+                        width={35}
+                        height={35}
+                        className="rounded-circle border"
+                      />
+                    ) : (
+                      <i className="fa fa-user fs-6 text-dark"></i>
+                    )}
+                  </button>
+                  <ul
+                    className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""}`}
+                    style={{
+                      right: 0,
+                      left: "auto",
+                      transform: "translateX(0)",
+                      minWidth: "160px",
+                      zIndex: 9999,
+                    }}
+                  >
+                    {userType !== "registrationadmin" && userType !== "biobank" && userType !== "databaseadmin" && (
+                      <li>
+                        <button
+                          className="dropdown-item fs-7"
+                          onClick={handleUpdateProfile}
+                        >
+                          Update Profilee
+                        </button>
+                      </li>
+                    )}
                     <li>
                       <button
                         className="dropdown-item fs-7"
-                        onClick={handleUpdateProfile}
+                        onClick={handleChangePassword}
                       >
-                        Update Profile
+                        Change Password
                       </button>
                     </li>
-                  )}
-                  <li>
-                    <button
-                      className="dropdown-item fs-7"
-                      onClick={handleChangePassword}
-                    >
-                      Change Password
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item fs-7"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                  </li>
-                </ul>
-              </div>
-              {userType === "researcher" && (
-                <div className="d-flex gap-0">
+                    <li>
+                      <button
+                        className="dropdown-item fs-7"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                {userType === "researcher" && (
+
                   <Link
                     href={{
                       pathname: router.pathname, // stays on the same dashboard route
@@ -404,8 +421,9 @@ const Header = ({ setActiveTab, activeTab }) => {
                       </span>
                     )}
                   </Link>
-                </div>
-              )}
+
+                )}
+              </div>
             </div>
           </div>
         </div>
