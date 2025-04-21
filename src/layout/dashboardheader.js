@@ -360,7 +360,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                     }`}
                   aria-labelledby="userDropdown"
                 >
-                  {userType !== "registrationadmin" && userType !== "biobank" && (
+                  {userType !== "registrationadmin" && userType !== "biobank" && userType !== "databaseadmin" && (
                     <li>
                       <button
                         className="dropdown-item fs-7"

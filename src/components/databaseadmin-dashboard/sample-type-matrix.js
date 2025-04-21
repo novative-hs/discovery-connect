@@ -321,39 +321,40 @@ const SampleTypeMatrixArea = () => {
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2", // soft blue
+                    backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "10px 20px",
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px", 
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Sample Type Matrix
+                  <i className="fas fa-plus"></i> Add Sample type Matrix
                 </button>
 
-                {/* Upload Sample Type Matrix List Button */}
                 <label
                   style={{
-                    backgroundColor: "#f1f1f1", // soft gray
+                    backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "10px 20px",
+                    padding: "8px 16px", 
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload Sample Type Matrix List
+                  <i className="fas fa-upload"></i> Upload List
                   <input
                     type="file"
                     accept=".xlsx, .xls"

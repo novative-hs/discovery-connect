@@ -64,13 +64,13 @@ const CommitteeMemberArea = () => {
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
-    { label: "Org", placeholder: "Search Org", field: "organization" },
+    { label: "Organization", placeholder: "Search Org", field: "organization" },
     {
       label: "Committee",
       placeholder: "Search Committee",
       field: "committeetype",
     },
-    { label: "Registered", placeholder: "Search Date", field: "created_at" },
+    { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 

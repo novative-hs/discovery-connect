@@ -278,8 +278,8 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
                           field: "phoneNumber",
                         },
                         {
-                          label: "Register At",
-                          placeholder: "Search Register At",
+                          label: "Created at",
+                          placeholder: "Search Created at",
                           field: "created_at",
                         },
                         {
