@@ -10,6 +10,8 @@ import { getLocalStorage } from "@utils/localstorage";
 import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
+
+
 const BioBankSampleArea = () => {
   const id = localStorage.getItem("userID");
   if (id === null) {
@@ -25,6 +27,10 @@ const BioBankSampleArea = () => {
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
+  const [countryname, setCountryname] = useState([]);
+  const [searchCountry, setSearchCountry] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
@@ -46,7 +52,7 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions"},
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -130,6 +136,35 @@ const BioBankSampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: "",
   });
+
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData((prev) => ({
+      ...prev,
+      CountryOfCollection: country.name, // or country.id if you store ID
+    }));
+    setSearchCountry("");
+    setShowCountryDropdown(false);
+  };
+
+
+  // Fetch countries from backend
+  useEffect(() => {
+    const fetchData = async (url, setState, label) => {
+      try {
+        const response = await axios.get(url);
+        setState(response.data);
+      } catch (error) {
+        console.error(`Error fetching ${label}:`, error);
+      }
+    };
+
+    fetchData(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`,
+      setCountryname,
+      "Country"
+    );
+  }, []);
 
   const handleTransferClick = (sample) => {
     console.log("Transfer action for:", sample);
@@ -660,6 +695,7 @@ const BioBankSampleArea = () => {
     showTransferModal,
     showHistoryModal,
   ]);
+
   const resetFormData = () => {
     setFormData({
       locationids: "",
@@ -711,6 +747,7 @@ const BioBankSampleArea = () => {
       logo: file,
     }));
   };
+
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -1138,24 +1175,85 @@ const BioBankSampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          <div className="form-group">
+                          {/* Country Of Collection Field */}
+                          <div className="form-group position-relative">
                             <label>Country Of Collection</label>
                             <input
                               type="text"
                               className="form-control"
                               name="CountryOfCollection"
-                              value={formData.CountryOfCollection}
-                              onChange={handleInputChange}
+                              placeholder="Type to search country..."
+                              value={
+                                searchCountry || (selectedCountry ? selectedCountry.name : "")
+                              }
+                              onChange={(e) => {
+                                setSearchCountry(e.target.value);
+                                setShowCountryDropdown(true);
+                                if (!e.target.value) setSelectedCountry(null);
+                              }}
+                              onFocus={() => setShowCountryDropdown(true)}
+                              onBlur={() =>
+                                setTimeout(() => setShowCountryDropdown(false), 200)
+                              }
                               required
                               style={{
-                                height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
+                                height: "45px",
+                                backgroundColor: "#f0f0f0",
                                 color: "black",
                               }}
                             />
+
+                            {/* Styled dropdown without grid lines */}
+                            {showCountryDropdown && (
+                              <ul
+                                className="w-100 position-absolute"
+                                style={{
+                                  zIndex: 999,
+                                  maxHeight: "200px",
+                                  overflowY: "auto",
+                                  top: "100%",
+                                  left: 0,
+                                  right: 0,
+                                  backgroundColor: "#f0f0f0",
+                                  border: "1px solid #ced4da",
+                                  borderTop: "none",
+                                  borderRadius: "0 0 4px 4px",
+                                  fontSize: "14px",
+                                  padding: 0,
+                                  margin: 0,
+                                  listStyle: "none",
+                                }}
+                              >
+                                {countryname
+                                  .filter((country) =>
+                                    searchCountry
+                                      ? country.name
+                                        .toLowerCase()
+                                        .includes(searchCountry.toLowerCase())
+                                      : true
+                                  )
+                                  .map((country) => (
+                                    <li
+                                      key={country.id}
+                                      style={{
+                                        padding: "10px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                      onMouseDown={() => handleSelectCountry(country)}
+                                      onMouseEnter={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#e2e2e2")
+                                      }
+                                      onMouseLeave={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                                      }
+                                    >
+                                      {country.name}
+                                    </li>
+                                  ))}
+                              </ul>
+                            )}
                           </div>
                           <div className="form-group">
                             <label>Price</label>
@@ -1749,7 +1847,6 @@ const BioBankSampleArea = () => {
             </div>
           </>
         )}
-
 
         {/* Modal for transfreing Samples */}
         {showTransferModal && (

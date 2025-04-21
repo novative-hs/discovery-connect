@@ -67,24 +67,24 @@ const SampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState(null);
   const fetchSamples = async () => {
-    setLoading(true);  // Set loading to true when fetching data
+    setLoading(true); // Set loading to true when fetching data
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
       );
       console.log(response.data);
-      
+
       if (response.data.error) {
-        setError(response.data.error);  // Handle empty or error response
-        setSamples([]);  // Clear previous sample data
+        setError(response.data.error); // Handle empty or error response
+        setSamples([]); // Clear previous sample data
       } else {
-        setSamples(response.data);  // Store fetched samples in state
+        setSamples(response.data); // Store fetched samples in state
       }
     } catch (error) {
       console.error("Error fetching samples:", error);
       setError("An error occurred while fetching the samples.");
     } finally {
-      setLoading(false);  // Set loading to false when fetch is done
+      setLoading(false); // Set loading to false when fetch is done
     }
   };
 
@@ -127,12 +127,9 @@ const SampleArea = () => {
     }
   };
   return (
-    
     <section className="policy__area pb-40 overflow-hidden p-3">
-
       <div className="container">
         <div className="row justify-content-center">
-        
           <div className="table-responsive w-100">
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
@@ -187,7 +184,7 @@ const SampleArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key, render }, index) => {
-                        // Check if it's the price column and merge currency
+                        // 🔁 Handle Price column with currency
                         if (key === "price") {
                           return (
                             <td key={index}>
@@ -200,7 +197,7 @@ const SampleArea = () => {
                           );
                         }
 
-                        // Check if it's the total payment column and merge currency
+                        // 🔁 Handle Total Payment column with currency
                         if (key === "totalpayment") {
                           return (
                             <td key={index}>
@@ -213,7 +210,23 @@ const SampleArea = () => {
                           );
                         }
 
-                        // Default rendering for other columns
+                        // ✅ Custom logic for committee_status
+                        if (key === "committee_status") {
+                          let displayValue = sample[key];
+
+                          if (sample.registration_admin_status === "Rejected") {
+                            displayValue = "No further processing";
+                          } else if (
+                            displayValue === null ||
+                            displayValue === undefined
+                          ) {
+                            displayValue = "Waiting for admin action";
+                          }
+
+                          return <td key={index}>{displayValue}</td>;
+                        }
+
+                        // 🔁 Default render for other fields
                         return (
                           <td key={index}>
                             {render

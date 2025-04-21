@@ -25,6 +25,10 @@ const SampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
+  const [countryname, setCountryname] = useState([]);
+  const [searchCountry, setSearchCountry] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
@@ -125,6 +129,37 @@ const SampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: "",
   });
+
+
+
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData((prev) => ({
+      ...prev,
+      CountryOfCollection: country.name, // or country.id if you store ID
+    }));
+    setSearchCountry("");
+    setShowCountryDropdown(false);
+  };
+
+  // Fetch countries from backend
+  useEffect(() => {
+    const fetchData = async (url, setState, label) => {
+      try {
+        const response = await axios.get(url);
+        setState(response.data);
+      } catch (error) {
+        console.error(`Error fetching ${label}:`, error);
+      }
+    };
+
+    fetchData(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`,
+      setCountryname,
+      "Country"
+    );
+  }, []);
+
   const tableNames = [
     { name: "ethnicity", setter: setEthnicityNames },
     { name: "samplecondition", setter: setSampleConditionNames },
@@ -676,31 +711,31 @@ const SampleArea = () => {
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
-             
-              <div className="d-flex flex-wrap gap-3 ">
-                {/* Add City Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    backgroundColor: "#4a90e2", // soft blue
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <i className="fas fa-vial"></i> Add Sample
-                </button>
 
-                
-               
-              </div>
-            </div>
+          <div className="d-flex flex-wrap gap-3 ">
+            {/* Add City Button */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: "#4a90e2", // soft blue
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <i className="fas fa-vial"></i> Add Sample
+            </button>
+
+
+
+          </div>
+        </div>
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
@@ -1078,24 +1113,85 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          <div className="form-group">
+                          {/* Country Of Collection Field */}
+                          <div className="form-group position-relative">
                             <label>Country Of Collection</label>
                             <input
                               type="text"
                               className="form-control"
                               name="CountryOfCollection"
-                              value={formData.CountryOfCollection}
-                              onChange={handleInputChange}
+                              placeholder="Type to search country..."
+                              value={
+                                searchCountry || (selectedCountry ? selectedCountry.name : "")
+                              }
+                              onChange={(e) => {
+                                setSearchCountry(e.target.value);
+                                setShowCountryDropdown(true);
+                                if (!e.target.value) setSelectedCountry(null);
+                              }}
+                              onFocus={() => setShowCountryDropdown(true)}
+                              onBlur={() =>
+                                setTimeout(() => setShowCountryDropdown(false), 200)
+                              }
                               required
                               style={{
-                                height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
+                                height: "45px",
+                                backgroundColor: "#f0f0f0",
                                 color: "black",
                               }}
                             />
+
+                            {/* Styled dropdown without grid lines */}
+                            {showCountryDropdown && (
+                              <ul
+                                className="w-100 position-absolute"
+                                style={{
+                                  zIndex: 999,
+                                  maxHeight: "200px",
+                                  overflowY: "auto",
+                                  top: "100%",
+                                  left: 0,
+                                  right: 0,
+                                  backgroundColor: "#f0f0f0",
+                                  border: "1px solid #ced4da",
+                                  borderTop: "none",
+                                  borderRadius: "0 0 4px 4px",
+                                  fontSize: "14px",
+                                  padding: 0,
+                                  margin: 0,
+                                  listStyle: "none",
+                                }}
+                              >
+                                {countryname
+                                  .filter((country) =>
+                                    searchCountry
+                                      ? country.name
+                                        .toLowerCase()
+                                        .includes(searchCountry.toLowerCase())
+                                      : true
+                                  )
+                                  .map((country) => (
+                                    <li
+                                      key={country.id}
+                                      style={{
+                                        padding: "10px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                      onMouseDown={() => handleSelectCountry(country)}
+                                      onMouseEnter={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#e2e2e2")
+                                      }
+                                      onMouseLeave={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                                      }
+                                    >
+                                      {country.name}
+                                    </li>
+                                  ))}
+                              </ul>
+                            )}
                           </div>
                         </div>
                         {/* {Column 3} */}
