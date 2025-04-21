@@ -21,7 +21,6 @@ const CartArea = () => {
 
   const [quantities, setQuantities] = useState({});
   const [errors, setErrors] = useState({});
-  const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
     setQuantities((prevQuantities) => {
@@ -111,6 +110,8 @@ const CartArea = () => {
       style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}
     >
       <div className="container">
+        <div className="d-flex align-items-center mb-4" style={{ position: 'relative', top: '-30px' }}>
+        </div>
         <div className="row">
           <div className="col-12">
             {cart_products.length > 0 ? (

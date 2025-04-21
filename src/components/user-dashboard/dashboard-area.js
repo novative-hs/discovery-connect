@@ -54,8 +54,8 @@ const DashboardArea = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "order-info":
-        return <OrderInfo setActiveTab={setActiveTab} />;
+      // case "order-info":
+      //   return <OrderInfo setActiveTab={setActiveTab} />;
       case "Booksamples":
         return <Shop setActiveTab={setActiveTab} />;
       case "Cart":
@@ -71,18 +71,18 @@ const DashboardArea = () => {
       case "update-user":
         return <UpdateUser />;
       default:
-        return <OrderInfo setActiveTab={setActiveTab} />;
+        return <Shop setActiveTab={setActiveTab} />;
     }
   };
 
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-      <section className="profile__area py-2 h-auto d-flex align-items-center my-4">
+      <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">
         <div className="container profile__inner position-relative">
           <div className="row justify-content-center">
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
-              <div className="profile__tab-content mx-auto w-100 p-3 my-1 h-auto overflow-hidden">
+              <div className="profile__tab-content mx-auto w-100 p-3 my-1 h-auto">
                 {renderContent()}
               </div>
             </div>

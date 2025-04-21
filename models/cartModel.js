@@ -259,11 +259,18 @@ const createCart = (data, callback) => {
                 }
 
                 const updateQuery = `
-                  UPDATE sample SET quantity = quantity - ? 
-                  WHERE id = ? AND quantity >= ?
-                `;
-                const updateValues = [item.samplequantity, item.sample_id, item.samplequantity];
-
+                UPDATE sample 
+                SET 
+                  quantity = quantity - ?, 
+                  quantity_allocated = IFNULL(quantity_allocated, 0) + ?
+                WHERE id = ? AND quantity >= ?
+              `;
+              const updateValues = [
+                item.samplequantity,  // deduct from quantity
+                item.samplequantity,  // add to quantity_allocated
+                item.sample_id,
+                item.samplequantity
+              ];
                 mysqlConnection.query(updateQuery, updateValues, (err) => {
                   if (err) {
                     console.error("Error updating stock:", err);
@@ -621,10 +628,39 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
       : null;
 
     // Step 3: Update cart status if required
-    if (newCartStatus) {
-      const cartStatusUpdateResult = await updateCartStatus(id, newCartStatus);
-      console.log("Cart Status Update Result:", cartStatusUpdateResult); // Log the result
-    }
+  // Step 3: Update cart status if required
+if (newCartStatus) {
+  const cartStatusUpdateResult = await updateCartStatus(id, newCartStatus);
+  console.log("Cart Status Update Result:", cartStatusUpdateResult);
+
+// Step 3.5: If rejected, revert quantity back to the sample table
+if (registration_admin_status === 'Rejected') {
+  const getQuantitySql = `
+    SELECT sample_id, quantity 
+    FROM cart 
+    WHERE id = ?
+  `;
+  const [cartItem] = await queryAsync(getQuantitySql, [id]);
+
+  if (cartItem) {
+    const { sample_id, quantity } = cartItem;
+
+    const updateSampleSql = `
+      UPDATE sample 
+      SET quantity = quantity + ?, 
+          quantity_allocated = quantity_allocated - ? 
+      WHERE id = ?
+    `;
+
+    await queryAsync(updateSampleSql, [quantity, quantity, sample_id]);
+    console.log("Sample quantity reverted successfully!");
+  } else {
+    console.warn("Cart item not found for rejection.");
+  }
+}
+
+}
+
 
     // Step 4: Prepare the notification message
     const message =
