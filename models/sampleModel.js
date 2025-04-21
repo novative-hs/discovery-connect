@@ -192,6 +192,7 @@ const getResearcherSamples = (userId, callback) => {
     c.name AS CityName,
     d.name AS DistrictName,
     p.payment_type AS payment_method,
+    p.payment_status AS payment_status,
     s.quantity AS orderquantity, 
     
     -- Include Registration Admin Status
@@ -267,8 +268,10 @@ LEFT JOIN
   city c ON cs.city = c.id
 LEFT JOIN 
   district d ON cs.district = d.id
-WHERE 
-  s.status = 'In Stock' and s.price > 0 and s.quantity > 0;
+ WHERE 
+  s.status = 'In Stock' 
+  AND s.price > 0 
+  AND (s.quantity > 0 OR s.quantity_allocated > 0);
 
   `;
 

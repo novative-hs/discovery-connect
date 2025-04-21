@@ -18,7 +18,7 @@ const EmptyCart = ({ search_prd = false }) => {
   };
 
   return (
-    <div className="cartmini__empty text-center">
+    <div className="cartmini__empty text-center mt-0">
       <Image src={empty_img} alt="empty img" />
       <p>{search_prd ? `Sorry,😥 we can not find this product` : `Your Cart is empty`}</p>
       {!search_prd && (

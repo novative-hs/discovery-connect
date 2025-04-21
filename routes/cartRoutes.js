@@ -21,8 +21,6 @@ router.get('/cart/:id', cartController.getAllCart); // Get all cart items for a 
 router.get('/cart/getCount/:id', cartController.getCartCount); // Get count of cart items for a user
 router.put('/cart/update/:id', cartController.updateCard); // Update quantity of a product in the cart
 router.put("/cart/:id/registration-status", (req, res, next) => {
-  console.log("✅ API Hit:", req.params.id);
-  console.log("✅ Body:", req.body);
   next();
 }, cartController.updateRegistrationAdminStatus);
 

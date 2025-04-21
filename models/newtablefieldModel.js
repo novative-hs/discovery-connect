@@ -14,6 +14,7 @@ const tablesAndColumns = [
       { column: "room_number", type: "INT", nullable: true },
       { column: "freezer_id", type: "INT", nullable: true },
       { column: "box_id", type: "INT", nullable: true },
+      { column: "quantity_allocated", type: "FLOAT", nullable: true },
     ],
   },
   {
@@ -23,7 +24,7 @@ const tablesAndColumns = [
       {
         column: "user_account_id",
         type: "INT",
-        nullable: true, // Change to true
+        nullable: true, 
         references: { table: "user_account", column: "id" },
       },
     ],
