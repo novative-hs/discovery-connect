@@ -13,7 +13,7 @@ import Pagination from "@ui/Pagination";
 import moment from "moment";
 
 const SampleConditionArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

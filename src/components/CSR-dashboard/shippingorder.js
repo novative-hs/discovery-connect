@@ -6,7 +6,7 @@ import { notifySuccess, notifyError } from "@utils/toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 const ShippingSampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) return <div>Loading...</div>;
 
   const [samples, setSamples] = useState([]);

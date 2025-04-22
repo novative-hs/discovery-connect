@@ -13,7 +13,7 @@ import useCartInfo from "@hooks/use-cart-info";
 const Header = ({ setActiveTab, activeTab }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
   const dispatch = useDispatch();
@@ -25,7 +25,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const [cartCount, setCartCount] = useState();
   useEffect(() => {
     const updateCartCount = () => {
-      setCartCount(localStorage.getItem("cartCount") || 0);
+      setCartCount(sessionStorage.getItem("cartCount") || 0);
     };
 
     window.addEventListener("cartUpdated", updateCartCount);
@@ -40,7 +40,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   useEffect(() => {
-    const type = localStorage.getItem("accountType")?.trim().toLowerCase();
+    const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
     if (type) {
       setUserType(type);
     } else {
@@ -84,11 +84,11 @@ const Header = ({ setActiveTab, activeTab }) => {
         typeof response.data[0].Count === "number"
       ) {
         setCartCount(response.data[0].Count);
-        localStorage.setItem("cartCount", response.data[0].Count);
+        sessionStorage.setItem("cartCount", response.data[0].Count);
         console.log("Cart count stored:", response.data[0].Count);
       } else {
         console.warn("Unexpected API response format");
-        localStorage.setItem("cartCount", 0);
+        sessionStorage.setItem("cartCount", 0);
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -152,7 +152,7 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   const handleLogout = () => {
     setShowDropdown(false);
-    localStorage.removeItem("userID");
+    sessionStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };

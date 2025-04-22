@@ -10,13 +10,13 @@ export const couponSlice = createSlice({
   reducers: {
     set_coupon: (state, { payload }) => {
       state.coupon_info = payload;
-      localStorage.setItem(
+      sessionStorage.setItem(
         "couponInfo",
         JSON.stringify(payload)
       );
     },
     get_coupons: (state, { payload }) => {
-      const data = localStorage.getItem('couponInfo');
+      const data = sessionStorage.getItem('couponInfo');
       if (data) {
         state.coupon_info = JSON.parse(data);
       } else {

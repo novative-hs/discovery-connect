@@ -8,7 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 const SampleDispatchArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
@@ -179,7 +179,7 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
     e.preventDefault();
 
     const { receiverName } = transferDetails;
-    const userID = localStorage.getItem("userID"); // Retrieve user ID from localStorage
+    const userID = sessionStorage.getItem("userID"); // Retrieve user ID from sessionStorage
 
     // Log transfer details and selected sample ID
     console.log("Transfer Details:", transferDetails);

@@ -6,14 +6,14 @@ import {
   faTrash,
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { getLocalStorage } from "@utils/localstorage";
+import { getsessionStorage } from "@utils/sessionStorage";
 import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
 
 
 const BioBankSampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
@@ -175,7 +175,7 @@ const BioBankSampleArea = () => {
 
   // Fetch samples from backend when component loads
   useEffect(() => {
-    const storedUser = getLocalStorage("user");
+    const storedUser = getsessionStorage("user");
     console.log("Logged-in user:", storedUser);
     fetchSamples(); // Call the function when the component mounts
   }, []);

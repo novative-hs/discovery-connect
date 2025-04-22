@@ -62,13 +62,20 @@ const SingleProduct = ({ product, discountPrd = false }) => {
 </div>
 
   <div className="d-flex gap-2">
-    {isInCart(product.id) ? (
-      <button className="btn btn-secondary w-75" disabled>Added</button>
-    ) : (
-      <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
-        Add to Cart
-      </button>
-    )}
+  {product.quantity === 0 ? (
+  <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+    Sample Allocated
+  </button>
+) : isInCart(product.id) ? (
+  <button className="btn btn-secondary w-75" disabled>
+    Added
+  </button>
+) : (
+  <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+    Add to Cart
+  </button>
+)}
+
 
     <button
       onClick={() => handleQuickView(product)}

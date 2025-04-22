@@ -17,7 +17,7 @@ export default function Cart({ query }) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const id = localStorage.getItem("userID");
+      const id = sessionStorage.getItem("userID");
       setUserId(id);
       setLoadingUser(false);
       if (id) console.log("account_id on cart page is:", id);

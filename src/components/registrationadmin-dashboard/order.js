@@ -38,7 +38,7 @@ const OrderPage = () => {
   };
 
   useEffect(() => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
       console.log("Registration Admin site  ID:", storedUserID); // Verify storedUserID

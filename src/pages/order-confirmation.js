@@ -21,8 +21,8 @@ const OrderConfirmation = () => {
 
 
   useEffect(() => {
-    const storedOrderId = localStorage.getItem("cartIDs");
-    const storedCreatedAt = localStorage.getItem("created_at");
+    const storedOrderId = sessionStorage.getItem("cartIDs");
+    const storedCreatedAt = sessionStorage.getItem("created_at");
     
     setOrderId(storedOrderId);
     setCreated_at(storedCreatedAt);
