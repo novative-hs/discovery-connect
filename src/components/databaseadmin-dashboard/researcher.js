@@ -274,7 +274,7 @@ const ResearcherArea = () => {
                           field: "status",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="col-md-1 px-2">
+                        <th key={field} className="col-md-2 px-1">
                          
                          <input
                         type="text"
