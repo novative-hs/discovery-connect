@@ -94,19 +94,21 @@ const Header = ({ setActiveTab, activeTab }) => {
       console.error("Error fetching cart:", error);
     }
   };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
-        setShowSampleDropdown(null); // Also close sub-dropdowns if needed
+        setShowSampleDropdown(null);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
+  
+    document.addEventListener("click", handleClickOutside); // <== CHANGED from 'mousedown' to 'click'
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
   useEffect(() => {
     if (user) {
       setUserLogo(
@@ -184,22 +186,17 @@ const Header = ({ setActiveTab, activeTab }) => {
               dropdown: [
                 { label: "Ethnicity", tab: "ethnicity" },
                 { label: "Sample Condition", tab: "sample-condition" },
+                { label: "Sample Price Currency", tab: "sample-price-currency" },
                 { label: "Storage Temperature", tab: "storage-temperature" },
                 { label: "Container Type", tab: "container-type" },
                 { label: "Quantity Unit", tab: "quantity-unit" },
                 { label: "Sample Type Matrix", tab: "sample-type-matrix" },
                 { label: "Test Method", tab: "test-method" },
                 { label: "Test Result Unit", tab: "test-result-unit" },
-                {
-                  label: "Concurrent Medical Conditions",
-                  tab: "concurrent-medical-conditions",
-                },
+                { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions"},
                 { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
                 { label: "Test System", tab: "test-system" },
-                {
-                  label: "Test System Manufacturer",
-                  tab: "test-system-manufacturer",
-                },
+                { label: "Test System Manufacturer", tab: "test-system-manufacturer"},
               ],
             },
           ]

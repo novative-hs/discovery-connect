@@ -561,7 +561,15 @@ const SampleArea = () => {
       user_account_id: sample.user_account_id,
       logo: sample.logo,
     });
+    // ✅ Add this block to properly show the country in the input field
+    const matchedCountry = countryname.find(
+      (c) =>
+        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+    );
+    setSelectedCountry(matchedCountry || null);
+    setSearchCountry(matchedCountry ? matchedCountry.name : "");
   };
+
   const resetFormData = () => {
     setFormData({
       locationids: "",
@@ -1120,9 +1128,7 @@ const SampleArea = () => {
                               className="form-control"
                               name="CountryOfCollection"
                               placeholder="Type to search country..."
-                              value={
-                                searchCountry || (selectedCountry ? selectedCountry.name : "")
-                              }
+                              value={selectedCountry ? selectedCountry.name : ""}
                               onChange={(e) => {
                                 setSearchCountry(e.target.value);
                                 setShowCountryDropdown(true);

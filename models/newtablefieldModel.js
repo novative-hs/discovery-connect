@@ -8,8 +8,9 @@ const tablesAndColumns = [
       { column: "CommitteeType", type: "VARCHAR(20)", nullable: true },
     ],
   },
+
   {
-    table: "researcher",
+    table: "collectionsite",
     columnsToAdd: [
       {
         column: "created_at",
@@ -24,44 +25,21 @@ const tablesAndColumns = [
         nullable: true,
       },
     ]
-    },
-    {
-      table: "organization",
-      columnsToAdd: [
-        {
-          column: "created_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-        {
-          column: "updated_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-      ]
-      },
-    {
-      table: "collectionsite",
-      columnsToAdd: [
-        {
-          column: "created_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-        {
-          column: "updated_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-      ]
-      },
+  },
   {
-    table:"registrationadmin_history",
-    columnsToAdd:[
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "samplepricecurrency_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "samplepricecurrency", column: "id" },
+      },
+    ],
+  },
+  {
+    table: "registrationadmin_history",
+    columnsToAdd: [
       {
         column: "CSR_id",
         type: "INT",
@@ -70,6 +48,7 @@ const tablesAndColumns = [
       },
     ],
   },
+
   {
     table: "history",
     columnsToAdd: [
@@ -98,18 +77,8 @@ const tablesAndColumns = [
       {
         column: "user_account_id",
         type: "INT",
-        nullable: true, 
-        references: { table: "user_account", column: "id" },
-      },
-    ],
-  },
-  {
-    table: "user_account",
-    columnsToAdd: [
-      {
-        column: "OTP",
-        type: "VARCHAR(4)",
         nullable: true,
+        references: { table: "user_account", column: "id" },
       },
     ],
   },
@@ -376,7 +345,7 @@ const createOrUpdateTables = async () => {
         "Refused",
       ]),
   ]);
-  
+
 };
 
 const updateAccountType = () => {
