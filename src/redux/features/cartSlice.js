@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getLocalStorage, setLocalStorage } from "@utils/localstorage";
+import { getsessionStorage, setsessionStorage } from "@utils/sessionStorage";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const CART_STORAGE_KEY = "cart_products";
@@ -53,7 +53,7 @@ export const cartSlice = createSlice({
         });
       }
 
-      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     increment: (state, { payload }) => {
@@ -66,7 +66,7 @@ export const cartSlice = createSlice({
         }
       }
       state.cart_products = [...state.cart_products];
-      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     decrement: (state, { payload }) => {
@@ -75,7 +75,7 @@ export const cartSlice = createSlice({
         cartItem.orderQuantity -= 1;
       }
       state.cart_products = [...state.cart_products];
-      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     quantityDecrement: (state, { payload }) => {
@@ -85,22 +85,22 @@ export const cartSlice = createSlice({
         }
         return { ...item };
       });
-      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     remove_product: (state, { payload }) => {
       state.cart_products = state.cart_products.filter(
         (item) => item.id !== payload.id
       );
-      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     get_cart_products: (state) => {
-      const storedCart = getLocalStorage(CART_STORAGE_KEY) || [];
+      const storedCart = getsessionStorage(CART_STORAGE_KEY) || [];
 
       if (isCartExpired(storedCart)) {
         state.cart_products = [];
-        setLocalStorage(CART_STORAGE_KEY, []);
+        setsessionStorage(CART_STORAGE_KEY, []);
         console.log("🧹 Cart expired and cleared after 2 minutes.");
         notifyError("Your cart has been emptied because the items were not checked out within 2 days.");
 
@@ -115,14 +115,14 @@ export const cartSlice = createSlice({
 
     clear_cart: (state) => {
       state.cart_products = [];
-      setLocalStorage(CART_STORAGE_KEY, []);
+      setsessionStorage(CART_STORAGE_KEY, []);
     },
 
     updateQuantity: (state, action) => {
       const item = state.cart_products.find((prod) => prod.id === action.payload.id);
       if (item) {
         item.orderQuantity = action.payload.quantity || 1;
-        setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+        setsessionStorage(CART_STORAGE_KEY, state.cart_products);
       }
     },
   },

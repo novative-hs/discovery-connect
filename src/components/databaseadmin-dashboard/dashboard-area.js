@@ -14,6 +14,7 @@ import Organization from "./organization";
 import CollectionsiteArea from "./collectionsite";
 import EthnicityArea from "./ethnicity";
 import SampleConditionArea from "./sample-condition";
+import SamplePriceCurrencyArea from "./sample-price-currency";
 import StorageTemperatureArea from "./storage-temperature";
 import ContainerTypeArea from "./container-type";
 import QuantityUnitArea from "./quantity-unit";
@@ -42,12 +43,12 @@ const DashboardArea = () => {
   }, [router]);
 
   useEffect(() => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
       console.log("Database Admin ID:", storedUserID); // Verify storedUserID
     } else {
-      console.error("No userID found in localStorage");
+      console.error("No userID found in sessionStorage");
       router.push("/login");
     }
   }, [router]);
@@ -80,6 +81,8 @@ const DashboardArea = () => {
         return <EthnicityArea />;
       case "sample-condition":
         return <SampleConditionArea />;
+      case "sample-price-currency":
+        return <SamplePriceCurrencyArea />;
       case "storage-temperature":
         return <StorageTemperatureArea />;
       case "container-type":

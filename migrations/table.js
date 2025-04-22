@@ -46,6 +46,7 @@ function Database() {
   committeesampleapprovalModel.createcommitteesampleapprovalTable();
   samplefieldsModel.createEthnicityTable();
   samplefieldsModel.createSampleConditionTable();
+  samplefieldsModel.createSamplePriceCurrencyTable();
   samplefieldsModel.createStorageTemperatureTable();
   samplefieldsModel.createContainerTypeTable()
   samplefieldsModel.createQuantityUnitTable();

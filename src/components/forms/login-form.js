@@ -57,8 +57,8 @@ const LoginForm = () => {
           return notifyError("Unexpected error: User ID is missing.");
         }
 
-        localStorage.setItem("userID", id);
-        localStorage.setItem("accountType", accountType);
+        sessionStorage.setItem("userID", id);
+        sessionStorage.setItem("accountType", accountType);
         notifySuccess("Login successfully");
 
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;

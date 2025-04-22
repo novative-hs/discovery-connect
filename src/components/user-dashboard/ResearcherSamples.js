@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 const SampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     // { label: "Age", key: "age" },

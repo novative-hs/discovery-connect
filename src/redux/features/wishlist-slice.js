@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getLocalStorage, setLocalStorage } from "@utils/localstorage";
+import { getsessionStorage, setsessionStorage } from "@utils/sessionStorage";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const initialState = {
@@ -20,16 +20,16 @@ export const wishlistSlice = createSlice({
         state.wishlist = state.wishlist.filter(item => item._id !== payload._id);
         notifyError(`${payload.title} removed from wishlist`); // Access the product title here
       }
-      setLocalStorage("wishlist_items", state.wishlist);
+      setsessionStorage("wishlist_items", state.wishlist);
     },
     remove_wishlist_product: (state, { payload }) => {
 
       state.wishlist = state.wishlist.filter((item) => item._id !== payload._id);
       notifyError(`${payload.title} removed from wishlist`);
-      setLocalStorage("wishlist_items", state.wishlist);
+      setsessionStorage("wishlist_items", state.wishlist);
     },
     get_wishlist_products: (state, { payload }) => {
-      state.wishlist = getLocalStorage("wishlist_items");
+      state.wishlist = getsessionStorage("wishlist_items");
     },
   },
 });

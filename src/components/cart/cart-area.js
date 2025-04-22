@@ -17,7 +17,7 @@ const CartArea = () => {
   const { cart_products } = useSelector((state) => state.cart);
 
   const userID =
-    typeof window !== "undefined" ? localStorage.getItem("userID") : null;
+    typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
 
   const [quantities, setQuantities] = useState({});
   const [errors, setErrors] = useState({});

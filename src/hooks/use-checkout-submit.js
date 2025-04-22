@@ -50,8 +50,8 @@ const useCheckoutSubmit = () => {
   const couponRef = useRef("");
 
   useEffect(() => {
-    if (localStorage.getItem("couponInfo")) {
-      const data = localStorage.getItem("couponInfo");
+    if (sessionStorage.getItem("couponInfo")) {
+      const data = sessionStorage.getItem("couponInfo");
       const coupon = JSON.parse(data);
       setCouponInfo(coupon);
       setDiscountPercentage(coupon.discountPercentage);
@@ -63,7 +63,7 @@ const useCheckoutSubmit = () => {
   useEffect(() => {
     if (minimumAmount - discountAmount > total || cart_products.length === 0) {
       setDiscountPercentage(0);
-      localStorage.removeItem("couponInfo");
+      sessionStorage.removeItem("couponInfo");
     }
   }, [minimumAmount, total, discountAmount, cart_products]);
 

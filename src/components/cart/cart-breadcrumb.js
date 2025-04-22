@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 const CartBreadcrumb = ({ title, subtitle }) => {
   const router = useRouter();
   const userID =
-    typeof window !== "undefined" ? localStorage.getItem("userID") : null;
+    typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
   const handleBackToShop = () => {
     if (userID) {
       router.push("/dashboardheader?tab=Booksamples");

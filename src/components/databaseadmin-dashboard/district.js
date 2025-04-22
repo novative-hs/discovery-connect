@@ -12,7 +12,7 @@ import {
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 const DistrictArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

@@ -9,7 +9,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const [showingGridItems, setShowingGridItems] = useState(0);
   const [showingListItems, setShowingListItems] = useState(0);
   const [tabActive, setActiveTab] = useState("grid");
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
 
   // New filter states
   const [selectedPrice, setSelectedPrice] = useState(null);

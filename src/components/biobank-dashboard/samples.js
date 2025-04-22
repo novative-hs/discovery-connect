@@ -6,14 +6,14 @@ import {
   faTrash,
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { getLocalStorage } from "@utils/localstorage";
+import { getsessionStorage } from "@utils/sessionStorage";
 import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
 
 
 const BioBankSampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
@@ -108,6 +108,7 @@ const BioBankSampleArea = () => {
   // Sample Dropdown Fields
   const [ethnicityNames, setEthnicityNames] = useState([]);
   const [sampleconditionNames, setSampleConditionNames] = useState([]);
+  const [samplepricecurrencyNames, setSamplePriceCurrencyNames] = useState([]);
   const [storagetemperatureNames, setStorageTemperatureNames] = useState([]);
   const [containertypeNames, setContainerTypeNames] = useState([]);
   const [quantityunitNames, setQuantityUnitNames] = useState([]);
@@ -174,7 +175,7 @@ const BioBankSampleArea = () => {
 
   // Fetch samples from backend when component loads
   useEffect(() => {
-    const storedUser = getLocalStorage("user");
+    const storedUser = getsessionStorage("user");
     console.log("Logged-in user:", storedUser);
     fetchSamples(); // Call the function when the component mounts
   }, []);
@@ -262,6 +263,12 @@ const BioBankSampleArea = () => {
     )
       .then((response) => response.json())
       .then((data) => setSampleConditionNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplepricecurrency`
+    )
+      .then((response) => response.json())
+      .then((data) => setSamplePriceCurrencyNames(data));
 
     fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`
@@ -603,6 +610,13 @@ const BioBankSampleArea = () => {
       user_account_id: sample.user_account_id,
       logo: sample.logo
     });
+    // ✅ Add this block to properly show the country in the input field
+    const matchedCountry = countryname.find(
+      (c) =>
+        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+    );
+    setSelectedCountry(matchedCountry || null);
+    setSearchCountry(matchedCountry ? matchedCountry.name : "");
   };
 
   const handleUpdate = async (e) => {
@@ -784,15 +798,25 @@ const BioBankSampleArea = () => {
             />
           </div>
 
-
           {/* Add Samples Button */}
           <div className="d-flex justify-content-end align-items-center gap-2 w-100">
             {/* Add Researcher Button */}
             <button
-              className="btn mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
               onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: "#4a90e2", // soft blue
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
             >
-              <span>Add Samples</span>
+              <i className="fas fa-vial"></i> Add Sample
             </button>
           </div>
         </div>
@@ -1183,9 +1207,7 @@ const BioBankSampleArea = () => {
                               className="form-control"
                               name="CountryOfCollection"
                               placeholder="Type to search country..."
-                              value={
-                                searchCountry || (selectedCountry ? selectedCountry.name : "")
-                              }
+                              value={selectedCountry ? selectedCountry.name : ""}
                               onChange={(e) => {
                                 setSearchCountry(e.target.value);
                                 setShowCountryDropdown(true);
@@ -1280,22 +1302,30 @@ const BioBankSampleArea = () => {
                         <div className="col-md-2">
                           <div className="form-group">
                             <label>Sample Price Currency</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="SamplePriceCurrency"
                               value={formData.SamplePriceCurrency}
                               onChange={handleInputChange}
                               required
                               style={{
-                                height: "45px",
                                 fontSize: "14px",
+                                height: "45px",
                                 backgroundColor: formData.SamplePriceCurrency
                                   ? "#f0f0f0"
                                   : "#f0f0f0",
                                 color: "black",
                               }}
-                            />
+                            >
+                              <option value="" hidden>
+                                Select Sample Price Currency
+                              </option>
+                              {samplepricecurrencyNames.map((name, index) => (
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Quantity</label>

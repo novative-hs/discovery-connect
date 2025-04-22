@@ -13,7 +13,7 @@ import useCartInfo from "@hooks/use-cart-info";
 const Header = ({ setActiveTab, activeTab }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
   const dispatch = useDispatch();
@@ -25,7 +25,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const [cartCount, setCartCount] = useState();
   useEffect(() => {
     const updateCartCount = () => {
-      setCartCount(localStorage.getItem("cartCount") || 0);
+      setCartCount(sessionStorage.getItem("cartCount") || 0);
     };
 
     window.addEventListener("cartUpdated", updateCartCount);
@@ -40,7 +40,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   useEffect(() => {
-    const type = localStorage.getItem("accountType")?.trim().toLowerCase();
+    const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
     if (type) {
       setUserType(type);
     } else {
@@ -84,29 +84,31 @@ const Header = ({ setActiveTab, activeTab }) => {
         typeof response.data[0].Count === "number"
       ) {
         setCartCount(response.data[0].Count);
-        localStorage.setItem("cartCount", response.data[0].Count);
+        sessionStorage.setItem("cartCount", response.data[0].Count);
         console.log("Cart count stored:", response.data[0].Count);
       } else {
         console.warn("Unexpected API response format");
-        localStorage.setItem("cartCount", 0);
+        sessionStorage.setItem("cartCount", 0);
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
     }
   };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
-        setShowSampleDropdown(null); // Also close sub-dropdowns if needed
+        setShowSampleDropdown(null);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
+  
+    document.addEventListener("click", handleClickOutside); // <== CHANGED from 'mousedown' to 'click'
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
   useEffect(() => {
     if (user) {
       setUserLogo(
@@ -150,7 +152,7 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   const handleLogout = () => {
     setShowDropdown(false);
-    localStorage.removeItem("userID");
+    sessionStorage.removeItem("userID");
     dispatch(userLoggedOut());
     router.push("/");
   };
@@ -184,22 +186,17 @@ const Header = ({ setActiveTab, activeTab }) => {
               dropdown: [
                 { label: "Ethnicity", tab: "ethnicity" },
                 { label: "Sample Condition", tab: "sample-condition" },
+                { label: "Sample Price Currency", tab: "sample-price-currency" },
                 { label: "Storage Temperature", tab: "storage-temperature" },
                 { label: "Container Type", tab: "container-type" },
                 { label: "Quantity Unit", tab: "quantity-unit" },
                 { label: "Sample Type Matrix", tab: "sample-type-matrix" },
                 { label: "Test Method", tab: "test-method" },
                 { label: "Test Result Unit", tab: "test-result-unit" },
-                {
-                  label: "Concurrent Medical Conditions",
-                  tab: "concurrent-medical-conditions",
-                },
+                { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions"},
                 { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
                 { label: "Test System", tab: "test-system" },
-                {
-                  label: "Test System Manufacturer",
-                  tab: "test-system-manufacturer",
-                },
+                { label: "Test System Manufacturer", tab: "test-system-manufacturer"},
               ],
             },
           ]

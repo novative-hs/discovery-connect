@@ -33,9 +33,9 @@ export const authApi = apiSlice.injectEndpoints({
         try {
           const result = await queryFulfilled;
           if(result){
-            localStorage.removeItem("couponInfo");
-            localStorage.removeItem("cart_products");
-            localStorage.removeItem("shipping_info");
+            sessionStorage.removeItem("couponInfo");
+            sessionStorage.removeItem("cart_products");
+            sessionStorage.removeItem("shipping_info");
           }
         } catch (err) {
           // do nothing

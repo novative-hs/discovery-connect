@@ -19,7 +19,7 @@ const UserOrdersPage = () => {
   const router = useRouter();
   const [userType, setUserType] = useState(null);
   useEffect(() => {
-    const type = localStorage.getItem("accountType")?.trim().toLowerCase();
+    const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
     console.log("Fetched accountType:", type);
 
     if (type) {

@@ -48,7 +48,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   const handleSubmit = async (paymentId) => {
     if (!validateDocuments()) return false;
 
-    const userID = localStorage.getItem("userID");
+    const userID = sessionStorage.getItem("userID");
 
     const formData = new FormData();
     formData.append("researcher_id", userID);
@@ -88,8 +88,8 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       const cartIds = result.result.results.map((item) => item.cartId);
       const created_at = result.result.results[0].created_at;
 
-      localStorage.setItem("cartIDs", JSON.stringify(cartIds));
-      localStorage.setItem("created_at", JSON.stringify(created_at));
+      sessionStorage.setItem("cartIDs", JSON.stringify(cartIds));
+      sessionStorage.setItem("created_at", JSON.stringify(created_at));
 
       dispatch(clear_cart());
 

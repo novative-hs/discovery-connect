@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 const BillingDetails = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const [userData, setUserData] = useState(null); // State to store user data
   const [loading, setLoading] = useState(true); // Loading state
 

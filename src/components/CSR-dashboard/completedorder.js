@@ -11,7 +11,7 @@ import {
 import Pagination from "@ui/Pagination";
 
 const CompletedSampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

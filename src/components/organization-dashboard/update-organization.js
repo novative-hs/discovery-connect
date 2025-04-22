@@ -36,7 +36,7 @@ const schema = Yup.object().shape({
 });
 
 const UpdateOrganization = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const { user } = useSelector((state) => state.auth);
   const [cityname, setcityname] = useState([]);
   const [organization, setOrganization] = useState(null); // Set initial state as null
