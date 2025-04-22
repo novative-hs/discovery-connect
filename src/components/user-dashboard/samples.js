@@ -14,7 +14,7 @@ import {
 } from "../../redux/features/cartSlice";
 import { useDispatch } from "react-redux";
 const SampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
   const isInCart = (sampleId) => {

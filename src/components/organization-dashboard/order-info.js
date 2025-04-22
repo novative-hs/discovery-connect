@@ -10,7 +10,7 @@ const OrderInfo = ({ setActiveTab }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const userID = localStorage.getItem("userID");
+      const userID = sessionStorage.getItem("userID");
       if (!userID) return;
 
       try {

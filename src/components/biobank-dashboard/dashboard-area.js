@@ -7,7 +7,7 @@ import ChangePassword from './change-password';
 import BioBankSampleArea from './samples';
 import BioBankSampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
-import { getLocalStorage } from "@utils/localstorage";
+import { getsessionStorage } from "@utils/sessionStorage";
 
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples");
@@ -27,12 +27,11 @@ const DashboardArea = () => {
   }, [router]);
 
   useEffect(() => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
       console.log("Collection site  ID:", storedUserID); // Verify storedUserID
     } else {
-      console.error("No userID found in localStorage");
       router.push("/login");
     }
   }, [router]);

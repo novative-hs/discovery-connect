@@ -3,7 +3,7 @@ import axios from "axios";
 import { notifyError } from "@utils/toast";
 import Pagination from "@ui/Pagination";
 const ResearcherArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);

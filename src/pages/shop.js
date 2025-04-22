@@ -21,10 +21,10 @@ export default function Shop({ query }) {
   const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath);
   const [shortValue, setShortValue] = useState("");
 const [activeTab, setActiveTab] = useState("order-info");
-  // Check localStorage on mount
+  // Check sessionStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const id = localStorage.getItem("userID");
+      const id = sessionStorage.getItem("userID");
       setUserId(id);
       setLoadingUser(false);
       if (id) console.log("account_id on shop page is:", id);
@@ -82,7 +82,7 @@ const [activeTab, setActiveTab] = useState("order-info");
     );
   }
 
-  // Prevent flicker before localStorage is read
+  // Prevent flicker before sessionStorage is read
   if (loadingUser) return <div>Loading...</div>;
 
   return (

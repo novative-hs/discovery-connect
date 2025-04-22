@@ -12,7 +12,7 @@ import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX from "xlsx";
 const TestKitManufacturerArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

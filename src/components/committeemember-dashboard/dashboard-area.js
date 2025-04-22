@@ -24,12 +24,12 @@ const DashboardArea = () => {
   }, [router]);
 
   useEffect(() => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
       console.log("Committee member site  ID:", storedUserID); // Verify storedUserID
     } else {
-      console.error("No userID found in localStorage");
+      console.error("No userID found in sessionStorage");
       router.push("/login");
     }
   }, [router]);

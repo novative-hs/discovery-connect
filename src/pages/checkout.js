@@ -19,7 +19,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const id = localStorage.getItem("userID");
+      const id = sessionStorage.getItem("userID");
       if (!id) {
         router.push("/login");
       } else {

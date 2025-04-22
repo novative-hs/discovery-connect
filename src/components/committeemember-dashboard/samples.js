@@ -6,7 +6,7 @@ import { faDownload, faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid
 import Pagination from "@ui/Pagination";
 
 const SampleArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

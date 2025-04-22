@@ -9,7 +9,7 @@ const EmptyCart = ({ search_prd = false }) => {
 
   const handleRedirect = (e) => {
     e.preventDefault();
-    const id = localStorage.getItem("userID");
+    const id = sessionStorage.getItem("userID");
     if (id) {
       router.push("/dashboardheader?tab=Booksamples");
     } else {

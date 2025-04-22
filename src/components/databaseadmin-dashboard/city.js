@@ -6,7 +6,7 @@ import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
 const CityArea = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

@@ -7,10 +7,10 @@ import {
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
-import { getLocalStorage } from "@utils/localstorage";
+import { getsessionStorage } from "@utils/sessionStorage";
 
 const ContactUS = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {

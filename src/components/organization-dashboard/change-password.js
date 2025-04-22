@@ -25,7 +25,7 @@ const schema = Yup.object().shape({
 });
 
 const ChangePassword = () => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
 
   const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);

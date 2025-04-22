@@ -10,16 +10,16 @@ import CheckoutArea from "@components/checkout/checkout-area";
 import Footer from "@layout/footer";
 // import ShopCta from "@components/cta";
 import useCheckoutSubmit from "@hooks/use-checkout-submit";
-import { getLocalStorage } from "@utils/localstorage";
+import { getsessionStorage } from "@utils/sessionStorage";
 import OrderSummary from "@components/order/order-summary";
 import SampleCopy from "@components/checkout/sample-copy";
 
 export default function Checkout() {
   //const checkout_data = useCheckoutSubmit();
-  const checkout_data=getLocalStorage("cart")
+  const checkout_data=getsessionStorage("cart")
   const router = useRouter();
   useEffect(() => {
-    const isAuthenticate = localStorage.getItem("userID");
+    const isAuthenticate = sessionStorage.getItem("userID");
     if(!isAuthenticate){
       router.push("/login")
     }

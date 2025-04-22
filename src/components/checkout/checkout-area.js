@@ -5,7 +5,7 @@ import SampleCopy from "@components/checkout/sample-copy";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...others }) => {
-  const id = localStorage.getItem("userID");
+  const id = sessionStorage.getItem("userID");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [sampleCopyData, setSampleCopyData] = useState({
