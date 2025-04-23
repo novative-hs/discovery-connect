@@ -80,6 +80,11 @@ const tablesAndColumns = [
         nullable: true,
         references: { table: "user_account", column: "id" },
       },
+      {
+        column: "otpExpiry",
+        type: "TIMESTAMP",
+        nullable: true,
+      },
     ],
   },
   {
@@ -316,6 +321,7 @@ const createOrUpdateTables = async () => {
     () =>
       ensureColumnsExist("user_account", [
         { column: "OTP", type: "VARCHAR(4)", nullable: true },
+        { column: "otpExpiry", type: "TIMESTAMP", nullable: true },
       ]),
     () =>
       updateEnumColumn("user_account", "accountType", [

@@ -68,19 +68,25 @@ const verifyOTP = (req, res) => {
     return res.status(400).json({ message: "Email and OTP are required!" });
   }
 
-  accountModel.verifyOTP(email, otp, (err, isVerified) => { // 🔹 Change result to isVerified
+  accountModel.verifyOTP(email, otp, (err, isVerified, otpExpiry) => { 
     if (err) {
       console.error("❌ Error verifying OTP:", err);
       return res.status(500).json({ message: "Failed to verify OTP", error: err.message });
     }
 
-    if (!isVerified) { // 🔹 Use isVerified instead of result.otp
+    // Check if OTP is expired
+    if (otpExpiry && Date.now() > otpExpiry) {
+      return res.status(401).json({ message: "OTP has expired. Please request a new one." });
+    }
+
+    if (!isVerified) {
       return res.status(401).json({ message: "Invalid OTP. Please try again." });
     }
 
     res.status(200).json({ message: "✅ OTP verified successfully!" });
   });
 };
+
 
 const createAccount = (req, res) => {
   console.log("Received Account Data:", req.body);

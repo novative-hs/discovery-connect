@@ -11,6 +11,7 @@ const createuser_accountTable = () => {
     password VARCHAR(255) NOT NULL,
     accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
+    otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
@@ -1063,28 +1064,39 @@ function changepassword(data, callback) {
 }
 
 const verifyOTP = (email, otp, callback) => {
-  const query = "SELECT OTP FROM user_account WHERE email = ?";
+  const query = "SELECT OTP, otpExpiry FROM user_account WHERE email = ?";
 
   mysqlConnection.query(query, [email], (err, result) => {
     if (err) {
-      console.error("❌ Error fetching OTP from DB:", err);
-      return callback(err, null);
+      console.error("❌ Error fetching OTP from database:", err);
+      return callback({ status: 500, message: "Database error while verifying OTP." }, null);
     }
 
     if (result.length === 0) {
-      return callback(null, { message: "User not found" });
+      return callback({ status: 404, message: "User not found." }, null);
     }
 
-    const storedOTP = result[0].OTP.toString();  // ✅ Convert to string
-    const inputOTP = otp.toString();  // ✅ Convert input to string
+    const storedOTP = result[0].OTP?.toString().trim();  // ✅ Convert to string and trim any spaces
+    const inputOTP = otp?.toString().trim();  // ✅ Convert input to string and trim
 
+    const otpExpiry = result[0].otpExpiry;
+
+    // Check if OTP is expired
+    if (!otpExpiry || new Date() > new Date(otpExpiry)) {
+      return callback({ status: 401, message: "OTP has expired. Please request a new one." }, null);
+    }
+
+    // Check if OTP is correct
     if (storedOTP !== inputOTP) {
-      return callback(null, { message: "Invalid OTP" });
+      return callback({ status: 401, message: "Invalid OTP. Please try again." }, null);
     }
 
-    callback(null, { message: "✅ OTP verified successfully!" });
+    // OTP is valid
+    return callback(null, { message: "✅ OTP verified successfully!" });
   });
 };
+
+
 
 
 const sendOTP = (req, callback) => {
@@ -1102,28 +1114,27 @@ const sendOTP = (req, callback) => {
     }
     if (result.length === 0) {
       return callback({ status: 404, message: "User not found" }, null);
-    }
-
-    // Now update the OTP
+    }    
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const updateQuery = `UPDATE user_account SET OTP = ? WHERE email = ?`;
-    mysqlConnection.query(updateQuery, [otp, email], (updateErr) => {
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+    
+    const updateQuery = `UPDATE user_account SET OTP = ?, otpExpiry = ? WHERE email = ?`;
+    mysqlConnection.query(updateQuery, [otp, otpExpiry, email], (updateErr, result) => {
       if (updateErr) {
+        console.error("❌ Error while updating OTP:", updateErr);
         return callback({ status: 500, message: "Error saving OTP" }, null);
       }
-
-      // Send email after successfully updating OTP
-      sendEmail(email, "Your OTP Code", `Your OTP code is: ${otp}`)
+    
+      sendEmail(email, "Your OTP Code", `Your OTP code is: ${otp}.it is valid for the next 5 minutes.`)
         .then(() => {
-          console.log("✅ Email sent successfully to:", email);
           callback(null, { message: "OTP sent successfully!", otp });
         })
-        .catch((error) => {
-          console.error("❌ Email sending error:", error);
-          callback({ status: 500, message: error.message }, null);
+        .catch((emailError) => {
+          console.error("❌ Email sending error:", emailError);
+          callback({ status: 500, message: emailError.message }, null);
         });
-
     });
+    
   });
 };
 
