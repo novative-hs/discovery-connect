@@ -202,10 +202,10 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
       year: "2-digit",
       month: "short",
       day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
   
     const formatted = new Date(date).toLocaleString("en-GB", options);
@@ -216,7 +216,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
   
     const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
   
-    return `${day}-${formattedMonth}-${year} ${timePart}`;
+    return `${day}-${formattedMonth}-${year}`;
   };
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
