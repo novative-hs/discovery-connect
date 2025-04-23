@@ -51,7 +51,9 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
         role="dialog"
         style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
       >
-        <div className="modal-dialog modal-lg modal-md modal-sm" role="document">
+        <div
+          className="modal-dialog modal-lg modal-md modal-sm"
+          role="document" style={{ maxWidth: "800px", width: "90%" }}>
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Order Summary</h5>

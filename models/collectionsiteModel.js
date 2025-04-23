@@ -72,7 +72,7 @@ const updateCollectionSiteStatus = async (id, status) => {
     }
 
     const email = emailResults[0].email;
-    const name=emailResults[0].CollectionSiteName;
+    const name = emailResults[0].CollectionSiteName;
     // Prepare email content
     let emailText = `
     Dear ${name},
@@ -90,9 +90,9 @@ const updateCollectionSiteStatus = async (id, status) => {
     Best regards,
     The Discovery Connect Team
   `;
-  
-  if (status === "approved") {
-    emailText = `
+
+    if (status === "approved") {
+      emailText = `
     Dear ${name},
   
     Congratulations! 🎉
@@ -108,8 +108,8 @@ const updateCollectionSiteStatus = async (id, status) => {
     Best regards,
     The Discovery Connect Team
   `;
-  
-  }
+
+    }
 
     // Send email asynchronously (does not block function execution)
     sendEmail(email, "Welcome to Discovery Connect", emailText)
@@ -159,7 +159,7 @@ const deleteCollectionSite = async (id) => {
     }
 
     const email = emailResults[0].email;
-    const name=emailResults[0].CollectionSiteName;
+    const name = emailResults[0].CollectionSiteName;
 
     // Construct the email content based on the status
     let emailText = `
@@ -180,8 +180,8 @@ const deleteCollectionSite = async (id) => {
     Best regards,
     The Discovery Connect Team
     `;
-  
-  
+
+
 
     // Send email asynchronously (does not block response)
     sendEmail(email, "Account Status Update", emailText)
@@ -238,7 +238,8 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
     const collectionSiteQuery = `
       SELECT CollectionSiteName, user_account_id 
       FROM collectionsite 
-      WHERE user_account_id != ?;
+      WHERE user_account_id != ?
+      AND status = 'approved';
     `;
 
     mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
