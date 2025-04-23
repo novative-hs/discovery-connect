@@ -11,7 +11,7 @@ const createSampleDispatchTable = () => {
       dispatchReceiptNumber VARCHAR(255) NOT NULL,
       Quantity VARCHAR(255) NOT NULL,
       status VARCHAR(255) DEFAULT 'In Transit',
-      TransferTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      TransferDate DATE DEFAULT (CURRENT_DATE),
       sampleID VARCHAR(36) NOT NULL,
       FOREIGN KEY (sampleID) REFERENCES sample(id),
       FOREIGN KEY (TransferTo) REFERENCES user_account(id) ON DELETE CASCADE,
@@ -27,35 +27,6 @@ const createSampleDispatchTable = () => {
     }
   });
 };
-
-// Function to get all samples with 'In Stock' status
-// const getSampleDispatchesInTransit = (id, callback) => {
-//   // Validate and parse `id`
-//   const user_account_id = parseInt(id);
-//   if (isNaN(user_account_id)) {
-//     console.error("Invalid user_account_id:", id);
-//     return callback(new Error("Invalid user_account_id"), null);
-//   }
-
-//   const query = `
-//     SELECT s.*
-//     FROM sample s
-//     JOIN user_account ua ON s.user_account_id = ua.id
-//     WHERE s.status = "In Transit" 
-//       AND ua.accountType = "CollectionSites"
-//       AND s.user_account_id = ?;
-//   `;
-//   mysqlConnection.query(query, [user_account_id], (err, results) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return callback(err, null);
-//     }
-//     callback(null, results);
-//     console.log("data fetched:", results)
-//   });
-// };
-
-
 
 // Function to fetch dispatched samples with 'In Transit' status
 const getDispatchedwithInTransitStatus = (req, res) => {
@@ -156,7 +127,6 @@ const createSampleDispatch = (dispatchData, sampleID, callback) => {
 
 module.exports = {
   createSampleDispatchTable,
-  // getSampleDispatchesInTransit,
   createSampleDispatch,
   getDispatchedwithInTransitStatus
 };
