@@ -24,8 +24,8 @@ transporter.verify((err, success) => {
 });
 
 // Function to send an email
-const sendEmail = async (to, subject, text) => {
-  if (!to || !subject || !text) {
+const sendEmail = async (to, subject, html) => {
+  if (!to || !subject || !html) {
     console.error("Missing email parameters");
     throw new Error("Missing email parameters");
   }
@@ -34,7 +34,7 @@ const sendEmail = async (to, subject, text) => {
     from: secret.email_user,
     to,
     subject,
-    text,
+    html,
   };
 
   try {

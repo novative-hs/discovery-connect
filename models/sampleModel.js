@@ -203,8 +203,8 @@ const getResearcherSamples = (userId, callback) => {
         WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
         WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 
             THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'review' THEN 1 ELSE 0 END) > 0 
-            THEN 'review'
+        WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 
+            THEN 'UnderReview'
         ELSE 'accepted' 
     END AS committee_status
 
@@ -236,8 +236,6 @@ ORDER BY s.id ASC;
       console.error("Database error:", err);
       return callback(err, null);
     }
-
-    console.log("Query Results:", results);
 
     // Check if no samples found
     if (results.length === 0) {

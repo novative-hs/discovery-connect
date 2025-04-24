@@ -279,7 +279,7 @@ const updateResearcherStatus = async (id, status) => {
   
     - **Status:** Pending Approval
   
-    Your account is currently pending approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
+    Your account is currently <b>pending</b> approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
   
     Thank you for your patience and cooperation.
   
@@ -293,7 +293,7 @@ const updateResearcherStatus = async (id, status) => {
   
     Congratulations! 🎉
   
-    We are thrilled to inform you that your Researcher account has been successfully approved! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
+    We are thrilled to inform you that your Researcher account has been successfully <b>approved</b>! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
   
     Here are a few next steps:
     - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).

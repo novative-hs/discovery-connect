@@ -11,7 +11,7 @@ import {
   faTimes,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import { notifyError } from "@utils/toast";
+import { notifyError,notifySuccess } from "@utils/toast";
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]); // Filtered orders
@@ -80,18 +80,18 @@ const OrderPage = () => {
   };
   const handleAdminStatus = async (newStatus) => {
     if (!selectedOrderId) return;
-
+  
     setLoading(true);
-
+  
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/registration-status`,
         { registration_admin_status: newStatus }
       );
-
+  
       if (response.status === 200) {
         setSuccessMessage(`Order status updated to ${newStatus} successfully!`);
-        fetchOrders();
+        fetchOrders();  // Refresh the orders
       }
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -102,6 +102,7 @@ const OrderPage = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
+  
 
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
@@ -118,56 +119,38 @@ const OrderPage = () => {
 
   const handleCommitteeApproval = (committeeType) => {
     axios
-      .post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
-        {
-          cartId: selectedOrderId,
-          senderId: user_id,
-          committeeType: committeeType,
-        }
-      )
+      .post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`, {
+        cartId: selectedOrderId,
+        senderId: user_id,
+        committeeType: committeeType,
+      })
       .then((response) => {
-        console.log("Approval request sent:", response.data);
-
-        // Check if the response contains a specific message
-        if (response.data.message) {
-          // If the backend returns a message about no active committee members
-          notifyError(response.data.message);
-          return;
-        }
-
-        setSuccessMessage("Approval request sent successfully!");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-
-        setSelectedOrderId(null);
+        notifySuccess(response.data.message || "Approval request sent successfully!");
         setShowModal(false);
-        fetchOrders();
+        setSelectedOrderId(null);
+        setSelectedApprovalType("")
+        fetchOrders(); // Optimize fetchOrders if necessary
         setShowTransferModal(false);
       })
       .catch((error) => {
-        // Check if the error response contains a specific message about inactive committee members
-        if (
-          error.response &&
-          error.response.data.message ===
-            "No active committee members found for the given type"
-        ) {
-          notifyError(
-            "Some committee members are inactive. Please check the committee members."
-          );
-          setShowModal(false);
-          setSelectedOrderId(null);
-        } else {
-          console.error("Error sending approval request:", error);
-          notifyError("An error occurred while sending the approval request.");
-          setShowModal(false);
-          setSelectedOrderId(null);
-        }
+        notifyError("An error occurred while sending the approval request.");
+        setShowModal(false);
       });
   };
+  
 
+  
+useEffect(() => {
+    if (showSampleModal ||showTransferModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showSampleModal,showTransferModal]);
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -235,11 +218,6 @@ const OrderPage = () => {
                   currentOrders.map((order) => (
                     <tr
                       key={order.order_id}
-                      onClick={() => {
-                        setSelectedSample(order);
-                        setSampleShowModal(true);
-                      }}
-                      className={`cursor-pointer `}
                     >
                       <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
@@ -258,6 +236,11 @@ const OrderPage = () => {
                         onMouseLeave={(e) => {
                           e.target.style.color = "inherit";
                           e.target.style.textDecoration = "none";
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent triggering row click
+                          setSelectedSample(order);
+                          setSampleShowModal(true);
                         }}
                       >
                         {order.samplename}
@@ -431,7 +414,7 @@ const OrderPage = () => {
           {/* Approval  */}
 
           {showTransferModal && (
-            <div className="modal show d-block" tabIndex="-1">
+            <div className="modal show d-block mt-5" tabIndex="-1">
               <div className="modal-dialog">
                 <div className="modal-content">
                   <div className="modal-header">
@@ -566,16 +549,17 @@ const OrderPage = () => {
                           <strong>Order Status:</strong>{" "}
                           {selectedSample.order_status}
                         </p>
+                        <p>
+                        <strong>Age:</strong> {selectedSample.age} years |{" "}
+                        <strong>Gender:</strong> {selectedSample.gender} |{" "}
+                        <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                      </p>
                       </div>
                     </div>
 
                     {/* Right Side: Detailed Information */}
                     <div className="col-md-7">
-                      <p>
-                        <strong>Age:</strong> {selectedSample.age} years |{" "}
-                        <strong>Gender:</strong> {selectedSample.gender} |{" "}
-                        <strong>Ethnicity:</strong> {selectedSample.ethnicity}
-                      </p>
+                      
                       <p>
                         <strong>Storage Temperature:</strong>{" "}
                         {selectedSample.storagetemp}

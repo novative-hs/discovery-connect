@@ -346,7 +346,7 @@ const createOrUpdateTables = async () => {
       ]),
     () =>
       updateEnumColumn("committeesampleapproval", "committee_status", [
-        "Review",
+        "UnderReview",
         "Approved",
         "Refused",
       ]),

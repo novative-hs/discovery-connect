@@ -290,7 +290,7 @@ const createCart = (data, callback) => {
     Promise.all(insertPromises)
       .then((results) => {
         const cartIds = results.map(result => result.cartId);
-        const message = 'Your sample request has been successfully created. Please check your dashboard for more details.';
+        const message = 'Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.';
 
         notifyResearcher(cartIds, message, "Sample Request Status Update")
           .then(() => {
@@ -439,7 +439,7 @@ SELECT
                 WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
             ) THEN 'Not Sent'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
-            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Review') > 0 THEN 'Review'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
             ELSE NULL
         END
@@ -461,7 +461,7 @@ SELECT
                 WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
             ) THEN 'Not Sent'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
-            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Review') > 0 THEN 'Review'
+            WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
             WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
             ELSE NULL
         END
@@ -492,21 +492,12 @@ ORDER BY c.created_at ASC  `;
     if (err) {
       console.error("Error fetching cart data:", err);
       callback(err, null);
-    } else {
-      // Iterate over the fetched results and check if cart can be updated to "Shipping"
-      results.forEach(cart => {
-        updateCartStatusToShipping(cart.order_id, (updateErr, updateResults) => {
-          if (updateErr) {
-            console.error("Error updating cart status:", updateErr);
-          } else if (updateResults) {
-            console.log(`Cart ${cart.order_id} status updated to 'Shipping'.`);
-          }
-        });
-      });
-      callback(null, results);
-    }
+    } 
+    callback(null, results);
   });
 };
+
+
 const getAllOrderByCommittee = (committeeMemberId, callback) => {
   const sqlQuery = `
     SELECT 
@@ -613,9 +604,9 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
     const sqlQuery = `
       UPDATE registrationadminsampleapproval 
       SET registration_admin_status = ? 
-      WHERE cart_id = ?
-    `;
+      WHERE cart_id = ?`;
 
+    // Use promise-based query to avoid blocking
     await queryAsync(sqlQuery, [registration_admin_status, id]);
 
     console.log("Registration Admin Status updated successfully!");
@@ -627,20 +618,48 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
       ? 'Rejected'
       : null;
 
-    // Step 3: Update cart status if required
-  // Step 3: Update cart status if required
-if (newCartStatus) {
-  const cartStatusUpdateResult = await updateCartStatus(id, newCartStatus);
-  console.log("Cart Status Update Result:", cartStatusUpdateResult);
+    // Step 3: Update cart status if needed, perform concurrently if possible
+    const cartStatusUpdatePromise = newCartStatus
+      ? updateCartStatus(id, newCartStatus)
+      : Promise.resolve(null);  // If no new cart status, resolve immediately
 
-// Step 3.5: If rejected, revert quantity back to the sample table
-if (registration_admin_status === 'Rejected') {
+    // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
+    const revertQuantityPromise = registration_admin_status === 'Rejected'
+      ? revertSampleQuantity(id)
+      : Promise.resolve(null);  // Skip if not rejected
+
+    // Wait for both the cart status update and quantity revert in parallel
+    await Promise.all([cartStatusUpdatePromise, revertQuantityPromise]);
+
+    // Step 4: Prepare the notification message
+    const message =
+      registration_admin_status === 'Accepted'
+        ? "Your sample request has been <b>approved</b> by the Registration Admin."
+        : registration_admin_status === 'Rejected'
+        ? "Your sample request has been <b>rejected</b> by the Registration Admin."
+        : "Your sample request is still <b>pending</b> approval by the Registration Admin.";
+
+    // Step 5: Notify the researcher asynchronously (no blocking)
+    const notifyPromise = notifyResearcher(id, message, "Sample Request Status Update");
+
+    // Wait for notification to be sent
+    await notifyPromise;
+
+    return { message: "Registration Admin and Cart status updated. Researcher notified." };
+  } catch (err) {
+    console.error("Error updating registration admin status:", err);
+    throw new Error("Error updating status");
+  }
+};
+
+// Helper function to revert sample quantity if the request is rejected
+const revertSampleQuantity = async (cartId) => {
   const getQuantitySql = `
     SELECT sample_id, quantity 
     FROM cart 
-    WHERE id = ?
-  `;
-  const [cartItem] = await queryAsync(getQuantitySql, [id]);
+    WHERE id = ?`;
+
+  const [cartItem] = await queryAsync(getQuantitySql, [cartId]);
 
   if (cartItem) {
     const { sample_id, quantity } = cartItem;
@@ -649,36 +668,15 @@ if (registration_admin_status === 'Rejected') {
       UPDATE sample 
       SET quantity = quantity + ?, 
           quantity_allocated = quantity_allocated - ? 
-      WHERE id = ?
-    `;
+      WHERE id = ?`;
 
     await queryAsync(updateSampleSql, [quantity, quantity, sample_id]);
     console.log("Sample quantity reverted successfully!");
   } else {
     console.warn("Cart item not found for rejection.");
   }
-}
-
-}
-
-
-    // Step 4: Prepare the notification message
-    const message =
-      registration_admin_status === 'Accepted'
-        ? "Your sample request has been approved by the Registration Admin."
-        : registration_admin_status === 'Rejected'
-        ? "Your sample request has been rejected by the Registration Admin."
-        : "Your sample request is still pending approval by the Registration Admin.";
-
-    // Step 5: Notify the researcher asynchronously
-    await notifyResearcher(id, message, "Sample Request Status Update");
-
-    return { message: "Registration Admin and Cart status updated. Researcher notified." };
-  } catch (err) {
-    console.error("Error updating registration admin status:", err);
-    throw new Error("Error updating status");
-  }
 };
+
 
 
 
@@ -698,15 +696,12 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     // Ensure cartIds is always an array
     const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
 
-    const message =
-      cartStatus === 'Accepted'
-        ? "Your sample request has been accepted and is now processing."
-        : cartStatus === 'Rejected'
-        ? "Your sample request has been rejected."
+    const message =cartStatus === 'Rejected'
+        ? "Your sample request has been <b>rejected</b>."
         : cartStatus === 'UnderReview'
-        ? "Your sample documents have been reviewed by a committee member."
+        ? "Your sample documents have been <b>reviewed by a committee member</b>."
         : cartStatus === 'Dispatched'
-        ? "Your sample request has been dispatched and is on its way."
+        ? "Your sample request has been <b>dispatched</b> and is on its way."
         : "Your sample request status has been updated.";
 
     console.log(ids);

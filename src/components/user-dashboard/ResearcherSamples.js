@@ -93,7 +93,12 @@ const SampleArea = () => {
     if (id === null) {
       return <div>Loading...</div>;
     } else {
-      fetchSamples();
+          const intervalId = setInterval(() => {
+            fetchSamples();
+          }, 500); // Fetch data every 5 seconds
+      
+          // Cleanup interval when component is unmounted
+          return () => clearInterval(intervalId);
     }
   }, []);
 
