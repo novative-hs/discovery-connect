@@ -380,7 +380,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                           className="dropdown-item fs-7"
                           onClick={handleUpdateProfile}
                         >
-                          Update Profilee
+                          Update Profile
                         </button>
                       </li>
                     )}
