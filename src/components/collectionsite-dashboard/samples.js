@@ -138,7 +138,7 @@ const SampleArea = () => {
       ...prev,
       CountryOfCollection: country.name, // or country.id if you store ID
     }));
-    setSearchCountry("");
+    setSearchCountry(country.name);
     setShowCountryDropdown(false);
   };
 
@@ -351,7 +351,7 @@ const SampleArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
@@ -530,6 +530,7 @@ const SampleArea = () => {
     )}-${String(sample.freezer_id).padStart(2, "0")}-${String(
       sample.box_id
     ).padStart(2, "0")}`;
+
     setFormData({
       locationids: formattedLocationId,
       samplename: sample.samplename,
@@ -605,6 +606,7 @@ const SampleArea = () => {
       logo: "",
     });
   };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -1128,17 +1130,14 @@ const SampleArea = () => {
                               type="text"
                               className="form-control"
                               name="CountryOfCollection"
-                              placeholder="Type to search country..."
-                              value={selectedCountry ? selectedCountry.name : ""}
+                              placeholder="Type to search country"
+                              value={searchCountry}
                               onChange={(e) => {
                                 setSearchCountry(e.target.value);
                                 setShowCountryDropdown(true);
-                                if (!e.target.value) setSelectedCountry(null);
+                                setSelectedCountry(null);
                               }}
                               onFocus={() => setShowCountryDropdown(true)}
-                              onBlur={() =>
-                                setTimeout(() => setShowCountryDropdown(false), 200)
-                              }
                               required
                               style={{
                                 fontSize: "14px",
@@ -1148,7 +1147,6 @@ const SampleArea = () => {
                               }}
                             />
 
-                            {/* Styled dropdown without grid lines */}
                             {showCountryDropdown && (
                               <ul
                                 className="w-100 position-absolute"
@@ -1172,9 +1170,7 @@ const SampleArea = () => {
                                 {countryname
                                   .filter((country) =>
                                     searchCountry
-                                      ? country.name
-                                        .toLowerCase()
-                                        .includes(searchCountry.toLowerCase())
+                                      ? country.name.toLowerCase().includes(searchCountry.toLowerCase())
                                       : true
                                   )
                                   .map((country) => (
@@ -1185,7 +1181,8 @@ const SampleArea = () => {
                                         cursor: "pointer",
                                         backgroundColor: "#f0f0f0",
                                       }}
-                                      onMouseDown={() => handleSelectCountry(country)}
+                                      // ✅ Changed from onMouseDown to onClick
+                                      onClick={() => handleSelectCountry(country)}
                                       onMouseEnter={(e) =>
                                         (e.currentTarget.style.backgroundColor = "#e2e2e2")
                                       }
@@ -1198,6 +1195,7 @@ const SampleArea = () => {
                                   ))}
                               </ul>
                             )}
+
                           </div>
                         </div>
                         {/* {Column 3} */}

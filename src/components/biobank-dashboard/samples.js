@@ -144,7 +144,7 @@ const BioBankSampleArea = () => {
       ...prev,
       CountryOfCollection: country.name, // or country.id if you store ID
     }));
-    setSearchCountry("");
+    setSearchCountry(country.name);
     setShowCountryDropdown(false);
   };
 
@@ -1206,17 +1206,14 @@ const BioBankSampleArea = () => {
                               type="text"
                               className="form-control"
                               name="CountryOfCollection"
-                              placeholder="Type to search country..."
-                              value={selectedCountry ? selectedCountry.name : ""}
+                              placeholder="Type to search country"
+                              value={searchCountry}
                               onChange={(e) => {
                                 setSearchCountry(e.target.value);
                                 setShowCountryDropdown(true);
-                                if (!e.target.value) setSelectedCountry(null);
+                                setSelectedCountry(null);
                               }}
                               onFocus={() => setShowCountryDropdown(true)}
-                              onBlur={() =>
-                                setTimeout(() => setShowCountryDropdown(false), 200)
-                              }
                               required
                               style={{
                                 fontSize: "14px",
@@ -1226,7 +1223,6 @@ const BioBankSampleArea = () => {
                               }}
                             />
 
-                            {/* Styled dropdown without grid lines */}
                             {showCountryDropdown && (
                               <ul
                                 className="w-100 position-absolute"
@@ -1250,9 +1246,7 @@ const BioBankSampleArea = () => {
                                 {countryname
                                   .filter((country) =>
                                     searchCountry
-                                      ? country.name
-                                        .toLowerCase()
-                                        .includes(searchCountry.toLowerCase())
+                                      ? country.name.toLowerCase().includes(searchCountry.toLowerCase())
                                       : true
                                   )
                                   .map((country) => (
@@ -1263,7 +1257,8 @@ const BioBankSampleArea = () => {
                                         cursor: "pointer",
                                         backgroundColor: "#f0f0f0",
                                       }}
-                                      onMouseDown={() => handleSelectCountry(country)}
+                                      // ✅ Changed from onMouseDown to onClick
+                                      onClick={() => handleSelectCountry(country)}
                                       onMouseEnter={(e) =>
                                         (e.currentTarget.style.backgroundColor = "#e2e2e2")
                                       }
@@ -1276,6 +1271,7 @@ const BioBankSampleArea = () => {
                                   ))}
                               </ul>
                             )}
+
                           </div>
                           <div className="form-group">
                             <label>Price</label>

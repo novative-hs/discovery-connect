@@ -2,30 +2,7 @@ const mysqlConnection = require("../config/db");
 
 // List of tables and their columns to be added or removed
 const tablesAndColumns = [
-  {
-    table: "history",
-    columnsToAdd: [
-      { column: "CommitteeType", type: "VARCHAR(20)", nullable: true },
-    ],
-  },
 
-  {
-    table: "collectionsite",
-    columnsToAdd: [
-      {
-        column: "created_at",
-        type: "TIMESTAMP",
-        default: "CURRENT_TIMESTAMP",
-        nullable: true,
-      },
-      {
-        column: "updated_at",
-        type: "TIMESTAMP",
-        default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-        nullable: true,
-      },
-    ]
-  },
   {
     table: "registrationadmin_history",
     columnsToAdd: [
@@ -37,39 +14,7 @@ const tablesAndColumns = [
       },
     ],
   },
-  {
-    table: "registrationadmin_history",
-    columnsToAdd: [
-      {
-        column: "CSR_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "CSR", column: "id" },
-      },
-    ],
-  },
 
-  {
-    table: "history",
-    columnsToAdd: [
-      { column: "CSRName", type: "VARCHAR(100)", nullable: true },
-      {
-        column: "CSR_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "CSR", column: "id" },
-      },
-    ],
-  },
-  {
-    table: "sample",
-    columnsToAdd: [
-      { column: "room_number", type: "INT", nullable: true },
-      { column: "freezer_id", type: "INT", nullable: true },
-      { column: "box_id", type: "INT", nullable: true },
-      { column: "quantity_allocated", type: "FLOAT", nullable: true },
-    ],
-  },
   {
     table: "committee_member",
     columnsToDelete: ["email", "password"],

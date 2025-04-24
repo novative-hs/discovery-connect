@@ -81,9 +81,8 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
               marginBottom: "20px",
             }}
           >
-            You must register before adding any samples to your cart. Please
-            sign up or log in to continue.
-          </p>
+            Please Sign up or Log in before submitting request for Sample.
+            </p>
         )}
         <div className="shop__top mb-50">
           <div className="row align-items-center">

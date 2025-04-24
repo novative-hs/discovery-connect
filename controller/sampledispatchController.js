@@ -8,28 +8,6 @@ const createSampleDispatchTable = (req, res) => {
 };
 
 // Controller to get all sample dispatches in "In Transit" status
-// const getSampleDispatchesInTransit = (req, res) => {
-//   const id = req.params.id;
-
-//   if (!id) {
-//     return res.status(400).json({ error: "ID parameter is missing" });
-//   }
-//   const query = `
-//     SELECT s.*
-//     FROM sampledispatch sd
-//     JOIN sample s ON sd.sampleID = s.id
-//     WHERE sd.TransferTo = ? AND s.status = "In Transit";
-//   `;
-//   mysqlConnection.query(query, [id], (err, results) => {
-//     if (err) {
-//       console.error("Error fetching sample dispatches:", err);
-//       return res.status(500).json({ error: "Error fetching sample dispatches" });
-//     }
-//     res.status(200).json(results);
-//   });
-// };
-
-// Controller to get all sample dispatches in "In Transit" status
 const getDispatchedwithInTransitStatus = (req, res) => {
   const id = req.params.id;
 
@@ -245,7 +223,6 @@ const createSampleDispatch = (req, res) => {
 
 module.exports = {
   createSampleDispatchTable,
-  // getSampleDispatchesInTransit,
   createSampleDispatch,
   getDispatchedwithInTransitStatus
 };
