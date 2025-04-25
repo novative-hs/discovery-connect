@@ -45,7 +45,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
     }
 
     if (committeeMembers.length === 0) {
-      const msg = committeeType === "both" ? 
+      const msg = committeeType === "both" ?
         "No scientific or ethical committee members found." :
         `No ${committeeType} committee members found.`;
       return callback(null, { message: msg });
@@ -288,7 +288,7 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
 };
 
 module.exports = {
-createcommitteesampleapprovalTable,
- insertCommitteeApproval,
- updateCommitteeStatus
+  createcommitteesampleapprovalTable,
+  insertCommitteeApproval,
+  updateCommitteeStatus
 };

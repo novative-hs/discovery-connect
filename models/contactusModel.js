@@ -38,7 +38,7 @@ function saveContactUs(data, callback) {
     });
 }
 const getAllContactus = (callback) => {
-    const query = 'SELECT * FROM contact_us ORDER BY id ASC';
+    const query = 'SELECT * FROM contact_us ORDER BY id DESC';
     mysqlConnection.query(query, (err, results) => {
       if (err) {
         callback(err, null);

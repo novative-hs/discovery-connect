@@ -75,7 +75,7 @@ WHERE s.status = "In Stock"
   AND ua.accountType = "CollectionSites"
   AND s.user_account_id = ? 
   AND s.Quantity > 0 
-ORDER BY s.created_at ASC;
+ORDER BY s.created_at DESC;
 
   `;
   mysqlConnection.query(query, [user_account_id], (err, results) => {
@@ -148,9 +148,6 @@ WHERE
     
   });
 };
-
-
-
 
 const getResearcherSamples = (userId, callback) => {
   const query = `
