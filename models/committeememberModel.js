@@ -32,13 +32,6 @@ const createCommitteeMemberTable = () => {
       console.log("Committee member table created or already exists");
     }
   });
-
-  // Ensure alterCommitteememberTable exists before calling
-  if (typeof alterCommitteememberTable === "function") {
-    alterCommitteememberTable();
-  } else {
-    console.warn("alterCommitteememberTable function is not defined.");
-  }
 };
 
 

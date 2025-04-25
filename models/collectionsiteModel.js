@@ -183,9 +183,6 @@ const deleteCollectionSite = async (id) => {
 
   
   
-    `;
-
-
 
     // Send email asynchronously (does not block response)
     sendEmail(email, "Account Status Update", emailText)

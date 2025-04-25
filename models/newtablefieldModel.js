@@ -299,24 +299,6 @@ const createOrUpdateTables = async () => {
 
 };
 
-const updateAccountType = () => {
-  const updateQuery = `
-    UPDATE user_account 
-    SET accountType = 'DatabaseAdmin' 
-    WHERE accountType = 'RegistrationAdmin'
-  `;
-
-  mysqlConnection.query(updateQuery, (err, results) => {
-    if (err) {
-      console.error("Error updating accountType: ", err);
-    } else {
-      console.log(
-        `Updated ${results.affectedRows} rows: accountType 'RegistrationAdmin' → 'DatabaseAdmin'`
-      );
-    }
-  });
-};
 module.exports = {
   createOrUpdateTables,
-  updateAccountType,
 };
