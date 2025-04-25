@@ -11,7 +11,7 @@ import {
   faTimes,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import { notifyError,notifySuccess } from "@utils/toast";
+import { notifyError, notifySuccess } from "@utils/toast";
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]); // Filtered orders
@@ -28,6 +28,8 @@ const OrderPage = () => {
   const [actionType, setActionType] = useState("");
   const [user_id, setUserID] = useState(null);
   const [selectedApprovalType, setSelectedApprovalType] = useState("");
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [selectedComments, setSelectedComments] = useState("");
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
@@ -80,18 +82,18 @@ const OrderPage = () => {
   };
   const handleAdminStatus = async (newStatus) => {
     if (!selectedOrderId) return;
-  
+
     setLoading(true);
-  
+
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/registration-status`,
         { registration_admin_status: newStatus }
       );
-  
+
       if (response.status === 200) {
         setSuccessMessage(`Order status updated to ${newStatus} successfully!`);
-        fetchOrders();  // Refresh the orders
+        fetchOrders(); // Refresh the orders
       }
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -102,7 +104,6 @@ const OrderPage = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
-  
 
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
@@ -119,16 +120,21 @@ const OrderPage = () => {
 
   const handleCommitteeApproval = (committeeType) => {
     axios
-      .post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`, {
-        cartId: selectedOrderId,
-        senderId: user_id,
-        committeeType: committeeType,
-      })
+      .post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
+        {
+          cartId: selectedOrderId,
+          senderId: user_id,
+          committeeType: committeeType,
+        }
+      )
       .then((response) => {
-        notifySuccess(response.data.message || "Approval request sent successfully!");
+        notifySuccess(
+          response.data.message || "Approval request sent successfully!"
+        );
         setShowModal(false);
         setSelectedOrderId(null);
-        setSelectedApprovalType("")
+        setSelectedApprovalType("");
         fetchOrders(); // Optimize fetchOrders if necessary
         setShowTransferModal(false);
       })
@@ -137,11 +143,9 @@ const OrderPage = () => {
         setShowModal(false);
       });
   };
-  
 
-  
-useEffect(() => {
-    if (showSampleModal ||showTransferModal) {
+  useEffect(() => {
+    if (showSampleModal || showTransferModal || showCommentsModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -150,7 +154,7 @@ useEffect(() => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showSampleModal,showTransferModal]);
+  }, [showSampleModal, showTransferModal, showCommentsModal]);
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -216,9 +220,7 @@ useEffect(() => {
               <tbody className="table-light">
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
-                    <tr
-                      key={order.order_id}
-                    >
+                    <tr key={order.order_id}>
                       <td>{order.order_id}</td>
                       <td>{order.researcher_name}</td>
                       <td>{order.organization_name}</td>
@@ -272,47 +274,14 @@ useEffect(() => {
                       <td
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleComments(order.order_id);
+                          setSelectedComments(order.committee_comments);
+                          setShowCommentsModal(true);
                         }}
                         style={{ cursor: "pointer" }}
                       >
-                        {expandedComments[order.order_id] ? (
-                          order.committee_comments ? (
-                            <div
-                              style={{
-                                background: "#f8f9fa",
-                                padding: "10px",
-                                borderRadius: "8px",
-                                boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
-                                maxWidth: "300px",
-                                whiteSpace: "normal",
-                                wordBreak: "break-word",
-                              }}
-                            >
-                              {order.committee_comments
-                                .split(" | ")
-                                .map((comment, index) => (
-                                  <div
-                                    key={index}
-                                    style={{
-                                      marginBottom: "5px",
-                                      color: "#333",
-                                    }}
-                                  >
-                                    • {comment}
-                                  </div>
-                                ))}
-                            </div>
-                          ) : (
-                            <div style={{ color: "#888", fontStyle: "italic" }}>
-                              No comments available
-                            </div>
-                          )
-                        ) : (
-                          <span className="text-primary fw-bold">
-                            Click to View
-                          </span>
-                        )}
+                        <span className="text-primary fw-bold">
+                          View Comments
+                        </span>
                       </td>
 
                       <td>
@@ -409,6 +378,94 @@ useEffect(() => {
                 </Button>
               </Modal.Footer>
             </Modal>
+          )}
+          {showCommentsModal && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="modal-backdrop fade show"
+                style={{
+                  backdropFilter: "blur(5px)",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  zIndex: 1040,
+                }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  backgroundColor: "#fff",
+                  padding: "20px",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+                  width: "90vw",
+                  maxWidth: "500px",
+                  maxHeight: "70vh",
+                  overflowY: "auto",
+                }}
+              >
+                <div className="modal-header d-flex justify-content-between align-items-center">
+                  <h5 className="fw-bold">Committee Member Comments</h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => setShowCommentsModal(false)}
+                    style={{
+                      fontSize: "1.5rem",
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  {selectedComments ? (
+                    selectedComments.split(" | ").map((comment, idx) => {
+                      const [name, text] = comment.split(" : ");
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3 mb-3 rounded"
+                          style={{
+                            backgroundColor: "#f8f9fa", // light background
+                            border: "1px solid #dee2e6", // subtle border
+                          }}
+                        >
+                          <p
+                            className="mb-1"
+                            style={{ color: "#0d6efd", fontWeight: "600" }}
+                          >
+                            Name: {name?.trim()}
+                          </p>
+                          <p className="mb-0" style={{ color: "#343a40" }}>
+                            <strong>Comments:</strong> {text?.trim()}
+                          </p>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-muted fst-italic">
+                      No comments available
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
           )}
 
           {/* Approval  */}
@@ -550,16 +607,15 @@ useEffect(() => {
                           {selectedSample.order_status}
                         </p>
                         <p>
-                        <strong>Age:</strong> {selectedSample.age} years |{" "}
-                        <strong>Gender:</strong> {selectedSample.gender} |{" "}
-                        <strong>Ethnicity:</strong> {selectedSample.ethnicity}
-                      </p>
+                          <strong>Age:</strong> {selectedSample.age} years |{" "}
+                          <strong>Gender:</strong> {selectedSample.gender} |{" "}
+                          <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                        </p>
                       </div>
                     </div>
 
                     {/* Right Side: Detailed Information */}
                     <div className="col-md-7">
-                      
                       <p>
                         <strong>Storage Temperature:</strong>{" "}
                         {selectedSample.storagetemp}

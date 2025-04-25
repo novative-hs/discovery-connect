@@ -7,7 +7,7 @@ const createcommitteesampleapprovalTable = () => {
   cart_id INT NOT NULL,  
   sender_id INT NOT NULL,  -- Registration admin
   committee_member_id INT NOT NULL, -- Committee member
-  committee_status ENUM('UnderReview', 'Approved', 'Refused') NOT NULL DEFAULT 'Review',
+  committee_status ENUM('UnderReview', 'Approved', 'Refused') NOT NULL DEFAULT 'UnderReview',
   comments TEXT NULL, 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
@@ -143,7 +143,6 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 };
 
 const updateCartStatusToShipping = (cartId, callback) => {
-  // Combine queries to reduce number of database calls
   const committeeStatusQuery = `
     SELECT 
       (SELECT COUNT(*) FROM committeesampleapproval ca
@@ -162,9 +161,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
     FROM cart c WHERE c.id = ?`;
 
   mysqlConnection.query(committeeStatusQuery, [cartId, cartId, cartId, cartId, cartId], (err, results) => {
-    if (err) {
-      return callback(err, null);
-    }
+    if (err) return callback(err, null);
 
     const {
       ethical_approved,
@@ -173,6 +170,8 @@ const updateCartStatusToShipping = (cartId, callback) => {
       scientific_total,
       current_order_status
     } = results[0];
+
+    console.log("Committee counts:", { ethical_approved, ethical_total, scientific_approved, scientific_total, current_order_status });
 
     const ethicalApprovedComplete = ethical_total === 0 || ethical_approved === ethical_total;
     const scientificApprovedComplete = scientific_total === 0 || scientific_approved === scientific_total;
@@ -183,17 +182,11 @@ const updateCartStatusToShipping = (cartId, callback) => {
 
     if (ethicalApprovedComplete && scientificApprovedComplete) {
       if (current_order_status !== "Shipping" && current_order_status !== "Dispatched") {
-        const updateStatusQuery = `
-          UPDATE cart 
-          SET order_status = 'Shipping' 
-          WHERE id = ?`;
+        const updateStatusQuery = `UPDATE cart SET order_status = 'Shipping' WHERE id = ?`;
 
         mysqlConnection.query(updateStatusQuery, [cartId], (updateErr, updateResults) => {
-          if (updateErr) {
-            return callback(updateErr, null);
-          }
+          if (updateErr) return callback(updateErr, null);
 
-          // Use Promise.all to fetch email and other necessary data in parallel
           const getResearcherEmailQuery = `
             SELECT ua.email, c.created_at, c.id AS cartId
             FROM user_account ua
@@ -201,81 +194,74 @@ const updateCartStatusToShipping = (cartId, callback) => {
             WHERE c.id = ?`;
 
           mysqlConnection.query(getResearcherEmailQuery, [cartId], (emailErr, emailResults) => {
-            if (emailErr) {
-              return callback(emailErr, null);
-            }
+            if (emailErr) return callback(emailErr, null);
 
             if (emailResults.length === 0) {
-              return callback(new Error("No researcher found for this cart ID"), null);
+              console.warn("No researcher found for this cart ID");
+              return callback(null, updateResults); // Status updated, just no email sent
             }
 
-            const researcherEmail = emailResults[0].email;
-            const cartCreatedAt = emailResults[0].created_at;
+            const { email: researcherEmail, created_at: cartCreatedAt } = emailResults[0];
             const subject = "Sample Request Status Update";
             const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>shipping</b>.\n\nDetails:\nCart ID: ${cartId} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
 
-            // Offload email sending to background
             setImmediate(() => {
               sendEmail(researcherEmail, subject, message, (emailSendErr) => {
                 if (emailSendErr) {
-                  console.error("❌ Failed to send email to researcher:", emailSendErr);
-                  return callback(emailSendErr, null);
+                  console.error("❌ Failed to send email:", emailSendErr);
+                } else {
+                  console.log("✅ Email notification sent to researcher.");
                 }
-                console.log("✅ Email notification sent to researcher.");
-                return callback(null, updateResults);
               });
             });
+
+            return callback(null, updateResults);
           });
         });
       } else {
-        return callback(null, null); // Status already updated
+        return callback(null, null); // Already updated
       }
     } else {
-      return callback(null, null); // Not fully approved
+      return callback(null, null); // Not fully approved yet
     }
   });
 };
 
-const updateCommitteeStatus = (id, committee_member_id, committee_status, comments, callback) => {
-  const sqlQuery = `
+const updateCommitteeStatus = (cartId, committee_member_id, committee_status, comments, callback) => {
+  const updateQuery = `
     UPDATE committeesampleapproval 
     SET committee_status = ?, comments = ? 
     WHERE committee_member_id = ? AND cart_id = ?`;
 
-  mysqlConnection.query(sqlQuery, [committee_status, comments, committee_member_id, id], (err, result) => {
+  mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartId], (err, result) => {
     if (err) {
       console.error("Error updating committee status:", err);
       return callback(err, null);
     }
 
-    console.log("Committee Status updated successfully!");
+    console.log("✅ Committee Status updated successfully!");
 
-    const updateResponse = {
+    const response = {
       success: true,
       message: "Committee status updated",
-      cartId: id,
+      cartId,
       status: committee_status,
     };
 
-    // Fetch email asynchronously
     const getEmailQuery = `
       SELECT ua.email 
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
       WHERE c.id = ?`;
 
-    mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
+    mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
       if (emailErr) {
         console.error("Error fetching email:", emailErr);
-        return callback(emailErr, null);
-      }
-
-      if (emailResults.length > 0) {
+      } else if (emailResults.length > 0) {
         const userEmail = emailResults[0].email;
         const subject = `Committee Status Update`;
-        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Cart ID: ${id}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
+        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Cart ID: ${cartId}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
 
-        // Offload email sending to background
         setImmediate(() => {
           sendEmail(userEmail, subject, text, (emailSendErr) => {
             if (emailSendErr) {
@@ -283,19 +269,23 @@ const updateCommitteeStatus = (id, committee_member_id, committee_status, commen
             } else {
               console.log("Email notification sent successfully.");
             }
-            updateCartStatusToShipping(id, (shippingErr) => {
-              if (shippingErr) console.error("Error in shipping status update:", shippingErr);
-            });
           });
         });
+      } else {
+        console.warn("No email found for user with cart ID", cartId);
       }
 
-      // Respond quickly to the frontend
-      callback(null, updateResponse);
+      // Always try to update cart shipping status regardless of email success
+      updateCartStatusToShipping(cartId, (shippingErr) => {
+        if (shippingErr) {
+          console.error("Error in shipping status update:", shippingErr);
+        }
+      });
+
+      callback(null, response);
     });
   });
 };
-
 
 module.exports = {
   createcommitteesampleapprovalTable,
