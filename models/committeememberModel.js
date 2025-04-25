@@ -41,7 +41,6 @@ const createCommitteeMemberTable = () => {
   }
 };
 
-
 // Function to get all committee members
 const getAllCommitteeMembers = (callback) => {
   const query = `
@@ -68,7 +67,9 @@ const getAllCommitteeMembers = (callback) => {
     JOIN 
         organization org ON cm.organization = org.id
     LEFT JOIN 
-        user_account ua ON cm.user_account_id = ua.id;
+        user_account ua ON cm.user_account_id = ua.id
+    ORDER BY 
+        cm.id DESC;
   `;
 
   mysqlConnection.query(query, (err, results) => {

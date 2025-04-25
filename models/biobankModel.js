@@ -14,7 +14,8 @@ const getBiobankSamples = (id, callback) => {
     SELECT *
     FROM sample
     WHERE status = "In Stock" 
-      AND is_deleted = FALSE;
+      AND is_deleted = FALSE
+      ORDER BY id DESC;
   `;
   mysqlConnection.query(query, (err, results) => {
     if (err) {

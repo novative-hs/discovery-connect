@@ -2,7 +2,7 @@ const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 // Function to fetch all CSR
 const getAllCSR = (callback) => {
-  const query = "SELECT c.*, user_account.email AS email FROM CSR c JOIN user_account ON c.user_account_id = user_account.id ORDER BY CSRName ASC";
+  const query = "SELECT c.*, user_account.email AS email FROM CSR c JOIN user_account ON c.user_account_id = user_account.id ORDER BY CSRName DESC";
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });

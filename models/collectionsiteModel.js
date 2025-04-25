@@ -7,7 +7,7 @@ const getAllCollectionSites = (callback) => {
   SELECT collectionsite.*, user_account.email
   FROM collectionsite
   JOIN user_account ON collectionsite.user_account_id = user_account.id
-  ORDER BY collectionsite.id ASC
+  ORDER BY collectionsite.id DESC
 `;
 
 
@@ -19,7 +19,6 @@ const getAllCollectionSites = (callback) => {
     }
   });
 };
-
 
 // Function to insert a new collection site
 const createCollectionSite = (data, callback) => {
@@ -124,7 +123,6 @@ const updateCollectionSiteStatus = async (id, status) => {
 };
 
 
-
 function getCollectionSiteById(id, callback) {
   const query = 'SELECT * FROM researcher WHERE id = ?';
   mysqlConnection.query(query, [id], callback);
@@ -180,12 +178,6 @@ const deleteCollectionSite = async (id) => {
     Best regards,<br/>
     The Discovery Connect Team
 `;
-
-  
-  
-    `;
-
-
 
     // Send email asynchronously (does not block response)
     sendEmail(email, "Account Status Update", emailText)

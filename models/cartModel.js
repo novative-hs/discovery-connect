@@ -486,7 +486,7 @@ LEFT JOIN organization org ON r.nameofOrganization = org.id
 JOIN sample s ON c.sample_id = s.id
 LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
 
-ORDER BY c.created_at ASC  `;
+ORDER BY c.created_at DESC`;
 
   mysqlConnection.query(sqlQuery, (err, results) => {
     if (err) {

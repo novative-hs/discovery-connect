@@ -21,7 +21,7 @@ function getAllResearchers(callback) {
     FROM researcher
     JOIN user_account ON researcher.user_account_id = user_account.id
     JOIN organization ON researcher.nameofOrganization = organization.id
-    ORDER BY researcher.id ASC
+    ORDER BY researcher.id DESC
   `;
   mysqlConnection.query(query, callback);
 }
@@ -50,8 +50,10 @@ LEFT JOIN district ON researcher.district = district.id
 LEFT JOIN country ON researcher.country = country.id
 LEFT JOIN organization ON researcher.nameofOrganization = organization.id
 LEFT JOIN user_account ON researcher.user_account_id = user_account.id
-WHERE 
-    researcher.nameofOrganization = ?;
+ WHERE 
+      researcher.nameofOrganization = ?
+    ORDER BY 
+      researcher.id DESC;
   `;
   mysqlConnection.query(query, [organizationId], callback);
 }
@@ -286,9 +288,9 @@ const updateResearcherStatus = async (id, status) => {
     Best regards,
     The Discovery Connect Team
   `;
-  
-  if (status === "approved") {
-    emailText = `
+
+    if (status === "approved") {
+      emailText = `
     Dear ${name},
   
     Congratulations! 🎉
@@ -304,8 +306,8 @@ const updateResearcherStatus = async (id, status) => {
     Best regards,
     The Discovery Connect Team
   `;
-  
-  }
+
+    }
 
     sendEmail(email, "Welcome to Discovery Connect", emailText)
       .then(() => console.log("Email sent successfully"))

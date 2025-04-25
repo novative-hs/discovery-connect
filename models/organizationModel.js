@@ -2,7 +2,7 @@ const mysqlConnection = require("../config/db");
 const {sendEmail}=require("../config/email");
 // Function to fetch all organizations
 const getAllOrganizations = (callback) => {
-  const query = "SELECT organization.*, user_account.email AS email FROM organization JOIN user_account ON organization.user_account_id = user_account.id ORDER BY organization.id  ASC";
+  const query = "SELECT organization.*, user_account.email AS email FROM organization JOIN user_account ON organization.user_account_id = user_account.id ORDER BY organization.id DESC";
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });

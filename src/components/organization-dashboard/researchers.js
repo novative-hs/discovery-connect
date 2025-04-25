@@ -366,7 +366,8 @@ const ResearcherArea = () => {
 
           {/* Table */}
           <div className="table-responsive w-100">
-            <table className="table table-hover text-center align-middle w-auto border">
+            {/* <table className="table table-hover text-center align-middle w-auto border"> */}
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
