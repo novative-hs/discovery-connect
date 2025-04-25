@@ -189,20 +189,16 @@ const createCart = (data, callback) => {
     );
   }
 
-  // Query to get Registration Admin ID
   const getAdminIdQuery = `SELECT id FROM user_account WHERE accountType = 'RegistrationAdmin' LIMIT 1`;
 
   mysqlConnection.query(getAdminIdQuery, (err, adminResults) => {
-    if (err) {
-      console.error("Error fetching Registration Admin ID:", err);
-      return callback(err);
-    }
+    if (err) return callback(err);
 
     if (adminResults.length === 0) {
       return callback(new Error("No Registration Admin found"));
     }
 
-    const registrationAdminId = adminResults[0].id; // Get the admin ID
+    const registrationAdminId = adminResults[0].id;
 
     let insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
@@ -220,19 +216,13 @@ const createCart = (data, callback) => {
         ];
 
         mysqlConnection.query(insertCartQuery, cartValues, (err, cartResult) => {
-          if (err) {
-            console.error("Error inserting into cart:", err);
-            return reject(err);
-          }
+          if (err) return reject(err);
 
           const cartId = cartResult.insertId;
           const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
 
           mysqlConnection.query(getCreatedAtQuery, [cartId], (err, createdAtResult) => {
-            if (err) {
-              console.error("Error fetching created_at:", err);
-              return reject(err);
-            }
+            if (err) return reject(err);
 
             const created_at = createdAtResult?.[0]?.created_at;
             const insertApprovalQuery = `
@@ -241,10 +231,7 @@ const createCart = (data, callback) => {
             `;
 
             mysqlConnection.query(insertApprovalQuery, [cartId, registrationAdminId], (err) => {
-              if (err) {
-                console.error("Error inserting into approval:", err);
-                return reject(err);
-              }
+              if (err) return reject(err);
 
               const insertDocumentsQuery = `
                 INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file)
@@ -253,31 +240,25 @@ const createCart = (data, callback) => {
               const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null];
 
               mysqlConnection.query(insertDocumentsQuery, documentValues, (err) => {
-                if (err) {
-                  console.error("Error inserting into documents:", err);
-                  return reject(err);
-                }
+                if (err) return reject(err);
 
                 const updateQuery = `
-                UPDATE sample 
-                SET 
-                  quantity = quantity - ?, 
-                  quantity_allocated = IFNULL(quantity_allocated, 0) + ?
-                WHERE id = ? AND quantity >= ?
-              `;
-              const updateValues = [
-                item.samplequantity,  // deduct from quantity
-                item.samplequantity,  // add to quantity_allocated
-                item.sample_id,
-                item.samplequantity
-              ];
-                mysqlConnection.query(updateQuery, updateValues, (err) => {
-                  if (err) {
-                    console.error("Error updating stock:", err);
-                    return reject(err);
-                  }
+                  UPDATE sample 
+                  SET 
+                    quantity = quantity - ?, 
+                    quantity_allocated = IFNULL(quantity_allocated, 0) + ?
+                  WHERE id = ? AND quantity >= ?
+                `;
+                const updateValues = [
+                  item.samplequantity,
+                  item.samplequantity,
+                  item.sample_id,
+                  item.samplequantity,
+                ];
 
-                  resolve({ cartId, message: "Cart created and stock updated." ,created_at});
+                mysqlConnection.query(updateQuery, updateValues, (err) => {
+                  if (err) return reject(err);
+                  resolve({ cartId, created_at });
                 });
               });
             });
@@ -286,24 +267,50 @@ const createCart = (data, callback) => {
       });
     });
 
-    // After all cart items are inserted, notify the researcher
     Promise.all(insertPromises)
       .then((results) => {
-        const cartIds = results.map(result => result.cartId);
+        const cartIds = results.map((result) => result.cartId);
         const message = 'Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.';
+        const subject = "Sample Request Status Update";
 
-        notifyResearcher(cartIds, message, "Sample Request Status Update")
-          .then(() => {
-            callback(null, { message: 'Cart created successfully', results });
-          })
-          .catch((emailErr) => {
-            console.error("Error sending email:", emailErr);
-            callback(emailErr);
-          });
+        // ✅ Inline notifyResearcher logic
+        const placeholders = cartIds.map(() => '?').join(',');
+        const getResearcherEmailQuery = `
+          SELECT ua.email, c.created_at, c.id AS cartId
+          FROM user_account ua
+          JOIN cart c ON ua.id = c.user_id
+          WHERE c.id IN (${placeholders})
+        `;
+
+        mysqlConnection.query(getResearcherEmailQuery, cartIds, (emailErr, emailResults) => {
+          if (emailErr) return callback(emailErr);
+
+          if (emailResults.length === 0) {
+            return callback(new Error("No data found for provided cart IDs"));
+          }
+
+          const researcherEmail = emailResults[0].email;
+          const cartIdsList = emailResults
+            .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
+            .join("\n");
+
+          const emailMessage = `Dear Researcher,\n\n${message}\n\nDetails for the following carts:\n\n${cartIdsList}\n\nBest regards,\nYour Team`;
+
+          sendEmail(researcherEmail, subject, emailMessage)
+            .then(() => {
+              console.log("Email notification sent to researcher.");
+              callback(null, { message: 'Cart created successfully', results });
+            })
+            .catch((emailSendErr) => {
+              console.error("Failed to send researcher email:", emailSendErr);
+              callback(emailSendErr);
+            });
+        });
       })
       .catch((error) => callback(error));
   });
 };
+
 
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
@@ -693,10 +700,10 @@ const queryAsync = (sql, params) => {
 };
 const updateCartStatus = async (cartIds, cartStatus, callback) => {
   try {
-    // Ensure cartIds is always an array
     const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
 
-    const message =cartStatus === 'Rejected'
+    const message =
+      cartStatus === 'Rejected'
         ? "Your sample request has been <b>rejected</b>."
         : cartStatus === 'UnderReview'
         ? "Your sample documents have been <b>reviewed by a committee member</b>."
@@ -704,41 +711,52 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
         ? "Your sample request has been <b>dispatched</b> and is on its way."
         : "Your sample request status has been updated.";
 
-    console.log(ids);
+    const subject = "Sample Request Status Update";
 
-    // Run all updates and notifications in parallel
-    const tasks = ids.map(async (id) => {
-      const statusUpdate = queryAsync(
-        `UPDATE cart SET order_status = ? WHERE id = ?`,
-        [cartStatus, id]
-      );
-      const notification = notifyResearcher(
-        id,
-        message,
-        "Sample Request Status Update"
-      );
-      return Promise.all([statusUpdate, notification]);
-    });
+    // Step 1: Update each cart status
+    for (const id of ids) {
+      await queryAsync(`UPDATE cart SET order_status = ? WHERE id = ?`, [cartStatus, id]);
+    }
 
-    // Wait for all tasks to complete
-    await Promise.all(tasks);
-    console.log("Cart status updated and researchers notified.");
+    // Step 2: Get email info for the FIRST cart only
+    const getFirstCartEmailQuery = `
+      SELECT ua.email, c.created_at, c.id AS cartId
+      FROM user_account ua
+      JOIN cart c ON ua.id = c.user_id
+      WHERE c.id = ?
+    `;
+    const result = await queryAsync(getFirstCartEmailQuery, [ids[0]]);
 
-    if (callback && typeof callback === 'function') {
-      callback(null, "Cart status updated and researchers notified.");
+    if (!result || result.length === 0) {
+      throw new Error(`No researcher found for cart ID: ${ids[0]}`);
+    }
+
+    const { email, created_at, cartId } = result[0];
+
+    // Step 3: Build email message (include all updated cart IDs for context)
+    const cartList = ids.map(id => `Cart ID: ${id}`).join("\n");
+    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):\n${cartList}<br/>Best regards,\nYour Team`;
+
+    // Step 4: Send the email
+    await sendEmail(email, subject, emailMessage);
+
+    console.log("Cart status updated and researcher notified.");
+
+    if (typeof callback === 'function') {
+      callback(null, "Cart status updated and researcher notified.");
     } else {
-      return "Cart status updated and researchers notified."; // Return result if no callback
+      return "Cart status updated and researcher notified.";
     }
   } catch (err) {
     console.error("Error in update and notify:", err);
-
-    if (callback && typeof callback === 'function') {
-      callback(err, null); // Pass error to callback if it's provided
+    if (typeof callback === 'function') {
+      callback(err, null);
     } else {
-      throw new Error("Error updating status and notifying researchers.");
+      throw err;
     }
   }
 };
+
 
 
 module.exports = {
