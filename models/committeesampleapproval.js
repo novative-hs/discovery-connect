@@ -84,7 +84,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
         return callback(insertErr, null);
       }
 
-      console.log(`Inserted ${insertResult.affectedRows} records into committeesampleapproval.`);
+    
 
       const updateCartStatusQuery = `
         UPDATE cart
@@ -98,7 +98,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
           return callback(updateErr, null);
         }
 
-        console.log("Cart order status updated to 'UnderReview'");
+       
 
         const getEmailQuery = `
           SELECT ua.email 
@@ -120,7 +120,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
           if (userEmail) {
             sendEmail(userEmail, subject, text)
               .then(() => {
-                console.log("Email notification sent successfully.");
+               
                 return callback(null, {
                   message: notice + "Committee status updated and email sent successfully!"
                 });
@@ -171,7 +171,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
       current_order_status
     } = results[0];
 
-    console.log("Committee counts:", { ethical_approved, ethical_total, scientific_approved, scientific_total, current_order_status });
+ 
 
     const ethicalApprovedComplete = ethical_total === 0 || ethical_approved === ethical_total;
     const scientificApprovedComplete = scientific_total === 0 || scientific_approved === scientific_total;
@@ -181,8 +181,8 @@ const updateCartStatusToShipping = (cartId, callback) => {
     }
 
     if (ethicalApprovedComplete && scientificApprovedComplete) {
-      if (current_order_status !== "Shipping" && current_order_status !== "Dispatched") {
-        const updateStatusQuery = `UPDATE cart SET order_status = 'Shipping' WHERE id = ?`;
+      if (current_order_status !== "Shipped" && current_order_status !== "Dispatched") {
+        const updateStatusQuery = `UPDATE cart SET order_status = 'Dispatched' WHERE id = ?`;
 
         mysqlConnection.query(updateStatusQuery, [cartId], (updateErr, updateResults) => {
           if (updateErr) return callback(updateErr, null);
@@ -203,15 +203,13 @@ const updateCartStatusToShipping = (cartId, callback) => {
 
             const { email: researcherEmail, created_at: cartCreatedAt } = emailResults[0];
             const subject = "Sample Request Status Update";
-            const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>shipping</b>.\n\nDetails:\nCart ID: ${cartId} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
+            const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>Dispatched</b>.\n\nDetails:\nCart ID: ${cartId} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
 
             setImmediate(() => {
               sendEmail(researcherEmail, subject, message, (emailSendErr) => {
                 if (emailSendErr) {
                   console.error("❌ Failed to send email:", emailSendErr);
-                } else {
-                  console.log("✅ Email notification sent to researcher.");
-                }
+                } 
               });
             });
 
@@ -239,7 +237,7 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       return callback(err, null);
     }
 
-    console.log("✅ Committee Status updated successfully!");
+  
 
     const response = {
       success: true,
@@ -266,16 +264,14 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
           sendEmail(userEmail, subject, text, (emailSendErr) => {
             if (emailSendErr) {
               console.error("Failed to send email:", emailSendErr);
-            } else {
-              console.log("Email notification sent successfully.");
-            }
+            } 
           });
         });
       } else {
         console.warn("No email found for user with cart ID", cartId);
       }
 
-      // Always try to update cart shipping status regardless of email success
+      // Always try to update cart Shipped status regardless of email success
       updateCartStatusToShipping(cartId, (shippingErr) => {
         if (shippingErr) {
           console.error("Error in shipping status update:", shippingErr);

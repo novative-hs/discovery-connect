@@ -128,7 +128,7 @@ const TestSystemManufacturerArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -136,10 +136,7 @@ const TestSystemManufacturerArea = () => {
         `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
         formData
       );
-      console.log(
-        "Test System Manufacturer added successfully:",
-        response.data
-      );
+     
       setSuccessMessage("Test System Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -162,10 +159,7 @@ const TestSystemManufacturerArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`
       );
-      console.log(
-        `Test System Manufacturer name with ID ${selectedTestSystemManufacturernameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Test System Manufacturer Name deleted successfully.");
 
@@ -199,7 +193,7 @@ const TestSystemManufacturerArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testsystemmanufacturername) => {
-    console.log("data in case of update is", testsystemmanufacturername);
+   
 
     setSelectedTestSystemManufacturernameId(testsystemmanufacturername.id);
     setEditTestSystemManufacturername(testsystemmanufacturername);
@@ -220,10 +214,7 @@ const TestSystemManufacturerArea = () => {
         `${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`,
         formData
       );
-      console.log(
-        "Test System Manufacturer Name updated successfully:",
-        response.data
-      );
+     
 
       fetchTestSystemManufacturername();
 
@@ -254,10 +245,10 @@ const TestSystemManufacturerArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+   
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -273,7 +264,7 @@ const TestSystemManufacturerArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -281,10 +272,7 @@ const TestSystemManufacturerArea = () => {
           `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
           { bulkData: dataWithAddedBy }
         );
-        console.log(
-          "Test System Manufacturer added successfully:",
-          response.data
-        );
+      
 
         fetchTestSystemManufacturername();
       } catch (error) {

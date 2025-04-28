@@ -139,7 +139,7 @@ const RegisterForm = () => {
   };
 
   const handleSelectCountry = (country) => {
-    console.log("Country", country);
+    
     setSelectedCountry(country);
     setSearchCountry("");
     setShowCountryDropdown(false);
@@ -213,7 +213,7 @@ const RegisterForm = () => {
   };
 
   const onSubmit = (data) => {
-    console.log("submit", data);
+    
     const formData = new FormData();
 
     // Append other form data
@@ -298,10 +298,6 @@ const RegisterForm = () => {
 
     reset();
   };
-
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

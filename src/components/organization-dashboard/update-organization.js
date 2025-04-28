@@ -79,8 +79,7 @@ const UpdateOrganization = () => {
         setLogoFile(file);
       }
       reset(organization); // Reset form with the organization data when available
-    }
-    console.log("org", organization);
+    }    
   }, [organization, reset]);
 
   const fetchcityname = async () => {
@@ -137,11 +136,7 @@ const UpdateOrganization = () => {
       formData.append("logo", logoFile);
     }
 
-    // Debugging: log the FormData keys
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
+    
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/updateProfile/${id}`,
@@ -154,7 +149,7 @@ const UpdateOrganization = () => {
       );
 
       notifySuccess("Organization updated successfully");
-      console.log("Organization updated successfully:", response.data);
+      
     } catch (error) {
       console.error("Error updating organization:", error);
       notifyError("Failed to update organization");

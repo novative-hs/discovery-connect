@@ -24,14 +24,14 @@ const createSampleFields = (req, res) => {
     return res.status(400).json({ error: "Invalid table name" });
   }
 
-  console.log("Received Data:", newSampleFieldsData);
+  
 
   samplefieldsModel.createSampleFields(tableName, newSampleFieldsData, (err, result) => {
     if (err) {
-      console.log("Error:", err);
+      
       return res.status(500).json({ error: "Error creating sample fields" });
     }
-    console.log("Insert Result:", result);
+    
     res.status(201).json({ message: "Sample fields added successfully", id: result.insertId });
   });
 };

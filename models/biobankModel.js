@@ -29,7 +29,7 @@ const getBiobankSamples = (id, callback) => {
 
 // Function to create a new sample
 const createBiobankSample = (data, callback) => {
-  console.log("Inserting data into database:", data);
+  
 
   const id = uuidv4(); // Generate a secure unique ID
   const masterID = uuidv4(); // Secure Master ID
@@ -58,7 +58,7 @@ const createBiobankSample = (data, callback) => {
       return callback(err, null);
     }
 
-    console.log('Insert result:', results);
+    
 
     // Now update masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
@@ -67,7 +67,7 @@ const createBiobankSample = (data, callback) => {
         console.error('Error updating masterID:', err);
         return callback(err, null);
       }
-      console.log('Sample inserted successfully with masterID:', masterID);
+      
       callback(null, { insertId: id, masterID: masterID });
     });
   });

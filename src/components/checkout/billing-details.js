@@ -16,7 +16,6 @@ const BillingDetails = () => {
     formState: { errors },
   } = useForm();
 
-  console.log("data on billing page is", id);
 
   // Fetch user data from API
   useEffect(() => {
@@ -27,7 +26,7 @@ const BillingDetails = () => {
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
           );
           const data = await response.json();
-          console.log("Fetched data:", data); // Log the data to verify the response
+         
           if (response.ok) {
             setUserData(data); // Store the fetched data
             if (data && data.length > 0) {

@@ -6,11 +6,8 @@ const createCommitteeSample = (req, res) => {
   // Pass data to the model
   committeesampleapproval.insertCommitteeApproval(cartId,senderId,committeeType, (err, result) => {
     if (err) {
-      console.log("Error:", err); // Log the error for debugging
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
-
-    console.log("Insert Result:", result); // Log the result for debugging
     res.status(201).json(result); // Send the success response
   });
 };

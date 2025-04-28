@@ -34,7 +34,7 @@ const ForgotForm = () => {
   // Step 1: Send OTP to user email
   const onSubmit = async (data) => {
     try {
-      console.log("Sending OTP to:", data.email);
+      
       const response = await sendOTP(data.email).unwrap();
       notifySuccess("✅ OTP sent to your email!");
       setEmail(data.email);
@@ -53,7 +53,7 @@ const ForgotForm = () => {
 
   // Step 2: Verify OTP
   const handleOTPSubmit = async () => {
-    console.log("Verifying OTP:", otp); // Debugging
+    
 
     if (!otp) {
       notifyError("Please enter the OTP.");

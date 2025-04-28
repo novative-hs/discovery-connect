@@ -19,15 +19,12 @@ const getAllDistricts = (req, res) => {
 // Controller to create a committee member
 const createDistrict = (req, res) => {
     const newCityData = req.body;
-    console.log('Received District Data:', newCityData); // Log the incoming data for debugging
-  
     // Pass the newCityData directly to the model
     districtModel.createDistrict(newCityData, (err, result) => {
       if (err) {
-        console.log('Error:', err); // Log the error for more insights
+     
         return res.status(500).json({ error: "Error creating district" });
       }
-      console.log('Insert Result:', result); // Log the result for debugging
       res.status(201).json({ message: "District added successfully", id: result.insertId });
     });
 };

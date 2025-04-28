@@ -144,7 +144,7 @@ const updateOrganization = (data, user_account_id, callback) => {
   mysqlConnection.query(query, values, (err, result) => {
     callback(err, result);
   });
-  console.log("quesry",query,values)
+  
 };
 
 // Function to delete a collection site

@@ -53,7 +53,6 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (id === null) {
       return <div>Loading...</div>; // Or redirect to login
     } else {
-      console.log("account_id on Header page is:", id);
       fetchCart();
       fetchUserDetail();
     }
@@ -64,7 +63,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
-      console.log("User", response.data[0])
+    
       setUser(response.data[0]); // Store fetched organization data
     } catch (error) {
       console.error("Error fetching Organization:", error);
@@ -77,7 +76,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
 
-      console.log("API Response:", response.data);
+     
 
       if (
         response.data.length > 0 &&
@@ -85,7 +84,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       ) {
         setCartCount(response.data[0].Count);
         sessionStorage.setItem("cartCount", response.data[0].Count);
-        console.log("Cart count stored:", response.data[0].Count);
+      
       } else {
         console.warn("Unexpected API response format");
         sessionStorage.setItem("cartCount", 0);
@@ -223,8 +222,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   : userType == "csr"
                     ? [
                       { label: "Profile", tab: "order-info" },
-                      { label: "Order Packaging List", tab: "shippingorder" },
                       { label: "Order Dispatch List", tab: "dispatchorder" },
+                      { label: "Order Packaging List", tab: "shippingorder" },
                       { label: "Order Completed List", tab: "completedorder" },
                     ]
                     : [];

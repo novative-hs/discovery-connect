@@ -75,10 +75,10 @@ ORDER BY s.id;
 
   mysqlConnection.query(query, [id], (err, results) => {
       if (err) {
-          console.error("Error fetching sample receive:", err);
+          
           return res.status(500).json({ error: "Error fetching sample receive" });
       }
-      console.log(results);
+      
       res.status(200).json(results);
   });
 };
@@ -88,7 +88,7 @@ ORDER BY s.id;
 // Controller to create a new sample receive
 const createSampleReceive = (req, res) => {
   const { id } = req.params; // ID of the sample being received
-  console.log("Sample receive id is:", id);
+  
 
   const { receiverName, ReceivedByCollectionSite } = req.body; // Receiving both receiverName and ReceivedByCollectionSite from the payload
 

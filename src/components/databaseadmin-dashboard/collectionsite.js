@@ -80,10 +80,7 @@ const CollectionsiteArea = () => {
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/delete/${selectedCollectionsiteId}`
       );
-      console.log(
-        `Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage(response.data.message);
 
@@ -126,7 +123,7 @@ const CollectionsiteArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/edit/${selectedCollectionsiteId}`,
         formData
       );
-      console.log("Collectionsite updated successfully:", response.data);
+     
       fetchCollectionsites();
       setShowEditModal(false);
 
@@ -226,7 +223,7 @@ const CollectionsiteArea = () => {
     };
 
     const formatted = new Date(date).toLocaleString("en-GB", options);
-    console.log("Formatted:", formatted); // debug output
+ 
 
     const [datePart, timePart] = formatted.split(", ");
     const [day, month, year] = datePart.split(" ");

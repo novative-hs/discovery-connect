@@ -168,7 +168,6 @@ const BioBankSampleArea = () => {
   }, []);
 
   const handleTransferClick = (sample) => {
-    console.log("Transfer action for:", sample);
     setSelectedSampleId(sample.id);
     setShowTransferModal(true); // Show the modal
   };
@@ -176,13 +175,11 @@ const BioBankSampleArea = () => {
   // Fetch samples from backend when component loads
   useEffect(() => {
     const storedUser = getsessionStorage("user");
-    console.log("Logged-in user:", storedUser);
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
 
       // Fetch samples added by this collection site
       const ownSamplesResponse = await axios.get(
@@ -224,7 +221,7 @@ const BioBankSampleArea = () => {
           throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-        console.log("Fetched Site Names:", data);
+        
         setCollectionSiteNames(data.data);
       } catch (error) {
         console.error("Error fetching site names:", error);
@@ -396,7 +393,7 @@ const BioBankSampleArea = () => {
           },
         }
       );
-      console.log("Sample added successfully:", response.data);
+    
 
       fetchSamples(); // This will refresh the samples list
 
@@ -483,7 +480,7 @@ const BioBankSampleArea = () => {
           Quantity,
         }
       );
-      console.log("Sample dispatched successfully:", response.data);
+     
       alert("Sample dispatched successfully!");
       fetchSamples()
       setTransferDetails({
@@ -521,7 +518,7 @@ const BioBankSampleArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
       );
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+    
 
       // Set success message
       setSuccessMessage("Sample deleted successfully.");
@@ -558,7 +555,7 @@ const BioBankSampleArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log("ID", id);
+   
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -632,7 +629,7 @@ const BioBankSampleArea = () => {
           },
         }
       );
-      console.log("Sample updated successfully:", response.data);
+    
 
       fetchSamples(); // This will refresh the samples list
 

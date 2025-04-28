@@ -24,7 +24,6 @@ export default function Checkout() {
         router.push("/login");
       } else {
         setUserId(id);
-        console.log("Researcher ID on checkout page is:", id);
       }
       setLoadingUser(false);
     }

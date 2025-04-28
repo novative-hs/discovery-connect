@@ -74,7 +74,7 @@ GROUP BY
 // Controller to create a new sample dispatch
 const createSampleDispatch = (req, res) => {
     const { id } = req.params; // Sample ID
-    console.log("Sample Dispatch id is:", id);
+    
   
     const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = req.body;
   

@@ -76,11 +76,7 @@ const UpdateCollectionSite = () => {
   };
   useEffect(() => {
     if (collectionsite) {
-      console.log("Logo Data:", collectionsite.logo?.data);
-      console.log(
-        "Logo URL:",
-        bufferToBase64(collectionsite.logo?.data, "jpeg")
-      );
+      
       reset(collectionsite); // Reset form with the organization data when available
     }
   }, [collectionsite, reset]);

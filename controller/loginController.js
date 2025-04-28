@@ -18,10 +18,10 @@ function userLogin(req, res) {
     // Check if any results were returned
     if (results.length > 0) {
       const user = results[0];  // Assuming one user matches the credentials
-      console.log("User Found:", user);  // Log the user object
+      
       res.status(200).json({ status: "success", message: "Login successful", user });
     } else {
-      console.log("No matching user found.");
+  
       res.status(401).json({ status: "fail", error: "Invalid email or password" });
     }
   });

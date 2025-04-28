@@ -36,7 +36,7 @@ const DashboardArea = () => {
       .split("; ")
       .find((row) => row.startsWith("authToken="))
       ?.split("=")[1];
-    console.log("Database admin dashboard", token);
+   
     if (!token) {
       router.push("/login"); // Redirect to login if token is missing
     }
@@ -46,7 +46,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Database Admin ID:", storedUserID); // Verify storedUserID
+     
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");

@@ -168,7 +168,6 @@ const create_biobankTable = () => {
 
 
 const getAccountDetail = (id, callback) => {
-  console.log("ID", id);
   // Query to verify email and password for any account type
   const query = `SELECT id, email, accountType 
      FROM user_account 
@@ -407,7 +406,6 @@ const updateAccount = (req, callback) => {
     // If a file was uploaded, convert it to a buffer
     logo = req.file.buffer;
   }
-  console.log(req.body)
   mysqlConnection.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting database connection:", err);
@@ -447,7 +445,7 @@ const updateAccount = (req, callback) => {
         UPDATE user_account SET email = ? WHERE id = ?
       `;
           const updateUserAccountValues = [useraccount_email, user_account_id];
-          console.log("Updating user_account with:", { useraccount_email, user_account_id });
+         
 
 
           connection.query(

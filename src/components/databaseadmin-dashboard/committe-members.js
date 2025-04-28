@@ -150,7 +150,7 @@ const CommitteeMemberArea = () => {
   };
 
   const handleInputChange = (e) => {
-    console.log(organization);
+   
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -166,7 +166,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/post`,
         formData
       );
-      console.log("Committee Member added successfully:", response.data);
+     
       // Refresh the committeemember list after successful submission
       fetchCommitteemembers();
 
@@ -186,7 +186,7 @@ const CommitteeMemberArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log(data)
+     
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -202,10 +202,7 @@ const CommitteeMemberArea = () => {
       await axios.delete(
         `${url}/committeemember/delete/${selectedCommitteememberId}`
       );
-      console.log(
-        `Committeemember with ID ${selectedCommitteememberId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Committeemember deleted successfully.");
 
@@ -257,7 +254,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
-      console.log("Committeemember updated successfully:", response.data);
+     
 
       fetchCommitteemembers();
       setShowEditModal(false);
@@ -306,7 +303,7 @@ const CommitteeMemberArea = () => {
         { committeetype: option }, // Only send the selected `committeetype`
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log("Update successful:", response.data.message);
+     
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
         prevMembers.map((member) =>
@@ -368,7 +365,7 @@ const CommitteeMemberArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      console.log("Update successful:", response.data.message);
+    
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
         prevMembers.map((member) =>

@@ -125,7 +125,7 @@ const SamplePriceCurrencyArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -133,7 +133,7 @@ const SamplePriceCurrencyArea = () => {
         `${url}/samplefields/post-samplefields/samplepricecurrency`,
         formData
       );
-      console.log("Sample Price Currency added successfully:", response.data);
+      
       setSuccessMessage("Sample Price Currency Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -155,9 +155,7 @@ const SamplePriceCurrencyArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`
       );
-      console.log(
-        `Sample Price Currency name with ID ${selectedSamplePriceCurrencynameId} deleted successfully.`
-      );
+    
 
       // Set success message
       setSuccessMessage("Sample Price Currency Name deleted successfully.");
@@ -192,7 +190,7 @@ const SamplePriceCurrencyArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (samplepricecurrencyname) => {
-    console.log("data in case of update is", samplepricecurrencyname);
+  
 
     setSelectedSamplePriceCurrencynameId(samplepricecurrencyname.id);
     setEditSamplePriceCurrencyname(samplepricecurrencyname);
@@ -213,7 +211,7 @@ const SamplePriceCurrencyArea = () => {
         `${url}/samplefields/put-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`,
         formData
       );
-      console.log("sample pricecurrency Name updated successfully:", response.data);
+     
 
       fetchSamplePriceCurrencyname();
 
@@ -243,10 +241,10 @@ const SamplePriceCurrencyArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+  
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+  
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -262,7 +260,7 @@ const SamplePriceCurrencyArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -270,7 +268,7 @@ const SamplePriceCurrencyArea = () => {
           `${url}/samplefields/post-samplefields/samplepricecurrency`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Sample pricecurrency added successfully:", response.data);
+        
 
         fetchSamplePriceCurrencyname();
       } catch (error) {

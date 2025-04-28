@@ -14,7 +14,7 @@ const ContactUS = () => {
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("Collection site Id on sample page is:", id);
+    console.log("Contact us Id :", id);
   }
 
   const [filteredContactus, setFilteredContactus] = useState([]); // Store filtered cities
@@ -44,7 +44,7 @@ const ContactUS = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contactus/get-all`
       );
-      console.log(response.data);
+      
       setContact_us(response.data);
       setFilteredContactus(response.data);
     } catch (error) {

@@ -73,7 +73,7 @@ const ChangePassword = () => {
 
   // on submit
   const onSubmit = async (data) => {
-    console.log("Email", data.email);
+    
     if (data.password === data.newPassword) {
       notifyError("New password cannot be the same as the old password.");
       return;

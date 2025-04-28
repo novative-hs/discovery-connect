@@ -37,7 +37,7 @@ const getAllDistricts = (callback) => {
 
 
 const createDistrict = (data, callback) => {
-  console.log("Received Request Body:", data);
+  
   const { bulkData, districtname, added_by } = data || {};
 
   mysqlPool.getConnection((err, connection) => {

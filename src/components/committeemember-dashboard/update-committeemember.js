@@ -137,11 +137,7 @@ const UpdateCommitteemember = () => {
       formData.append(key, value);
     });
 
-    // Debugging: log the FormData keys
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
+   
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/updateProfile/${id}`,
@@ -154,7 +150,7 @@ const UpdateCommitteemember = () => {
       );
 
       notifySuccess("Committee member updated successfully");
-      console.log("Committee member updated successfully:", response.data);
+      
     } catch (error) {
       console.error("Error updating Committee member:", error);
       notifyError("Failed to update Committee member");

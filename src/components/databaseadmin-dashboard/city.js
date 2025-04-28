@@ -112,7 +112,7 @@ const CityArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(`${url}/city/post-city`, formData);
-      console.log("City added successfully:", response.data);
+    
 
       setSuccessMessage("City added successfully.");
       setTimeout(() => {
@@ -135,10 +135,7 @@ const CityArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
-      console.log(
-        `cityname with ID ${selectedcitynameId} deleted successfully.`
-      );
-
+    
       // Set success message
       setSuccessMessage("cityname deleted successfully.");
 
@@ -174,8 +171,7 @@ const CityArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (cityname) => {
-    console.log("data in case of update is", cityname);
-
+   
     setSelectedcitynameId(cityname.id);
     setEditcityname(cityname);
 
@@ -195,7 +191,7 @@ const CityArea = () => {
         `${url}/city/put-city/${selectedcitynameId}`,
         formData
       );
-      console.log("cityname updated successfully:", response.data);
+    
 
       fetchcityname();
 
@@ -267,7 +263,7 @@ const CityArea = () => {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/post-city`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Cities uploaded successfully:", response.data);
+       
         setSuccessMessage("Cities uploaded successfully");
 
         setTimeout(() => {

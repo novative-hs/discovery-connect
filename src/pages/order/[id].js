@@ -45,7 +45,7 @@ const SingleOrder = ({ params }) => {
       discount,
       totalAmount,
     } = order.order;
-    console.log('order.order',order.order)
+ 
     content = (
       <section className="invoice__area pt-120 pb-120">
         <div className="container">

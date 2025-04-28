@@ -121,7 +121,7 @@ const TestMethodArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -129,7 +129,7 @@ const TestMethodArea = () => {
         `${url}/samplefields/post-samplefields/testmethod`,
         formData
       );
-      console.log("Test Method added successfully:", response.data);
+      
       setSuccessMessage("Test Method Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -155,10 +155,7 @@ const TestMethodArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testmethod/${selectedTestMethodnameId}`
       );
-      console.log(
-        `Test Method name with ID ${selectedTestMethodnameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Test Method Name deleted successfully.");
 
@@ -192,7 +189,7 @@ const TestMethodArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testmethodname) => {
-    console.log("data in case of update is", testmethodname);
+   
 
     setSelectedTestMethodnameId(testmethodname.id);
     setEditTestMethodname(testmethodname);
@@ -213,7 +210,7 @@ const TestMethodArea = () => {
         `${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`,
         formData
       );
-      console.log("Test Method Name updated successfully:", response.data);
+      
 
       fetchTestMethodname();
 
@@ -244,10 +241,10 @@ const TestMethodArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+    
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -263,7 +260,7 @@ const TestMethodArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+      
 
       try {
         // POST request inside the same function
@@ -273,7 +270,7 @@ const TestMethodArea = () => {
             bulkData: dataWithAddedBy,
           }
         );
-        console.log("Test Method added successfully:", response.data);
+        
 
         fetchTestMethodname();
       } catch (error) {

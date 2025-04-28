@@ -31,12 +31,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
       notifyError("Please upload all required documents in PDF format.");
       return;
     }
-    console.log("Sample Copy Data Submitted:", {
-      studyCopy,
-      reportingMechanism,
-      irbFile,
-      nbcFile,
-    });
+   
   };
 
   const updateParent = (field, value) => {

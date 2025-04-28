@@ -27,7 +27,6 @@ const [activeTab, setActiveTab] = useState("order-info");
       const id = sessionStorage.getItem("userID");
       setUserId(id);
       setLoadingUser(false);
-      if (id) console.log("account_id on shop page is:", id);
     }
   }, []);
 

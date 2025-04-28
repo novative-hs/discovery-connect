@@ -54,8 +54,7 @@ const[selectedComment,setSelectedComment]=useState("");
 
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
-
+    
       if (!id) {
         console.error("ID is missing.");
         return;
@@ -64,10 +63,10 @@ const[selectedComment,setSelectedComment]=useState("");
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}`
       );
-console.log(response.data)
+
       // Update state
       setSamples(response.data);
-      console.log(response.data);
+      
       setFilteredSamplename(response.data);
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -191,14 +190,14 @@ console.log(response.data)
     };
   
     try {
-      console.log("📤 Sending approval request:", payload);
+      
   
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
         payload
       );
   
-      console.log("✅ Response:", response.data);
+      
   
       if (response.data.success) {
         notifySuccess(response.data.message)
