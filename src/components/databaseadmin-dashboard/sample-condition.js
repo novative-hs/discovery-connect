@@ -125,7 +125,7 @@ const SampleConditionArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+  
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -133,7 +133,7 @@ const SampleConditionArea = () => {
         `${url}/samplefields/post-samplefields/samplecondition`,
         formData
       );
-      console.log("Sample Condition added successfully:", response.data);
+     
       setSuccessMessage("Sample Condition Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -155,10 +155,7 @@ const SampleConditionArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`
       );
-      console.log(
-        `Sample Condition name with ID ${selectedSampleConditionnameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Sample Condition Name deleted successfully.");
 
@@ -192,7 +189,7 @@ const SampleConditionArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (sampleconditionname) => {
-    console.log("data in case of update is", sampleconditionname);
+   
 
     setSelectedSampleConditionnameId(sampleconditionname.id);
     setEditSampleConditionname(sampleconditionname);
@@ -213,7 +210,7 @@ const SampleConditionArea = () => {
         `${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`,
         formData
       );
-      console.log("sample condition Name updated successfully:", response.data);
+    
 
       fetchSampleConditionname();
 
@@ -243,7 +240,7 @@ const SampleConditionArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+   
     const file = e.target.files[0];
     if (!file) return;
     console.log("File selected:", file); // Debugging

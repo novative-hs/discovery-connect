@@ -14,7 +14,7 @@ const tablesAndColumns = [
       },
     ],
   },
-
+  
   {
     table: "committee_member",
     columnsToDelete: ["email", "password"],
@@ -44,6 +44,11 @@ const tablesAndColumns = [
         type: "INT",
         nullable: true, // Change to true
         references: { table: "payment", column: "id" },
+      },
+      {
+        column: "delivered_at",
+        type: "DATETIME",
+        nullable: true, 
       },
     ],
     columnsToDelete: ["payment_status", "payment_method"],
@@ -222,14 +227,13 @@ const checkIfExists = (tableName, email) => {
 const insertRecord = (tableName, record) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(`Checking if record exists for: ${record.email}`);
+    
       const exists = await checkIfExists(tableName, record.email);
       if (exists) {
         resolve(`Record already exists for email: ${record.email}`);
         return;
       }
 
-      console.log(`Inserting record for: ${record.email}`);
       const query = `
         INSERT INTO ${tableName} (email, password, accountType)
         VALUES (?, ?, ?)
@@ -285,7 +289,7 @@ const createOrUpdateTables = async () => {
         "Accepted",
         "UnderReview",
         "Rejected",
-        "Shipping",
+        "Shipped",
         "Dispatched",
         "Completed",
       ]),

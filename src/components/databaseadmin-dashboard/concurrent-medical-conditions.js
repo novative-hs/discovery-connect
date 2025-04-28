@@ -124,7 +124,7 @@ const ConcurrentMedicalConditionsArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -132,10 +132,7 @@ const ConcurrentMedicalConditionsArea = () => {
         `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
         formData
       );
-      console.log(
-        "Concurrent Medical Conditions added successfully:",
-        response.data
-      );
+     
       setSuccessMessage(
         "Concurrent Medical ConditionsRoutes Name deleted successfully."
       );
@@ -163,11 +160,7 @@ const ConcurrentMedicalConditionsArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`
       );
-      console.log(
-        `Concurrent Medical ConditionsRoutes name with ID ${selectedConcurrentMedicalnameId} deleted successfully.`
-      );
-
-      // Set success message
+     
       setSuccessMessage(
         "Concurrent Medical Conditions Name deleted successfully."
       );
@@ -202,7 +195,7 @@ const ConcurrentMedicalConditionsArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (concurrentmedicalname) => {
-    console.log("data in case of update is", concurrentmedicalname);
+    
 
     setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
     setEditConcurrentMedicalname(concurrentmedicalname);
@@ -223,11 +216,7 @@ const ConcurrentMedicalConditionsArea = () => {
         `${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`,
         formData
       );
-      console.log(
-        "Concurrent Medical Conditions Name updated successfully:",
-        response.data
-      );
-
+    
       fetchConcurrentMedicalname();
 
       setShowEditModal(false);
@@ -257,10 +246,10 @@ const ConcurrentMedicalConditionsArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+  
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+   
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -276,7 +265,7 @@ const ConcurrentMedicalConditionsArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+    
 
       try {
         // POST request inside the same function
@@ -284,11 +273,6 @@ const ConcurrentMedicalConditionsArea = () => {
           `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
           { bulkData: dataWithAddedBy }
         );
-        console.log(
-          "Concurrent Medical Conditions added successfully:",
-          response.data
-        );
-
         fetchConcurrentMedicalname();
       } catch (error) {
         console.error("Error adding Concurrent Medical Conditions :", error);

@@ -340,7 +340,6 @@ function updateCollectionSiteDetail(id, data, callback) {
                   });
                 }
                 connection.release();
-                console.log('Both email and collectionsite updated successfully');
                 return callback(null, 'Both updates were successful');
               });
             }

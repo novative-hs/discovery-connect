@@ -122,7 +122,7 @@ const TestResultUnitArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -130,7 +130,7 @@ const TestResultUnitArea = () => {
         `${url}/samplefields/post-samplefields/testresultunit`,
         formData
       );
-      console.log("Test ResultUnit added successfully:", response.data);
+    
       setSuccessMessage("Test ResultUnit Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -153,9 +153,7 @@ const TestResultUnitArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`
       );
-      console.log(
-        `Test ResultUnit name with ID ${selectedTestResultUnitnameId} deleted successfully.`
-      );
+    
 
       // Set success message
       setSuccessMessage("Test ResultUnit Name deleted successfully.");
@@ -190,7 +188,7 @@ const TestResultUnitArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testResultUnitname) => {
-    console.log("data in case of update is", testResultUnitname);
+    
 
     setSelectedTestResultUnitnameId(testResultUnitname.id);
     setEditTestResultUnitname(testResultUnitname);
@@ -211,7 +209,7 @@ const TestResultUnitArea = () => {
         `${url}/samplefields/put-samplefields/testresultUnit/${selectedTestResultUnitnameId}`,
         formData
       );
-      console.log("Test ResultUnit Name updated successfully:", response.data);
+      
 
       fetchTestResultUnitname();
 
@@ -242,10 +240,10 @@ const TestResultUnitArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+    
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+   
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -261,7 +259,7 @@ const TestResultUnitArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -269,8 +267,7 @@ const TestResultUnitArea = () => {
           `${url}/samplefields/post-samplefields/testresultunit`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Test ResultUnit added successfully:", response.data);
-
+        
         fetchTestResultUnitname();
       } catch (error) {
         console.error("Error adding Test ResultUnit :", error);

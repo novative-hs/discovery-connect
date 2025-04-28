@@ -16,7 +16,7 @@ const QuantityUnitArea = () => {
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on quantityunit page is:", id);
+    ("account_id on quantityunit page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -122,7 +122,7 @@ const QuantityUnitArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -130,7 +130,7 @@ const QuantityUnitArea = () => {
         `${url}/samplefields/post-samplefields/quantityunit`,
         formData
       );
-      console.log("Quantityunit added successfully:", response.data);
+      
       setSuccessMessage("Quantityunit added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
@@ -149,10 +149,7 @@ const QuantityUnitArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/quantityunit/${selectedquantityunitnameId}`
       );
-      console.log(
-        `Quantity unit name with ID ${selectedquantityunitnameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Quantity unit Name deleted successfully.");
 
@@ -186,7 +183,7 @@ const QuantityUnitArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (quantityunitname) => {
-    console.log("data in case of update is", quantityunitname);
+    
 
     setSelectedquantityunitnameId(quantityunitname.id);
     setEditquantityunitname(quantityunitname);
@@ -207,7 +204,7 @@ const QuantityUnitArea = () => {
         `${url}/samplefields/put-samplefields/quantityunit/${selectedquantityunitnameId}`,
         formData
       );
-      console.log("Quantity unit Name updated successfully:", response.data);
+      
 
       fetchQuantityunitname();
 
@@ -237,10 +234,10 @@ const QuantityUnitArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+    
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -256,7 +253,7 @@ const QuantityUnitArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+    
 
       try {
         // POST request inside the same function
@@ -264,7 +261,7 @@ const QuantityUnitArea = () => {
           `${url}/samplefields/post-samplefields/quantityunit`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Quantity unit added successfully:", response.data);
+        
 
         fetchQuantityunitname();
       } catch (error) {

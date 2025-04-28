@@ -293,14 +293,12 @@ LEFT JOIN
       if (totalImages >= totalSamples) {
         // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
-        console.log("Shuffled selected images:", selectedImages);
       } else {
         // More samples than images – allow repetition
         for (let i = 0; i < totalSamples; i++) {
           const img = imageFiles[i % totalImages]; // cycle through
           selectedImages.push(img);
         }
-        console.log("Repeated selected images:", selectedImages);
       }
     
       const updatedResults = results.map((sample, index) => {
@@ -326,7 +324,7 @@ const getSampleById = (id, callback) => {
 
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-  console.log("Inserting data into database:", data);
+
 
   const id = uuidv4(); // Generate a secure unique ID
   const masterID = uuidv4(); // Secure Master ID
@@ -355,7 +353,7 @@ const createSample = (data, callback) => {
       return callback(err, null);
     }
 
-    console.log('Insert result:', results);
+   
 
     // Now update masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
@@ -364,7 +362,7 @@ const createSample = (data, callback) => {
         console.error('Error updating masterID:', err);
         return callback(err, null);
       }
-      console.log('Sample inserted successfully with masterID:', masterID);
+      
       callback(null, { insertId: id, masterID: masterID });
     });
   });
@@ -373,7 +371,6 @@ const createSample = (data, callback) => {
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
-  console.log(data.status);
 
   let room_number = null;
   let freezer_id = null;
@@ -411,7 +408,7 @@ const updateSample = (id, data, callback) => {
         console.error('Error inserting into sample_history:', err);
         return callback(err, null);
       }
-      console.log('Sample history recorded.', historyResults);
+     
       callback(err, result);
     });
   });

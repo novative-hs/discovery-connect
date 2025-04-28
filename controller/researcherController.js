@@ -13,7 +13,7 @@ function getResearchersByOrganization(req, res) {
     organizationId,
     (err, results) => {
       if (err) {
-        console.log("error is", err);
+
         return res.status(500).json({ error: "Error fetching researchers" });
       }
       res.status(200).json(results);
@@ -101,7 +101,7 @@ function createResearcher(req, res) {
 // Controller to handle updating a researcher's details
 function updateResearcher(req, res) {
   const { id } = req.params;
-  console.log("Request", req.body, req.params);
+  
   const {
     userID,
     ResearcherName,

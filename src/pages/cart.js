@@ -20,7 +20,7 @@ export default function Cart({ query }) {
       const id = sessionStorage.getItem("userID");
       setUserId(id);
       setLoadingUser(false);
-      if (id) console.log("account_id on cart page is:", id);
+      
     }
   }, []);
 

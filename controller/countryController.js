@@ -19,15 +19,11 @@ const getAllCountries = (req, res) => {
 // Controller to create a committee member
 const createCountry = (req, res) => {
     const newCountryData = req.body;
-    console.log('Received Country Data:', newCountryData); // Log the incoming data for debugging
-  
     // Pass the newCountryData directly to the model
     countryModel.createCountry(newCountryData, (err, result) => {
       if (err) {
-        console.log('Error:', err); // Log the error for more insights
         return res.status(500).json({ error: "Error creating Country" });
       }
-      console.log('Insert Result:', result); // Log the result for debugging
       res.status(201).json({ message: "Country added successfully", id: result.insertId });
     });
 };

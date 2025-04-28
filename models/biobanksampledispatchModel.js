@@ -2,7 +2,6 @@ const mysqlConnection = require("../config/db");
 
 const getSampleDispatchesInTransit = (callback) => {  
     const query = `SELECT s.* FROM sample s WHERE s.status = "In Transit"`;
-    console.log('Executing query:', query); // Log the query
     mysqlConnection.query(query, callback);
   };
 

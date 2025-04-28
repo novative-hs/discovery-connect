@@ -119,7 +119,7 @@ const CSRArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/edit/${selectedCSRId}`,
         formData
       );
-      console.log("CSR updated successfully:", response.data);
+      
 
       fetchCSR()
 

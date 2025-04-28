@@ -14,7 +14,7 @@ export const wishlistSlice = createSlice({
       const isExist = state.wishlist.some(item => item._id === payload._id);
       if (!isExist) {
         state.wishlist.push(payload);
-        console.log("Payload in add_to_wishlist:", payload);
+       
         notifySuccess(`${payload.title} added to wishlist`); // Access the product title here
       } else {
         state.wishlist = state.wishlist.filter(item => item._id !== payload._id);

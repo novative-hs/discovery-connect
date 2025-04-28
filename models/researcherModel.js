@@ -2,7 +2,6 @@ const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 
 function createResearcher(data, callback) {
-  console.log("Researcher Model", data)
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
     INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by)
@@ -88,7 +87,7 @@ WHERE
 // Function to update a researcher's details
 function updateResearcher(id, data, callback) {
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
-  console.log(data)
+  
   const query = `
     UPDATE researcher
     SET ResearcherName = ?, phoneNumber = ?, nameofOrganization = ?, fullAddress = ?,city=?,district=?, country = ?, logo = ?
@@ -161,7 +160,7 @@ function updateResearcherDetail(id, data, callback) {
               });
             }
 
-            console.log('Both email and collectionsite updated successfully');
+            
             return callback(null, 'Both updates were successful');
           });
         }

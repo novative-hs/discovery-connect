@@ -101,7 +101,7 @@ const useCheckoutSubmit = () => {
       })
         .then((data) => {
           setClientSecret(data.data.clientSecret);
-          console.log(data);
+          
         })
         .then((error) => {
           console.log(error);

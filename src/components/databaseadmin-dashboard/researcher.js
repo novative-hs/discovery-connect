@@ -122,7 +122,7 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
-      console.log("Researcher updated successfully:", response.data);
+     
 
       const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`

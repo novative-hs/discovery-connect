@@ -67,8 +67,7 @@ const createCart = (req, res) => {
       console.error("Error creating cart:", err);  // This is where you'd see the error logs.
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
-    
-    console.log("Insert Result:", result);  // This will log the successful insert result
+  
     return res.status(201).json({ message: "Cart created successfully", result });
   });
   
@@ -151,6 +150,20 @@ const updateRegistrationAdminStatus = async (req, res) => {
     return res.status(500).json({ error: "Error in updating status" });
   }
 };
+const updateCartStatusbyCSR = (req, res) => {
+  const ids = req.body.ids;
+  cartModel.updateCartStatusbyCSR(ids, req, (err, result) => {
+    if (err) {
+      console.error("Error updating cart_status status:", err);
+      return res.status(500).json({ error: "Error in updating cart_status" });
+    }
+    
+    res.status(200).json({ message: result }); 
+  });
+};
+
+
+
 
 
 const updateCartStatus = (req, res) => {
@@ -159,7 +172,6 @@ const updateCartStatus = (req, res) => {
   if (!cartStatus) {
     return res.status(400).json({ error: "Registration admin status is required" });
   }
-console.log("Received Body",req.body)
   cartModel.updateCartStatus(id, cartStatus, (err, result) => {
     if (err) {
       console.error("Error updating cart_status status:", err);
@@ -180,5 +192,6 @@ module.exports = {
   getAllOrderByCommittee,
   getAllOrderByOrderPacking,
   updateRegistrationAdminStatus,
-  updateCartStatus
+  updateCartStatus,
+  updateCartStatusbyCSR
 };

@@ -26,15 +26,13 @@ const getCount=(req,res)=>{
 // Controller to create a committee member
 const createCity = (req, res) => {
     const newCityData = req.body;
-    console.log('Received City Data:', newCityData); // Log the incoming data for debugging
+    
   
     // Pass the newCityData directly to the model
     cityModel.createCity(newCityData, (err, result) => {
       if (err) {
-        console.log('Error:', err); // Log the error for more insights
         return res.status(500).json({ error: "Error creating City" });
       }
-      console.log('Insert Result:', result); // Log the result for debugging
       res.status(201).json({ message: "City added successfully", id: result.insertId });
     });
 };

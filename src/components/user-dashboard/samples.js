@@ -203,14 +203,14 @@ const SampleArea = () => {
     setCurrentPage(0); // Reset to first page after filtering
   };
   const handleAddClick = async (e) => {
-    console.log(e);
+    
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/post`,
         e
       );
       notifySuccess("Sample added to cart successfully");
-      console.log("Sample added to cart successfully:", response.data);
+      
 
       const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get`

@@ -90,7 +90,7 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
   });
 
   const handleTransferClick = (sample) => {
-    console.log("Transfer action for sample:", sample);
+   
     setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
     setShowReceiveModal(true); // Show the modal
   };
@@ -181,11 +181,6 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
     const { receiverName } = transferDetails;
     const userID = sessionStorage.getItem("userID"); // Retrieve user ID from sessionStorage
 
-    // Log transfer details and selected sample ID
-    console.log("Transfer Details:", transferDetails);
-    console.log("Receiver Name:", receiverName);
-    console.log("Selected Sample ID:", selectedSampleId);
-
     // Validate input before making the API call
     if (!receiverName) {
       alert("All fields are required.");
@@ -197,7 +192,7 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
     }
 
     try {
-      console.log("Sending POST request to API...");
+    
       // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/post/${selectedSampleId}`,
@@ -206,11 +201,11 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
           ReceivedByCollectionSite: userID, // Pass user ID along with receiverName
         }
       );
-      console.log("Sample received successfully:", response.data);
+     
       
 
       alert("Sample received successfully!");
-      console.log(`Fetching updated samples for ID: ${id}`);
+     
       fetchSamples();
 
       setShowReceiveModal(false); // Close the modal after submission

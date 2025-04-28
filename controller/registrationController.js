@@ -50,11 +50,11 @@ const getAccountDetail = (req, res) => {
 };
 
 const sendOTP = (req, res) => {
-  console.log("Received Account Data:", req.body);
+  
 
   accountModel.sendOTP(req, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       return res.status(500).json({ message: "Failed to send OTP", error: err.message });
     }
 
@@ -89,18 +89,18 @@ const verifyOTP = (req, res) => {
 
 
 const createAccount = (req, res) => {
-  console.log("Received Account Data:", req.body);
+  
 
   accountModel.createAccount(req, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       if (err.message === "Email already exists") {
         return res.status(400).json({ error: err.message });
       }
       return res.status(500).json({ error: "Error creating account" });
     }
 
-    console.log("Insert Result:", result);
+    
     res.status(201).json(result);
   });
 };
@@ -108,11 +108,11 @@ const createAccount = (req, res) => {
 const loginAccount = (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Login request:", { email, password });
+  
 
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       if (err.message === "Email and password are required") {
         return res.status(400).json({ status: "fail", error: err.message });
       }
@@ -126,8 +126,6 @@ const loginAccount = (req, res) => {
         .status(500)
         .json({ status: "fail", error: "Internal server error" });
     }
-
-    console.log("Login Successful:", result);
     res.status(200).json({
       status: "success",
       message: "Login successful",
@@ -205,15 +203,13 @@ const changepassword = (req, res) => {
 
 
 const updateAccount = (req, res) => {
-  console.log("Received Account Data:", req.body);
+  
 
   accountModel.updateAccount(req, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       return res.status(500).json({ error: "Error creating account" });
     }
-
-    console.log("Insert Result:", result);
     res.status(201).json(result);
   });
 };

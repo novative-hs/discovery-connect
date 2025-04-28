@@ -25,6 +25,8 @@ router.put("/cart/:id/registration-status", (req, res, next) => {
 }, cartController.updateRegistrationAdminStatus);
 
 router.put("/cart/:id/cart-status", cartController.updateCartStatus);
+router.put('/cart/cartstatusbyCSR', cartController.updateCartStatusbyCSR); 
+
 router.delete('/cart/delete/:id', cartController.deleteCart); // Remove a product from the cart
 
 module.exports = router;

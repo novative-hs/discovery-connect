@@ -20,7 +20,6 @@ const UserOrdersPage = () => {
   const [userType, setUserType] = useState(null);
   useEffect(() => {
     const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
-    console.log("Fetched accountType:", type);
 
     if (type) {
       setUserType(type);

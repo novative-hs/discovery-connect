@@ -101,7 +101,7 @@ export const cartSlice = createSlice({
       if (isCartExpired(storedCart)) {
         state.cart_products = [];
         setsessionStorage(CART_STORAGE_KEY, []);
-        console.log("🧹 Cart expired and cleared after 2 minutes.");
+        
         notifyError("Your cart has been emptied because the items were not checked out within 2 days.");
 
       } else {

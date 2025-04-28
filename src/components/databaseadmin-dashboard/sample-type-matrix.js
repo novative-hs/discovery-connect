@@ -124,7 +124,7 @@ const SampleTypeMatrixArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -132,7 +132,7 @@ const SampleTypeMatrixArea = () => {
         `${url}/samplefields/post-samplefields/sampletypematrix`,
         formData
       );
-      console.log("Sample Type Matrix added successfully:", response.data);
+      
       setSuccessMessage("Sample Type Matrix Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -158,9 +158,7 @@ const SampleTypeMatrixArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
       );
-      console.log(
-        `Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId} deleted successfully.`
-      );
+      
 
       // Set success message
       setSuccessMessage("Sample Type Matrix Name deleted successfully.");
@@ -197,7 +195,7 @@ const SampleTypeMatrixArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (sampletypematrix) => {
-    console.log("data in case of update is", sampletypematrix);
+    
 
     setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
     setEditSampleTypeMatrixname(sampletypematrix);
@@ -218,10 +216,7 @@ const SampleTypeMatrixArea = () => {
         `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
         formData
       );
-      console.log(
-        "Sample Type Matrix Name updated successfully:",
-        response.data
-      );
+     
 
       fetchSampleTypeMatrixname();
 
@@ -252,10 +247,10 @@ const SampleTypeMatrixArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+    
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -271,7 +266,7 @@ const SampleTypeMatrixArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+      
 
       try {
         // POST request inside the same function
@@ -279,7 +274,7 @@ const SampleTypeMatrixArea = () => {
           `${url}/samplefields/post-samplefields/sampletypematrix`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Sample Type Matrix added successfully:", response.data);
+        
 
         fetchSampleTypeMatrixname();
       } catch (error) {

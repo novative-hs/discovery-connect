@@ -40,7 +40,7 @@ const OrderInfo = ({ setActiveTab }) => {
   
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
+      
   
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`
@@ -49,7 +49,7 @@ const OrderInfo = ({ setActiveTab }) => {
       const samples = response.data;
   
       // Filter samples based on order_status
-      const shippingCount = samples.filter(sample => sample.order_status === 'Shipping').length;
+      const shippingCount = samples.filter(sample => sample.order_status === 'Shipped').length;
       const dispatchCount = samples.filter(sample => sample.order_status === 'Dispatched').length;
       const completedCount = samples.filter(sample => sample.order_status === 'Completed').length;
   
@@ -58,7 +58,6 @@ const OrderInfo = ({ setActiveTab }) => {
       setCountDispatch(dispatchCount);
       setCountCompleted(completedCount);
   
-      console.log("Counts - Shipping:", shippingCount, "Dispatched:", dispatchCount, "Completed:", completedCount);
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
@@ -87,16 +86,16 @@ const OrderInfo = ({ setActiveTab }) => {
       <div className="profile__main-info">
         <div className="row gx-3">
           <SingleOrderInfo
-            info={countShipping !== null ? countShipping : "Loading..."}
-            icon={<Processing />}
-            title="Pending Order"
-            onClick={() => handleNavigate("shippingorder")} // Set active tab to "shippingorder"
-          />
-          <SingleOrderInfo
             info={countDispatch !== null ? countDispatch : "Loading..."}
             icon={<Truck />}
             title="Dispatch Order"
             onClick={() => handleNavigate("dispatchorder")} // Set active tab to "dispatchorder"
+          />
+          <SingleOrderInfo
+            info={countShipping !== null ? countShipping : "Loading..."}
+            icon={<Processing />}
+            title="Shipping Order"
+            onClick={() => handleNavigate("shippingorder")} // Set active tab to "shippingorder"
           />
           <SingleOrderInfo
             info={countCompleted !== null ? countCompleted : "Loading..."}
