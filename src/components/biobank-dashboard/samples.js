@@ -23,7 +23,7 @@ const BioBankSampleArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -191,7 +191,7 @@ const BioBankSampleArea = () => {
       console.log("Own samples:", ownSamplesResponse.data);
       const ownSamples = ownSamplesResponse.data.map((sample) => ({
         ...sample,
-        quantity: sample.quantity, // Use 'quantity' as is
+        quantity: sample.quantity,
       }));
 
       // Fetch samples received by this collection site
@@ -515,34 +515,34 @@ const BioBankSampleArea = () => {
     setShowTransferModal(false); // Close the modal
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-      );
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+  // const handleDelete = async () => {
+  //   try {
+  //     // Send delete request to backend
+  //     await axios.delete(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
+  //     );
+  //     console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
 
-      // Set success message
-      setSuccessMessage("Sample deleted successfully.");
+  //     // Set success message
+  //     setSuccessMessage("Sample deleted successfully.");
 
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
+  //     // Clear success message after 3 seconds
+  //     setTimeout(() => {
+  //       setSuccessMessage("");
+  //     }, 3000);
 
-      fetchSamples(); // This will refresh the samples list
+  //     fetchSamples(); // This will refresh the samples list
 
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting sample with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  };
+  //     // Close modal after deletion
+  //     setShowDeleteModal(false);
+  //     setSelectedSampleId(null);
+  //   } catch (error) {
+  //     console.error(
+  //       `Error deleting sample with ID ${selectedSampleId}:`,
+  //       error
+  //     );
+  //   }
+  // };
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -688,7 +688,7 @@ const BioBankSampleArea = () => {
 
   useEffect(() => {
     if (
-      showDeleteModal ||
+      // showDeleteModal ||
       showAddModal ||
       showEditModal ||
       showTransferModal ||
@@ -703,7 +703,7 @@ const BioBankSampleArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [
-    showDeleteModal,
+    // showDeleteModal,
     showAddModal,
     showEditModal,
     showTransferModal,
@@ -920,6 +920,7 @@ const BioBankSampleArea = () => {
             focusPage={currentPage}
           />
         )}
+
         {/* Modal for Adding Samples */}
         {(showAddModal || showEditModal) && (
           <>
@@ -2067,16 +2068,13 @@ const BioBankSampleArea = () => {
           </div>
         )}
 
-        {/* Modal for Deleting Samples */}
+        {/* Modal for Deleting Samples
         {showDeleteModal && (
           <>
-            {/* Bootstrap Backdrop with Blur */}
             <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>
-
-            {/* Modal Content */}
             <div
               className="modal show d-block"
               tabIndex="-1"
@@ -2128,7 +2126,7 @@ const BioBankSampleArea = () => {
               </div>
             </div>
           </>
-        )}
+        )} */}
 
         {/* Modal for History of Samples */}
         {showHistoryModal && (

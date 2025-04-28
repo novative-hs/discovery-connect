@@ -1,16 +1,14 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import shape from "@assets/img/shape/offcanvas-shape-1.png";
-import logo from "@assets/img/logo/logo-black.svg";
+import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import MobileMenus from "./mobile-menus";
-import SocialLinks from "@components/social";
 
 const OffCanvas = ({
   isOffCanvasOpen,
   setIsOffCanvasOpen,
   setActiveTab,
-  dashboardType, 
+  dashboardType,
 }) => {
   // Define role-specific menu items
   const getMenuItems = () => {
@@ -53,18 +51,14 @@ const OffCanvas = ({
   };
 
   const menuItems = getMenuItems();
-  
+
   return (
     <React.Fragment>
       <div
-        className={`offcanvas__area offcanvas__area-1 ${
-          isOffCanvasOpen ? "offcanvas-opened" : ""
-        }`}
+        className={`offcanvas__area offcanvas__area-1 ${isOffCanvasOpen ? "offcanvas-opened" : ""
+          }`}
       >
         <div className="offcanvas__wrapper">
-          <div className="offcanvas__shape">
-            <Image className="offcanvas__shape-1" src={shape} alt="shape" />
-          </div>
           <div className="offcanvas__close">
             <button
               onClick={() => setIsOffCanvasOpen(false)}
@@ -75,10 +69,17 @@ const OffCanvas = ({
           </div>
           <div className="offcanvas__content">
             <div className="offcanvas__top mb-40 d-flex justify-content-between align-items-center">
-              <div className="offcanvas__logo logo">
+              <div className="offcanvas__logo logo" style={{ position: 'relative', top: '-30px' }}>
                 <Link href="/">
-                  <Image src={logo} alt="logo" />
+                  <Image src={logo} alt="logo" width={150} height={70} />
                 </Link>
+                {/* LINKS BELOW LOGO */}
+                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Link href="/" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>Home</Link>
+                  <Link href="/about" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>About Us</Link>
+                  <Link href="/shop" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>Discover</Link>
+                  <Link href="/login" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>Login</Link>
+                </div>
               </div>
             </div>
             <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
@@ -88,7 +89,7 @@ const OffCanvas = ({
             </div>
             <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
               <ul style={{ listStyleType: "none", padding: 0 }}>
-            
+
                 {menuItems.map((item, index) => (
                   <li
                     key={index}
@@ -116,28 +117,10 @@ const OffCanvas = ({
                 ))}
               </ul>
             </div>
-
-            <div className="offcanvas__btn">
-              <a href="#" className="tp-btn-offcanvas">
-                Getting Started <i className="fa-regular fa-chevron-right"></i>
-              </a>
-            </div>
-            <div className="offcanvas__social">
-              <h3 className="offcanvas__social-title">Follow :</h3>
-              <SocialLinks />
-            </div>
-            <div className="offcanvas__contact">
-              <p className="offcanvas__contact-call">
-                <a href="tel:+964-742-44-763">+964 742 44 763</a>
-              </p>
-              <p className="offcanvas__contact-mail">
-                <a href="mailto:info@harry.com">info@harry.com</a>
-              </p>
-            </div>
           </div>
         </div>
       </div>
-      
+
       <div
         onClick={() => setIsOffCanvasOpen(false)}
         className={`body-overlay ${isOffCanvasOpen ? "opened" : ""}`}
