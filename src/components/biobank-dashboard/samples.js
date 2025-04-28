@@ -186,10 +186,20 @@ const BioBankSampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
       );
       console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.quantity,
-      }));
+      const ownSamples = ownResponse.data.map((sample) => {
+        // Convert logo BLOB into base64
+        let base64Logo = "";
+        if (sample.logo && sample.logo.data) {
+          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+        }
+
+        return {
+          ...sample,
+          quantity: Number(sample.quantity) || 0,
+          logo: base64Logo, // Important: Replace logo BLOB with base64 string
+        };
+      });
 
       // Fetch samples received by this collection site
       const receivedSamplesResponse = await axios.get(
@@ -221,7 +231,7 @@ const BioBankSampleArea = () => {
           throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-        
+
         setCollectionSiteNames(data.data);
       } catch (error) {
         console.error("Error fetching site names:", error);
@@ -393,7 +403,7 @@ const BioBankSampleArea = () => {
           },
         }
       );
-    
+
 
       fetchSamples(); // This will refresh the samples list
 
@@ -480,7 +490,7 @@ const BioBankSampleArea = () => {
           Quantity,
         }
       );
-     
+
       alert("Sample dispatched successfully!");
       fetchSamples()
       setTransferDetails({
@@ -555,7 +565,7 @@ const BioBankSampleArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-   
+
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -629,7 +639,7 @@ const BioBankSampleArea = () => {
           },
         }
       );
-    
+
 
       fetchSamples(); // This will refresh the samples list
 
@@ -752,7 +762,10 @@ const BioBankSampleArea = () => {
     const base64String = btoa(binary);
     return `data:image/${mimeType};base64,${base64String}`;
   }
+  
   const logoHandler = (file) => {
+    const imageUrl = URL.createObjectURL(file);
+    setLogo(imageUrl);  // Update the preview with the new image URL
     setFormData((prev) => ({
       ...prev,
       logo: file,
@@ -1855,6 +1868,15 @@ const BioBankSampleArea = () => {
                                   color: "black",
                                 }}
                               />
+                              {/* Add image preview next to the file input */}
+                              {formData.logo && (
+                                <img
+                                  src={formData.logo}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{ marginLeft: "20px", borderRadius: "5px" }}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>

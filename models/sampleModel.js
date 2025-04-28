@@ -116,14 +116,14 @@ WHERE
 
     fs.readdir(imageFolder, (fsErr, files) => {
       if (fsErr) return callback(fsErr, null);
-    
+
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    
+
       const totalSamples = results.length;
       const totalImages = imageFiles.length;
-    
+
       let selectedImages = [];
-    
+
       if (totalImages >= totalSamples) {
         // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
@@ -134,7 +134,7 @@ WHERE
           selectedImages.push(img);
         }
       }
-    
+
       const updatedResults = results.map((sample, index) => {
         const selectedImage = selectedImages[index];
         const imagePath = path.join(imageFolder, selectedImage);
@@ -142,10 +142,10 @@ WHERE
         sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
-    
+
       callback(null, updatedResults);
     });
-    
+
   });
 };
 
@@ -282,14 +282,14 @@ LEFT JOIN
     const imageFolder = path.join(__dirname, '../uploads/Images');
     fs.readdir(imageFolder, (fsErr, files) => {
       if (fsErr) return callback(fsErr, null);
-    
+
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    
+
       const totalSamples = results.length;
       const totalImages = imageFiles.length;
-    
+
       let selectedImages = [];
-    
+
       if (totalImages >= totalSamples) {
         // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
@@ -300,7 +300,7 @@ LEFT JOIN
           selectedImages.push(img);
         }
       }
-    
+
       const updatedResults = results.map((sample, index) => {
         const selectedImage = selectedImages[index];
         const imagePath = path.join(imageFolder, selectedImage);
@@ -308,10 +308,10 @@ LEFT JOIN
         sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
-    
+
       callback(null, updatedResults);
     });
-    
+
   });
 };
 // Function to get a sample by its ID
@@ -324,8 +324,6 @@ const getSampleById = (id, callback) => {
 
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-
-
   const id = uuidv4(); // Generate a secure unique ID
   const masterID = uuidv4(); // Secure Master ID
 
@@ -353,8 +351,6 @@ const createSample = (data, callback) => {
       return callback(err, null);
     }
 
-   
-
     // Now update masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
     mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
@@ -362,12 +358,24 @@ const createSample = (data, callback) => {
         console.error('Error updating masterID:', err);
         return callback(err, null);
       }
-      
-      callback(null, { insertId: id, masterID: masterID });
+      // Now insert into sample_history
+      const historyQuery = `
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)
+      `;
+
+      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+        if (err) {
+          console.error('Error inserting into sample_history:', err);
+          return callback(err, null);
+        }
+
+        // All queries successful
+        return callback(null, { insertId: id, masterID: masterID });
+      });
     });
   });
 };
-
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
@@ -392,9 +400,9 @@ const updateSample = (id, data, callback) => {
   const values = [
     data.donorID, room_number, freezer_id, box_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
-    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting,data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, 
-    data.ConcurrentMedicalConditions,data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
-     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status,data.logo, id
+    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
+    data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
@@ -408,7 +416,7 @@ const updateSample = (id, data, callback) => {
         console.error('Error inserting into sample_history:', err);
         return callback(err, null);
       }
-     
+
       callback(err, result);
     });
   });

@@ -175,11 +175,14 @@ const SampleArea = () => {
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
   ];
   const handleTransferClick = (sample) => {
-   
+
     setSelectedSampleId(sample.id);
     setShowTransferModal(true);
   };
+  
   const logoHandler = (file) => {
+    const imageUrl = URL.createObjectURL(file);
+    setLogo(imageUrl);  // Update the preview with the new image URL
     setFormData((prev) => ({
       ...prev,
       logo: file,
@@ -189,14 +192,12 @@ const SampleArea = () => {
   // Fetch samples from backend when component loads
   useEffect(() => {
     const storedUser = getsessionStorage("user");
-    
+
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
   const fetchSamples = async () => {
     try {
-     
-
       if (!id) {
         console.error("ID is missing.");
         return;
@@ -206,11 +207,21 @@ const SampleArea = () => {
       const ownResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
-      const ownSamples = ownResponse.data.map((sample) => ({
-        ...sample,
-        quantity: Number(sample.quantity) || 0, // Ensure it's a number
-      }));
-      console.log("Own samples...", ownSamples);
+      const ownSamples = ownResponse.data.map((sample) => {
+        // Convert logo BLOB into base64
+        let base64Logo = "";
+        if (sample.logo && sample.logo.data) {
+          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+        }
+
+        return {
+          ...sample,
+          quantity: Number(sample.quantity) || 0,
+          logo: base64Logo, // Important: Replace logo BLOB with base64 string
+        };
+      });
+
       // Fetch received samples
       const receivedResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
@@ -242,11 +253,11 @@ const SampleArea = () => {
       // **Filter out samples with quantity = 0**
       combinedSamples = combinedSamples.filter((sample) => sample.quantity > 0);
 
-    
+
 
       // Update state
       setSamples(combinedSamples);
-     
+
       setFilteredSamplename(combinedSamples);
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -264,7 +275,7 @@ const SampleArea = () => {
           throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-       
+
         setCollectionSiteNames(data.data);
       } catch (error) {
         console.error("Error fetching site names:", error);
@@ -472,7 +483,7 @@ const SampleArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
       );
- 
+
       setSuccessMessage("Sample deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -687,6 +698,7 @@ const SampleArea = () => {
     showTransferModal,
     showHistoryModal,
   ]);
+
   const handleLogoChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -836,7 +848,7 @@ const SampleArea = () => {
           />
         )}
 
-        {/* Modal for Adding Samples */}
+        {/* Modal for Adding and Editing Samples */}
         {(showAddModal || showEditModal) && (
           <>
             {/* Bootstrap Backdrop with Blur */}
@@ -1728,6 +1740,15 @@ const SampleArea = () => {
                                   color: "black",
                                 }}
                               />
+                              {/* Add image preview next to the file input */}
+                              {formData.logo && (
+                                <img
+                                  src={formData.logo}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{ marginLeft: "20px", borderRadius: "5px" }}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>

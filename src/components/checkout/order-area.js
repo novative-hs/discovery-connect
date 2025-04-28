@@ -93,9 +93,6 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
       dispatch(clear_cart());
 
-      // ✅ Show success message before redirecting
-      notifySuccess("Order placed successfully!");
-
       setTimeout(() => {
         router.push({
           pathname: "/order-confirmation",
