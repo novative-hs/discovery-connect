@@ -98,6 +98,7 @@ const BioBankSampleArea = () => {
     user_account_id: id,
     logo: ""
   });
+  const [logo, setLogo] = useState("");
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
@@ -180,26 +181,17 @@ const BioBankSampleArea = () => {
 
   const fetchSamples = async () => {
     try {
+      console.log("Fetching samples...");
 
       // Fetch samples added by this collection site
       const ownSamplesResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
       );
       console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownResponse.data.map((sample) => {
-        // Convert logo BLOB into base64
-        let base64Logo = "";
-        if (sample.logo && sample.logo.data) {
-          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
-          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
-        }
-
-        return {
-          ...sample,
-          quantity: Number(sample.quantity) || 0,
-          logo: base64Logo, // Important: Replace logo BLOB with base64 string
-        };
-      });
+      const ownSamples = ownSamplesResponse.data.map((sample) => ({
+        ...sample,
+        quantity: sample.quantity, // Use 'quantity' as is
+      }));
 
       // Fetch samples received by this collection site
       const receivedSamplesResponse = await axios.get(
@@ -762,7 +754,7 @@ const BioBankSampleArea = () => {
     const base64String = btoa(binary);
     return `data:image/${mimeType};base64,${base64String}`;
   }
-  
+
   const logoHandler = (file) => {
     const imageUrl = URL.createObjectURL(file);
     setLogo(imageUrl);  // Update the preview with the new image URL
