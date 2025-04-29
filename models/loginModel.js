@@ -17,13 +17,10 @@ function verifyUserLogin(email, password, callback) {
       console.error("Database query error:", err);  // Log the error
       return callback(err, null);  // Pass the error to the callback
     }
-
-    console.log("Query Results:", results);  // Log the results to verify what data is returned
     callback(null, results);  // Pass the results to the callback
   });
 }
 const getTableCounts = (callback) => {
-  console.log("callfunction")
     // Queries to get the record count for each table
     const queries = {
       totalCities: 'SELECT COUNT(*) AS count FROM city',
@@ -43,10 +40,10 @@ const getTableCounts = (callback) => {
       return new Promise((resolve, reject) => {
         mysqlConnection.query(query, (err, result) => {
           if (err) {
-            console.log(`Error executing query for ${key}:`, err);
+            
             reject(err); // Reject the promise on error
           } else {
-            console.log(`${key} result:`, result); // Log the result of the query
+            
             results[key] = result[0].count; // Store the count for each table
             resolve();
           }

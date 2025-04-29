@@ -42,7 +42,7 @@ const StorageTemperatureArea = () => {
 
   // Fetch City from backend when component loads
   useEffect(() => {
-    console.log("useEffect", formData);
+    
     fetchStoragetemperaturename(); // Call the function when the component mounts
   }, []);
   const fetchStoragetemperaturename = async () => {
@@ -120,7 +120,7 @@ const StorageTemperatureArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+   
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -128,7 +128,7 @@ const StorageTemperatureArea = () => {
         `${url}/samplefields/post-samplefields/storagetemperature`,
         formData
       );
-      console.log("Storage temperature added successfully:", response.data);
+      
       setSuccessMessage("Storage Temperature added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
@@ -148,10 +148,7 @@ const StorageTemperatureArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`
       );
-      console.log(
-        `Storage temperature name with ID ${selectedstoragetemperaturenameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Storage temperature Name deleted successfully.");
 
@@ -186,7 +183,7 @@ const StorageTemperatureArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
 
   const handleEditClick = (storagetemperaturename) => {
-    console.log("data in case of update is", storagetemperaturename);
+   
 
     setSelectedStoragetemperaturenameId(storagetemperaturename.id);
     setEditStoragetemperaturename(storagetemperaturename);
@@ -207,10 +204,7 @@ const StorageTemperatureArea = () => {
         `${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`,
         formData
       );
-      console.log(
-        "Storage temperature Name updated successfully:",
-        response.data
-      );
+    
 
       fetchStoragetemperaturename();
 
@@ -240,10 +234,10 @@ const StorageTemperatureArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+   
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+  
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -259,7 +253,7 @@ const StorageTemperatureArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -267,7 +261,7 @@ const StorageTemperatureArea = () => {
           `${url}/samplefields/post-samplefields/storagetemperature`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Storage temperature added successfully:", response.data);
+        
 
         fetchStoragetemperaturename();
       } catch (error) {

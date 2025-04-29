@@ -40,7 +40,6 @@ const Feedback = () => {
       password: data.password,
       newPassword: data.newPassword,
     }).then((result) => {
-      console.log(result)
       if (result?.error) {
         notifyError(result?.error?.data?.message)
       }

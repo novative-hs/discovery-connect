@@ -119,15 +119,13 @@ const EthnicityArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       const response = await axios.post(
         `${url}/samplefields/post-samplefields/ethnicity`,
         formData
       );
-
-      console.log("Ethnicity added successfully:", response.data);
 
       fetchEthnicityname();
       setSuccessMessage("Ethnicity added successfully.");
@@ -148,9 +146,7 @@ const EthnicityArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/ethnicity/${selectedethnicitynameId}`
       );
-      console.log(
-        `Ethnicityname with ID ${selectedethnicitynameId} deleted successfully.`
-      );
+    
 
       // Set success message
       setSuccessMessage("Ethnicity Name deleted successfully.");
@@ -190,7 +186,7 @@ const EthnicityArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (ethnicityname) => {
-    console.log("data in case of update is", ethnicityname);
+   
 
     setSelectedethnicitynameId(ethnicityname.id);
     setEditethnicityname(ethnicityname);
@@ -211,7 +207,7 @@ const EthnicityArea = () => {
         `${url}/samplefields/put-samplefields/ethnicity/${selectedethnicitynameId}`,
         formData
       );
-      console.log("Ethnicity Name updated successfully:", response.data);
+     
 
       fetchEthnicityname();
 
@@ -241,10 +237,10 @@ const EthnicityArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+   
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+   
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -260,7 +256,7 @@ const EthnicityArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -268,7 +264,7 @@ const EthnicityArea = () => {
           `${url}/samplefields/post-samplefields/ethnicity`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Ethnicity added successfully:", response.data);
+       
 
         fetchEthnicityname();
       } catch (error) {

@@ -42,7 +42,7 @@ try {
 };
 
 const updateOrganization = (req, res) => {
-  console.log("Request",req.body)
+
   const {user_account_id,OrganizationName, type,HECPMDCRegistrationNo,phoneNumber, fullAddress, city,district,country,ntnNumber,useraccount_email } = req.body;
   
 

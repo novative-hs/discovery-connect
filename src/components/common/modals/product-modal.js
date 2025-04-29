@@ -16,7 +16,7 @@ import { handleModalShow } from "src/redux/features/productSlice";
 import { Minus, Plus } from "@svg/index";
 import { decrement, increment } from "src/redux/features/cartSlice";
 const ProductModal = ({ product, discountPrd = false }) => {
-  console.log("value in product is:", product)
+  
   const { id, image_url, samplename, title, price, discount, originalPrice } = product || {};
   const { isShow } = useSelector((state) => state.product);
   const { wishlist } = useSelector((state) => state.wishlist);
@@ -33,11 +33,11 @@ const ProductModal = ({ product, discountPrd = false }) => {
 
   const handleDecrease = (item) => {
     dispatch(decrement({ id: item.id }));
-    console.log("item after decreasing is", item.orderQuantity);
+    
   };
   const cartItem = cart_products.find((item) => item.id === product.id);
   const displayQuantity = cartItem ? cartItem.orderQuantity : product.quantity;
-  console.log(" item after decresing is ", product.quantity)
+  
   const subtotal = cart_products.reduce(
     (acc, item) => acc + item.price * item.orderQuantity,
     0

@@ -53,13 +53,13 @@ const DispatchSampleArea = () => {
 
       // Filter only the samples where order_status is 'Dispatched'
       const shippingSamples = response.data.filter(
-        (sample) => sample.order_status === "Dispatched"
+        (sample) => sample.order_status === "Shipped"
       );
-console.log(shippingSamples)
+
       // Update state
       setSamples(shippingSamples);
       setFilteredSamplename(shippingSamples); // Assuming you want to use the filtered samples
-      console.log(shippingSamples);
+      
     } catch (error) {
       console.error("Error fetching samples:", error);
     }

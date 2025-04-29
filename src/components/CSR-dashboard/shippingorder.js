@@ -20,7 +20,18 @@ const ShippingSampleArea = () => {
   const [selectedUserSamples, setSelectedUserSamples] = useState([]);
   const [selectedUserName, setSelectedUserName] = useState("");
   const [showOrderStatusError, setShowOrderStatusError] = useState(false);
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryTime, setDeliveryTime] = useState("");
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "DeliveryDate") {
+      setDeliveryDate(value);
+    }
+    if (name === "DeliveryTime") {
+      setDeliveryTime(value);
+    }
+  };
   const tableHeaders = [
     { label: "Order ID", key: "id" },
     { label: "Researcher Name", key: "researcher_name" },
@@ -41,7 +52,7 @@ const ShippingSampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`
       );
       const shippingSamples = response.data.filter(
-        (sample) => sample.order_status === "Shipping"
+        (sample) => sample.order_status === "Dispatched"
       );
 
       setSamples(shippingSamples);
@@ -90,36 +101,50 @@ const ShippingSampleArea = () => {
   };
 
   const handleOrderStatusSubmit = async () => {
-    const orderIds = selectedUserSamples.map((s) => s.id);
-    if (!orderIds.length) {
+    const id = selectedUserSamples.map((s) => s.id);
+  
+    if (!id.length) {
       notifyError("No items selected.");
       return;
     }
-
-    if (orderStatus !== "Dispatched") {
-      setShowOrderStatusError(true); // show the inline error message
+  
+    if (orderStatus !== "Shipped") {
+      setShowOrderStatusError(true);
       return;
     }
-
+  
+    if (!deliveryDate || !deliveryTime) {
+      notifyError("Please select both delivery date and time.");
+      return;
+    }
+  
     try {
-      await Promise.all(
-        orderIds.map((id) =>
-          axios.put(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${id}/cart-status`,
-            { cartStatus: orderStatus }
-          )
-        )
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/cartstatusbyCSR`,
+        {
+          ids: id, // send the array properly
+          cartStatus: orderStatus,
+          deliveryDate,
+          deliveryTime,
+        }
       );
-      notifySuccess("Order status updated successfully!");
+  
+      // Ensure that res.data.message contains the expected success message
+      notifySuccess(res.data.message); // Show backend response
       setShowOrderStatusModal(false);
       setShowOrderStatusError(false);
       setOrderStatus("");
+      setDeliveryDate("");
+      setDeliveryTime("");
       fetchSamples();
     } catch (error) {
       console.error("Error updating order status:", error);
       notifyError("Failed to update order status.");
     }
   };
+  
+  
+  
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -189,120 +214,164 @@ const ShippingSampleArea = () => {
           </table>
         </div>
 
-        {showOrderStatusModal && (
-          <Modal
-            show
-            onHide={() => setShowOrderStatusModal(false)}
-            size="lg"
-            centered
+        { showOrderStatusModal && (
+      <Modal
+        show
+        onHide={() => setShowOrderStatusModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
+          {/* Header: Name & Address */}
+          <div className="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h5 className="fw-bold text-dark mb-2">
+                <span className="text-primary">👤 Name:</span>{" "}
+                {selectedUserSamples[0]?.researcher_name}
+              </h5>
+            </div>
+            <div className="text-end small text-secondary">
+              <div>
+                <span className="fw-bold text-primary">📍 Address:</span>
+                <br />
+                {selectedUserSamples[0]?.fullAddress},<br />
+                {selectedUserSamples[0]?.district_name},{" "}
+                {selectedUserSamples[0]?.city_name},{" "}
+                {selectedUserSamples[0]?.country_name}
+              </div>
+              <div className="mt-2">
+                <span className="fw-bold">🗓️ Created:</span>{" "}
+                {new Date(
+                  selectedUserSamples[0]?.created_at
+                ).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+
+          <hr className="mb-4" />
+
+          {/* Table of Items */}
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
+              <thead className="table-success text-dark">
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Unit Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedUserSamples.map((sample, i) => (
+                  <tr key={i}>
+                    <td>{sample.samplename}</td>
+                    <td>{sample.quantity || "-"}</td>
+                    <td>{sample.price || "-"}</td>
+                    <td>{sample.totalpayment || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-light">
+                <tr>
+                  <td colSpan="3" className="text-end fw-bold">
+                    Total
+                  </td>
+                  <td className="fw-bold text-success">
+                    {selectedUserSamples
+                      .reduce(
+                        (sum, s) => sum + Number(s.totalpayment || 0),
+                        0
+                      )
+                      .toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+
+          {/* Delivery Date Input */}
+          <Form.Group className="mt-4">
+  <Form.Label>Delivery Date</Form.Label>
+  <input
+    type="date"
+    className="form-control"
+    name="DeliveryDate"
+    value={deliveryDate}
+    onChange={handleInputChange}
+    min={new Date().toISOString().split("T")[0]} // ✅ Disable past dates
+    required
+    style={{
+      fontSize: "14px",
+      height: "45px",
+      backgroundColor: "#f0f0f0",
+      color: "black",
+    }}
+  />
+</Form.Group>
+
+
+          {/* Delivery Time Input */}
+          <Form.Group className="mt-4">
+            <Form.Label>Delivery Time</Form.Label>
+            <input
+              type="time"
+              className="form-control"
+              name="DeliveryTime"
+              value={deliveryTime}
+              onChange={handleInputChange}
+              required
+              style={{
+                fontSize: "14px",
+                height: "45px",
+                backgroundColor: "#f0f0f0",
+                color: "black",
+              }}
+            />
+          </Form.Group>
+
+                    {/* Status Selection */}
+                    <Form.Group className="mt-4">
+            <Form.Check
+              type="checkbox"
+              label=" Mark all items as Shipped"
+              onChange={(e) => {
+                setOrderStatus(e.target.checked ? "Shipped" : "");
+                if (e.target.checked) setShowOrderStatusError(false); // hide error if checked
+              }}
+              checked={orderStatus === "Shipped"}
+              className="fw-semibold"
+            />
+            {showOrderStatusError && (
+              <div className="text-danger mt-2 small">
+                Please check the box to mark items as Shipped.
+              </div>
+            )}
+          </Form.Group>
+
+        </Modal.Body>
+
+        {/* Footer Buttons */}
+        <Modal.Footer className="bg-white border-0">
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowOrderStatusModal(false)}
+            className="rounded-pill px-4"
           >
-            <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
-              {/* Header: Name & Address */}
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h5 className="fw-bold text-dark mb-2">
-                    <span className="text-primary">👤 Name:</span>{" "}
-                    {selectedUserSamples[0]?.researcher_name}
-                  </h5>
-                </div>
-                <div className="text-end small text-secondary">
-                  <div>
-                    <span className="fw-bold text-primary">📍 Address:</span>
-                    <br />
-                    {selectedUserSamples[0]?.fullAddress},<br />
-                    {selectedUserSamples[0]?.district_name},{" "}
-                    {selectedUserSamples[0]?.city_name},{" "}
-                    {selectedUserSamples[0]?.country_name}
-                  </div>
-                  <div className="mt-2">
-                    <span className="fw-bold">🗓️ Created:</span>{" "}
-                    {new Date(
-                      selectedUserSamples[0]?.created_at
-                    ).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              <hr className="mb-4" />
-
-              {/* Table of Items */}
-              <div className="table-responsive">
-                <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
-                  <thead className="table-success text-dark">
-                    <tr>
-                      <th>Item</th>
-                      <th>Qty</th>
-                      <th>Unit Price</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedUserSamples.map((sample, i) => (
-                      <tr key={i}>
-                        <td>{sample.samplename}</td>
-                        <td>{sample.quantity || "-"}</td>
-                        <td>{sample.price || "-"}</td>
-                        <td>{sample.totalpayment || "-"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-light">
-                    <tr>
-                      <td colSpan="3" className="text-end fw-bold">
-                        Total
-                      </td>
-                      <td className="fw-bold text-success">
-                        {selectedUserSamples
-                          .reduce(
-                            (sum, s) => sum + Number(s.totalpayment || 0),
-                            0
-                          )
-                          .toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              {/* Status Selection */}
-              <Form.Group className="mt-4">
-                <Form.Check
-                  type="checkbox"
-                  label=" Mark all items as Dispatched"
-                  onChange={(e) => {
-                    setOrderStatus(e.target.checked ? "Dispatched" : "");
-                    if (e.target.checked) setShowOrderStatusError(false); // hide error if checked
-                  }}
-                  checked={orderStatus === "Dispatched"}
-                  className="fw-semibold"
-                />
-                {showOrderStatusError && (
-                  <div className="text-danger mt-2 small">
-                    Please check the box to mark items as dispatched.
-                  </div>
-                )}
-              </Form.Group>
-            </Modal.Body>
-
-            {/* Footer Buttons */}
-            <Modal.Footer className="bg-white border-0">
-              <Button
-                variant="outline-secondary"
-                onClick={() => setShowOrderStatusModal(false)}
-                className="rounded-pill px-4"
-              >
-                ❌ Cancel
-              </Button>
-              <Button
-                variant="success"
-                onClick={handleOrderStatusSubmit}
-                className="rounded-pill px-4"
-              >
-                🚚 Save & Dispatch
-              </Button>
-            </Modal.Footer>
-          </Modal>
-        )}
+            ❌ Cancel
+          </Button>
+          <Button
+            variant="success"
+            onClick={() => {
+              handleOrderStatusSubmit(deliveryDate, deliveryTime); // Pass the date and time to the submit function
+            }}
+            className="rounded-pill px-4"
+          >
+            🚚 Save & Dispatch
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    )}
 
         {totalPages > 1 && (
           <Pagination

@@ -74,13 +74,11 @@ const getSampleById = (req, res) => {
   });
 };
 
+// Controller to create a sample
 const createSample = (req, res) => {
   
   const sampleData = req.body;
   const file = req.file;
-
-  console.log("Controller Received fields:", sampleData);
-  console.log("Controller Received file:", file);
 
   // Attach file buffer to the sampleData
   sampleData.logo = file?.buffer;
@@ -103,14 +101,14 @@ const createSample = (req, res) => {
     return res.status(400).json({ error: "DateOfCollection must be before today" });
   }
 
-  console.log("Fields validated, executing insert...");
+  
 
   SampleModel.createSample(sampleData, (err, result) => {
     if (err) {
       console.error('Error creating sample:', err);
       return res.status(500).json({ error: "Error creating sample" });
     }
-    console.log("Sample created, result:", result);
+    
     res.status(201).json({ message: "Sample created successfully", id: result.insertId });
   });
 };

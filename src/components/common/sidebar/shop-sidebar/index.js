@@ -6,6 +6,8 @@ const ShopSidebar = ({
   selectedSampleType,
   setSelectedSampleType,
   handleReset,
+  selectedGender,
+  selectedSmokingStatus,
   selectedPrice
 }) => {
   const priceRanges = [
@@ -46,18 +48,21 @@ const ShopSidebar = ({
             </h2>
             <div id="price_widget_collapse" className="accordion-collapse collapse show">
               <div className="accordion-body">
-                {priceRanges.map((range, index) => (
-                  <div key={index} className="shop__widget-list-item">
-                    <input
-                      type="radio"
-                      name="price"
-                      id={`price-${index}`}
-                      checked={selectedPrice && selectedPrice.min === range.min && selectedPrice.max === range.max}
-                      onChange={() => setSelectedPrice({ min: range.min, max: range.max })}
-                    />
-                    <label htmlFor={`price-${index}`}>{range.label}</label>
-                  </div>
-                ))}
+              {priceRanges.map((range, index) => (
+  <div key={index} className="shop__widget-list-item">
+    <input
+      type="radio"
+      name="price"
+      id={`price-${index}`}
+      checked={selectedPrice && selectedPrice.min === range.min && selectedPrice.max === range.max}
+
+      onChange={() => setSelectedPrice({ min: range.min, max: range.max })}
+    />
+    <label htmlFor={`price-${index}`}>{range.label}</label>
+  </div>
+))}
+
+
               </div>
             </div>
           </div>
@@ -88,7 +93,16 @@ const ShopSidebar = ({
                 <div className="shop__widget-list">
                   {smokingOptions.map((status, index) => (
                     <div key={index} className="shop__widget-list-item">
-                      <input type="radio" name="smoking" id={`smoking-${status}`} onChange={() => setSelectedSmokingStatus(status)} />
+                  <input
+  type="radio"
+  name="smoking"
+  id={`smoking-${status}`}
+  checked={selectedSmokingStatus === status}
+  onChange={() => setSelectedSmokingStatus(status)}
+/>
+
+
+
                       <label htmlFor={`smoking-${status}`}>{status}</label>
                     </div>
                   ))}
@@ -123,7 +137,16 @@ const ShopSidebar = ({
                 <div className="shop__widget-list">
                   {genderOptions.map((gender, index) => (
                     <div key={index} className="shop__widget-list-item">
-                      <input type="radio" name="gender" id={`gender-${gender}`} onChange={() => setSelectedGender(gender)} />
+                    <input
+  type="radio"
+  name="gender"
+  id={`gender-${gender}`}
+  checked={selectedGender === gender}
+  onChange={() => setSelectedGender(gender)}
+/>
+
+
+
                       <label htmlFor={`gender-${gender}`}>{gender}</label>
                     </div>
                   ))}

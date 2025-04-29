@@ -44,8 +44,6 @@ const ForgotPassword = ({ params }) => {
         newPassword: data.password,
       });
   
-      console.log("Reset Password Response:", response);
-  
       if (response?.data?.message) { 
         notifySuccess(response.data.message);
         router.push("/login"); // Redirect after success

@@ -25,6 +25,10 @@ const SampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
+  const [countryname, setCountryname] = useState([]);
+  const [searchCountry, setSearchCountry] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
@@ -125,6 +129,37 @@ const SampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: "",
   });
+
+
+
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData((prev) => ({
+      ...prev,
+      CountryOfCollection: country.name, // or country.id if you store ID
+    }));
+    setSearchCountry(country.name);
+    setShowCountryDropdown(false);
+  };
+
+  // Fetch countries from backend
+  useEffect(() => {
+    const fetchData = async (url, setState, label) => {
+      try {
+        const response = await axios.get(url);
+        setState(response.data);
+      } catch (error) {
+        console.error(`Error fetching ${label}:`, error);
+      }
+    };
+
+    fetchData(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`,
+      setCountryname,
+      "Country"
+    );
+  }, []);
+
   const tableNames = [
     { name: "ethnicity", setter: setEthnicityNames },
     { name: "samplecondition", setter: setSampleConditionNames },
@@ -140,11 +175,14 @@ const SampleArea = () => {
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
   ];
   const handleTransferClick = (sample) => {
-    console.log("Transfer action for:", sample);
+
     setSelectedSampleId(sample.id);
     setShowTransferModal(true);
   };
+  
   const logoHandler = (file) => {
+    const imageUrl = URL.createObjectURL(file);
+    setLogo(imageUrl);  // Update the preview with the new image URL
     setFormData((prev) => ({
       ...prev,
       logo: file,
@@ -154,14 +192,12 @@ const SampleArea = () => {
   // Fetch samples from backend when component loads
   useEffect(() => {
     const storedUser = getsessionStorage("user");
-    console.log("Logged-in user:", storedUser);
+
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
-
       if (!id) {
         console.error("ID is missing.");
         return;
@@ -171,11 +207,21 @@ const SampleArea = () => {
       const ownResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
       );
-      const ownSamples = ownResponse.data.map((sample) => ({
-        ...sample,
-        quantity: Number(sample.quantity) || 0, // Ensure it's a number
-      }));
-      console.log("Own samples...", ownSamples);
+      const ownSamples = ownResponse.data.map((sample) => {
+        // Convert logo BLOB into base64
+        let base64Logo = "";
+        if (sample.logo && sample.logo.data) {
+          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+        }
+
+        return {
+          ...sample,
+          quantity: Number(sample.quantity) || 0,
+          logo: base64Logo, // Important: Replace logo BLOB with base64 string
+        };
+      });
+
       // Fetch received samples
       const receivedResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
@@ -207,11 +253,11 @@ const SampleArea = () => {
       // **Filter out samples with quantity = 0**
       combinedSamples = combinedSamples.filter((sample) => sample.quantity > 0);
 
-      console.log("Final filtered samples:", combinedSamples);
+
 
       // Update state
       setSamples(combinedSamples);
-      console.log(combinedSamples);
+
       setFilteredSamplename(combinedSamples);
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -229,7 +275,7 @@ const SampleArea = () => {
           throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-        console.log("Fetched Site Names:", data);
+
         setCollectionSiteNames(data.data);
       } catch (error) {
         console.error("Error fetching site names:", error);
@@ -316,6 +362,7 @@ const SampleArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
@@ -326,8 +373,6 @@ const SampleArea = () => {
           },
         }
       );
-
-      console.log("Sample added successfully:", response.data);
       fetchSamples();
 
       setSuccessMessage("Sample added successfully.");
@@ -397,8 +442,6 @@ const SampleArea = () => {
 
       // Refresh the sample list
       fetchSamples();
-
-      console.log("Sample dispatched successfully:", response.data);
       alert("Sample dispatched successfully!");
 
       // Reset the input fields
@@ -440,9 +483,7 @@ const SampleArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
       );
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
 
-      // Set success message
       setSuccessMessage("Sample deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -477,7 +518,6 @@ const SampleArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log("ID", id);
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -494,6 +534,7 @@ const SampleArea = () => {
     )}-${String(sample.freezer_id).padStart(2, "0")}-${String(
       sample.box_id
     ).padStart(2, "0")}`;
+
     setFormData({
       locationids: formattedLocationId,
       samplename: sample.samplename,
@@ -526,7 +567,15 @@ const SampleArea = () => {
       user_account_id: sample.user_account_id,
       logo: sample.logo,
     });
+    // ✅ Add this block to properly show the country in the input field
+    const matchedCountry = countryname.find(
+      (c) =>
+        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+    );
+    setSelectedCountry(matchedCountry || null);
+    setSearchCountry(matchedCountry ? matchedCountry.name : "");
   };
+
   const resetFormData = () => {
     setFormData({
       locationids: "",
@@ -561,6 +610,7 @@ const SampleArea = () => {
       logo: "",
     });
   };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -574,7 +624,6 @@ const SampleArea = () => {
           },
         }
       );
-      console.log("Sample updated successfully:", response.data);
 
       fetchSamples(); // This will refresh the samples list
 
@@ -649,6 +698,7 @@ const SampleArea = () => {
     showTransferModal,
     showHistoryModal,
   ]);
+
   const handleLogoChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -675,31 +725,31 @@ const SampleArea = () => {
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
-             
-              <div className="d-flex flex-wrap gap-3 ">
-                {/* Add City Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    backgroundColor: "#4a90e2", // soft blue
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <i className="fas fa-vial"></i> Add Sample
-                </button>
 
-                
-               
-              </div>
-            </div>
+          <div className="d-flex flex-wrap gap-3 ">
+            {/* Add City Button */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: "#4a90e2", // soft blue
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <i className="fas fa-vial"></i> Add Sample
+            </button>
+
+
+
+          </div>
+        </div>
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
@@ -798,7 +848,7 @@ const SampleArea = () => {
           />
         )}
 
-        {/* Modal for Adding Samples */}
+        {/* Modal for Adding and Editing Samples */}
         {(showAddModal || showEditModal) && (
           <>
             {/* Bootstrap Backdrop with Blur */}
@@ -1077,24 +1127,79 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          <div className="form-group">
+                          {/* Country Of Collection Field */}
+                          <div className="form-group position-relative">
                             <label>Country Of Collection</label>
                             <input
                               type="text"
                               className="form-control"
                               name="CountryOfCollection"
-                              value={formData.CountryOfCollection}
-                              onChange={handleInputChange}
+                              placeholder="Type to search country"
+                              value={searchCountry}
+                              onChange={(e) => {
+                                setSearchCountry(e.target.value);
+                                setShowCountryDropdown(true);
+                                setSelectedCountry(null);
+                              }}
+                              onFocus={() => setShowCountryDropdown(true)}
                               required
                               style={{
-                                height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
+                                height: "45px",
+                                backgroundColor: "#f0f0f0",
                                 color: "black",
                               }}
                             />
+
+                            {showCountryDropdown && (
+                              <ul
+                                className="w-100 position-absolute"
+                                style={{
+                                  zIndex: 999,
+                                  maxHeight: "200px",
+                                  overflowY: "auto",
+                                  top: "100%",
+                                  left: 0,
+                                  right: 0,
+                                  backgroundColor: "#f0f0f0",
+                                  border: "1px solid #ced4da",
+                                  borderTop: "none",
+                                  borderRadius: "0 0 4px 4px",
+                                  fontSize: "14px",
+                                  padding: 0,
+                                  margin: 0,
+                                  listStyle: "none",
+                                }}
+                              >
+                                {countryname
+                                  .filter((country) =>
+                                    searchCountry
+                                      ? country.name.toLowerCase().includes(searchCountry.toLowerCase())
+                                      : true
+                                  )
+                                  .map((country) => (
+                                    <li
+                                      key={country.id}
+                                      style={{
+                                        padding: "10px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                      // ✅ Changed from onMouseDown to onClick
+                                      onClick={() => handleSelectCountry(country)}
+                                      onMouseEnter={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#e2e2e2")
+                                      }
+                                      onMouseLeave={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                                      }
+                                    >
+                                      {country.name}
+                                    </li>
+                                  ))}
+                              </ul>
+                            )}
+
                           </div>
                         </div>
                         {/* {Column 3} */}
@@ -1635,6 +1740,15 @@ const SampleArea = () => {
                                   color: "black",
                                 }}
                               />
+                              {/* Add image preview next to the file input */}
+                              {formData.logo && (
+                                <img
+                                  src={formData.logo}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{ marginLeft: "20px", borderRadius: "5px" }}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>

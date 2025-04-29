@@ -36,7 +36,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
-      console.log("Data",data)
+      ("Data",data)
     } catch (error) {
       console.error("Error fetching history:", error);
     }
@@ -117,7 +117,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
         const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${selectedOrganizationId}`);
         
         // Log the response to ensure you get the correct message
-        console.log(`Response: ${response.data.message}`);
+        (`Response: ${response.data.message}`);
         
         // Set success message
         setSuccessMessage(response.data.message);
@@ -154,9 +154,9 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
   };
 
   useEffect(() => {
-    console.log("All Researchers:", organizations);
-    console.log("Filtered Researchers:", filteredOrganizations);
-    console.log("Current Data:", currentData);
+    ("All Researchers:", organizations);
+    ("Filtered Researchers:", filteredOrganizations);
+    ("Current Data:", currentData);
   }, [filteredOrganizations, currentData]);
 
   const handleUpdate = async (e) => {
@@ -167,7 +167,7 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${selectedOrganizationId}`,
         formData
       );
-      console.log("Organization updated successfully:", response.data);
+      ("Organization updated successfully:", response.data);
 
       const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
@@ -202,21 +202,21 @@ const [filteredOrganizations, setFilteredOrganizations] = useState([]);
       year: "2-digit",
       month: "short",
       day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
   
     const formatted = new Date(date).toLocaleString("en-GB", options);
-    console.log("Formatted:", formatted); // debug output
+    
   
     const [datePart, timePart] = formatted.split(", ");
     const [day, month, year] = datePart.split(" ");
   
     const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
   
-    return `${day}-${formattedMonth}-${year} ${timePart}`;
+    return `${day}-${formattedMonth}-${year}`;
   };
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">

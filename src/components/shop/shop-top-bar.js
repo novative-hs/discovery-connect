@@ -58,7 +58,7 @@ export function ShopShortSelect({shortHandler}) {
       <div className="shop__sort-select">
         <NiceSelect
           options={[
-            { value: "Short Filtering", text: "Short Filtering" },
+            { value: "Short Filtering", text: "Sort Filtering" },
             // { value: "Latest Product", text: "Latest Product" },
             { value: "Price low to high", text: "Price low to high" },
             { value: "Price high to low", text: "Price high to low" },

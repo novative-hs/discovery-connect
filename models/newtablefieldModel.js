@@ -2,95 +2,19 @@ const mysqlConnection = require("../config/db");
 
 // List of tables and their columns to be added or removed
 const tablesAndColumns = [
+
   {
-    table: "history",
-    columnsToAdd: [
-      { column: "CommitteeType", type: "VARCHAR(20)", nullable: true },
-    ],
-  },
-  {
-    table: "researcher",
+    table: "registrationadmin_history",
     columnsToAdd: [
       {
-        column: "created_at",
-        type: "TIMESTAMP",
-        default: "CURRENT_TIMESTAMP",
-        nullable: true,
-      },
-      {
-        column: "updated_at",
-        type: "TIMESTAMP",
-        default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-        nullable: true,
-      },
-    ]
-    },
-    {
-      table: "organization",
-      columnsToAdd: [
-        {
-          column: "created_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-        {
-          column: "updated_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-      ]
-      },
-    {
-      table: "collectionsite",
-      columnsToAdd: [
-        {
-          column: "created_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-        {
-          column: "updated_at",
-          type: "TIMESTAMP",
-          default: "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-          nullable: true,
-        },
-      ]
-      },
-  {
-    table:"registrationadmin_history",
-    columnsToAdd:[
-      {
-        column: "CSR_id",
+        column: "samplepricecurrency_id",
         type: "INT",
         nullable: true, // Change to true
-        references: { table: "CSR", column: "id" },
+        references: { table: "samplepricecurrency", column: "id" },
       },
     ],
   },
-  {
-    table: "history",
-    columnsToAdd: [
-      { column: "CSRName", type: "VARCHAR(100)", nullable: true },
-      {
-        column: "CSR_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "CSR", column: "id" },
-      },
-    ],
-  },
-  {
-    table: "sample",
-    columnsToAdd: [
-      { column: "room_number", type: "INT", nullable: true },
-      { column: "freezer_id", type: "INT", nullable: true },
-      { column: "box_id", type: "INT", nullable: true },
-      { column: "quantity_allocated", type: "FLOAT", nullable: true },
-    ],
-  },
+  
   {
     table: "committee_member",
     columnsToDelete: ["email", "password"],
@@ -98,17 +22,12 @@ const tablesAndColumns = [
       {
         column: "user_account_id",
         type: "INT",
-        nullable: true, 
+        nullable: true,
         references: { table: "user_account", column: "id" },
       },
-    ],
-  },
-  {
-    table: "user_account",
-    columnsToAdd: [
       {
-        column: "OTP",
-        type: "VARCHAR(4)",
+        column: "otpExpiry",
+        type: "TIMESTAMP",
         nullable: true,
       },
     ],
@@ -125,6 +44,11 @@ const tablesAndColumns = [
         type: "INT",
         nullable: true, // Change to true
         references: { table: "payment", column: "id" },
+      },
+      {
+        column: "delivered_at",
+        type: "DATETIME",
+        nullable: true, 
       },
     ],
     columnsToDelete: ["payment_status", "payment_method"],
@@ -303,14 +227,13 @@ const checkIfExists = (tableName, email) => {
 const insertRecord = (tableName, record) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(`Checking if record exists for: ${record.email}`);
+    
       const exists = await checkIfExists(tableName, record.email);
       if (exists) {
         resolve(`Record already exists for email: ${record.email}`);
         return;
       }
 
-      console.log(`Inserting record for: ${record.email}`);
       const query = `
         INSERT INTO ${tableName} (email, password, accountType)
         VALUES (?, ?, ?)
@@ -347,6 +270,7 @@ const createOrUpdateTables = async () => {
     () =>
       ensureColumnsExist("user_account", [
         { column: "OTP", type: "VARCHAR(4)", nullable: true },
+        { column: "otpExpiry", type: "TIMESTAMP", nullable: true },
       ]),
     () =>
       updateEnumColumn("user_account", "accountType", [
@@ -365,38 +289,20 @@ const createOrUpdateTables = async () => {
         "Accepted",
         "UnderReview",
         "Rejected",
-        "Shipping",
+        "Shipped",
         "Dispatched",
         "Completed",
       ]),
     () =>
       updateEnumColumn("committeesampleapproval", "committee_status", [
-        "Review",
+        "UnderReview",
         "Approved",
         "Refused",
       ]),
   ]);
-  
+
 };
 
-const updateAccountType = () => {
-  const updateQuery = `
-    UPDATE user_account 
-    SET accountType = 'DatabaseAdmin' 
-    WHERE accountType = 'RegistrationAdmin'
-  `;
-
-  mysqlConnection.query(updateQuery, (err, results) => {
-    if (err) {
-      console.error("Error updating accountType: ", err);
-    } else {
-      console.log(
-        `Updated ${results.affectedRows} rows: accountType 'RegistrationAdmin' → 'DatabaseAdmin'`
-      );
-    }
-  });
-};
 module.exports = {
   createOrUpdateTables,
-  updateAccountType,
 };

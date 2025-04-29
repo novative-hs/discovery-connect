@@ -50,11 +50,11 @@ const getAccountDetail = (req, res) => {
 };
 
 const sendOTP = (req, res) => {
-  console.log("Received Account Data:", req.body);
+  
 
   accountModel.sendOTP(req, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       return res.status(500).json({ message: "Failed to send OTP", error: err.message });
     }
 
@@ -68,13 +68,18 @@ const verifyOTP = (req, res) => {
     return res.status(400).json({ message: "Email and OTP are required!" });
   }
 
-  accountModel.verifyOTP(email, otp, (err, isVerified) => { // 🔹 Change result to isVerified
+  accountModel.verifyOTP(email, otp, (err, isVerified, otpExpiry) => { 
     if (err) {
       console.error("❌ Error verifying OTP:", err);
       return res.status(500).json({ message: "Failed to verify OTP", error: err.message });
     }
 
-    if (!isVerified) { // 🔹 Use isVerified instead of result.otp
+    // Check if OTP is expired
+    if (otpExpiry && Date.now() > otpExpiry) {
+      return res.status(401).json({ message: "OTP has expired. Please request a new one." });
+    }
+
+    if (!isVerified) {
       return res.status(401).json({ message: "Invalid OTP. Please try again." });
     }
 
@@ -82,19 +87,20 @@ const verifyOTP = (req, res) => {
   });
 };
 
+
 const createAccount = (req, res) => {
-  console.log("Received Account Data:", req.body);
+  
 
   accountModel.createAccount(req, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       if (err.message === "Email already exists") {
         return res.status(400).json({ error: err.message });
       }
       return res.status(500).json({ error: "Error creating account" });
     }
 
-    console.log("Insert Result:", result);
+    
     res.status(201).json(result);
   });
 };
@@ -102,11 +108,11 @@ const createAccount = (req, res) => {
 const loginAccount = (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Login request:", { email, password });
+  
 
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       if (err.message === "Email and password are required") {
         return res.status(400).json({ status: "fail", error: err.message });
       }
@@ -120,8 +126,6 @@ const loginAccount = (req, res) => {
         .status(500)
         .json({ status: "fail", error: "Internal server error" });
     }
-
-    console.log("Login Successful:", result);
     res.status(200).json({
       status: "success",
       message: "Login successful",
@@ -199,15 +203,13 @@ const changepassword = (req, res) => {
 
 
 const updateAccount = (req, res) => {
-  console.log("Received Account Data:", req.body);
+  
 
   accountModel.updateAccount(req, (err, result) => {
     if (err) {
-      console.error("Error:", err);
+      
       return res.status(500).json({ error: "Error creating account" });
     }
-
-    console.log("Insert Result:", result);
     res.status(201).json(result);
   });
 };

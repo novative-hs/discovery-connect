@@ -1,40 +1,44 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
+import { useRouter } from "next/router";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
 const SampleArea = () => {
+  const router = useRouter();
   const id = sessionStorage.getItem("userID");
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
-    { label: "Sample Condition", key: "samplecondition" },
-    { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
+    // { label: "Ethnicity", key: "ethnicity" },
+    // { label: "Sample Condition", key: "samplecondition" },
+    // { label: "Storage Temperature", key: "storagetemp" },
+    // { label: "Container Type", key: "ContainerType" },
+    // { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Price", key: "price" },
     { label: "Quantity", key: "orderquantity" },
     { label: "Total Payment", key: "totalpayment" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
-    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
-    { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
-    { label: "Test Method", key: "TestMethod" },
-    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
-    { label: "Test System", key: "TestSystem" },
-    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+    // { label: "Quantity Unit", key: "QuantityUnit" },
+    // { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    // { label: "Smoking Status", key: "SmokingStatus" },
+    // { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    // { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
+    // { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
+    // { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    // { label: "Date Of Collection", key: "DateOfCollection" },
+    // {
+    //   label: "Concurrent Medical Conditions",
+    //   key: "ConcurrentMedicalConditions",
+    // },
+    // { label: "Concurrent Medications", key: "ConcurrentMedications" },
+    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    // { label: "Test Result", key: "TestResult" },
+    // { label: "Test Result Unit", key: "TestResultUnit" },
+    // { label: "Test Method", key: "TestMethod" },
+    // { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
+    // { label: "Test System", key: "TestSystem" },
+    // { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     // { label: "Status", key: "status" },
     {
       label: "Payment Method",
@@ -59,6 +63,43 @@ const SampleArea = () => {
       render: (value) => (value === null ? "Waiting for admin action" : value),
     },
   ];
+  
+  const fieldsToShowInOrder = [
+    { label: "Sample Name", key: "samplename" },
+    // { label: "Price", key: "price" },
+    // { label: "Quantity", key: "orderquantity" },
+    // { label: "Total Payment", key: "totalpayment" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Ethnicity", key: "ethnicity" },
+    { label: "Sample Condition", key: "samplecondition" },
+    { label: "Storage Temperature", key: "storagetemp" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
+    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
+    { label: "Concurrent Medications", key: "ConcurrentMedications" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Test Result", key: "TestResult" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Test Method", key: "TestMethod" },
+    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
+    { label: "Test System", key: "TestSystem" },
+    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+  ];
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedSample, setSelectedSample] = useState(null);
   const [loading, setLoading] = useState(false);
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,24 +108,24 @@ const SampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState(null);
   const fetchSamples = async () => {
-    setLoading(true);  // Set loading to true when fetching data
+    setLoading(true); // Set loading to true when fetching data
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
       );
-      console.log(response.data);
       
+
       if (response.data.error) {
-        setError(response.data.error);  // Handle empty or error response
-        setSamples([]);  // Clear previous sample data
+        setError(response.data.error); // Handle empty or error response
+        setSamples([]); // Clear previous sample data
       } else {
-        setSamples(response.data);  // Store fetched samples in state
+        setSamples(response.data); // Store fetched samples in state
       }
     } catch (error) {
       console.error("Error fetching samples:", error);
       setError("An error occurred while fetching the samples.");
     } finally {
-      setLoading(false);  // Set loading to false when fetch is done
+      setLoading(false); // Set loading to false when fetch is done
     }
   };
 
@@ -93,7 +134,12 @@ const SampleArea = () => {
     if (id === null) {
       return <div>Loading...</div>;
     } else {
-      fetchSamples();
+      const intervalId = setInterval(() => {
+        fetchSamples();
+      }, 500); // Fetch data every 5 seconds
+
+      // Cleanup interval when component is unmounted
+      return () => clearInterval(intervalId);
     }
   }, []);
 
@@ -126,13 +172,21 @@ const SampleArea = () => {
       setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     }
   };
-  return (
+  const openModal = (sample) => {
     
-    <section className="policy__area pb-40 overflow-hidden p-3">
+    setSelectedSample(sample);
+    setShowModal(true);
+  };
 
+  const closeModal = () => {
+    setSelectedSample(null);
+    setShowModal(false);
+  };
+  return (
+    <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
+        <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
-        
           <div className="table-responsive w-100">
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
@@ -180,6 +234,7 @@ const SampleArea = () => {
                       </th>
                     );
                   })}
+                  <th className="px-3 align-middle text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,7 +242,7 @@ const SampleArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key, render }, index) => {
-                        // Check if it's the price column and merge currency
+                        // 🔁 Handle Price column with currency
                         if (key === "price") {
                           return (
                             <td key={index}>
@@ -200,7 +255,7 @@ const SampleArea = () => {
                           );
                         }
 
-                        // Check if it's the total payment column and merge currency
+                        // 🔁 Handle Total Payment column with currency
                         if (key === "totalpayment") {
                           return (
                             <td key={index}>
@@ -213,7 +268,46 @@ const SampleArea = () => {
                           );
                         }
 
-                        // Default rendering for other columns
+                        // ✅ Custom logic for committee_status
+                        if (key === "committee_status") {
+                          let displayValue = sample[key];
+
+                          if (sample.registration_admin_status === "Rejected") {
+                            displayValue = "No further processing";
+                          }   if (sample.registration_admin_status === "Rejected" && sample.committee_status==="rejected" && sample.order_status==="Rejected") {
+                            displayValue = "Rejected";
+                          } 
+                          else if (
+                            displayValue === null ||
+                            displayValue === undefined
+                          ) {
+                            displayValue = "Waiting for admin action";
+                          }
+
+                          return <td key={index}>{displayValue}</td>;
+                        }
+                        if (key === "samplename") {
+                          return (
+                            <td key={index}>
+                              <span
+                                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                                role="button"
+                                title="Sample Details"
+                                onClick={() => openModal(sample)}
+                                style={{
+                                  cursor: "pointer",
+                                  transition: "color 0.2s",
+                                }}
+                                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                                onMouseOut={(e) => (e.target.style.color = "")}
+                              >
+                                {sample.samplename || "N/A"}
+                              </span>
+                            </td>
+                          );
+                        }
+                        
+                        // 🔁 Default render for other fields
                         return (
                           <td key={index}>
                             {render
@@ -222,6 +316,29 @@ const SampleArea = () => {
                           </td>
                         );
                       })}
+
+                      {/* Handle sample name click to open modal */}
+
+                      <td>
+                        <button
+                          className="btn btn-outline-success btn-l d-flex align-items-center gap-1"
+                          onClick={() =>
+                            router.push({
+                              pathname: "/order-confirmation",
+                              query: {
+                                id: sample.id,
+                                created_at: sample.created_at,
+                                orderStatus: sample.order_status || "Placed",
+                                registration_admin_status: sample.registration_admin_status,
+                                committee_status: sample.committee_status,
+                              },
+                            })
+                          }
+                          title="Track Order"
+                        >
+                          <span>Track Order</span>
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -246,6 +363,50 @@ const SampleArea = () => {
           )}
         </div>
       </div>
+      {/* Modal for sample details */}
+      <Modal show={showModal} onHide={closeModal} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Sample Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ maxHeight: "400px", overflowY: "auto" }}>
+          {selectedSample ? (
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <tbody>
+                  {fieldsToShowInOrder.map(
+                    ({ key, label }) =>
+                      selectedSample[key] !== undefined && (
+                        <tr key={key} className="align-middle">
+                          <td
+                            className="bg-light fw-bold text-dark"
+                            style={{
+                              width: "35%",
+                              borderRadius: "8px 0 0 8px",
+                              padding: "12px",
+                            }}
+                          >
+                            {label}
+                          </td>
+                          <td
+                            className="text-primary"
+                            style={{ padding: "12px" }}
+                          >
+                            {selectedSample[key]
+                              ? selectedSample[key].toString()
+                              : "N/A"}
+                          </td>
+                        </tr>
+                      )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-center text-muted">No details to show</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer></Modal.Footer>
+      </Modal>
     </section>
   );
 };

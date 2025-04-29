@@ -3,6 +3,7 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
+import moment from "moment";
 const CollectionsiteArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -10,7 +11,8 @@ const CollectionsiteArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected collectionsite to edit
 
-  const [selectedCollectionsiteId, setSelectedCollectionsiteId] = useState(null);
+  const [selectedCollectionsiteId, setSelectedCollectionsiteId] =
+    useState(null);
   const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [formData, setFormData] = useState({
@@ -78,10 +80,7 @@ const CollectionsiteArea = () => {
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/delete/${selectedCollectionsiteId}`
       );
-      console.log(
-        `Collectionsite with ID ${selectedCollectionsiteId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage(response.data.message);
 
@@ -91,7 +90,7 @@ const CollectionsiteArea = () => {
       }, 3000);
 
       // Refresh the collectionsite list after deletion
-      fetchCollectionsites()
+      fetchCollectionsites();
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -124,10 +123,9 @@ const CollectionsiteArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/edit/${selectedCollectionsiteId}`,
         formData
       );
-      console.log("Collectionsite updated successfully:", response.data);
-      fetchCollectionsites()
+     
+      fetchCollectionsites();
       setShowEditModal(false);
-
 
       setSuccessMessage("Collectionsite updated successfully.");
       setTimeout(() => {
@@ -140,7 +138,6 @@ const CollectionsiteArea = () => {
       );
     }
   };
-
 
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
@@ -160,10 +157,14 @@ const CollectionsiteArea = () => {
     setCurrentPage(0); // Reset to first page when filtering
   };
   useEffect(() => {
-    const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
-      if (!statusFilter) return true;
-      return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
-    });
+    const updatedFilteredCollectionsite = collectionsites.filter(
+      (collectionsite) => {
+        if (!statusFilter) return true;
+        return (
+          collectionsite.status.toLowerCase() === statusFilter.toLowerCase()
+        );
+      }
+    );
 
     setFilteredCollectionsite(updatedFilteredCollectionsite);
     setCurrentPage(0); // Reset to first page when filtering
@@ -215,27 +216,27 @@ const CollectionsiteArea = () => {
       year: "2-digit",
       month: "short",
       day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
 
     const formatted = new Date(date).toLocaleString("en-GB", options);
-    console.log("Formatted:", formatted); // debug output
+ 
 
     const [datePart, timePart] = formatted.split(", ");
     const [day, month, year] = datePart.split(" ");
 
-    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+    const formattedMonth =
+      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
 
-    return `${day}-${formattedMonth}-${year} ${timePart}`;
+    return `${day}-${formattedMonth}-${year} `;
   };
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <div className="row justify-content-center">
-
           {/* Button Container */}
           <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
             {/* Success Message */}
@@ -258,9 +259,7 @@ const CollectionsiteArea = () => {
                 id="statusFilter"
                 className="form-control mb-2"
                 style={{ width: "auto" }}
-                onChange={(e) =>
-                  handleFilterChange("status", e.target.value)
-                } // Pass "status" as the field
+                onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
               >
                 <option value="">All</option>
                 <option value="pending">pending</option>
@@ -301,7 +300,6 @@ const CollectionsiteArea = () => {
                       placeholder: "Search Status",
                       field: "status",
                     },
-
                   ].map(({ label, placeholder, field }) => (
                     <th key={field} className="col-md-2 px-1">
                       <input
@@ -342,14 +340,24 @@ const CollectionsiteArea = () => {
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => {
-                              setSelectedCollectionsiteId(
-                                collectionsite.id
-                              );
+                              setSelectedCollectionsiteId(collectionsite.id);
                               setShowDeleteModal(true);
                             }}
                             title="Delete Collectionsite" // This is the text that will appear on hover
                           >
                             <FontAwesomeIcon icon={faTrash} size="sm" />
+                          </button>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() =>
+                              handleShowHistory(
+                                "collectionsite",
+                                collectionsite.id
+                              )
+                            }
+                            title="History"
+                          >
+                            <FontAwesomeIcon icon={faHistory} />
                           </button>
                         </div>
                       </td>
@@ -370,7 +378,10 @@ const CollectionsiteArea = () => {
           {filteredCollectionsite.length >= 0 && (
             <Pagination
               handlePageClick={handlePageChange}
-              pageCount={Math.max(1, Math.ceil(filteredCollectionsite.length / itemsPerPage))}
+              pageCount={Math.max(
+                1,
+                Math.ceil(filteredCollectionsite.length / itemsPerPage)
+              )}
               focusPage={currentPage}
             />
           )}
@@ -398,9 +409,7 @@ const CollectionsiteArea = () => {
                 <div className="modal-dialog" role="document">
                   <div className="modal-content">
                     <div className="modal-header">
-                      <h5 className="modal-title">
-                        Edit collectionsite
-                      </h5>
+                      <h5 className="modal-title">Edit collectionsite</h5>
                       <button
                         type="button"
                         className="close"
@@ -496,7 +505,109 @@ const CollectionsiteArea = () => {
               </div>
             </>
           )}
+  {showHistoryModal && (
+                <>
+                  {/* Bootstrap Backdrop with Blur */}
+                  <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
+                  {/* Modal Content */}
+                  <div
+                    className="modal show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                    style={{
+                      zIndex: 1050,
+                      position: "fixed",
+                      top: "100px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    <div className="modal-dialog modal-md" role="document">
+                      <div className="modal-content">
+                        {/* Modal Header */}
+                        <div className="modal-header">
+                          <h5 className="modal-title">History</h5>
+                          <button
+                            type="button"
+                            className="close"
+                            onClick={() => setShowHistoryModal(false)}
+                            style={{
+                              fontSize: "1.5rem",
+                              position: "absolute",
+                              right: "10px",
+                              top: "10px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>&times;</span>
+                          </button>
+                        </div>
+
+                        {/* Chat-style Modal Body */}
+                        <div
+                          className="modal-body"
+                          style={{
+                            maxHeight: "500px",
+                            overflowY: "auto",
+                            backgroundColor: "#e5ddd5", // WhatsApp-style background
+                            padding: "15px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          {historyData && historyData.length > 0 ? (
+                            historyData.map((log, index) => {
+                              const { created_name, updated_name,OrganizationName, added_by, created_at, updated_at } = log;
+
+                              return (
+                                <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "10px" }}>
+                                  {/* Message for City Addition */}
+                         
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor: "#ffffff",
+                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                    }}
+                                  >
+                                    <b>Organization:</b> {OrganizationName} was <b>added</b> by Database Admin at {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                  </div>
+
+                                  {/* Message for City Update (Only if it exists) */}
+                                  {updated_name && updated_at && (
+                                    <div
+                                      style={{
+                                        padding: "10px 15px",
+                                        borderRadius: "15px",
+                                        backgroundColor: "#dcf8c6", // Light green for updates
+                                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                        maxWidth: "75%",
+                                        fontSize: "14px",
+                                        textAlign: "left",
+                                        marginTop: "5px", // Spacing between messages
+                                      }}
+                                    >
+                                      <b>Organization:</b> {updated_name} was <b>updated</b> by Database Admin at {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-left">No history available.</p>
+                          )}
+
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
           {/* Modal for Deleting Researchername */}
           {showDeleteModal && (
             <>
@@ -533,15 +644,10 @@ const CollectionsiteArea = () => {
                       ></button>
                     </div>
                     <div className="modal-body">
-                      <p>
-                        Are you sure you want to delete this Researcher?
-                      </p>
+                      <p>Are you sure you want to delete this Researcher?</p>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
+                      <button className="btn btn-danger" onClick={handleDelete}>
                         Delete
                       </button>
                       <button
@@ -558,7 +664,6 @@ const CollectionsiteArea = () => {
           )}
         </div>
       </div>
-
     </section>
   );
 };

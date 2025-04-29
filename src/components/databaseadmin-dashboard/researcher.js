@@ -122,7 +122,7 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
-      console.log("Researcher updated successfully:", response.data);
+     
 
       const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
@@ -179,10 +179,10 @@ const ResearcherArea = () => {
       year: "2-digit",
       month: "short",
       day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
   
     const formatted = new Date(date).toLocaleString("en-GB", options);
@@ -192,7 +192,7 @@ const ResearcherArea = () => {
   
     const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
   
-    return `${day}-${formattedMonth}-${year} ${timePart}`;
+    return `${day}-${formattedMonth}-${year}`;
   };
   
   
@@ -274,7 +274,7 @@ const ResearcherArea = () => {
                           field: "status",
                         },
                       ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="col-md-1 px-2">
+                        <th key={field} className="col-md-2 px-1">
                          
                          <input
                         type="text"

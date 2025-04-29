@@ -38,8 +38,6 @@ const LoginForm = () => {
         password: data.password,
       });
 
-      console.log("Login result:", result); // ✅ TEMPORARY: Check what's coming back
-
       if (result?.error) {
         // ✅ Try to get the most helpful error message
         const errorData = result.error?.data;

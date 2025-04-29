@@ -75,7 +75,7 @@ WHERE s.status = "In Stock"
   AND ua.accountType = "CollectionSites"
   AND s.user_account_id = ? 
   AND s.Quantity > 0 
-ORDER BY s.created_at ASC;
+ORDER BY s.created_at DESC;
 
   `;
   mysqlConnection.query(query, [user_account_id], (err, results) => {
@@ -116,14 +116,14 @@ WHERE
 
     fs.readdir(imageFolder, (fsErr, files) => {
       if (fsErr) return callback(fsErr, null);
-    
+
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    
+
       const totalSamples = results.length;
       const totalImages = imageFiles.length;
-    
+
       let selectedImages = [];
-    
+
       if (totalImages >= totalSamples) {
         // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
@@ -134,7 +134,7 @@ WHERE
           selectedImages.push(img);
         }
       }
-    
+
       const updatedResults = results.map((sample, index) => {
         const selectedImage = selectedImages[index];
         const imagePath = path.join(imageFolder, selectedImage);
@@ -142,15 +142,12 @@ WHERE
         sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
-    
+
       callback(null, updatedResults);
     });
-    
+
   });
 };
-
-
-
 
 const getResearcherSamples = (userId, callback) => {
   const query = `
@@ -203,8 +200,8 @@ const getResearcherSamples = (userId, callback) => {
         WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
         WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 
             THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'review' THEN 1 ELSE 0 END) > 0 
-            THEN 'review'
+        WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 
+            THEN 'UnderReview'
         ELSE 'accepted' 
     END AS committee_status
 
@@ -236,8 +233,6 @@ ORDER BY s.id ASC;
       console.error("Database error:", err);
       return callback(err, null);
     }
-
-    console.log("Query Results:", results);
 
     // Check if no samples found
     if (results.length === 0) {
@@ -297,27 +292,25 @@ WHERE
     const imageFolder = path.join(__dirname, '../uploads/Images');
     fs.readdir(imageFolder, (fsErr, files) => {
       if (fsErr) return callback(fsErr, null);
-    
+
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    
+
       const totalSamples = results.length;
       const totalImages = imageFiles.length;
-    
+
       let selectedImages = [];
-    
+
       if (totalImages >= totalSamples) {
         // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
-        console.log("Shuffled selected images:", selectedImages);
       } else {
         // More samples than images – allow repetition
         for (let i = 0; i < totalSamples; i++) {
           const img = imageFiles[i % totalImages]; // cycle through
           selectedImages.push(img);
         }
-        console.log("Repeated selected images:", selectedImages);
       }
-    
+
       const updatedResults = results.map((sample, index) => {
         const selectedImage = selectedImages[index];
         const imagePath = path.join(imageFolder, selectedImage);
@@ -325,10 +318,10 @@ WHERE
         sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
-    
+
       callback(null, updatedResults);
     });
-    
+
   });
 };
 // Function to get a sample by its ID
@@ -341,8 +334,6 @@ const getSampleById = (id, callback) => {
 
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-  console.log("Inserting data into database:", data);
-
   const id = uuidv4(); // Generate a secure unique ID
   const masterID = uuidv4(); // Secure Master ID
 
@@ -370,8 +361,6 @@ const createSample = (data, callback) => {
       return callback(err, null);
     }
 
-    console.log('Insert result:', results);
-
     // Now update masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
     mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
@@ -379,16 +368,27 @@ const createSample = (data, callback) => {
         console.error('Error updating masterID:', err);
         return callback(err, null);
       }
-      console.log('Sample inserted successfully with masterID:', masterID);
-      callback(null, { insertId: id, masterID: masterID });
+      // Now insert into sample_history
+      const historyQuery = `
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)
+      `;
+
+      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+        if (err) {
+          console.error('Error inserting into sample_history:', err);
+          return callback(err, null);
+        }
+
+        // All queries successful
+        return callback(null, { insertId: id, masterID: masterID });
+      });
     });
   });
 };
 
-
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
-  console.log(data.status);
 
   let room_number = null;
   let freezer_id = null;
@@ -410,9 +410,9 @@ const updateSample = (id, data, callback) => {
   const values = [
     data.donorID, room_number, freezer_id, box_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
-    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting,data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, 
-    data.ConcurrentMedicalConditions,data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
-     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status,data.logo, id
+    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
+    data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
@@ -426,7 +426,7 @@ const updateSample = (id, data, callback) => {
         console.error('Error inserting into sample_history:', err);
         return callback(err, null);
       }
-      console.log('Sample history recorded.', historyResults);
+
       callback(err, result);
     });
   });

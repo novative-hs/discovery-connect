@@ -122,7 +122,7 @@ const TestSystemArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+   
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -130,7 +130,7 @@ const TestSystemArea = () => {
         `${url}/samplefields/post-samplefields/testsystem`,
         formData
       );
-      console.log("Test System added successfully:", response.data);
+     
       setSuccessMessage("Test System Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -153,10 +153,7 @@ const TestSystemArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testsystem/${selectedTestSystemnameId}`
       );
-      console.log(
-        `Test System name with ID ${selectedTestSystemnameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Test System Name deleted successfully.");
 
@@ -190,7 +187,7 @@ const TestSystemArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testsystemname) => {
-    console.log("data in case of update is", testsystemname);
+   
 
     setSelectedTestSystemnameId(testsystemname.id);
     setEditTestSystemname(testsystemname);
@@ -211,7 +208,7 @@ const TestSystemArea = () => {
         `${url}/samplefields/put-samplefields/testsystem/${selectedTestSystemnameId}`,
         formData
       );
-      console.log("Test System Name updated successfully:", response.data);
+      
 
       fetchTestSystemname();
 
@@ -242,10 +239,10 @@ const TestSystemArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+    
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -261,7 +258,7 @@ const TestSystemArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -269,7 +266,7 @@ const TestSystemArea = () => {
           `${url}/samplefields/post-samplefields/testsystem`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Test System added successfully:", response.data);
+      
 
         fetchTestSystemname();
       } catch (error) {

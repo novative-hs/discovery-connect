@@ -10,7 +10,6 @@ router.get('/get-city', cityController.getAllCities);
 
 // Route to create a new committee member
 router.post('/post-city', (req, res, next) => {
-    console.log('Middleware Log - Received Body:', req.body); // Debugging
     next();
   }, cityController.createCity);
 

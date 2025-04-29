@@ -42,9 +42,9 @@ const DashboardArea = () => {
     switch (activeTab) {
       case "order-info":
         return <OrderInfo setActiveTab={setActiveTab} />;
-      case "shippingorder":
+      case "dispatchorder":
         return <ShippingSampleArea />;
-        case "dispatchorder":
+        case "shippingorder":
           return <DispatchSampleArea />;
           case "completedorder":
             return <CompletedSampleArea />;

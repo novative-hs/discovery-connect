@@ -6,35 +6,41 @@ const HeroBanner = () => {
 
   const videoSources = [
     "/assets/img/slider/13/sample-3.mp4",
+    "/assets/img/slider/13/samplevideo1.mp4",
     "/assets/img/slider/13/sample-4.mp4",
+    
   ];
 
   useEffect(() => {
     const videoElement = videoRef.current;
-
+  
     const handleEnded = () => {
-      // Loop back to the first video
       setVideoIndex((prevIndex) => (prevIndex + 1) % videoSources.length);
     };
-
+  
     if (videoElement) {
       videoElement.addEventListener("ended", handleEnded);
+      videoElement.playbackRate = 1.5; // Set global speed once on mount
     }
-
+  
     return () => {
       if (videoElement) {
         videoElement.removeEventListener("ended", handleEnded);
       }
     };
   }, []);
+  
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load(); // reload video when index changes
       videoRef.current.play();
+  
+      // ✅ Set video speed
+      videoRef.current.playbackRate = 1.5; // You can adjust this value (e.g., 2 for 2x speed)
     }
   }, [videoIndex]);
-
+  
   return (
     <div className="container-fluid p-0">
       <div className="position-relative d-flex flex-column justify-content-center align-items-start min-vh-100 px-5 py-5">

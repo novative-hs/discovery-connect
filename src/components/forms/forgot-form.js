@@ -5,6 +5,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 // Internal
 import Email from "@svg/email";
+import Lock from "@svg/lock";
+
 import ErrorMessage from "@components/error-message/error";
 import { notifyError, notifySuccess } from "@utils/toast";
 import { useSendOTPMutation, useVerifyOTPMutation } from "src/redux/features/auth/authApi";
@@ -32,7 +34,7 @@ const ForgotForm = () => {
   // Step 1: Send OTP to user email
   const onSubmit = async (data) => {
     try {
-      console.log("Sending OTP to:", data.email);
+      
       const response = await sendOTP(data.email).unwrap();
       notifySuccess("✅ OTP sent to your email!");
       setEmail(data.email);
@@ -42,31 +44,47 @@ const ForgotForm = () => {
         notifyError(response.message || "Error sending OTP");
         return;
       }
-     
 
     } catch (error) {
       console.error("❌ Error sending OTP:", error);
       notifyError(error.data?.message || "Something went wrong!");
     }
-};
-
+  };
 
   // Step 2: Verify OTP
   const handleOTPSubmit = async () => {
-    console.log("Verifying OTP:", otp); // Debugging
+    
+
     if (!otp) {
       notifyError("Please enter the OTP.");
       return;
     }
-  
+
     try {
       const response = await verifyOTP({ email, otp }).unwrap();
       notifySuccess("✅ OTP verified! Redirecting...");
       router.push(`/forget-password/${email}`); // ✅ Redirect to reset password
 
     } catch (error) {
+      // Log the full error object to inspect its structure
       console.error("❌ Error verifying OTP:", error);
-      notifyError(error.data?.message || "Invalid OTP");
+
+      // Check if the error has the expected structure
+      const errorMessage = error?.data?.error || error?.response?.data?.error;
+
+      if (errorMessage) {
+        // Handle OTP expiration specifically
+        if (errorMessage === "OTP has expired. Please request a new one.") {
+          // Reset the OTP flow
+          setOtp("");  // Clear OTP state
+          setOtpSent(false); // Reset the OTP sent state
+          notifyError("❌ OTP has expired. Please request a new one.");
+        } else {
+          notifyError(errorMessage); // Display the error message from the backend
+        }
+      } else {
+        notifyError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -107,6 +125,7 @@ const ForgotForm = () => {
                 value={otp} 
                 onChange={(e) => setOtp(e.target.value)} 
               />
+              <span><Lock /></span>
             </div>
           </div>
 
@@ -121,5 +140,6 @@ const ForgotForm = () => {
     </form>
   );
 };
+
 
 export default ForgotForm;

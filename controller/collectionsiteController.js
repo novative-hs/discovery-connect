@@ -87,7 +87,7 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
   const { sample_id } = req.params;
   
   if (!sample_id) {
-    console.log("No Sample ID received in request");
+    
     return res.status(400).json({ error: "Sample ID is required" });
   }
 
@@ -102,7 +102,6 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
         user_account_id: row.user_account_id,
       }));
 
-      console.log("Database Query Result:", collectionSites); // Debugging
       res.status(200).json({ data: collectionSites });
   });
 };
@@ -144,7 +143,6 @@ const updateCollectionSiteDetail = (req, res) => {
 };
 const getCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
-  console.log("id us", id)
   collectionsiteModel.getCollectionSiteDetail(id, (err, results) => {
     if (err) {
       console.error('Error fetching collection site:', err);

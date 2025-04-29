@@ -53,7 +53,6 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (id === null) {
       return <div>Loading...</div>; // Or redirect to login
     } else {
-      console.log("account_id on Header page is:", id);
       fetchCart();
       fetchUserDetail();
     }
@@ -64,7 +63,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
-      console.log("User", response.data[0])
+    
       setUser(response.data[0]); // Store fetched organization data
     } catch (error) {
       console.error("Error fetching Organization:", error);
@@ -77,7 +76,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
 
-      console.log("API Response:", response.data);
+     
 
       if (
         response.data.length > 0 &&
@@ -85,7 +84,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       ) {
         setCartCount(response.data[0].Count);
         sessionStorage.setItem("cartCount", response.data[0].Count);
-        console.log("Cart count stored:", response.data[0].Count);
+      
       } else {
         console.warn("Unexpected API response format");
         sessionStorage.setItem("cartCount", 0);
@@ -94,19 +93,21 @@ const Header = ({ setActiveTab, activeTab }) => {
       console.error("Error fetching cart:", error);
     }
   };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
-        setShowSampleDropdown(null); // Also close sub-dropdowns if needed
+        setShowSampleDropdown(null);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
+  
+    document.addEventListener("click", handleClickOutside); // <== CHANGED from 'mousedown' to 'click'
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
   useEffect(() => {
     if (user) {
       setUserLogo(
@@ -184,22 +185,17 @@ const Header = ({ setActiveTab, activeTab }) => {
               dropdown: [
                 { label: "Ethnicity", tab: "ethnicity" },
                 { label: "Sample Condition", tab: "sample-condition" },
+                { label: "Sample Price Currency", tab: "sample-price-currency" },
                 { label: "Storage Temperature", tab: "storage-temperature" },
                 { label: "Container Type", tab: "container-type" },
                 { label: "Quantity Unit", tab: "quantity-unit" },
                 { label: "Sample Type Matrix", tab: "sample-type-matrix" },
                 { label: "Test Method", tab: "test-method" },
                 { label: "Test Result Unit", tab: "test-result-unit" },
-                {
-                  label: "Concurrent Medical Conditions",
-                  tab: "concurrent-medical-conditions",
-                },
+                { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions"},
                 { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
                 { label: "Test System", tab: "test-system" },
-                {
-                  label: "Test System Manufacturer",
-                  tab: "test-system-manufacturer",
-                },
+                { label: "Test System Manufacturer", tab: "test-system-manufacturer"},
               ],
             },
           ]
@@ -226,8 +222,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   : userType == "csr"
                     ? [
                       { label: "Profile", tab: "order-info" },
-                      { label: "Order Packaging List", tab: "shippingorder" },
                       { label: "Order Dispatch List", tab: "dispatchorder" },
+                      { label: "Order Packaging List", tab: "shippingorder" },
                       { label: "Order Completed List", tab: "completedorder" },
                     ]
                     : [];
@@ -383,7 +379,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                           className="dropdown-item fs-7"
                           onClick={handleUpdateProfile}
                         >
-                          Update Profilee
+                          Update Profile
                         </button>
                       </li>
                     )}

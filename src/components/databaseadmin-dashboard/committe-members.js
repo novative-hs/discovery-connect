@@ -150,7 +150,7 @@ const CommitteeMemberArea = () => {
   };
 
   const handleInputChange = (e) => {
-    console.log(organization);
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -166,7 +166,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/post`,
         formData
       );
-      console.log("Committee Member added successfully:", response.data);
+
       // Refresh the committeemember list after successful submission
       fetchCommitteemembers();
 
@@ -186,7 +186,7 @@ const CommitteeMemberArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log(data)
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -201,9 +201,6 @@ const CommitteeMemberArea = () => {
       // Send delete request to backend
       await axios.delete(
         `${url}/committeemember/delete/${selectedCommitteememberId}`
-      );
-      console.log(
-        `Committeemember with ID ${selectedCommitteememberId} deleted successfully.`
       );
 
       // Set success message
@@ -257,7 +254,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
-      console.log("Committeemember updated successfully:", response.data);
+
 
       fetchCommitteemembers();
       setShowEditModal(false);
@@ -306,7 +303,7 @@ const CommitteeMemberArea = () => {
         { committeetype: option }, // Only send the selected `committeetype`
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log("Update successful:", response.data.message);
+
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
         prevMembers.map((member) =>
@@ -368,7 +365,7 @@ const CommitteeMemberArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      console.log("Update successful:", response.data.message);
+
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
         prevMembers.map((member) =>
@@ -416,13 +413,15 @@ const CommitteeMemberArea = () => {
       filtered = committeemembers; // Show all if filter is empty
     } else {
       filtered = committeemembers.filter((committeemember) =>
-        committeemember[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
+        // Use exact matching for 'status' field
+        field === "status"
+          ? committeemember[field]?.toString().toLowerCase() === value.toLowerCase() // Match exactly
+          : committeemember[field]
+            ?.toString()
+            .toLowerCase()
+            .includes(value.toLowerCase()) // For other fields, use includes
       );
     }
-
     setFilteredCommitteemembers(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
@@ -458,7 +457,22 @@ const CommitteeMemberArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Committee Member List</h5>
+              {/* Status Filter */}
+              <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-auto">
+                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                  Status:
+                </label>
+                <select
+                  id="statusFilter"
+                  className="form-control mb-2"
+                  style={{ width: "auto" }}
+                  onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
+                >
+                  <option value="">All</option>
+                  <option value="Active">Active</option>
+                  <option value="inactive">inactive</option>
+                </select>
+              </div>
               <div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Add Committee Member Button */}
                 <button

@@ -1,47 +1,5 @@
 const mysqlConnection = require("../config/db");
 const {sendEmail}=require("../config/email");
-// New Updated fields in Table
-const addFieldToCommitteememberTable = (tableName, fieldName, fieldType) => {
-  const checkColumnQuery = `
-    SELECT COUNT(*) AS columnExists 
-    FROM information_schema.columns 
-    WHERE table_name = '${tableName}' 
-    AND column_name = '${fieldName}'`;
-
-  // Check if the column exists
-  mysqlConnection.query(checkColumnQuery, (err, results) => {
-    if (err) {
-      console.error(`Error checking column existence for ${fieldName}:`, err);
-    } else {
-      const columnExists = results[0].columnExists;
-      if (columnExists === 0) {
-        const addFieldQuery = `
-          ALTER TABLE ${tableName} 
-          ADD COLUMN ${fieldName} ${fieldType}`;
-
-        mysqlConnection.query(addFieldQuery, (err, results) => {
-          if (err) {
-            console.error(
-              `Error altering ${tableName} table to add ${fieldName}:`,
-              err
-            );
-          } else {
-            console.log(`${fieldName} added to ${tableName} table.`);
-          }
-        });
-      } else {
-        console.log(
-          `${fieldName} column already exists in ${tableName} table.`
-        );
-      }
-    }
-  });
-};
-
-// Add Field Names Here
-const alterCommitteememberTable = () => {
-  // addFieldToCommitteememberTable("committee_member", "CutOffRange", "VARCHAR(255)");
-};
 
 // Function to create the committee_member table
 const createCommitteeMemberTable = () => {
@@ -74,15 +32,7 @@ const createCommitteeMemberTable = () => {
       console.log("Committee member table created or already exists");
     }
   });
-
-  // Ensure alterCommitteememberTable exists before calling
-  if (typeof alterCommitteememberTable === "function") {
-    alterCommitteememberTable();
-  } else {
-    console.warn("alterCommitteememberTable function is not defined.");
-  }
 };
-
 
 // Function to get all committee members
 const getAllCommitteeMembers = (callback) => {
@@ -110,7 +60,9 @@ const getAllCommitteeMembers = (callback) => {
     JOIN 
         organization org ON cm.organization = org.id
     LEFT JOIN 
-        user_account ua ON cm.user_account_id = ua.id;
+        user_account ua ON cm.user_account_id = ua.id
+    ORDER BY 
+        cm.id DESC;
   `;
 
   mysqlConnection.query(query, (err, results) => {
@@ -319,11 +271,11 @@ const updateCommitteeMemberStatus = async (id, status) => {
     const email = emailResults;
 
     // Prepare the email content
-    let emailText = `Dear Committee Member,\n\nYour account status is currently inactive. 
+    let emailText = `Dear Committee Member,\n\nYour account status is currently <b>inactive</b>. 
     Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
 
     if (status === "active") {
-      emailText = `Dear Committee Member,\n\nYour account is now active! 
+      emailText = `Dear Committee Member,\n\nYour account is now <b>active</b>! 
       You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
     }
 

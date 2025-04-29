@@ -2,7 +2,6 @@ const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 
 function createResearcher(data, callback) {
-  console.log("Researcher Model", data)
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
     INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by)
@@ -21,7 +20,7 @@ function getAllResearchers(callback) {
     FROM researcher
     JOIN user_account ON researcher.user_account_id = user_account.id
     JOIN organization ON researcher.nameofOrganization = organization.id
-    ORDER BY researcher.id ASC
+    ORDER BY researcher.id DESC
   `;
   mysqlConnection.query(query, callback);
 }
@@ -50,8 +49,10 @@ LEFT JOIN district ON researcher.district = district.id
 LEFT JOIN country ON researcher.country = country.id
 LEFT JOIN organization ON researcher.nameofOrganization = organization.id
 LEFT JOIN user_account ON researcher.user_account_id = user_account.id
-WHERE 
-    researcher.nameofOrganization = ?;
+ WHERE 
+      researcher.nameofOrganization = ?
+    ORDER BY 
+      researcher.id DESC;
   `;
   mysqlConnection.query(query, [organizationId], callback);
 }
@@ -86,7 +87,7 @@ WHERE
 // Function to update a researcher's details
 function updateResearcher(id, data, callback) {
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
-  console.log(data)
+  
   const query = `
     UPDATE researcher
     SET ResearcherName = ?, phoneNumber = ?, nameofOrganization = ?, fullAddress = ?,city=?,district=?, country = ?, logo = ?
@@ -159,7 +160,7 @@ function updateResearcherDetail(id, data, callback) {
               });
             }
 
-            console.log('Both email and collectionsite updated successfully');
+            
             return callback(null, 'Both updates were successful');
           });
         }
@@ -279,21 +280,21 @@ const updateResearcherStatus = async (id, status) => {
   
     - **Status:** Pending Approval
   
-    Your account is currently pending approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
+    Your account is currently <b>pending</b> approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
   
     Thank you for your patience and cooperation.
   
     Best regards,
     The Discovery Connect Team
   `;
-  
-  if (status === "approved") {
-    emailText = `
+
+    if (status === "approved") {
+      emailText = `
     Dear ${name},
   
     Congratulations! 🎉
   
-    We are thrilled to inform you that your Researcher account has been successfully approved! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
+    We are thrilled to inform you that your Researcher account has been successfully <b>approved</b>! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
   
     Here are a few next steps:
     - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).
@@ -304,8 +305,8 @@ const updateResearcherStatus = async (id, status) => {
     Best regards,
     The Discovery Connect Team
   `;
-  
-  }
+
+    }
 
     sendEmail(email, "Welcome to Discovery Connect", emailText)
       .then(() => console.log("Email sent successfully"))

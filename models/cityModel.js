@@ -18,9 +18,7 @@ const createCityTable = () => {
   mysqlConnection.query(createCityTable, (err, results) => {
     if (err) {
       console.error("Error creating City table: ", err);
-    } else {
-      console.log("City table created Successfully");
-    }
+    } 
   });
 };
 
@@ -39,7 +37,7 @@ const getAllCities = (callback) => {
 
 // Function to create City
 const createCity = (data, callback) => {
-  console.log("Received Request Body:", data);
+ 
   const { bulkData, cityname, added_by } = data || {};
 
   mysqlPool.getConnection((err, connection) => {

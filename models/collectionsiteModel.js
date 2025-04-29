@@ -7,7 +7,7 @@ const getAllCollectionSites = (callback) => {
   SELECT collectionsite.*, user_account.email
   FROM collectionsite
   JOIN user_account ON collectionsite.user_account_id = user_account.id
-  ORDER BY collectionsite.id ASC
+  ORDER BY collectionsite.id DESC
 `;
 
 
@@ -19,7 +19,6 @@ const getAllCollectionSites = (callback) => {
     }
   });
 };
-
 
 // Function to insert a new collection site
 const createCollectionSite = (data, callback) => {
@@ -72,7 +71,7 @@ const updateCollectionSiteStatus = async (id, status) => {
     }
 
     const email = emailResults[0].email;
-    const name=emailResults[0].CollectionSiteName;
+    const name = emailResults[0].CollectionSiteName;
     // Prepare email content
     let emailText = `
     Dear ${name},
@@ -83,21 +82,21 @@ const updateCollectionSiteStatus = async (id, status) => {
   
     - **Status:** Pending Approval
   
-    Your account is currently pending approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
+    Your account is currently <b>pending</b> approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
   
     Thank you for your patience and cooperation.
   
     Best regards,
     The Discovery Connect Team
   `;
-  
-  if (status === "approved") {
-    emailText = `
+
+    if (status === "approved") {
+      emailText = `
     Dear ${name},
   
     Congratulations! 🎉
   
-    We are thrilled to inform you that your collectionsite account has been successfully approved! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
+    We are thrilled to inform you that your collectionsite account has been successfully <b>approved</b>! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
   
     Here are a few next steps:
     - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).
@@ -108,8 +107,8 @@ const updateCollectionSiteStatus = async (id, status) => {
     Best regards,
     The Discovery Connect Team
   `;
-  
-  }
+
+    }
 
     // Send email asynchronously (does not block function execution)
     sendEmail(email, "Welcome to Discovery Connect", emailText)
@@ -122,7 +121,6 @@ const updateCollectionSiteStatus = async (id, status) => {
     throw error;
   }
 };
-
 
 
 function getCollectionSiteById(id, callback) {
@@ -159,7 +157,7 @@ const deleteCollectionSite = async (id) => {
     }
 
     const email = emailResults[0].email;
-    const name=emailResults[0].CollectionSiteName;
+    const name = emailResults[0].CollectionSiteName;
 
     // Construct the email content based on the status
     let emailText = `
@@ -167,7 +165,7 @@ const deleteCollectionSite = async (id) => {
   
     Thank you for registering with Discovery Connect! 
   
-    We appreciate your interest in our platform. However, we regret to inform you that your account is currently **unapproved**. This means that you will not be able to log in or access the platform until the admin completes the review and approval process.
+    We appreciate your interest in our platform. However, we regret to inform you that your account is currently <b>UNAPPROVED</b>. This means that you will not be able to log in or access the platform until the admin completes the review and approval process.
   
     We understand this might be disappointing, but rest assured, we are working hard to process your registration as quickly as possible.
   
@@ -177,11 +175,9 @@ const deleteCollectionSite = async (id) => {
   
     We appreciate your patience and look forward to having you on board soon!
   
-    Best regards,
+    Best regards,<br/>
     The Discovery Connect Team
-    `;
-  
-  
+`;
 
     // Send email asynchronously (does not block response)
     sendEmail(email, "Account Status Update", emailText)
@@ -238,7 +234,8 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
     const collectionSiteQuery = `
       SELECT CollectionSiteName, user_account_id 
       FROM collectionsite 
-      WHERE user_account_id != ?;
+      WHERE user_account_id != ?
+      AND status = 'approved';
     `;
 
     mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
@@ -343,7 +340,6 @@ function updateCollectionSiteDetail(id, data, callback) {
                   });
                 }
                 connection.release();
-                console.log('Both email and collectionsite updated successfully');
                 return callback(null, 'Both updates were successful');
               });
             }

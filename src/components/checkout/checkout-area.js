@@ -67,6 +67,9 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
       >
         <div className="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div
+          className="modal-dialog modal-lg modal-md modal-sm"
+          role="document" style={{ maxWidth: "800px", width: "90%" }}>
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Order Summary</h5>
@@ -81,6 +84,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
             </div>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

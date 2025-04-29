@@ -7,13 +7,13 @@ import { useRouter } from "next/router";
 import { notifyError, notifySuccess } from "@utils/toast";
 import PaymentCardElement from "@components/order/pay-card-element";
 const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
-  console.log("Received Sample Copy Data:", sampleCopyData);
+  
 
   const { cart_products } = useSelector((state) => state.cart);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [showOrderDetails, setShowOrderDetails] = useState(false);
-  console.log("cart items are nnnn", cart_products);
+  
   const dispatch = useDispatch();
   const router = useRouter();
   // Calculate subtotal
@@ -84,7 +84,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
       const result = response.data;
 
-      console.log("res", result);
+      
       const cartIds = result.result.results.map((item) => item.cartId);
       const created_at = result.result.results[0].created_at;
 
@@ -93,11 +93,14 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
       dispatch(clear_cart());
 
-      // ✅ Show success message before redirecting
-      notifySuccess("Order placed successfully!");
-
       setTimeout(() => {
-        router.push(`/order-confirmation`);
+        router.push({
+          pathname: "/order-confirmation",
+          query: {
+            id: JSON.stringify(cartIds),
+            created_at: created_at,
+          },
+        });
       }, 1000); // Optional delay to let user see message
 
       return true;

@@ -12,12 +12,12 @@ import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 
-const SampleConditionArea = () => {
-  const id = sessionStorage.getItem("userID");
+const SamplePriceCurrencyArea = () => {
+  const id = localStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Sample Condition  page is:", id);
+    console.log("account_id on Sample Price Currency  page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -25,16 +25,16 @@ const SampleConditionArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
 
-  const [selectedSampleConditionnameId, setSelectedSampleConditionnameId] =
+  const [selectedSamplePriceCurrencynameId, setSelectedSamplePriceCurrencynameId] =
     useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSampleConditionname, setEditSampleConditionname] = useState(null); // State for selected City to edit
-  const [sampleconditionname, setSampleConditionname] = useState([]); // State to hold fetched City
+  const [editSamplePriceCurrencyname, setEditSamplePriceCurrencyname] = useState(null); // State for selected City to edit
+  const [samplepricecurrencyname, setSamplePriceCurrencyname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSampleconditionname, setFilteredSampleconditionname] =
+  const [filteredSamplepricecurrencyname, setFilteredSamplepricecurrencyname] =
     useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
@@ -45,32 +45,32 @@ const SampleConditionArea = () => {
 
   // Fetch City from backend when component loads
   useEffect(() => {
-    fetchSampleConditionname(); // Call the function when the component mounts
+    fetchSamplePriceCurrencyname(); // Call the function when the component mounts
   }, []);
-  const fetchSampleConditionname = async () => {
+  const fetchSamplePriceCurrencyname = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/samplecondition`
+        `${url}/samplefields/get-samplefields/samplepricecurrency`
       );
-      setFilteredSampleconditionname(response.data); // Initialize filtered list
-      setSampleConditionname(response.data); // Store fetched City in state
+      setFilteredSamplepricecurrencyname(response.data); // Initialize filtered list
+      setSamplePriceCurrencyname(response.data); // Store fetched City in state
     } catch (error) {
-      console.error("Error fetching Sample Condition", error);
+      console.error("Error fetching Sample Price Currency", error);
     }
   };
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredSampleconditionname.length / itemsPerPage)
+      Math.ceil(filteredSamplepricecurrencyname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSampleconditionname]);
+  }, [filteredSamplepricecurrencyname]);
 
-  const currentData = filteredSampleconditionname.slice(
+  const currentData = filteredSamplepricecurrencyname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -83,17 +83,17 @@ const SampleConditionArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = sampleconditionname; // Show all if filter is empty
+      filtered = samplepricecurrencyname; // Show all if filter is empty
     } else {
-      filtered = sampleconditionname.filter((samplecondition) =>
-        samplecondition[field]
+      filtered = samplepricecurrencyname.filter((samplepricecurrency) =>
+        samplepricecurrency[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
       );
     }
 
-    setFilteredSampleconditionname(filtered);
+    setFilteredSamplepricecurrencyname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -125,27 +125,27 @@ const SampleConditionArea = () => {
   };
 
   const handleSubmit = async (e) => {
-  
+    
     e.preventDefault();
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/samplecondition`,
+        `${url}/samplefields/post-samplefields/samplepricecurrency`,
         formData
       );
-     
-      setSuccessMessage("Sample Condition Name deleted successfully.");
+      
+      setSuccessMessage("Sample Price Currency Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      fetchSampleConditionname();
+      fetchSamplePriceCurrencyname();
       // Clear form after submission
       resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Sample Condition:", error);
+      console.error("Error adding Sample Price Currency:", error);
     }
   };
 
@@ -153,24 +153,25 @@ const SampleConditionArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`
+        `${url}/samplefields/delete-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`
       );
-     
+    
+
       // Set success message
-      setSuccessMessage("Sample Condition Name deleted successfully.");
+      setSuccessMessage("Sample Price Currency Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchSampleConditionname();
+      fetchSamplePriceCurrencyname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedSampleConditionnameId(null);
+      setSelectedSamplePriceCurrencynameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Storage temperature with ID ${selectedSampleConditionnameId}:`,
+        `Error deleting Storage temperature with ID ${selectedSamplePriceCurrencynameId}:`,
         error
       );
     }
@@ -188,14 +189,14 @@ const SampleConditionArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (sampleconditionname) => {
-   
+  const handleEditClick = (samplepricecurrencyname) => {
+  
 
-    setSelectedSampleConditionnameId(sampleconditionname.id);
-    setEditSampleConditionname(sampleconditionname);
+    setSelectedSamplePriceCurrencynameId(samplepricecurrencyname.id);
+    setEditSamplePriceCurrencyname(samplepricecurrencyname);
 
     setFormData({
-      name: sampleconditionname.name,
+      name: samplepricecurrencyname.name,
       added_by: id,
     });
 
@@ -207,22 +208,22 @@ const SampleConditionArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`,
+        `${url}/samplefields/put-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`,
         formData
       );
-    
+     
 
-      fetchSampleConditionname();
+      fetchSamplePriceCurrencyname();
 
       setShowEditModal(false);
-      setSuccessMessage("Sample Condition updated successfully.");
+      setSuccessMessage("Sample Price Currency updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
       console.error(
-        `Error updating Sample Condition name with ID ${selectedSampleConditionnameId}:`,
+        `Error updating Sample Price Currency name with ID ${selectedSamplePriceCurrencynameId}:`,
         error
       );
     }
@@ -240,10 +241,10 @@ const SampleConditionArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-   
+  
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+  
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -259,19 +260,19 @@ const SampleConditionArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/samplecondition`,
+          `${url}/samplefields/post-samplefields/samplepricecurrency`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Sample condition added successfully:", response.data);
+        
 
-        fetchSampleConditionname();
+        fetchSamplePriceCurrencyname();
       } catch (error) {
-        console.error("Error adding Sample condition:", error);
+        console.error("Error adding Sample pricecurrency:", error);
       }
     };
 
@@ -304,9 +305,9 @@ const SampleConditionArea = () => {
 
                 {/* Button Container */}
                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Sample Condition List</h5>
+              <h5 className="m-0 fw-bold ">Sample Price Currency List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Sample Condition Button */}
+                {/* Add Sample Price Currency Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -323,7 +324,7 @@ const SampleConditionArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Sample Condition
+                  <i className="fas fa-plus"></i> Add Sample Price Currency
                 </button>
 
                 <label
@@ -363,8 +364,8 @@ const SampleConditionArea = () => {
                       {[
                        // { label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                         {
-                          label: "Sample Condition Name",
-                          placeholder: "Search Sample Condition Name",
+                          label: "Sample Price Currency Name",
+                          placeholder: "Search Sample Price Currency Name",
                           field: "name",
                           width: "col-md-1"
                         },
@@ -427,26 +428,26 @@ const SampleConditionArea = () => {
                                       updated_at,
                                     })
                                   }
-                                  title="Edit Sample condition"
+                                  title="Edit Sample pricecurrency"
                                 >
                                   <FontAwesomeIcon icon={faEdit} size="xs" />
                                 </button>
                                 <button
                                   className="btn btn-danger btn-sm"
                                   onClick={() => {
-                                    setSelectedSampleConditionnameId(id);
+                                    setSelectedSamplePriceCurrencynameId(id);
                                     setShowDeleteModal(true);
                                   }}
-                                  title="Delete Sample Condition"
+                                  title="Delete Sample Price Currency"
                                 >
                                   <FontAwesomeIcon icon={faTrash} size="sm" />
                                 </button>
                                 <button
                                   className="btn btn-info btn-sm"
                                   onClick={() =>
-                                    handleShowHistory("samplecondition", id)
+                                    handleShowHistory("samplepricecurrency", id)
                                   }
-                                  title="History Sample Condition"
+                                  title="History Sample Price Currency"
                                 >
                                   <FontAwesomeIcon icon={faHistory} size="sm" />
                                 </button>
@@ -458,7 +459,7 @@ const SampleConditionArea = () => {
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center">
-                          No Sample Condition Available
+                          No Sample Price Currency Available
                         </td>
                       </tr>
                     )}
@@ -502,8 +503,8 @@ const SampleConditionArea = () => {
                         <div className="modal-header">
                           <h5 className="modal-title">
                             {showAddModal
-                              ? "Add SampleCondition"
-                              : "Edit SampleCondition"}
+                              ? "Add SamplePriceCurrency"
+                              : "Edit SamplePriceCurrency"}
                           </h5>
                           <button
                             type="button"
@@ -526,12 +527,12 @@ const SampleConditionArea = () => {
                         </div>
 
                         <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                          onSubmit={showAddModal ? handleSubmit : handleUpdate}
                         >
                           <div className="modal-body">
                             {/* Form Fields */}
                             <div className="form-group">
-                              <label>Sample Condition Name</label>
+                              <label>Sample Price Currency Name</label>
                               <input
                                 type="text"
                                 className="form-control"
@@ -545,7 +546,7 @@ const SampleConditionArea = () => {
 
                           <div className="modal-footer">
                             <button type="submit" className="btn btn-primary">
-                              {showAddModal ? "Save" : "Update SampleCondition"}
+                              {showAddModal ? "Save" : "Update SamplePriceCurrency"}
                             </button>
                           </div>
                         </form>
@@ -584,7 +585,7 @@ const SampleConditionArea = () => {
                           style={{ backgroundColor: "transparent" }}
                         >
                           <h5 className="modal-title">
-                            Delete Sample Condition
+                            Delete Sample Price Currency
                           </h5>
                           <button
                             type="button"
@@ -595,7 +596,7 @@ const SampleConditionArea = () => {
                         <div className="modal-body">
                           <p>
                             Are you sure you want to delete this Sample
-                            Condition?
+                            Price Currency?
                           </p>
                         </div>
                         <div className="modal-footer">
@@ -703,7 +704,7 @@ const SampleConditionArea = () => {
                                       textAlign: "left",
                                     }}
                                   >
-                                    <b>Sample Condition:</b> {created_name} was{" "}
+                                    <b>Sample Price Currency:</b> {created_name} was{" "}
                                     <b>added</b> by Database Admin at{" "}
                                     {moment(created_at).format(
                                       "DD MMM YYYY, h:mm A"
@@ -725,7 +726,7 @@ const SampleConditionArea = () => {
                                         marginTop: "5px", // Spacing between messages
                                       }}
                                     >
-                                      <b>Sample Condition:</b> {updated_name} was{" "}
+                                      <b>Sample Price Currency:</b> {updated_name} was{" "}
                                       <b>updated</b> by Database Admin at{" "}
                                       {moment(updated_at).format(
                                         "DD MMM YYYY, h:mm A"
@@ -752,4 +753,4 @@ const SampleConditionArea = () => {
   );
 };
 
-export default SampleConditionArea;
+export default SamplePriceCurrencyArea;

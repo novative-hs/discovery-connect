@@ -200,34 +200,40 @@ const CartArea = () => {
                 </div>
 
                 {/* Right side: Cart Totals */}
-                <div className="col-md-4">
-                  <div className="card shadow-sm">
-                    <div className="card-body">
-                      <h5 className="card-title">Cart Totals</h5>
-                      <ul className="list-group list-group-flush mb-3">
-                        <li className="list-group-item d-flex justify-content-between">
-                          <strong>Subtotal</strong>
-                          <span>{subtotal.toFixed(2)}</span>
-                        </li>
-                        <li className="list-group-item d-flex justify-content-between">
-                          <strong>Total</strong>
-                          <span>{subtotal.toFixed(2)}</span>
-                        </li>
-                      </ul>
-                      <button
-                        className="tp-btn cursor-pointer w-100"
-                        onClick={handleProceedToCheckout}
-                        style={{
-                          backgroundColor: "#003366",
-                          color: "white",
-                          border: "none",
-                        }}
-                      >
-                        Proceed to Checkout
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <div className="col-12 col-md-4">
+  <div className="card shadow-sm">
+    <div className="card-body">
+      <h5 className="card-title">Cart Totals</h5>
+      <ul className="list-group list-group-flush mb-3">
+        <li className="list-group-item d-flex justify-content-between">
+          <strong>Subtotal</strong>
+          <span className="text-truncate" style={{ maxWidth: "calc(100% - 70px)" }}>
+            {subtotal.toFixed(2)}
+          </span>
+        </li>
+        <li className="list-group-item d-flex justify-content-between">
+          <strong>Total</strong>
+          <span className="text-truncate" style={{ maxWidth: "calc(100% - 70px)" }}>
+            {subtotal.toFixed(2)}
+          </span>
+        </li>
+      </ul>
+      <button
+        className="tp-btn cursor-pointer w-100"
+        onClick={handleProceedToCheckout}
+        style={{
+          backgroundColor: "#003366",
+          color: "white",
+          border: "none",
+        }}
+      >
+        Proceed to Checkout
+      </button>
+    </div>
+  </div>
+</div>
+
+
               </div>
             ) : (
               <EmptyCart />

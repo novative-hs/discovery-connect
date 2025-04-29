@@ -125,7 +125,7 @@ const ContainerTypeArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -133,7 +133,7 @@ const ContainerTypeArea = () => {
         `${url}/samplefields/post-samplefields/containertype`,
         formData
       );
-      console.log("Container Type  added successfully:", response.data);
+      
       setSuccessMessage("Container Type  Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -159,10 +159,7 @@ const ContainerTypeArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
       );
-      console.log(
-        `ContainerType name with ID ${selectedContainerTypenameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("Container Type Name deleted successfully.");
 
@@ -197,7 +194,7 @@ const ContainerTypeArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (containertypename) => {
-    console.log("data in case of update is", containertypename);
+   
 
     setSelectedContainerTypenameId(containertypename.id);
     setEditContainerTypename(containertypename);
@@ -218,7 +215,7 @@ const ContainerTypeArea = () => {
         `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
         formData
       );
-      console.log("ContainerType Name updated successfully:", response.data);
+      
 
       fetchContainerTypename();
 
@@ -248,10 +245,10 @@ const ContainerTypeArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    console.log("File upload triggered"); // Debugging
+   
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -267,7 +264,7 @@ const ContainerTypeArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      console.log("Data with added_by", dataWithAddedBy);
+     
 
       try {
         // POST request inside the same function
@@ -275,7 +272,7 @@ const ContainerTypeArea = () => {
           `${url}/samplefields/post-samplefields/containertype`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Container Type added successfully:", response.data);
+      
 
         fetchContainerTypename();
       } catch (error) {

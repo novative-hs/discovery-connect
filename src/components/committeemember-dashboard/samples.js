@@ -4,6 +4,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
+import { notifyError, notifySuccess } from "@utils/toast";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
@@ -27,7 +28,7 @@ const[selectedComment,setSelectedComment]=useState("");
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
     { label: "Comments", key: "comments" },
-    { label: "Reporting Mechanism", key: "reporting_mechanism" },
+    { label: "Additional Mechanism", key: "reporting_mechanism" },
     { label: "Study Copy", key: "study_copy" },
     { label: "IRB file", key: "irb_file" },
     { label: "NBC file", key: "nbc_file" },
@@ -47,14 +48,13 @@ const[selectedComment,setSelectedComment]=useState("");
   const [selectedSample, setSelectedSample] = useState(null);
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
+ useEffect(() => {
+       fetchSamples();
+   }, []);
 
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
-
+    
       if (!id) {
         console.error("ID is missing.");
         return;
@@ -63,10 +63,10 @@ const[selectedComment,setSelectedComment]=useState("");
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}`
       );
-console.log(response.data)
+
       // Update state
       setSamples(response.data);
-      console.log(response.data);
+      
       setFilteredSamplename(response.data);
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -176,34 +176,48 @@ console.log(response.data)
     setComment(""); // Clear comment
   };
   const handleSubmit = async () => {
-    const trimmedComment = comment.trim(); // Trim spaces and new lines
-
+    const trimmedComment = comment.trim();
+  
     if (!id || !selectedSample || !trimmedComment) {
       alert("Please enter a comment.");
       return;
     }
-
+  
+    const payload = {
+      committee_member_id: id,
+      committee_status: actionType, // "Approved" or "Refused"
+      comments: trimmedComment,
+    };
+  
     try {
+      
+  
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
-        {
-          committee_member_id: id,
-          committee_status: actionType, // "Approved" or "Refused"
-          comments: trimmedComment, // Send trimmed comment
-        }
+        payload
       );
-
-      if (response.status === 200) {
-        alert(`Sample ${actionType} successfully!`);
+  
+      
+  
+      if (response.data.success) {
+        notifySuccess(response.data.message)
         setShowModal(false);
-        setComment(""); // Clear the comment field
-        fetchSamples(); // Refresh the data
+        setComment("");
+        fetchSamples(); 
+      } else {
+        notifyError("Failed to update committee status. Please try again.")
       }
     } catch (error) {
-      console.error("Error updating committee status:", error);
-      alert("Failed to update sample status.");
+      console.error("❌ Error updating committee status:", error);
+      if (error.response?.data?.error) {
+        
+        notifyError(`Error: ${error.response.data.error}`);
+      } else {
+        notifyError("Unexpected error occurred.");
+      }
     }
   };
+  
 
   useEffect(() => {
     if (showModal) {

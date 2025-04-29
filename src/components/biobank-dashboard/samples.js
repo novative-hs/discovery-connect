@@ -10,6 +10,8 @@ import { getsessionStorage } from "@utils/sessionStorage";
 import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
+
+
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
@@ -21,10 +23,14 @@ const BioBankSampleArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
+  const [countryname, setCountryname] = useState([]);
+  const [searchCountry, setSearchCountry] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
@@ -46,7 +52,7 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions"},
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -102,6 +108,7 @@ const BioBankSampleArea = () => {
   // Sample Dropdown Fields
   const [ethnicityNames, setEthnicityNames] = useState([]);
   const [sampleconditionNames, setSampleConditionNames] = useState([]);
+  const [samplepricecurrencyNames, setSamplePriceCurrencyNames] = useState([]);
   const [storagetemperatureNames, setStorageTemperatureNames] = useState([]);
   const [containertypeNames, setContainerTypeNames] = useState([]);
   const [quantityunitNames, setQuantityUnitNames] = useState([]);
@@ -131,8 +138,36 @@ const BioBankSampleArea = () => {
     Quantity: "",
   });
 
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData((prev) => ({
+      ...prev,
+      CountryOfCollection: country.name, // or country.id if you store ID
+    }));
+    setSearchCountry(country.name);
+    setShowCountryDropdown(false);
+  };
+
+
+  // Fetch countries from backend
+  useEffect(() => {
+    const fetchData = async (url, setState, label) => {
+      try {
+        const response = await axios.get(url);
+        setState(response.data);
+      } catch (error) {
+        console.error(`Error fetching ${label}:`, error);
+      }
+    };
+
+    fetchData(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`,
+      setCountryname,
+      "Country"
+    );
+  }, []);
+
   const handleTransferClick = (sample) => {
-    console.log("Transfer action for:", sample);
     setSelectedSampleId(sample.id);
     setShowTransferModal(true); // Show the modal
   };
@@ -140,23 +175,31 @@ const BioBankSampleArea = () => {
   // Fetch samples from backend when component loads
   useEffect(() => {
     const storedUser = getsessionStorage("user");
-    console.log("Logged-in user:", storedUser);
     fetchSamples(); // Call the function when the component mounts
   }, []);
 
   const fetchSamples = async () => {
     try {
-      console.log("Fetching samples...");
 
       // Fetch samples added by this collection site
       const ownSamplesResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
       );
       console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.quantity, // Use 'quantity' as is
-      }));
+      const ownSamples = ownResponse.data.map((sample) => {
+        // Convert logo BLOB into base64
+        let base64Logo = "";
+        if (sample.logo && sample.logo.data) {
+          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+        }
+
+        return {
+          ...sample,
+          quantity: Number(sample.quantity) || 0,
+          logo: base64Logo, // Important: Replace logo BLOB with base64 string
+        };
+      });
 
       // Fetch samples received by this collection site
       const receivedSamplesResponse = await axios.get(
@@ -188,7 +231,7 @@ const BioBankSampleArea = () => {
           throw new Error("Failed to fetch collection site names");
         }
         const data = await response.json();
-        console.log("Fetched Site Names:", data);
+
         setCollectionSiteNames(data.data);
       } catch (error) {
         console.error("Error fetching site names:", error);
@@ -227,6 +270,12 @@ const BioBankSampleArea = () => {
     )
       .then((response) => response.json())
       .then((data) => setSampleConditionNames(data));
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplepricecurrency`
+    )
+      .then((response) => response.json())
+      .then((data) => setSamplePriceCurrencyNames(data));
 
     fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`
@@ -354,7 +403,7 @@ const BioBankSampleArea = () => {
           },
         }
       );
-      console.log("Sample added successfully:", response.data);
+
 
       fetchSamples(); // This will refresh the samples list
 
@@ -441,7 +490,7 @@ const BioBankSampleArea = () => {
           Quantity,
         }
       );
-      console.log("Sample dispatched successfully:", response.data);
+
       alert("Sample dispatched successfully!");
       fetchSamples()
       setTransferDetails({
@@ -473,34 +522,34 @@ const BioBankSampleArea = () => {
     setShowTransferModal(false); // Close the modal
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-      );
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+  // const handleDelete = async () => {
+  //   try {
+  //     // Send delete request to backend
+  //     await axios.delete(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
+  //     );
+  //     console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
 
-      // Set success message
-      setSuccessMessage("Sample deleted successfully.");
+  //     // Set success message
+  //     setSuccessMessage("Sample deleted successfully.");
 
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
+  //     // Clear success message after 3 seconds
+  //     setTimeout(() => {
+  //       setSuccessMessage("");
+  //     }, 3000);
 
-      fetchSamples(); // This will refresh the samples list
+  //     fetchSamples(); // This will refresh the samples list
 
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting sample with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  };
+  //     // Close modal after deletion
+  //     setShowDeleteModal(false);
+  //     setSelectedSampleId(null);
+  //   } catch (error) {
+  //     console.error(
+  //       `Error deleting sample with ID ${selectedSampleId}:`,
+  //       error
+  //     );
+  //   }
+  // };
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -516,7 +565,7 @@ const BioBankSampleArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log("ID", id);
+
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -568,6 +617,13 @@ const BioBankSampleArea = () => {
       user_account_id: sample.user_account_id,
       logo: sample.logo
     });
+    // ✅ Add this block to properly show the country in the input field
+    const matchedCountry = countryname.find(
+      (c) =>
+        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+    );
+    setSelectedCountry(matchedCountry || null);
+    setSearchCountry(matchedCountry ? matchedCountry.name : "");
   };
 
   const handleUpdate = async (e) => {
@@ -583,7 +639,7 @@ const BioBankSampleArea = () => {
           },
         }
       );
-      console.log("Sample updated successfully:", response.data);
+
 
       fetchSamples(); // This will refresh the samples list
 
@@ -639,7 +695,7 @@ const BioBankSampleArea = () => {
 
   useEffect(() => {
     if (
-      showDeleteModal ||
+      // showDeleteModal ||
       showAddModal ||
       showEditModal ||
       showTransferModal ||
@@ -654,12 +710,13 @@ const BioBankSampleArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [
-    showDeleteModal,
+    // showDeleteModal,
     showAddModal,
     showEditModal,
     showTransferModal,
     showHistoryModal,
   ]);
+
   const resetFormData = () => {
     setFormData({
       locationids: "",
@@ -705,12 +762,16 @@ const BioBankSampleArea = () => {
     const base64String = btoa(binary);
     return `data:image/${mimeType};base64,${base64String}`;
   }
+  
   const logoHandler = (file) => {
+    const imageUrl = URL.createObjectURL(file);
+    setLogo(imageUrl);  // Update the preview with the new image URL
     setFormData((prev) => ({
       ...prev,
       logo: file,
     }));
   };
+
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -747,15 +808,25 @@ const BioBankSampleArea = () => {
             />
           </div>
 
-
           {/* Add Samples Button */}
           <div className="d-flex justify-content-end align-items-center gap-2 w-100">
             {/* Add Researcher Button */}
             <button
-              className="btn mb-3 px-4 py-2 rounded shadow-sm fw-semibold btn-primary text-white"
               onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: "#4a90e2", // soft blue
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
             >
-              <span>Add Samples</span>
+              <i className="fas fa-vial"></i> Add Sample
             </button>
           </div>
         </div>
@@ -859,6 +930,7 @@ const BioBankSampleArea = () => {
             focusPage={currentPage}
           />
         )}
+
         {/* Modal for Adding Samples */}
         {(showAddModal || showEditModal) && (
           <>
@@ -1138,24 +1210,79 @@ const BioBankSampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          <div className="form-group">
+                          {/* Country Of Collection Field */}
+                          <div className="form-group position-relative">
                             <label>Country Of Collection</label>
                             <input
                               type="text"
                               className="form-control"
                               name="CountryOfCollection"
-                              value={formData.CountryOfCollection}
-                              onChange={handleInputChange}
+                              placeholder="Type to search country"
+                              value={searchCountry}
+                              onChange={(e) => {
+                                setSearchCountry(e.target.value);
+                                setShowCountryDropdown(true);
+                                setSelectedCountry(null);
+                              }}
+                              onFocus={() => setShowCountryDropdown(true)}
                               required
                               style={{
-                                height: "45px",
                                 fontSize: "14px",
-                                backgroundColor: formData.CountryOfCollection
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
+                                height: "45px",
+                                backgroundColor: "#f0f0f0",
                                 color: "black",
                               }}
                             />
+
+                            {showCountryDropdown && (
+                              <ul
+                                className="w-100 position-absolute"
+                                style={{
+                                  zIndex: 999,
+                                  maxHeight: "200px",
+                                  overflowY: "auto",
+                                  top: "100%",
+                                  left: 0,
+                                  right: 0,
+                                  backgroundColor: "#f0f0f0",
+                                  border: "1px solid #ced4da",
+                                  borderTop: "none",
+                                  borderRadius: "0 0 4px 4px",
+                                  fontSize: "14px",
+                                  padding: 0,
+                                  margin: 0,
+                                  listStyle: "none",
+                                }}
+                              >
+                                {countryname
+                                  .filter((country) =>
+                                    searchCountry
+                                      ? country.name.toLowerCase().includes(searchCountry.toLowerCase())
+                                      : true
+                                  )
+                                  .map((country) => (
+                                    <li
+                                      key={country.id}
+                                      style={{
+                                        padding: "10px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                      // ✅ Changed from onMouseDown to onClick
+                                      onClick={() => handleSelectCountry(country)}
+                                      onMouseEnter={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#e2e2e2")
+                                      }
+                                      onMouseLeave={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                                      }
+                                    >
+                                      {country.name}
+                                    </li>
+                                  ))}
+                              </ul>
+                            )}
+
                           </div>
                           <div className="form-group">
                             <label>Price</label>
@@ -1182,22 +1309,30 @@ const BioBankSampleArea = () => {
                         <div className="col-md-2">
                           <div className="form-group">
                             <label>Sample Price Currency</label>
-                            <input
-                              type="text"
+                            <select
                               className="form-control"
                               name="SamplePriceCurrency"
                               value={formData.SamplePriceCurrency}
                               onChange={handleInputChange}
                               required
                               style={{
-                                height: "45px",
                                 fontSize: "14px",
+                                height: "45px",
                                 backgroundColor: formData.SamplePriceCurrency
                                   ? "#f0f0f0"
                                   : "#f0f0f0",
                                 color: "black",
                               }}
-                            />
+                            >
+                              <option value="" hidden>
+                                Select Sample Price Currency
+                              </option>
+                              {samplepricecurrencyNames.map((name, index) => (
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div className="form-group">
                             <label>Quantity</label>
@@ -1733,6 +1868,15 @@ const BioBankSampleArea = () => {
                                   color: "black",
                                 }}
                               />
+                              {/* Add image preview next to the file input */}
+                              {formData.logo && (
+                                <img
+                                  src={formData.logo}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{ marginLeft: "20px", borderRadius: "5px" }}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1749,7 +1893,6 @@ const BioBankSampleArea = () => {
             </div>
           </>
         )}
-
 
         {/* Modal for transfreing Samples */}
         {showTransferModal && (
@@ -1944,16 +2087,13 @@ const BioBankSampleArea = () => {
           </div>
         )}
 
-        {/* Modal for Deleting Samples */}
+        {/* Modal for Deleting Samples
         {showDeleteModal && (
           <>
-            {/* Bootstrap Backdrop with Blur */}
             <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>
-
-            {/* Modal Content */}
             <div
               className="modal show d-block"
               tabIndex="-1"
@@ -2005,7 +2145,7 @@ const BioBankSampleArea = () => {
               </div>
             </div>
           </>
-        )}
+        )} */}
 
         {/* Modal for History of Samples */}
         {showHistoryModal && (

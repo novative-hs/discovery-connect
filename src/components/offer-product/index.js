@@ -2,35 +2,53 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ErrorMessage from "@components/error-message/error";
 import ProductLoader from "@components/loader/product-loader";
-import { useGetAllSamplesQuery, useGetSampleFieldsQuery } from "src/redux/features/productApi";
+import {
+  useGetAllSamplesQuery,
+  useGetSampleFieldsQuery,
+} from "src/redux/features/productApi";
 import bg from "@assets/img/contact/contact-bg.png";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { add_cart_product } from "src/redux/features/cartSlice";
 import { useDispatch } from "react-redux";
-import { useRouter } from "next/router"; 
+import { useRouter } from "next/router";
+import { skipToken } from "@reduxjs/toolkit/query"; // add this at the top
+
+
 const OfferPopularProduct = () => {
   const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
-  const { data: sampleFieldsData, isLoading: sampleFieldsLoading, isError: sampleFieldsError } = useGetSampleFieldsQuery("sampletypematrix"); // Pass your actual table name here
-const router = useRouter();
+  const sampleType = "sampletypematrix";
+  const {
+    data: sampleFieldsData,
+    isLoading: sampleFieldsLoading,
+    isError: sampleFieldsError,
+  } = useGetSampleFieldsQuery(sampleType || skipToken);
+  
+  const router = useRouter();
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const dispatch = useDispatch();
 
-  // ✅ Always call hooks at the top
-  useEffect(() => {
-    console.log("Field",sampleFieldsData)
-    AOS.init({ duration: 500 });
-  }, []);
-
   // ✅ Filter valid categories
-  const filteredCategories = categories?.filter((category) => category.price !== null) || [];
+  const filteredCategories =
+    categories?.filter((category) => category.price !== null) || [];
   const displayedCategories = filteredCategories.slice(0, 6);
 
   // ✅ Setup Intersection Observer
   useEffect(() => {
+    AOS.init({ duration: 500 });
+    if (showModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -52,13 +70,17 @@ const router = useRouter();
         if (el) observer.unobserve(el);
       });
     };
-  }, [displayedCategories]);
+  }, [showModal,displayedCategories]);
 
   // ✅ Conditional rendering AFTER hooks
-  if (isLoading || sampleFieldsLoading) return <ProductLoader loading={isLoading || sampleFieldsLoading} />;
-  if (isError) return <ErrorMessage message="There was an error loading samples!" />;
-  if (sampleFieldsError) return <ErrorMessage message="Error loading sample fields!" />;
-  if (displayedCategories.length === 0) return <ErrorMessage message="No samples found!" />;
+  if (isLoading || sampleFieldsLoading)
+    return <ProductLoader loading={isLoading || sampleFieldsLoading} />;
+  if (isError)
+    return <ErrorMessage message="There was an error loading samples!" />;
+  if (sampleFieldsError)
+    return <ErrorMessage message="Error loading sample fields!" />;
+  if (displayedCategories.length === 0)
+    return <ErrorMessage message="No samples found!" />;
 
   const handleAddToCart = (product) => {
     dispatch(add_cart_product(product));
@@ -71,21 +93,6 @@ const router = useRouter();
         <div className="row text-center mb-4">
           <div className="col">
             <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
-            {/* {Array.isArray(sampleFieldsData) && sampleFieldsData.length > 0 && (
-  <div className="mt-2 d-flex flex-wrap gap-2">
-    {sampleFieldsData.map((item, index) => (
-      <button
-        key={index}
-        className="btn btn-outline-primary btn-sm"
-        onClick={() => router.push(`/shop?type=${encodeURIComponent(item.name)}`)}
-         
-      >
-        {item.name}
-      </button>
-    ))}
-  </div>
-)} */}
-
           </div>
         </div>
 
@@ -251,7 +258,8 @@ const router = useRouter();
                   {/* Right */}
                   <div className="col-md-8" data-aos="fade-left">
                     <div className="row g-2">
-                      {[{
+                      {[
+                        {
                           label: "Sample Type Matrix",
                           value: selectedProduct.SampleTypeMatrix,
                         },

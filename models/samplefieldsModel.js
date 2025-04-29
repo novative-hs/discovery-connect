@@ -40,6 +40,28 @@ const createSampleConditionTable = () => {
     }
   });
 };
+
+const createSamplePriceCurrencyTable = () => {
+  const createsamplepricecurrencyTable = `
+    CREATE TABLE IF NOT EXISTS samplepricecurrency (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      added_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status ENUM('active', 'inactive') DEFAULT 'active',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
+    )`;
+
+  mysqlConnection.query(createsamplepricecurrencyTable, (err, results) => {
+    if (err) {
+      console.error("Error creating Sample Price Currency table: ", err);
+    } else {
+      console.log("Sample Price Currency table created Successfully");
+    }
+  });
+};
+
 const createStorageTemperatureTable = () => {
   const createStorageTemperature = `
     CREATE TABLE IF NOT EXISTS storagetemperature(
@@ -396,7 +418,7 @@ const deleteSampleFields = (tableName, id, callback) => {
   });
 };
 
-// Function to GET ethnicity names
+// Function to GET sample field names
 const getSampleFieldsNames = (tableName, callback) => {
   // Validate table name to prevent SQL injection
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
@@ -404,7 +426,7 @@ const getSampleFieldsNames = (tableName, callback) => {
   }
 
   // Query to fetch names from the given table
-  const query = `SELECT name FROM \`${tableName}\``;
+  const query = `SELECT name FROM \`${tableName}\` WHERE status = 'active'`;
 
   mysqlConnection.query(query, (err, results) => {
     if (err) {
@@ -424,6 +446,7 @@ module.exports = {
   getSampleFieldsNames,
   createEthnicityTable,
   createSampleConditionTable,
+  createSamplePriceCurrencyTable,
   createStorageTemperatureTable,
   createContainerTypeTable,
   createQuantityUnitTable,

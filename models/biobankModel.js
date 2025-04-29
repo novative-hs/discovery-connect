@@ -14,7 +14,8 @@ const getBiobankSamples = (id, callback) => {
     SELECT *
     FROM sample
     WHERE status = "In Stock" 
-      AND is_deleted = FALSE;
+      AND is_deleted = FALSE
+      ORDER BY id DESC;
   `;
   mysqlConnection.query(query, (err, results) => {
     if (err) {
@@ -28,8 +29,6 @@ const getBiobankSamples = (id, callback) => {
 
 // Function to create a new sample
 const createBiobankSample = (data, callback) => {
-  console.log("Inserting data into database:", data);
-
   const id = uuidv4(); // Generate a secure unique ID
   const masterID = uuidv4(); // Secure Master ID
 
@@ -57,8 +56,6 @@ const createBiobankSample = (data, callback) => {
       return callback(err, null);
     }
 
-    console.log('Insert result:', results);
-
     // Now update masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
     mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
@@ -66,8 +63,20 @@ const createBiobankSample = (data, callback) => {
         console.error('Error updating masterID:', err);
         return callback(err, null);
       }
-      console.log('Sample inserted successfully with masterID:', masterID);
-      callback(null, { insertId: id, masterID: masterID });
+
+      const historyQuery = `
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)
+      `;
+
+      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+        if (err) {
+          console.error('Error inserting into sample_history:', err);
+          return callback(err, null);
+        }
+
+        callback(null, { insertId: id, masterID: masterID });
+      });
     });
   });
 };
@@ -97,12 +106,25 @@ const updateBiobankSample = (id, data, callback) => {
           logo=?
     WHERE id = ?`;
 
-  const values = [
-    room_number, freezer_id, box_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
-  ];
-
   mysqlConnection.query(query, values, (err, result) => {
-    callback(err, result);
+    if (err) {
+      console.error('Error updating sample:', err);
+      return callback(err, null);
+    }
+
+    const historyQuery = `
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)
+      `;
+
+    mysqlConnection.query(historyQuery, [id], (err, historyResult) => {
+      if (err) {
+        console.error('Error inserting into sample_history:', err);
+        return callback(err, null);
+      }
+
+      callback(null, { message: 'Sample updated and history recorded successfully.' });
+    });
   });
 };
 

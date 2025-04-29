@@ -37,7 +37,7 @@ const getAllCountries = (callback) => {
 };
 
 const createCountry = (data, callback) => {
-  console.log("Received Request Body:", data);
+  
   const { bulkData, countryname, added_by } = data || {};
 
   mysqlPool.getConnection((err, connection) => {

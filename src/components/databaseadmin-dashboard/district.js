@@ -118,7 +118,7 @@ const DistrictArea = () => {
         `${url}/district/post-district`,
         formData
       );
-      console.log("District added successfully:", response.data);
+      
       setSuccessMessage("District added successfully.");
 
       setTimeout(() => {
@@ -143,10 +143,7 @@ const DistrictArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/delete-district/${selecteddistrictnameId}`
       );
-      console.log(
-        `districtname with ID ${selecteddistrictnameId} deleted successfully.`
-      );
-
+     
       // Set success message
       setSuccessMessage("districtname deleted successfully.");
 
@@ -180,7 +177,7 @@ const DistrictArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (districtname) => {
-    console.log("data in case of update is", districtname);
+    
     setselecteddistrictnameId(districtname.id);
     setEditDistrictname(districtname); // Store the District data to edit
     setShowEditModal(true); // Show the edit modal
@@ -198,7 +195,7 @@ const DistrictArea = () => {
         `${url}/district/put-district/${selecteddistrictnameId}`,
         formData
       );
-      console.log("districtname updated successfully:", response.data);
+      
 
       fetchdistrictname();
 
@@ -263,7 +260,7 @@ const DistrictArea = () => {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Districts Uploaded Successfully:", response.data);
+        
         setSuccessMessage("Districts Uploaded Successfully");
 
         setTimeout(() => {

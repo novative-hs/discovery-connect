@@ -118,7 +118,7 @@ const CountryArea = () => {
         `${url}/country/post-country`,
         formData
       );
-      console.log("Country added successfully:", response.data);
+      
       setSuccessMessage("Country added successfully.");
 
       setTimeout(() => {
@@ -143,9 +143,7 @@ const CountryArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
       );
-      console.log(
-        `countryname with ID ${selectedcountrynameId} deleted successfully.`
-      );
+    
 
       // Set success message
       setSuccessMessage("countryname deleted successfully.");
@@ -180,7 +178,7 @@ const CountryArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (countryname) => {
-    console.log("data in case of update is", countryname);
+    
     setselectedcountrynameId(countryname.id);
     setEditCountryname(countryname); // Store the Country data to edit
     setShowEditModal(true); // Show the edit modal
@@ -198,7 +196,7 @@ const CountryArea = () => {
         `${url}/country/put-country/${selectedcountrynameId}`,
         formData
       );
-      console.log("countryname updated successfully:", response.data);
+      
 
       fetchcountryname();
 
@@ -263,7 +261,7 @@ const CountryArea = () => {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/post-country`,
           { bulkData: dataWithAddedBy }
         );
-        console.log("Countries Uploaded Successfully:", response.data);
+        
         setSuccessMessage("Countries Uploaded Successfully");
 
         setTimeout(() => {

@@ -55,7 +55,7 @@ const ResearcherArea = () => {
       fetchdistrictname();
       fetchcountryname();
       fetchOrganization();
-      console.log("account_id on city page is:", id);
+      console.log("researcher id is:", id);
     }
   }, []);
 
@@ -64,7 +64,7 @@ const ResearcherArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/researcher/get/${orgid}`
       );
-      console.log(response.data.length);
+      
       setFilteredResearchername(response.data);
       setResearchers(response.data); // Store fetched researchers in state
     } catch (error) {
@@ -146,7 +146,7 @@ const ResearcherArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    
     setCurrentStep(1);
     e.preventDefault();
 
@@ -205,7 +205,7 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log(data);
+      
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -214,7 +214,7 @@ const ResearcherArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-    console.log(id);
+    
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -270,7 +270,7 @@ const ResearcherArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      console.log("Researcher updated successfully:", response.data);
+      
     } catch (error) {
       console.error("Error updating researcher:", error);
     }
@@ -366,7 +366,8 @@ const ResearcherArea = () => {
 
           {/* Table */}
           <div className="table-responsive w-100">
-            <table className="table table-hover text-center align-middle w-auto border">
+            {/* <table className="table table-hover text-center align-middle w-auto border"> */}
+            <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[

@@ -14,6 +14,7 @@ import Organization from "./organization";
 import CollectionsiteArea from "./collectionsite";
 import EthnicityArea from "./ethnicity";
 import SampleConditionArea from "./sample-condition";
+import SamplePriceCurrencyArea from "./sample-price-currency";
 import StorageTemperatureArea from "./storage-temperature";
 import ContainerTypeArea from "./container-type";
 import QuantityUnitArea from "./quantity-unit";
@@ -35,7 +36,7 @@ const DashboardArea = () => {
       .split("; ")
       .find((row) => row.startsWith("authToken="))
       ?.split("=")[1];
-    console.log("Database admin dashboard", token);
+   
     if (!token) {
       router.push("/login"); // Redirect to login if token is missing
     }
@@ -45,7 +46,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Database Admin ID:", storedUserID); // Verify storedUserID
+     
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");
@@ -80,6 +81,8 @@ const DashboardArea = () => {
         return <EthnicityArea />;
       case "sample-condition":
         return <SampleConditionArea />;
+      case "sample-price-currency":
+        return <SamplePriceCurrencyArea />;
       case "storage-temperature":
         return <StorageTemperatureArea />;
       case "container-type":

@@ -147,7 +147,7 @@ const UpdateUser = () => {
       );
 
       notifySuccess("Researcher updated successfully");
-      console.log("Researcher updated successfully:", response.data);
+      
     } catch (error) {
       console.error("Error updating Researcher:", error);
       notifyError("Failed to update Researcher");
