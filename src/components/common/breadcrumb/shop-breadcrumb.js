@@ -18,7 +18,7 @@ const ShopBreadcrumb = () => {
                 <span className="dvdr">
                   <i className="fa-regular fa-angle-right"></i>
                 </span>
-                <span>Products</span>
+                <span>Samples</span>
               </div>
             </div>
           </div>

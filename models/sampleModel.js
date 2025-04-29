@@ -268,10 +268,20 @@ LEFT JOIN
   city c ON cs.city = c.id
 LEFT JOIN 
   district d ON cs.district = d.id
- WHERE 
+WHERE 
   s.status = 'In Stock' 
   AND s.price > 0 
-  AND (s.quantity > 0 OR s.quantity_allocated > 0);
+  AND (s.quantity > 0 OR s.quantity_allocated > 0)
+  AND NOT EXISTS (
+    SELECT 1
+    FROM cart ct
+    JOIN committeesampleapproval csa ON csa.cart_id = ct.id
+    JOIN registrationadminsampleapproval rasa ON rasa.cart_id = ct.id
+    WHERE 
+      ct.sample_id = s.id
+      AND csa.committee_status = 'Approved'
+      AND rasa.registration_admin_status = 'Accepted'
+  );
 
   `;
 
