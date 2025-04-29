@@ -246,43 +246,92 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       status: committee_status,
     };
 
-    const getEmailQuery = `
-      SELECT ua.email 
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.id = ?`;
+    // ✅ If status is "Refused", update sample quantities
+    if (committee_status.toLowerCase() === "refused") {
+      const getQuantitySql = `
+        SELECT sample_id, quantity 
+        FROM cart 
+        WHERE id = ?
+      `;
 
-    mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
-      if (emailErr) {
-        console.error("Error fetching email:", emailErr);
-      } else if (emailResults.length > 0) {
-        const userEmail = emailResults[0].email;
-        const subject = `Committee Status Update`;
-        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Cart ID: ${cartId}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
+      mysqlConnection.query(getQuantitySql, [id], (getErr, cartResults) => {
+        if (getErr) {
+          console.error("Error fetching cart item:", getErr);
+          return callback(getErr, null);
+        }
 
-        setImmediate(() => {
-          sendEmail(userEmail, subject, text, (emailSendErr) => {
-            if (emailSendErr) {
-              console.error("Failed to send email:", emailSendErr);
-            } 
+        if (cartResults.length > 0) {
+          const { sample_id, quantity } = cartResults[0];
+
+          const updateSampleSql = `
+            UPDATE sample 
+            SET quantity = quantity + ?, 
+                quantity_allocated = quantity_allocated - ? 
+            WHERE id = ?
+          `;
+
+          mysqlConnection.query(updateSampleSql, [quantity, quantity, sample_id], (updateErr, updateResults) => {
+            if (updateErr) {
+              console.error("Error updating sample quantities:", updateErr);
+              return callback(updateErr, null);
+            }
+
+            console.log("Sample quantities updated due to refusal.");
+
+            // After updating quantity, send email
+            sendUserEmail(id, committee_status, comments, callback);
           });
-        });
-      } else {
-        console.warn("No email found for user with cart ID", cartId);
-      }
-
-      // Always try to update cart Shipped status regardless of email success
-      updateCartStatusToShipping(cartId, (shippingErr) => {
-        if (shippingErr) {
-          console.error("Error in shipping status update:", shippingErr);
+        } else {
+          console.log("No cart item found to adjust sample quantities.");
+          sendUserEmail(id, committee_status, comments, callback);
         }
       });
-
-      callback(null, response);
-    });
+    } else {
+      // If not refused, directly send email
+      sendUserEmail(id, committee_status, comments, callback);
+    }
   });
 };
 
+// Helper function to fetch email and send notification
+const sendUserEmail = (id, committee_status, comments, callback) => {
+  const getEmailQuery = `
+    SELECT ua.email 
+    FROM user_account ua
+    JOIN cart c ON ua.id = c.user_id
+    WHERE c.id = ?
+  `;
+
+  mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
+    if (emailErr) {
+      console.error("Error fetching user email:", emailErr);
+      return callback(emailErr, null);
+    }
+
+    if (emailResults.length > 0) {
+      const userEmail = emailResults[0].email;
+      const subject = `Committee Status Update`;
+      const text = `Dear User, your sample request for cart ID ${id} has been updated by a committee member.\n\nStatus: ${committee_status}\nComments: ${comments}\n\nPlease check your dashboard for details.`;
+
+      sendEmail(userEmail, subject, text)
+        .then(() => {
+          console.log("Email notification sent successfully.");
+          callback(null, { message: "Committee status updated successfully!" });
+        })
+        .catch((emailError) => {
+          console.error("Failed to send email:", emailError);
+          callback(emailError, null);
+        });
+    } else {
+      console.log("No email found for user associated with this cart.");
+      callback(null, { message: "Committee status updated successfully!" });
+    }
+  });
+};
+
+
+
+  
 module.exports = {
   createcommitteesampleapprovalTable,
   insertCommitteeApproval,
