@@ -526,7 +526,7 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
     JOIN sample s ON c.sample_id = s.id  
     LEFT JOIN sampledocuments sd ON c.id = sd.cart_id 
     WHERE ca.committee_member_id = ?  
-    ORDER BY c.created_at ASC;
+    ORDER BY c.created_at DESC;
   `;
 
   mysqlConnection.query(sqlQuery, [committeeMemberId], (err, results) => {

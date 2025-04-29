@@ -224,7 +224,7 @@ WHERE s.user_id = ?
 
 GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.registration_admin_status
 
-ORDER BY s.id ASC;
+ORDER BY s.id DESC;
 
   `;
 
