@@ -598,17 +598,17 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
 
     
 
-    // Step 2: Determine new cart status based on registration admin status
-    const newCartStatus = registration_admin_status === 'Accepted'
-      ? 'Accepted'
-      : registration_admin_status === 'Rejected'
-      ? 'Rejected'
-      : null;
+    // // Step 2: Determine new cart status based on registration admin status
+    // const newCartStatus = registration_admin_status === 'Accepted'
+    //   ? 'Accepted'
+    //   : registration_admin_status === 'Rejected'
+    //   ? 'Rejected'
+    //   : null;
 
-    // Step 3: Update cart status if needed, perform concurrently if possible
-    const cartStatusUpdatePromise = newCartStatus
-      ? updateCartStatus(id, newCartStatus)
-      : Promise.resolve(null);  // If no new cart status, resolve immediately
+    // // Step 3: Update cart status if needed, perform concurrently if possible
+    // const cartStatusUpdatePromise = newCartStatus
+    //   ? updateCartStatus(id, newCartStatus)
+    //   : Promise.resolve(null);  // If no new cart status, resolve immediately
 
     // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
     const revertQuantityPromise = registration_admin_status === 'Rejected'
@@ -616,7 +616,7 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
       : Promise.resolve(null);  // Skip if not rejected
 
     // Wait for both the cart status update and quantity revert in parallel
-    await Promise.all([cartStatusUpdatePromise, revertQuantityPromise]);
+    await Promise.all([revertQuantityPromise]);
 
     // Step 4: Prepare the notification message
     const message =

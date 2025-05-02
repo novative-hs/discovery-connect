@@ -237,8 +237,6 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       return callback(err, null);
     }
 
-  
-
     const response = {
       success: true,
       message: "Committee status updated",
@@ -254,7 +252,7 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
         WHERE id = ?
       `;
 
-      mysqlConnection.query(getQuantitySql, [id], (getErr, cartResults) => {
+      mysqlConnection.query(getQuantitySql, [cartId], (getErr, cartResults) => {
         if (getErr) {
           console.error("Error fetching cart item:", getErr);
           return callback(getErr, null);
@@ -279,16 +277,16 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
             console.log("Sample quantities updated due to refusal.");
 
             // After updating quantity, send email
-            sendUserEmail(id, committee_status, comments, callback);
+            sendUserEmail(cartId, committee_status, comments, callback);
           });
         } else {
           console.log("No cart item found to adjust sample quantities.");
-          sendUserEmail(id, committee_status, comments, callback);
+          sendUserEmail(cartId, committee_status, comments, callback);
         }
       });
     } else {
       // If not refused, directly send email
-      sendUserEmail(id, committee_status, comments, callback);
+      sendUserEmail(cartId, committee_status, comments, callback);
     }
   });
 };

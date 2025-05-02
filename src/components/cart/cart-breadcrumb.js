@@ -40,7 +40,7 @@ const CartBreadcrumb = ({ title, subtitle }) => {
                   className="btn btn-primary fw-semibold fs-5 px-4 py-2 rounded-pill d-flex align-items-center"
                 >
                   <i className="fas fa-arrow-left me-2" style={{ fontSize: "18px" }}></i>
-                  <span>Continue Shopping</span>
+                  <span>Back to Samples</span>
                 </button>
               </div>
             </div>

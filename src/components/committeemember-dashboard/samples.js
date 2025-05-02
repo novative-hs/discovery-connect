@@ -14,20 +14,20 @@ const SampleArea = () => {
     console.log("Committee Member Id on sample page is:", id);
   }
   const [showModal, setShowModal] = useState(false);
-  const [actionType, setActionType] = useState(""); 
+  const [actionType, setActionType] = useState("");
   const [comment, setComment] = useState("");
-const[selectedComment,setSelectedComment]=useState("");
+  const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
-    { label: "User Name", key: "researcher_name" },
+    { label: "Researcher Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
-    { label: "Comments", key: "comments" },
+    { label: "Committee Comments", key: "comments" },
     { label: "Additional Mechanism", key: "reporting_mechanism" },
     { label: "Study Copy", key: "study_copy" },
     { label: "IRB file", key: "irb_file" },
@@ -48,13 +48,13 @@ const[selectedComment,setSelectedComment]=useState("");
   const [selectedSample, setSelectedSample] = useState(null);
 
   // Fetch samples from backend when component loads
- useEffect(() => {
-       fetchSamples();
-   }, []);
+  useEffect(() => {
+    fetchSamples();
+  }, []);
 
   const fetchSamples = async () => {
     try {
-    
+
       if (!id) {
         console.error("ID is missing.");
         return;
@@ -66,7 +66,7 @@ const[selectedComment,setSelectedComment]=useState("");
 
       // Update state
       setSamples(response.data);
-      
+
       setFilteredSamplename(response.data);
     } catch (error) {
       console.error("Error fetching samples:", error);
@@ -115,7 +115,7 @@ const[selectedComment,setSelectedComment]=useState("");
     setSelectedComment(comment); // Set the comment to be viewed
     setShowCommentModal(true); // Open the modal to display the comment
   };
-  
+
   const handleViewDocument = (fileBuffer, fileName, sampleId) => {
     if (!fileBuffer) {
       alert("No document available.");
@@ -177,47 +177,43 @@ const[selectedComment,setSelectedComment]=useState("");
   };
   const handleSubmit = async () => {
     const trimmedComment = comment.trim();
-  
+
     if (!id || !selectedSample || !trimmedComment) {
       alert("Please enter a comment.");
       return;
     }
-  
+
     const payload = {
       committee_member_id: id,
       committee_status: actionType, // "Approved" or "Refused"
       comments: trimmedComment,
     };
-  
+
     try {
-      
-  
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
         payload
       );
-  
-      
-  
+
       if (response.data.success) {
         notifySuccess(response.data.message)
         setShowModal(false);
         setComment("");
-        fetchSamples(); 
+        fetchSamples();
       } else {
         notifyError("Failed to update committee status. Please try again.")
       }
     } catch (error) {
       console.error("❌ Error updating committee status:", error);
       if (error.response?.data?.error) {
-        
+
         notifyError(`Error: ${error.response.data.error}`);
       } else {
         notifyError("Unexpected error occurred.");
       }
     }
   };
-  
+
 
   useEffect(() => {
     if (showModal) {
@@ -241,7 +237,7 @@ const[selectedComment,setSelectedComment]=useState("");
           </div>
         )}
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
-        Sample Orders & Documents
+          Sample Orders & Documents
         </h4>
         {/* <div className="profile__main-content">
                 <h4 className="profile__main-title text-capitalize">Welcome Committee Member</h4>
@@ -250,122 +246,121 @@ const[selectedComment,setSelectedComment]=useState("");
                 <h4 className="profile__main-title text-capitalize">Order Sample verify list</h4>
               </div> */}
         {/* Table */}
-    <div className="table-responsive" style={{ overflowX: 'auto' }}>
-      <table className="table table-bordered table-hover text-center align-middle">
-        <thead className="table-primary text-dark">
-          <tr>
-            {tableHeaders.map(({ label, key }, index) => (
-              <th key={index} className="px-2">
-                <div className="d-flex flex-column align-items-center">
-                  <input
-                    type="text"
-                    className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                    placeholder={`Search ${label}`}
-                    onChange={(e) => handleFilterChange(key, e.target.value)}
-                    style={{ minWidth: "100px" }}  // Adjusted minWidth
-                  />
-                  <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
-                    {label}
-                  </span>
-                </div>
-              </th>
-            ))}
-            <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody className="table-light">
-          {currentData.length > 0 ? (
-            currentData.map((sample) => (
-              <tr
-                key={sample.id}
-                onClick={() => {
-                  setSelectedSample(sample);
-                  setSampleShowModal(true);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                {tableHeaders.map(({ key }, index) => (
-                  <td
-                    key={index}
-                    className="text-center"
-                    style={{
-                      maxWidth: "150px", // Limit max width for each cell
-                      wordWrap: "break-word",
-                      whiteSpace: "normal", // Allow wrapping of long content
+        <div className="table-responsive" style={{ overflowX: 'auto' }}>
+          <table className="table table-bordered table-hover text-center align-middle">
+            <thead className="table-primary text-dark">
+              <tr>
+                {tableHeaders.map(({ label, key }, index) => (
+                  <th key={index} className="px-2">
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "100px" }}  // Adjusted minWidth
+                      />
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                        {label}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+                <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-light">
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr
+                    key={sample.id}
+                    onClick={() => {
+                      setSelectedSample(sample);
+                      setSampleShowModal(true);
                     }}
+                    style={{ cursor: "pointer" }}
                   >
-                    {["study_copy", "irb_file", "nbc_file"].includes(key) ? (
-                      <button
-                        className={`btn btn-sm ${
-                          viewedDocuments[sample.cart_id]?.[key]
-                            ? "btn-outline-primary"
-                            : "btn-outline-primary"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDocument(sample[key], key, sample.cart_id);
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className="text-center"
+                        style={{
+                          maxWidth: "150px", // Limit max width for each cell
+                          wordWrap: "break-word",
+                          whiteSpace: "normal", // Allow wrapping of long content
                         }}
                       >
-                        Download
-                        <FontAwesomeIcon icon={faDownload} size="sm" />
-                      </button>
-                    ) : key === "reporting_mechanism" && sample[key] ? (
-                      sample[key].length > 50 ? (
-                        <span
-                          className="text-primary"
-                          style={{
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedComment(sample[key]);
-                            setShowCommentModal(true);
-                          }}
-                          title={sample[key]}
+                        {["study_copy", "irb_file", "nbc_file"].includes(key) ? (
+                          <button
+                            className={`btn btn-sm ${viewedDocuments[sample.cart_id]?.[key]
+                              ? "btn-outline-primary"
+                              : "btn-outline-primary"
+                              }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDocument(sample[key], key, sample.cart_id);
+                            }}
+                          >
+                            Download
+                            <FontAwesomeIcon icon={faDownload} size="sm" />
+                          </button>
+                        ) : key === "reporting_mechanism" && sample[key] ? (
+                          sample[key].length > 50 ? (
+                            <span
+                              className="text-primary"
+                              style={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedComment(sample[key]);
+                                setShowCommentModal(true);
+                              }}
+                              title={sample[key]}
+                            >
+                              Click to View
+                            </span>
+                          ) : (
+                            <span title={sample[key]}>{sample[key]}</span>
+                          )
+                        ) : (
+                          sample[key] || "N/A"
+                        )}
+                      </td>
+                    ))}
+                    <td className="text-center">
+                      <div className="d-flex justify-content-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleOpenModal("Approved", sample)}
+                          title="Approve Sample"
                         >
-                          Click to View
-                        </span>
-                      ) : (
-                        <span title={sample[key]}>{sample[key]}</span>
-                      )
-                    ) : (
-                      sample[key] || "N/A"
-                    )}
+                          <FontAwesomeIcon icon={faCheck} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleOpenModal("Refused", sample)}
+                          title="Refuse Sample"
+                        >
+                          <FontAwesomeIcon icon={faTimes} size="sm" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="30" className="text-center">
+                    No samples available
                   </td>
-                ))}
-                <td className="text-center">
-                  <div className="d-flex justify-content-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="btn btn-outline-success btn-sm"
-                      onClick={() => handleOpenModal("Approved", sample)}
-                      title="Approve Sample"
-                    >
-                      <FontAwesomeIcon icon={faCheck} size="sm" />
-                    </button>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => handleOpenModal("Refused", sample)}
-                      title="Refuse Sample"
-                    >
-                      <FontAwesomeIcon icon={faTimes} size="sm" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="30" className="text-center">
-                No samples available
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
 
         {showModal && (
@@ -398,16 +393,18 @@ const[selectedComment,setSelectedComment]=useState("");
             </Modal.Footer>
           </Modal>
         )}
-{showCommentModal && (
-  <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
-    <Modal.Header closeButton>
-      <Modal.Title>Comment</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      <p>{selectedComment}</p>
-    </Modal.Body>
-  </Modal>
-)}
+
+        {/* Additional Mechanism Modal */}
+        {showCommentModal && (
+          <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title className="h6">Additional Mechanism by Researcher</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>{selectedComment}</p>
+            </Modal.Body>
+          </Modal>
+        )}
 
         {/* Pagination */}
         {totalPages >= 0 && (

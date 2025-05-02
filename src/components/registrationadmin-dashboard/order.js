@@ -60,7 +60,7 @@ const OrderPage = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder`
       );
-      
+
       setOrders(response.data);
       setAllOrders(response.data); // Save original data
     } catch (error) {
@@ -250,33 +250,27 @@ const OrderPage = () => {
                       <td>{order.order_status}</td>
                       <td>{order.registration_admin_status}</td>
                       <td>
-                        {order.order_status === "Rejected" &&
-                        order.registration_admin_status === "Rejected" &&
-                        order.scientific_committee_status === "Refused"
-                          ? "Refused"
-                          : order.registration_admin_status === "Rejected"
+                        {order.registration_admin_status === "Rejected"
                           ? "No further processing"
-                          : order.scientific_committee_status === null ||
-                            order.scientific_committee_status === ""
-                          ? "Awaiting Admin Action"
-                          : order.scientific_committee_status ||
-                            "Awaiting Review"}
+                          : order.registration_admin_status === "Pending"
+                            ? "Pending Admin Approval"
+                            : order.scientific_committee_status === "Refused"
+                              ? "Refused"
+                              : order.scientific_committee_status
+                                ? order.scientific_committee_status
+                                : "Awaiting Committee Forwarding"}
                       </td>
-
                       <td>
-  {order.ethical_committee_status === "Refused"
-    ? "Refused"
-    : order.registration_admin_status === "Rejected"
-    ? "No further processing"
-    : order.ethical_committee_status === null
-    ? "Not Sent"
-    : order.ethical_committee_status === ""
-    ? "Awaiting Admin Action"
-    : order.ethical_committee_status || "Awaiting Review"}
-</td>
-
-
-
+                        {order.registration_admin_status === "Rejected"
+                          ? "No further processing"
+                          : order.registration_admin_status === "Pending"
+                            ? "Pending Admin Approval"
+                            : order.ethical_committee_status === "Refused"
+                              ? "Refused"
+                              : order.ethical_committee_status
+                                ? order.ethical_committee_status
+                                : "Awaiting Committee Forwarding"}
+                      </td>
                       <td
                         onClick={(e) => {
                           e.stopPropagation();
@@ -594,10 +588,6 @@ const OrderPage = () => {
                     <div className="col-md-5 text-center">
                       <div className="mt-3 p-2 bg-light rounded text-start">
                         <p>
-                          <strong>Price:</strong> {selectedSample.price}{" "}
-                          {selectedSample.SamplePriceCurrency}
-                        </p>
-                        <p>
                           <strong>Quantity:</strong> {selectedSample.quantity}
                         </p>
                         <p>
@@ -607,10 +597,6 @@ const OrderPage = () => {
                         <p>
                           <strong>Country of Collection:</strong>{" "}
                           {selectedSample.CountryofCollection}
-                        </p>
-                        <p>
-                          <strong>Order Status:</strong>{" "}
-                          {selectedSample.order_status}
                         </p>
                         <p>
                           <strong>Age:</strong> {selectedSample.age} years |{" "}

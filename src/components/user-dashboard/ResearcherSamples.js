@@ -60,10 +60,10 @@ const SampleArea = () => {
     {
       label: "Committee Member Status",
       key: "committee_status",
-      render: (value) => (value === null ? "Waiting for admin action" : value),
+      render: (value) => (value === null ? "Pending Admin Action" : value),
     },
   ];
-  
+
   const fieldsToShowInOrder = [
     { label: "Sample Name", key: "samplename" },
     // { label: "Price", key: "price" },
@@ -113,7 +113,7 @@ const SampleArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
       );
-      
+
 
       if (response.data.error) {
         setError(response.data.error); // Handle empty or error response
@@ -173,7 +173,7 @@ const SampleArea = () => {
     }
   };
   const openModal = (sample) => {
-    
+
     setSelectedSample(sample);
     setShowModal(true);
   };
@@ -247,9 +247,8 @@ const SampleArea = () => {
                           return (
                             <td key={index}>
                               {sample.price
-                                ? `${sample.price} ${
-                                    sample.SamplePriceCurrency || ""
-                                  }`
+                                ? `${sample.price} ${sample.SamplePriceCurrency || ""
+                                }`
                                 : "N/A"}
                             </td>
                           );
@@ -260,9 +259,8 @@ const SampleArea = () => {
                           return (
                             <td key={index}>
                               {sample.totalpayment
-                                ? `${sample.totalpayment} ${
-                                    sample.SamplePriceCurrency || ""
-                                  }`
+                                ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""
+                                }`
                                 : "N/A"}
                             </td>
                           );
@@ -272,16 +270,21 @@ const SampleArea = () => {
                         if (key === "committee_status") {
                           let displayValue = sample[key];
 
-                          if (sample.registration_admin_status === "Rejected") {
-                            displayValue = "No further processing";
-                          }   if (sample.registration_admin_status === "Rejected" && sample.committee_status==="rejected" && sample.order_status==="Rejected") {
-                            displayValue = "Rejected";
-                          } 
-                          else if (
-                            displayValue === null ||
-                            displayValue === undefined
+                          if (
+                            sample.registration_admin_status === "Rejected" &&
+                            sample.committee_status === "rejected" &&
+                            sample.order_status === "Rejected"
                           ) {
-                            displayValue = "Waiting for admin action";
+                            displayValue = "Rejected";
+                          } else if (sample.registration_admin_status === "Rejected") {
+                            displayValue = "No further processing";
+                          } else if (
+                            sample.registration_admin_status === "Accepted" &&
+                            (displayValue === null || displayValue === undefined)
+                          ) {
+                            displayValue = "Awaiting Admin to Forward to Committee";
+                          } else if (displayValue === null || displayValue === undefined) {
+                            displayValue = "Pending Admin Action";
                           }
 
                           return <td key={index}>{displayValue}</td>;
@@ -306,7 +309,7 @@ const SampleArea = () => {
                             </td>
                           );
                         }
-                        
+
                         // 🔁 Default render for other fields
                         return (
                           <td key={index}>
