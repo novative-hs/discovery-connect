@@ -107,24 +107,54 @@ const deleteSingleCartItem = (req, res) => {
     res.status(200).json({ message: "Cart Item deleted successfully" });
   });
 };
-const getAllOrder=(req,res)=>{
-  cartModel.getAllOrder((err,results)=>{
-    if(err){
-      return res.status(500).json({error:"Error fetching cart list"})
-    }
-    res.status(200).json(results);
-  })
-}
-const getAllOrderByCommittee = (req, res) => {
-  const { id } = req.params; // ✅ Extract from params
+const getAllOrder = (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
 
-  cartModel.getAllOrderByCommittee(id, (err, results) => {
+  cartModel.getAllOrder(page, limit, searchField, searchValue, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching cart list" });
     }
-    res.status(200).json(results);
+    const { results: data, totalCount } = result;
+
+    res.status(200).json({
+      data,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      pageSize: limit,
+      totalCount,
+    });
+    
   });
 };
+
+const getAllOrderByCommittee = (req, res) => {
+  const { id } = req.params; // committee_member_id
+  const { page = 1, pageSize = 10, searchField, searchValue } = req.query;
+
+  cartModel.getAllOrderByCommittee(
+    id,
+    parseInt(page),
+    parseInt(pageSize),
+    searchField,
+    searchValue,
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching cart list" });
+      }
+      // Return paginated data and total count
+      res.status(200).json({
+        results: result.results,
+        totalCount: result.totalCount,
+        currentPage: parseInt(page),
+        pageSize: parseInt(pageSize),
+      });
+    }
+  );
+};
+
 const getAllOrderByOrderPacking = (req, res) => {
   cartModel.getAllOrderByOrderPacking((err, results) => {
     if (err) {

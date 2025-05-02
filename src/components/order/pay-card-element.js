@@ -92,7 +92,6 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
       }
 
       const orderPlaced = await handleSubmit(response.data.insertedId);
-      if (orderPlaced) notifySuccess("Order placed successfully! Now your cart is empty");
     } catch (error) {
       notifyError(error.response?.data?.message || "An unexpected error occurred.");
     }

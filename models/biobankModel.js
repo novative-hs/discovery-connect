@@ -2,27 +2,59 @@ const mysqlConnection = require("../config/db");
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
-// Function to get all samples with 'In Stock' status
-const getBiobankSamples = (id, callback) => {
-  // Validate and parse `id`
-  const user_account_id = parseInt(id);
-  if (isNaN(user_account_id)) {
-    console.error("Invalid user_account_id:", id);
-    return callback(new Error("Invalid user_account_id"), null);
-  }
-  const query = `
-    SELECT *
+const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
+  const pageInt = parseInt(page, 10) || 1;
+  const pageSizeInt = parseInt(pageSize, 10) || 10;
+  const offset = (pageInt - 1) * pageSizeInt;
+
+  // Start building base query
+  let baseQuery = `
     FROM sample
-    WHERE status = "In Stock" 
+    WHERE status = "In Stock"
       AND is_deleted = FALSE
-      ORDER BY id DESC;
   `;
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return callback(err, null);
-    }
-    callback(null, results);
+
+  const queryParams = [];
+
+  // Add price filter if requested
+  if (priceFilter === "priceAdded") {
+    baseQuery += ` AND price IS NOT NULL AND price > 0 `;
+  } else if (priceFilter === "priceNotAdded") {
+    baseQuery += ` AND (price IS NULL OR price = 0) `;
+  }
+
+  // Add search filter if provided
+  if (searchField && searchValue) {
+    baseQuery += ` AND ?? LIKE ? `;
+    queryParams.push(searchField, `%${searchValue}%`);
+  }
+
+  // Main query with pagination
+  const dataQuery = `
+    SELECT *
+    ${baseQuery}
+    ORDER BY id DESC
+    LIMIT ? OFFSET ?;
+  `;
+  // Add pagination values to parameters
+  queryParams.push(pageSizeInt, offset);
+
+  mysqlConnection.query(dataQuery, queryParams, (err, results) => {
+    if (err) return callback(err);
+
+    // Count query (without pagination)
+    const countQuery = `SELECT COUNT(*) AS totalCount ${baseQuery}`;
+
+    mysqlConnection.query(countQuery, queryParams.slice(0, -2), (err, countResults) => {
+      if (err) return callback(err);
+
+      const totalCount = countResults[0].totalCount;
+
+      callback(null, {
+        results,
+        totalCount,
+      });
+    });
   });
 };
 
@@ -43,20 +75,20 @@ const createBiobankSample = (data, callback) => {
     box_id = parts[2] || null;
   }
 
-  const query = `
+  const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status,logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
-  mysqlConnection.query(query, [
+  mysqlConnection.query(insertQuery, [
     id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
-      console.error('Error in MySQL query:', err);
+      console.error('Error inserting into sample:', err);
       return callback(err, null);
     }
 
-    // Now update masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
     mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
       if (err) {
@@ -75,15 +107,17 @@ const createBiobankSample = (data, callback) => {
           return callback(err, null);
         }
 
+        // 🟰 Now everything is successful
         callback(null, { insertId: id, masterID: masterID });
       });
     });
   });
 };
 
+
 // Function to update a sample by its ID
 const updateBiobankSample = (id, data, callback) => {
-  console.log(data.status);
+  console.log('Updating sample with status:', data.status);
 
   let room_number = null;
   let freezer_id = null;
@@ -95,16 +129,27 @@ const updateBiobankSample = (id, data, callback) => {
     freezer_id = parts[1] || null;
     box_id = parts[2] || null;
   }
+
   const query = `
     UPDATE sample
-    SET  room_number = ?, freezer_id = ?, box_id = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+    SET room_number = ?, freezer_id = ?, box_id = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
         storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, price = ?, SamplePriceCurrency = ?,
-         quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, 
-         InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, 
-         ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?,
-          TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer=?, status = ?,
-          logo=?
-    WHERE id = ?`;
+        quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, 
+        InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, 
+        ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?,
+        TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
+    WHERE id = ?
+  `;
+
+  const values = [
+    room_number, freezer_id, box_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition,
+    data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
+    data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse,
+    data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult,
+    data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer,
+    data.status, data.logo, id
+  ];
 
   mysqlConnection.query(query, values, (err, result) => {
     if (err) {
@@ -113,9 +158,9 @@ const updateBiobankSample = (id, data, callback) => {
     }
 
     const historyQuery = `
-        INSERT INTO sample_history (sample_id)
-        VALUES (?)
-      `;
+      INSERT INTO sample_history (sample_id)
+      VALUES (?)
+    `;
 
     mysqlConnection.query(historyQuery, [id], (err, historyResult) => {
       if (err) {
@@ -123,10 +168,12 @@ const updateBiobankSample = (id, data, callback) => {
         return callback(err, null);
       }
 
+      // 🟰 Now everything is successful
       callback(null, { message: 'Sample updated and history recorded successfully.' });
     });
   });
 };
+
 
 module.exports = {
   getBiobankSamples,

@@ -6,8 +6,7 @@ import ProductGridItems from "./prd-grid-items";
 import ProductListItems from "./prd-list-items";
 
 const ShopArea = ({ products, all_products, shortHandler }) => {
-  const [showingGridItems, setShowingGridItems] = useState(0);
-  const [showingListItems, setShowingListItems] = useState(0);
+  
   const [tabActive, setActiveTab] = useState("grid");
   const id = sessionStorage.getItem("userID");
 
@@ -17,7 +16,18 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const [selectedGender, setSelectedGender] = useState(null); // Ensure this is initialized to null
   const [selectedSampleType, setSelectedSampleType] = useState([]); // Initialize as an empty array
   const [selectedSampleName, setSelectedSampleName] = useState([]); // Initialize as an empty array
-
+  const [showingGridItems, setShowingGridItems] = useState({
+    start: 0,
+    end: 0,
+    total: 0,
+  });
+  
+  const [showingListItems, setShowingListItems] = useState({
+    start: 0,
+    end: 0,
+    total: 0,
+  });
+  
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -87,12 +97,12 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
         <div className="shop__top mb-50">
           <div className="row align-items-center">
             <div className="col-lg-6 col-md-5">
-              <ShowingResult
-                show={
-                  tabActive === "grid" ? showingGridItems : showingListItems
-                }
-                total={filteredProducts.length}
-              />
+            <ShowingResult
+  start={tabActive === "grid" ? showingGridItems.start : showingListItems.start}
+  end={tabActive === "grid" ? showingGridItems.end : showingListItems.end}
+  total={tabActive === "grid" ? showingGridItems.total : showingListItems.total}
+/>
+
             </div>
 
             {/* Search Input Field */}

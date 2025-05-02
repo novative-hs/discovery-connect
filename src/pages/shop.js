@@ -18,7 +18,15 @@ export default function Shop({ query }) {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath);
+  const page = Number(router.query.page) || 1;
+const queryParams = {
+  ...router.query,
+  limit: 20,
+  offset: (page - 1) * 20,
+};
+
+const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(queryParams);
+
   const [shortValue, setShortValue] = useState("");
 const [activeTab, setActiveTab] = useState("order-info");
   // Check sessionStorage on mount

@@ -11,7 +11,6 @@ import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
 
-
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
@@ -52,7 +51,10 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -96,14 +98,14 @@ const BioBankSampleArea = () => {
     TestSystemManufacturer: "",
     status: "In Stock",
     user_account_id: id,
-    logo: ""
+    logo: "",
   });
   const [logo, setLogo] = useState("");
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [filter, setFilter] = useState(""); // State for dropdown selection
-  const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
+  const [samples, setSamples] = useState([]); // all fetched (combined) samples
+  const [filtertotal, setfiltertotal] = useState(null);
+  const [filteredSamples, setFilteredSamples] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [collectionSiteNames, setCollectionSiteNames] = useState([]);
   // Sample Dropdown Fields
@@ -124,12 +126,13 @@ const BioBankSampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] =
     useState([]);
-  const [filteredSamplename, setFilteredSamplename] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
-  // Calculate total pages
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
-
+  const [searchField, setSearchField] = useState(null);
+  const [searchValue, setSearchValue] = useState(null);
+  const [priceFilter, setPriceFilter] = useState(null);
+  
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -148,7 +151,6 @@ const BioBankSampleArea = () => {
     setSearchCountry(country.name);
     setShowCountryDropdown(false);
   };
-
 
   // Fetch countries from backend
   useEffect(() => {
@@ -174,44 +176,85 @@ const BioBankSampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
+
   useEffect(() => {
     const storedUser = getsessionStorage("user");
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
+    fetchSamples(currentPage, itemsPerPage, {
+      priceFilter,
+      searchField,
+      searchValue,
+    });
+  }, [currentPage, priceFilter, searchField, searchValue]);
+  
 
-  const fetchSamples = async () => {
+  // Fetch samples from the backend
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
-      console.log("Fetching samples...");
-
-      // Fetch samples added by this collection site
-      const ownSamplesResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
-      );
-      console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.quantity, // Use 'quantity' as is
-      }));
-
-      // Fetch samples received by this collection site
-      const receivedSamplesResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
-      );
-      console.log("Received samples:", receivedSamplesResponse.data);
-      const receivedSamples = receivedSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.Quantity, // Map 'Quantity' to 'quantity'
-      }));
-
-      // Combine both responses
-      const combinedSamples = [...ownSamples, ...receivedSamples];
-      setFilteredSamples(combinedSamples)
-      // Update state with the combined list
-      setSamples(combinedSamples);
+      const { priceFilter, searchField, searchValue } = filters;
+  
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+  
+      if (priceFilter) {
+        url += `&priceFilter=${priceFilter}`;
+      }
+  
+      if (searchField && searchValue) {
+        url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
+  
+      const response = await axios.get(url);
+  
+      const { samples, totalCount } = response.data;
+      setSamples(samples);
+      setFilteredSamples(samples); // Ensure filteredSamples are updated
+      setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
+      setfiltertotal(Math.ceil(totalCount / pageSize))
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
+  
+  
+
+  // Get the current data for the table (pagination of data)
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages); // Adjust down if needed
+    }
+  }, [totalPages]);
+
+  const handleFilterChange = (field, value) => {
+    const trimmedValue = value.trim().toLowerCase();
+    setSearchField(field);
+    setSearchValue(trimmedValue);
+    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
+  };
+  
+  
+
+  // Pagination logic - Make sure this handles the transition correctly
+  const handlePageChange = (event) => {
+    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
+    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+  };
+  
+  const handleScroll = (e) => {
+    const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
+  
+    if (isVerticalScroll) {
+      const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+  
+      if (bottom && currentPage < totalPages) {
+        setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
+        fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
+      }
+    }
+  };
+  
+
+  // The actual current data that will be shown in the table
+  const currentData = filteredSamples;
+
 
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -234,22 +277,6 @@ const BioBankSampleArea = () => {
   }, [selectedSampleId]);
 
   // Sample Price Filter
-  useEffect(() => {
-    if (samples.length > 0) {
-      // Ensure samples are fetched
-      if (filter === "priceAdded") {
-        setFilteredSamples(
-          samples.filter((sample) => sample.price && sample.price > 0)
-        );
-      } else if (filter === "priceNotAdded") {
-        setFilteredSamples(
-          samples.filter((sample) => !sample.price || sample.price === null)
-        );
-      } else {
-        setFilteredSamples(samples);
-      }
-    }
-  }, [filter, samples]);
 
   // Sample fields Dropdown
   useEffect(() => {
@@ -326,44 +353,7 @@ const BioBankSampleArea = () => {
       .then((data) => setTestSystemManufacturerNames(data));
   }, []);
 
-  useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamples.length / itemsPerPage)
-    );
-    setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamples]);
-
-  // Get the current data for the table
-  const currentData = filteredSamples.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
-
   // Filter the researchers list
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
-    } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-    }
-
-    setFilteredSamples(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -380,7 +370,6 @@ const BioBankSampleArea = () => {
     }));
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -395,9 +384,8 @@ const BioBankSampleArea = () => {
           },
         }
       );
-
-
-      fetchSamples(); // This will refresh the samples list
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
 
       setSuccessMessage("Sample added successfully.");
 
@@ -438,7 +426,7 @@ const BioBankSampleArea = () => {
         TestSystemManufacturer: "",
         status: "",
         user_account_id: id,
-        logo: ""
+        logo: "",
       });
 
       setShowAddModal(false); // Close modal after submission
@@ -484,7 +472,8 @@ const BioBankSampleArea = () => {
       );
 
       alert("Sample dispatched successfully!");
-      fetchSamples()
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
       setTransferDetails({
         TransferTo: "",
         dispatchVia: "",
@@ -514,13 +503,12 @@ const BioBankSampleArea = () => {
     setShowTransferModal(false); // Close the modal
   };
 
-  // const handleDelete = async () => {
-  //   try {
-  //     // Send delete request to backend
-  //     await axios.delete(
-  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-  //     );
-  //     console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+  const handleDelete = async () => {
+    try {
+      // Send delete request to backend
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
+      );
 
   //     // Set success message
   //     setSuccessMessage("Sample deleted successfully.");
@@ -530,7 +518,8 @@ const BioBankSampleArea = () => {
   //       setSuccessMessage("");
   //     }, 3000);
 
-  //     fetchSamples(); // This will refresh the samples list
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
 
   //     // Close modal after deletion
   //     setShowDeleteModal(false);
@@ -557,7 +546,6 @@ const BioBankSampleArea = () => {
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
@@ -607,12 +595,11 @@ const BioBankSampleArea = () => {
       TestSystemManufacturer: sample.TestSystemManufacturer,
       status: sample.status,
       user_account_id: sample.user_account_id,
-      logo: sample.logo
+      logo: sample.logo,
     });
     // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
-      (c) =>
-        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+      (c) => c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
     );
     setSelectedCountry(matchedCountry || null);
     setSearchCountry(matchedCountry ? matchedCountry.name : "");
@@ -632,9 +619,8 @@ const BioBankSampleArea = () => {
         }
       );
 
-
       fetchSamples(); // This will refresh the samples list
-
+      setCurrentPage(1);
       setShowEditModal(false);
       setSuccessMessage("Sample updated successfully.");
 
@@ -671,7 +657,7 @@ const BioBankSampleArea = () => {
         TestSystemManufacturer: "",
         status: "In Stock",
         user_account_id: id,
-        logo: ""
+        logo: "",
       });
 
       setTimeout(() => {
@@ -740,10 +726,9 @@ const BioBankSampleArea = () => {
       TestSystemManufacturer: "",
       status: "In Stock",
       user_account_id: id,
-      logo: ""
+      logo: "",
     });
-
-  }
+  };
   function bufferToBase64(bufferObj, mimeType) {
     if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
 
@@ -773,31 +758,33 @@ const BioBankSampleArea = () => {
             {successMessage}
           </div>
         )}
-        <div
-          className="text-danger fw-bold"
-          style={{ marginTop: "-40px" }}>
-          <h6>Note: Click on Edit Icon to Add Price and Currency for Sample.</h6>
-
+        <div className="text-danger fw-bold" style={{ marginTop: "-40px" }}>
+          <h6>
+            Note: Click on Edit Icon to Add Price and Currency for Sample.
+          </h6>
         </div>
 
         {/* Header Section with Filter and Button */}
         <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
           {/* Filter Dropdown */}
 
-
           <div className="d-flex align-items-center gap-2">
             <label className="fw-bold">Filter:</label>
 
             <NiceSelect
-              options={[
-                { value: "", text: "All" },
-                { value: "priceAdded", text: "Price Added" },
-                { value: "priceNotAdded", text: "Price Not Added" },
-              ]}
-              defaultCurrent={0}
-              onChange={(item) => setFilter(item.value)}
-              name="filter-by-price"
-            />
+  options={[
+    { value: "", text: "All" },
+    { value: "priceAdded", text: "Price Added" },
+    { value: "priceNotAdded", text: "Price Not Added" },
+  ]}
+  defaultCurrent={0}
+  onChange={(item) => {
+    setPriceFilter(item.value); // set server-side price filter
+    setCurrentPage(1); // reset to first page
+  }}
+  name="filter-by-price"
+/>
+
           </div>
 
           {/* Add Samples Button */}
@@ -824,13 +811,19 @@ const BioBankSampleArea = () => {
         </div>
 
         {/* Table */}
-        <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto border">
+        <div
+          onScroll={handleScroll}
+          className="table-responsive"
+          style={{ overflowX: "auto" }}
+        >
+          <table
+            className="table table-bordered table-hover text-center align-middle"
+            style={{ minWidth: "1000px" }}
+          >
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-
                     <div className="d-flex flex-column align-items-center">
                       <input
                         type="text"
@@ -844,7 +837,6 @@ const BioBankSampleArea = () => {
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>
-
                     </div>
                   </th>
                 ))}
@@ -860,7 +852,11 @@ const BioBankSampleArea = () => {
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
-                        className={key === "price" ? "text-end" : "text-center text-truncate"}
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : "text-center text-truncate"
+                        }
                         style={{ maxWidth: "150px" }}
                       >
                         {sample[key] || "N/A"}
@@ -875,16 +871,6 @@ const BioBankSampleArea = () => {
                         >
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>
-                        {/* <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowDeleteModal(true);
-                          }}
-                          title="Delete"
-                        >
-                          <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button> */}
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => handleTransferClick(sample)}
@@ -919,7 +905,7 @@ const BioBankSampleArea = () => {
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage}
+            focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
         )}
 
@@ -1249,7 +1235,9 @@ const BioBankSampleArea = () => {
                                 {countryname
                                   .filter((country) =>
                                     searchCountry
-                                      ? country.name.toLowerCase().includes(searchCountry.toLowerCase())
+                                      ? country.name
+                                          .toLowerCase()
+                                          .includes(searchCountry.toLowerCase())
                                       : true
                                   )
                                   .map((country) => (
@@ -1261,12 +1249,16 @@ const BioBankSampleArea = () => {
                                         backgroundColor: "#f0f0f0",
                                       }}
                                       // ✅ Changed from onMouseDown to onClick
-                                      onClick={() => handleSelectCountry(country)}
+                                      onClick={() =>
+                                        handleSelectCountry(country)
+                                      }
                                       onMouseEnter={(e) =>
-                                        (e.currentTarget.style.backgroundColor = "#e2e2e2")
+                                        (e.currentTarget.style.backgroundColor =
+                                          "#e2e2e2")
                                       }
                                       onMouseLeave={(e) =>
-                                        (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                                        (e.currentTarget.style.backgroundColor =
+                                          "#f0f0f0")
                                       }
                                     >
                                       {country.name}
@@ -1274,7 +1266,6 @@ const BioBankSampleArea = () => {
                                   ))}
                               </ul>
                             )}
-
                           </div>
                           <div className="form-group">
                             <label>Price</label>
@@ -1292,7 +1283,6 @@ const BioBankSampleArea = () => {
                                   ? "#f0f0f0"
                                   : "#f0f0f0",
                                 color: "black",
-
                               }}
                             />
                           </div>
