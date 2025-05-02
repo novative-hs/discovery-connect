@@ -378,115 +378,232 @@ const updateCart = (id, data, callback, res) => {
   });
 };
 
-const getAllOrder = (callback, res) => {
+const getAllOrder = (page, pageSize, searchField, searchValue,callback) => {
+
+  const offset = (page - 1) * pageSize;
+
+  
+
+  let whereClause = "";
+  const queryParams = [];
+
+  // Add WHERE clause if search field/value provided and valid
+  if (searchField && searchValue) {
+    let dbField = searchField;
+  
+    if (searchField === "order_id") {
+      dbField = "c.id";
+    } else if (searchField === "researcher_name") {
+      dbField = "r.ResearcherName";
+    }
+    else if (searchField === "organization_name") {
+      dbField = " org.OrganizationName";
+    }
+    else if (searchField === "scientific_committee_status") {
+      dbField = `(SELECT 
+                    CASE 
+                      WHEN NOT EXISTS (
+                          SELECT 1 FROM committeesampleapproval ca
+                          JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                          WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
+                      ) AND EXISTS (
+                          SELECT 1 FROM committeesampleapproval ca
+                          JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                          WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
+                      ) THEN 'Not Sent'
+                      WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+                      WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
+                      WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+                      ELSE NULL
+                    END
+                  FROM committeesampleapproval ca 
+                  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                  WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific')`;
+    }
+    else if (searchField === "ethical_committee_status") {
+      dbField = `(SELECT 
+                    CASE 
+                      WHEN NOT EXISTS (
+                          SELECT 1 FROM committeesampleapproval ca
+                          JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                          WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
+                      ) AND EXISTS (
+                          SELECT 1 FROM committeesampleapproval ca
+                          JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                          WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
+                      ) THEN 'Not Sent'
+                      WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+                      WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
+                      WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+                      ELSE NULL
+                    END
+                  FROM committeesampleapproval ca 
+                  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                  WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical')`;
+    }
+        
+  
+    whereClause = `WHERE ${dbField} LIKE ?`;
+    queryParams.push(`%${searchValue}%`);
+  }
+  
+  
   const sqlQuery = `
-    SELECT 
-        c.id AS order_id, 
-        c.user_id, 
-        u.email AS user_email,
-        r.ResearcherName AS researcher_name, 
-        org.OrganizationName AS organization_name,
-        c.sample_id, 
-        s.samplename, 
-        s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-        s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-        s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-        s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
-        s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
-        s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
-        s.TestSystemManufacturer, s.SamplePriceCurrency,
-        c.price, 
-        c.quantity,  
-        c.totalpayment, 
-        c.order_status,
-        c.created_at,
-        IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
+  SELECT 
+      c.id AS order_id, 
+      c.user_id, 
+      u.email AS user_email,
+      r.ResearcherName AS researcher_name, 
+      org.OrganizationName AS organization_name,
+      c.sample_id, 
+      s.samplename, 
+      s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
+      s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+      s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
+      s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
+      s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
+      s.TestSystemManufacturer, s.SamplePriceCurrency,
+      c.price, 
+      c.quantity,  
+      c.totalpayment, 
+      c.order_status,
+      c.created_at,
+      IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
 
-        -- ✅ Ethical Committee Status (with "Not Sent" condition)
-        (SELECT 
-            CASE 
-                WHEN NOT EXISTS (
-                    SELECT 1 FROM committeesampleapproval ca
-                    JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-                    WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
-                ) AND EXISTS (
-                    SELECT 1 FROM committeesampleapproval ca
-                    JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-                    WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
-                ) THEN 'Not Sent'
-                WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
-                WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
-                WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
-                ELSE NULL
-            END
-         FROM committeesampleapproval ca 
-         JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-         WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
-        ) AS ethical_committee_status,
+      -- ✅ Ethical Committee Status
+      (SELECT 
+          CASE 
+              WHEN NOT EXISTS (
+                  SELECT 1 FROM committeesampleapproval ca
+                  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                  WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
+              ) AND EXISTS (
+                  SELECT 1 FROM committeesampleapproval ca
+                  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                  WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
+              ) THEN 'Not Sent'
+              WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+              WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
+              WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+              ELSE NULL
+          END
+       FROM committeesampleapproval ca 
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
+      ) AS ethical_committee_status,
 
-        -- ✅ Scientific Committee Status (Handle the case where cart is not sent to Scientific)
-         (SELECT 
-            CASE 
-                WHEN NOT EXISTS (
-                    SELECT 1 FROM committeesampleapproval ca
-                    JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-                    WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
-                ) AND EXISTS (
-                    SELECT 1 FROM committeesampleapproval ca
-                    JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-                    WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
-                ) THEN 'Not Sent'
-                WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
-                WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
-                WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
-                ELSE NULL
-            END
-         FROM committeesampleapproval ca 
-         JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-         WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
-        ) AS scientific_committee_status,
+      -- ✅ Scientific Committee Status
+       (SELECT 
+          CASE 
+              WHEN NOT EXISTS (
+                  SELECT 1 FROM committeesampleapproval ca
+                  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                  WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
+              ) AND EXISTS (
+                  SELECT 1 FROM committeesampleapproval ca
+                  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+                  WHERE ca.cart_id = c.id AND cm.committeetype = 'Ethical'
+              ) THEN 'Not Sent'
+              WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+              WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
+              WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+              ELSE NULL
+          END
+       FROM committeesampleapproval ca 
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = c.id AND cm.committeetype = 'Scientific'
+      ) AS scientific_committee_status,
 
-        -- ✅ Collect all comments from committee members (Both Ethical & Scientific)
-        (SELECT GROUP_CONCAT(
-              DISTINCT CONCAT(cm.CommitteeMemberName, ' (', cm.committeetype, ') : ', ca.comments) 
-              SEPARATOR ' | ')
-         FROM committeesampleapproval ca
-         JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-         WHERE ca.cart_id = c.id
-        ) AS committee_comments
+      -- ✅ Committee Comments
+      (SELECT GROUP_CONCAT(
+            DISTINCT CONCAT(cm.CommitteeMemberName, ' (', cm.committeetype, ') : ', ca.comments) 
+            SEPARATOR ' | ')
+       FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = c.id
+      ) AS committee_comments
 
+  FROM cart c
+  JOIN user_account u ON c.user_id = u.id
+  LEFT JOIN researcher r ON u.id = r.user_account_id 
+  LEFT JOIN organization org ON r.nameofOrganization = org.id
+  JOIN sample s ON c.sample_id = s.id
+  LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
+  ${whereClause}
+  ORDER BY c.created_at DESC
+  LIMIT ? OFFSET ?`;
+  queryParams.push(parseInt(pageSize), parseInt(offset));
+
+  const countQuery = `
+    SELECT COUNT(*) AS totalCount
     FROM cart c
     JOIN user_account u ON c.user_id = u.id
     LEFT JOIN researcher r ON u.id = r.user_account_id 
     LEFT JOIN organization org ON r.nameofOrganization = org.id
     JOIN sample s ON c.sample_id = s.id
     LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
+    ${whereClause}
+  `;
 
-    ORDER BY c.created_at DESC`;
-
-  mysqlConnection.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching cart data:", err);
-      callback(err, null);
+  mysqlConnection.query(countQuery, queryParams, (countErr, countResults) => {
+    if (countErr) {
+      console.error("Error getting total count:", countErr);
+      callback(countErr, null);
     } else {
-      // Check each order and update status if applicable
-      results.forEach(order => {
-        // Call the updateCartStatusToCompleted function for each order
-        updateCartStatusToCompleted(order.order_id, (updateErr, updateResult) => {
-          if (updateErr) {
-            console.error(`Error updating status for order ${order.order_id}:`, updateErr);
-          } 
-        });
-      });
+      const totalCount = countResults[0].totalCount;
 
-      callback(null, results);
+      mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
+        if (err) {
+          console.error("Error fetching cart data:", err);
+          callback(err, null);
+        } else {
+          results.forEach(order => {
+            updateCartStatusToCompleted(order.order_id, (updateErr) => {
+              if (updateErr) {
+                console.error(`Error updating status for order ${order.order_id}:`, updateErr);
+              }
+            });
+          });
+
+          callback(null, {
+            results,
+            totalCount,
+          });
+        }
+      });
     }
   });
+
 };
 
 
 
-const getAllOrderByCommittee = (committeeMemberId, callback) => {
+const getAllOrderByCommittee = (committeeMemberId, page, pageSize, searchField, searchValue, callback) => {
+  const offset = (page - 1) * pageSize;
+
+  const params = [committeeMemberId];
+  let whereClause = `WHERE ca.committee_member_id = ?`;
+
+  if (searchField && searchValue) {
+    let dbField = searchField;
+  
+    if (searchField === "cart_id") {
+      dbField = "c.id";
+    } else if (searchField === "researcher_name") {
+      dbField = "r.ResearcherName";
+    }
+    else if (searchField === "user_email") {
+      dbField = " u.email";
+    }
+    else if (searchField === "organization_name") {
+      dbField = " org.OrganizationName";
+    }
+    whereClause += ` AND ${dbField} LIKE ?`;
+    params.push(`%${searchValue}%`);
+  }
+
+  // Final query (directly interpolating LIMIT and OFFSET as integers — safe because we control them)
   const sqlQuery = `
     SELECT 
       c.id AS cart_id, 
@@ -513,7 +630,6 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
       c.created_at,
       ca.committee_status,  
       ca.comments,
-      -- Sample Documents
       sd.study_copy,
       sd.reporting_mechanism,
       sd.irb_file,
@@ -525,19 +641,43 @@ const getAllOrderByCommittee = (committeeMemberId, callback) => {
     LEFT JOIN organization org ON r.nameofOrganization = org.id
     JOIN sample s ON c.sample_id = s.id  
     LEFT JOIN sampledocuments sd ON c.id = sd.cart_id 
-    WHERE ca.committee_member_id = ?  
-    ORDER BY c.created_at ASC;
+    ${whereClause}
+    ORDER BY c.created_at ASC
+    LIMIT ${parseInt(pageSize)} OFFSET ${parseInt(offset)};
   `;
 
-  mysqlConnection.query(sqlQuery, [committeeMemberId], (err, results) => {
+  const countQuery = `
+    SELECT COUNT(*) AS totalCount
+    FROM committeesampleapproval ca
+    JOIN cart c ON ca.cart_id = c.id  
+    JOIN user_account u ON c.user_id = u.id
+    LEFT JOIN researcher r ON u.id = r.user_account_id 
+    LEFT JOIN organization org ON r.nameofOrganization = org.id
+    JOIN sample s ON c.sample_id = s.id  
+    ${whereClause};
+  `;
+
+  mysqlConnection.query(sqlQuery, params, (err, results) => {
     if (err) {
       console.error("Error fetching committee member's orders:", err);
       callback(err, null);
     } else {
-      callback(null, results);
+      mysqlConnection.query(countQuery, params, (countErr, countResults) => {
+        if (countErr) {
+          console.error("Error fetching total count:", countErr);
+          callback(countErr, null);
+        } else {
+          callback(null, {
+            results,
+            totalCount: countResults[0].totalCount,
+          });
+        }
+      });
     }
   });
 };
+
+
 const getAllOrderByOrderPacking = (callback) => {
   const sqlQuery = `
    SELECT 

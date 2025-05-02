@@ -24,7 +24,7 @@ const SampleArea = () => {
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
+  
   const [countryname, setCountryname] = useState([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -96,6 +96,8 @@ const SampleArea = () => {
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
+  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
+    const [filtertotal, setfiltertotal] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [collectionSiteNames, setCollectionSiteNames] = useState([]);
   // Sample Dropdown Fields
@@ -116,11 +118,12 @@ const SampleArea = () => {
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] =
     useState([]);
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-
+const [searchField, setSearchField] = useState(null);
+  const [searchValue, setSearchValue] = useState(null);
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -187,72 +190,115 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
 
-  const fetchSamples = async () => {
+
+ useEffect(() => {
+  const storedUser = getsessionStorage("user");
+    fetchSamples(currentPage, itemsPerPage, {
+      
+      searchField,
+      searchValue,
+    });
+  }, [currentPage, searchField, searchValue]);
+  
+
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
-     
-
+      const { searchField, searchValue } = filters;
       if (!id) {
         console.error("ID is missing.");
         return;
       }
-
+  
+      // Construct URLs
+      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+      if (searchField && searchValue) {
+        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
+  
+      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
+      if (searchField && searchValue) {
+        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
+  
       // Fetch own samples
-      const ownResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`
-      );
-      const ownSamples = ownResponse.data.map((sample) => ({
+      const ownResponse = await axios.get(ownResponseurl);
+      const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
+  
+      const ownSamples = ownSampleData.map((sample) => ({
         ...sample,
-        quantity: Number(sample.quantity) || 0, // Ensure it's a number
+        quantity: Number(sample.quantity) || 0,
       }));
-      console.log("Own samples...", ownSamples);
+  
       // Fetch received samples
-      const receivedResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
-      );
-      const receivedSamples = receivedResponse.data.map((sample) => ({
+      const receivedResponse = await axios.get(receivedResponseurl);
+      const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
+  
+      const receivedSamples = receivedSampleData.map((sample) => ({
         ...sample,
-        quantity: Number(sample.Quantity) || 0, // Ensure it's a number
+        quantity: Number(sample.Quantity) || 0,
       }));
-      console.log("Receive samples...", receivedSamples);
-      // Use a Map to merge and sum quantities of duplicate samples
+  
+      // Merge and sum duplicate quantities
       const sampleMap = new Map();
-
+  
       [...ownSamples, ...receivedSamples].forEach((sample) => {
         const sampleId = sample.id;
-
         if (sampleMap.has(sampleId)) {
-          // If the sample exists, add its quantity
           const existingSample = sampleMap.get(sampleId);
           existingSample.quantity += sample.quantity;
           sampleMap.set(sampleId, existingSample);
         } else {
-          // If the sample does not exist, add it to the map
           sampleMap.set(sampleId, { ...sample });
         }
       });
-
+  
       let combinedSamples = Array.from(sampleMap.values());
-
-      // **Filter out samples with quantity = 0**
       combinedSamples = combinedSamples.filter((sample) => sample.quantity > 0);
-
-    
-
-      // Update state
+  
+      // ✅ Merge total counts from both APIs
+      const combinedTotalCount = (ownTotalCount || 0) + (receivedTotalCount || 0);
+      const totalPages = Math.ceil(combinedTotalCount / pageSize);
+  
+      setTotalPages(totalPages);
+      setfiltertotal(totalPages);
       setSamples(combinedSamples);
-     
       setFilteredSamplename(combinedSamples);
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
+  
+   useEffect(() => {
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages); // Adjust down if needed
+      }
+    }, [totalPages]);
+    const handleFilterChange = (field, value) => {
+      const trimmedValue = value.trim().toLowerCase();
+      setSearchField(field);
+      setSearchValue(trimmedValue);
+      setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
+    };
 
+    const handlePageChange = (event) => {
+      const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
+      setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+    };
+    
+    const handleScroll = (e) => {
+      const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
+    
+      if (isVerticalScroll) {
+        const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+    
+        if (bottom && currentPage < totalPages) {
+          setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
+          fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
+        }
+      }
+    };
+    const currentData = filteredSamplename;
   // get collectionsite names in collectionsite dashboard in stock transfer modal
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -294,45 +340,7 @@ const SampleArea = () => {
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
-  useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamplename.length / itemsPerPage)
-    );
-    setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamplename]);
-
-  // Get the current data for the table
-  const currentData = filteredSamplename.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
-
-  // Filter the researchers list
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
-    } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-    }
-
-    setFilteredSamplename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
-
+ 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -362,7 +370,8 @@ const SampleArea = () => {
           },
         }
       );
-      fetchSamples();
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
 
       setSuccessMessage("Sample added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -430,7 +439,8 @@ const SampleArea = () => {
       );
 
       // Refresh the sample list
-      fetchSamples();
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
       alert("Sample dispatched successfully!");
 
       // Reset the input fields
@@ -480,7 +490,8 @@ const SampleArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchSamples(); // This will refresh the samples list
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -499,6 +510,7 @@ const SampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
+      console.log(data)  
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -614,7 +626,8 @@ const SampleArea = () => {
         }
       );
 
-      fetchSamples(); // This will refresh the samples list
+      fetchSamples(); // Refresh only current page
+      setCurrentPage(1);
 
       setShowEditModal(false);
       setSuccessMessage("Sample updated successfully.");
@@ -739,8 +752,15 @@ const SampleArea = () => {
           </div>
         </div>
         {/* Table */}
-        <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto border">
+        <div
+          onScroll={handleScroll}
+          className="table-responsive"
+          style={{ overflowX: "auto" }}
+        >
+          <table
+            className="table table-bordered table-hover text-center align-middle"
+            style={{ minWidth: "1000px" }}
+          >
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
@@ -832,7 +852,7 @@ const SampleArea = () => {
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage}
+            focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
         )}
 
@@ -1386,12 +1406,11 @@ const SampleArea = () => {
                               Infectious Disease Result
                             </label>
                             <div>
-                              <div
-                                className="form-check form-check-inline"
+                              <div className="form-check form-check-inline"
                                 style={{ marginRight: "10px" }}
                               >
                                 <input
-                                  className="form-check-input"
+                                   className="form-check-input"
                                   type="radio"
                                   name="InfectiousDiseaseResult"
                                   value="Positive"
@@ -1481,7 +1500,11 @@ const SampleArea = () => {
                               }}
                             />
                           </div>
-                          <div className="form-group">
+                          
+                        </div>
+                        {/* {Column 5} */}
+                        <div className="col-md-2">
+                        <div className="form-group">
                             <label>Concurrent Medical Conditions</label>
                             <select
                               className="form-control"
@@ -1511,9 +1534,6 @@ const SampleArea = () => {
                               )}
                             </select>
                           </div>
-                        </div>
-                        {/* {Column 5} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Concurrent Medications</label>
                             <input
@@ -1598,7 +1618,11 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                          <div className="form-group">
+                       
+                        </div>
+                        {/* {Column 6} */}
+                        <div className="col-md-2">
+                        <div className="form-group">
                             <label>Test Method</label>
                             <select
                               className="form-control"
@@ -1625,9 +1649,6 @@ const SampleArea = () => {
                               ))}
                             </select>
                           </div>
-                        </div>
-                        {/* {Column 6} */}
-                        <div className="col-md-2">
                           <div className="form-group">
                             <label>Test Kit Manufacturer</label>
                             <select

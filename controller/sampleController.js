@@ -12,17 +12,30 @@ const createSampleTable = (req, res) => {
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
+  const page = req.query.page || 1; // Get page from query, default to 1
+  const pageSize = req.query.pageSize || 50; // Get pageSize from query, default to 50
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
   if (!id) {
     return res.status(400).json({ error: "ID parameter is missing" });
   }
-  SampleModel.getSamples(id, (err, results) => {
+  
+  SampleModel.getSamples(id, page, pageSize,searchField, searchValue, (err, results) => {
     if (err) {
       console.error('Error in model:', err);
       return res.status(500).json({ error: "Error fetching samples" });
     }
-    res.status(200).json(results);
+    const { results: samples, totalCount } = results;
+    res.status(200).json({
+      samples,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: parseInt(page),
+      pageSize: parseInt(pageSize),
+      totalCount,
+    });
   });
 };
+
 
 const getAllSamples = (req, res) => {
   SampleModel.getAllSamples((err, results) => {
@@ -52,13 +65,15 @@ const getResearcherSamples = (req, res) => {
 
 
 const getAllCSSamples = (req, res) => {
-  SampleModel.getAllCSSamples((err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching samples" });
-    }
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = parseInt(req.query.offset) || 0;
+
+  SampleModel.getAllCSSamples(limit, offset, (err, results) => {
+    if (err) return res.status(500).json({ error: "Error fetching samples" });
     res.status(200).json(results);
   });
 };
+
 // Controller to get a sample by ID
 const getSampleById = (req, res) => {
   const { id } = req.params;

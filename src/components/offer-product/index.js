@@ -16,7 +16,9 @@ import { skipToken } from "@reduxjs/toolkit/query"; // add this at the top
 
 
 const OfferPopularProduct = () => {
-  const { data: categories, isError, isLoading } = useGetAllSamplesQuery();
+  const [page, setPage] = useState(1)
+  const { data: categories, isLoading, isError } = useGetAllSamplesQuery({ limit: 20, offset: (page - 1) * 20 });
+
   const sampleType = "sampletypematrix";
   const {
     data: sampleFieldsData,
@@ -89,6 +91,7 @@ const OfferPopularProduct = () => {
   return (
     <section className="product__coupon-area product__offer py-5" style={{}}>
       <div className="container">
+        
         {/* Header */}
         <div className="row text-center mb-4">
           <div className="col">

@@ -94,7 +94,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       dispatch(clear_cart());
 
       // ✅ Show success message before redirecting
-      notifySuccess("Order placed successfully!");
+      notifySuccess("Order placed successfully!Now your cart is empty");
 
       setTimeout(() => {
         router.push({

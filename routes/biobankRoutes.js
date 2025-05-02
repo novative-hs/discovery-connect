@@ -7,7 +7,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage(); // for buffer
 const upload = multer({ storage: storage });
 
-router.get('/biobank/getsamples/:id', BioBankController.getBiobankSamples); // GET a new sample
+router.get('/biobank/getsamples/:id', BioBankController.getBiobankSamples); // Correct route
 router.post('/biobank/postBBsample',upload.single("logo"), BioBankController.createBiobankSample); // POST a new sample
 router.put('/biobank/editBBsample/:id', upload.single("logo"),BioBankController.updateBiobankSample); // PUT update sample
 

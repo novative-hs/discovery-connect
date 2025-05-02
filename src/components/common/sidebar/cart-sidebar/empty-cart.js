@@ -19,14 +19,14 @@ const EmptyCart = ({ search_prd = false }) => {
 
   return (
     <div className="cartmini__empty text-center mt-0">
-      <Image src={empty_img} alt="empty img" />
-      <p>{search_prd ? `Sorry,😥 we can not find this product` : `Your Cart is empty`}</p>
-      {!search_prd && (
-        <button onClick={handleRedirect} className="tp-btn">
-          Go to Shop
-        </button>
-      )}
-    </div>
+    <Image src={empty_img} alt="Empty cart illustration" />
+    <p className="mt-3 fs-5 text-muted">
+      {search_prd 
+        ? `Sorry 😥, we couldn't find any matching results for your search. Please try different keywords.` 
+        : `Your cart is currently empty. Start exploring our samples and add items to begin your order.`}
+    </p>
+  </div>
+  
   );
 };
 
