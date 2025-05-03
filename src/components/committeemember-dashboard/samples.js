@@ -51,54 +51,96 @@ const SampleArea = () => {
   
   // Fetch samples from backend when component loads
   useEffect(() => {
-    fetchSamples(currentPage, itemsPerPage, {
-      
-      searchField,
-      searchValue,
-    });
+      if (id) {
+        fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+      }
+    
   }, [currentPage, searchField, searchValue]);
+  
+  
 
-   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
       const { searchField, searchValue } = filters;
+  
       if (!id) {
-        console.error("ID is missing.");
+        console.error("Committee member ID is missing.");
         return;
       }
-
-      let responseurl =`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`
-
+  
+      // Fields that belong to document API
+      const docFields = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"];
+  
+      // Decide which API needs the filter
+      const filterForDoc = docFields.includes(searchField);
+  
+      // Build URLs
+      let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
+      let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
+  
       if (searchField && searchValue) {
-        responseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+        const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
+        if (filterForDoc) {
+          docUrl += filter;
+        } else {
+          orderUrl += filter;
+        }
       }
   
-      const response = await axios.get(responseurl);
-      const { results: sampledata, totalCount: totalCount } = response.data;
-      console.log(sampledata)
+      // Fetch both APIs
+      const [orderRes, docRes] = await Promise.all([
+        axios.get(orderUrl),
+        axios.get(docUrl),
+      ]);
+  
+      const orders = orderRes.data.results || [];
+      const totalCount = orderRes.data.totalCount || 0;
+      const documents = docRes.data.results || [];
+  
+      // ✅ Create docMap BEFORE using it
+      const docMap = {};
+      documents.forEach((doc) => {
+        if (doc.cart_id) {
+          docMap[doc.cart_id] = doc;
+        }
+      });
+  console.log("Documents",documents)
+  console.log("Sample",orders)
+      // ✅ Merge: flatten document fields directly into order object
+      const merged = orders.map((order) => {
+        const document = docMap[order.cart_id] || {};
+        return {
+          ...order,
+          ...document,
+        };
+      });
+  
+      console.log("Merged Orders with Documents:", merged);
+  
       // Update state
-      setSamples(sampledata);
+      setSamples(merged);
+      setFilteredSamplename(merged);
       setTotalPages(Math.ceil(totalCount / pageSize));
-      setFilteredSamplename(sampledata);
-
     } catch (error) {
-      console.error("Error fetching samples:", error);
+      console.error("Error fetching data:", error);
     }
   };
-
- useEffect(() => {
+  
+   
+  
+  
+  useEffect(() => {
       if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages); // Adjust down if needed
       }
     }, [totalPages]);
 
-  // Get the current data for the table
-  const currentData = filteredSamplename;
 
- 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
+  
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
@@ -107,6 +149,9 @@ const SampleArea = () => {
     setSearchValue(trimmedValue);
     setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
   };
+
+  const currentData = filteredSamplename;
+
   const handleViewComment = (comment) => {
     setSelectedComment(comment); // Set the comment to be viewed
     setShowCommentModal(true); // Open the modal to display the comment

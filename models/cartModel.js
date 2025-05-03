@@ -579,31 +579,30 @@ const getAllOrder = (page, pageSize, searchField, searchValue,callback) => {
 
 
 
-const getAllOrderByCommittee = (committeeMemberId, page, pageSize, searchField, searchValue, callback) => {
+const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, callback) => {
   const offset = (page - 1) * pageSize;
 
-  const params = [committeeMemberId];
+  const params = [id];
   let whereClause = `WHERE ca.committee_member_id = ?`;
 
   if (searchField && searchValue) {
     let dbField = searchField;
-  
+
+    // Mapping fields to DB fields
     if (searchField === "cart_id") {
       dbField = "c.id";
     } else if (searchField === "researcher_name") {
       dbField = "r.ResearcherName";
-    }
-    else if (searchField === "user_email") {
-      dbField = " u.email";
-    }
-    else if (searchField === "organization_name") {
-      dbField = " org.OrganizationName";
+    } else if (searchField === "user_email") {
+      dbField = "u.email";
+    } else if (searchField === "organization_name") {
+      dbField = "org.OrganizationName";
     }
     whereClause += ` AND ${dbField} LIKE ?`;
     params.push(`%${searchValue}%`);
   }
 
-  // Final query (directly interpolating LIMIT and OFFSET as integers — safe because we control them)
+  // SQL Query to get orders with pagination
   const sqlQuery = `
     SELECT 
       c.id AS cart_id, 
@@ -629,11 +628,7 @@ const getAllOrderByCommittee = (committeeMemberId, page, pageSize, searchField, 
       c.order_status,  
       c.created_at,
       ca.committee_status,  
-      ca.comments,
-      sd.study_copy,
-      sd.reporting_mechanism,
-      sd.irb_file,
-      sd.nbc_file
+      ca.comments
     FROM committeesampleapproval ca
     JOIN cart c ON ca.cart_id = c.id  
     JOIN user_account u ON c.user_id = u.id
@@ -643,7 +638,7 @@ const getAllOrderByCommittee = (committeeMemberId, page, pageSize, searchField, 
     LEFT JOIN sampledocuments sd ON c.id = sd.cart_id 
     ${whereClause}
     ORDER BY c.created_at ASC
-    LIMIT ${parseInt(pageSize)} OFFSET ${parseInt(offset)};
+    LIMIT ? OFFSET ?
   `;
 
   const countQuery = `
@@ -657,7 +652,9 @@ const getAllOrderByCommittee = (committeeMemberId, page, pageSize, searchField, 
     ${whereClause};
   `;
 
-  mysqlConnection.query(sqlQuery, params, (err, results) => {
+  const queryParams = [...params, pageSize, offset];
+
+  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
     if (err) {
       console.error("Error fetching committee member's orders:", err);
       callback(err, null);
@@ -673,6 +670,58 @@ const getAllOrderByCommittee = (committeeMemberId, page, pageSize, searchField, 
           });
         }
       });
+    }
+  });
+};
+
+const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
+  const offset = (page - 1) * pageSize;
+
+  let whereClause = "WHERE 1=1";
+  const params = [];
+
+  // Filter by search field
+  if (searchField && searchValue) {
+    let dbField = searchField;
+
+    // Map fields to DB fields
+    if (searchField === "cart_id") {
+      dbField = "c.id";
+    }
+
+    whereClause += ` AND ${dbField} LIKE ?`;
+    params.push(`%${searchValue}%`);
+  }
+
+  // Filter by committee member ID
+  if (id) {
+    whereClause += " AND csa.committee_member_id = ?";
+    params.push(id);
+  }
+
+  const sqlQuery = `
+    SELECT 
+      c.id AS cart_id, 
+      sd.study_copy,
+      sd.reporting_mechanism,
+      sd.irb_file,
+      sd.nbc_file
+    FROM sampledocuments sd
+    JOIN cart c ON sd.cart_id = c.id
+    JOIN committeesampleapproval csa ON c.id = csa.cart_id
+    ${whereClause}
+    ORDER BY c.created_at ASC
+    LIMIT ? OFFSET ?
+  `;
+
+  const queryParams = [...params, pageSize, offset];
+
+  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
+    if (err) {
+      console.error("Error fetching documents:", err);
+      callback(err, null);
+    } else {
+      callback(null, { results });
     }
   });
 };
@@ -946,6 +995,7 @@ module.exports = {
   updateCart,
   getAllOrder,
   getAllOrderByCommittee,
+  getAllDocuments,
   getAllOrderByOrderPacking,
   updateRegistrationAdminStatus,
   updateCartStatus,

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { notifyError, notifySuccess } from "@utils/toast";
+import visa from "@assets/img/slider/13/visacard.png";
+import master from "@assets/img/slider/13/mastercard.png";
 
 const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
   const [loading, setLoading] = useState(false);
@@ -176,40 +178,41 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
 
               {/* Payment Type */}
               <div className="mb-4">
-                <label className="form-label fw-semibold fs-5">Payment Type</label>
-                <div className="d-flex gap-4">
-                  {["Credit", "Debit"].map((type) => (
-                    <div
-                      key={type}
-                      className={`border rounded p-3 d-flex align-items-center gap-3 ${formData.paymentType === type ? "border-primary" : ""
-                        }`}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentType"
-                        value={type}
-                        checked={formData.paymentType === type}
-                        onChange={handleRadioChange}
-                        id={`${type}Radio`}
-                        className="form-check-input m-0"
-                      />
-                      <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
-                        alt="Visa"
-                        width="30"
-                      />
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
-                        alt="MasterCard"
-                        width="30"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+  <label className="form-label fw-semibold fs-5">Payment Type</label>
+  <div className="d-flex gap-4">
+    {["Credit", "Debit"].map((type) => (
+      <div
+        key={type}
+        className={`border rounded p-3 d-flex align-items-center gap-3 ${
+          formData.paymentType === type ? "border-primary" : ""
+        }`}
+        style={{ cursor: "pointer" }}
+        onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
+      >
+        <input
+          type="radio"
+          name="paymentType"
+          value={type}
+          checked={formData.paymentType === type}
+          onChange={handleRadioChange}
+          id={`${type}Radio`}
+          className="form-check-input m-0"
+        />
+        <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
+        <img src="/img/slider/13/visacard.png" alt="Visa" width="30" />
+
+        <img
+          src={master}
+          alt="MasterCard"
+          width="30"
+        />
+      </div>
+    ))}
+  </div>
+</div>
+
+
+
 
               {/* Submit Button */}
               <button

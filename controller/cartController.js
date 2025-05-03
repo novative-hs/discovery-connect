@@ -154,6 +154,20 @@ const getAllOrderByCommittee = (req, res) => {
     }
   );
 };
+const getAllDocuments = (req, res) => {
+  const { id } = req.params; // committee_member_id
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const { searchField, searchValue } = req.query;
+
+  cartModel.getAllDocuments(page, pageSize, searchField, searchValue,id, (err, data) => {
+    if (err) {
+      console.error('Controller Error:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+    res.status(200).json(data);
+  });
+};
 
 const getAllOrderByOrderPacking = (req, res) => {
   cartModel.getAllOrderByOrderPacking((err, results) => {
@@ -220,6 +234,7 @@ module.exports = {
   deleteSingleCartItem,
   getAllOrder,
   getAllOrderByCommittee,
+  getAllDocuments,
   getAllOrderByOrderPacking,
   updateRegistrationAdminStatus,
   updateCartStatus,

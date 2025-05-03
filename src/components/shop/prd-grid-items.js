@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import SingleProduct from "@components/products/single-product";
 import Pagination from "@ui/Pagination";
 
-const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
+const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems, totalCount }) => {
   const [currentItems, setCurrentItems] = useState(null);
   const [pageCount, setPageCount] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
@@ -11,17 +11,19 @@ const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
     const endOffset = itemOffset + itemsPerPage;
     const current = items?.slice(itemOffset, endOffset);
     setCurrentItems(current);
-    setPageCount(Math.ceil(items.length / itemsPerPage));
+
+    // Use totalCount to calculate the total pages, instead of items.length
+    setPageCount(Math.ceil(totalCount / itemsPerPage));
 
     // Update showing range
     if (setShowingGridItems) {
       setShowingGridItems({
         start: itemOffset + 1,
-        end: Math.min(endOffset, items.length),
-        total: items.length,
+        end: Math.min(endOffset, totalCount),
+        total: totalCount,
       });
     }
-  }, [itemOffset, itemsPerPage, items, setShowingGridItems]);
+  }, [itemOffset, itemsPerPage, items, setShowingGridItems, totalCount]);
 
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % items.length;
@@ -55,5 +57,6 @@ const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
     </div>
   );
 };
+
 
 export default ProductGridItems;

@@ -65,7 +65,7 @@ const getResearcherSamples = (req, res) => {
 
 
 const getAllCSSamples = (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit) || 30;
   const offset = parseInt(req.query.offset) || 0;
 
   SampleModel.getAllCSSamples(limit, offset, (err, results) => {

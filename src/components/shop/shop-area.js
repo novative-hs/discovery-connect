@@ -5,7 +5,7 @@ import ShopSidebar from "@components/common/sidebar/shop-sidebar/index";
 import ProductGridItems from "./prd-grid-items";
 import ProductListItems from "./prd-list-items";
 
-const ShopArea = ({ products, all_products, shortHandler }) => {
+const ShopArea = ({ products, all_products, shortHandler, totalCount }) => {
   
   const [tabActive, setActiveTab] = useState("grid");
   const id = sessionStorage.getItem("userID");
@@ -100,8 +100,9 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
             <ShowingResult
   start={tabActive === "grid" ? showingGridItems.start : showingListItems.start}
   end={tabActive === "grid" ? showingGridItems.end : showingListItems.end}
-  total={tabActive === "grid" ? showingGridItems.total : showingListItems.total}
+  total={totalCount}  // This will display the total count of the samples
 />
+
 
             </div>
 
@@ -154,15 +155,18 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
             <div className={`col-lg-9 order-first order-lg-last`}>
               <div className="shop__tab-content mb-40">
                 <div className="tab-content" id="shop_tab_content">
-                  <ProductGridItems
-                    itemsPerPage={9}
-                    items={filteredProducts}
-                    setShowingGridItems={setShowingGridItems}
-                  />
+                <ProductGridItems
+  itemsPerPage={9}
+  items={filteredProducts}
+  setShowingGridItems={setShowingGridItems}
+  totalCount={totalCount}  // Pass the totalCount here
+/>
+
                   <ProductListItems
                     itemsPerPage={5}
                     items={filteredProducts}
                     setShowingListItems={setShowingListItems}
+                    totalCount={totalCount}  // Pass the totalCount here
                   />
                 </div>
                 {/* pagination */}

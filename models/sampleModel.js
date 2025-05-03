@@ -287,7 +287,7 @@ ORDER BY s.id DESC;
 };
 
 const getAllCSSamples = (limit, offset, callback) => {
-  const query = `
+  const dataQuery = `
     SELECT 
       s.*, 
       cs.CollectionSiteName AS CollectionSiteName,
@@ -307,44 +307,57 @@ const getAllCSSamples = (limit, offset, callback) => {
     LIMIT ? OFFSET ?
   `;
 
-  mysqlConnection.query(query, [limit, offset], (err, results) => {
-    if (err) return callback(err, null);
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM sample s
+    LEFT JOIN collectionsite cs ON s.user_account_id = cs.user_account_id
+    WHERE 
+      s.status = 'In Stock' 
+      AND s.price > 0 
+      AND (s.quantity > 0 OR s.quantity_allocated > 0)
+  `;
 
-    const imageFolder = path.join(__dirname, '../uploads/Images');
-    fs.readdir(imageFolder, (fsErr, files) => {
-      if (fsErr) return callback(fsErr, null);
+  mysqlConnection.query(countQuery, (countErr, countResult) => {
+    if (countErr) return callback(countErr, null);
 
-      const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+    const totalCount = countResult[0].total;
 
-      const totalSamples = results.length;
-      const totalImages = imageFiles.length;
+    mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
+      if (dataErr) return callback(dataErr, null);
 
-      let selectedImages = [];
+      const imageFolder = path.join(__dirname, '../uploads/Images');
+      fs.readdir(imageFolder, (fsErr, files) => {
+        if (fsErr) return callback(fsErr, null);
 
-      if (totalImages >= totalSamples) {
-        selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
-      } else {
-        for (let i = 0; i < totalSamples; i++) {
-          const img = imageFiles[i % totalImages];
-          selectedImages.push(img);
+        const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+        const totalSamples = results.length;
+        const totalImages = imageFiles.length;
+
+        let selectedImages = [];
+
+        if (totalImages >= totalSamples) {
+          selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
+        } else {
+          for (let i = 0; i < totalSamples; i++) {
+            const img = imageFiles[i % totalImages];
+            selectedImages.push(img);
+          }
         }
-      }
 
-      const updatedResults = results.map((sample, index) => {
-        const selectedImage = selectedImages[index];
-        const imagePath = path.join(imageFolder, selectedImage);
-        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+        const updatedResults = results.map((sample, index) => {
+          const selectedImage = selectedImages[index];
+          const imagePath = path.join(imageFolder, selectedImage);
+          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+          sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
+          return sample;
+        });
 
-        // ✅ CORRECT way to assign imageUrl with base64 data
-        sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
-
-        return sample;
+        callback(null, { data: updatedResults, totalCount });
       });
-
-      callback(null, updatedResults);
     });
   });
 };
+
 
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
