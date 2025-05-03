@@ -8,7 +8,7 @@ const upload = multer({ storage });
 
 router.get('/cart/getOrder',cartController.getAllOrder)
 router.get('/cart/getOrderbyCommittee/:id',cartController.getAllOrderByCommittee)
-
+router.get('/cart/getAllDocuments/:id',cartController.getAllDocuments)
 router.get('/cart/getOrderbyOrderPacking',cartController.getAllOrderByOrderPacking)
 
 router.post('/cart', upload.fields([

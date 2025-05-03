@@ -211,7 +211,7 @@ const Header = ({ setActiveTab, activeTab }) => {
               ]
               : userType == "committeemember"
                 ? [
-                  { label: "Sample List", tab: "samples" },
+                  { label: "Order Sample List", tab: "samples" },
                 ]
                 : userType == "registrationadmin"
                   ? [

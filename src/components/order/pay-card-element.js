@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { notifyError, notifySuccess } from "@utils/toast";
+import visa from "@assets/img/slider/13/visacard.png";
+import master from "@assets/img/slider/13/mastercard.png";
 
 const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
   const router = useRouter();
@@ -191,13 +193,10 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
           className="form-check-input m-0"
         />
         <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
+        <img src="/img/slider/13/visacard.png" alt="Visa" width="30" />
+
         <img
-          src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
-          alt="Visa"
-          width="30"
-        />
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
+          src={master}
           alt="MasterCard"
           width="30"
         />
