@@ -16,6 +16,5 @@ router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById); // GET a single sample by ID
 router.post('/samples/postsample', upload.single("logo"),SampleController.createSample); // POST a new sample
 router.put('/samples/edit/:id', upload.single("logo"),SampleController.updateSample); // PUT update sample
-router.delete('/samples/delete/:id', SampleController.deleteSample); // DELETE a sample
 
 module.exports = router;

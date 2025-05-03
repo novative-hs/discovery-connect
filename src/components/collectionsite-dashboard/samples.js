@@ -20,11 +20,10 @@ const SampleArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-  
+
   const [countryname, setCountryname] = useState([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -97,7 +96,7 @@ const SampleArea = () => {
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered cities
-    const [filtertotal, setfiltertotal] = useState(null);
+  const [filtertotal, setfiltertotal] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [collectionSiteNames, setCollectionSiteNames] = useState([]);
   // Sample Dropdown Fields
@@ -122,7 +121,7 @@ const SampleArea = () => {
   const [itemsPerPage] = useState(10);
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-const [searchField, setSearchField] = useState(null);
+  const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
@@ -182,7 +181,7 @@ const [searchField, setSearchField] = useState(null);
     setSelectedSampleId(sample.id);
     setShowTransferModal(true);
   };
-  
+
   const logoHandler = (file) => {
     const imageUrl = URL.createObjectURL(file);
     setLogo(imageUrl);  // Update the preview with the new image URL
@@ -194,16 +193,15 @@ const [searchField, setSearchField] = useState(null);
 
   // Fetch samples from backend when component loads
 
-
- useEffect(() => {
-  const storedUser = getsessionStorage("user");
+  useEffect(() => {
+    const storedUser = getsessionStorage("user");
     fetchSamples(currentPage, itemsPerPage, {
-      
+
       searchField,
       searchValue,
     });
   }, [currentPage, searchField, searchValue]);
-  
+
 
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
@@ -212,39 +210,49 @@ const [searchField, setSearchField] = useState(null);
         console.error("ID is missing.");
         return;
       }
-  
+
       // Construct URLs
       let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
       if (searchField && searchValue) {
         ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
-  
+
       let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
       if (searchField && searchValue) {
         receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
-  
+
       // Fetch own samples
       const ownResponse = await axios.get(ownResponseurl);
       const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
-  
-      const ownSamples = ownSampleData.map((sample) => ({
-        ...sample,
-        quantity: Number(sample.quantity) || 0,
-      }));
-  
+
+      const ownSamples = ownSampleData.map((sample) => {
+        // Convert logo BLOB into base64
+        let base64Logo = "";
+        if (sample.logo && sample.logo.data) {
+          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+        }
+
+        return {
+          ...sample,
+          quantity: Number(sample.quantity) || 0,
+          logo: base64Logo, // Replace logo BLOB with base64 string
+        };
+      });
+
       // Fetch received samples
       const receivedResponse = await axios.get(receivedResponseurl);
       const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
-  
+
       const receivedSamples = receivedSampleData.map((sample) => ({
         ...sample,
         quantity: Number(sample.Quantity) || 0,
       }));
-  
+
       // Merge and sum duplicate quantities
       const sampleMap = new Map();
-  
+
       [...ownSamples, ...receivedSamples].forEach((sample) => {
         const sampleId = sample.id;
         if (sampleMap.has(sampleId)) {
@@ -255,14 +263,14 @@ const [searchField, setSearchField] = useState(null);
           sampleMap.set(sampleId, { ...sample });
         }
       });
-  
+
       let combinedSamples = Array.from(sampleMap.values());
       combinedSamples = combinedSamples.filter((sample) => sample.quantity > 0);
-  
+
       // ✅ Merge total counts from both APIs
       const combinedTotalCount = (ownTotalCount || 0) + (receivedTotalCount || 0);
       const totalPages = Math.ceil(combinedTotalCount / pageSize);
-  
+
       setTotalPages(totalPages);
       setfiltertotal(totalPages);
       setSamples(combinedSamples);
@@ -271,37 +279,37 @@ const [searchField, setSearchField] = useState(null);
       console.error("Error fetching samples:", error);
     }
   };
-  
-   useEffect(() => {
-      if (currentPage > totalPages && totalPages > 0) {
-        setCurrentPage(totalPages); // Adjust down if needed
-      }
-    }, [totalPages]);
-    const handleFilterChange = (field, value) => {
-      const trimmedValue = value.trim().toLowerCase();
-      setSearchField(field);
-      setSearchValue(trimmedValue);
-      setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
-    };
 
-    const handlePageChange = (event) => {
-      const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
-      setCurrentPage(selectedPage); // This will trigger the data change based on selected page
-    };
-    
-    const handleScroll = (e) => {
-      const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
-    
-      if (isVerticalScroll) {
-        const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
-    
-        if (bottom && currentPage < totalPages) {
-          setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
-          fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
-        }
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages); // Adjust down if needed
+    }
+  }, [totalPages]);
+  const handleFilterChange = (field, value) => {
+    const trimmedValue = value.trim().toLowerCase();
+    setSearchField(field);
+    setSearchValue(trimmedValue);
+    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
+  };
+
+  const handlePageChange = (event) => {
+    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
+    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+  };
+
+  const handleScroll = (e) => {
+    const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
+
+    if (isVerticalScroll) {
+      const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+
+      if (bottom && currentPage < totalPages) {
+        setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
+        fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
       }
-    };
-    const currentData = filteredSamplename;
+    }
+  };
+  const currentData = filteredSamplename;
   // get collectionsite names in collectionsite dashboard in stock transfer modal
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -343,7 +351,7 @@ const [searchField, setSearchField] = useState(null);
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
- 
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -361,8 +369,6 @@ const [searchField, setSearchField] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
@@ -479,41 +485,13 @@ const [searchField, setSearchField] = useState(null);
     setShowTransferModal(false); // Close the modal
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-      );
-
-      setSuccessMessage("Sample deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchSamples(); // Refresh only current page
-      setCurrentPage(1);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting sample with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  };
-
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
-      console.log(data)  
+      console.log(data)
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -682,7 +660,6 @@ const [searchField, setSearchField] = useState(null);
 
   useEffect(() => {
     if (
-      showDeleteModal ||
       showAddModal ||
       showEditModal ||
       showTransferModal ||
@@ -697,7 +674,6 @@ const [searchField, setSearchField] = useState(null);
       document.body.classList.remove("modal-open");
     }
   }, [
-    showDeleteModal,
     showAddModal,
     showEditModal,
     showTransferModal,
@@ -750,9 +726,6 @@ const [searchField, setSearchField] = useState(null);
             >
               <i className="fas fa-vial"></i> Add Sample
             </button>
-
-
-
           </div>
         </div>
         {/* Table */}
@@ -812,16 +785,6 @@ const [searchField, setSearchField] = useState(null);
                         >
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>
-                        {/* <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowDeleteModal(true);
-                          }}
-                          title="Delete"
-                        >
-                          <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button> */}
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => handleTransferClick(sample)}
@@ -1414,7 +1377,7 @@ const [searchField, setSearchField] = useState(null);
                                 style={{ marginRight: "10px" }}
                               >
                                 <input
-                                   className="form-check-input"
+                                  className="form-check-input"
                                   type="radio"
                                   name="InfectiousDiseaseResult"
                                   value="Positive"
@@ -1504,11 +1467,11 @@ const [searchField, setSearchField] = useState(null);
                               }}
                             />
                           </div>
-                          
+
                         </div>
                         {/* {Column 5} */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label>Concurrent Medical Conditions</label>
                             <select
                               className="form-control"
@@ -1622,11 +1585,11 @@ const [searchField, setSearchField] = useState(null);
                               ))}
                             </select>
                           </div>
-                       
+
                         </div>
                         {/* {Column 6} */}
                         <div className="col-md-2">
-                        <div className="form-group">
+                          <div className="form-group">
                             <label>Test Method</label>
                             <select
                               className="form-control"
@@ -1977,69 +1940,6 @@ const [searchField, setSearchField] = useState(null);
               </form>
             </div>
           </div>
-        )}
-
-        {/* Modal for Deleting Samples */}
-        {showDeleteModal && (
-          <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
-
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-              <div className="modal-dialog" role="document">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Delete Sample</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowDeleteModal(false)}
-                      style={{
-                        // background: 'none',
-                        // border: 'none',
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
-                  <div className="modal-body">
-                    <p>Are you sure you want to delete this sample?</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="btn btn-danger" onClick={handleDelete}>
-                      Delete
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
         )}
 
         {/* Modal for History of Samples */}

@@ -117,7 +117,7 @@ const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
       }
 
       const totalCount = countResults[0].totalCount;
-     
+
       callback(null, {
         results,
         totalCount,
@@ -470,14 +470,6 @@ const updateSampleStatus = (id, status, callback) => {
   });
 };
 
-// Function to delete a sample by its ID
-const deleteSample = (id, callback) => {
-  const query = 'UPDATE sample SET is_deleted = TRUE WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
-    callback(err, result);
-  });
-};
-
 const getFilteredSamples = (price, smokingStatus, callback) => {
   let query = "SELECT * FROM sample WHERE is_deleted = FALSE";
   let queryParams = [];
@@ -511,5 +503,4 @@ module.exports = {
   createSample,
   updateSample,
   updateSampleStatus,
-  deleteSample
 };

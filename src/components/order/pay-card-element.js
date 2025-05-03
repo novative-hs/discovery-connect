@@ -4,6 +4,7 @@ import axios from "axios";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [formData, setFormData] = useState({
     cardholderName: "",
@@ -68,6 +69,8 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (loading) return; // 🔒 Prevent double-click
+    setLoading(true);
     if (!validateDocuments()) return;
     if (!validateFields()) return;
 
@@ -95,6 +98,9 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
     } catch (error) {
       notifyError(error.response?.data?.message || "An unexpected error occurred.");
     }
+    finally {
+      setLoading(false); // ✅ Always stop loading
+    }
   };
 
   return (
@@ -118,7 +124,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                   <small className="text-danger">{errors.cardholderName}</small>
                 )}
               </div>
-  
+
               {/* Card Number */}
               <div className="mb-3">
                 <label className="form-label fw-semibold">Card Number</label>
@@ -134,7 +140,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                   <small className="text-danger">{errors.cardNumber}</small>
                 )}
               </div>
-  
+
               {/* Expiration and CVC */}
               <div className="row mb-3">
                 <div className="col-md-6">
@@ -167,47 +173,43 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                   )}
                 </div>
               </div>
-  
+
               {/* Payment Type */}
               <div className="mb-4">
-  <label className="form-label fw-semibold fs-5">Payment Type</label>
-  <div className="d-flex gap-4">
-    {["Credit", "Debit"].map((type) => (
-      <div
-        key={type}
-        className={`border rounded p-3 d-flex align-items-center gap-3 ${
-          formData.paymentType === type ? "border-primary" : ""
-        }`}
-        style={{ cursor: "pointer" }}
-        onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
-      >
-        <input
-          type="radio"
-          name="paymentType"
-          value={type}
-          checked={formData.paymentType === type}
-          onChange={handleRadioChange}
-          id={`${type}Radio`}
-          className="form-check-input m-0"
-        />
-        <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
-          alt="Visa"
-          width="30"
-        />
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
-          alt="MasterCard"
-          width="30"
-        />
-      </div>
-    ))}
-  </div>
-</div>
-
-
-
+                <label className="form-label fw-semibold fs-5">Payment Type</label>
+                <div className="d-flex gap-4">
+                  {["Credit", "Debit"].map((type) => (
+                    <div
+                      key={type}
+                      className={`border rounded p-3 d-flex align-items-center gap-3 ${formData.paymentType === type ? "border-primary" : ""
+                        }`}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentType"
+                        value={type}
+                        checked={formData.paymentType === type}
+                        onChange={handleRadioChange}
+                        id={`${type}Radio`}
+                        className="form-check-input m-0"
+                      />
+                      <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+                        alt="Visa"
+                        width="30"
+                      />
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
+                        alt="MasterCard"
+                        width="30"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Submit Button */}
               <button
@@ -215,8 +217,9 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                 className="btn w-100 text-white"
                 style={{ backgroundColor: "#0a1d4e" }}
                 onClick={handlePlaceOrder}
+                disabled={loading}
               >
-                Place Order
+                {loading ? "Processing..." : "Place Order"}
               </button>
             </form>
           </div>
@@ -224,7 +227,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
       </div>
     </div>
   );
-  
+
 };
 
 export default PaymentCardElement;
