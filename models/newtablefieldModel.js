@@ -37,6 +37,22 @@ const tablesAndColumns = [
     ],
   },
   {
+    table: "researcher",
+    columnsToAdd: [
+      
+      {
+        column: "CNIC",
+        type: "LONGBLOB",
+        nullable: true,
+      },
+      {
+        column: "organization_card",
+        type: "LONGBLOB",
+        nullable: true,
+      },
+    ],
+  },
+  {
     table: "cart",
     columnsToAdd: [
       {
@@ -282,7 +298,7 @@ const createOrUpdateTables = async () => {
         "Organization",
         "CollectionSites",
         "DatabaseAdmin",
-        "RegistrationAdmin",
+        "TechnicalAdmin",
         "biobank",
         "Committeemember",
         "CSR"

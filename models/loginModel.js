@@ -1,6 +1,6 @@
 const mysqlConnection = require("../config/db");
 
-// Query to check login credentials in user_account, researcher, collectionsite, organization, and registrationadmin tables
+// Query to check login credentials in user_account, researcher, collectionsite, organization, and Technical tables
 function verifyUserLogin(email, password, callback) {
   const query = `
     SELECT 'researcher' AS accountType, id, email FROM researcher WHERE email = ? AND password = ?
@@ -9,7 +9,7 @@ function verifyUserLogin(email, password, callback) {
     UNION
     SELECT 'organization' AS accountType, id, email FROM organization WHERE email = ? AND password = ?
     UNION
-    SELECT 'registrationadmin' AS accountType, id, email FROM user_account WHERE email = ? AND password = ? AND accountType = 'registrationadmin'
+    SELECT 'technicaladmin' AS accountType, id, email FROM user_account WHERE email = ? AND password = ? AND accountType = 'technicaladmin'
   `;
 
   mysqlConnection.query(query, [email, password, email, password, email, password, email, password], (err, results) => {

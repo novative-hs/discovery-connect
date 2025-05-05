@@ -17,6 +17,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   const validateFields = () => {
     let newErrors = {};
@@ -64,7 +65,6 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
     setFormData({ ...formData, [id]: cleanedValue });
   };
 
-
   const handleRadioChange = (e) => {
     setFormData({ ...formData, paymentType: e.target.value });
   };
@@ -86,6 +86,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
     };
 
     try {
+      setIsLoading(true); // Start loading
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/createPayment`,
         paymentData
@@ -96,8 +97,10 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
         return;
       }
 
-      const orderPlaced = await handleSubmit(response.data.insertedId);
+      await handleSubmit(response.data.insertedId);
+      setIsLoading(false); // End loading
     } catch (error) {
+      setIsLoading(false); // End loading on error
       notifyError(error.response?.data?.message || "An unexpected error occurred.");
     }
     finally {
@@ -183,8 +186,9 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                   {["Credit", "Debit"].map((type) => (
                     <div
                       key={type}
-                      className={`border rounded p-3 d-flex align-items-center gap-3 ${formData.paymentType === type ? "border-primary" : ""
-                        }`}
+                      className={`border rounded p-3 d-flex align-items-center gap-3 ${
+                        formData.paymentType === type ? "border-primary" : ""
+                      }`}
                       style={{ cursor: "pointer" }}
                       onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
                     >
@@ -198,13 +202,16 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                         className="form-check-input m-0"
                       />
                       <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
-                      <img src="/img/slider/13/visacard.png" alt="Visa" width="30" />
-
                       <img
-                        src={master}
-                        alt="MasterCard"
-                        width="30"
-                      />
+          src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+          alt="Visa"
+          width="30"
+        />
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
+          alt="MasterCard"
+          width="30"
+        />
                     </div>
                   ))}
                 </div>
@@ -218,7 +225,13 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                 onClick={handlePlaceOrder}
                 disabled={loading}
               >
-                {loading ? "Processing..." : "Place Order"}
+                {isLoading ? (
+                  <div className="spinner-border text-light" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                ) : (
+                  "Place Order"
+                )}
               </button>
             </form>
           </div>
@@ -226,7 +239,6 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
       </div>
     </div>
   );
-
 };
 
 export default PaymentCardElement;

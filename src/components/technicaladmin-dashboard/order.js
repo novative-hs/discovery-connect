@@ -47,7 +47,7 @@ const OrderPage = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Registration Admin site  ID:", storedUserID); // Verify storedUserID
+      console.log("technical Admin site  ID:", storedUserID); // Verify storedUserID
     }
   }, []);
   useEffect(() => {
@@ -116,8 +116,8 @@ const OrderPage = () => {
 
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/registration-status`,
-        { registration_admin_status: newStatus }
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/technical-status`,
+        { technical_admin_status: newStatus }
       );
 
       if (response.status === 200) {
@@ -215,8 +215,8 @@ const OrderPage = () => {
                     { label: "Sample Name", field: "samplename" },
                     { label: "Order Status", field: "order_status" },
                     {
-                      label: "Registration Admin Status",
-                      field: "registration_admin_status",
+                      label: "Technical Admin Status",
+                      field: "technical_admin_status",
                     },
                     {
                       label: "Scientific Committee Member Status",
@@ -283,22 +283,31 @@ const OrderPage = () => {
                         {order.samplename}
                       </td>
                       <td>{order.order_status}</td>
-                      <td>{order.registration_admin_status}</td>
+                      <td>{order.technical_admin_status}</td>
                       <td>
-                        {order.registration_admin_status === "Rejected"
-                          ? "No further processing"
-                          : order.registration_admin_status === "Pending"
-                            ? "Pending Admin Approval"
-                            : order.scientific_committee_status === "Refused"
-                              ? "Refused"
-                              : order.scientific_committee_status
-                                ? order.scientific_committee_status
-                                : "Awaiting Committee Forwarding"}
-                      </td>
+  {order.order_status === "Rejected" &&
+  order.technical_admin_status === "Rejected" &&
+  order.scientific_committee_status === "Refused" ? (
+    "Refused"
+  ) : order.technical_admin_status === "Rejected" ? (
+    order.registration_admin_status === "Rejected" ? (
+      "No further processing"
+    ) : order.registration_admin_status === "Pending" ? (
+      "Pending Admin Approval"
+    ) : order.scientific_committee_status === "Refused" ? (
+      "Refused"
+    ) : order.scientific_committee_status ? (
+      order.scientific_committee_status
+    ) : (
+      "Awaiting Committee Forwarding"
+    )
+  ) : null}
+</td>
+
                       <td>
                         {order.ethical_committee_status === "Refused"
                           ? "Refused"
-                          : order.registration_admin_status === "Rejected"
+                          : order.technical_admin_status === "Rejected"
                           ? "No further processing"
                           : order.ethical_committee_status === "" ||
                           order.ethical_committee_status === null &&
@@ -357,7 +366,7 @@ const OrderPage = () => {
                             </button>
                           </div>
                           {/* Send Approval Button */}
-                          {order.registration_admin_status === "Accepted" &&
+                          {order.technical_admin_status === "Accepted" &&
                             order.ethical_committee_status === null &&
                             order.scientific_committee_status === null && (
                               <div className="position-relative">

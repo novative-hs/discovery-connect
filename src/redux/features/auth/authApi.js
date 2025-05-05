@@ -140,34 +140,16 @@ export const authApi = apiSlice.injectEndpoints({
     }),
     // Update Profile
     updateProfile: builder.mutation({
-      query: ({id,...data}) => ({
-        url: `api/user-dashboard/update-profile/${id}`,
+      query: ({ id, formData }) => ({
+        url: `api/user/updateProfile/${id}`,
         method: "PUT",
-        body: data,
+        body: formData, // ✅ correct
+        // Do NOT set Content-Type (browser will set it)
       }),
-
-      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-        try {
-          const result = await queryFulfilled;
-
-          sessionStorage.setItem(
-            "auth",
-            JSON.stringify({
-              accessToken: result.data.data.token,
-              user: result.data.data.user,
-            })
-          );
-
-          dispatch(
-            userLoggedIn({
-              user: result.data.data.user,
-            })
-          );
-        } catch (err) {
-          // do nothing
-        }
-      },
     }),
+    
+    
+    
   }),
 });
 

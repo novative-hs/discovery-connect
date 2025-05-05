@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -32,14 +32,14 @@ const create_researcherTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
       ResearcherName VARCHAR(100),
-      cnicPic LONGBLOB,
-      orgIdCardPic LONGBLOB,
+      nameofOrganization INT,
       phoneNumber VARCHAR(15),
-      fullAddress TEXT,
       city INT,
       district INT,
       country INT,
-      nameofOrganization INT,
+      fullAddress TEXT,
+      CNIC LONGBLOB,
+      organization_card LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
       added_by INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -379,9 +379,9 @@ WHERE
 // Function to update account (Researcher, Organization, Collection Sites)
 const updateAccount = (req, callback) => {
   const {
-    user_account_id,
+    
     useraccount_email,
-    password,
+    useraccount_password,
     accountType,
     ResearcherName,
     OrganizationName,
@@ -401,13 +401,17 @@ const updateAccount = (req, callback) => {
     committeetype,
     added_by
   } = req.body;
-
+  const user_account_id = req.params.id
   // Handle the logo file (if provided)
   let logo = null;
   if (req.file) {
-    // If a file was uploaded, convert it to a buffer
     logo = req.file.buffer;
   }
+  else if (req.files?.logo?.[0]) {
+    logo = req.files.logo[0].buffer;
+  }
+ 
+
   mysqlConnection.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting database connection:", err);
@@ -443,12 +447,15 @@ const updateAccount = (req, callback) => {
           const previousEmail = results[0].email;
           const previousPassword = results[0].password;
           // Update user account table
-          const updateUserAccountQuery = `
-        UPDATE user_account SET email = ? WHERE id = ?
-      `;
-          const updateUserAccountValues = [useraccount_email, user_account_id];
-
-
+          let updateUserAccountQuery = `UPDATE user_account SET email = ?`;
+          const updateUserAccountValues = [useraccount_email];
+          
+          if (useraccount_password) {
+            updateUserAccountQuery += `, password = ?`;
+            updateUserAccountValues.push(useraccount_password);
+          }
+          updateUserAccountQuery += ` WHERE id = ?`;
+          updateUserAccountValues.push(user_account_id);
 
           connection.query(
             updateUserAccountQuery,
@@ -646,11 +653,22 @@ const createAccount = (req, callback) => {
     type,
     HECPMDCRegistrationNo,
     ntnNumber,
+    status,
     added_by,
+    
   } = req.body;
 
-  let logo = req.file ? req.file.buffer : null;
+  const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
+const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
+let logo = null;
+if (req.file) {
+  logo = req.file.buffer;
+} else if (req.files?.logo?.[0]) {
+  logo = req.files.logo[0].buffer;
+}
 
+console.log("body",req.body)
+console.log("file",logo)
   mysqlPool.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting database connection:", err);
@@ -698,8 +716,8 @@ const createAccount = (req, callback) => {
 
             switch (accountType) {
               case "Researcher":
-                query = `INSERT INTO researcher (user_account_id, ResearcherName, cnicPic, orgIdCardPic, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by,CNIC,organization_card) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
@@ -712,12 +730,14 @@ const createAccount = (req, callback) => {
                   country,
                   nameofOrganization,
                   added_by,
+                  CNICBuffer,
+                  OrgCardBuffer
                 ];
                 break;
 
               case "Organization":
-                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo,status) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
                 values = [
                   userAccountId,
                   OrganizationName,
@@ -730,6 +750,7 @@ const createAccount = (req, callback) => {
                   district,
                   country,
                   logo,
+                  status
                 ];
                 break;
 
@@ -750,8 +771,8 @@ const createAccount = (req, callback) => {
                 break;
 
               case "CSR":
-                query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country) 
-                           VALUES ( ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country,status) 
+                           VALUES ( ?, ?, ?, ?, ?, ?, ?,?)`;
                 values = [
                   userAccountId,
                   CSRName,
@@ -760,11 +781,12 @@ const createAccount = (req, callback) => {
                   city,
                   district,
                   country,
+                  status
 
                 ];
                 break;
 
-              case "RegistrationAdmin":
+              case "TechnicalAdmin":
               case "biobank":
                 return callback(null, {
                   message: `${accountType} account registered successfully`,

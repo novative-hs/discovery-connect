@@ -178,16 +178,16 @@ const getAllOrderByOrderPacking = (req, res) => {
   });
 };
 
-const updateRegistrationAdminStatus = async (req, res) => {
+const updateTechnicalAdminStatus = async (req, res) => {
   const { id } = req.params;
-  const { registration_admin_status } = req.body;
+  const { technical_admin_status } = req.body;
 
-  if (!registration_admin_status) {
-    return res.status(400).json({ error: "Registration admin status is required" });
+  if (!technical_admin_status) {
+    return res.status(400).json({ error: "technical admin status is required" });
   }
 
   try {
-    const result = await cartModel.updateRegistrationAdminStatus(id, registration_admin_status);
+    const result = await cartModel.updateTechnicalAdminStatus(id, technical_admin_status);
     return res.status(200).json(result);
   } catch (err) {
     console.error("Error in update:", err);
@@ -214,7 +214,7 @@ const updateCartStatus = (req, res) => {
   const { id } = req.params;
   const { cartStatus } = req.body;
   if (!cartStatus) {
-    return res.status(400).json({ error: "Registration admin status is required" });
+    return res.status(400).json({ error: "cart status is required" });
   }
   cartModel.updateCartStatus(id, cartStatus, (err, result) => {
     if (err) {
@@ -236,7 +236,7 @@ module.exports = {
   getAllOrderByCommittee,
   getAllDocuments,
   getAllOrderByOrderPacking,
-  updateRegistrationAdminStatus,
+  updateTechnicalAdminStatus,
   updateCartStatus,
   updateCartStatusbyCSR
 };

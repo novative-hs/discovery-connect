@@ -13,11 +13,11 @@ import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 export default function Shop({ query }) {
   const router = useRouter();
   const page = Number(router.query.page) || 1;
-  const perPage = 1000; // Large enough to fetch all
+  const perPage = 1000;
   const queryParams = {
     ...router.query,
     limit: perPage,
-    offset: 0, // fetch from beginning
+    offset: 0,
   };
   
 

@@ -126,10 +126,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (userType === "biobank") {
       return;
     }
-
-    if (userType === "organization") {
-      setActiveTab("update-organization");
-    } else if (userType === "researcher") {
+if (userType === "researcher") {
       setActiveTab("update-user");
     } else if (userType === "collectionsites") {
       setActiveTab("update-collectionsite");
@@ -157,12 +154,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   const menuItems =
-    userType == "organization"
-      ? [
-        { label: "Profile", tab: "order-info" },
-        { label: "Researcher List", tab: "researchers" },
-      ]
-      : userType == "researcher"
+  userType == "researcher"
         ? [
           { label: "Book Samples", tab: "Booksamples" },
           { label: "Sample List", tab: "samples" },
@@ -213,7 +205,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                 ? [
                   { label: "Order Sample List", tab: "samples" },
                 ]
-                : userType == "registrationadmin"
+                : userType == "technicaladmin"
                   ? [
                     { label: "Profile", tab: "order-info" },
                     { label: "Order List", tab: "order" },
@@ -324,12 +316,12 @@ const Header = ({ setActiveTab, activeTab }) => {
 
             {/* Right Section */}
             <div className="d-flex align-items-center gap-2 ms-auto">
-              {userType === "registrationadmin" && (
+              {userType === "technicaladmin" && (
                 <span
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
-                  Welcome Registration Admin!
+                  Welcome Technical Admin!
                 </span>
               )}
               {userType === "databaseadmin" && (
@@ -373,7 +365,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                       zIndex: 9999,
                     }}
                   >
-                    {userType !== "registrationadmin" && userType !== "biobank" && userType !== "databaseadmin" && (
+                    {userType !== "technicaladmin" && userType !== "biobank" && userType !== "databaseadmin" && (
                       <li>
                         <button
                           className="dropdown-item fs-7"

@@ -89,7 +89,6 @@ const verifyOTP = (req, res) => {
 
 
 const createAccount = (req, res) => {
-  
 
   accountModel.createAccount(req, (err, result) => {
     if (err) {
@@ -107,9 +106,6 @@ const createAccount = (req, res) => {
 
 const loginAccount = (req, res) => {
   const { email, password } = req.body;
-
-  
-
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
       
@@ -208,7 +204,8 @@ const updateAccount = (req, res) => {
   accountModel.updateAccount(req, (err, result) => {
     if (err) {
       
-      return res.status(500).json({ error: "Error creating account" });
+      console.error("Update failed:", err);
+      return res.status(500).json({ error: err.message || "Update failed" });      
     }
     res.status(201).json(result);
   });

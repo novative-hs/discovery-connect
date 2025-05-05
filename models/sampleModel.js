@@ -233,8 +233,8 @@ const getResearcherSamples = (userId, callback) => {
     p.payment_status AS payment_status,
     s.quantity AS orderquantity, 
     
-    -- Include Registration Admin Status
-    ra.registration_admin_status,
+    -- Include Technical Admin Status
+    ra.technical_admin_status,
 
     -- Determine Final Committee Status
     CASE 
@@ -255,15 +255,15 @@ LEFT JOIN city c ON cs.city = c.id
 LEFT JOIN district d ON cs.district = d.id
 LEFT JOIN country ON sm.CountryOfCollection = country.id 
 JOIN payment p ON s.payment_id = p.id 
--- Join Registration Admin Sample Approval
-LEFT JOIN registrationadminsampleapproval ra ON s.id = ra.cart_id
+-- Join Technical Admin Sample Approval
+LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
 
 -- Join Committee Sample Approval
 LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
 
 WHERE s.user_id = ?
 
-GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.registration_admin_status
+GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
 
 ORDER BY s.id DESC;
 

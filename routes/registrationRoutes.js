@@ -9,7 +9,16 @@ router.post('/create-account-table', registrationController.createuser_accountTa
 router.post('/create-researcher-table', registrationController.create_researcherTable);
 router.post('/create-organization-table', registrationController.create_organizationTable);
 router.post('/create-collectionsite-table', registrationController.create_collectionsiteTable);
-router.post('/signup',upload.single('logo'), registrationController.createAccount);
+router.post(
+    '/signup',
+    upload.fields([
+      { name: 'CNIC', maxCount: 1 },
+      { name: 'Org_card', maxCount: 1 },
+      { name: 'logo', maxCount: 1 }, // <-- add this line
+    ]),    
+    registrationController.createAccount
+  );
+  
 router.post('/login', registrationController.loginAccount);
 router.get('/:id', registrationController.getUserEmail); 
 router.post("/check-email", registrationController.getEmail); 

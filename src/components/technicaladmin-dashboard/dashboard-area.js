@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
-import OrderInfo from "./order-info";
+import Link from "next/link";
+import { React, useState, useEffect } from "react";
+import { useRouter } from "next/router";  // Importing useRouter for redirect
+// internal
 import ProfileShapes from "./profile-shapes";
-import ChangePassword from "./change-password";
-import UpdateOrganization from "./update-organization";
-import ResearcherArea from "./researchers";
-import Header from "../../layout/dashboardheader";
-import { useRouter } from "next/router";
+import ChangePassword from './change-password';
+import ContactUS from "./contactus";
+import OrderArea from './order';
+import Header from '../../layout/dashboardheader';
+import OrderInfo from "./order-info";
 const DashboardArea = () => {
-  const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
+  const [activeTab, setActiveTab] = useState("order-info"); // Default to "Samples"
   const router = useRouter();
   const [id, setUserID] = useState(null);
 
@@ -18,7 +20,7 @@ const DashboardArea = () => {
       ?.split("=")[1];
 
     if (!token) {
-      router.push("/login");
+      router.push("/login"); // Redirect to login if token is missing
     }
   }, [router]);
 
@@ -26,7 +28,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Organization ID:", storedUserID); // Verify storedUserID
+      console.log("technical Admin site  ID:", storedUserID); // Verify storedUserID
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");
@@ -36,18 +38,16 @@ const DashboardArea = () => {
   if (!id) {
     return <div>Loading...</div>; // Or redirect to login
   }
-
-  // Function to render the content based on activeTab
   const renderContent = () => {
     switch (activeTab) {
       case "order-info":
-        return <OrderInfo setActiveTab={setActiveTab} />;
-      case "researchers":
-        return <ResearcherArea />;
+          return <OrderInfo setActiveTab={setActiveTab} />;
+      case "order":
+        return <OrderArea />;
+       case "contactus":
+        return <ContactUS/>
       case "change-password":
         return <ChangePassword />;
-      case "update-organization":
-        return <UpdateOrganization />;
       default:
         return <OrderInfo setActiveTab={setActiveTab} />;
     }
@@ -73,6 +73,8 @@ const DashboardArea = () => {
       </section>
     </>
   );
+  
+  
 };
 
 export default DashboardArea;

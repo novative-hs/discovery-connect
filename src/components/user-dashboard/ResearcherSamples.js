@@ -54,8 +54,8 @@ const SampleArea = () => {
       key: "order_status",
     },
     {
-      label: "Registration Admin status",
-      key: "registration_admin_status",
+      label: "Technical Admin status",
+      key: "technical_admin_status",
     },
     {
       label: "Committee Member Status",
@@ -332,7 +332,7 @@ const SampleArea = () => {
                                 id: sample.id,
                                 created_at: sample.created_at,
                                 orderStatus: sample.order_status || "Placed",
-                                registration_admin_status: sample.registration_admin_status,
+                                technical_admin_status: sample.technical_admin_status,
                                 committee_status: sample.committee_status,
                               },
                             })
