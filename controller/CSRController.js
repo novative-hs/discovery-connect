@@ -12,7 +12,8 @@ const getAllCSR = (req, res) => {
 };
 const  deleteCSR=(req, res)=> {
     const { id } = req.params;
-    csrModel.deleteCSR(id, (err, result) => {
+    const { status } = req.body;
+    csrModel.deleteCSR(id,status, (err, result) => {
       if (err) {
         return res.status(500).json({ error: "Error deleting CSR" });
       }

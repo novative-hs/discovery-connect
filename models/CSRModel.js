@@ -2,14 +2,26 @@ const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 // Function to fetch all CSR
 const getAllCSR = (callback) => {
-  const query = "SELECT c.*, user_account.email AS email FROM CSR c JOIN user_account ON c.user_account_id = user_account.id ORDER BY CSRName DESC";
+  const query = `SELECT c.*, user_account.id AS user_account_id, 
+      user_account.email AS useraccount_email, 
+      user_account.password AS useraccount_password, city.name AS city,
+      city.id AS cityid,
+      district.name AS district,
+      district.id AS districtid,
+      country.name AS country,
+      country.id AS countryid FROM CSR c 
+      JOIN user_account ON c.user_account_id = user_account.id
+       LEFT JOIN city ON c.city = city.id
+    LEFT JOIN district ON c.district = district.id
+    LEFT JOIN country ON c.country = country.id
+      ORDER BY c.id DESC`;
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });
 };
-const deleteCSR=(id,callback)=>{
+const deleteCSR=(id,status,callback)=>{
     const query = 'UPDATE CSR SET status = ? WHERE id = ?';
-    mysqlConnection.query(query, ['unapproved', id], (err, result) => {
+    mysqlConnection.query(query, [status, id], (err, result) => {
       callback(err, result);
     });
 }
@@ -17,7 +29,7 @@ const deleteCSR=(id,callback)=>{
 const updateCSRStatus = async (id, status) => {
     const updateQuery = "UPDATE CSR SET status = ? WHERE id = ?";
     const insertHistoryQuery = `
-      INSERT INTO registrationadmin_history (csr_id, status, updated_at)
+      INSERT INTO min_history (csr_id, status, updated_at)
       VALUES (?, ?, NOW())
     `;
     const getEmailQuery = `

@@ -164,16 +164,16 @@ const createCart = (data, callback) => {
     );
   }
 
-  const getAdminIdQuery = `SELECT id FROM user_account WHERE accountType = 'RegistrationAdmin' LIMIT 1`;
+  const getAdminIdQuery = `SELECT id FROM user_account WHERE accountType = 'TechnicalAdmin' LIMIT 1`;
 
   mysqlConnection.query(getAdminIdQuery, (err, adminResults) => {
     if (err) return callback(err);
 
     if (adminResults.length === 0) {
-      return callback(new Error("No Registration Admin found"));
+      return callback(new Error("No Technical Admin found"));
     }
 
-    const registrationAdminId = adminResults[0].id;
+    const technicalAdminId = adminResults[0].id;
 
     let insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
@@ -201,11 +201,11 @@ const createCart = (data, callback) => {
 
             const created_at = createdAtResult?.[0]?.created_at;
             const insertApprovalQuery = `
-              INSERT INTO registrationadminsampleapproval (cart_id, registration_admin_id, registration_admin_status)
+              INSERT INTO technicaladminsampleapproval (cart_id, technical_admin_id, technical_admin_status)
               VALUES (?, ?, 'pending')
             `;
 
-            mysqlConnection.query(insertApprovalQuery, [cartId, registrationAdminId], (err) => {
+            mysqlConnection.query(insertApprovalQuery, [cartId, technicalAdminId], (err) => {
               if (err) return reject(err);
 
               const insertDocumentsQuery = `
@@ -469,7 +469,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue,callback) => {
       c.totalpayment, 
       c.order_status,
       c.created_at,
-      IFNULL(ra.registration_admin_status, NULL) AS registration_admin_status,
+      IFNULL(ra.technical_admin_status, NULL) AS technical_admin_status,
 
       -- ✅ Ethical Committee Status
       (SELECT 
@@ -529,7 +529,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue,callback) => {
   LEFT JOIN researcher r ON u.id = r.user_account_id 
   LEFT JOIN organization org ON r.nameofOrganization = org.id
   JOIN sample s ON c.sample_id = s.id
-  LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
+  LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
   ${whereClause}
   ORDER BY c.created_at DESC
   LIMIT ? OFFSET ?`;
@@ -542,7 +542,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue,callback) => {
     LEFT JOIN researcher r ON u.id = r.user_account_id 
     LEFT JOIN organization org ON r.nameofOrganization = org.id
     JOIN sample s ON c.sample_id = s.id
-    LEFT JOIN registrationadminsampleapproval ra ON c.id = ra.cart_id
+    LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
     ${whereClause}
   `;
 
@@ -773,24 +773,24 @@ ORDER BY c.created_at ASC;
 };
 
 
-const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
+const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
   try {
 
-    // Step 1: Update registration admin status
+    // Step 1: Update Technical admin status
     const sqlQuery = `
-      UPDATE registrationadminsampleapproval 
-      SET registration_admin_status = ? 
+      UPDATE technicaladminsampleapproval 
+      SET technical_admin_status = ? 
       WHERE cart_id = ?`;
 
     // Use promise-based query to avoid blocking
-    await queryAsync(sqlQuery, [registration_admin_status, id]);
+    await queryAsync(sqlQuery, [technical_admin_status, id]);
 
     
 
-    // Step 2: Determine new cart status based on registration admin status
-    const newCartStatus = registration_admin_status === 'Accepted'
+    // Step 2: Determine new cart status based on Technical admin status
+    const newCartStatus = technical_admin_status === 'Accepted'
       ? 'Accepted'
-      : registration_admin_status === 'Rejected'
+      : technical_admin_status === 'Rejected'
       ? 'Rejected'
       : null;
 
@@ -800,7 +800,7 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
       : Promise.resolve(null);  // If no new cart status, resolve immediately
 
     // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
-    const revertQuantityPromise = registration_admin_status === 'Rejected'
+    const revertQuantityPromise = technical_admin_status === 'Rejected'
       ? revertSampleQuantity(id)
       : Promise.resolve(null);  // Skip if not rejected
 
@@ -809,11 +809,11 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
 
     // Step 4: Prepare the notification message
     const message =
-      registration_admin_status === 'Accepted'
-        ? "Your sample request has been <b>approved</b> by the Registration Admin.<br/>"
-        : registration_admin_status === 'Rejected'
-        ? "Your sample request has been <b>rejected</b> by the Registration Admin.<br/>"
-        : "Your sample request is still <b>pending</b> approval by the Registration Admin.<br/>";
+      technical_admin_status === 'Accepted'
+        ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
+        : technical_admin_status === 'Rejected'
+        ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
+        : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
 
     // Step 5: Notify the researcher asynchronously (no blocking)
     const notifyPromise = notifyResearcher(id, message, "Sample Request Status Update");
@@ -821,9 +821,9 @@ const updateRegistrationAdminStatus = async (id, registration_admin_status) => {
     // Wait for notification to be sent
     await notifyPromise;
 
-    return { message: "Registration Admin and Cart status updated. Researcher notified." };
+    return { message: "Technical Admin and Cart status updated. Researcher notified." };
   } catch (err) {
-    console.error("Error updating registration admin status:", err);
+    console.error("Error updating Technical admin status:", err);
     throw new Error("Error updating status");
   }
 };
@@ -997,7 +997,7 @@ module.exports = {
   getAllOrderByCommittee,
   getAllDocuments,
   getAllOrderByOrderPacking,
-  updateRegistrationAdminStatus,
+  updateTechnicalAdminStatus,
   updateCartStatus,
   updateCartStatusbyCSR
 };

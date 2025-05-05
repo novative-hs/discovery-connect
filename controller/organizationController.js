@@ -77,10 +77,10 @@ const getOrganizationById = (req, res) => {
 
 const deleteOrganization = async (req, res) => {
   const { id } = req.params;  // Get the id from request parameters
-
+  const { status } = req.body;
   try {
     // Call the model method and wait for the response
-    const result = await organizationModel.deleteOrganization(id);
+    const result = await organizationModel.deleteOrganization(id,status);
     
     // Return the success message after the status update
     res.status(200).json({ message: result.message });

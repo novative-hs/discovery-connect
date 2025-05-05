@@ -22,7 +22,7 @@ const schema = Yup.object().shape({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password"), null], "Passwords must match")
     .required("Confirm Password is required!"),
-  accountType: Yup.string().required("Account Type is required"),
+ 
   phoneNumber: Yup.string()
     .matches(
       /^\d{4}-\d{7}$/,
@@ -30,73 +30,39 @@ const schema = Yup.object().shape({
     )
     .required("Phone number is required")
     .label("Phone number is required"),
-  logo: Yup.mixed().when("accountType", {
-    is: (accountType) =>
-      accountType !== "Researcher" && accountType !== "CSR",
-    then: Yup.mixed().required("Logo is required"),
-    otherwise: Yup.mixed().notRequired(),
-  }),
+ 
   fullAddress: Yup.string().required("Full Address is required"),
   city: Yup.string().required("City is required"),
   district: Yup.string().required("District is required"),
   country: Yup.string().required("Country is required"),
-  CSRName: Yup.string().when("accountType", {
-    is: "CSR",
-    then: Yup.string().required("CSR Name is required!"),
-  }),
-  ResearcherName: Yup.string().when("accountType", {
-    is: "Researcher",
-    then: Yup.string()
-      .required("Researcher Name is required!")
-      .matches(
-        /^[A-Za-z\s]+$/,
-        "Researcher Name must only contain letters and spaces!"
-      ),
-  }),
+  
+  ResearcherName: Yup.string()
+    .required("Researcher Name is required!")
+    .matches(
+      /^[A-Za-z\s]+$/,
+      "Researcher Name must only contain letters and spaces!"
+    ),
+
 
   nameofOrganization: Yup.string().when("accountType", {
     is: "Researcher",
     then: Yup.string().required("Name of Organization is required!"),
   }),
-  OrganizationName: Yup.string().when("accountType", {
-    is: "Organization",
-    then: Yup.string().required("Organization Name is required!"),
-  }),
-  type: Yup.string()
-    .oneOf(["Public", "Private", "NGO"], "Invalid type selected")
-    .when("accountType", {
-      is: "Organization", // Condition: if accountType is 'Organization'
-      then: Yup.string().required("Type is required!"), // 'type' field becomes required
-      otherwise: Yup.string().nullable(), // Optional when condition is not met
-    }),
-  HECPMDCRegistrationNo: Yup.string().when("accountType", {
-    is: "Organization",
-    then: Yup.string().required("HEC / PMDC Registration No is required!"),
-  }),
-  ntnNumber: Yup.string().when("accountType", {
-    is: ["Organization"],
-    then: Yup.string().required("NTN Number is required!"),
-  }),
-  // CollectionSites-specific fields (conditional validation)
-  CollectionSiteName: Yup.string().when("accountType", {
-    is: "CollectionSites",
-    then: Yup.string().required("Collection Site Name is required!"),
-  }),
-  CollectionSiteType: Yup.string().when("accountType", {
-    is: "CollectionSites",
-    then: Yup.string().required("Type is required!"),
-  }),
+ 
+  
 });
 
 const RegisterForm = () => {
   const [showPass, setShowPass] = useState(false);
   const [showConPass, setShowConPass] = useState(false);
-  const [logo, setLogo] = useState("");
-  const [accountTypeLabel, setAccountTypeLabel] = useState("Choose Logo");
+  const [Org_name, setOrganizationname] = useState([]);
+  const [CNIC, setCNIC] = useState("");
+  const [Org_card, setOrg_card] = useState("");
   const [cityname, setCityname] = useState([]);
   const [districtname, setDistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
-  const [Org_name, setOrganizationname] = useState([]);
+  const fileInputRefCNIC = useRef(null);
+  const fileInputRefOrgCard = useRef(null);
   const router = useRouter();
   const [registerUser, {}] = useRegisterUserMutation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -121,10 +87,7 @@ const RegisterForm = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const fileInputRef = useRef(null);
-  const accountType = watch("accountType");
-  const selectedAccountType = watch("accountType");
-
+ 
   const handleSelectCity = (city) => {
     setSelectedCity(city);
     setSearchTerm("");
@@ -146,14 +109,6 @@ const RegisterForm = () => {
     setValue("country", country.id);
   };
 
-  // Dynamically change the "Choose Logo" label based on account type
-  useEffect(() => {
-    const labels = {
-      Organization: "Choose Organization Logo",
-      CollectionSites: "Choose Collection Site Logo",
-    };
-    setAccountTypeLabel(labels[accountType] || "Choose Logo");
-  }, [accountType]);
 
   // Fetch cities, districts, and countries from backend
   useEffect(() => {
@@ -192,86 +147,67 @@ const RegisterForm = () => {
       "Organization"
     );
   }, []);
-
-  const handleLogoChange = (event) => {
-    if (event.target.type === "file") {
-      // Handle file selection
-      const file = event.target.files[0];
-      if (file) {
-        setValue("logo", file);
-        setLogo(file.name); // Update the input field with the file name
-      }
-    } else {
-      // Handle button click (to trigger file input)
-      document.getElementById("fileInput").click(); // Trigger file input click
+  const handleFileChange = (e, setFn, fieldName) => {
+    const files = Array.from(e.target.files);
+    
+    // If more than 2 files are selected, prevent further selection
+    if (files.length > 2) {
+      notifyError("You can only select two images.");
+      return;
     }
+  
+    // If less than or equal to 2 files, update the state and form value
+    setValue(fieldName, files);
+    setFn(files.map(file => file.name).join(", ")); // Set filenames as a comma-separated string
   };
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click(); // Trigger file input
+  
+ 
+ 
+  
+  const triggerFileInput = (ref) => {
+    if (ref.current) {
+      ref.current.click();
     }
   };
 
   const onSubmit = (data) => {
-    
     const formData = new FormData();
-
+  
     // Append other form data
     formData.append("email", data.email);
     formData.append("password", data.password);
-    formData.append("accountType", data.accountType);
-
+    formData.append("accountType", "Researcher");
+  
     // Append Researcher-specific fields
-    if (data.accountType === "Researcher") {
-      formData.append("ResearcherName", data.ResearcherName);
-      formData.append("phoneNumber", data.phoneNumber);
-      formData.append("fullAddress", data.fullAddress);
-      formData.append("city", data.city);
-      formData.append("district", data.district);
-      formData.append("country", data.country);
-      formData.append("nameofOrganization", data.nameofOrganization);
+    formData.append("ResearcherName", data.ResearcherName);
+    formData.append("phoneNumber", data.phoneNumber);
+    formData.append("fullAddress", data.fullAddress);
+    formData.append("city", data.city);
+    formData.append("district", data.district);
+    formData.append("country", data.country);
+    formData.append("nameofOrganization", data.nameofOrganization);
+  
+    // Check if CNIC file is selected and append to FormData
+    if (data.CNIC && data.CNIC.length > 0) {
+      formData.append("CNIC", data.CNIC[0]); // Append the first CNIC file
+    } else {
+      // Handle the case where CNIC file is not selected
+      notifyError("CNIC file is required.");
+      return;
     }
-    if (data.accountType === "CSR") {
-      formData.append("CSRName", data.CSRName);
-      formData.append("phoneNumber", data.phoneNumber);
-      formData.append("fullAddress", data.fullAddress);
-      formData.append("city", data.city);
-      formData.append("district", data.district);
-      formData.append("country", data.country);
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
     }
-
-    // Append Organization-specific fields
-    if (data.accountType === "Organization") {
-      formData.append("OrganizationName", data.OrganizationName);
-      formData.append("type", data.type);
-      formData.append("HECPMDCRegistrationNo", data.HECPMDCRegistrationNo);
-      formData.append("ntnNumber", data.ntnNumber);
-      formData.append("fullAddress", data.fullAddress);
-      formData.append("city", data.city);
-      formData.append("district", data.district);
-      formData.append("country", data.country);
-      formData.append("phoneNumber", data.phoneNumber);
+    
+    // Check if Org_card file is selected and append to FormData
+    if (data.Org_card && data.Org_card.length > 0) {
+      formData.append("Org_card", data.Org_card[0]); // Append the first Org_card file
+    } else {
+      // Handle the case where Org_card file is not selected
+      notifyError("Organization card file is required.");
+      return;
     }
-
-    // Append CollectionSite-specific fields
-    if (data.accountType === "CollectionSites") {
-      formData.append("CollectionSiteName", data.CollectionSiteName);
-      formData.append("CollectionSiteType", data.CollectionSiteType);
-      formData.append("fullAddress", data.fullAddress);
-      formData.append("city", data.city);
-      formData.append("district", data.district);
-      formData.append("country", data.country);
-      formData.append("phoneNumber", data.phoneNumber);
-    }
-
-    // Append logo (if a file is selected)
-    if (
-      data.accountType !== "Researcher" &&
-      data.accountType !== "CSR" &&
-      data.logo
-    ) {
-      formData.append("logo", data.logo);
-    }
+  
     // Send the formData to the backend
     registerUser(formData)
       .then((result) => {
@@ -279,12 +215,17 @@ const RegisterForm = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-          setLogo("");
-          setValue("logo", "");
+          setCNIC("");
+          setOrg_card("");
+          setValue("CNIC", "");
+          setValue("Org_card", "");
+          setSearchCountry("");
+          setSearchDistrict("");
+          setSelectedCity("")
           notifySuccess(
             "Your information is received, you'll get email once your account got approval from Database Admin"
           );
-
+  
           router.push("/login");
         }
       })
@@ -292,12 +233,19 @@ const RegisterForm = () => {
         notifyError(
           error?.response?.data?.error || "An unexpected error occurred"
         );
-        setLogo("");
-        setValue("logo", "");
       });
-
-    reset();
+  
+    // Clear the file inputs and reset the form after submitting
+    setCNIC("");
+    setOrg_card("");
+    setValue("CNIC", "");
+    setValue("Org_card", "");
+  setSearchCountry("");
+  setSearchDistrict("");
+  setSelectedCity("")
+    reset(); // Reset form fields
   };
+  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -365,44 +313,86 @@ const RegisterForm = () => {
           </div>
           <ErrorMessage message={errors.confirmPassword?.message} />
         </div>
+        
+{/* CNIC Image */}
+<div className="login__input-item">
+  <div className="login-input form-control md-10 p-2">
+    <i className="fa-solid fa-image text-black px-3 mt-2"></i>
+    <label
+      className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
+      onClick={() => triggerFileInput(fileInputRefCNIC)}
+    >
+      {CNIC ? (
+        <span className="form-label">{CNIC}</span>
+      ) : (
+        "Choose CNIC Images"
+      )}
+    </label>
 
-        {/* Account Type */}
-        <div className="login__input-item">
-          <div className="login__input position-relative ">
-            <span className="position-absolute start-0 top-50 translate-middle-y ps-3">
-              <i className="fa-regular fa-user px-2"></i>
-            </span>
-            <select
-              {...register("accountType", {
-                required: "Account Type is required!",
-              })}
-              name="accountType"
-              id="accountType"
-              className="form-select ps-5 py-3 form-control-lg"
-            >
-              <option value="">Select Account Type</option>
-              <option value="Researcher">Researcher</option>
-              <option value="Organization">Organization</option>
-              <option value="CollectionSites">Collection Site</option>
-              <option value="CSR">CSR </option>
-            </select>
-          </div>
-          <ErrorMessage message={errors.accountType?.message} />
-        </div>
+    <input
+      type="file"
+      multiple
+      {...register("CNIC", {
+        required: "CNIC is required",
+      })}
+      className="d-none"
+      ref={fileInputRefCNIC}
+      onChange={(e) => handleFileChange(e, setCNIC, "CNIC")}
+    />
+  </div>
+  <ErrorMessage
+    name="CNIC"
+    component="div"
+    className="error-message"
+    message={errors.CNIC?.message}
+  />
+</div>
 
-        {selectedAccountType && (
-          <>
-            {accountType === "Researcher" && (
-              <>
+{/* Org Card Image */}
+<div className="login__input-item">
+  <div className="login-input form-control md-10 p-2">
+    <i className="fa-solid fa-image text-black px-3 mt-2"></i>
+    <label
+      className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
+      onClick={() => triggerFileInput(fileInputRefOrgCard)}
+    >
+      {Org_card ? (
+        <span className="form-label">{Org_card}</span>
+      ) : (
+        "Choose Org Card Images"
+      )}
+    </label>
+
+    <input
+      type="file"
+      multiple
+      {...register("Org_card", {
+        required: "Org card is required",
+      })}
+      className="d-none"
+      ref={fileInputRefOrgCard}
+      onChange={(e) => handleFileChange(e, setOrg_card, "Org_card")}
+    />
+  </div>
+  <ErrorMessage
+    name="Org_card"
+    component="div"
+    className="error-message"
+    message={errors.Org_card?.message}
+  />
+</div>
+
+
                 <div className="login__input-item">
                   <div className="login__input">
-                    <input
-                      {...register("ResearcherName")}
-                      name="ResearcherName"
-                      type="text"
-                      placeholder="Researcher Name"
-                      id="ResearcherName"
-                    />
+                  <input
+        {...register("ResearcherName")}
+        name="ResearcherName"
+        type="text"
+        placeholder="Researcher Name"
+        id="ResearcherName"
+      />
+
                     <span>
                       <i className="fa-solid fa-user"></i>
                     </span>
@@ -436,150 +426,7 @@ const RegisterForm = () => {
                   </div>
                   <ErrorMessage message={errors.nameofOrganization?.message} />
                 </div>
-              </>
-            )}
-            {accountType === "CSR" && (
-              <>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <input
-                      {...register("CSRName")}
-                      name="CSRName"
-                      type="text"
-                      placeholder="CSR Name"
-                      id="CSRName"
-                    />
-                    <span>
-                      <i className="fa-solid fa-user"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage message={errors.CSRName?.message} />
-                </div>
-              </>
-            )}
-
-            {accountType === "Organization" && (
-              <>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <input
-                      {...register("OrganizationName")}
-                      name="OrganizationName"
-                      type="text"
-                      placeholder="Organization Name"
-                      id="OrganizationName"
-                    />
-                    <span>
-                      <i className="fa-solid fa-building"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage message={errors.OrganizationName?.message} />
-                </div>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <select
-                      {...register("type")}
-                      name="type"
-                      id="type"
-                      style={{
-                        width: "100%",
-                        height: "50px",
-                        paddingLeft: "50px",
-                        borderColor: "#f0f0f0",
-                        color: "#808080",
-                      }}
-                    >
-                      <option value="">Select Type</option>
-                      <option value="Public">Public</option>
-                      <option value="Private">Private</option>
-                      <option value="NGO">NGO</option>
-                    </select>
-                    <span>
-                      <i className="fa-solid fa-id-card"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage message={errors.type?.message} />
-                </div>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <input
-                      {...register("HECPMDCRegistrationNo")}
-                      name="HECPMDCRegistrationNo"
-                      type="text"
-                      placeholder="HEC / PMDC Registration No"
-                      id="HECPMDCRegistrationNo"
-                    />
-                    <span>
-                      <i className="fa-solid fa-id-card"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage
-                    message={errors.HECPMDCRegistrationNo?.message}
-                  />
-                </div>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <input
-                      {...register("ntnNumber")}
-                      name="ntnNumber"
-                      type="text"
-                      placeholder="NTN Number"
-                      id="ntnNumber"
-                    />
-                    <span>
-                      <i className="fa-solid fa-id-card"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage message={errors.ntnNumber?.message} />
-                </div>
-              </>
-            )}
-
-            {accountType === "CollectionSites" && (
-              <>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <input
-                      {...register("CollectionSiteName")}
-                      name="CollectionSiteName"
-                      type="text"
-                      placeholder="Collection Site Name"
-                      id="CollectionSiteName"
-                    />
-                    <span>
-                      <i className="fa-solid fa-user"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage message={errors.CollectionSiteName?.message} />
-                </div>
-                <div className="login__input-item">
-                  <div className="login__input">
-                    <select
-                      {...register("CollectionSiteType")}
-                      name="CollectionSiteType"
-                      id="CollectionSiteType"
-                      style={{
-                        width: "100%",
-                        height: "50px",
-                        paddingLeft: "50px",
-                        borderColor: "#f0f0f0",
-                        color: "#808080",
-                      }}
-                    >
-                      <option value="">Select Type</option>
-                      <option value="Hospital">Hospital</option>
-                      <option value="Independent Lab">Independent Lab</option>
-                      <option value="Blood Bank">Blood Bank</option>
-                    </select>
-                    <span>
-                      <i className="fa-solid fa-id-card"></i>
-                    </span>
-                  </div>
-                  <ErrorMessage message={errors.CollectionSiteType?.message} />
-                </div>
-              </>
-            )}
-
+             
             {/* Phone Number */}
             <div className="login__input-item">
               <div className="login__input">
@@ -595,45 +442,6 @@ const RegisterForm = () => {
               </div>
               <ErrorMessage message={errors.phoneNumber?.message} />
             </div>
-
-            {/* Logo Upload */}
-            {accountType !== "Researcher" && accountType !== "CSR" && (
-  <div className="login__input-item">
-    <div className="login-input form-control md-10 p-2">
-      <i className="fa-solid fa-image text-black px-3 mt-2"></i>
-      <label
-        className="btn btn-outline-secondary bg-transparent border-0 px-0 m-0"
-        onClick={triggerFileInput}
-      >
-        {logo ? (
-          <span className="form-label">{logo}</span>
-        ) : (
-          accountTypeLabel
-        )}
-      </label>
-
-      <input
-        type="file"
-        {...register("logo", {
-          required:
-            accountType !== "Researcher" && accountType !== "CSR"
-              ? "Logo is required"
-              : false,
-        })}
-        className="d-none"
-        ref={fileInputRef}
-        onChange={handleLogoChange}
-      />
-    </div>
-    <ErrorMessage
-      name="logo"
-      component="div"
-      className="error-message"
-      message={errors.logo?.message}
-    />
-  </div>
-)}
-
 
             {/* {/ City Fields /} */}
             <div className="login__input-item">
@@ -824,8 +632,6 @@ const RegisterForm = () => {
               </div>
               <ErrorMessage message={errors.fullAddress?.message} />
             </div>
-          </>
-        )}
       </div>
       <div className="login__btn mt-25">
         <button type="submit" className="tp-btn w-100" disabled={false}>

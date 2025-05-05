@@ -2,11 +2,31 @@ const mysqlConnection = require("../config/db");
 const {sendEmail}=require("../config/email");
 // Function to fetch all organizations
 const getAllOrganizations = (callback) => {
-  const query = "SELECT organization.*, user_account.email AS email FROM organization JOIN user_account ON organization.user_account_id = user_account.id ORDER BY organization.id DESC";
+  const query = `
+    SELECT 
+      organization.*, 
+      user_account.id AS user_account_id, 
+      user_account.email AS useraccount_email, 
+      user_account.password AS useraccount_password,
+      city.name AS city,
+      city.id AS cityid,
+      district.name AS district,
+      district.id AS districtid,
+      country.name AS country,
+      country.id AS countryid
+    FROM organization 
+    JOIN user_account ON organization.user_account_id = user_account.id
+    LEFT JOIN city ON organization.city = city.id
+    LEFT JOIN district ON organization.district = district.id
+    LEFT JOIN country ON organization.country = country.id
+    ORDER BY organization.id DESC
+  `;
+
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });
 };
+
 
 function getCurrentOrganizationById(id, callback) {
   const query = 'SELECT o.*,  c.id AS cityid, c.name AS cityname, cnt.id AS countryid, cnt.name AS countryname, d.id AS districtid, d.name AS districtname, ua.email AS useraccount_email FROM organization o JOIN city c ON o.city = c.id JOIN country cnt ON o.country = cnt.id JOIN district d ON o.district = d.id JOIN user_account ua ON o.user_account_id = ua.id WHERE o.user_account_id = ?';
@@ -148,7 +168,7 @@ const updateOrganization = (data, user_account_id, callback) => {
 };
 
 // Function to delete a collection site
-const deleteOrganization = async (id) => {
+const deleteOrganization = async (id,status) => {
   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
   const getEmailQuery = `
     SELECT ua.email ,o.OrganizationName
@@ -158,8 +178,6 @@ const deleteOrganization = async (id) => {
   `;
 
   try {
-    // Set the status here (e.g., 'unapproved' for deletion)
-    const status = 'unapproved';
 
     // Update organization status
     const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);

@@ -8,7 +8,7 @@ const ResearcherArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyData, setHistoryData] = useState([])
+  const [historyData, setHistoryData] = useState([]);
   const [editResearcher, setEditResearcher] = useState(null);
   const [selectedResearcherId, setSelectedResearcherId] = useState(null);
   const [allResearchers, setAllResearchers] = useState([]);
@@ -78,7 +78,6 @@ const ResearcherArea = () => {
     (currentPage + 1) * itemsPerPage
   );
 
-
   const handlePageChange = (event) => {
     setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
@@ -91,15 +90,17 @@ const ResearcherArea = () => {
         setSuccessMessage(response.data.message);
         setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
       }
-  
+
       fetchResearchers(); // Refresh data after delete
       setShowDeleteModal(false);
       setSelectedResearcherId(null);
     } catch (error) {
-      console.error(`Error deleting researcher with ID ${selectedResearcherId}:`, error);
+      console.error(
+        `Error deleting researcher with ID ${selectedResearcherId}:`,
+        error
+      );
     }
   };
-  
 
   const handleEditClick = (researcher) => {
     setSelectedResearcherId(researcher.id);
@@ -122,7 +123,6 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
-     
 
       const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
@@ -184,24 +184,22 @@ const ResearcherArea = () => {
       // hour12: true,
       // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
-  
+
     const formatted = new Date(date).toLocaleString("en-GB", options);
-  
+
     const [datePart, timePart] = formatted.split(", ");
     const [day, month, year] = datePart.split(" ");
-  
-    const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-  
+
+    const formattedMonth =
+      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+
     return `${day}-${formattedMonth}-${year}`;
   };
-  
-  
-  
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
-
           <div className="d-flex flex-column w-100">
             {/* Button Container */}
             <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
@@ -225,9 +223,7 @@ const ResearcherArea = () => {
                   id="statusFilter"
                   className="form-control mb-2"
                   style={{ width: "auto" }}
-                  onChange={(e) =>
-                    handleFilterChange("status", e.target.value)
-                  } // Pass "status" as the field
+                  onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
                 >
                   <option value="">All</option>
                   <option value="pending">pending</option>
@@ -236,72 +232,71 @@ const ResearcherArea = () => {
               </div>
             </div>
 
-              {/* Table */}
-              <div className="table-responsive w-100">
-            <table className="table table-hover table-bordered text-center align-middle w-auto border">
-              <thead className="table-primary text-dark">
-                <tr className="text-center">
-                      {[
-                        //{ label: "ID", placeholder: "Search ID", field: "id" },
-                        {
-                          label: "Name",
-                          placeholder: "Search Name",
-                          field: "ResearcherName",
-                        },
-                        {
-                          label: "Email",
-                          placeholder: "Search Email",
-                          field: "email",
-                        },
-                        {
-                          label: "Contact",
-                          placeholder: "Search Contact",
-                          field: "phoneNumber",
-                        },
-                        {
-                          label: "Organization",
-                          placeholder: "Search Organization",
-                          field: "OrganizationName",
-                        },
-                        {
-                          label: "Created at",
-                          placeholder: "Search Created at",
-                          field: "created_at",
-                        },
-                        {
-                          label: "Status",
-                          placeholder: "Search Status",
-                          field: "status",
-                        },
-                      ].map(({ label, placeholder, field }) => (
-                        <th key={field} className="col-md-2 px-1">
-                         
-                         <input
-                        type="text"
-                        className="form-control w-100 mx-auto"
-                        placeholder={placeholder}
-                        onChange={(e) =>
-                          handleFilterChange(field, e.target.value)
-                        }
-                      />
-                            {label}
-                        </th>
-                      ))}
-                      <th className="col-1">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((researcher) => (
-                        <tr key={researcher.id}>
-                          {/* <td>{researcher.id}</td> */}
-                          <td>{researcher.ResearcherName}</td>
-                          <td>{researcher.email}</td>
-                          <td>{researcher.phoneNumber}</td>
-                          <td>{researcher.OrganizationName}</td>
-                          <td>{formatDate(researcher.created_at)}</td>
-                          <td>{researcher.status}</td>
-                          <td>
+            {/* Table */}
+            <div className="table-responsive w-100">
+              <table className="table table-hover table-bordered text-center align-middle w-auto border">
+                <thead className="table-primary text-dark">
+                  <tr className="text-center">
+                    {[
+                      {
+                        label: "Name",
+                        placeholder: "Search Name",
+                        field: "ResearcherName",
+                      },
+                      {
+                        label: "Email",
+                        placeholder: "Search Email",
+                        field: "email",
+                      },
+                      {
+                        label: "Contact",
+                        placeholder: "Search Contact",
+                        field: "phoneNumber",
+                      },
+                      {
+                        label: "Organization",
+                        placeholder: "Search Organization",
+                        field: "OrganizationName",
+                      },
+                      {
+                        label: "Created at",
+                        placeholder: "Search Created at",
+                        field: "created_at",
+                      },
+                      {
+                        label: "Status",
+                        placeholder: "Search Status",
+                        field: "status",
+                      },
+                    ].map(({ label, placeholder, field }) => (
+                      <th key={field} style={{ minWidth: "180px" }}>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                        />
+                        <div className="fw-bold mt-1">{label}</div>
+                      </th>
+                    ))}
+                    <th style={{ minWidth: "120px" }}>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {currentData.length > 0 ? (
+                    currentData.map((researcher) => (
+                      <tr key={researcher.id}>
+                        {/* <td>{researcher.id}</td> */}
+                        <td>{researcher.ResearcherName}</td>
+                        <td>{researcher.email}</td>
+                        <td>{researcher.phoneNumber}</td>
+                        <td>{researcher.OrganizationName}</td>
+                        <td>{formatDate(researcher.created_at)}</td>
+                        <td>{researcher.status}</td>
+                        <td>
                           <div className="d-flex justify-content-center gap-2">
                             <button
                               className="btn btn-success btn-sm"
@@ -346,7 +341,10 @@ const ResearcherArea = () => {
             {filteredResearchers.length >= 0 && (
               <Pagination
                 handlePageClick={handlePageChange}
-                pageCount={Math.max(1, Math.ceil(filteredResearchers.length / itemsPerPage))}
+                pageCount={Math.max(
+                  1,
+                  Math.ceil(filteredResearchers.length / itemsPerPage)
+                )}
                 focusPage={currentPage}
               />
             )}
@@ -565,8 +563,7 @@ const ResearcherArea = () => {
                                     padding: "10px 15px",
                                     borderRadius: "15px",
                                     backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow:
-                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
@@ -639,10 +636,7 @@ const ResearcherArea = () => {
                       <p>Are you sure you want to delete this researcher?</p>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
+                      <button className="btn btn-danger" onClick={handleDelete}>
                         Delete
                       </button>
                       <button
@@ -657,7 +651,6 @@ const ResearcherArea = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
     </section>

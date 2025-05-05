@@ -54,8 +54,8 @@ const SampleArea = () => {
       key: "order_status",
     },
     {
-      label: "Registration Admin status",
-      key: "registration_admin_status",
+      label: "Technical Admin status",
+      key: "technical_admin_status",
     },
     {
       label: "Committee Member Status",
@@ -272,9 +272,9 @@ const SampleArea = () => {
                         if (key === "committee_status") {
                           let displayValue = sample[key];
 
-                          if (sample.registration_admin_status === "Rejected") {
+                          if (sample.technical_admin_status === "Rejected") {
                             displayValue = "No further processing";
-                          }   if (sample.registration_admin_status === "Rejected" && sample.committee_status==="rejected" && sample.order_status==="Rejected") {
+                          }   if (sample.technical_admin_status === "Rejected" && sample.committee_status==="rejected" && sample.order_status==="Rejected") {
                             displayValue = "Rejected";
                           } 
                           else if (
@@ -329,7 +329,7 @@ const SampleArea = () => {
                                 id: sample.id,
                                 created_at: sample.created_at,
                                 orderStatus: sample.order_status || "Placed",
-                                registration_admin_status: sample.registration_admin_status,
+                                technical_admin_status: sample.technical_admin_status,
                                 committee_status: sample.committee_status,
                               },
                             })
