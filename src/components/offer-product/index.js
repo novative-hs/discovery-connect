@@ -6,18 +6,19 @@ import {
   useGetAllSamplesQuery,
   useGetSampleFieldsQuery,
 } from "src/redux/features/productApi";
-import bg from "@assets/img/contact/contact-bg.png";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { add_cart_product } from "src/redux/features/cartSlice";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/router";
-import { skipToken } from "@reduxjs/toolkit/query"; // add this at the top
-
+import { skipToken } from "@reduxjs/toolkit/query";
 
 const OfferPopularProduct = () => {
-  const [page, setPage] = useState(1)
-  const { data: categories, isLoading, isError } = useGetAllSamplesQuery({ limit: 20, offset: (page - 1) * 20 });
+  const [page, setPage] = useState(1);
+  const { data: categories, isLoading, isError } = useGetAllSamplesQuery({
+    limit: 20,
+    offset: (page - 1) * 20,
+  });
 
   const sampleType = "sampletypematrix";
   const {
@@ -25,7 +26,7 @@ const OfferPopularProduct = () => {
     isLoading: sampleFieldsLoading,
     isError: sampleFieldsError,
   } = useGetSampleFieldsQuery(sampleType || skipToken);
-  
+
   const router = useRouter();
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
@@ -33,20 +34,19 @@ const OfferPopularProduct = () => {
   const [showModal, setShowModal] = useState(false);
   const dispatch = useDispatch();
 
-  // ✅ Filter valid categories
-  const filteredCategories =
-    categories?.filter((category) => category.price !== null) || [];
-  const displayedCategories = filteredCategories.slice(0, 6);
+  // ✅ Get actual sample list
+  const sampleList = categories?.data || [];
+  const filteredCategories = sampleList.filter((category) => category.price !== null);
+  const displayedCategories = filteredCategories.slice(0, 6); // showing only 6 on homepage
 
-  // ✅ Setup Intersection Observer
+  // ✅ Setup Intersection Observer and AOS
   useEffect(() => {
     AOS.init({ duration: 500 });
+
     if (showModal) {
-      // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
     } else {
-      // Allow scrolling again when modal is closed
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
@@ -72,9 +72,8 @@ const OfferPopularProduct = () => {
         if (el) observer.unobserve(el);
       });
     };
-  }, [showModal,displayedCategories]);
+  }, [showModal, displayedCategories]);
 
-  // ✅ Conditional rendering AFTER hooks
   if (isLoading || sampleFieldsLoading)
     return <ProductLoader loading={isLoading || sampleFieldsLoading} />;
   if (isError)
@@ -89,17 +88,14 @@ const OfferPopularProduct = () => {
   };
 
   return (
-    <section className="product__coupon-area product__offer py-5" style={{}}>
+    <section className="product__coupon-area product__offer py-5">
       <div className="container">
-        
-        {/* Header */}
         <div className="row text-center mb-4">
           <div className="col">
             <h2 className="fw-bold text-primary">High-Quality Lab Samples</h2>
           </div>
         </div>
 
-        {/* Products */}
         <div className="row py-4">
           {displayedCategories.map((category, index) => (
             <div
@@ -148,7 +144,6 @@ const OfferPopularProduct = () => {
           ))}
         </div>
 
-        {/* Footer */}
         <div className="row text-center mt-4">
           <div className="col">
             <Link
@@ -197,14 +192,8 @@ const OfferPopularProduct = () => {
                 overflow: "hidden",
               }}
             >
-              {/* Header */}
-              <div
-                className="modal-header bg-info text-white"
-                data-aos="fade-down"
-              >
-                <h5 className="modal-title fw-bold">
-                  {selectedProduct.samplename}
-                </h5>
+              <div className="modal-header bg-info text-white" data-aos="fade-down">
+                <h5 className="modal-title fw-bold">{selectedProduct.samplename}</h5>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
@@ -216,10 +205,8 @@ const OfferPopularProduct = () => {
                 ></button>
               </div>
 
-              {/* Body */}
               <div className="modal-body">
                 <div className="row">
-                  {/* Left */}
                   <div className="col-md-4 text-center" data-aos="fade-right">
                     <img
                       src={selectedProduct.imageUrl || "/placeholder.jpg"}
@@ -231,88 +218,33 @@ const OfferPopularProduct = () => {
                       }}
                     />
                     <ul className="list-group text-start small">
-                      <li className="list-group-item">
-                        <strong>Age:</strong> {selectedProduct.age}
-                      </li>
-                      <li className="list-group-item">
-                        <strong>Gender:</strong> {selectedProduct.gender}
-                      </li>
-                      <li className="list-group-item">
-                        <strong>Ethnicity:</strong> {selectedProduct.ethnicity}
-                      </li>
-                      <li className="list-group-item">
-                        <strong>Alcohol/Drug Abuse:</strong>{" "}
-                        {selectedProduct.AlcoholOrDrugAbuse}
-                      </li>
-                      <li className="list-group-item">
-                        <strong>Smoking Status:</strong>{" "}
-                        {selectedProduct.SmokingStatus}
-                      </li>
-                      <li className="list-group-item">
-                        <strong>Country:</strong>{" "}
-                        {selectedProduct.CountryOfCollection}
-                      </li>
-                      <li className="list-group-item">
-                        <strong>Status:</strong> {selectedProduct.status}
-                      </li>
+                      <li className="list-group-item"><strong>Age:</strong> {selectedProduct.age}</li>
+                      <li className="list-group-item"><strong>Gender:</strong> {selectedProduct.gender}</li>
+                      <li className="list-group-item"><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</li>
+                      <li className="list-group-item"><strong>Alcohol/Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</li>
+                      <li className="list-group-item"><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</li>
+                      <li className="list-group-item"><strong>Country:</strong> {selectedProduct.CountryOfCollection}</li>
+                      <li className="list-group-item"><strong>Status:</strong> {selectedProduct.status}</li>
                     </ul>
                   </div>
 
-                  {/* Right */}
                   <div className="col-md-8" data-aos="fade-left">
                     <div className="row g-2">
                       {[
-                        {
-                          label: "Sample Type Matrix",
-                          value: selectedProduct.SampleTypeMatrix,
-                        },
-                        {
-                          label: "Quantity Unit",
-                          value: selectedProduct.QuantityUnit,
-                        },
-                        {
-                          label: "Sample Condition",
-                          value: selectedProduct.samplecondition,
-                        },
-                        {
-                          label: "Storage Temp",
-                          value: selectedProduct.storagetemp,
-                        },
-                        {
-                          label: "Container Type",
-                          value: selectedProduct.ContainerType,
-                        },
-                        {
-                          label: "Freeze Thaw Cycles",
-                          value: selectedProduct.FreezeThawCycles,
-                        },
-                        {
-                          label: "Infectious Disease Testing",
-                          value: `${selectedProduct.InfectiousDiseaseTesting} ${selectedProduct.InfectiousDiseaseResult}`,
-                        },
-                        {
-                          label: "Diagnosis Test Parameter",
-                          value: selectedProduct.DiagnosisTestParameter,
-                        },
-                        {
-                          label: "Test Result Unit",
-                          value: selectedProduct.TestResultUnit,
-                        },
-                        {
-                          label: "Test Method",
-                          value: selectedProduct.TestMethod,
-                        },
+                        { label: "Sample Type Matrix", value: selectedProduct.SampleTypeMatrix },
+                        { label: "Quantity Unit", value: selectedProduct.QuantityUnit },
+                        { label: "Sample Condition", value: selectedProduct.samplecondition },
+                        { label: "Storage Temp", value: selectedProduct.storagetemp },
+                        { label: "Container Type", value: selectedProduct.ContainerType },
+                        { label: "Freeze Thaw Cycles", value: selectedProduct.FreezeThawCycles },
+                        { label: "Infectious Disease Testing", value: `${selectedProduct.InfectiousDiseaseTesting} ${selectedProduct.InfectiousDiseaseResult}` },
+                        { label: "Diagnosis Test Parameter", value: selectedProduct.DiagnosisTestParameter },
+                        { label: "Test Result Unit", value: selectedProduct.TestResultUnit },
+                        { label: "Test Method", value: selectedProduct.TestMethod },
                       ].map((item, index) => (
-                        <div
-                          className="col-6"
-                          key={index}
-                          data-aos="zoom-in"
-                          data-aos-delay={index * 100}
-                        >
+                        <div className="col-6" key={index} data-aos="zoom-in" data-aos-delay={index * 100}>
                           <div className="border rounded p-2 h-100 bg-light">
-                            <small className="text-muted d-block">
-                              {item.label}
-                            </small>
+                            <small className="text-muted d-block">{item.label}</small>
                             <strong>{item.value || "N/A"}</strong>
                           </div>
                         </div>

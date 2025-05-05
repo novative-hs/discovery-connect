@@ -11,6 +11,7 @@ const upload = multer({ storage: storage });
 router.get('/collectionsitenames', collectionsiteController.getAllCollectionSiteNames);
 router.get('/get', collectionsiteController.getAllCollectionSites);
 router.get('/:id', collectionsiteController.getCollectionSiteById);
+router.post('/post', collectionsiteController.createCollectionSite); 
 router.put('/edit/:id', collectionsiteController.updateCollectionSiteStatus);
 router.delete('/delete/:id', collectionsiteController.deleteCollectionSite);
 router.get('/collectionsitenames/:user_account_id', collectionsiteController.getAllCollectionSiteNames);

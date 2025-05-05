@@ -27,6 +27,19 @@ const getCollectionSiteById = (req, res) => {
   });
 };
 
+
+// Controller to create a collection site
+const createCollectionSite = (req, res) => {
+  const newMemberData = req.body;
+  collectionsiteModel.createCollectionSite(newMemberData, (err, result) => {
+    if (err) {
+      console.error("Error creating collection site:", err); // Add this line
+      return res.status(500).json({ error: "Error creating collection site" });
+    }
+    res.status(201).json({ message: "Collection site created successfully", id: result.insertId });
+  });
+};
+
 // Controller to update collection site status
 const updateCollectionSiteStatus = async (req, res) => {
   const { id } = req.params;
@@ -157,6 +170,7 @@ const getCollectionSiteDetail = (req, res) => {
 
 module.exports = {
   getCollectionSiteDetail,
+  createCollectionSite,
   updateCollectionSiteDetail,
   getAllCollectionSiteNames,
   getAllCollectionSiteNamesInBiobank,

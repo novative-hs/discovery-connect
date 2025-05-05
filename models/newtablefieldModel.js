@@ -4,13 +4,17 @@ const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
 
   {
-    table: "registrationadmin_history",
+    table: "researcher",
     columnsToAdd: [
       {
-        column: "samplepricecurrency_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "samplepricecurrency", column: "id" },
+        column: "cnicPic",
+        type: "LONGBLOB",
+        nullable: true, // Allow null if needed
+      },
+      {
+        column: "orgIdCardPic",
+        type: "LONGBLOB",
+        nullable: true, // Allow null if needed
       },
     ],
   },

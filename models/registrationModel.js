@@ -32,6 +32,8 @@ const create_researcherTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
       ResearcherName VARCHAR(100),
+      cnicPic LONGBLOB,
+      orgIdCardPic LONGBLOB,
       phoneNumber VARCHAR(15),
       fullAddress TEXT,
       city INT,
@@ -445,7 +447,7 @@ const updateAccount = (req, callback) => {
         UPDATE user_account SET email = ? WHERE id = ?
       `;
           const updateUserAccountValues = [useraccount_email, user_account_id];
-         
+
 
 
           connection.query(
@@ -629,6 +631,8 @@ const createAccount = (req, callback) => {
     email,
     password,
     ResearcherName,
+    cnicPic,
+    orgIdCardPic,
     CSRName,
     OrganizationName,
     CollectionSiteName,
@@ -694,11 +698,13 @@ const createAccount = (req, callback) => {
 
             switch (accountType) {
               case "Researcher":
-                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, cnicPic, orgIdCardPic, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
+                  cnicPic,
+                  orgIdCardPic,
                   phoneNumber,
                   fullAddress,
                   city,
@@ -807,11 +813,11 @@ const createAccount = (req, callback) => {
 
               const historyQuery = `
                 INSERT INTO history (
-                  email, password, ResearcherName, CollectionSiteName, OrganizationName, CSRName,
+                  email, password, ResearcherName, cnicPic, orgIdCardPic, CollectionSiteName, OrganizationName, CSRName,
                   HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
                   researcher_id, collectionsite_id, CSR_id,status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?)`;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
@@ -831,6 +837,8 @@ const createAccount = (req, callback) => {
                 district,
                 country,
                 logo,
+                cnicPic,
+                orgIdCardPic,
                 added_by || null,
                 organizationId,
                 researcherId,
@@ -1112,17 +1120,17 @@ const sendOTP = (req, callback) => {
     }
     if (result.length === 0) {
       return callback({ status: 404, message: "User not found" }, null);
-    }    
+    }
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-    
+
     const updateQuery = `UPDATE user_account SET OTP = ?, otpExpiry = ? WHERE email = ?`;
     mysqlConnection.query(updateQuery, [otp, otpExpiry, email], (updateErr, result) => {
       if (updateErr) {
         console.error("❌ Error while updating OTP:", updateErr);
         return callback({ status: 500, message: "Error saving OTP" }, null);
       }
-    
+
       sendEmail(email, "Your OTP Code", `Your OTP code is: ${otp}.it is valid for the next 5 minutes.`)
         .then(() => {
           callback(null, { message: "OTP sent successfully!", otp });
@@ -1132,7 +1140,7 @@ const sendOTP = (req, callback) => {
           callback({ status: 500, message: emailError.message }, null);
         });
     });
-    
+
   });
 };
 

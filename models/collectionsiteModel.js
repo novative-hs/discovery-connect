@@ -22,13 +22,67 @@ const getAllCollectionSites = (callback) => {
 
 // Function to insert a new collection site
 const createCollectionSite = (data, callback) => {
-  const { user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
-  const query = `
-    INSERT INTO collectionsite (user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber], (err, result) => {
-    callback(err, result);
+  const {
+    CollectionSiteName,
+    email,
+    password,
+    CollectionSiteType,
+    phoneNumber,
+    fullAddress,
+    city,
+    district,
+    country,
+  } = data;
+
+  const checkEmailQuery = `SELECT * FROM user_account WHERE email = ?`;
+
+  mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
+    if (err) return callback(err, null);
+
+    if (results.length > 0) {
+      return callback(new Error("Email already exists in user_account"), null);
+    }
+
+    const userAccountQuery = `
+      INSERT INTO user_account (email, password, accountType) 
+      VALUES (?, ?, ?)
+    `;
+
+    mysqlConnection.query(userAccountQuery, [email, password, "CollectionSites"], (err, result) => {
+      if (err) return callback(err, null);
+
+      const userAccountId = result.insertId; // Get inserted user ID
+
+      const collectionSiteQuery = `
+        INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      mysqlConnection.query(
+        collectionSiteQuery,
+        [userAccountId, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country],
+        (err, result) => {
+          if (err) return callback(err, null);
+
+          const collectionSiteId = result.insertId; // ✅ Get collection site ID
+
+          // ✅ Insert into history table with collection site ID
+          const historyQuery = `
+            INSERT INTO history (email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, status, collectionsite_id)
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          mysqlConnection.query(
+            historyQuery,
+            [email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, "added", collectionSiteId],
+            (err) => {
+              if (err) console.error("Error inserting into history:", err);
+              callback(err, result);
+            }
+          );
+        }
+      );
+    });
   });
 };
 
@@ -376,12 +430,12 @@ function getCollectionSiteDetail(id, callback) {
 
 module.exports = {
   getCollectionSiteDetail,
+  createCollectionSite,
   updateCollectionSiteDetail,
   getAllCollectionSiteNames,
   getAllCollectionSiteNamesInBiobank,
   getCollectionSiteById,
   getAllCollectionSites,
-  createCollectionSite,
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,
