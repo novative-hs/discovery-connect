@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import BillingDetails from "./billing-details";
 import OrderArea from "./order-area";
 import SampleCopy from "@components/checkout/sample-copy";
@@ -7,13 +7,28 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...others }) => {
   const id = sessionStorage.getItem("userID");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isClicked, setIsClicked] = useState(false);
   const [sampleCopyData, setSampleCopyData] = useState({
     studyCopy: null,
     reportingMechanism: "",
     irbFile: null,
     nbcFile: null,
   });
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.classList.add("modal-open");
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+    }
+  
+    return () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+    };
+  }, [isModalOpen]);
+  
 
   if (id === null) {
     return <div>Loading...</div>;
@@ -24,7 +39,6 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
   return (
     <section className="checkout-area pb-85">
       <div className="container">
-        
         <form>
           <div className="row mt-3">
             <div className="col-lg-6">
@@ -49,11 +63,11 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
         className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
         tabIndex="-1"
         role="dialog"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        aria-modal="true"
+        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
       >
-        <div
-          className="modal-dialog modal-lg modal-md modal-sm"
-          role="document" style={{ maxWidth: "800px", width: "90%" }}>
+        <div className="modal-dialog modal-dialog-scrollable modal-lg" role="document"
+        style={{ maxWidth: "800px", width: "90%" }}>
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Order Summary</h5>
@@ -69,7 +83,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
           </div>
         </div>
       </div>
-
+      
     </section>
   );
 };

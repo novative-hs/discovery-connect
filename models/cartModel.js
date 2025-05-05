@@ -794,10 +794,10 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
       ? 'Rejected'
       : null;
 
-    // Step 3: Update cart status if needed, perform concurrently if possible
-    const cartStatusUpdatePromise = newCartStatus
-      ? updateCartStatus(id, newCartStatus)
-      : Promise.resolve(null);  // If no new cart status, resolve immediately
+    // // Step 3: Update cart status if needed, perform concurrently if possible
+    // const cartStatusUpdatePromise = newCartStatus
+    //   ? updateCartStatus(id, newCartStatus)
+    //   : Promise.resolve(null);  // If no new cart status, resolve immediately
 
     // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
     const revertQuantityPromise = technical_admin_status === 'Rejected'
@@ -805,7 +805,7 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
       : Promise.resolve(null);  // Skip if not rejected
 
     // Wait for both the cart status update and quantity revert in parallel
-    await Promise.all([cartStatusUpdatePromise, revertQuantityPromise]);
+    await Promise.all([revertQuantityPromise]);
 
     // Step 4: Prepare the notification message
     const message =

@@ -14,20 +14,20 @@ const SampleArea = () => {
     console.log("Committee Member Id on sample page is:", id);
   }
   const [showModal, setShowModal] = useState(false);
-  const [actionType, setActionType] = useState(""); 
+  const [actionType, setActionType] = useState("");
   const [comment, setComment] = useState("");
-const[selectedComment,setSelectedComment]=useState("");
+  const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
-    { label: "User Name", key: "researcher_name" },
+    { label: "Researcher Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
-    { label: "Comments", key: "comments" },
+    { label: "Committee Comments", key: "comments" },
     { label: "Additional Mechanism", key: "reporting_mechanism" },
     { label: "Study Copy", key: "study_copy" },
     { label: "IRB file", key: "irb_file" },
@@ -156,7 +156,7 @@ const[selectedComment,setSelectedComment]=useState("");
     setSelectedComment(comment); // Set the comment to be viewed
     setShowCommentModal(true); // Open the modal to display the comment
   };
-  
+
   const handleViewDocument = (fileBuffer, fileName, sampleId) => {
     if (!fileBuffer) {
       alert("No document available.");
@@ -218,28 +218,24 @@ const[selectedComment,setSelectedComment]=useState("");
   };
   const handleSubmit = async () => {
     const trimmedComment = comment.trim();
-  
+
     if (!id || !selectedSample || !trimmedComment) {
       alert("Please enter a comment.");
       return;
     }
-  
+
     const payload = {
       committee_member_id: id,
       committee_status: actionType, // "Approved" or "Refused"
       comments: trimmedComment,
     };
-  
+
     try {
-      
-  
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
         payload
       );
-  
-      
-  
+
       if (response.data.success) {
         notifySuccess(response.data.message)
         setShowModal(false);
@@ -252,7 +248,7 @@ const[selectedComment,setSelectedComment]=useState("");
     } catch (error) {
       console.error("❌ Error updating committee status:", error);
       if (error.response?.data?.error) {
-        
+
         notifyError(`Error: ${error.response.data.error}`);
       } else {
         notifyError("Unexpected error occurred.");
@@ -294,7 +290,7 @@ const[selectedComment,setSelectedComment]=useState("");
           </div>
         )}
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
-        Sample Orders & Documents
+          Sample Orders & Documents
         </h4>
         {/* <div className="profile__main-content">
                 <h4 className="profile__main-title text-capitalize">Welcome Committee Member</h4>
@@ -476,16 +472,18 @@ const[selectedComment,setSelectedComment]=useState("");
             </Modal.Footer>
           </Modal>
         )}
-{showCommentModal && (
-  <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
-    <Modal.Header closeButton>
-      <Modal.Title>Comment</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      <p>{selectedComment}</p>
-    </Modal.Body>
-  </Modal>
-)}
+
+        {/* Additional Mechanism Modal */}
+        {showCommentModal && (
+          <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title className="h6">Additional Mechanism by Researcher</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>{selectedComment}</p>
+            </Modal.Body>
+          </Modal>
+        )}
 
         {/* Pagination */}
         {totalPages >= 0 && (

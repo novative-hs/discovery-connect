@@ -58,7 +58,7 @@ const Footer = () => {
                 </p>
                 <p className="small d-flex align-items-center">
                   <i className="bi bi-telephone me-2 text-danger"></i>
-                  <a className="text-dark text-decoration-none" href="tel:+15057922430">0369-6666665</a>
+                  0369-6666665
                 </p>
                 <p className="small d-flex align-items-center text-nowrap">
                   <i className="bi bi-globe me-2 text-danger"></i>

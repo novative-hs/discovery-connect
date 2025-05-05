@@ -6,6 +6,7 @@ import visa from "@assets/img/slider/13/visacard.png";
 import master from "@assets/img/slider/13/mastercard.png";
 
 const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [formData, setFormData] = useState({
     cardholderName: "",
@@ -70,6 +71,8 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (loading) return; // 🔒 Prevent double-click
+    setLoading(true);
     if (!validateDocuments()) return;
     if (!validateFields()) return;
 
@@ -99,6 +102,9 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
     } catch (error) {
       setIsLoading(false); // End loading on error
       notifyError(error.response?.data?.message || "An unexpected error occurred.");
+    }
+    finally {
+      setLoading(false); // ✅ Always stop loading
     }
   };
 
@@ -217,6 +223,7 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                 className="btn w-100 text-white"
                 style={{ backgroundColor: "#0a1d4e" }}
                 onClick={handlePlaceOrder}
+                disabled={loading}
               >
                 {isLoading ? (
                   <div className="spinner-border text-light" role="status">

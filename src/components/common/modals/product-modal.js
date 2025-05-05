@@ -43,10 +43,15 @@ const ProductModal = ({ product, discountPrd = false }) => {
     0
   );
 
-  const handleAddProduct = (prd) => {
-    dispatch(add_cart_product(prd));
-  };
+   const handleAddToCart = (product) => {
+     dispatch(add_cart_product(product));
+   };
 
+     const cartItems = useSelector((state) => state.cart?.cart_products || []);
+     const isInCart = (sampleId) => {
+       return cartItems.some((item) => item.id === sampleId);
+     };
+     
   const handleModalClose = () => {
     dispatch(handleModalShow())
     dispatch(initialOrderQuantity())
@@ -127,9 +132,19 @@ const ProductModal = ({ product, discountPrd = false }) => {
               <p><strong>Test Method:</strong> {product.TestMethod}</p>
               {/* Add to Cart Button */}
               <div className="text-end mt-3">
-                <button className="btn btn-primary" onClick={() => handleAddProduct(product)}>
-                  Add to Cart
-                </button>
+                     {product.quantity === 0 ? (
+                           <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+                             Sample Allocated
+                           </button>
+                         ) : isInCart(product.id) ? (
+                           <button className="btn btn-secondary w-75" disabled>
+                             Added
+                           </button>
+                         ) : (
+                           <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+                             Add to Cart
+                           </button>
+                         )}
               </div>
             </div>
           </div>

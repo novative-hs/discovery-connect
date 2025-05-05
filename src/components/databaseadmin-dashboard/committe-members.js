@@ -66,8 +66,8 @@ const CommitteeMemberArea = () => {
     { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "Organization", placeholder: "Search Org", field: "organization" },
     {
-      label: "Committee",
-      placeholder: "Search Committee",
+      label: "Committee Type",
+      placeholder: "Search Committee Type",
       field: "committeetype",
     },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
@@ -150,7 +150,7 @@ const CommitteeMemberArea = () => {
   };
 
   const handleInputChange = (e) => {
-   
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -166,7 +166,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/post`,
         formData
       );
-     
+
       // Refresh the committeemember list after successful submission
       fetchCommitteemembers();
 
@@ -186,7 +186,7 @@ const CommitteeMemberArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-     
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -202,7 +202,7 @@ const CommitteeMemberArea = () => {
       await axios.delete(
         `${url}/committeemember/delete/${selectedCommitteememberId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Committeemember deleted successfully.");
 
@@ -254,7 +254,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
-     
+
 
       fetchCommitteemembers();
       setShowEditModal(false);
@@ -303,7 +303,7 @@ const CommitteeMemberArea = () => {
         { committeetype: option }, // Only send the selected `committeetype`
         { headers: { "Content-Type": "application/json" } }
       );
-     
+
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
         prevMembers.map((member) =>
@@ -365,7 +365,7 @@ const CommitteeMemberArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-    
+
       // Update the committeemembers state to reflect the change
       setCommitteemembers((prevMembers) =>
         prevMembers.map((member) =>
@@ -413,13 +413,15 @@ const CommitteeMemberArea = () => {
       filtered = committeemembers; // Show all if filter is empty
     } else {
       filtered = committeemembers.filter((committeemember) =>
-        committeemember[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
+        // Use exact matching for 'status' field
+        field === "status"
+          ? committeemember[field]?.toString().toLowerCase() === value.toLowerCase() // Match exactly
+          : committeemember[field]
+            ?.toString()
+            .toLowerCase()
+            .includes(value.toLowerCase()) // For other fields, use includes
       );
     }
-
     setFilteredCommitteemembers(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
@@ -455,7 +457,22 @@ const CommitteeMemberArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Committee Member List</h5>
+              {/* Status Filter */}
+              <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-auto">
+                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                  Status:
+                </label>
+                <select
+                  id="statusFilter"
+                  className="form-control mb-2"
+                  style={{ width: "auto" }}
+                  onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
+                >
+                  <option value="">All</option>
+                  <option value="Active">Active</option>
+                  <option value="inactive">inactive</option>
+                </select>
+              </div>
               <div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Add Committee Member Button */}
                 <button
@@ -656,8 +673,10 @@ const CommitteeMemberArea = () => {
               focusPage={currentPage}
             />
           )}
-          {/* Modal for Adding/Editing Committee members */}
 
+          <h6 class="text-danger small">Note: Handle 'Status' and 'Committee Type' through Action Icons</h6>
+
+          {/* Modal for Adding/Editing Committee members */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -785,8 +804,8 @@ const CommitteeMemberArea = () => {
                             onChange={handleInputChange}
                             required
                             pattern="^\d{4}-\d{7}$"
-                            placeholder="0123-4567890"
-                            title="Phone number must be in the format 0123-4567890 and numeric"
+                            placeholder="XXXX-XXXXXXX"
+                            title="Phone number must be in the format e.g. 0332-4567890"
                           />
                         </div>
 
@@ -796,11 +815,11 @@ const CommitteeMemberArea = () => {
                             type="text"
                             className="form-control"
                             name="cnic"
-                            placeholder="Enter CNIC"
+                            placeholder="XXXXX-XXXXXXX-X"
                             value={formData.cnic}
                             onChange={handleInputChange}
                             pattern="^\d{5}-\d{7}-\d{1}$"
-                            title="CNIC must be in the format XXXXX-XXXXXXX-X ."
+                            title="CNIC must be in the format 34765-5676554-3."
                             required
                           />
                         </div>

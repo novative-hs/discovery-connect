@@ -22,7 +22,6 @@ const BioBankSampleArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -101,6 +100,7 @@ const BioBankSampleArea = () => {
     logo: "",
   });
 
+  const [logo, setLogo] = useState("");
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // all fetched (combined) samples
   const [filtertotal, setfiltertotal] = useState(null);
@@ -131,7 +131,7 @@ const BioBankSampleArea = () => {
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
   const [priceFilter, setPriceFilter] = useState(null);
-  
+
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -184,25 +184,25 @@ const BioBankSampleArea = () => {
       searchValue,
     });
   }, [currentPage, priceFilter, searchField, searchValue]);
-  
+
 
   // Fetch samples from the backend
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
       const { priceFilter, searchField, searchValue } = filters;
-  
+
       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
-  
+
       if (priceFilter) {
         url += `&priceFilter=${priceFilter}`;
       }
-  
+
       if (searchField && searchValue) {
         url += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
-  
+
       const response = await axios.get(url);
-  
+
       const { samples, totalCount } = response.data;
       setSamples(samples);
       setFilteredSamples(samples); // Ensure filteredSamples are updated
@@ -212,8 +212,8 @@ const BioBankSampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
-  
-  
+
+
 
   // Get the current data for the table (pagination of data)
   useEffect(() => {
@@ -228,28 +228,28 @@ const BioBankSampleArea = () => {
     setSearchValue(trimmedValue);
     setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
   };
-  
-  
+
+
 
   // Pagination logic - Make sure this handles the transition correctly
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
-  
+
   const handleScroll = (e) => {
     const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
-  
+
     if (isVerticalScroll) {
       const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
-  
+
       if (bottom && currentPage < totalPages) {
         setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
         fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
       }
     }
   };
-  
+
 
   // The actual current data that will be shown in the table
   const currentData = filteredSamples;
@@ -502,35 +502,6 @@ const BioBankSampleArea = () => {
     setShowTransferModal(false); // Close the modal
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-      );
-
-      // Set success message
-      setSuccessMessage("Sample deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchSamples(); // Refresh only current page
-      setCurrentPage(1);
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedSampleId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting sample with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  };
-
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
@@ -672,7 +643,6 @@ const BioBankSampleArea = () => {
 
   useEffect(() => {
     if (
-      showDeleteModal ||
       showAddModal ||
       showEditModal ||
       showTransferModal ||
@@ -687,7 +657,6 @@ const BioBankSampleArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [
-    showDeleteModal,
     showAddModal,
     showEditModal,
     showTransferModal,
@@ -738,7 +707,10 @@ const BioBankSampleArea = () => {
     const base64String = btoa(binary);
     return `data:image/${mimeType};base64,${base64String}`;
   }
+
   const logoHandler = (file) => {
+    const imageUrl = URL.createObjectURL(file);
+    setLogo(imageUrl);  // Update the preview with the new image URL
     setFormData((prev) => ({
       ...prev,
       logo: file,
@@ -768,18 +740,18 @@ const BioBankSampleArea = () => {
             <label className="fw-bold">Filter:</label>
 
             <NiceSelect
-  options={[
-    { value: "", text: "All" },
-    { value: "priceAdded", text: "Price Added" },
-    { value: "priceNotAdded", text: "Price Not Added" },
-  ]}
-  defaultCurrent={0}
-  onChange={(item) => {
-    setPriceFilter(item.value); // set server-side price filter
-    setCurrentPage(1); // reset to first page
-  }}
-  name="filter-by-price"
-/>
+              options={[
+                { value: "", text: "All" },
+                { value: "priceAdded", text: "Price Added" },
+                { value: "priceNotAdded", text: "Price Not Added" },
+              ]}
+              defaultCurrent={0}
+              onChange={(item) => {
+                setPriceFilter(item.value); // set server-side price filter
+                setCurrentPage(1); // reset to first page
+              }}
+              name="filter-by-price"
+            />
 
           </div>
 
@@ -1232,8 +1204,8 @@ const BioBankSampleArea = () => {
                                   .filter((country) =>
                                     searchCountry
                                       ? country.name
-                                          .toLowerCase()
-                                          .includes(searchCountry.toLowerCase())
+                                        .toLowerCase()
+                                        .includes(searchCountry.toLowerCase())
                                       : true
                                   )
                                   .map((country) => (
@@ -1249,12 +1221,12 @@ const BioBankSampleArea = () => {
                                         handleSelectCountry(country)
                                       }
                                       onMouseEnter={(e) =>
-                                        (e.currentTarget.style.backgroundColor =
-                                          "#e2e2e2")
+                                      (e.currentTarget.style.backgroundColor =
+                                        "#e2e2e2")
                                       }
                                       onMouseLeave={(e) =>
-                                        (e.currentTarget.style.backgroundColor =
-                                          "#f0f0f0")
+                                      (e.currentTarget.style.backgroundColor =
+                                        "#f0f0f0")
                                       }
                                     >
                                       {country.name}
@@ -1846,6 +1818,15 @@ const BioBankSampleArea = () => {
                                   color: "black",
                                 }}
                               />
+                              {/* Add image preview next to the file input */}
+                              {formData.logo && (
+                                <img
+                                  src={formData.logo}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{ marginLeft: "20px", borderRadius: "5px" }}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2054,69 +2035,6 @@ const BioBankSampleArea = () => {
               </form>
             </div>
           </div>
-        )}
-
-        {/* Modal for Deleting Samples */}
-        {showDeleteModal && (
-          <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
-
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-              <div className="modal-dialog" role="document">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Delete Sample</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowDeleteModal(false)}
-                      style={{
-                        // background: 'none',
-                        // border: 'none',
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
-                  <div className="modal-body">
-                    <p>Are you sure you want to delete this sample?</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="btn btn-danger" onClick={handleDelete}>
-                      Delete
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
         )}
 
         {/* Modal for History of Samples */}

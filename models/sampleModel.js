@@ -117,7 +117,7 @@ const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
       }
 
       const totalCount = countResults[0].totalCount;
-     
+
       callback(null, {
         results,
         totalCount,
@@ -157,14 +157,14 @@ WHERE
 
     fs.readdir(imageFolder, (fsErr, files) => {
       if (fsErr) return callback(fsErr, null);
-    
+
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    
+
       const totalSamples = results.length;
       const totalImages = imageFiles.length;
-    
+
       let selectedImages = [];
-    
+
       if (totalImages >= totalSamples) {
         // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
@@ -175,7 +175,7 @@ WHERE
           selectedImages.push(img);
         }
       }
-    
+
       const updatedResults = results.map((sample, index) => {
         const selectedImage = selectedImages[index];
         const imagePath = path.join(imageFolder, selectedImage);
@@ -183,10 +183,10 @@ WHERE
         sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
         return sample;
       });
-    
+
       callback(null, updatedResults);
     });
-    
+
   });
 };
 
@@ -265,7 +265,7 @@ WHERE s.user_id = ?
 
 GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
 
-ORDER BY s.id ASC;
+ORDER BY s.id DESC;
 
   `;
 
@@ -449,9 +449,9 @@ const updateSample = (id, data, callback) => {
   const values = [
     data.donorID, room_number, freezer_id, box_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
-    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting,data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, 
-    data.ConcurrentMedicalConditions,data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
-     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status,data.logo, id
+    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
+    data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
@@ -465,7 +465,7 @@ const updateSample = (id, data, callback) => {
         console.error('Error inserting into sample_history:', err);
         return callback(err, null);
       }
-     
+
       callback(err, result);
     });
   });
@@ -479,14 +479,6 @@ const updateSampleStatus = (id, status, callback) => {
     WHERE id = ?`;
 
   mysqlConnection.query(query, [status, id], (err, result) => {
-    callback(err, result);
-  });
-};
-
-// Function to delete a sample by its ID
-const deleteSample = (id, callback) => {
-  const query = 'UPDATE sample SET is_deleted = TRUE WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
     callback(err, result);
   });
 };
@@ -524,5 +516,4 @@ module.exports = {
   createSample,
   updateSample,
   updateSampleStatus,
-  deleteSample
 };
