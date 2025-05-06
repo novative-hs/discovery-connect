@@ -142,7 +142,7 @@ const RegisterForm = () => {
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`,
       (data) => {
         setOrganizationname(data);
-        setOrganizationname(data.filter((org) => org.status === "approved"));
+        setOrganizationname(data.filter((org) => org.status === "active"));
       },
       "Organization"
     );

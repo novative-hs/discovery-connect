@@ -65,8 +65,8 @@ const updateCSRStatus = async (id, status) => {
       let emailText = `Dear CSR,\n\nYour account status is currently <b>pending</b>. 
         Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
   
-      if (status === "approved") {
-        emailText = `Dear CSR,\n\nYour account has been <b>approved</b>! 
+      if (status === "active") {
+        emailText = `Dear CSR,\n\nYour account has been <b>active</b>! 
           You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
       }
   

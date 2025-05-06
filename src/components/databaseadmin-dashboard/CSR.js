@@ -174,7 +174,7 @@ const CSRArea = () => {
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
     newformData.append("country", formData.country);
-    newformData.append("status", "unapproved");
+    newformData.append("status", "inactive");
     // Debug log to inspect FormData entries
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
@@ -187,8 +187,8 @@ const CSRArea = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-          fetchCSR();
-          notifySuccess("CSR Registered Successfully");
+          notifySuccess("Organization Registered Successfully");
+          fetchCSR()
           setShowAddModal(false);
         }
       })
@@ -368,8 +368,8 @@ const CSRArea = () => {
                   >
                     <option value="">All</option>
                     <option value="pending">Pending</option>
-                    <option value="unapproved">UnApproved</option>
-                    <option value="approved">Approved</option>
+                    <option value="inactive">InActive</option>
+                    <option value="active">Active</option>
                   </select>
                 </div>
 
@@ -469,18 +469,18 @@ const CSRArea = () => {
                                   <button
                                     className="dropdown-item"
                                     onClick={() =>
-                                      handleStatusClick(CSR.id, "approved")
+                                      handleStatusClick(CSR.id, "active")
                                     }
                                   >
-                                    Approved
+                                    Active
                                   </button>
                                   <button
                                     className="dropdown-item"
                                     onClick={() =>
-                                      handleStatusClick(CSR.id, "unapproved")
+                                      handleStatusClick(CSR.id, "inactive")
                                     }
                                   >
-                                    Unapproved
+                                    InActive
                                   </button>
                                 </div>
                               )}
