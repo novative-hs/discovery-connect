@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory,faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import {
   useRegisterUserMutation,
   useUpdateProfileMutation,
@@ -53,8 +53,8 @@ const OrganizationArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  const [registerUser, {}] = useRegisterUserMutation();
-  const [updateUser, {}] = useUpdateProfileMutation();
+  const [registerUser, { }] = useRegisterUserMutation();
+  const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
@@ -317,7 +317,7 @@ const OrganizationArea = () => {
       ntnNumber: organization.ntnNumber,
       logo: logodata,
       logoPreview: logoPreview, // ✅ use the correctly computed value
-      status:organization.status
+      status: organization.status
     });
   };
 
@@ -375,24 +375,24 @@ const OrganizationArea = () => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    console.log(id,option)
+    console.log(id, option)
     try {
       // Send status update request to backend
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${id}`,
-        { data: { status: option } }, 
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${id}`,
+        { data: { status: option } },
         { headers: { "Content-Type": "application/json" } }
       );
-  
+
       // Assuming the response is successful, set success message and hide the dropdown
       setSuccessMessage(response.data.message);
-  
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-  
+
       // Refresh the organization list
       fetchOrganizations();
-  
+
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({
         ...prev,
@@ -437,11 +437,11 @@ const OrganizationArea = () => {
     const handleClickOutside = (event) => {
       // Get all the dropdown elements
       const dropdowns = document.querySelectorAll(".dropdown-menu");
-  
+
       dropdowns.forEach((dropdown) => {
         // Check if the dropdown and its closest button group are valid
         const buttonGroup = dropdown.closest(".btn-group");
-        
+
         // If dropdown exists and the clicked target is outside the dropdown and button group
         if (dropdown && buttonGroup && !dropdown.contains(event.target) && !buttonGroup.contains(event.target)) {
           const dropdownId = dropdown.dataset.id;
@@ -453,17 +453,17 @@ const OrganizationArea = () => {
         }
       });
     };
-  
+
     // Add the event listener for click events
     document.addEventListener("click", handleClickOutside);
-  
+
     // Clean up the event listener on unmount
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-  
-  
+
+
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -526,104 +526,104 @@ const OrganizationArea = () => {
 
           {/* Table */}
           <div className="table-responsive" style={{ overflowX: "auto" }}>
-  <table className="table table-hover table-bordered text-center align-middle w-100">
-    <thead className="table-primary text-dark">
-      <tr className="text-center">
-        {columns.map(({ label, placeholder, field }) => (
-          <th key={field} style={{ minWidth: "180px" }}>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder={placeholder}
-              onChange={(e) => handleFilterChange(field, e.target.value)}
-            />
-            <div className="fw-bold mt-1">{label}</div>
-          </th>
-        ))}
-        <th style={{ minWidth: "120px" }}>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {currentData.length > 0 ? (
-        currentData.map((organization) => (
-          <tr key={organization.id}>
-            {columns.map(({ field }) => (
-              <td key={field}>
-                {field === "created_at"
-                  ? moment(organization[field]).format("YYYY-MM-DD")
-                  : organization[field]}
-              </td>
-            ))}
-           <td className="position-relative">
-  <div className="d-flex justify-content-center gap-2">
-    <button
-      className="btn btn-success btn-sm"
-      onClick={() => handleEditClick(organization)}
-      title="Edit"
-    >
-      <FontAwesomeIcon icon={faEdit} />
-    </button>
+            <table className="table table-hover table-bordered text-center align-middle w-100">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
+                  {columns.map(({ label, placeholder, field }) => (
+                    <th key={field} style={{ minWidth: "180px" }}>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder={placeholder}
+                        onChange={(e) => handleFilterChange(field, e.target.value)}
+                      />
+                      <div className="fw-bold mt-1">{label}</div>
+                    </th>
+                  ))}
+                  <th style={{ minWidth: "120px" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((organization) => (
+                    <tr key={organization.id}>
+                      {columns.map(({ field }) => (
+                        <td key={field}>
+                          {field === "created_at"
+                            ? moment(organization[field]).format("YYYY-MM-DD")
+                            : organization[field]}
+                        </td>
+                      ))}
+                      <td className="position-relative">
+                        <div className="d-flex justify-content-center gap-2">
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleEditClick(organization)}
+                            title="Edit"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
 
-    <div className="btn-group">
-      <button
-        className="btn btn-primary btn-sm"
-        onClick={() => handleToggleStatusOptions(organization.id)}
-        title="Edit Status"
-      >
-        <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
-      </button>
+                          <div className="btn-group">
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleToggleStatusOptions(organization.id)}
+                              title="Edit Status"
+                            >
+                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                            </button>
 
-      {statusOptionsVisibility[organization.id] && (
-        <div
-          className="dropdown-menu show"
-          data-id={organization.id}
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: "0",
-            zIndex: 1000,
-            minWidth: "100px",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <button
-            className="dropdown-item"
-            onClick={() => handleStatusClick(organization.id, "active")}
-          >
-            Active
-          </button>
-          <button
-            className="dropdown-item"
-            onClick={() => handleStatusClick(organization.id, "inactive")}
-          >
-            InActive
-          </button>
-        </div>
-      )}
-    </div>
+                            {statusOptionsVisibility[organization.id] && (
+                              <div
+                                className="dropdown-menu show"
+                                data-id={organization.id}
+                                style={{
+                                  position: "absolute",
+                                  top: "100%",
+                                  left: "0",
+                                  zIndex: 1000,
+                                  minWidth: "100px",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <button
+                                  className="dropdown-item"
+                                  onClick={() => handleStatusClick(organization.id, "active")}
+                                >
+                                  Active
+                                </button>
+                                <button
+                                  className="dropdown-item"
+                                  onClick={() => handleStatusClick(organization.id, "inactive")}
+                                >
+                                  InActive
+                                </button>
+                              </div>
+                            )}
+                          </div>
 
-    <button
-      className="btn btn-info btn-sm"
-      onClick={() => handleShowHistory("organization", organization.id)}
-      title="History"
-    >
-      <FontAwesomeIcon icon={faHistory} />
-    </button>
-  </div>
-</td>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() => handleShowHistory("organization", organization.id)}
+                            title="History"
+                          >
+                            <FontAwesomeIcon icon={faHistory} />
+                          </button>
+                        </div>
+                      </td>
 
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan={columns.length + 1} className="text-center">
-            No organizations available
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length + 1} className="text-center">
+                      No organizations available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           {filteredOrganizations.length >= 0 && (
@@ -1016,28 +1016,28 @@ const OrganizationArea = () => {
                               }}
                             >
                               {/* Message for City Addition */}
-                              {status==='added' && (
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor: "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "75%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                }}
-                              >
-                                <b>Organization:</b> {OrganizationName} was{" "}
-                                <b>{status}</b> by Database Admin at{" "}
-                                {moment(created_at).format(
-                                  "DD MMM YYYY, h:mm A"
-                                )}
-                              </div>
+                              {status === 'added' && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#ffffff",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  <b>Organization:</b> {OrganizationName} was{" "}
+                                  <b>{status}</b> by Database Admin at{" "}
+                                  {moment(created_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
                               )}
 
                               {/* Message for City Update (Only if it exists) */}
-                              {status==='updated' && (
+                              {status === 'updated' && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
@@ -1069,7 +1069,7 @@ const OrganizationArea = () => {
               </div>
             </>
           )}
-          
+
         </div>
       </div>
     </section>

@@ -101,9 +101,9 @@ const create_organizationTable = () => {
       ntnNumber VARCHAR(50),
       fullAddress TEXT,
       logo LONGBLOB,
-      status ENUM('pending', 'active', 'inactive') DEFAULT 'pending',
+      status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -132,9 +132,9 @@ const create_collectionsiteTable = () => {
       country INT,
       logo LONGBLOB,
       phoneNumber VARCHAR(15),
-      status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -386,6 +386,7 @@ const updateAccount = (req, callback) => {
     ResearcherName,
     OrganizationName,
     CollectionSiteName,
+    CollectionSiteType,
     CommitteeMemberName,
     CSRName,
     cnic,
@@ -497,10 +498,10 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM collectionsite WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE collectionsite SET 
-                      CollectionSiteName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                      CollectionSiteName = ?, CollectionSiteType = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                       country = ?, logo = ? WHERE user_account_id = ?
                   `;
-                  values = [CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+                  values = [CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
                   break;
                 case "Committeemember":
                   fetchQuery = "SELECT * FROM committee_member WHERE user_account_id = ?";
@@ -560,11 +561,11 @@ const updateAccount = (req, callback) => {
 
                   const historyQuery = `
                     INSERT INTO history (
-                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName,CSRName,
+                      email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
                       HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, CSR_id,status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
 
                   const historyValues = [
@@ -572,6 +573,7 @@ const updateAccount = (req, callback) => {
                     previousPassword,
                     previousData.ResearcherName || null,
                     previousData.CollectionSiteName || null,
+                    previousData.CollectionSiteType || null,
                     previousData.OrganizationName || null,
                     previousData.CommitteeMemberName || null,
                     previousData.CSRName || null,

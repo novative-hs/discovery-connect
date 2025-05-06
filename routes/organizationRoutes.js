@@ -5,9 +5,7 @@ const organizationController = require("../controller/organizationController");
 router.get("/get", organizationController.getAllOrganizations);
 router.get('/get/:id', organizationController.getCurrentOrganizationById);
 router.get('/:id', organizationController.getOrganizationById);
-router.delete('/delete/:id', organizationController.deleteOrganization);
-// Route to update organization status
-router.put("/edit/:id", organizationController.updateOrganizationStatus);
+router.delete('/edit/:id', organizationController.updateOrganizationStatus);  // Route to update organization status (active/inactive)
 router.put("/update/:id", organizationController.updateOrganization);
 
 module.exports = router;

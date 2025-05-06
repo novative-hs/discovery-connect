@@ -12,7 +12,8 @@ router.get('/collectionsitenames', collectionsiteController.getAllCollectionSite
 router.get('/get', collectionsiteController.getAllCollectionSites);
 router.get('/:id', collectionsiteController.getCollectionSiteById);
 router.post('/post', collectionsiteController.createCollectionSite); 
-router.put('/edit/:id', collectionsiteController.updateCollectionSiteStatus);
+// router.put('/edit/:id', collectionsiteController.updateCollectionSiteStatus);
+router.delete('/edit/:id', collectionsiteController.updateCollectionSiteStatus);  // Route to update Collection Site status (active/inactive)
 router.delete('/delete/:id', collectionsiteController.deleteCollectionSite);
 router.get('/collectionsitenames/:user_account_id', collectionsiteController.getAllCollectionSiteNames);
 router.get("/collectionsitenamesinbiobank/:sample_id", collectionsiteController.getAllCollectionSiteNamesInBiobank);

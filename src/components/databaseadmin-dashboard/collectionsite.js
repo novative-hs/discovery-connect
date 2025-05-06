@@ -1,56 +1,68 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import {
-  faEdit,
-  faTrash,
-  faQuestionCircle,
-  faHistory,
-} from "@fortawesome/free-solid-svg-icons";
+  useRegisterUserMutation,
+  useUpdateProfileMutation,
+} from "src/redux/features/auth/authApi";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+import { notifyError, notifySuccess } from "@utils/toast";
 const CollectionSiteArea = () => {
-  const [historyData, setHistoryData] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedCollectionsiteId, setSelectedCollectionsiteId] =
-    useState(null); // Store ID of Collection Sites to delete
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    CollectionSiteName: "",
-    email: "",
-    password: "",
-    CollectionSiteType: "",
-    phoneNumber: "",
-    fullAddress: "",
-    city: "",
-    district: "",
-    country: "",
-    created_at: "",
-    status: "",
-  });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected Collection Sites to edit
-  const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched Collection Sites
-  const [successMessage, setSuccessMessage] = useState("");
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected Collectionsite to edit
+  const [selectedCollectionsiteId, setSelectedCollectionSiteId] = useState(null); // Store ID of Collectionsite to delete
+  const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
+  const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [cityname, setcityname] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
-  const [formStep, setFormStep] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [filteredCollectionsites, setFilteredCollectionsites] = useState([]); // Store filtered cities
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [showPassword, setShowPassword] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [formData, setFormData] = useState({
+    user_account_id: "",
+    CollectionSiteName: "",
+    CollectionSiteType: "",
+    email: "",
+    password: "",
+    phoneNumber: "",
+    city: "",
+    district: "",
+    country: "",
+    fullAddress: "",
+    logo: "",
+    logoPreview: null,
+    created_at: "",
+    status: "",
+  });
+  const [historyData, setHistoryData] = useState([]);
+  const [filteredCollectionsites, setFilteredCollectionsites] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   // Calculate total pages
+  const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
+  const [registerUser, { }] = useRegisterUserMutation();
+  const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "CollectionSiteName" },
-    { label: "Email", placeholder: "Search Email", field: "email" },
-    { label: "Password", placeholder: "Search Password", field: "password" },
-    { label: "CollectionSiteType", placeholder: "Search Collection Site Type", field: "CollectionSiteType" },
+    { label: "Name", placeholder: "Search Name", field: "CollectionSiteType" },
+    { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
+    {
+      label: "Password",
+      placeholder: "Search Password",
+      field: "useraccount_password",
+    },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
     { label: "City", placeholder: "Search City", field: "city" },
@@ -60,9 +72,80 @@ const CollectionSiteArea = () => {
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch Collection Sites from backend when component loads
+  const onSubmit = (event) => {
+    console.log("formData before appending logo:", formData);
+    event.preventDefault();
+
+    const newformData = new FormData();
+
+    // Append form fields
+    newformData.append("email", formData.email);
+    newformData.append("password", formData.password);
+    newformData.append("accountType", "CollectionSites");
+    newformData.append("CollectionSiteName", formData.CollectionSiteName);
+    newformData.append("CollectionSiteType", formData.CollectionSiteType);
+    newformData.append("phoneNumber", formData.phoneNumber);
+    newformData.append("fullAddress", formData.fullAddress);
+    newformData.append("city", formData.city);
+    newformData.append("district", formData.district);
+    newformData.append("country", formData.country);
+    newformData.append("status", "inactive");
+    // Ensure logo is a file before appending
+    if (formData.logo) {
+      console.log("Appending logo:", formData.logo);
+      newformData.append("logo", formData.logo);
+    } else {
+      console.log("No logo found in formData at submission.");
+    }
+
+    // Debug log to inspect FormData entries
+    for (let pair of newformData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    // Call the mutation (assuming the function is available)
+    registerUser(newformData)
+      .then((result) => {
+        if (result?.error) {
+          const errorMessage = result?.error?.data?.error || "Register Failed";
+          notifyError(errorMessage);
+        } else {
+          fetchCollectionsites()
+          notifySuccess("Collectionsite Registered Successfully");
+          fetchCollectionsites()
+          setShowAddModal(false);
+        }
+      })
+      .catch((error) => {
+        notifyError(error?.message || "An unexpected error occurred");
+      });
+
+    // Reset state and form (if necessary)
+    setShowAddModal(false);
+    resetFormData();
+  };
+
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
+      const data = await response.json();
+      setHistoryData(data);
+      "Data", data;
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
+
+  // Fetch collectionsites from backend when component loads
   useEffect(() => {
     fetchCollectionsites(); // Call the function when the component mounts
     fetchcityname();
@@ -72,25 +155,16 @@ const CollectionSiteArea = () => {
 
   const fetchCollectionsites = async () => {
     try {
-      const response = await axios.get(`${url}/collectionsite/get`);
-      setCollectionsites(response.data); // Store fetched Collection Sites in state
-      setFilteredCollectionsites(response.data);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
+      );
+      console.log(response.data)
+      setAllCollectionsites(response.data);
+      setCollectionsites(response.data); // Store fetched collectionsites in state
     } catch (error) {
-      console.error("Error fetching Collection Sites:", error);
+      console.error("Error fetching collectionsites:", error);
     }
   };
-  useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredCollectionsites.length / itemsPerPage)
-    );
-    setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredCollectionsites]);
-
   const fetchcityname = async () => {
     try {
       const response = await axios.get(`${url}/city/get-city`);
@@ -118,207 +192,35 @@ const CollectionSiteArea = () => {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleFilterChange = (field, value) => {
+    setSearchTerm(value);
 
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/collectionsite/post`,
-        formData
-      );
-
-      // Refresh the collectionsite list after successful submission
-      fetchCollectionsites();
-
-      setSuccessMessage("Collection Site updated successfully.");
-      resetFormData();
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding Collection Site:", error);
-    }
-  };
-  const fetchHistory = async (filterType, id) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
-      const data = await response.json();
-
-      setHistoryData(data);
-    } catch (error) {
-      console.error("Error fetching history:", error);
-    }
-  };
-  const handleShowHistory = (filterType, id) => {
-    fetchHistory(filterType, id);
-    setShowHistoryModal(true);
-  };
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/collectionsite/delete/${selectedCollectionsiteId}`
-      );
-
-      // Set success message
-      setSuccessMessage("Collectionsite deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the collectionsite list after deletion
-      fetchCollectionsites();
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedCollectionsiteId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting Collection Site with ID ${selectedCollectionsiteId}:`,
-        error
-      );
-    }
-  };
-
-  const handleEditClick = (collectionsite) => {
-    setSelectedCollectionsiteId(collectionsite.id);
-    setEditCollectionsite(collectionsite); // Store the Collection Sites data to edit
-    setShowEditModal(true); // Show the edit modal
-    setFormData({
-      CollectionSiteName: collectionsite.CollectionSiteName,
-      email: collectionsite.email,
-      password: collectionsite.password,
-      CollectionSiteType: collectionsite.CollectionSiteType,
-      phoneNumber: collectionsite.phoneNumber,
-      fullAddress: collectionsite.fullAddress,
-      city: collectionsite.city,
-      district: collectionsite.district,
-      country: collectionsite.country,
-      committetype: collectionsite.committetype,
-      created_at: collectionsite.created_at,
-      status: collectionsite.status,
-    });
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/collectionsite/edit/${selectedCollectionsiteId}`,
-        formData
-      );
-
-
-      fetchCollectionsites();
-      setShowEditModal(false);
-      setSuccessMessage("Collectionsite updated successfully.");
-
-      setFormData({
-        CollectionSiteName: "",
-        email: "",
-        password: "",
-        CollectionSiteType: "",
-        phoneNumber: "",
-        fullAddress: "",
-        city: "",
-        district: "",
-        country: "",
-        created_at: "",
-        status: "",
+    if (!value) {
+      setCollectionsites(allcollectionsites);
+    } else {
+      const filtered = allcollectionsites.filter((collectionsite) => {
+        return collectionsite[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
       });
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(
-        `Error updating collectionsite with ID ${selectedCollectionsiteId}:`,
-        error
-      );
+      setCollectionsites(filtered);
     }
+
+    setCurrentPage(0); // Reset to first page when filtering
   };
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
-
-  const resetFormData = () => {
-    setFormData({
-      CollectionSiteName: "",
-      email: "",
-      password: "",
-      CollectionSiteType: "",
-      phoneNumber: "",
-      fullAddress: "",
-      city: "",
-      district: "",
-      country: "",
-      created_at: "",
-      status: "",
+  useEffect(() => {
+    const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
+      if (!statusFilter) return true;
+      return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
     });
-    setFormStep(1);
-  };
-  const handleStatusClick = async (collectionsiteId, option) => {
-    try {
-      const response = await axios.put(
-        `${url}/collectionsite/status/edit/${collectionsiteId}`,
-        { status: option }, // Only send the selected `status`
-        { headers: { "Content-Type": "application/json" } }
-      );
-      setSuccessMessage("Committe Member Status Updated successfully");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
 
-      // Update the collectionsites state to reflect the change
-      setCollectionsites((prevMembers) =>
-        prevMembers.map((member) =>
-          member.id === collectionsiteId
-            ? { ...member, status: option }
-            : member
-        )
-      );
-      // Hide the options after the update
-      setStatusOptionsVisibility((prev) => ({
-        ...prev,
-        [collectionsiteId]: false,
-      }));
+    setFilteredCollectionsites(updatedFilteredCollectionsite);
+    setCurrentPage(0); // Reset to first page when filtering
+  }, [collectionsites, statusFilter]);
 
-      fetchCollectionsites();
-    } catch (error) {
-      console.error(
-        "Error updating status:",
-        error.response?.data?.error || error.message
-      );
-    }
-  };
-
-  const handleToggleStatusOptions = (collectionsiteId) => {
-    setStatusOptionsVisibility((prev) => ({
-      ...prev,
-      [collectionsiteId]: !prev[collectionsiteId],
-    }));
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
   };
 
   const currentData = filteredCollectionsites.slice(
@@ -326,34 +228,160 @@ const CollectionSiteArea = () => {
     (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+
+    if (name === "logo") {
+      // If the name is "logo", handle the file selection
+      const file = files[0];
+      if (file) {
+        const validTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "image/gif",
+        ];
+        if (!validTypes.includes(file.type)) {
+          alert("Please select a valid image file.");
+          return;
+        }
+
+        // Update formData with the selected file and preview URL
+        setFormData((prev) => ({
+          ...prev,
+          logo: file,
+          logoPreview: URL.createObjectURL(file),
+        }));
+      }
+    } else {
+      // For other input fields, update the formData with the input value
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    }
   };
 
-  // Filter the Committe member list
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = collectionsites; // Show all if filter is empty
-    } else {
-      filtered = collectionsites.filter((collectionsite) =>
-        // Use exact matching for 'status' field
-        field === "status"
-          ? collectionsite[field]?.toString().toLowerCase() === value.toLowerCase() // Match exactly
-          : collectionsite[field]
-            ?.toString()
-            .toLowerCase()
-            .includes(value.toLowerCase()) // For other fields, use includes
+  const handleEditClick = (collectionsite) => {
+    let logoPreview = "";
+    let logodata = "";
+    if (collectionsite.logo?.data) {
+      const binary = new Uint8Array(collectionsite.logo.data).reduce(
+        (acc, byte) => acc + String.fromCharCode(byte),
+        ""
       );
+      logoPreview = `data:image/png;base64,${btoa(binary)}`;
     }
-    setFilteredCollectionsites(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+
+    if (collectionsite.logo && collectionsite.logo.data) {
+      const blob = new Blob([new Uint8Array(collectionsite.logo.data)], {
+        type: "image/jpeg",
+      });
+      const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
+      logodata = file;
+    }
+    setSelectedCollectionSiteId(collectionsite.id);
+    setEditCollectionsite(collectionsite);
+    setShowEditModal(true);
+    setFormData({
+      user_account_id: collectionsite.user_account_id,
+      CollectionSiteName: collectionsite.CollectionSiteName,
+      CollectionSiteType: collectionsite.CollectionSiteType,
+      email: collectionsite.useraccount_email,
+      password: collectionsite.useraccount_password,
+      city: collectionsite.cityid,
+      district: collectionsite.districtid,
+      country: collectionsite.countryid,
+      phoneNumber: collectionsite.phoneNumber,
+      fullAddress: collectionsite.fullAddress,
+      logo: logodata,
+      logoPreview: logoPreview, // ✅ use the correctly computed value
+      status: collectionsite.status
+    });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    const newformData = new FormData();
+    newformData.append("useraccount_email", formData.email);
+    newformData.append("useraccount_password", formData.password);
+    newformData.append("accountType", "CollectionSites");
+    newformData.append("CollectionSiteName", formData.CollectionSiteName);
+    newformData.append("CollectionSiteType", formData.CollectionSiteType);
+    newformData.append("phoneNumber", formData.phoneNumber);
+    newformData.append("fullAddress", formData.fullAddress);
+    newformData.append("city", formData.city);
+    newformData.append("district", formData.district);
+    newformData.append("country", formData.country);
+    newformData.append("status", "inactive");
+    if (formData.logo) {
+      newformData.append("logo", formData.logo);
+    }
+
+    // Debug
+    for (let pair of newformData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    const id = formData.user_account_id;
+
+    updateUser({ id, formData: newformData })
+      .then((result) => {
+        if (result?.error) {
+          const errorMessage = result?.error?.data?.error || "Update Failed";
+          notifyError(errorMessage);
+        } else {
+          notifySuccess("Update collection site Successfully");
+          setShowEditModal(false);
+        }
+      })
+      .catch((error) => {
+        notifyError(error?.message || "An unexpected error occurred");
+      });
+
+    setShowEditModal(false);
+    resetFormData();
+  };
+  const handleToggleStatusOptions = (id) => {
+    setStatusOptionsVisibility((prev) => ({
+      ...prev,
+      [id]: !prev[id], // Toggle the visibility of the dropdown for the given id
+    }));
+  };
+
+
+  // Handle status update
+  const handleStatusClick = async (id, option) => {
+    console.log(id, option)
+    try {
+      // Send status update request to backend
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/edit/${id}`,
+        { data: { status: option } },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      // Assuming the response is successful, set success message and hide the dropdown
+      setSuccessMessage(response.data.message);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      // Refresh the collectionsite list
+      fetchCollectionsites();
+
+      // Close the dropdown after status change
+      setStatusOptionsVisibility((prev) => ({
+        ...prev,
+        [id]: false,
+      }));
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showAddModal || showDeleteModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -362,204 +390,225 @@ const CollectionSiteArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showAddModal || showDeleteModal, showEditModal, showHistoryModal]);
+
+  const resetFormData = () => {
+    setFormData({
+      CollectionSiteName: "",
+      CollectionSiteType: "",
+      email: "",
+      password: "",
+      phoneNumber: "",
+      city: "",
+      district: "",
+      country: "",
+      fullAddress: "",
+      logo: "",
+      created_at: "",
+      status: "",
+    });
+  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Get all the dropdown elements
+      const dropdowns = document.querySelectorAll(".dropdown-menu");
+
+      dropdowns.forEach((dropdown) => {
+        // Check if the dropdown and its closest button group are valid
+        const buttonGroup = dropdown.closest(".btn-group");
+
+        // If dropdown exists and the clicked target is outside the dropdown and button group
+        if (dropdown && buttonGroup && !dropdown.contains(event.target) && !buttonGroup.contains(event.target)) {
+          const dropdownId = dropdown.dataset.id;
+          // Close dropdown if clicked outside
+          setStatusOptionsVisibility((prev) => ({
+            ...prev,
+            [dropdownId]: false,
+          }));
+        }
+      });
+    };
+
+    // Add the event listener for click events
+    document.addEventListener("click", handleClickOutside);
+
+    // Clean up the event listener on unmount
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+
 
   return (
-    <section className="policy__area pb-40 overflow-hidden p-4">
+    <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <div className="row justify-content-center">
-          {/* {Button} */}
-          <div className="d-flex flex-column w-100">
+          {/* Button Container */}
+          <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100">
             {/* Success Message */}
             {successMessage && (
               <div
-                className="alert alert-success w-100 text-start mb-2"
+                className="alert alert-success w-100 text-start"
                 role="alert"
               >
                 {successMessage}
               </div>
             )}
 
-            {/* Button Container */}
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              {/* Status Filter */}
-              <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-auto">
-                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+            <h5 className="m-0 fw-bold">Collection Site List</h5>
+
+            {/* Status Filter and Add Button in Same Row */}
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
+              <div className="d-flex align-items-center gap-2">
+                <label htmlFor="statusFilter" className="mb-0">
                   Status:
                 </label>
                 <select
                   id="statusFilter"
-                  className="form-control mb-2"
+                  className="form-control"
                   style={{ width: "auto" }}
-                  onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
+                  onChange={(e) => handleFilterChange("status", e.target.value)}
                 >
                   <option value="">All</option>
-                  <option value="Active">Active</option>
-                  <option value="inactive">inactive</option>
+                  <option value="inactive">InActive</option>
+                  <option value="active">Active</option>
                 </select>
               </div>
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Collection Site Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    backgroundColor: "#4a90e2", // soft blue
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <i className="fas fa-plus"></i> Add Collection Site
-                </button>
-              </div>
+
+              {/* Add collection site Button */}
+              <button
+                onClick={() => setShowAddModal(true)}
+                style={{
+                  backgroundColor: "#4a90e2",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  margin: 10,
+                }}
+              >
+                <i className="fas fa-plus"></i> Add Collection Site
+              </button>
             </div>
           </div>
+
           {/* Table */}
-          <div className="table-responsive w-100">
-            <table className="table table-hover table-bordered text-center align-middle w-auto border">
+          <div className="table-responsive" style={{ overflowX: "auto" }}>
+            <table className="table table-hover table-bordered text-center align-middle w-100">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
-                  {columns.map(({ label, field, placeholder }) => (
-                    <th key={label} className="px-4 py-2">
+                  {columns.map(({ label, placeholder, field }) => (
+                    <th key={field} style={{ minWidth: "180px" }}>
                       <input
                         type="text"
-                        className="form-control  w-100"
+                        className="form-control form-control-sm"
                         placeholder={placeholder}
-                        style={{ minWidth: "160px" }} // Ensures visibility and alignment
-                        onChange={(e) =>
-                          handleFilterChange(field, e.target.value)
-                        }
+                        onChange={(e) => handleFilterChange(field, e.target.value)}
                       />
-                      <div className="fw-bold mt-1">{label}</div>{" "}
-                      {/* Keeps label below input */}
+                      <div className="fw-bold mt-1">{label}</div>
                     </th>
                   ))}
-                  <th className="col-1">Action</th>
+                  <th style={{ minWidth: "120px" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
                   currentData.map((collectionsite) => (
                     <tr key={collectionsite.id}>
-                      {/* <td>{collectionsite.id}</td> */}
-                      <td>{collectionsite.CollectionSiteName}</td>
-                      <td>{collectionsite.email}</td>
-                      <td>{collectionsite.password}</td>
-                      <td>{collectionsite.CollectionSiteType}</td>
-                      <td>{collectionsite.phoneNumber}</td>
-                      <td>{collectionsite.fullAddress}</td>
-                      <td>{collectionsite.city_name}</td>
-                      <td>{collectionsite.district_name}</td>
-                      <td>{collectionsite.country_name}</td>
-                      <td>{formatDate(collectionsite.created_at)}</td>
-                      <td>{collectionsite.status}</td>
-                      <td>
-                        <div className="d-flex justify-content-around gap-2">
+                      {columns.map(({ field }) => (
+                        <td key={field}>
+                          {field === "created_at"
+                            ? moment(collectionsite[field]).format("YYYY-MM-DD")
+                            : collectionsite[field]}
+                        </td>
+                      ))}
+                      <td className="position-relative">
+                        <div className="d-flex justify-content-center gap-2">
                           <button
-                            className="btn btn-success btn-sm py-0 px-1"
+                            className="btn btn-success btn-sm"
                             onClick={() => handleEditClick(collectionsite)}
-                            title="Edit Collection Site"
+                            title="Edit"
                           >
-                            <FontAwesomeIcon icon={faEdit} size="xs" />
+                            <FontAwesomeIcon icon={faEdit} />
                           </button>
 
                           <div className="btn-group">
                             <button
-                              className="btn btn-primary btn-sm py-0 px-1"
-                              onClick={() =>
-                                handleToggleStatusOptions(collectionsite.id)
-                              }
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleToggleStatusOptions(collectionsite.id)}
                               title="Edit Status"
                             >
-                              <FontAwesomeIcon
-                                icon={faQuestionCircle}
-                                size="xs"
-                              />
+                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
                             </button>
+
                             {statusOptionsVisibility[collectionsite.id] && (
-                              <div className="dropdown-menu show">
+                              <div
+                                className="dropdown-menu show"
+                                data-id={collectionsite.id}
+                                style={{
+                                  position: "absolute",
+                                  top: "100%",
+                                  left: "0",
+                                  zIndex: 1000,
+                                  minWidth: "100px",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
                                 <button
                                   className="dropdown-item"
-                                  onClick={() =>
-                                    handleStatusClick(
-                                      collectionsite.id,
-                                      "Active"
-                                    )
-                                  }
+                                  onClick={() => handleStatusClick(collectionsite.id, "active")}
                                 >
                                   Active
                                 </button>
                                 <button
                                   className="dropdown-item"
-                                  onClick={() =>
-                                    handleStatusClick(
-                                      collectionsite.id,
-                                      "Inactive"
-                                    )
-                                  }
+                                  onClick={() => handleStatusClick(collectionsite.id, "inactive")}
                                 >
-                                  Inactive
+                                  InActive
                                 </button>
                               </div>
                             )}
                           </div>
 
                           <button
-                            className="btn btn-danger btn-sm py-0 px-1"
-                            onClick={() => {
-                              setSelectedCollectionsiteId(collectionsite.id);
-                              setShowDeleteModal(true);
-                            }}
-                            title="Delete Collection Site"
-                          >
-                            <FontAwesomeIcon icon={faTrash} size="sm" />
-                          </button>
-
-                          <button
                             className="btn btn-info btn-sm"
-                            onClick={() => {
-                              handleShowHistory(
-                                "collectionsite",
-                                collectionsite.id
-                              );
-                            }}
-                            title="Collection Site History"
+                            onClick={() => handleShowHistory("collectionsite", collectionsite.id)}
+                            title="History"
                           >
-                            <FontAwesomeIcon icon={faHistory} size="sm" />
+                            <FontAwesomeIcon icon={faHistory} />
                           </button>
                         </div>
                       </td>
+
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="15" className="text-center">
-                      No Collection Sites Available
+                    <td colSpan={columns.length + 1} className="text-center">
+                      No collectionsites available
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
           {/* Pagination */}
-          {totalPages >= 0 && (
+          {filteredCollectionsites.length >= 0 && (
             <Pagination
               handlePageClick={handlePageChange}
-              pageCount={totalPages}
+              pageCount={Math.max(
+                1,
+                Math.ceil(filteredCollectionsites.length / itemsPerPage)
+              )}
               focusPage={currentPage}
             />
           )}
-
-          <h6 class="text-danger small">Note: Handle 'Status' through Action Icons</h6>
-
-          {/* Modal for Adding/Editing Collection sites */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -608,11 +657,58 @@ const CollectionSiteArea = () => {
                       </button>
                     </div>
 
-                    <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
+                    <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
                       <div
                         className="modal-body"
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
+                        <div className="form-group">
+                          <div
+                            className="mt-2"
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center", // To center content vertically
+                            }}
+                          >
+                            {formData.logoPreview ? (
+                              <img
+                                src={formData.logoPreview}
+                                alt="Logo Preview"
+                                style={{
+                                  maxHeight: "120px",
+                                  objectFit: "contain",
+                                  border: "2px solid black",
+                                  borderRadius: "50%",
+                                  padding: "5px",
+                                }}
+                              />
+                            ) : (
+                              <i
+                                className="fa fa-user"
+                                style={{
+                                  fontSize: "60px",
+                                  color: "#000",
+                                  border: "2px solid black",
+                                  borderRadius: "50%",
+                                  padding: "20px",
+                                }}
+                              />
+                            )}
+                          </div>
+
+                          <label>Logo</label>
+
+                          <input
+                            id="logo"
+                            type="file"
+                            className="form-control"
+                            name="logo"
+                            accept="image/*"
+                            onChange={handleInputChange}
+                          />
+                        </div>
+
                         <div className="form-group">
                           <label>Name</label>
                           <input
@@ -626,15 +722,33 @@ const CollectionSiteArea = () => {
                             title="Only letters and spaces are allowed."
                             required
                           />
-                          {!/^[A-Za-z\s]*$/.test(
-                            formData.CollectionSiteName
-                          ) && (
-                              <small className="text-danger">
-                                Only letters and spaces are allowed.
-                              </small>
-                            )}
+                          {!/^[A-Za-z\s]*$/.test(formData.CollectionSiteName) && (
+                            <small className="text-danger">
+                              Only letters and spaces are allowed.
+                            </small>
+                          )}
                         </div>
-
+                        <div className="form-group">
+                          <label>Collection Site Type</label>
+                          <select
+                            name="CollectionSiteType"
+                            value={formData.CollectionSiteType} // Bind the value to formData.CollectionSiteType
+                            id="CollectionSiteType"
+                            style={{
+                              width: "100%",
+                              height: "50px",
+                              paddingLeft: "50px",
+                              borderColor: "#f0f0f0",
+                              color: "#808080",
+                            }}
+                            onChange={handleInputChange} // Ensure onChange updates formData.type
+                          >
+                            <option value="">Select Type</option>
+                            <option value="Hospital">Hospital</option>
+                            <option value="Independent Lab">Independent Lab</option>
+                            <option value="Blood Bank">Blood Bank</option>
+                          </select>
+                        </div>
                         <div className="form-group">
                           <label>Email</label>
                           <input
@@ -677,21 +791,6 @@ const CollectionSiteArea = () => {
                           </div>
                         </div>
                         <div className="form-group">
-                          <label>Collection Site Type</label>
-                          <select
-                            className="form-control"
-                            name="CollectionSiteType"
-                            value={formData.CollectionSiteType}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">-- Select Collection Site Type --</option>
-                            <option value="Hospital">Hospital</option>
-                            <option value="Independent Lab">Independent Lab</option>
-                            <option value="Blood Bank">Blood Bank</option>
-                          </select>
-                        </div>
-                        <div className="form-group">
                           <label>Phone Number</label>
                           <input
                             type="text"
@@ -701,8 +800,8 @@ const CollectionSiteArea = () => {
                             onChange={handleInputChange}
                             required
                             pattern="^\d{4}-\d{7}$"
-                            placeholder="XXXX-XXXXXXX"
-                            title="Phone number must be in the format e.g. 0332-4567890"
+                            placeholder="0123-4567890"
+                            title="Phone number must be in the format 0123-4567890 and numeric"
                           />
                         </div>
                         <div className="form-group">
@@ -787,9 +886,9 @@ const CollectionSiteArea = () => {
               </div>
             </>
           )}
-          {/* Modal for Deleting Collectionsites */}
-          {showDeleteModal && (
+          {showHistoryModal && (
             <>
+              {/* Bootstrap Backdrop with Blur */}
               <div
                 className="modal-backdrop fade show"
                 style={{ backdropFilter: "blur(5px)" }}
@@ -803,23 +902,21 @@ const CollectionSiteArea = () => {
                 style={{
                   zIndex: 1050,
                   position: "fixed",
-                  top: "120px",
+                  top: "100px",
                   left: "50%",
                   transform: "translateX(-50%)",
                 }}
               >
-                <div className="modal-dialog" role="document">
+                <div className="modal-dialog modal-md" role="document">
                   <div className="modal-content">
+                    {/* Modal Header */}
                     <div className="modal-header">
-                      <h5 className="modal-title">Delete Collection Site</h5>
-
+                      <h5 className="modal-title">History</h5>
                       <button
                         type="button"
                         className="close"
-                        onClick={() => setShowDeleteModal(false)}
+                        onClick={() => setShowHistoryModal(false)}
                         style={{
-                          // background: 'none',
-                          // border: 'none',
                           fontSize: "1.5rem",
                           position: "absolute",
                           right: "10px",
@@ -830,64 +927,88 @@ const CollectionSiteArea = () => {
                         <span>&times;</span>
                       </button>
                     </div>
-                    <div className="modal-body">
-                      <p>
-                        Are you sure you want to delete this collection site?
-                      </p>
-                    </div>
-                    <div className="modal-footer">
-                      <button className="btn btn-danger" onClick={handleDelete}>
-                        Delete
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowDeleteModal(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-          {showHistoryModal && (
-            <>
-              {/* Backdrop */}
-              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-              {/* Modal */}
-              <div className="modal show d-block" role="dialog" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}>
-                <div className="modal-dialog modal-md">
-                  <div className="modal-content">
-                    {/* Header */}
-                    <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
-                      <button type="button" className="close" onClick={() => setShowHistoryModal(false)} style={{ fontSize: "1.5rem", position: "absolute", right: "10px", cursor: "pointer" }}>
-                        &times;
-                      </button>
-                    </div>
+                    {/* Chat-style Modal Body */}
+                    <div
+                      className="modal-body"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        padding: "15px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            created_name,
+                            updated_name,
+                            CollectionSiteName,
+                            added_by,
+                            created_at,
+                            updated_at,
+                            status
+                          } = log;
 
-                    {/* Body */}
-                    <div className="modal-body" style={{ maxHeight: "500px", overflowY: "auto", backgroundColor: "#e5ddd5", padding: "15px", borderRadius: "10px" }}>
-                      {historyData?.length ? historyData.map(({ CollectionSiteName, phoneNumber, fullAddress, city_name, district_name, country_name, created_at, updated_at, status }, index) => (
-                        <div key={index} style={{ marginBottom: "10px" }}>
-                          {/* History Message */}
-                          <div style={{
-                            padding: "10px 15px",
-                            borderRadius: "15px",
-                            backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
-                            boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                            maxWidth: "75%",
-                            fontSize: "14px",
-                          }}>
-                            <b>Collection Site:</b> {CollectionSiteName} was <b>{status}</b> by Database Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
-                            <br />
-                            {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}
-                            {fullAddress && <><b>Address:</b> {fullAddress}, {city_name}, {district_name}, {country_name} <br /></>}
-                          </div>
-                        </div>
-                      )) : <p className="text-left">No history available.</p>}
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Message for City Addition */}
+                              {status === 'added' && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#ffffff",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  <b>Collectionsite:</b> {CollectionSiteName} was{" "}
+                                  <b>{status}</b> by Database Admin at{" "}
+                                  {moment(created_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Message for City Update (Only if it exists) */}
+                              {status === 'updated' && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                    marginTop: "5px", // Spacing between messages
+                                  }}
+                                >
+                                  <b>Collectionsite:</b> {CollectionSiteName} was{" "}
+                                  <b>{status}</b> by Database Admin at{" "}
+                                  {moment(updated_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
                     </div>
                   </div>
                 </div>

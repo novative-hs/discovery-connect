@@ -27,7 +27,6 @@ const getCollectionSiteById = (req, res) => {
   });
 };
 
-
 // Controller to create a collection site
 const createCollectionSite = (req, res) => {
   const newMemberData = req.body;
@@ -40,26 +39,6 @@ const createCollectionSite = (req, res) => {
   });
 };
 
-// Controller to update collection site status
-const updateCollectionSiteStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  if (!status) {
-    return res.status(400).json({ error: "Status is required" });
-  }
-
-  try {
-    const result = await collectionsiteModel.updateCollectionSiteStatus(id, status);
-
-    res.status(200).json(result); // Sends success response
-
-  } catch (error) {
-    console.error("Error updating collection site status:", error);
-    res.status(500).json({ error: "An error occurred while updating collection site status" });
-  }
-};
-
 //Controller to delete a collection site
 const deleteCollectionSite = async (req, res) => {
   const { id } = req.params;  // Get the id from request parameters
@@ -67,7 +46,7 @@ const deleteCollectionSite = async (req, res) => {
   try {
     // Call the model method and wait for the response
     const result = await collectionsiteModel.deleteCollectionSite(id);
-    
+
     // Return the success message after the status update
     res.status(200).json({ message: result.message });
   } catch (error) {
@@ -92,15 +71,15 @@ const getAllCollectionSiteNames = (req, res) => {
       user_account_id: row.user_account_id,
     }));
     res.status(200).json({ data: collectionSites });
-    });
+  });
 };
 
 // Controller to fetch collection site names in biobank dashboard
 const getAllCollectionSiteNamesInBiobank = (req, res) => {
   const { sample_id } = req.params;
-  
+
   if (!sample_id) {
-    
+
     return res.status(400).json({ error: "Sample ID is required" });
   }
 
@@ -109,13 +88,13 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
       console.error("Error fetching data:", err);
       return res.status(500).json({ error: "An error occurred while fetching data" });
     }
-      // Ensure the response includes `CollectionSiteName` and `user_account_id`
-      const collectionSites = results.map(row => ({
-        CollectionSiteName: row.CollectionSiteName,
-        user_account_id: row.user_account_id,
-      }));
+    // Ensure the response includes `CollectionSiteName` and `user_account_id`
+    const collectionSites = results.map(row => ({
+      CollectionSiteName: row.CollectionSiteName,
+      user_account_id: row.user_account_id,
+    }));
 
-      res.status(200).json({ data: collectionSites });
+    res.status(200).json({ data: collectionSites });
   });
 };
 
@@ -154,6 +133,7 @@ const updateCollectionSiteDetail = (req, res) => {
     res.status(200).json({ message: 'Collection site updated successfully' });
   });
 };
+
 const getCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
   collectionsiteModel.getCollectionSiteDetail(id, (err, results) => {
@@ -166,6 +146,22 @@ const getCollectionSiteDetail = (req, res) => {
     }
     res.status(200).json(results[0]);
   });
+};
+
+// Controller to update collection site Status (Active/Inactive))
+const updateCollectionSiteStatus = async (req, res) => {
+  const { id } = req.params;  // Get the id from request parameters
+  const { status } = req.body;
+  try {
+    // Call the model method and wait for the response
+    const result = await collectionsiteModel.updateCollectionSiteStatus(id, status);
+
+    // Return the success message after the status update
+    res.status(200).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in deleting CollectionSite:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
 };
 
 module.exports = {
