@@ -638,8 +638,6 @@ const createAccount = (req, callback) => {
     email,
     password,
     ResearcherName,
-    cnicPic,
-    orgIdCardPic,
     CSRName,
     OrganizationName,
     CollectionSiteName,
@@ -721,8 +719,6 @@ console.log("file",logo)
                 values = [
                   userAccountId,
                   ResearcherName,
-                  cnicPic,
-                  orgIdCardPic,
                   phoneNumber,
                   fullAddress,
                   city,
@@ -835,11 +831,11 @@ console.log("file",logo)
 
               const historyQuery = `
                 INSERT INTO history (
-                  email, password, ResearcherName, cnicPic, orgIdCardPic, CollectionSiteName, OrganizationName, CSRName,
+                  email, password, ResearcherName, CollectionSiteName, OrganizationName, CSRName,
                   HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
                   researcher_id, collectionsite_id, CSR_id,status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?)`;
 
               const historyValues = [
                 email,
@@ -859,8 +855,6 @@ console.log("file",logo)
                 district,
                 country,
                 logo,
-                cnicPic,
-                orgIdCardPic,
                 added_by || null,
                 organizationId,
                 researcherId,

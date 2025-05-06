@@ -131,6 +131,7 @@ const OrganizationArea = () => {
           notifyError(errorMessage);
         } else {
           notifySuccess("Organization Registered Successfully");
+          fetchOrganizations()
           setShowAddModal(false);
         }
       })

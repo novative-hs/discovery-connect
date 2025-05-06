@@ -187,7 +187,8 @@ const CSRArea = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
-          notifySuccess("Organization Registered Successfully");
+          fetchCSR();
+          notifySuccess("CSR Registered Successfully");
           setShowAddModal(false);
         }
       })
@@ -858,3 +859,4 @@ const CSRArea = () => {
 };
 
 export default CSRArea;
+

@@ -96,7 +96,7 @@ const createAccount = (req, res) => {
       if (err.message === "Email already exists") {
         return res.status(400).json({ error: err.message });
       }
-      return res.status(500).json({ error: "Error creating account" });
+      return res.status(500).json({ error: err.message });
     }
 
     
