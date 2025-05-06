@@ -108,7 +108,7 @@ const OrganizationArea = () => {
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
     newformData.append("country", formData.country);
-    newformData.append("status", "unapproved");
+    newformData.append("status", "inactive");
     newformData.append("type", formData.type);
     // Ensure logo is a file before appending
     if (formData.logo) {
@@ -130,6 +130,7 @@ const OrganizationArea = () => {
           const errorMessage = result?.error?.data?.error || "Register Failed";
           notifyError(errorMessage);
         } else {
+          fetchOrganizations()
           notifySuccess("Organization Registered Successfully");
           setShowAddModal(false);
         }
@@ -333,7 +334,7 @@ const OrganizationArea = () => {
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
     newformData.append("country", formData.country);
-    newformData.append("status", "unapproved");
+    newformData.append("status", "inactive");
     newformData.append("type", formData.type);
     if (formData.logo) {
       newformData.append("logo", formData.logo);
@@ -495,8 +496,8 @@ const OrganizationArea = () => {
                 >
                   <option value="">All</option>
                   <option value="pending">Pending</option>
-                  <option value="unapproved">UnApproved</option>
-                  <option value="approved">Approved</option>
+                  <option value="inactive">InActive</option>
+                  <option value="active">Active</option>
                 </select>
               </div>
 
@@ -586,15 +587,15 @@ const OrganizationArea = () => {
         >
           <button
             className="dropdown-item"
-            onClick={() => handleStatusClick(organization.id, "approved")}
+            onClick={() => handleStatusClick(organization.id, "active")}
           >
-            Approved
+            Active
           </button>
           <button
             className="dropdown-item"
-            onClick={() => handleStatusClick(organization.id, "unapproved")}
+            onClick={() => handleStatusClick(organization.id, "inactive")}
           >
-            Unapproved
+            InActive
           </button>
         </div>
       )}

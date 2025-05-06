@@ -69,7 +69,7 @@ const create_CSR = () => {
     city INT,
     district INT,
     country INT,
-    status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+    status ENUM('pending', 'active', 'inactive') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
@@ -101,7 +101,7 @@ const create_organizationTable = () => {
       ntnNumber VARCHAR(50),
       fullAddress TEXT,
       logo LONGBLOB,
-      status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      status ENUM('pending', 'active', 'inactive') DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
@@ -665,8 +665,6 @@ if (req.file) {
   logo = req.files.logo[0].buffer;
 }
 
-console.log("body",req.body)
-console.log("file",logo)
   mysqlPool.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting database connection:", err);
@@ -957,10 +955,10 @@ const loginAccount = (data, callback) => {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (OrganizationResults.length > 0 && OrganizationResults[0].status === 'approved') {
+          if (OrganizationResults.length > 0 && OrganizationResults[0].status === 'active') {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
+            return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
       } else if (user.accountType === 'CollectionSites') {
@@ -1004,10 +1002,10 @@ const loginAccount = (data, callback) => {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (CSRResults.length > 0 && CSRResults[0].status === 'approved') {
+          if (CSRResults.length > 0 && CSRResults[0].status === 'active') {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
+            return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
       }

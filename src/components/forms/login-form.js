@@ -43,7 +43,7 @@ const LoginForm = () => {
         const errorData = result.error?.data;
 
         const errorMsg =
-          errorData?.message || // Backend custom message (e.g., 'Account is not approved')
+          errorData?.message || 
           errorData?.error || // If backend sends it under `error`
           result.error?.statusText || // Generic HTTP error
           "Internal Server Error"; // Fallback

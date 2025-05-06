@@ -81,7 +81,7 @@ const updateOrganizationStatus = async (id, status) => {
   The Discovery Connect Team
 `;
 
-if (status === "approved") {
+if (status === "active") {
   emailText = `
   Dear ${name},
 
@@ -168,68 +168,78 @@ const updateOrganization = (data, user_account_id, callback) => {
 };
 
 // Function to delete a collection site
-const deleteOrganization = async (id,status) => {
+const deleteOrganization = async (id, status) => {
   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
   const getEmailQuery = `
-    SELECT ua.email ,o.OrganizationName
+    SELECT ua.email, o.OrganizationName
     FROM organization o
     JOIN user_account ua ON o.user_account_id = ua.id
     WHERE o.id = ?
   `;
 
   try {
-
     // Update organization status
     const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
     if (updateResult.affectedRows === 0) {
       throw new Error("No organization found with the given ID.");
     }
 
-    // Fetch email in parallel
+    // Fetch email
     const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
-
-    // Check if email exists
     if (emailResults.length === 0) {
       throw new Error("Organization email not found.");
     }
 
     const email = emailResults[0].email;
-    const name=emailResults[0].OrganizationName;
+    const name = emailResults[0].OrganizationName;
 
-    // Construct the email content based on the status
-    let emailText = `
-    Dear ${name},
-  
-    Thank you for registering with Discovery Connect! 
-  
-    We appreciate your interest in our platform. However, we regret to inform you that your account is currently <b>unapproved</b>. This means that you will not be able to log in or access the platform until the admin completes the review and approval process.
-  
-    We understand this might be disappointing, but rest assured, we are working hard to process your registration as quickly as possible.
-  
-    Once your account is approved, you'll be able to explore all the exciting features and resources that Discovery Connect has to offer!
-  
-    We will notify you via email as soon as your account is approved. In the meantime, if you have any questions or need further assistance, feel free to reach out to us.
-  
-    We appreciate your patience and look forward to having you on board soon!
-  
-    Best regards,
-    The Discovery Connect Team
-    `;
-  
-  
+    // Construct email content based on status
+    let emailText = "";
 
-    // Send email asynchronously (does not block response)
+    if (status === "inactive") {
+      emailText = `
+      Dear ${name},
+      
+      We hope you're doing well.
+
+      We wanted to inform you that your organization's account on Discovery Connect has been set to <b>inactive</b>. This means you will no longer be able to access the platform or its services until reactivation.
+
+      If you believe this was done in error or you need further assistance, please reach out to our support team.
+
+      Thank you for being a part of Discovery Connect.
+
+      Best regards,  
+      The Discovery Connect Team
+      `;
+    } else if (status === "active") {
+      emailText = `
+      Dear ${name},
+
+      We are pleased to inform you that your organization's account on Discovery Connect has been <b>approved and activated</b>!
+
+      You can now log in and start exploring all the features and resources our platform offers. We're excited to have you onboard and look forward to your active participation.
+
+      If you have any questions or need help getting started, feel free to contact us.
+
+      Welcome to Discovery Connect!
+
+      Best regards,  
+      The Discovery Connect Team
+      `;
+    }
+
+    // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)
       .then(() => console.log("Email sent successfully"))
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
-    // Final response (status update and email sent)
     return { message: "Status updated and email sent" };
   } catch (error) {
     console.error("Error updating organization status:", error);
     throw error;
   }
 };
+
 
 
 

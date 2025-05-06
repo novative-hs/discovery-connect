@@ -3,72 +3,91 @@ const mysqlConnection = require("../config/db");
 // List of tables and their columns to be added or removed
 const tablesAndColumns = [
 
-  {
-    table: "registrationadmin_history",
-    columnsToAdd: [
-      {
-        column: "samplepricecurrency_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "samplepricecurrency", column: "id" },
-      },
-    ],
-  },
+  // {
+  //   table: "registrationadmin_history",
+  //   columnsToAdd: [
+  //     {
+  //       column: "samplepricecurrency_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "samplepricecurrency", column: "id" },
+  //     },
+  //   ],
+  // },
   
-  {
-    table: "committee_member",
-    columnsToDelete: ["email", "password"],
-    columnsToAdd: [
-      {
-        column: "user_account_id",
-        type: "INT",
-        nullable: true,
-        references: { table: "user_account", column: "id" },
-      },
-      {
-        column: "otpExpiry",
-        type: "TIMESTAMP",
-        nullable: true,
-      },
-    ],
-  },
-  {
-    table: "researcher",
-    columnsToAdd: [
+  // {
+  //   table: "committee_member",
+  //   columnsToDelete: ["email", "password"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "user_account_id",
+  //       type: "INT",
+  //       nullable: true,
+  //       references: { table: "user_account", column: "id" },
+  //     },
+  //     {
+  //       column: "otpExpiry",
+  //       type: "TIMESTAMP",
+  //       nullable: true,
+  //     },
+  //   ],
+  // },
+  // {
+  //   table: "researcher",
+  //   columnsToAdd: [
       
-      {
-        column: "CNIC",
-        type: "LONGBLOB",
-        nullable: true,
-      },
-      {
-        column: "organization_card",
-        type: "LONGBLOB",
-        nullable: true,
-      },
-    ],
-  },
+  //     {
+  //       column: "CNIC",
+  //       type: "LONGBLOB",
+  //       nullable: true,
+  //     },
+  //     {
+  //       column: "organization_card",
+  //       type: "LONGBLOB",
+  //       nullable: true,
+  //     },
+  //   ],
+  // },
   {
-    table: "cart",
-    columnsToAdd: [
+    table:'csr',
+    columnsToAdd:[
       {
-        column: "order_status",
-        type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
+        column: "status",
+        type: "ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending'",
       },
-      {
-        column: "payment_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "payment", column: "id" },
-      },
-      {
-        column: "delivered_at",
-        type: "DATETIME",
-        nullable: true, 
-      },
-    ],
-    columnsToDelete: ["payment_status", "payment_method"],
+    ]
   },
+
+  {
+    table:'organization',
+    columnsToAdd:[ 
+    {
+      column: "status",
+      type: "ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending'",
+    },
+  ]
+  },
+  // {
+  //   table: "cart",
+  //   columnsToAdd: [
+  //     {
+  //       column: "order_status",
+  //       type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
+  //     },
+  //     {
+  //       column: "payment_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "payment", column: "id" },
+  //     },
+  //     {
+  //       column: "delivered_at",
+  //       type: "DATETIME",
+  //       nullable: true, 
+  //     },
+  //   ],
+  //   columnsToDelete: ["payment_status", "payment_method"],
+  // },
 ];
 const executeSequentially = async (tasks) => {
   for (let task of tasks) {
@@ -299,16 +318,18 @@ const createOrUpdateTables = async () => {
         "Committeemember",
         "CSR"
       ]),
-    () =>
-      updateEnumColumn("cart", "order_status", [
-        "Pending",
-        "Accepted",
-        "UnderReview",
-        "Rejected",
-        "Shipped",
-        "Dispatched",
-        "Completed",
-      ]),
+      () =>
+        updateEnumColumn("organization", "status", [
+          "pending",
+          "active",
+          "inactive"
+        ]),
+        () =>
+          updateEnumColumn("csr", "status", [
+            "pending",
+            "active",
+            "inactive"
+          ]),
     () =>
       updateEnumColumn("committeesampleapproval", "committee_status", [
         "UnderReview",

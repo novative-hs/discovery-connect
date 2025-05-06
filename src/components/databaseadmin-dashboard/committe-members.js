@@ -110,12 +110,12 @@ const CommitteeMemberArea = () => {
     try {
       const response = await axios.get(`${url}/admin/organization/get`);
 
-      // ✅ Filter only approved organizations
+      // ✅ Filter only active organizations
       const approvedOrganizations = response.data.filter(
-        (org) => org.status === "approved"
+        (org) => org.status === "active"
       );
 
-      setOrganization(approvedOrganizations); // Store only approved organizations in state
+      setOrganization(approvedOrganizations); // Store only active organizations in state
     } catch (error) {
       console.error("Error fetching organizations:", error);
     }
