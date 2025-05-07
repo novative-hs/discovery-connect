@@ -32,22 +32,22 @@ const tablesAndColumns = [
   //     },
   //   ],
   // },
-  // {
-  //   table: "researcher",
-  //   columnsToAdd: [
+  {
+    table: "researcher",
+    columnsToAdd: [
       
-  //     {
-  //       column: "CNIC",
-  //       type: "LONGBLOB",
-  //       nullable: true,
-  //     },
-  //     {
-  //       column: "organization_card",
-  //       type: "LONGBLOB",
-  //       nullable: true,
-  //     },
-  //   ],
-  // },
+      {
+        column: "CNIC",
+        type: "LONGBLOB",
+        nullable: true,
+      },
+      {
+        column: "organization_card",
+        type: "LONGBLOB",
+        nullable: true,
+      },
+    ],
+  },
   {
     table:'csr',
     columnsToAdd:[
@@ -76,28 +76,28 @@ const tablesAndColumns = [
          nullable: true,
       }
     ]
-  }
-  // {
-  //   table: "cart",
-  //   columnsToAdd: [
-  //     {
-  //       column: "order_status",
-  //       type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
-  //     },
-  //     {
-  //       column: "payment_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "payment", column: "id" },
-  //     },
-  //     {
-  //       column: "delivered_at",
-  //       type: "DATETIME",
-  //       nullable: true, 
-  //     },
-  //   ],
-  //   columnsToDelete: ["payment_status", "payment_method"],
-  // },
+  },
+  {
+    table: "cart",
+    columnsToAdd: [
+      {
+        column: "order_status",
+        type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
+      },
+      {
+        column: "payment_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "payment", column: "id" },
+      },
+      {
+        column: "delivered_at",
+        type: "DATETIME",
+        nullable: true, 
+      },
+    ],
+    columnsToDelete: ["payment_status", "payment_method"],
+  },
 ];
 const executeSequentially = async (tasks) => {
   for (let task of tasks) {
