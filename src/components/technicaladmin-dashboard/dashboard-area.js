@@ -7,6 +7,7 @@ import ChangePassword from './change-password';
 import ContactUS from "./contactus";
 import OrderArea from './order';
 import Header from '../../layout/dashboardheader';
+import OrderRejectedPage from "./orderrejected";
 import OrderInfo from "./order-info";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "Samples"
@@ -44,6 +45,8 @@ const DashboardArea = () => {
           return <OrderInfo setActiveTab={setActiveTab} />;
       case "order":
         return <OrderArea />;
+        case "orderrejected":
+          return <OrderRejectedPage/>
        case "contactus":
         return <ContactUS/>
       case "change-password":

@@ -25,6 +25,7 @@ const createSampleTable = () => {
         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
+         quantity_allocated INT,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50),

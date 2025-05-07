@@ -292,12 +292,7 @@ const SampleArea = () => {
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
           Sample Orders & Documents
         </h4>
-        {/* <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">Welcome Committee Member</h4>
-              </div>
-              <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">Order Sample verify list</h4>
-              </div> */}
+        
         {/* Table */}
         <div
           onScroll={handleScroll}
@@ -344,9 +339,9 @@ const SampleArea = () => {
                     key={index}
                     className="text-center"
                     style={{
-                      maxWidth: "150px", // Limit max width for each cell
+                      maxWidth: "150px", 
                       wordWrap: "break-word",
-                      whiteSpace: "normal", // Allow wrapping of long content
+                      whiteSpace: "normal",
                     }}
                   >
                     {["study_copy", "irb_file", "nbc_file"].includes(key) ? (
@@ -406,7 +401,7 @@ const SampleArea = () => {
                       )
                     ):
                     (
-                      sample[key] || "N/A"
+                      sample[key] || "----"
                     )}
                   </td>
                 ))}

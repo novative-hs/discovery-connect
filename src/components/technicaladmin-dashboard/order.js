@@ -69,10 +69,13 @@ const OrderPage = () => {
       const response = await axios.get(responseUrl);
 
       const { data, totalCount } = response.data;
+      const sampleOrders = data.filter(
+        (sample) => sample.technical_admin_status !== "Rejected"
+      );
       console.log("response", response.data);
-      setOrders(data);
-      setAllOrders(data); // Only necessary if you need full copy
-      setTotalPages(Math.ceil(totalCount / ordersPerPage));
+      setOrders(sampleOrders);
+      setAllOrders(sampleOrders); // Only necessary if you need full copy
+      setTotalPages(Math.ceil(sampleOrders.length / pageSize));
       setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -194,6 +197,7 @@ const OrderPage = () => {
             {successMessage}
           </div>
         )}
+          <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
             Order Detail
@@ -285,24 +289,29 @@ const OrderPage = () => {
                       <td>{order.order_status}</td>
                       <td>{order.technical_admin_status}</td>
                       <td>
-  {order.order_status === "Rejected" &&
-  order.technical_admin_status === "Rejected" &&
-  order.scientific_committee_status === "Refused" ? (
-    "Refused"
-  ) : order.technical_admin_status === "Rejected" ? (
-    order.registration_admin_status === "Rejected" ? (
+  {order.technical_admin_status === "Rejected" ? (
+    order.technical_admin_status === "Rejected" ? (
       "No further processing"
-    ) : order.registration_admin_status === "Pending" ? (
+    ) : order.technical_admin_status === "Pending" ? (
       "Pending Admin Approval"
     ) : order.scientific_committee_status === "Refused" ? (
       "Refused"
-    ) : order.scientific_committee_status ? (
-      order.scientific_committee_status
+    ) : !order.scientific_committee_status ? (
+      "Awaiting Admin Action"
     ) : (
-      "Awaiting Committee Forwarding"
+      order.scientific_committee_status
     )
-  ) : null}
+  ) : order.scientific_committee_status === "Refused" ? (
+    "Refused"
+  ) : !order.scientific_committee_status ? (
+    "Awaiting Admin Action"
+  ) : (
+    order.scientific_committee_status
+  )}
 </td>
+
+
+
 
                       <td>
                         {order.ethical_committee_status === "Refused"

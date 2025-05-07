@@ -26,7 +26,6 @@ const  deleteCSR=(req, res)=> {
   const  updateCSRStatus=async(req, res)=> {
      const { id } = req.params;
       const { status } = req.body;
-    
       if (!status) {
         return res.status(400).json({ error: "Status is required" });
       }

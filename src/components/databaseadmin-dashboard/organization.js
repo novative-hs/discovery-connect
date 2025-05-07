@@ -151,6 +151,7 @@ const OrganizationArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
+      console.log("histor",data)
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -379,8 +380,8 @@ const OrganizationArea = () => {
     try {
       // Send status update request to backend
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${id}`,
-        { data: { status: option } },
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${id}`,
+        { data: { status: option } }, 
         { headers: { "Content-Type": "application/json" } }
       );
 
@@ -1016,28 +1017,29 @@ const OrganizationArea = () => {
                               }}
                             >
                               {/* Message for City Addition */}
-                              {status === 'added' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <b>Organization:</b> {OrganizationName} was{" "}
-                                  <b>{status}</b> by Database Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
+                              {status==='added' && (
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                <b>Organization:</b> {OrganizationName} was{" "}
+                                <b>{status}</b> by Database Admin at{" "}
+                                {moment(created_at).format(
+                                  "DD MMM YYYY, h:mm A"
+                                )}
+                              </div>
                               )}
+                              
 
                               {/* Message for City Update (Only if it exists) */}
-                              {status === 'updated' && (
+                              {status==='updated' && (
                                 <div
                                   style={{
                                     padding: "10px 15px",

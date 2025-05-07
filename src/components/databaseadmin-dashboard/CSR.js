@@ -141,21 +141,20 @@ const CSRArea = () => {
 
   const handleStatusClick = async (id, option) => {
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/delete/${id}`,
-        { data: { status: option } },
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/edit/${id}`,
+         { status: option } ,
         { headers: { "Content-Type": "application/json" } }
       );
-      setSuccessMessage("CSR deleted successfully.");
+      setSuccessMessage("CSR status updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       fetchCSR(); // Refresh data after delete
-      setShowDeleteModal(false);
       setStatusOptionsVisibility((prev) => ({
         ...prev,
         [id]: false,
       }));
     } catch (error) {
-      console.error(`Error deleting CSR with ID ${selectedCSRId}:`, error);
+      console.error(`Error changing CSR status with ID ${selectedCSRId}:`, error);
     }
   };
 
@@ -261,6 +260,7 @@ const CSRArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
+      
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -798,7 +798,7 @@ const CSRArea = () => {
                               }}
                             >
                               {/* Message for City Addition */}
-                              {status === "added" && (
+                             { (status === "active" || status === "added" )&&(
                                 <div
                                   style={{
                                     padding: "10px 15px",
@@ -819,7 +819,7 @@ const CSRArea = () => {
                               )}
 
                               {/* Message for City Update (Only if it exists) */}
-                              {status === "updated" && (
+                              {status === "updated"|| status==='inactive' && (
                                 <div
                                   style={{
                                     padding: "10px 15px",

@@ -35,7 +35,90 @@ function getCurrentOrganizationById(id, callback) {
 function getOrganizationById(id, callback) {
   const query = 'SELECT * FROM organization WHERE id = ?';
   mysqlConnection.query(query, [id], callback);
+} 
+
+// Function to update organization status
+const updateOrganizationStatus = async (id, status) => {
+  const insertHistoryQuery = `
+  INSERT INTO registrationadmin_history (organization_id, status)
+  VALUES (?, ?)
+`;
+  const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
+  const getEmailQuery = `
+    SELECT ua.email ,o.OrganizationName
+    FROM organization o
+    JOIN user_account ua ON o.user_account_id = ua.id
+    WHERE o.id = ?
+  `;
+
+  try {
+    // Update organization status
+    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    if (updateResult.affectedRows === 0) {
+      throw new Error("No organization found with the given ID.");
+    }
+    const [insertResult] = await mysqlConnection.promise().query(insertHistoryQuery, [id, status]);
+    // Fetch email in parallel
+    const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
+
+    // Check if email exists
+    if (emailResults.length === 0) {
+      throw new Error("Organization email not found.");
+    }
+
+    const email = emailResults[0].email;
+    const name=emailResults[0].OrganizationName;
+    let emailText = `
+  Dear ${name},
+
+  We hope this message finds you well! 
+
+  We would like to update you about the status of your organization’s account. 
+
+  - **Status:** InActive
+
+  Your account is currently <b>inactive</b>. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
+
+  Thank you for your patience and cooperation.
+
+  Best regards,
+  The Discovery Connect Team
+`;
+
+if (status === "active") {
+  emailText = `
+  Dear ${name},
+
+  Congratulations! 🎉
+
+  We are thrilled to inform you that your organization’s account has been successfully <b>approved</b>! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
+
+  Here are a few next steps:
+  - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).
+  - Get in touch with our support team if you have any questions or need assistance.
+
+  We are excited to have you on board and look forward to seeing how you’ll benefit from our platform!
+
+  Best regards,
+  The Discovery Connect Team
+`;
+
 }
+
+
+    // Send email asynchronously (does not block response)
+    sendEmail(email, "Welcome to Discovery Connect", emailText)
+      .then(() => console.log("Email sent successfully"))
+      .catch((emailErr) => console.error("Error sending email:", emailErr));
+
+    return { message: "Status updated and email sent" };
+  } catch (error) {
+    console.error("Error updating organization status:", error);
+    throw error;
+  }
+};
+
+
 
 const updateOrganization = (data, user_account_id, callback) => {
   const {
@@ -88,8 +171,12 @@ const updateOrganization = (data, user_account_id, callback) => {
 
 };
 
-// Function to update organization Status (Active/Inactive))
-const updateOrganizationStatus = async (id, status) => {
+// Function to delete a collection site
+const deleteOrganization = async (id, status) => {
+  const insertHistoryQuery = `
+  INSERT INTO registrationadmin_history (organization_id, status)
+  VALUES (?, ?)
+`;
   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
   const getEmailQuery = `
     SELECT ua.email, o.OrganizationName
@@ -104,6 +191,7 @@ const updateOrganizationStatus = async (id, status) => {
       throw new Error("No organization found with the given ID.");
     }
     // Fetch email
+    const [insertResult] = await mysqlConnection.promise().query(insertHistoryQuery, [id, status]);
     const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
     if (emailResults.length === 0) {
       throw new Error("Organization email not found.");
@@ -128,22 +216,8 @@ const updateOrganizationStatus = async (id, status) => {
       Best regards,  
       The Discovery Connect Team
       `;
-    } else if (status === "active") {
-      emailText = `
-      Dear ${name},
+    } 
 
-      We are pleased to inform you that your organization's account on Discovery Connect has been <b>approved and activated</b>!
-
-      You can now log in and start exploring all the features and resources our platform offers. We're excited to have you onboard and look forward to your active participation.
-
-      If you have any questions or need help getting started, feel free to contact us.
-
-      Welcome to Discovery Connect!
-
-      Best regards,  
-      The Discovery Connect Team
-      `;
-    }
     // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)
       .then(() => console.log("Email sent successfully"))

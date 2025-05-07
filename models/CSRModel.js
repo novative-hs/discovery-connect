@@ -29,8 +29,8 @@ const deleteCSR=(id,status,callback)=>{
 const updateCSRStatus = async (id, status) => {
     const updateQuery = "UPDATE CSR SET status = ? WHERE id = ?";
     const insertHistoryQuery = `
-      INSERT INTO min_history (csr_id, status, updated_at)
-      VALUES (?, ?, NOW())
+      INSERT INTO registrationadmin_history (CSR_id, status)
+      VALUES (?, ?)
     `;
     const getEmailQuery = `
       SELECT ua.email 
@@ -68,6 +68,10 @@ const updateCSRStatus = async (id, status) => {
       if (status === "active") {
         emailText = `Dear CSR,\n\nYour account has been <b>active</b>! 
           You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
+      }
+      if (status === "inactive") {
+        emailText = `Dear CSR,\n\nYour account has been <b>inactive</b>! 
+           Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
       }
   
       sendEmail(email, "Welcome to Discovery Connect", emailText)
