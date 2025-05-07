@@ -31,8 +31,14 @@ const getBiobankSamples = (req, res) => {
   });
 };
 
-
-
+const getQuarantineStock = (req, res) => {
+  BioBankModel.getQuarantineStock((err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching Quarantine Stock" });
+    }
+    res.status(200).json(results);
+  });
+};
 
 // Controller to create a sample
 const createBiobankSample = (req, res) => {
@@ -94,9 +100,21 @@ const updateBiobankSample = (req, res) => {
   });
 };
 
+const UpdateSampleStatus = (req, res) => {
+  const sampleId = req.params.id;
+  const { sample_status } = req.body;
+
+  BioBankModel.UpdateSampleStatus(sampleId, sample_status, (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to update sample status.' });
+
+    res.status(200).json(result);
+  });
+};
 module.exports = {
   getBiobankSamples,
   createBiobankSample,
-  updateBiobankSample
+  updateBiobankSample,
+  getQuarantineStock,
+  UpdateSampleStatus
   
 };

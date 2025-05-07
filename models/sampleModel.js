@@ -43,7 +43,8 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        status VARCHAR(20) DEFAULT 'In Stock',
+        sample_status ENUM('Public', 'Private') DEFAULT 'Public',
+        status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE,
@@ -191,6 +192,7 @@ WHERE
   });
 };
 
+
 const getResearcherSamples = (userId, callback) => {
   const query = `
   SELECT 
@@ -287,6 +289,7 @@ ORDER BY s.id DESC;
 
 };
 
+
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
     SELECT 
@@ -304,6 +307,7 @@ const getAllCSSamples = (limit, offset, callback) => {
     WHERE 
       s.status = 'In Stock' 
       AND s.price > 0 
+      AND s.sample_status = 'Public'
       AND (s.quantity > 0 OR s.quantity_allocated > 0)
     LIMIT ? OFFSET ?
   `;
@@ -472,6 +476,7 @@ const updateSample = (id, data, callback) => {
   });
 };
 
+
 // Function to update a sample's status
 const updateSampleStatus = (id, status, callback) => {
   const query = `
@@ -480,6 +485,15 @@ const updateSampleStatus = (id, status, callback) => {
     WHERE id = ?`;
 
   mysqlConnection.query(query, [status, id], (err, result) => {
+    callback(err, result);
+  });
+};
+
+
+// Function to delete a sample by its ID
+const deleteSample = (id, callback) => {
+  const query = 'UPDATE sample SET is_deleted = TRUE WHERE id = ?';
+  mysqlConnection.query(query, [id], (err, result) => {
     callback(err, result);
   });
 };
@@ -506,6 +520,28 @@ const getFilteredSamples = (price, smokingStatus, callback) => {
   });
 };
 
+// Function to update a sample's status
+const updateQuarantineSamples = (id, status, comment, callback) => {
+  const updateQuery = `
+    UPDATE sample
+    SET status = ?
+    WHERE id = ?`;
+
+  const insertHistoryQuery = `
+    INSERT INTO sample_history (sample_id, status, comments)
+    VALUES (?, ?, ?)`;
+
+  mysqlConnection.query(updateQuery, [status, id], (err, result) => {
+    if (err) return callback(err);
+
+    mysqlConnection.query(insertHistoryQuery, [id, status, comment], (historyErr, historyResult) => {
+      if (historyErr) return callback(historyErr);
+      callback(null, { updateResult: result, historyResult });
+    });
+  });
+};
+
+
 module.exports = {
   getFilteredSamples,
   createSampleTable,
@@ -517,4 +553,6 @@ module.exports = {
   createSample,
   updateSample,
   updateSampleStatus,
+  deleteSample,
+  updateQuarantineSamples
 };

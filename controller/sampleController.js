@@ -36,6 +36,22 @@ const getSamples = (req, res) => {
   });
 };
 
+const deleteSample = (req, res) => {
+  const sampleId = req.params.id;
+
+  SampleModel.deleteSample(sampleId, (err, result) => {
+    if (err) {
+      console.error("Error deleting sample:", err);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Sample not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Sample deleted successfully" });
+  });
+};
 
 const getAllSamples = (req, res) => {
   SampleModel.getAllSamples((err, results) => {
@@ -161,6 +177,26 @@ const getFilteredSamples = (req, res) => {
     res.status(200).json(results);
   });
 };
+
+const updateQuarantineSamples = (req, res) => {
+  const sampleId = req.params.id;
+  const { status, comment } = req.body;
+
+  if (!status || !comment) {
+    return res.status(400).json({ error: 'Both status and comment are required' });
+  }
+
+  SampleModel.updateQuarantineSamples(sampleId, status, comment, (err, result) => {
+    if (err) {
+      console.error("Error in updating Sample status:", err);
+      return res.status(500).json({ error: 'Error in updating Sample status' });
+    }
+
+    return res.status(200).json({ message: 'Sample status updated and comment saved successfully' });
+  });
+};
+
+
 module.exports = {
   createSampleTable,
   getFilteredSamples,
@@ -171,4 +207,6 @@ module.exports = {
   getSampleById,
   createSample,
   updateSample,
+  updateQuarantineSamples,
+  deleteSample
 };

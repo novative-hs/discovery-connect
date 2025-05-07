@@ -76,7 +76,7 @@ const SingleListProduct = ({ product }) => {
           </div>
 
           <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "4px" }}>
-             Stock: {product.quantity}
+            Stock: {product.quantity}
           </div>
 
           <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "10px" }}>
@@ -91,29 +91,29 @@ const SingleListProduct = ({ product }) => {
           </p>
 
           <div className="d-flex gap-2">
-          {product.quantity === 0 ? (
-  <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
-    Sample Allocated
-  </button>
-) : isInCart(product.id) ? (
-  <button className="btn btn-secondary w-75" disabled>
-    Added
-  </button>
-) : (
-  <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
-    Add to Cart
-  </button>
-)}
+            {product.quantity === 0 ? (
+              <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+                Sample Allocated
+              </button>
+            ) : isInCart(product.id) ? (
+              <button className="btn btn-secondary w-75" disabled>
+                Added
+              </button>
+            ) : (
+              <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+                Add to Cart
+              </button>
+            )}
 
-       <button
-         onClick={() => handleQuickView(product)}
-         className="btn btn-outline-danger w-15"
-         data-bs-toggle="tooltip"
-         data-bs-placement="top"
-         title="Quick View"
-       >
-         <Eye product={product} />
-       </button>
+            <button
+              onClick={() => handleQuickView(product)}
+              className="btn btn-outline-danger w-15"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Quick View"
+            >
+              <Eye product={product} />
+            </button>
           </div>
         </div>
       </div>

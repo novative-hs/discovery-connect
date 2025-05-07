@@ -61,7 +61,6 @@ app.use("/api/samplereceive", sampleReceiveRoutes);
 app.use("/api/collectionsite", collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
-app.use('/api', biobankRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", biobankRoutes);
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);

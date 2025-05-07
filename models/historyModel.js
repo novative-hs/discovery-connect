@@ -160,6 +160,8 @@ const create_samplehistoryTable = () => {
   CREATE TABLE IF NOT EXISTS sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sample_id VARCHAR(36) NOT NULL,
+    status VARCHAR(50),
+    comments TEXT, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
   )`;
@@ -179,6 +181,7 @@ const getSampleHistory = (sampleId, callback) => {
     SELECT 
       sh.id AS history_id,
       sh.sample_id,
+      sh.comments AS comments,
       CAST(sh.updated_at AS CHAR) AS updated_at,
       s.samplename,
       s.age,

@@ -1,6 +1,4 @@
 const mysqlConnection = require("../config/db");
-
-// List of tables and their columns to be added or removed
 const tablesAndColumns = [
 
   // {

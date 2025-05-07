@@ -200,6 +200,8 @@ if (userType === "researcher") {
               ? [
                 { label: "Sample List", tab: "samples" },
                 { label: "Sample Dispatch", tab: "sample-dispatch" },
+                { label: "Quarantine Stock", tab: "Quarantine-Stock" },
+                { label: "Sample Visibility", tab: "Sample-Visibility" },
               ]
               : userType == "committeemember"
                 ? [
