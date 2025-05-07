@@ -107,24 +107,68 @@ const deleteSingleCartItem = (req, res) => {
     res.status(200).json({ message: "Cart Item deleted successfully" });
   });
 };
-const getAllOrder=(req,res)=>{
-  cartModel.getAllOrder((err,results)=>{
-    if(err){
-      return res.status(500).json({error:"Error fetching cart list"})
-    }
-    res.status(200).json(results);
-  })
-}
-const getAllOrderByCommittee = (req, res) => {
-  const { id } = req.params; // ✅ Extract from params
+const getAllOrder = (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
 
-  cartModel.getAllOrderByCommittee(id, (err, results) => {
+  cartModel.getAllOrder(page, limit, searchField, searchValue, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching cart list" });
     }
-    res.status(200).json(results);
+    const { results: data, totalCount } = result;
+
+    res.status(200).json({
+      data,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      pageSize: limit,
+      totalCount,
+    });
+    
   });
 };
+
+const getAllOrderByCommittee = (req, res) => {
+  const { id } = req.params; // committee_member_id
+  const { page = 1, pageSize = 10, searchField, searchValue } = req.query;
+
+  cartModel.getAllOrderByCommittee(
+    id,
+    parseInt(page),
+    parseInt(pageSize),
+    searchField,
+    searchValue,
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching cart list" });
+      }
+      // Return paginated data and total count
+      res.status(200).json({
+        results: result.results,
+        totalCount: result.totalCount,
+        currentPage: parseInt(page),
+        pageSize: parseInt(pageSize),
+      });
+    }
+  );
+};
+const getAllDocuments = (req, res) => {
+  const { id } = req.params; // committee_member_id
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const { searchField, searchValue } = req.query;
+
+  cartModel.getAllDocuments(page, pageSize, searchField, searchValue,id, (err, data) => {
+    if (err) {
+      console.error('Controller Error:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+    res.status(200).json(data);
+  });
+};
+
 const getAllOrderByOrderPacking = (req, res) => {
   cartModel.getAllOrderByOrderPacking((err, results) => {
     if (err) {
@@ -134,16 +178,16 @@ const getAllOrderByOrderPacking = (req, res) => {
   });
 };
 
-const updateRegistrationAdminStatus = async (req, res) => {
+const updateTechnicalAdminStatus = async (req, res) => {
   const { id } = req.params;
-  const { registration_admin_status } = req.body;
+  const { technical_admin_status } = req.body;
 
-  if (!registration_admin_status) {
-    return res.status(400).json({ error: "Registration admin status is required" });
+  if (!technical_admin_status) {
+    return res.status(400).json({ error: "technical admin status is required" });
   }
 
   try {
-    const result = await cartModel.updateRegistrationAdminStatus(id, registration_admin_status);
+    const result = await cartModel.updateTechnicalAdminStatus(id, technical_admin_status);
     return res.status(200).json(result);
   } catch (err) {
     console.error("Error in update:", err);
@@ -170,7 +214,7 @@ const updateCartStatus = (req, res) => {
   const { id } = req.params;
   const { cartStatus } = req.body;
   if (!cartStatus) {
-    return res.status(400).json({ error: "Registration admin status is required" });
+    return res.status(400).json({ error: "cart status is required" });
   }
   cartModel.updateCartStatus(id, cartStatus, (err, result) => {
     if (err) {
@@ -190,8 +234,9 @@ module.exports = {
   deleteSingleCartItem,
   getAllOrder,
   getAllOrderByCommittee,
+  getAllDocuments,
   getAllOrderByOrderPacking,
-  updateRegistrationAdminStatus,
+  updateTechnicalAdminStatus,
   updateCartStatus,
   updateCartStatusbyCSR
 };

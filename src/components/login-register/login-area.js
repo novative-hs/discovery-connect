@@ -26,7 +26,7 @@ const LoginArea = () => {
                   <div className="login__register-now">
                     <p>
                       Don’t have an account?{" "}
-                      <Link href="/register">Register Now</Link>
+                      <Link href="/register">Register Researcher Now</Link>
                     </p>
                   </div>
                 </div>

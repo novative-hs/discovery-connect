@@ -14,20 +14,20 @@ const SampleArea = () => {
     console.log("Committee Member Id on sample page is:", id);
   }
   const [showModal, setShowModal] = useState(false);
-  const [actionType, setActionType] = useState(""); 
+  const [actionType, setActionType] = useState("");
   const [comment, setComment] = useState("");
-const[selectedComment,setSelectedComment]=useState("");
+  const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
-    { label: "User Name", key: "researcher_name" },
+    { label: "Researcher Name", key: "researcher_name" },
     { label: "Sample Name", key: "samplename" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
-    { label: "Comments", key: "comments" },
+    { label: "Committee Comments", key: "comments" },
     { label: "Additional Mechanism", key: "reporting_mechanism" },
     { label: "Study Copy", key: "study_copy" },
     { label: "IRB file", key: "irb_file" },
@@ -40,82 +40,123 @@ const[selectedComment,setSelectedComment]=useState("");
 
   // Sample Dropdown Fields
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
-
+  const [searchField, setSearchField] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  
   // Fetch samples from backend when component loads
- useEffect(() => {
-       fetchSamples();
-   }, []);
-
-  const fetchSamples = async () => {
-    try {
+  useEffect(() => {
+      if (id) {
+        fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+      }
     
+  }, [currentPage, searchField, searchValue]);
+  
+  
+
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { searchField, searchValue } = filters;
+  
       if (!id) {
-        console.error("ID is missing.");
+        console.error("Committee member ID is missing.");
         return;
       }
-
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}`
-      );
-
+  
+      // Fields that belong to document API
+      const docFields = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"];
+  
+      // Decide which API needs the filter
+      const filterForDoc = docFields.includes(searchField);
+  
+      // Build URLs
+      let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
+      let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
+  
+      if (searchField && searchValue) {
+        const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
+        if (filterForDoc) {
+          docUrl += filter;
+        } else {
+          orderUrl += filter;
+        }
+      }
+  
+      // Fetch both APIs
+      const [orderRes, docRes] = await Promise.all([
+        axios.get(orderUrl),
+        axios.get(docUrl),
+      ]);
+  
+      const orders = orderRes.data.results || [];
+      const totalCount = orderRes.data.totalCount || 0;
+      const documents = docRes.data.results || [];
+  
+      // ✅ Create docMap BEFORE using it
+      const docMap = {};
+      documents.forEach((doc) => {
+        if (doc.cart_id) {
+          docMap[doc.cart_id] = doc;
+        }
+      });
+  console.log("Documents",documents)
+  console.log("Sample",orders)
+      // ✅ Merge: flatten document fields directly into order object
+      const merged = orders.map((order) => {
+        const document = docMap[order.cart_id] || {};
+        return {
+          ...order,
+          ...document,
+        };
+      });
+  
+      console.log("Merged Orders with Documents:", merged);
+  
       // Update state
-      setSamples(response.data);
-      
-      setFilteredSamplename(response.data);
+      setSamples(merged);
+      setFilteredSamplename(merged);
+      setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (error) {
-      console.error("Error fetching samples:", error);
+      console.error("Error fetching data:", error);
     }
   };
-
+  
+   
+  
+  
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamplename.length / itemsPerPage)
-    );
-    setTotalPages(pages);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages); // Adjust down if needed
+      }
+    }, [totalPages]);
 
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamplename]);
-
-  // Get the current data for the table
-  const currentData = filteredSamplename.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
 
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
+    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
+  
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
-    } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-    }
-
-    setFilteredSamplename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    const trimmedValue = value.trim().toLowerCase();
+    setSearchField(field);
+    setSearchValue(trimmedValue);
+    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
   };
+
+  const currentData = filteredSamplename;
+
   const handleViewComment = (comment) => {
     setSelectedComment(comment); // Set the comment to be viewed
     setShowCommentModal(true); // Open the modal to display the comment
   };
-  
+
   const handleViewDocument = (fileBuffer, fileName, sampleId) => {
     if (!fileBuffer) {
       alert("No document available.");
@@ -173,51 +214,59 @@ const[selectedComment,setSelectedComment]=useState("");
     setSelectedSample(null); // Ensure the selected sample is set
     setActionType(null);
     setShowModal(false);
-    setComment(""); // Clear comment
+    
   };
   const handleSubmit = async () => {
     const trimmedComment = comment.trim();
-  
+
     if (!id || !selectedSample || !trimmedComment) {
       alert("Please enter a comment.");
       return;
     }
-  
+
     const payload = {
       committee_member_id: id,
       committee_status: actionType, // "Approved" or "Refused"
       comments: trimmedComment,
     };
-  
+
     try {
-      
-  
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
         payload
       );
-  
-      
-  
+
       if (response.data.success) {
         notifySuccess(response.data.message)
         setShowModal(false);
         setComment("");
         fetchSamples(); 
+        setCurrentPage(1)
       } else {
         notifyError("Failed to update committee status. Please try again.")
       }
     } catch (error) {
       console.error("❌ Error updating committee status:", error);
       if (error.response?.data?.error) {
-        
+
         notifyError(`Error: ${error.response.data.error}`);
       } else {
         notifyError("Unexpected error occurred.");
       }
     }
   };
+  const handleScroll = (e) => {
+    const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
   
+    if (isVerticalScroll) {
+      const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+  
+      if (bottom && currentPage < totalPages) {
+        setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
+        fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
+      }
+    }
+  };
 
   useEffect(() => {
     if (showModal) {
@@ -241,7 +290,7 @@ const[selectedComment,setSelectedComment]=useState("");
           </div>
         )}
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
-        Sample Orders & Documents
+          Sample Orders & Documents
         </h4>
         {/* <div className="profile__main-content">
                 <h4 className="profile__main-title text-capitalize">Welcome Committee Member</h4>
@@ -250,7 +299,11 @@ const[selectedComment,setSelectedComment]=useState("");
                 <h4 className="profile__main-title text-capitalize">Order Sample verify list</h4>
               </div> */}
         {/* Table */}
-    <div className="table-responsive" style={{ overflowX: 'auto' }}>
+        <div
+          onScroll={handleScroll}
+          className="table-responsive"
+          style={{ overflowX: "auto" }}
+        >
       <table className="table table-bordered table-hover text-center align-middle">
         <thead className="table-primary text-dark">
           <tr>
@@ -331,7 +384,28 @@ const[selectedComment,setSelectedComment]=useState("");
                       ) : (
                         <span title={sample[key]}>{sample[key]}</span>
                       )
-                    ) : (
+                    ) :  key === "comments" && sample[key] ? (
+                      sample[key].length > 50 ? (
+                        <span
+                          className="text-primary"
+                          style={{
+                            cursor: "pointer",
+                            textDecoration: "underline",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedComment(sample[key]);
+                            setShowCommentModal(true);
+                          }}
+                          title={sample[key]}
+                        >
+                          Click to View
+                        </span>
+                      ) : (
+                        <span title={sample[key]}>{sample[key]}</span>
+                      )
+                    ):
+                    (
                       sample[key] || "N/A"
                     )}
                   </td>
@@ -398,23 +472,25 @@ const[selectedComment,setSelectedComment]=useState("");
             </Modal.Footer>
           </Modal>
         )}
-{showCommentModal && (
-  <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
-    <Modal.Header closeButton>
-      <Modal.Title>Comment</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      <p>{selectedComment}</p>
-    </Modal.Body>
-  </Modal>
-)}
+
+        {/* Additional Mechanism Modal */}
+        {showCommentModal && (
+          <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title className="h6">Additional Mechanism by Researcher</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>{selectedComment}</p>
+            </Modal.Body>
+          </Modal>
+        )}
 
         {/* Pagination */}
         {totalPages >= 0 && (
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage}
+            focusPage={currentPage - 1} 
           />
         )}
         {showSampleModal && selectedSample && (

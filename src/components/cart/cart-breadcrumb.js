@@ -35,14 +35,29 @@ const CartBreadcrumb = ({ title, subtitle }) => {
 
               {/* Updated button with improved design */}
               <div className="mt-4 d-flex justify-content-center">
-                <button
-                  onClick={handleBackToShop}
-                  className="btn btn-primary fw-semibold fs-5 px-4 py-2 rounded-pill d-flex align-items-center"
-                >
-                  <i className="fas fa-arrow-left me-2" style={{ fontSize: "18px" }}></i>
-                  <span>Continue Shopping</span>
-                </button>
-              </div>
+  <button
+    onClick={handleBackToShop}
+    className="btn btn-outline-primary fw-semibold fs-5 px-4 py-2 rounded-pill d-flex align-items-center shadow-sm transition"
+    style={{
+      transition: "all 0.3s ease",
+      backgroundColor: "#f8f9fa",
+      borderColor: "#0d6efd",
+      color: "#0d6efd",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = "#0d6efd";
+      e.currentTarget.style.color = "#fff";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "#f8f9fa";
+      e.currentTarget.style.color = "#0d6efd";
+    }}
+  >
+    <i className="fas fa-arrow-left me-2" style={{ fontSize: "18px" }}></i>
+    <span>Back to Available Samples</span>
+  </button>
+</div>
+
             </div>
           </div>
         </div>

@@ -8,7 +8,7 @@ const upload = multer({ storage });
 
 router.get('/cart/getOrder',cartController.getAllOrder)
 router.get('/cart/getOrderbyCommittee/:id',cartController.getAllOrderByCommittee)
-
+router.get('/cart/getAllDocuments/:id',cartController.getAllDocuments)
 router.get('/cart/getOrderbyOrderPacking',cartController.getAllOrderByOrderPacking)
 
 router.post('/cart', upload.fields([
@@ -20,9 +20,9 @@ router.post('/cart', upload.fields([
 router.get('/cart/:id', cartController.getAllCart); // Get all cart items for a user
 router.get('/cart/getCount/:id', cartController.getCartCount); // Get count of cart items for a user
 router.put('/cart/update/:id', cartController.updateCard); // Update quantity of a product in the cart
-router.put("/cart/:id/registration-status", (req, res, next) => {
+router.put("/cart/:id/technical-status", (req, res, next) => {
   next();
-}, cartController.updateRegistrationAdminStatus);
+}, cartController.updateTechnicalAdminStatus);
 
 router.put("/cart/:id/cart-status", cartController.updateCartStatus);
 router.put('/cart/cartstatusbyCSR', cartController.updateCartStatusbyCSR); 

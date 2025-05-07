@@ -10,9 +10,10 @@ const getAllOrganizations = (req, res) => {
     res.status(200).json(results);
   });
 };
+
 const getCurrentOrganizationById = (req, res) => {
   const { id } = req.params;
-  organizationModel.getCurrentOrganizationById(id,(err, results) => {
+  organizationModel.getCurrentOrganizationById(id, (err, results) => {
     if (err) {
       console.error("Error fetching organizations:", err);
       return res.status(500).json({ error: "An error occurred while fetching organizations" });
@@ -21,45 +22,23 @@ const getCurrentOrganizationById = (req, res) => {
   });
 };
 
-
-// Controller to update organization status
-const updateOrganizationStatus = async(req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  if (!status) {
-    return res.status(400).json({ error: "Status is required" });
-  }
-try {
-    const result = await organizationModel.updateOrganizationStatus(id, status);
-    res.status(200).json(result); // Sends success response
-  } catch (error) {
-    console.error("Error updating Organization  status:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while updating Organization status" });
-  }
-};
-
 const updateOrganization = (req, res) => {
 
-  const {user_account_id,OrganizationName, type,HECPMDCRegistrationNo,phoneNumber, fullAddress, city,district,country,ntnNumber,useraccount_email } = req.body;
-  
+  const { user_account_id, OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, ntnNumber, useraccount_email } = req.body;
 
-  if (!user_account_id || !OrganizationName ||!type||!ntnNumber|| !phoneNumber || !fullAddress || !city || !district || !country ||!useraccount_email) {
+
+  if (!user_account_id || !OrganizationName || !type || !ntnNumber || !phoneNumber || !fullAddress || !city || !district || !country || !useraccount_email) {
     return res.status(400).json({ error: 'All required fields must be provided' });
   }
- const data =  {OrganizationName, type,HECPMDCRegistrationNo,phoneNumber, fullAddress, city,district,country,ntnNumber,useraccount_email } ;
-   organizationModel.updateOrganization(data,user_account_id, (err, result) => {
-     if (err) {
-       return res.status(500).json({ error: 'Error updating researcher' });
-     }
-     res.status(200).json({ message: 'Researcher updated successfully' });
-   });
-  
+  const data = { OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, ntnNumber, useraccount_email };
+  organizationModel.updateOrganization(data, user_account_id, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error updating researcher' });
+    }
+    res.status(200).json({ message: 'Researcher updated successfully' });
+  });
+
 };
-
-
 
 const getOrganizationById = (req, res) => {
   const { id } = req.params;
@@ -75,13 +54,14 @@ const getOrganizationById = (req, res) => {
   });
 };
 
-const deleteOrganization = async (req, res) => {
+// Controller to update organization Status (Active/Inactive))
+const updateOrganizationStatus = async (req, res) => {
   const { id } = req.params;  // Get the id from request parameters
-
+  const { status } = req.body;
   try {
     // Call the model method and wait for the response
-    const result = await organizationModel.deleteOrganization(id);
-    
+    const result = await organizationModel.updateOrganizationStatus(id, status);
+
     // Return the success message after the status update
     res.status(200).json({ message: result.message });
   } catch (error) {
@@ -90,12 +70,10 @@ const deleteOrganization = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getOrganizationById,
   updateOrganization,
   getCurrentOrganizationById,
-  deleteOrganization,
   getAllOrganizations,
   updateOrganizationStatus,
 };

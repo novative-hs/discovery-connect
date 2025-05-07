@@ -66,8 +66,8 @@ const CommitteeMemberArea = () => {
     { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "Organization", placeholder: "Search Org", field: "organization" },
     {
-      label: "Committee",
-      placeholder: "Search Committee",
+      label: "Committee Type",
+      placeholder: "Search Committee Type",
       field: "committeetype",
     },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
@@ -110,12 +110,12 @@ const CommitteeMemberArea = () => {
     try {
       const response = await axios.get(`${url}/admin/organization/get`);
 
-      // ✅ Filter only approved organizations
+      // ✅ Filter only active organizations
       const approvedOrganizations = response.data.filter(
-        (org) => org.status === "approved"
+        (org) => org.status === "active"
       );
 
-      setOrganization(approvedOrganizations); // Store only approved organizations in state
+      setOrganization(approvedOrganizations); // Store only active organizations in state
     } catch (error) {
       console.error("Error fetching organizations:", error);
     }
@@ -673,8 +673,10 @@ const CommitteeMemberArea = () => {
               focusPage={currentPage}
             />
           )}
-          {/* Modal for Adding/Editing Committee members */}
 
+          <h6 class="text-danger small">Note: Handle 'Status' and 'Committee Type' through Action Icons</h6>
+
+          {/* Modal for Adding/Editing Committee members */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -802,8 +804,8 @@ const CommitteeMemberArea = () => {
                             onChange={handleInputChange}
                             required
                             pattern="^\d{4}-\d{7}$"
-                            placeholder="0123-4567890"
-                            title="Phone number must be in the format 0123-4567890 and numeric"
+                            placeholder="XXXX-XXXXXXX"
+                            title="Phone number must be in the format e.g. 0332-4567890"
                           />
                         </div>
 
@@ -813,11 +815,11 @@ const CommitteeMemberArea = () => {
                             type="text"
                             className="form-control"
                             name="cnic"
-                            placeholder="Enter CNIC"
+                            placeholder="XXXXX-XXXXXXX-X"
                             value={formData.cnic}
                             onChange={handleInputChange}
                             pattern="^\d{5}-\d{7}-\d{1}$"
-                            title="CNIC must be in the format XXXXX-XXXXXXX-X ."
+                            title="CNIC must be in the format 34765-5676554-3."
                             required
                           />
                         </div>

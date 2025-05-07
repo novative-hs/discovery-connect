@@ -12,15 +12,44 @@ const createSampleTable = (req, res) => {
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
+  const page = req.query.page || 1; // Get page from query, default to 1
+  const pageSize = req.query.pageSize || 50; // Get pageSize from query, default to 50
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
   if (!id) {
     return res.status(400).json({ error: "ID parameter is missing" });
   }
-  SampleModel.getSamples(id, (err, results) => {
+
+  SampleModel.getSamples(id, page, pageSize, searchField, searchValue, (err, results) => {
     if (err) {
       console.error('Error in model:', err);
       return res.status(500).json({ error: "Error fetching samples" });
     }
-    res.status(200).json(results);
+    const { results: samples, totalCount } = results;
+    res.status(200).json({
+      samples,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: parseInt(page),
+      pageSize: parseInt(pageSize),
+      totalCount,
+    });
+  });
+};
+
+const deleteSample = (req, res) => {
+  const sampleId = req.params.id;
+
+  SampleModel.deleteSample(sampleId, (err, result) => {
+    if (err) {
+      console.error("Error deleting sample:", err);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Sample not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Sample deleted successfully" });
   });
 };
 
@@ -52,13 +81,15 @@ const getResearcherSamples = (req, res) => {
 
 
 const getAllCSSamples = (req, res) => {
-  SampleModel.getAllCSSamples((err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching samples" });
-    }
+  const limit = parseInt(req.query.limit) || 30;
+  const offset = parseInt(req.query.offset) || 0;
+
+  SampleModel.getAllCSSamples(limit, offset, (err, results) => {
+    if (err) return res.status(500).json({ error: "Error fetching samples" });
     res.status(200).json(results);
   });
 };
+
 // Controller to get a sample by ID
 const getSampleById = (req, res) => {
   const { id } = req.params;
@@ -76,7 +107,7 @@ const getSampleById = (req, res) => {
 
 // Controller to create a sample
 const createSample = (req, res) => {
-  
+
   const sampleData = req.body;
   const file = req.file;
 
@@ -84,7 +115,7 @@ const createSample = (req, res) => {
   sampleData.logo = file?.buffer;
   // Required fields validation
   const requiredFields = [
-    'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer' , 'logo'
+    'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer', 'logo'
   ];
 
   for (const field of requiredFields) {
@@ -101,14 +132,14 @@ const createSample = (req, res) => {
     return res.status(400).json({ error: "DateOfCollection must be before today" });
   }
 
-  
+
 
   SampleModel.createSample(sampleData, (err, result) => {
     if (err) {
       console.error('Error creating sample:', err);
       return res.status(500).json({ error: "Error creating sample" });
     }
-    
+
     res.status(201).json({ message: "Sample created successfully", id: result.insertId });
   });
 };
@@ -136,20 +167,6 @@ const updateSample = (req, res) => {
   });
 };
 
-// Controller to delete a sample
-const deleteSample = (req, res) => {
-  const { id } = req.params;
-
-  SampleModel.deleteSample(id, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error deleting sample" });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Sample not found" });
-    }
-    res.status(200).json({ message: "Sample deleted successfully" });
-  });
-};
 const getFilteredSamples = (req, res) => {
   const { price, smokingStatus } = req.query;
 
@@ -190,6 +207,6 @@ module.exports = {
   getSampleById,
   createSample,
   updateSample,
-  deleteSample,
-  updateQuarantineSamples
+  updateQuarantineSamples,
+  deleteSample
 };

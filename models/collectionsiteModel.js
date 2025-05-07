@@ -1,34 +1,96 @@
 const mysqlConnection = require("../config/db");
 const mysqlPool = require("../config/db");
 const { sendEmail } = require("../config/email");
-// Function to get all collection sites
+
 const getAllCollectionSites = (callback) => {
   const query = `
-  SELECT collectionsite.*, user_account.email
-  FROM collectionsite
-  JOIN user_account ON collectionsite.user_account_id = user_account.id
-  ORDER BY collectionsite.id DESC
-`;
-
+    SELECT 
+      collectionsite.*, 
+      user_account.id AS user_account_id, 
+      user_account.email AS useraccount_email, 
+      user_account.password AS useraccount_password,
+      city.name AS city,
+      city.id AS cityid,
+      district.name AS district,
+      district.id AS districtid,
+      country.name AS country,
+      country.id AS countryid
+    FROM collectionsite 
+    JOIN user_account ON collectionsite.user_account_id = user_account.id
+    LEFT JOIN city ON collectionsite.city = city.id
+    LEFT JOIN district ON collectionsite.district = district.id
+    LEFT JOIN country ON collectionsite.country = country.id
+    ORDER BY collectionsite.id DESC
+  `;
 
   mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      callback(err, null);
-    } else {
-      callback(null, results);
-    }
+    callback(err, results);
   });
 };
 
 // Function to insert a new collection site
 const createCollectionSite = (data, callback) => {
-  const { user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber } = data;
-  const query = `
-    INSERT INTO collectionsite (user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  mysqlConnection.query(query, [user_account_id, username, email, password, accountType, CollectionSiteName, CollectionSiteType, confirmPassword, fullAddress, city, district, country, phoneNumber], (err, result) => {
-    callback(err, result);
+  const {
+    CollectionSiteName,
+    email,
+    password,
+    CollectionSiteType,
+    phoneNumber,
+    fullAddress,
+    city,
+    district,
+    country,
+  } = data;
+
+  const checkEmailQuery = `SELECT * FROM user_account WHERE email = ?`;
+
+  mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
+    if (err) return callback(err, null);
+
+    if (results.length > 0) {
+      return callback(new Error("Email already exists in user_account"), null);
+    }
+
+    const userAccountQuery = `
+      INSERT INTO user_account (email, password, accountType) 
+      VALUES (?, ?, ?)
+    `;
+
+    mysqlConnection.query(userAccountQuery, [email, password, "CollectionSites"], (err, result) => {
+      if (err) return callback(err, null);
+
+      const userAccountId = result.insertId; // Get inserted user ID
+
+      const collectionSiteQuery = `
+        INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      mysqlConnection.query(
+        collectionSiteQuery,
+        [userAccountId, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country],
+        (err, result) => {
+          if (err) return callback(err, null);
+
+          const collectionSiteId = result.insertId; // ✅ Get collection site ID
+
+          // ✅ Insert into history table with collection site ID
+          const historyQuery = `
+            INSERT INTO history (email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, status, collectionsite_id)
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          mysqlConnection.query(
+            historyQuery,
+            [email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, "added", collectionSiteId],
+            (err) => {
+              if (err) console.error("Error inserting into history:", err);
+              callback(err, result);
+            }
+          );
+        }
+      );
+    });
   });
 };
 
@@ -44,84 +106,6 @@ const updateCollectionSite = (id, data, callback) => {
     callback(err, result);
   });
 };
-
-// Function to update a collection site's status
-const updateCollectionSiteStatus = async (id, status) => {
-  const getEmailQuery = `
-    SELECT ua.email ,cs.CollectionSiteName
-    FROM collectionsite cs
-    JOIN user_account ua ON cs.user_account_id = ua.id
-    WHERE cs.id = ?
-  `;
-
-  const updateStatusQuery = `
-    UPDATE collectionsite SET status = ? WHERE id = ?
-  `;
-
-  try {
-    // Fetch email and update status in parallel
-    const [[emailResults], _] = await Promise.all([
-      mysqlConnection.promise().query(getEmailQuery, [id]),
-      mysqlConnection.promise().query(updateStatusQuery, [status, id])
-    ]);
-
-    // Check if email exists
-    if (emailResults.length === 0) {
-      throw new Error("Collection site not found");
-    }
-
-    const email = emailResults[0].email;
-    const name = emailResults[0].CollectionSiteName;
-    // Prepare email content
-    let emailText = `
-    Dear ${name},
-  
-    We hope this message finds you well! 
-  
-    We would like to update you about the status of your collectionsite account. 
-  
-    - **Status:** Pending Approval
-  
-    Your account is currently <b>pending</b> approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
-  
-    Thank you for your patience and cooperation.
-  
-    Best regards,
-    The Discovery Connect Team
-  `;
-
-    if (status === "approved") {
-      emailText = `
-    Dear ${name},
-  
-    Congratulations! 🎉
-  
-    We are thrilled to inform you that your collectionsite account has been successfully <b>approved</b>! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
-  
-    Here are a few next steps:
-    - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).
-    - Get in touch with our support team if you have any questions or need assistance.
-  
-    We are excited to have you on board and look forward to seeing how you’ll benefit from our platform!
-  
-    Best regards,
-    The Discovery Connect Team
-  `;
-
-    }
-
-    // Send email asynchronously (does not block function execution)
-    sendEmail(email, "Welcome to Discovery Connect", emailText)
-      .then(() => console.log("Email sent successfully"))
-      .catch((emailErr) => console.error("Error sending email:", emailErr));
-
-    return { message: "Status updated and email sent" };
-  } catch (error) {
-    console.error("Error:", error.message);
-    throw error;
-  }
-};
-
 
 function getCollectionSiteById(id, callback) {
   const query = 'SELECT * FROM researcher WHERE id = ?';
@@ -374,14 +358,82 @@ function getCollectionSiteDetail(id, callback) {
   mysqlConnection.query(query, [id], callback);
 }
 
+// Function to update collection site Status (Active/Inactive))
+const updateCollectionSiteStatus = async (id, status) => {
+  const updateQuery = 'UPDATE collectionsite SET status = ? WHERE id = ?';
+  const getEmailQuery = `
+    SELECT ua.email, cs.CollectionSiteName
+    FROM collectionsite cs
+    JOIN user_account ua ON cs.user_account_id = ua.id
+    WHERE cs.id = ?
+  `;
+  try {
+    // Update collection site status
+    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    if (updateResult.affectedRows === 0) {
+      throw new Error("No collection site found with the given ID.");
+    }
+    // Fetch email
+    const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
+    if (emailResults.length === 0) {
+      throw new Error("collection site email not found.");
+    }
+    const email = emailResults[0].email;
+    const name = emailResults[0].CollectionSiteName;
+
+    // Construct email content based on status
+    let emailText = "";
+    if (status === "inactive") {
+      emailText = `
+      Dear ${name},
+      
+      We hope you're doing well.
+
+      We wanted to inform you that your collection site's account on Discovery Connect has been set to <b>inactive</b>. This means you will no longer be able to access the platform or its services until reactivation.
+
+      If you believe this was done in error or you need further assistance, please reach out to our support team.
+
+      Thank you for being a part of Discovery Connect.
+
+      Best regards,  
+      The Discovery Connect Team
+      `;
+    } else if (status === "active") {
+      emailText = `
+      Dear ${name},
+
+      We are pleased to inform you that your collection site's account on Discovery Connect has been <b>approved and activated</b>!
+
+      You can now log in and start exploring all the features and resources our platform offers. We're excited to have you onboard and look forward to your active participation.
+
+      If you have any questions or need help getting started, feel free to contact us.
+
+      Welcome to Discovery Connect!
+
+      Best regards,  
+      The Discovery Connect Team
+      `;
+    }
+    // Send email asynchronously
+    sendEmail(email, "Account Status Update", emailText)
+      .then(() => console.log("Email sent successfully"))
+      .catch((emailErr) => console.error("Error sending email:", emailErr));
+
+    return { message: "Status updated and email sent" };
+  } catch (error) {
+    console.error("Error updating collection site status:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getCollectionSiteDetail,
+  createCollectionSite,
   updateCollectionSiteDetail,
   getAllCollectionSiteNames,
   getAllCollectionSiteNamesInBiobank,
   getCollectionSiteById,
   getAllCollectionSites,
-  createCollectionSite,
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,

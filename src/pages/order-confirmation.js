@@ -8,7 +8,7 @@ import Link from "next/link";
 
 const OrderConfirmation = () => {
   const router = useRouter();
-  const { id, created_at, orderStatus, registration_admin_status, committee_status } = router.query;
+  const { id, created_at, orderStatus, technical_admin_status, committee_status } = router.query;
 
   const [progressWidth, setProgressWidth] = useState("10%");
   const [steps, setSteps] = useState(Array(7).fill("secondary"));
@@ -42,7 +42,7 @@ const OrderConfirmation = () => {
     }
 
     // Special: Admin accepted but committee_status missing (pending)
-    if (registration_admin_status === "Accepted" && !committee_status && orderStatus !== "Rejected") {
+    if (technical_admin_status === "Accepted" && !committee_status && orderStatus !== "Rejected") {
       stepColors[1] = "success";
       stepColors[2] = "warning"; // Show warning on committee step
       width = "20%";
@@ -76,17 +76,17 @@ const OrderConfirmation = () => {
     }
 
     // Rejected scenarios
-    if (registration_admin_status === "Rejected" && orderStatus === "Rejected") {
+    if (technical_admin_status === "Rejected" && orderStatus === "Rejected") {
       stepColors[1] = "danger"; // Admin rejected
       width = "20%";
     }
-    if (registration_admin_status === "Rejected" && orderStatus === "Rejected" && committee_status === "rejected") {
+    if (technical_admin_status === "Rejected" && orderStatus === "Rejected" && committee_status === "rejected") {
       stepColors[1] = "danger"; // Admin rejected
       stepColors[2] = "danger";
       width = "40%";
     }
 
-    if (registration_admin_status === "Accepted" && committee_status === "rejected") {
+    if (technical_admin_status === "Accepted" && committee_status === "rejected") {
       stepColors[1] = "success"; // Admin accepted
       stepColors[2] = "danger"; // Committee rejected
       width = "40%";
@@ -94,7 +94,7 @@ const OrderConfirmation = () => {
 
     setProgressWidth(width);
     setSteps(stepColors);
-  }, [orderStatus, registration_admin_status, committee_status]);
+  }, [orderStatus, technical_admin_status, committee_status]);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A";
@@ -153,7 +153,7 @@ const OrderConfirmation = () => {
                 let icon = <i className="bi bi-check-lg"></i>; // Default icon
                 let color = stepColor;
 
-                if (idx === 1 && registration_admin_status === "Rejected" && orderStatus === "Rejected") {
+                if (idx === 1 && technical_admin_status === "Rejected" && orderStatus === "Rejected") {
                   icon = <i className="bi bi-x-lg"></i>;
                   color = "danger";
                 }
@@ -164,7 +164,7 @@ const OrderConfirmation = () => {
                   color = "danger";
                 }
 
-                if (idx === 2 && !committee_status && registration_admin_status === "Accepted" && orderStatus !== "Rejected") {
+                if (idx === 2 && !committee_status && technical_admin_status === "Accepted" && orderStatus !== "Rejected") {
                   icon = <i className="bi bi-hourglass-split"></i>; // Pending hourglass icon
                   color = "warning"; 
                 }
@@ -209,7 +209,7 @@ const OrderConfirmation = () => {
           {/* Button */}
           <div className="d-flex justify-content-center">
             <button className="tp-btn mt-3 shadow" onClick={handleTrack}>
-              <i className="bi bi-arrow-right-circle"></i> Order List
+              <i className="bi bi-arrow-right-circle"></i> Orders List
             </button>
           </div>
 

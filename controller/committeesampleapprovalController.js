@@ -11,6 +11,7 @@ const createCommitteeSample = (req, res) => {
     res.status(201).json(result); // Send the success response
   });
 };
+
 const updateCommitteeStatus = (req, res) => {
   const { committee_status, comments, committee_member_id } = req.body;
   const cartId = req.params.id; // ✅ Extract ID from URL

@@ -19,7 +19,7 @@ const OrderPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
-  const ordersPerPage = 10;
+
   const [loading, setLoading] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -30,10 +30,14 @@ const OrderPage = () => {
   const [selectedApprovalType, setSelectedApprovalType] = useState("");
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedComments, setSelectedComments] = useState("");
-
+  const ordersPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [filtertotal, setfiltertotal] = useState(null);
+  const [searchField, setSearchField] = useState(null);
+  const [searchValue, setSearchValue] = useState(null);
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+
   const handleCloseModal = () => {
     setSelectedOrderId(null);
     setShowModal(false);
@@ -43,42 +47,67 @@ const OrderPage = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Registration Admin site  ID:", storedUserID); // Verify storedUserID
+      console.log("technical Admin site  ID:", storedUserID); // Verify storedUserID
     }
   }, []);
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetchOrders();
-    }, 500); // Fetch data every 5 seconds
+    fetchOrders(currentPage, ordersPerPage, {
+      searchField,
+      searchValue,
+    });
+  }, [currentPage, searchField, searchValue]);
 
-    // Cleanup interval when component is unmounted
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const fetchOrders = async () => {
+  const fetchOrders = async (page = 1, pageSize = 10, filters = {}) => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder`
-      );
-      
-      setOrders(response.data);
-      setAllOrders(response.data); // Save original data
+      const { searchField, searchValue } = filters;
+      setLoading(true);
+      let responseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}`;
+
+      if (searchField && searchValue) {
+        responseUrl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
+      const response = await axios.get(responseUrl);
+
+      const { data, totalCount } = response.data;
+      console.log("response", response.data);
+      setOrders(data);
+      setAllOrders(data); // Only necessary if you need full copy
+      setTotalPages(Math.ceil(totalCount / ordersPerPage));
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);
+      setLoading(false);
     }
   };
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages); // Adjust down if needed
+    }
+  }, [totalPages]);
+  const currentOrders = orders || [];
 
   const handleFilterChange = (field, value) => {
-    if (value.trim() === "") {
-      setOrders(allOrders); // Restore original data
-    } else {
-      const filtered = allOrders.filter((order) =>
-        order[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
+    const trimmedValue = value.trim().toLowerCase();
+    setSearchField(field);
+    setSearchValue(trimmedValue);
+    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
+  };
+  const handlePageChange = (event) => {
+    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
+    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+  };
+  const handleScroll = (e) => {
+    const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
 
-      setOrders(filtered);
+    if (isVerticalScroll) {
+      const bottom =
+        e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+
+      if (bottom && currentPage < totalPages) {
+        setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
+        fetchOrders(currentPage + 1); // Fetch more data if bottom is reached
+      }
     }
-    setCurrentPage(1); // Reset pagination to first page
   };
   const handleAdminStatus = async (newStatus) => {
     if (!selectedOrderId) return;
@@ -87,13 +116,14 @@ const OrderPage = () => {
 
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/registration-status`,
-        { registration_admin_status: newStatus }
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/technical-status`,
+        { technical_admin_status: newStatus }
       );
 
       if (response.status === 200) {
         setSuccessMessage(`Order status updated to ${newStatus} successfully!`);
         fetchOrders(); // Refresh the orders
+        setCurrentPage(1)
       }
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -136,6 +166,7 @@ const OrderPage = () => {
         setSelectedOrderId(null);
         setSelectedApprovalType("");
         fetchOrders(); // Optimize fetchOrders if necessary
+        setCurrentPage(1)
         setShowTransferModal(false);
       })
       .catch((error) => {
@@ -169,7 +200,11 @@ const OrderPage = () => {
           </h4>
 
           {/* Table */}
-          <div className="table-responsive w-100">
+          <div
+            onScroll={handleScroll}
+            className="table-responsive w-100"
+            style={{ overflowX: "auto" }}
+          >
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
@@ -180,8 +215,8 @@ const OrderPage = () => {
                     { label: "Sample Name", field: "samplename" },
                     { label: "Order Status", field: "order_status" },
                     {
-                      label: "Registration Admin Status",
-                      field: "registration_admin_status",
+                      label: "Technical Admin Status",
+                      field: "technical_admin_status",
                     },
                     {
                       label: "Scientific Committee Member Status",
@@ -248,34 +283,41 @@ const OrderPage = () => {
                         {order.samplename}
                       </td>
                       <td>{order.order_status}</td>
-                      <td>{order.registration_admin_status}</td>
+                      <td>{order.technical_admin_status}</td>
                       <td>
-                        {order.order_status === "Rejected" &&
-                        order.registration_admin_status === "Rejected" &&
-                        order.scientific_committee_status === "Refused"
-                          ? "Refused"
-                          : order.registration_admin_status === "Rejected"
-                          ? "No further processing"
-                          : order.scientific_committee_status === null ||
-                            order.scientific_committee_status === ""
-                          ? "Awaiting Admin Action"
-                          : order.scientific_committee_status ||
-                            "Awaiting Review"}
-                      </td>
-
-                      <td>
-  {order.ethical_committee_status === "Refused"
-    ? "Refused"
-    : order.registration_admin_status === "Rejected"
-    ? "No further processing"
-    : order.ethical_committee_status === null
-    ? "Not Sent"
-    : order.ethical_committee_status === ""
-    ? "Awaiting Admin Action"
-    : order.ethical_committee_status || "Awaiting Review"}
+  {order.order_status === "Rejected" &&
+  order.technical_admin_status === "Rejected" &&
+  order.scientific_committee_status === "Refused" ? (
+    "Refused"
+  ) : order.technical_admin_status === "Rejected" ? (
+    order.registration_admin_status === "Rejected" ? (
+      "No further processing"
+    ) : order.registration_admin_status === "Pending" ? (
+      "Pending Admin Approval"
+    ) : order.scientific_committee_status === "Refused" ? (
+      "Refused"
+    ) : order.scientific_committee_status ? (
+      order.scientific_committee_status
+    ) : (
+      "Awaiting Committee Forwarding"
+    )
+  ) : null}
 </td>
 
-
+                      <td>
+                        {order.ethical_committee_status === "Refused"
+                          ? "Refused"
+                          : order.technical_admin_status === "Rejected"
+                          ? "No further processing"
+                          : order.ethical_committee_status === "" ||
+                          order.ethical_committee_status === null &&
+                          order.sender_id=== null
+                         ? "Not Send"
+                          : order.ethical_committee_status === "" ||
+                           order.ethical_committee_status === null
+                          ? "Awaiting Admin Action"
+                          : order.ethical_committee_status || "Awaiting Review"}
+                      </td>
 
                       <td
                         onClick={(e) => {
@@ -293,6 +335,7 @@ const OrderPage = () => {
                       <td>
                         <div className="d-flex align-items-center gap-2 position-relative">
                           {/* Edit Status Button */}
+                          
                           <div className="d-flex align-items-center gap-2 position-relative">
                             {/* ✅ Accept Button (Tick Icon) */}
                             <button
@@ -323,7 +366,7 @@ const OrderPage = () => {
                             </button>
                           </div>
                           {/* Send Approval Button */}
-                          {order.registration_admin_status === "Accepted" &&
+                          {order.technical_admin_status === "Accepted" &&
                             order.ethical_committee_status === null &&
                             order.scientific_committee_status === null && (
                               <div className="position-relative">
@@ -518,10 +561,10 @@ const OrderPage = () => {
           )}
 
           {/* Pagination Controls */}
-          {orders.length >= 0 && (
+          {totalPages >= 0 && (
             <Pagination
-              handlePageClick={(data) => setCurrentPage(data.selected + 1)}
-              pageCount={Math.ceil(orders.length / ordersPerPage)}
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
               focusPage={currentPage - 1}
             />
           )}
@@ -594,10 +637,6 @@ const OrderPage = () => {
                     <div className="col-md-5 text-center">
                       <div className="mt-3 p-2 bg-light rounded text-start">
                         <p>
-                          <strong>Price:</strong> {selectedSample.price}{" "}
-                          {selectedSample.SamplePriceCurrency}
-                        </p>
-                        <p>
                           <strong>Quantity:</strong> {selectedSample.quantity}
                         </p>
                         <p>
@@ -607,10 +646,6 @@ const OrderPage = () => {
                         <p>
                           <strong>Country of Collection:</strong>{" "}
                           {selectedSample.CountryofCollection}
-                        </p>
-                        <p>
-                          <strong>Order Status:</strong>{" "}
-                          {selectedSample.order_status}
                         </p>
                         <p>
                           <strong>Age:</strong> {selectedSample.age} years |{" "}

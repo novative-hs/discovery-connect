@@ -3,13 +3,20 @@ import React from "react";
 import { Dots, Lists } from "@svg/index";
 import NiceSelect from "@ui/NiceSelect";
 
-export function ShowingResult({ show, total }) {
+export function ShowingResult({ start, end, total }) {
   return (
     <div className="shop__result">
-      <p>Showing 1–{show} of {total} results</p>
+      {total === 0 ? (
+        <p>No results found.</p>
+      ) : (
+        <p>
+          Showing {start}–{end} of {total} results
+        </p>
+      )}
     </div>
   );
 }
+
 
 export function ShopShortTab({ handleTab }) {
   return (

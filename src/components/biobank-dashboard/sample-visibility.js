@@ -92,18 +92,19 @@ const BioBankSampleArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
       );
-
-      const ownSamples = response.data.map((sample) => ({
+  
+      const ownSamples = response.data.samples.map((sample) => ({
         ...sample,
         quantity: Number(sample.quantity) || 0,
       }));
-
+  
       return ownSamples;
     } catch (error) {
       console.error("Error fetching samples:", error);
       return [];
     }
   };
+  
 
   useEffect(() => {
     const pages = Math.max(

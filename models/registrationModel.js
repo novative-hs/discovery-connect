@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'RegistrationAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -32,12 +32,14 @@ const create_researcherTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_account_id INT,
       ResearcherName VARCHAR(100),
+      nameofOrganization INT,
       phoneNumber VARCHAR(15),
-      fullAddress TEXT,
       city INT,
       district INT,
       country INT,
-      nameofOrganization INT,
+      fullAddress TEXT,
+      CNIC LONGBLOB,
+      organization_card LONGBLOB,
       status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
       added_by INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -67,7 +69,7 @@ const create_CSR = () => {
     city INT,
     district INT,
     country INT,
-    status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+    status ENUM('pending', 'active', 'inactive') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
@@ -99,9 +101,9 @@ const create_organizationTable = () => {
       ntnNumber VARCHAR(50),
       fullAddress TEXT,
       logo LONGBLOB,
-      status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -130,9 +132,9 @@ const create_collectionsiteTable = () => {
       country INT,
       logo LONGBLOB,
       phoneNumber VARCHAR(15),
-      status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -377,13 +379,14 @@ WHERE
 // Function to update account (Researcher, Organization, Collection Sites)
 const updateAccount = (req, callback) => {
   const {
-    user_account_id,
+    
     useraccount_email,
-    password,
+    useraccount_password,
     accountType,
     ResearcherName,
     OrganizationName,
     CollectionSiteName,
+    CollectionSiteType,
     CommitteeMemberName,
     CSRName,
     cnic,
@@ -399,13 +402,17 @@ const updateAccount = (req, callback) => {
     committeetype,
     added_by
   } = req.body;
-
+  const user_account_id = req.params.id
   // Handle the logo file (if provided)
   let logo = null;
   if (req.file) {
-    // If a file was uploaded, convert it to a buffer
     logo = req.file.buffer;
   }
+  else if (req.files?.logo?.[0]) {
+    logo = req.files.logo[0].buffer;
+  }
+ 
+
   mysqlConnection.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting database connection:", err);
@@ -441,12 +448,15 @@ const updateAccount = (req, callback) => {
           const previousEmail = results[0].email;
           const previousPassword = results[0].password;
           // Update user account table
-          const updateUserAccountQuery = `
-        UPDATE user_account SET email = ? WHERE id = ?
-      `;
-          const updateUserAccountValues = [useraccount_email, user_account_id];
-         
-
+          let updateUserAccountQuery = `UPDATE user_account SET email = ?`;
+          const updateUserAccountValues = [useraccount_email];
+          
+          if (useraccount_password) {
+            updateUserAccountQuery += `, password = ?`;
+            updateUserAccountValues.push(useraccount_password);
+          }
+          updateUserAccountQuery += ` WHERE id = ?`;
+          updateUserAccountValues.push(user_account_id);
 
           connection.query(
             updateUserAccountQuery,
@@ -488,10 +498,10 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM collectionsite WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE collectionsite SET 
-                      CollectionSiteName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                      CollectionSiteName = ?, CollectionSiteType = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                       country = ?, logo = ? WHERE user_account_id = ?
                   `;
-                  values = [CollectionSiteName, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+                  values = [CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
                   break;
                 case "Committeemember":
                   fetchQuery = "SELECT * FROM committee_member WHERE user_account_id = ?";
@@ -551,11 +561,11 @@ const updateAccount = (req, callback) => {
 
                   const historyQuery = `
                     INSERT INTO history (
-                      email, password, ResearcherName, CollectionSiteName, OrganizationName, CommitteeMemberName,CSRName,
+                      email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
                       HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, CSR_id,status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
 
                   const historyValues = [
@@ -563,6 +573,7 @@ const updateAccount = (req, callback) => {
                     previousPassword,
                     previousData.ResearcherName || null,
                     previousData.CollectionSiteName || null,
+                    previousData.CollectionSiteType || null,
                     previousData.OrganizationName || null,
                     previousData.CommitteeMemberName || null,
                     previousData.CSRName || null,
@@ -642,10 +653,19 @@ const createAccount = (req, callback) => {
     type,
     HECPMDCRegistrationNo,
     ntnNumber,
+    status,
     added_by,
+    
   } = req.body;
 
-  let logo = req.file ? req.file.buffer : null;
+  const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
+const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
+let logo = null;
+if (req.file) {
+  logo = req.file.buffer;
+} else if (req.files?.logo?.[0]) {
+  logo = req.files.logo[0].buffer;
+}
 
   mysqlPool.getConnection((err, connection) => {
     if (err) {
@@ -694,8 +714,8 @@ const createAccount = (req, callback) => {
 
             switch (accountType) {
               case "Researcher":
-                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO researcher (user_account_id, ResearcherName, phoneNumber, fullAddress, city, district, country, nameofOrganization, added_by,CNIC,organization_card) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`;
                 values = [
                   userAccountId,
                   ResearcherName,
@@ -706,12 +726,14 @@ const createAccount = (req, callback) => {
                   country,
                   nameofOrganization,
                   added_by,
+                  CNICBuffer,
+                  OrgCardBuffer
                 ];
                 break;
 
               case "Organization":
-                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo,status) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
                 values = [
                   userAccountId,
                   OrganizationName,
@@ -724,6 +746,7 @@ const createAccount = (req, callback) => {
                   district,
                   country,
                   logo,
+                  status
                 ];
                 break;
 
@@ -744,8 +767,8 @@ const createAccount = (req, callback) => {
                 break;
 
               case "CSR":
-                query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country) 
-                           VALUES ( ?, ?, ?, ?, ?, ?, ?)`;
+                query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country,status) 
+                           VALUES ( ?, ?, ?, ?, ?, ?, ?,?)`;
                 values = [
                   userAccountId,
                   CSRName,
@@ -754,11 +777,12 @@ const createAccount = (req, callback) => {
                   city,
                   district,
                   country,
+                  status
 
                 ];
                 break;
 
-              case "RegistrationAdmin":
+              case "TechnicalAdmin":
               case "biobank":
                 return callback(null, {
                   message: `${accountType} account registered successfully`,
@@ -933,10 +957,10 @@ const loginAccount = (data, callback) => {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (OrganizationResults.length > 0 && OrganizationResults[0].status === 'approved') {
+          if (OrganizationResults.length > 0 && OrganizationResults[0].status === 'active') {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
+            return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
       } else if (user.accountType === 'CollectionSites') {
@@ -980,10 +1004,10 @@ const loginAccount = (data, callback) => {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (CSRResults.length > 0 && CSRResults[0].status === 'approved') {
+          if (CSRResults.length > 0 && CSRResults[0].status === 'active') {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
+            return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
       }
@@ -1112,17 +1136,17 @@ const sendOTP = (req, callback) => {
     }
     if (result.length === 0) {
       return callback({ status: 404, message: "User not found" }, null);
-    }    
+    }
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-    
+
     const updateQuery = `UPDATE user_account SET OTP = ?, otpExpiry = ? WHERE email = ?`;
     mysqlConnection.query(updateQuery, [otp, otpExpiry, email], (updateErr, result) => {
       if (updateErr) {
         console.error("❌ Error while updating OTP:", updateErr);
         return callback({ status: 500, message: "Error saving OTP" }, null);
       }
-    
+
       sendEmail(email, "Your OTP Code", `Your OTP code is: ${otp}.it is valid for the next 5 minutes.`)
         .then(() => {
           callback(null, { message: "OTP sent successfully!", otp });
@@ -1132,7 +1156,7 @@ const sendOTP = (req, callback) => {
           callback({ status: 500, message: emailError.message }, null);
         });
     });
-    
+
   });
 };
 

@@ -12,6 +12,4 @@ router.post('/biobank/postBBsample',upload.single("logo"), BioBankController.cre
 router.put('/biobank/editBBsample/:id', upload.single("logo"),BioBankController.updateBiobankSample); // PUT update sample
 router.get('/biobank/getQuarantineStock', BioBankController.getQuarantineStock);
 router.put('/biobank/UpdateSampleStatus/:id', BioBankController.UpdateSampleStatus); // PUT update sample
-
-
 module.exports = router;

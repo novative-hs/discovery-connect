@@ -3,16 +3,31 @@ const moment = require('moment');
 
 // Controller to create a sample
 const getBiobankSamples = (req, res) => {
-  const id = req.params.id;
-  if (!id) {
-    return res.status(400).json({ error: "ID parameter is missing" });
+  const id = parseInt(req.params.id);
+  const page = req.query.page || 1;
+  const pageSize = req.query.pageSize || 10;
+
+  const priceFilter = req.query.priceFilter || null;
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid user_account_id" });
   }
-  BioBankModel.getBiobankSamples(id, (err, results) => {
+
+  BioBankModel.getBiobankSamples(id, page, pageSize, priceFilter, searchField, searchValue, (err, results) => {
     if (err) {
-      console.error('Error in model:', err);
       return res.status(500).json({ error: "Error fetching samples" });
     }
-    res.status(200).json(results);
+
+    const { results: samples, totalCount } = results;
+    res.status(200).json({
+      samples,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: parseInt(page),
+      pageSize: parseInt(pageSize),
+      totalCount,
+    });
   });
 };
 

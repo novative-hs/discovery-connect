@@ -60,33 +60,74 @@ const createSampleTable = () => {
 };
 
 // Function to get all samples with 'In Stock' status
-const getSamples = (id, callback) => {
-  // Validate and parse `id`
+const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
   const user_account_id = parseInt(id);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
   }
 
-  const query = `
-   SELECT s.*
-FROM sample s
-JOIN user_account ua ON s.user_account_id = ua.id
-WHERE s.status = "In Stock" 
-  AND s.is_deleted = FALSE
-  AND ua.accountType = "CollectionSites"
-  AND s.user_account_id = ? 
-  AND s.Quantity > 0 
-ORDER BY s.created_at DESC;
+  const pageInt = parseInt(page, 10) || 1;
+  const pageSizeInt = parseInt(pageSize, 10) || 50;
+  const offset = (pageInt - 1) * pageSizeInt;
 
+  // Base conditions
+  let baseWhereClause = `
+    s.status = "In Stock"
+    AND s.is_deleted = FALSE
+    AND ua.accountType = "CollectionSites"
+    AND s.user_account_id = ?
+    AND s.Quantity > 0
   `;
-  mysqlConnection.query(query, [user_account_id], (err, results) => {
+
+  const params = [user_account_id];
+
+  // Optional search condition
+  if (searchField && searchValue) {
+    baseWhereClause += ` AND ?? LIKE ? `;
+    params.push(searchField, `%${searchValue}%`);
+  }
+
+
+  const query = `
+    SELECT s.*
+    FROM sample s
+    JOIN user_account ua ON s.user_account_id = ua.id
+    WHERE ${baseWhereClause}
+    ORDER BY s.created_at DESC
+    LIMIT ? OFFSET ?;
+  `;
+
+  params.push(pageSizeInt, offset);
+
+  mysqlConnection.query(query, params, (err, results) => {
     if (err) {
       return callback(err, null);
     }
 
-    callback(null, results);
+    // Count query with same WHERE logic
+    const countQuery = `
+      SELECT COUNT(*) AS totalCount
+      FROM sample s
+      JOIN user_account ua ON s.user_account_id = ua.id
+      WHERE ${baseWhereClause};
+    `;
+
+    mysqlConnection.query(countQuery, params.slice(0, -2), (err, countResults) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      const totalCount = countResults[0].totalCount;
+
+      callback(null, {
+        results,
+        totalCount,
+      });
+    });
   });
 };
+
+
 
 const getAllSamples = (callback) => {
   const query = `
@@ -194,8 +235,8 @@ const getResearcherSamples = (userId, callback) => {
     p.payment_status AS payment_status,
     s.quantity AS orderquantity, 
     
-    -- Include Registration Admin Status
-    ra.registration_admin_status,
+    -- Include Technical Admin Status
+    ra.technical_admin_status,
 
     -- Determine Final Committee Status
     CASE 
@@ -216,15 +257,15 @@ LEFT JOIN city c ON cs.city = c.id
 LEFT JOIN district d ON cs.district = d.id
 LEFT JOIN country ON sm.CountryOfCollection = country.id 
 JOIN payment p ON s.payment_id = p.id 
--- Join Registration Admin Sample Approval
-LEFT JOIN registrationadminsampleapproval ra ON s.id = ra.cart_id
+-- Join Technical Admin Sample Approval
+LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
 
 -- Join Committee Sample Approval
 LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
 
 WHERE s.user_id = ?
 
-GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.registration_admin_status
+GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
 
 ORDER BY s.id DESC;
 
@@ -247,86 +288,81 @@ ORDER BY s.id DESC;
 
 };
 
-const getAllCSSamples = (callback) => {
-  const query = `
-SELECT 
-  s.*,
-  cs.CollectionSiteName AS Name,
-  bb.Name AS Name,
-  c.name AS CityName,
-  d.name AS DistrictName
-FROM 
-  sample s
-LEFT JOIN 
-  collectionsite cs ON s.user_account_id = cs.user_account_id
-LEFT JOIN 
-  biobank bb ON s.user_account_id = bb.id
-LEFT JOIN 
-  city c ON cs.city = c.id
-LEFT JOIN 
-  district d ON cs.district = d.id
-WHERE 
-  s.status = 'In Stock' 
-  AND s.price > 0 
-  AND s.sample_status = 'Public'
-  AND (s.quantity > 0 OR s.quantity_allocated > 0)
-  AND NOT EXISTS (
-    SELECT 1
-    FROM cart ct
-    JOIN committeesampleapproval csa ON csa.cart_id = ct.id
-    JOIN registrationadminsampleapproval rasa ON rasa.cart_id = ct.id
-    WHERE 
-      ct.sample_id = s.id
-      AND csa.committee_status = 'Approved'
-      AND rasa.registration_admin_status = 'Accepted'
-  );
 
+const getAllCSSamples = (limit, offset, callback) => {
+  const dataQuery = `
+    SELECT 
+      s.*, 
+      cs.CollectionSiteName AS CollectionSiteName,
+      bb.Name AS BiobankName,
+      c.name AS CityName,
+      d.name AS DistrictName
+    FROM 
+      sample s
+    LEFT JOIN collectionsite cs ON s.user_account_id = cs.user_account_id
+    LEFT JOIN biobank bb ON s.user_account_id = bb.id
+    LEFT JOIN city c ON cs.city = c.id
+    LEFT JOIN district d ON cs.district = d.id
+    WHERE 
+      s.status = 'In Stock' 
+      AND s.price > 0 
+      AND s.sample_status = 'Public'
+      AND (s.quantity > 0 OR s.quantity_allocated > 0)
+    LIMIT ? OFFSET ?
   `;
 
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM sample s
+    LEFT JOIN collectionsite cs ON s.user_account_id = cs.user_account_id
+    WHERE 
+      s.status = 'In Stock' 
+      AND s.price > 0 
+      AND (s.quantity > 0 OR s.quantity_allocated > 0)
+  `;
 
-  mysqlConnection.query(query, (err, results) => {
-    if (err) {
-      console.error("MySQL Query Error:", err);
-      callback(err, null); // Will send 500 if there's an error with the query
-      return;
-    }
+  mysqlConnection.query(countQuery, (countErr, countResult) => {
+    if (countErr) return callback(countErr, null);
 
-    // Continue with image processing
-    const imageFolder = path.join(__dirname, '../uploads/Images');
-    fs.readdir(imageFolder, (fsErr, files) => {
-      if (fsErr) return callback(fsErr, null);
+    const totalCount = countResult[0].total;
 
-      const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+    mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
+      if (dataErr) return callback(dataErr, null);
 
-      const totalSamples = results.length;
-      const totalImages = imageFiles.length;
+      const imageFolder = path.join(__dirname, '../uploads/Images');
+      fs.readdir(imageFolder, (fsErr, files) => {
+        if (fsErr) return callback(fsErr, null);
 
-      let selectedImages = [];
+        const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+        const totalSamples = results.length;
+        const totalImages = imageFiles.length;
 
-      if (totalImages >= totalSamples) {
-        // Shuffle images and assign one per sample (no repeat)
-        selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
-      } else {
-        // More samples than images – allow repetition
-        for (let i = 0; i < totalSamples; i++) {
-          const img = imageFiles[i % totalImages]; // cycle through
-          selectedImages.push(img);
+        let selectedImages = [];
+
+        if (totalImages >= totalSamples) {
+          selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
+        } else {
+          for (let i = 0; i < totalSamples; i++) {
+            const img = imageFiles[i % totalImages];
+            selectedImages.push(img);
+          }
         }
-      }
 
-      const updatedResults = results.map((sample, index) => {
-        const selectedImage = selectedImages[index];
-        const imagePath = path.join(imageFolder, selectedImage);
-        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
-        sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
-        return sample;
+        const updatedResults = results.map((sample, index) => {
+          const selectedImage = selectedImages[index];
+          const imagePath = path.join(imageFolder, selectedImage);
+          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+          sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
+          return sample;
+        });
+
+        callback(null, { data: updatedResults, totalCount });
       });
-
-      callback(null, updatedResults);
     });
-
   });
 };
+
+
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -351,16 +387,17 @@ const createSample = (data, callback) => {
     box_id = parts[2] || null;
   }
 
-  const query = `
+  const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status,logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
-  mysqlConnection.query(query, [
+  mysqlConnection.query(insertQuery, [
     id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
-      console.error('Error in MySQL query:', err);
+      console.error('Error inserting into sample:', err);
       return callback(err, null);
     }
 
@@ -371,6 +408,7 @@ const createSample = (data, callback) => {
         console.error('Error updating masterID:', err);
         return callback(err, null);
       }
+
       // Now insert into sample_history
       const historyQuery = `
         INSERT INTO sample_history (sample_id)
@@ -389,6 +427,8 @@ const createSample = (data, callback) => {
     });
   });
 };
+
+
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {

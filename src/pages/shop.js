@@ -1,47 +1,42 @@
 import { useState, useEffect, useMemo } from "react";
-// internal
 import Wrapper from "@layout/wrapper";
 import SEO from "@components/seo";
 import Header from "@layout/header";
-import DashboardHeader from "@layout/dashboardheader";
 import Footer from "@layout/footer";
 import ShopBreadcrumb from "@components/common/breadcrumb/shop-breadcrumb";
 import ShopArea from "@components/shop/shop-area";
-import DashboardArea from "@components/user-dashboard/dashboard-area";
 import ErrorMessage from "@components/error-message/error";
 import ShopLoader from "@components/loader/shop-loader";
 import { useRouter } from "next/router";
-// Import API hook
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 
 export default function Shop({ query }) {
   const router = useRouter();
-  const [userId, setUserId] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const { data: samples, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath);
-  const [shortValue, setShortValue] = useState("");
-const [activeTab, setActiveTab] = useState("order-info");
-  // Check sessionStorage on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const id = sessionStorage.getItem("userID");
-      setUserId(id);
-      setLoadingUser(false);
-    }
-  }, []);
+  const page = Number(router.query.page) || 1;
+  const perPage = 1000;
+  const queryParams = {
+    ...router.query,
+    limit: perPage,
+    offset: 0,
+  };
+  
 
-  // Select Short Handler
+  const { data, isError, isLoading, error } = useGetAllSamplesQuery(queryParams);
+  const samples = data?.data || [];
+  const totalCount = data?.totalCount || 0;
+
+  const [shortValue, setShortValue] = useState("");
+
   const selectShortHandler = (e) => {
     setShortValue(e.value);
   };
 
-  // Filtering and Sorting
   const filtered_samples = useMemo(() => {
     if (!samples) return [];
 
     let sortedSamples = [...samples];
     const { priceMin, priceMax } = router.query || {};
-  
+
     if (priceMin || priceMax) {
       sortedSamples = sortedSamples.filter((sample) => {
         const price = Number(sample.price);
@@ -61,8 +56,7 @@ const [activeTab, setActiveTab] = useState("order-info");
     return sortedSamples;
   }, [samples, shortValue, query]);
 
-  // Render Logic
-  let content = null;
+  let content;
 
   if (isLoading) {
     content = <ShopLoader loading={isLoading} />;
@@ -89,41 +83,28 @@ const [activeTab, setActiveTab] = useState("order-info");
         </div>
       </>
     );
-    
-    
   } else {
     content = (
-      <ShopArea
-        products={filtered_samples}
-        all_products={samples}
-        shortHandler={selectShortHandler}
-      />
+      <>
+        <ShopArea
+          products={filtered_samples}
+          all_products={samples}
+          shortHandler={selectShortHandler}
+          totalCount={totalCount} // Pass the totalCount here
+        />
+      </>
     );
   }
-  // Prevent flicker before sessionStorage is read
-  if (loadingUser) return <div>Loading...</div>;
 
   return (
     <Wrapper>
       <SEO pageTitle={"Shop"} />
-      {userId ? (
-        <>
-          {content}
-        </>
-      ) : (
-        // Flex column layout to push footer to bottom
-        <div className="min-h-screen flex flex-col">
-          <Header style_2={true} />
-          <ShopBreadcrumb />
-          <main className="flex-grow">
-            {content}
-          </main>
-          <Footer />
-        </div>
-      )}
+      <Header style_2={true} />
+      <ShopBreadcrumb />
+      {content}
+      <Footer />
     </Wrapper>
   );
-  
 }
 
 export const getServerSideProps = async (context) => {

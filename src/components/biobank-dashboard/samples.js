@@ -20,6 +20,7 @@ const BioBankSampleArea = () => {
   } else {
     console.log("Collection site Id on sample page is:", id);
   }
+  const [filtertotal, setfiltertotal] = useState(null);
   const [quarantineComment, setQuarantineComment] = useState("");
   const [commentError, setCommentError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -100,15 +101,6 @@ const BioBankSampleArea = () => {
     logo: ""
   });
 
-  const handleQuarantineClick = () => {
-    if (!quarantineComment.trim()) {
-      setCommentError("Comment is required to quarantine the sample.");
-      return;
-    }
-    setCommentError(""); // Clear any previous errors
-    handleQuarantine(quarantineComment); // Call your actual function
-  };
-
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
   const [filter, setFilter] = useState(""); // State for dropdown selection
@@ -147,6 +139,15 @@ const BioBankSampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: "",
   });
+
+  const handleQuarantineClick = () => {
+    if (!quarantineComment.trim()) {
+      setCommentError("Comment is required to quarantine the sample.");
+      return;
+    }
+    setCommentError("");
+    handleQuarantine(quarantineComment); // Pass the comment
+  };
 
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
@@ -187,45 +188,28 @@ const BioBankSampleArea = () => {
     const storedUser = getsessionStorage("user");
     fetchSamples(); // Call the function when the component mounts
   }, []);
-
-  const fetchSamples = async () => {
+  // Fetch samples from the backend
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
+      const { priceFilter, searchField, searchValue } = filters;
 
-      // Fetch samples added by this collection site
-      const ownSamplesResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
-      );
-      console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownSamplesResponse.data.map((sample) => {
-        // Convert logo BLOB into base64
-        let base64Logo = "";
-        if (sample.logo && sample.logo.data) {
-          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
-          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
-        }
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-        return {
-          ...sample,
-          quantity: Number(sample.quantity) || 0,
-          logo: base64Logo, // Important: Replace logo BLOB with base64 string
-        };
-      });
+      if (priceFilter) {
+        url += `&priceFilter=${priceFilter}`;
+      }
 
-      // Fetch samples received by this collection site
-      const receivedSamplesResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`
-      );
-      console.log("Received samples:", receivedSamplesResponse.data);
-      const receivedSamples = receivedSamplesResponse.data.map((sample) => ({
-        ...sample,
-        quantity: sample.Quantity, // Map 'Quantity' to 'quantity'
-      }));
+      if (searchField && searchValue) {
+        url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
 
-      // Combine both responses
-      const combinedSamples = [...ownSamples, ...receivedSamples];
-      setFilteredSamples(combinedSamples)
-      // Update state with the combined list
-      setSamples(combinedSamples);
+      const response = await axios.get(url);
+
+      const { samples, totalCount } = response.data;
+      setSamples(samples);
+      setFilteredSamples(samples); // Ensure filteredSamples are updated
+      setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
+      setfiltertotal(Math.ceil(totalCount / pageSize))
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
@@ -551,6 +535,7 @@ const BioBankSampleArea = () => {
       fetchSamples();
       setShowQuarantineModal(false);
       setSelectedSampleId(null);
+      setQuarantineComment("");
     } catch (error) {
       console.error(
         `Error quarantining sample with ID ${selectedSampleId}:`,
@@ -558,6 +543,7 @@ const BioBankSampleArea = () => {
       );
     }
   };
+  
   
 
   const fetchHistory = async (filterType, id) => {
@@ -2098,7 +2084,65 @@ const BioBankSampleArea = () => {
             </div>
           </div>
         )}
-{showQuarantineModal && (
+        {showQuarantineModal && (
+          <>
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "120px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Quarantine Sample</h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => setShowQuarantineModal(false)}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <div className="modal-body">
+                    <p>Are you sure you want to Quarantine this sample?</p>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="btn btn-danger" onClick={handleQuarantine}>
+                    Quarantine Sample
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowQuarantineModal(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )} 
+
+        {/* Modal for History of Samples */}
+   {showQuarantineModal && (
   <>
     <div
       className="modal-backdrop fade show"
@@ -2139,6 +2183,7 @@ const BioBankSampleArea = () => {
             </button>
           </div>
           <div className="modal-body">
+            <p>Are you sure you want to Quarantine this sample?</p>
             <label htmlFor="quarantine-comment" className="form-label mt-3">
               Add Comment <span className="text-danger">*</span>
             </label>
@@ -2175,119 +2220,6 @@ const BioBankSampleArea = () => {
     </div>
   </>
 )}
-
-        {/* Modal for History of Samples */}
-        {showHistoryModal && (
-          <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
-
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "100px",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-              <div className="modal-dialog modal-md" role="document">
-                <div className="modal-content">
-                  {/* Modal Header */}
-                  <div className="modal-header">
-                    <h5 className="modal-title">History</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowHistoryModal(false)}
-                      style={{
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
-
-                  {/* Chat-style Modal Body */}
-                  <div
-                    className="modal-body"
-                    style={{
-                      maxHeight: "500px",
-                      overflowY: "auto",
-                      backgroundColor: "#e5ddd5", // WhatsApp-style background
-                      padding: "15px",
-                      borderRadius: "10px",
-                    }}
-                  >
-                    {historyData && historyData.length > 0 ? (
-                      historyData.map((log, index) => {
-                        const hiddenFields = [
-                          "logo",
-                          "ntnNumber",
-                          "type",
-                          "city",
-                          "country",
-                          "district",
-                          "OrganizationName",
-                          "nameofOrganization",
-                          "CollectionSiteName",
-                          "HECPMDCRegistrationNo",
-                          "organization_id",
-                          "collectionsite_id",
-                        ]; // Add fields you want to hide
-
-                        return (
-                          <div
-                            key={index}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "flex-start",
-                              marginBottom: "10px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                padding: "10px 15px",
-                                borderRadius: "15px",
-                                backgroundColor: "#ffffff",
-                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                maxWidth: "75%",
-                                fontSize: "14px",
-                                textAlign: "left",
-                              }}
-                            >
-                              {Object.entries(log).map(([key, value]) =>
-                                !hiddenFields.includes(key) ? ( // Only show fields that are NOT in hiddenFields array
-                                  <div key={key}>
-                                    <b>{key.replace(/_/g, " ")}:</b> {value}
-                                  </div>
-                                ) : null
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-left">No history available.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
       </div>
     </section>
   );

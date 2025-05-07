@@ -66,9 +66,9 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
     if (committeeType === "both") {
       const foundTypes = new Set(activeMembers.map(m => m.committeetype));
       if (!foundTypes.has("Scientific") && foundTypes.has("Ethical")) {
-        notice = "Only ethical committee members were found. ";
+        notice = "Only Ethical Committee Members were found. ";
       } else if (!foundTypes.has("Ethical") && foundTypes.has("Scientific")) {
-        notice = "Only scientific committee members were found. ";
+        notice = "Only Scientific Committee Members were found. ";
       }
     }
 
@@ -237,8 +237,6 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       return callback(err, null);
     }
 
-  
-
     const response = {
       success: true,
       message: "Committee status updated",
@@ -246,50 +244,40 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       status: committee_status,
     };
 
-    // ✅ If status is "Refused", update sample quantities
-    if (committee_status.toLowerCase() === "refused") {
-      const getQuantitySql = `
-        SELECT sample_id, quantity 
-        FROM cart 
-        WHERE id = ?
-      `;
+    const getEmailQuery = `
+      SELECT ua.email 
+      FROM user_account ua
+      JOIN cart c ON ua.id = c.user_id
+      WHERE c.id = ?`;
 
-      mysqlConnection.query(getQuantitySql, [id], (getErr, cartResults) => {
-        if (getErr) {
-          console.error("Error fetching cart item:", getErr);
-          return callback(getErr, null);
-        }
+    mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
+      if (emailErr) {
+        console.error("Error fetching email:", emailErr);
+      } else if (emailResults.length > 0) {
+        const userEmail = emailResults[0].email;
+        const subject = `Committee Status Update`;
+        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Cart ID: ${cartId}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
 
-        if (cartResults.length > 0) {
-          const { sample_id, quantity } = cartResults[0];
-
-          const updateSampleSql = `
-            UPDATE sample 
-            SET quantity = quantity + ?, 
-                quantity_allocated = quantity_allocated - ? 
-            WHERE id = ?
-          `;
-
-          mysqlConnection.query(updateSampleSql, [quantity, quantity, sample_id], (updateErr, updateResults) => {
-            if (updateErr) {
-              console.error("Error updating sample quantities:", updateErr);
-              return callback(updateErr, null);
-            }
-
-            console.log("Sample quantities updated due to refusal.");
-
-            // After updating quantity, send email
-            sendUserEmail(id, committee_status, comments, callback);
+        setImmediate(() => {
+          sendEmail(userEmail, subject, text, (emailSendErr) => {
+            if (emailSendErr) {
+              console.error("Failed to send email:", emailSendErr);
+            } 
           });
-        } else {
-          console.log("No cart item found to adjust sample quantities.");
-          sendUserEmail(id, committee_status, comments, callback);
+        });
+      } else {
+        console.warn("No email found for user with cart ID", cartId);
+      }
+
+      // Always try to update cart Shipped status regardless of email success
+      updateCartStatusToShipping(cartId, (shippingErr) => {
+        if (shippingErr) {
+          console.error("Error in shipping status update:", shippingErr);
         }
       });
-    } else {
-      // If not refused, directly send email
-      sendUserEmail(id, committee_status, comments, callback);
-    }
+
+      callback(null, response);
+    });
   });
 };
 
@@ -328,9 +316,6 @@ const sendUserEmail = (id, committee_status, comments, callback) => {
     }
   });
 };
-
-
-
   
 module.exports = {
   createcommitteesampleapprovalTable,

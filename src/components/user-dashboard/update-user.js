@@ -84,12 +84,12 @@ const UpdateUser = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
 
-      // Filter organizations where status is "approved"
+      // Filter organizations where status is "active"
       const approvedOrganizations = response.data.filter(
-        (organization) => organization.status === "approved"
+        (organization) => organization.status === "active"
       );
 
-      setOrganization(approvedOrganizations); // Store only approved organizations
+      setOrganization(approvedOrganizations); // Store only active organizations
     } catch (error) {
       console.error("Error fetching Organization:", error);
     }
