@@ -271,15 +271,15 @@ const SampleArea = () => {
                           let displayValue = sample[key];
 
                           if (
-                            sample.registration_admin_status === "Rejected" &&
+                            sample.technical_admin_status === "Rejected" &&
                             sample.committee_status === "rejected" &&
                             sample.order_status === "Rejected"
                           ) {
                             displayValue = "Rejected";
-                          } else if (sample.registration_admin_status === "Rejected") {
+                          } else if (sample.technical_admin_status === "Rejected") {
                             displayValue = "No further processing";
                           } else if (
-                            sample.registration_admin_status === "Accepted" &&
+                            sample.technical_admin_status === "Accepted" &&
                             (displayValue === null || displayValue === undefined)
                           ) {
                             displayValue = "Awaiting Admin to Forward to Committee";

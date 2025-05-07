@@ -67,6 +67,16 @@ const tablesAndColumns = [
     },
   ]
   },
+  {
+    table:'sample',
+    columnsToAdd:[
+      {
+        column:"quantity_allocated",
+        type:"INT",
+         nullable: true,
+      }
+    ]
+  }
   // {
   //   table: "cart",
   //   columnsToAdd: [

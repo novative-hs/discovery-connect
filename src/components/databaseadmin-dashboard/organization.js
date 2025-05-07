@@ -150,6 +150,7 @@ const OrganizationArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
+      console.log("histor",data)
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -377,9 +378,9 @@ const OrganizationArea = () => {
     console.log(id,option)
     try {
       // Send status update request to backend
-      const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${id}`,
-        { data: { status: option } }, 
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${id}`,
+         { status: option } , 
         { headers: { "Content-Type": "application/json" } }
       );
   
@@ -1015,7 +1016,7 @@ const OrganizationArea = () => {
                               }}
                             >
                               {/* Message for City Addition */}
-                              {status==='added' && (
+                              {(status === 'added' || status === 'active') && (
                               <div
                                 style={{
                                   padding: "10px 15px",
@@ -1034,9 +1035,10 @@ const OrganizationArea = () => {
                                 )}
                               </div>
                               )}
+                              
 
                               {/* Message for City Update (Only if it exists) */}
-                              {status==='updated' && (
+                              {(status === 'updated' || status === 'inactive') && (
                                 <div
                                   style={{
                                     padding: "10px 15px",

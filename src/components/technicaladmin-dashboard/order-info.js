@@ -16,6 +16,7 @@ const OrderInfo = ({ setActiveTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`
       );
+      console.log(response.data);
       setUserCount(response.data); // Set the fetched counts in the state
     } catch (error) {
       console.error("Error fetching user count:", error);
@@ -38,8 +39,27 @@ const OrderInfo = ({ setActiveTab }) => {
   }
 
   const stats = [
-    { label: "Order List", count: userCount.totalOrders, icon: "fa-solid fa-clipboard-list", bg: "bg-success", tab: "order" },
-    { label: "Contact us List", count: contactusCount, icon: "fa-solid fa-envelope", bg: "bg-primary", tab: "contactus" },
+    {
+      label: "Order List",
+      count: userCount.totalOrders,
+      icon: "fa-solid fa-clipboard-list",
+      bg: "bg-success",
+      tab: "order",
+    },
+    {
+      label: "Order Rejected List",
+      count: userCount.totalOrdersRejected,
+      icon: "fa-solid fa-times-circle",
+      bg: "bg-danger",
+      tab: "orderrejected",
+    },
+    {
+      label: "Contact us List",
+      count: contactusCount,
+      icon: "fa-solid fa-envelope",
+      bg: "bg-primary",
+      tab: "contactus",
+    },
   ];
 
   // Handle stat div click and set active tab
@@ -56,18 +76,27 @@ const OrderInfo = ({ setActiveTab }) => {
               className="card text-center shadow-sm p-3 w-100"
               onClick={() => handleTabClick(stat.tab)}
               style={{ transition: "transform 0.3s ease-in-out" }} // Smooth animation
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.15)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.15)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
             >
               <div className="card-body">
                 <div
-                  className="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2"
+                  className={`${stat.bg} text-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2`}
                   style={{ width: "50px", height: "50px" }}
                 >
                   <i className={`${stat.icon} fs-5`}></i>
                 </div>
-                <h6 className="card-title text-black fs-6 fw-bold">{stat.label}</h6>
-                <p className="card-text text-primary fs-5 fw-bold">{stat.count}</p>
+
+                <h6 className="card-title text-black fs-6 fw-bold">
+                  {stat.label}
+                </h6>
+                <p className="card-text text-primary fs-5 fw-bold">
+                  {stat.count}
+                </p>
               </div>
             </div>
           </div>

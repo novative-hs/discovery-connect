@@ -22,6 +22,7 @@ const ShippingSampleArea = () => {
   const [showOrderStatusError, setShowOrderStatusError] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -101,6 +102,7 @@ const ShippingSampleArea = () => {
   };
 
   const handleOrderStatusSubmit = async () => {
+    setIsSubmitting(true);
     const id = selectedUserSamples.map((s) => s.id);
   
     if (!id.length) {
@@ -129,9 +131,10 @@ const ShippingSampleArea = () => {
         }
       );
   
-      // Ensure that res.data.message contains the expected success message
-      notifySuccess(res.data.message); // Show backend response
+     
+      notifySuccess(res.data.message)
       setShowOrderStatusModal(false);
+      setIsSubmitting(false);
       setShowOrderStatusError(false);
       setOrderStatus("");
       setDeliveryDate("");
@@ -365,9 +368,17 @@ const ShippingSampleArea = () => {
             onClick={() => {
               handleOrderStatusSubmit(deliveryDate, deliveryTime); // Pass the date and time to the submit function
             }}
+            disabled={isSubmitting} 
             className="rounded-pill px-4"
           >
-            🚚 Save & Dispatch
+            {isSubmitting ? (
+    <>
+      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+      Processing...
+    </>
+  ) : (
+    "🚚 Save & Dispatch"
+  )}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -209,7 +209,9 @@ if (userType === "researcher") {
                   ? [
                     { label: "Profile", tab: "order-info" },
                     { label: "Order List", tab: "order" },
+                    {label:"Order Rejected List",tab:"orderrejected"},
                     { label: "Contact us List", tab: "contactus" },
+
                   ]
                   : userType == "csr"
                     ? [

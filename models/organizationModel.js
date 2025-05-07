@@ -39,6 +39,10 @@ function getOrganizationById(id, callback) {
 
 // Function to update organization status
 const updateOrganizationStatus = async (id, status) => {
+  const insertHistoryQuery = `
+  INSERT INTO registrationadmin_history (organization_id, status)
+  VALUES (?, ?)
+`;
   const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
   const getEmailQuery = `
     SELECT ua.email ,o.OrganizationName
@@ -53,7 +57,7 @@ const updateOrganizationStatus = async (id, status) => {
     if (updateResult.affectedRows === 0) {
       throw new Error("No organization found with the given ID.");
     }
-
+    const [insertResult] = await mysqlConnection.promise().query(insertHistoryQuery, [id, status]);
     // Fetch email in parallel
     const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
 
@@ -71,9 +75,9 @@ const updateOrganizationStatus = async (id, status) => {
 
   We would like to update you about the status of your organization’s account. 
 
-  - **Status:** Pending Approval
+  - **Status:** InActive
 
-  Your account is currently <b>pending</b> approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
+  Your account is currently <b>inactive</b>. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
 
   Thank you for your patience and cooperation.
 
@@ -169,6 +173,10 @@ const updateOrganization = (data, user_account_id, callback) => {
 
 // Function to delete a collection site
 const deleteOrganization = async (id, status) => {
+  const insertHistoryQuery = `
+  INSERT INTO registrationadmin_history (organization_id, status)
+  VALUES (?, ?)
+`;
   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
   const getEmailQuery = `
     SELECT ua.email, o.OrganizationName
@@ -185,6 +193,7 @@ const deleteOrganization = async (id, status) => {
     }
 
     // Fetch email
+    const [insertResult] = await mysqlConnection.promise().query(insertHistoryQuery, [id, status]);
     const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
     if (emailResults.length === 0) {
       throw new Error("Organization email not found.");
@@ -211,22 +220,7 @@ const deleteOrganization = async (id, status) => {
       Best regards,  
       The Discovery Connect Team
       `;
-    } else if (status === "active") {
-      emailText = `
-      Dear ${name},
-
-      We are pleased to inform you that your organization's account on Discovery Connect has been <b>approved and activated</b>!
-
-      You can now log in and start exploring all the features and resources our platform offers. We're excited to have you onboard and look forward to your active participation.
-
-      If you have any questions or need help getting started, feel free to contact us.
-
-      Welcome to Discovery Connect!
-
-      Best regards,  
-      The Discovery Connect Team
-      `;
-    }
+    } 
 
     // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)

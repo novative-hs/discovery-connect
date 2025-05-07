@@ -300,8 +300,12 @@ const getCount = (callback) => {
     totalOrganizations: 'SELECT COUNT(*) AS count FROM organization',
     totalCommitteeMembers: 'SELECT COUNT(*) AS count FROM committee_member',
     totalCollectionSites: 'SELECT COUNT(*) AS count FROM collectionsite',
-    totalOrders: 'SELECT COUNT(*) AS count FROM cart',
-   totalCSR: 'SELECT COUNT(*) AS count FROM CSR' 
+    
+    // ✅ Use consistent alias AS count here
+    totalOrders: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status != 'Rejected'`,
+    totalOrdersRejected: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status = 'Rejected'`,
+
+    totalCSR: 'SELECT COUNT(*) AS count FROM CSR'
   };
 
   let results = {};
@@ -311,10 +315,18 @@ const getCount = (callback) => {
     return new Promise((resolve, reject) => {
       mysqlConnection.query(query, (err, result) => {
         if (err) {
-          console.log(err)
+          console.log(`Error executing query for ${key}:`, err);
           reject(err); // If any query fails, reject the promise
         } else {
-          results[key] = result[0].count; // Store the count for each table
+          console.log(`${key} query result:`, result);  // Log result for debugging
+
+          // ✅ Always use the 'count' field since all queries now return it
+          if (result && result[0]) {
+            results[key] = result[0].count || 0;
+          } else {
+            results[key] = 0;
+          }
+
           resolve();
         }
       });
@@ -324,12 +336,17 @@ const getCount = (callback) => {
   // Run all queries concurrently
   Promise.all(Object.entries(queries).map(([key, query]) => executeQuery(key, query)))
     .then(() => {
+      console.log('All counts:', results); // Log results for debugging
       callback(null, results); // Return the counts when all queries have completed
     })
     .catch((err) => {
+      console.error("Error fetching counts:", err);
       callback(err, null); // If any error occurs, pass the error to the callback
     });
 };
+
+
+
 
 
 

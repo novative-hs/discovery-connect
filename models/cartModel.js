@@ -788,16 +788,19 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     
 
     // Step 2: Determine new cart status based on Technical admin status
-    const newCartStatus = technical_admin_status === 'Accepted'
-      ? 'Accepted'
-      : technical_admin_status === 'Rejected'
-      ? 'Rejected'
-      : null;
+    let newCartStatus = null;
 
-    // // Step 3: Update cart status if needed, perform concurrently if possible
-    // const cartStatusUpdatePromise = newCartStatus
-    //   ? updateCartStatus(id, newCartStatus)
-    //   : Promise.resolve(null);  // If no new cart status, resolve immediately
+    if (technical_admin_status === 'Accepted') {
+      newCartStatus = 'Pending';  // or 'Accepted', depending on business logic
+    } else if (technical_admin_status === 'Rejected') {
+      newCartStatus = 'Rejected';
+    }
+    
+
+if (newCartStatus) {
+  await updateCartStatus(id, newCartStatus);
+}
+
 
     // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
     const revertQuantityPromise = technical_admin_status === 'Rejected'
