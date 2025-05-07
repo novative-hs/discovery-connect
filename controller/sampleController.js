@@ -160,6 +160,26 @@ const getFilteredSamples = (req, res) => {
     res.status(200).json(results);
   });
 };
+
+const updateQuarantineSamples = (req, res) => {
+  const sampleId = req.params.id;
+  const { status, comment } = req.body;
+
+  if (!status || !comment) {
+    return res.status(400).json({ error: 'Both status and comment are required' });
+  }
+
+  SampleModel.updateQuarantineSamples(sampleId, status, comment, (err, result) => {
+    if (err) {
+      console.error("Error in updating Sample status:", err);
+      return res.status(500).json({ error: 'Error in updating Sample status' });
+    }
+
+    return res.status(200).json({ message: 'Sample status updated and comment saved successfully' });
+  });
+};
+
+
 module.exports = {
   createSampleTable,
   getFilteredSamples,
@@ -171,4 +191,5 @@ module.exports = {
   createSample,
   updateSample,
   deleteSample,
+  updateQuarantineSamples
 };

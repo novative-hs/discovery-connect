@@ -53,6 +53,37 @@ const ProfileNav = () => {
 
           <button
             className="nav-link"
+            id="nav-Quarantine-Stock-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-Quarantine-Stock"
+            type="button"
+            role="tab"
+            aria-controls="nav-Quarantine-Stock"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            Quarantine Stock
+          </button>
+          <button
+            className="nav-link"
+            id="nav-Sample-Visibility-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-Sample-Visibility"
+            type="button"
+            role="tab"
+            aria-controls="nav-Sample-Visibility"
+            aria-selected="false"
+          >
+            <span>
+              <i className="fa-regular fa-circle-info"></i>
+            </span>{" "}
+            Sample Visibility
+          </button>
+
+          <button
+            className="nav-link"
             id="nav-information-tab"
             data-bs-toggle="tab"
             data-bs-target="#nav-information"

@@ -128,9 +128,43 @@ const updateBiobankSample = (id, data, callback) => {
   });
 };
 
+const UpdateSampleStatus = (id, status, callback) => {
+  console.log("Updating sample ID:", id, "with status:", status);
+
+  const query = `
+    UPDATE sample
+    SET sample_status = ?
+    WHERE id = ?
+  `;
+
+  const values = [status, id];
+
+  mysqlConnection.query(query, values, (err, result) => {
+    if (err) {
+      console.error('Error updating sample:', err);
+      return callback(err, null);
+    }
+
+    callback(null, { message: 'Sample status updated successfully.' });
+  });
+};
+
+
+const getQuarantineStock = (callback) => {
+  const query = `SELECT * FROM sample WHERE status =  "Quarantine" and is_deleted = false`;
+
+  mysqlConnection.query(query, (err, results) => {
+    if (err) return callback(err, null);
+    return callback(null, results); 
+  });
+};
+
+
 module.exports = {
   getBiobankSamples,
   createBiobankSample,
-  updateBiobankSample
+  updateBiobankSample,
+  getQuarantineStock,
+  UpdateSampleStatus
 
 };

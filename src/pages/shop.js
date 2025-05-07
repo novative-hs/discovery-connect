@@ -70,7 +70,27 @@ const [activeTab, setActiveTab] = useState("order-info");
     console.error("Error fetching samples:", error);
     content = <ErrorMessage message="There was an error loading samples." />;
   } else if (filtered_samples.length === 0) {
-    content = <ErrorMessage message="No samples found!" />;
+    content = (
+      <>
+        <style jsx>{`
+          @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+          }
+          .blinking-text {
+            animation: blink 1s infinite;
+          }
+        `}</style>
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '33vh' }}>
+          <div className="text-center fw-bold blinking-text" style={{ color: 'red', fontSize: '2rem', fontWeight: 'bold' }}>
+            Sorry, No samples found!
+          </div>
+        </div>
+      </>
+    );
+    
+    
   } else {
     content = (
       <ShopArea
@@ -80,30 +100,30 @@ const [activeTab, setActiveTab] = useState("order-info");
       />
     );
   }
-
   // Prevent flicker before sessionStorage is read
   if (loadingUser) return <div>Loading...</div>;
 
   return (
-    <Wrapper >
-      
+    <Wrapper>
       <SEO pageTitle={"Shop"} />
       {userId ? (
-  <>
-{content}
-  </>
-) : (
-  <>
-    <Header style_2={true} />
-    <ShopBreadcrumb />
-    {content}
-    <Footer/>
-  </>
-)}      
-      
-
+        <>
+          {content}
+        </>
+      ) : (
+        // Flex column layout to push footer to bottom
+        <div className="min-h-screen flex flex-col">
+          <Header style_2={true} />
+          <ShopBreadcrumb />
+          <main className="flex-grow">
+            {content}
+          </main>
+          <Footer />
+        </div>
+      )}
     </Wrapper>
   );
+  
 }
 
 export const getServerSideProps = async (context) => {

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
+   faQuestionCircle,
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { getsessionStorage } from "@utils/sessionStorage";
@@ -19,11 +20,12 @@ const BioBankSampleArea = () => {
   } else {
     console.log("Collection site Id on sample page is:", id);
   }
-
+  const [quarantineComment, setQuarantineComment] = useState("");
+  const [commentError, setCommentError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  // const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showQuarantineModal, setShowQuarantineModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -31,7 +33,6 @@ const BioBankSampleArea = () => {
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
@@ -98,6 +99,15 @@ const BioBankSampleArea = () => {
     user_account_id: id,
     logo: ""
   });
+
+  const handleQuarantineClick = () => {
+    if (!quarantineComment.trim()) {
+      setCommentError("Comment is required to quarantine the sample.");
+      return;
+    }
+    setCommentError(""); // Clear any previous errors
+    handleQuarantine(quarantineComment); // Call your actual function
+  };
 
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
@@ -186,7 +196,7 @@ const BioBankSampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
       );
       console.log("Own samples:", ownSamplesResponse.data);
-      const ownSamples = ownResponse.data.map((sample) => {
+      const ownSamples = ownSamplesResponse.data.map((sample) => {
         // Convert logo BLOB into base64
         let base64Logo = "";
         if (sample.logo && sample.logo.data) {
@@ -522,34 +532,33 @@ const BioBankSampleArea = () => {
     setShowTransferModal(false); // Close the modal
   };
 
-  // const handleDelete = async () => {
-  //   try {
-  //     // Send delete request to backend
-  //     await axios.delete(
-  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
-  //     );
-  //     console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
-
-  //     // Set success message
-  //     setSuccessMessage("Sample deleted successfully.");
-
-  //     // Clear success message after 3 seconds
-  //     setTimeout(() => {
-  //       setSuccessMessage("");
-  //     }, 3000);
-
-  //     fetchSamples(); // This will refresh the samples list
-
-  //     // Close modal after deletion
-  //     setShowDeleteModal(false);
-  //     setSelectedSampleId(null);
-  //   } catch (error) {
-  //     console.error(
-  //       `Error deleting sample with ID ${selectedSampleId}:`,
-  //       error
-  //     );
-  //   }
-  // };
+  const handleQuarantine = async (comment) => {
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/QuarantineSamples/${selectedSampleId}`,
+        {
+          status: "Quarantine",
+          comment: comment, // Include the comment here
+        }
+      );
+  
+      setSuccessMessage("Sample quarantined successfully.");
+  
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+  
+      fetchSamples();
+      setShowQuarantineModal(false);
+      setSelectedSampleId(null);
+    } catch (error) {
+      console.error(
+        `Error quarantining sample with ID ${selectedSampleId}:`,
+        error
+      );
+    }
+  };
+  
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -695,7 +704,7 @@ const BioBankSampleArea = () => {
 
   useEffect(() => {
     if (
-      // showDeleteModal ||
+     showQuarantineModal ||
       showAddModal ||
       showEditModal ||
       showTransferModal ||
@@ -710,7 +719,7 @@ const BioBankSampleArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [
-    // showDeleteModal,
+    showQuarantineModal,
     showAddModal,
     showEditModal,
     showTransferModal,
@@ -883,16 +892,19 @@ const BioBankSampleArea = () => {
                         >
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>
-                        {/* <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowDeleteModal(true);
-                          }}
-                          title="Delete"
-                        >
-                          <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button> */}
+                             <button
+                                                    className="btn btn-danger btn-sm py-0 px-1"
+                                                    onClick={() => {
+                                                      setSelectedSampleId(sample.id);
+                                                      setShowQuarantineModal(true);
+                                                    }}
+                                                    title="Quarantine Sample"
+                                                  >
+                                                     <FontAwesomeIcon
+                                                   icon={faQuestionCircle}
+                                                   size="xs"
+                                                 />
+                                                  </button>
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => handleTransferClick(sample)}
@@ -2086,66 +2098,83 @@ const BioBankSampleArea = () => {
             </div>
           </div>
         )}
-
-        {/* Modal for Deleting Samples
-        {showDeleteModal && (
-          <>
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
+{showQuarantineModal && (
+  <>
+    <div
+      className="modal-backdrop fade show"
+      style={{ backdropFilter: "blur(5px)" }}
+    ></div>
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{
+        zIndex: 1050,
+        position: "fixed",
+        top: "120px",
+        left: "50%",
+        transform: "translateX(-50%)",
+      }}
+    >
+      <div className="modal-dialog" role="document">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Quarantine Sample</h5>
+            <button
+              type="button"
+              className="close"
+              onClick={() => {
+                setShowQuarantineModal(false);
+                setCommentError("");
+              }}
               style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "120px",
-                left: "50%",
-                transform: "translateX(-50%)",
+                fontSize: "1.5rem",
+                position: "absolute",
+                right: "10px",
+                top: "10px",
+                cursor: "pointer",
               }}
             >
-              <div className="modal-dialog" role="document">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Delete Sample</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowDeleteModal(false)}
-                      style={{
-                        // background: 'none',
-                        // border: 'none',
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
-                  <div className="modal-body">
-                    <p>Are you sure you want to delete this sample?</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="btn btn-danger" onClick={handleDelete}>
-                      Delete
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )} */}
+              <span>&times;</span>
+            </button>
+          </div>
+          <div className="modal-body">
+            <label htmlFor="quarantine-comment" className="form-label mt-3">
+              Add Comment <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="quarantine-comment"
+              className="form-control"
+              rows="4"
+              placeholder="Write your reason for quarantine..."
+              value={quarantineComment}
+              onChange={(e) => setQuarantineComment(e.target.value)}
+            ></textarea>
+            {commentError && (
+              <p className="text-danger mt-2" style={{ fontSize: "0.9rem" }}>
+                {commentError}
+              </p>
+            )}
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-danger" onClick={handleQuarantineClick}>
+              Quarantine Sample
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setShowQuarantineModal(false);
+                setCommentError("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
         {/* Modal for History of Samples */}
         {showHistoryModal && (
