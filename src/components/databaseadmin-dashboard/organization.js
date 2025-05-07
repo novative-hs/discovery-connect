@@ -379,9 +379,9 @@ const OrganizationArea = () => {
     console.log(id, option)
     try {
       // Send status update request to backend
-      const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/delete/${id}`,
-        { data: { status: option } }, 
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${id}`,
+         { status: option } , 
         { headers: { "Content-Type": "application/json" } }
       );
 

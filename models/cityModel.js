@@ -318,8 +318,6 @@ const getCount = (callback) => {
           console.log(`Error executing query for ${key}:`, err);
           reject(err); // If any query fails, reject the promise
         } else {
-          console.log(`${key} query result:`, result);  // Log result for debugging
-
           // ✅ Always use the 'count' field since all queries now return it
           if (result && result[0]) {
             results[key] = result[0].count || 0;
@@ -336,7 +334,7 @@ const getCount = (callback) => {
   // Run all queries concurrently
   Promise.all(Object.entries(queries).map(([key, query]) => executeQuery(key, query)))
     .then(() => {
-      console.log('All counts:', results); // Log results for debugging
+    
       callback(null, results); // Return the counts when all queries have completed
     })
     .catch((err) => {
