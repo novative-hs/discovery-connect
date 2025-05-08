@@ -23,15 +23,6 @@ const tablesAndColumns = [
   //   columnsToDelete: ["payment_status", "payment_method"],
   // },
 ];
-const executeSequentially = async (tasks) => {
-  for (let task of tasks) {
-    try {
-      await task();
-    } catch (error) {
-      console.error("Error executing task:", error);
-    }
-  }
-};
 
 // Function to check if column exists and add it if not
 const ensureColumnsExist = (table, columns) => {
@@ -155,74 +146,8 @@ const deleteColumns = (table, columns) => {
     });
   });
 };
-const updateEnumColumn = (table, column, enumValues, retries = 3) => {
-  const enumList = enumValues.map((value) => `'${value}'`).join(", ");
-  const alterEnumQuery = `
-    ALTER TABLE ${table} 
-    MODIFY COLUMN ${column} ENUM(${enumList}) NOT NULL DEFAULT '${enumValues[0]}'
-  `;
 
-  const attemptQuery = (retriesRemaining) => {
-    mysqlConnection.query(alterEnumQuery, (err) => {
-      if (err) {
-        if (err.code === 'ER_LOCK_DEADLOCK' && retriesRemaining > 0) {
-          console.log(`Deadlock detected, retrying... (${retriesRemaining} attempts left)`);
-          setTimeout(() => attemptQuery(retriesRemaining - 1), 1000); // Retry after 1 second
-        } else {
-          console.error(`Error updating ENUM values for ${column} in ${table}:`, err);
-        }
-      } else {
-        console.log(`Updated ENUM values for ${column} in ${table} successfully.`);
-      }
-    });
-  };
 
-  attemptQuery(retries);
-};
-
-const checkIfExists = (tableName, email) => {
-  return new Promise((resolve, reject) => {
-    const query = `SELECT * FROM ${tableName} WHERE email = ?`;
-    mysqlConnection.query(query, [email], (err, results) => {
-      if (err) {
-        reject('Error checking record: ' + err);
-      } else {
-        resolve(results.length > 0); // true if exists
-      }
-    });
-  });
-};
-
-const insertRecord = (tableName, record) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-
-      const exists = await checkIfExists(tableName, record.email);
-      if (exists) {
-        resolve(`Record already exists for email: ${record.email}`);
-        return;
-      }
-
-      const query = `
-        INSERT INTO ${tableName} (email, password, accountType)
-        VALUES (?, ?, ?)
-      `;
-      const values = [record.email, record.password, record.accountType];
-
-      mysqlConnection.query(query, values, (err, result) => {
-        if (err) {
-          console.error('Insert error:', err);
-          reject('Error inserting record: ' + err);
-        } else {
-          resolve(`Record inserted: ${result.insertId}`);
-        }
-      });
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      reject(err);
-    }
-  });
-};
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = async () => {

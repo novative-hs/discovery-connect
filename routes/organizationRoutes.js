@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const organizationController = require("../controller/organizationController");
 // Route to get all organizations
+
+router.post('/create-organization-table', organizationController.create_organizationTable);
 router.get("/get", organizationController.getAllOrganizations);
 router.get('/get/:id', organizationController.getCurrentOrganizationById);
 router.get('/:id', organizationController.getOrganizationById);

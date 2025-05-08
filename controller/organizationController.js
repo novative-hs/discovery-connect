@@ -1,5 +1,10 @@
 const organizationModel = require("../models/organizationModel");
 
+
+const create_organizationTable = (req, res) => {
+  organizationModel.create_organizationTable();
+  res.status(200).json({ message: "Organization table creation process started" });
+};
 // Controller to get all organizations
 const getAllOrganizations = (req, res) => {
   organizationModel.getAllOrganizations((err, results) => {
@@ -71,6 +76,7 @@ const updateOrganizationStatus = async (req, res) => {
 };
 
 module.exports = {
+  create_organizationTable,
   getOrganizationById,
   updateOrganization,
   getCurrentOrganizationById,

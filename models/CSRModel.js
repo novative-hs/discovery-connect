@@ -1,6 +1,35 @@
 const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 // Function to fetch all CSR
+
+const create_CSRTable = () => {
+  const create_CSR = `
+  CREATE TABLE IF NOT EXISTS csr (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_account_id INT,
+    CSRName VARCHAR(100),
+    phoneNumber VARCHAR(15),
+    fullAddress TEXT,
+    city INT,
+    district INT,
+    country INT,
+    status ENUM( 'active', 'inactive') DEFAULT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
+    FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
+    FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+)`;
+  mysqlConnection.query(create_CSR, (err, results) => {
+    if (err) {
+      console.error("Error creating CSR table: ", err);
+    } else {
+      console.log("CSR table created Successfully");
+    }
+  });
+}
+
 const getAllCSR = (callback) => {
   const query = `SELECT c.*, user_account.id AS user_account_id, 
       user_account.email AS useraccount_email, 
@@ -87,6 +116,8 @@ const updateCSRStatus = async (id, status) => {
   }
 };
 module.exports = {
+  
+  create_CSRTable,
   getAllCSR,
   deleteCSR,
   updateCSRStatus

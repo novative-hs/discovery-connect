@@ -1,5 +1,9 @@
 const collectionsiteModel = require('../models/collectionsiteModel');
 
+const create_collectionsiteTable = (req, res) => {
+  collectionsiteModel.create_collectionsiteTable();
+  res.status(200).json({ message: "Collection Site table creation process started" });
+};
 
 // Controller to get all collection sites
 const getAllCollectionSites = (req, res) => {
@@ -165,6 +169,7 @@ const updateCollectionSiteStatus = async (req, res) => {
 };
 
 module.exports = {
+  create_collectionsiteTable,
   getCollectionSiteDetail,
   createCollectionSite,
   updateCollectionSiteDetail,

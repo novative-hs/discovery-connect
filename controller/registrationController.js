@@ -7,30 +7,6 @@ const createuser_accountTable = (req, res) => {
   res.status(200).json({ message: "Acounts table creation process started" });
 };
 
-const create_researcherTable = (req, res) => {
-  accountModel.create_researcherTable();
-  res
-    .status(200)
-    .json({ message: "Researcher table creation process started" });
-};
-
-
-const create_organizationTable = (req, res) => {
-  accountModel.create_organizationTable();
-  res
-    .status(200)
-    .json({ message: "Organization table creation process started" });
-};
-
-const create_collectionsiteTable = (req, res) => {
-  accountModel.create_collectionsiteTable();
-  res
-    .status(200)
-    .json({ message: "Collection Site table creation process started" });
-};
-
-
-
 const getAccountDetail = (req, res) => {
   const { id } = req.params;
 
@@ -216,13 +192,10 @@ const updateAccount = (req, res) => {
 };
 
 module.exports = {
+  createuser_accountTable,
   changepassword,
   loginAccount,
   getUserEmail,
-  create_collectionsiteTable,
-  create_organizationTable,
-  create_researcherTable,
-  createuser_accountTable,
   createAccount,
   getAccountDetail,
   updateAccount,

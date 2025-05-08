@@ -6,9 +6,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.post('/create-account-table', registrationController.createuser_accountTable);
-router.post('/create-researcher-table', registrationController.create_researcherTable);
-router.post('/create-organization-table', registrationController.create_organizationTable);
-router.post('/create-collectionsite-table', registrationController.create_collectionsiteTable);
 router.post(
     '/signup',
     upload.fields([
