@@ -18,7 +18,7 @@ const createCityTable = () => {
   mysqlConnection.query(createCityTable, (err, results) => {
     if (err) {
       console.error("Error creating City table: ", err);
-    } 
+    }
   });
 };
 
@@ -37,7 +37,7 @@ const getAllCities = (callback) => {
 
 // Function to create City
 const createCity = (data, callback) => {
- 
+
   const { bulkData, cityname, added_by } = data || {};
 
   mysqlPool.getConnection((err, connection) => {
@@ -181,44 +181,94 @@ const updateCity = (id, data, callback) => {
     if (err) {
       return callback(err, null);
     }
-  connection.beginTransaction((err) => {
-    if (err) {
-      connection.release();
-      return callback(err, null);
-    }
-    const fetchCityQuery = `SELECT name FROM city WHERE id = ?`;
-    mysqlConnection.query(fetchCityQuery, [id], (err, results) => {
+    connection.beginTransaction((err) => {
       if (err) {
-        return connection.rollback(() => {
-          connection.release();
-          callback(err, null);
-        });
+        connection.release();
+        return callback(err, null);
       }
-      if (results.length === 0) {
-        return connection.rollback(() => {
-          connection.release();
-          callback(new Error("City not found"), null);
-        });
-      }
-      const oldCityName = results[0].name; 
-      const updateCityQuery = `
-        UPDATE city
-        SET name = ?, added_by = ?
-        WHERE id = ?
-      `;
-      connection.query(updateCityQuery, [cityname, added_by, id], (err, result) => {
+      const fetchCityQuery = `SELECT name FROM city WHERE id = ?`;
+      mysqlConnection.query(fetchCityQuery, [id], (err, results) => {
         if (err) {
           return connection.rollback(() => {
             connection.release();
             callback(err, null);
           });
         }
-        const updateHistoryQuery = `
+        if (results.length === 0) {
+          return connection.rollback(() => {
+            connection.release();
+            callback(new Error("City not found"), null);
+          });
+        }
+        const oldCityName = results[0].name;
+        const updateCityQuery = `
+        UPDATE city
+        SET name = ?, added_by = ?
+        WHERE id = ?
+      `;
+        connection.query(updateCityQuery, [cityname, added_by, id], (err, result) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              callback(err, null);
+            });
+          }
+          const updateHistoryQuery = `
           UPDATE registrationadmin_history
           SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
           WHERE city_id = ?
         `;
-        connection.query(updateHistoryQuery, [oldCityName, cityname, added_by, id], (err, historyResult) => {
+          connection.query(updateHistoryQuery, [oldCityName, cityname, added_by, id], (err, historyResult) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                callback(err, null);
+              });
+            }
+            connection.commit((err) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  callback(err, null);
+                });
+              }
+              connection.release();
+              callback(null, { result, historyResult });
+            });
+          });
+        });
+      });
+    });
+  });
+};
+
+// Function to delete City
+const deleteCity = (id, callback) => {
+  mysqlPool.getConnection((err, connection) => {
+    if (err) {
+      return callback(err, null);
+    }
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        return callback(err, null);
+      }
+      // Step 1: Update the city status to 'inactive'
+      const updateCityStatusQuery = `UPDATE city SET status = 'inactive' WHERE id = ?`;
+      connection.query(updateCityStatusQuery, [id], (err, result) => {
+        if (err) {
+          return connection.rollback(() => {
+            connection.release();
+            callback(err, null);
+          });
+        }
+        // Step 2: Update the status in registrationadmin_history
+        const updateHistoryStatusQuery = `
+        UPDATE registrationadmin_history
+        SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+        WHERE city_id = ?
+      `;
+        connection.query(updateHistoryStatusQuery, [id], (err, historyResult) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
@@ -232,62 +282,12 @@ const updateCity = (id, data, callback) => {
                 callback(err, null);
               });
             }
-            connection.release();
             callback(null, { result, historyResult });
           });
         });
       });
     });
   });
-});
-};
-
-// Function to delete City
-const deleteCity = (id, callback) => {
-  mysqlPool.getConnection((err, connection) => {
-    if (err) {
-      return callback(err, null);
-    }
-  connection.beginTransaction((err) => {
-    if (err) {
-      connection.release();
-      return callback(err, null);
-    }
-    // Step 1: Update the city status to 'inactive'
-    const updateCityStatusQuery = `UPDATE city SET status = 'inactive' WHERE id = ?`;
-    connection.query(updateCityStatusQuery, [id], (err, result) => {
-      if (err) {
-        return connection.rollback(() => {
-          connection.release();
-          callback(err, null);
-        });
-      }
-      // Step 2: Update the status in registrationadmin_history
-      const updateHistoryStatusQuery = `
-        UPDATE registrationadmin_history
-        SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
-        WHERE city_id = ?
-      `;
-      connection.query(updateHistoryStatusQuery, [id], (err, historyResult) => {
-        if (err) {
-          return connection.rollback(() => {
-            connection.release();
-            callback(err, null);
-          });
-        }
-        connection.commit((err) => {
-          if (err) {
-            return connection.rollback(() => {
-              connection.release();
-              callback(err, null);
-            });
-          }
-          callback(null, { result, historyResult });
-        });
-      });
-    });
-  });
-});
 };
 
 const getCount = (callback) => {
@@ -300,12 +300,12 @@ const getCount = (callback) => {
     totalOrganizations: 'SELECT COUNT(*) AS count FROM organization',
     totalCommitteeMembers: 'SELECT COUNT(*) AS count FROM committee_member',
     totalCollectionSites: 'SELECT COUNT(*) AS count FROM collectionsite',
-    
+
     // ✅ Use consistent alias AS count here
     totalOrders: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status != 'Rejected'`,
     totalOrdersRejected: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status = 'Rejected'`,
 
-    totalCSR: 'SELECT COUNT(*) AS count FROM CSR'
+    totalCSR: 'SELECT COUNT(*) AS count FROM csr'
   };
 
   let results = {};
@@ -334,7 +334,7 @@ const getCount = (callback) => {
   // Run all queries concurrently
   Promise.all(Object.entries(queries).map(([key, query]) => executeQuery(key, query)))
     .then(() => {
-    
+
       callback(null, results); // Return the counts when all queries have completed
     })
     .catch((err) => {

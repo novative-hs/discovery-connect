@@ -1,77 +1,47 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
+  // {
+  //   table: "researcher",
+  //   columnsToAdd: [
 
-  // {
-  //   table: "registrationadmin_history",
-  //   columnsToAdd: [
   //     {
-  //       column: "samplepricecurrency_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "samplepricecurrency", column: "id" },
-  //     },
-  //   ],
-  // },
-  
-  // {
-  //   table: "committee_member",
-  //   columnsToDelete: ["email", "password"],
-  //   columnsToAdd: [
-  //     {
-  //       column: "user_account_id",
-  //       type: "INT",
+  //       column: "CNIC",
+  //       type: "LONGBLOB",
   //       nullable: true,
-  //       references: { table: "user_account", column: "id" },
   //     },
   //     {
-  //       column: "otpExpiry",
-  //       type: "TIMESTAMP",
+  //       column: "organization_card",
+  //       type: "LONGBLOB",
   //       nullable: true,
   //     },
   //   ],
   // },
   {
-    table: "researcher",
+    table: 'sample',
     columnsToAdd: [
-      
       {
-        column: "CNIC",
-        type: "LONGBLOB",
+        column: "quantity_allocated",
+        type: "INT",
         nullable: true,
       },
       {
-        column: "organization_card",
-        type: "LONGBLOB",
-        nullable: true,
-      },
-    ],
-  },
-  {
-    table:'csr',
-    columnsToAdd:[
-      {
-        column: "status",
-        type: "ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending'",
-      },
+        column: "sample_status",
+        type: "ENUM('Public', 'Private') DEFAULT 'Public'",
+      }
     ]
   },
-
   {
-    table:'organization',
-    columnsToAdd:[ 
-    {
-      column: "status",
-      type: "ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending'",
-    },
-  ]
-  },
-  {
-    table:'sample',
-    columnsToAdd:[
+    table: 'sample_history',
+    columnsToAdd: [
       {
-        column:"quantity_allocated",
-        type:"INT",
-         nullable: true,
+        column: "status",
+        type: "VARCHAR(50)",
+        nullable: true,
+      },
+      {
+        column: "comments",
+        type: "TEXT",
+        nullable: true,
       }
     ]
   },
@@ -91,7 +61,7 @@ const tablesAndColumns = [
       {
         column: "delivered_at",
         type: "DATETIME",
-        nullable: true, 
+        nullable: true,
       },
     ],
     columnsToDelete: ["payment_status", "payment_method"],
@@ -270,7 +240,7 @@ const checkIfExists = (tableName, email) => {
 const insertRecord = (tableName, record) => {
   return new Promise(async (resolve, reject) => {
     try {
-    
+
       const exists = await checkIfExists(tableName, record.email);
       if (exists) {
         resolve(`Record already exists for email: ${record.email}`);
@@ -326,18 +296,18 @@ const createOrUpdateTables = async () => {
         "Committeemember",
         "CSR"
       ]),
-      () =>
-        updateEnumColumn("organization", "status", [
-          "pending",
-          "active",
-          "inactive"
-        ]),
-        () =>
-          updateEnumColumn("csr", "status", [
-            "pending",
-            "active",
-            "inactive"
-          ]),
+    () =>
+      updateEnumColumn("organization", "status", [
+        "pending",
+        "active",
+        "inactive"
+      ]),
+    () =>
+      updateEnumColumn("csr", "status", [
+        "pending",
+        "active",
+        "inactive"
+      ]),
     () =>
       updateEnumColumn("committeesampleapproval", "committee_status", [
         "UnderReview",
