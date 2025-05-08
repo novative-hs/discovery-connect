@@ -237,7 +237,7 @@ const deleteResearcher = async (id) => {
 const updateResearcherStatus = async (id, status) => {
   const updateQuery = "UPDATE researcher SET status = ? WHERE id = ?";
   const insertHistoryQuery = `
-    INSERT INTO registrationadmin_history (resaercher_id, status, updated_at)
+    INSERT INTO databaseadmin_history (resaercher_id, status, updated_at)
     VALUES (?, ?, NOW())
   `;
   const getEmailQuery = `

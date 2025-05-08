@@ -25,7 +25,7 @@ function Database() {
 
 
   cityModel.createCityTable();
-  historyModel.registrationadmin_history();
+  historyModel.databaseadmin_history();
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
   signupModel.create_collectionsiteTable();
@@ -57,7 +57,7 @@ function Database() {
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
-  historyModel.registrationadmin_history();
+  historyModel.databaseadmin_history();
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();

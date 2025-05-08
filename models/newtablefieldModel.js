@@ -1,71 +1,27 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
-  // {
-  //   table: "researcher",
-  //   columnsToAdd: [
 
+  // {
+  //   table: "cart",
+  //   columnsToAdd: [
   //     {
-  //       column: "CNIC",
-  //       type: "LONGBLOB",
-  //       nullable: true,
+  //       column: "order_status",
+  //       type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
   //     },
   //     {
-  //       column: "organization_card",
-  //       type: "LONGBLOB",
+  //       column: "payment_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "payment", column: "id" },
+  //     },
+  //     {
+  //       column: "delivered_at",
+  //       type: "DATETIME",
   //       nullable: true,
   //     },
   //   ],
+  //   columnsToDelete: ["payment_status", "payment_method"],
   // },
-  {
-    table: 'sample',
-    columnsToAdd: [
-      {
-        column: "quantity_allocated",
-        type: "INT",
-        nullable: true,
-      },
-      {
-        column: "sample_status",
-        type: "ENUM('Public', 'Private') DEFAULT 'Public'",
-      }
-    ]
-  },
-  {
-    table: 'sample_history',
-    columnsToAdd: [
-      {
-        column: "status",
-        type: "VARCHAR(50)",
-        nullable: true,
-      },
-      {
-        column: "comments",
-        type: "TEXT",
-        nullable: true,
-      }
-    ]
-  },
-  {
-    table: "cart",
-    columnsToAdd: [
-      {
-        column: "order_status",
-        type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
-      },
-      {
-        column: "payment_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "payment", column: "id" },
-      },
-      {
-        column: "delivered_at",
-        type: "DATETIME",
-        nullable: true,
-      },
-    ],
-    columnsToDelete: ["payment_status", "payment_method"],
-  },
 ];
 const executeSequentially = async (tasks) => {
   for (let task of tasks) {
@@ -315,7 +271,6 @@ const createOrUpdateTables = async () => {
         "Refused",
       ]),
   ]);
-
 };
 
 module.exports = {

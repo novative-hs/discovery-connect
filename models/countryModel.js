@@ -91,7 +91,7 @@ const createCountry = (data, callback) => {
             ]);
 
             const historyQuery = `
-              INSERT INTO registrationadmin_history (created_name, added_by, country_id, status)
+              INSERT INTO databaseadmin_history (created_name, added_by, country_id, status)
               VALUES ?;
             `;
 
@@ -148,7 +148,7 @@ const createCountry = (data, callback) => {
             const countryId = result[0].id;
 
             const historyQuery = `
-              INSERT INTO registrationadmin_history (created_name, added_by, country_id, status)
+              INSERT INTO databaseadmin_history (created_name, added_by, country_id, status)
               VALUES (?, ?, ?, ?);
             `;
 
@@ -225,7 +225,7 @@ const updateCountry = (id, data, callback) => {
           });
         }
         const updateHistoryQuery = `
-          UPDATE registrationadmin_history
+          UPDATE databaseadmin_history
           SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
           WHERE country_id = ?
         `;

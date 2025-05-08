@@ -29,7 +29,7 @@ const deleteCSR = (id, status, callback) => {
 const updateCSRStatus = async (id, status) => {
   const updateQuery = "UPDATE csr SET status = ? WHERE id = ?";
   const insertHistoryQuery = `
-      INSERT INTO registrationadmin_history (CSR_id, status)
+      INSERT INTO databaseadmin_history (CSR_id, status)
       VALUES (?, ?)
     `;
   const getEmailQuery = `

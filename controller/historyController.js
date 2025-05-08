@@ -1,10 +1,10 @@
 const historyModel = require("../models/historyModel");
 
 
-// Controller for creating the registration admin history
-const registrationadmin_history = (req, res) => {
-  historyModel.registrationadmin_history();
-  res.status(200).json({ message: "Registration Admin Historytable creation process started" });
+// Controller for creating the database admin history
+const databaseadmin_history = (req, res) => {
+  historyModel.databaseadmin_history();
+  res.status(200).json({ message: "Database Admin Historytable creation process started" });
 };
 
 // Controller to get all History
@@ -45,7 +45,7 @@ const getSampleHistory = (req, res) => {
 
 
 module.exports = {
-  registrationadmin_history,
+  databaseadmin_history,
   getHistory,
   create_historyTable,
   getSampleHistory

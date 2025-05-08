@@ -91,7 +91,7 @@ const createDistrict = (data, callback) => {
             ]);
 
             const historyQuery = `
-              INSERT INTO registrationadmin_history (created_name, added_by, district_id, status)
+              INSERT INTO databaseadmin_history (created_name, added_by, district_id, status)
               VALUES ?;
             `;
 
@@ -148,7 +148,7 @@ const createDistrict = (data, callback) => {
             const districtId = result[0].id;
 
             const historyQuery = `
-              INSERT INTO registrationadmin_history (created_name, added_by, district_id, status)
+              INSERT INTO databaseadmin_history (created_name, added_by, district_id, status)
               VALUES (?, ?, ?, ?);
             `;
 
@@ -228,7 +228,7 @@ const updateDistrict = (id, data, callback) => {
           });
         }
         const updateHistoryQuery = `
-          UPDATE registrationadmin_history
+          UPDATE databaseadmin_history
           SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
           WHERE district_id = ?
         `;

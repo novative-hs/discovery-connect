@@ -40,7 +40,7 @@ function getOrganizationById(id, callback) {
 // Function to update organization status
 const updateOrganizationStatus = async (id, status) => {
   const insertHistoryQuery = `
-  INSERT INTO registrationadmin_history (organization_id, status)
+  INSERT INTO databaseadmin_history (organization_id, status)
   VALUES (?, ?)
 `;
   const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
@@ -174,7 +174,7 @@ const updateOrganization = (data, user_account_id, callback) => {
 // Function to delete a collection site
 const deleteOrganization = async (id, status) => {
   const insertHistoryQuery = `
-  INSERT INTO registrationadmin_history (organization_id, status)
+  INSERT INTO databaseadmin_history (organization_id, status)
   VALUES (?, ?)
 `;
   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
