@@ -33,7 +33,7 @@ const registrationadmin_history = () => {
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
-      FOREIGN KEY (CSR_id) REFERENCES CSR(id) ON DELETE CASCADE,
+      FOREIGN KEY (CSR_id) REFERENCES csr(id) ON DELETE CASCADE,
       FOREIGN KEY (resaercher_id) REFERENCES researcher(id) ON DELETE CASCADE,
       FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
       FOREIGN KEY (city_id) REFERENCES city(id) ON DELETE CASCADE,
@@ -140,7 +140,7 @@ const create_historyTable = () => {
     FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
     FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
-    FOREIGN KEY (CSR_id) REFERENCES CSR(id) ON DELETE CASCADE,
+    FOREIGN KEY (CSR_id) REFERENCES csr(id) ON DELETE CASCADE,
     FOREIGN KEY (committeemember_id) REFERENCES committee_member(id) ON DELETE CASCADE,
     FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE

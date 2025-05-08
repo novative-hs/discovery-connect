@@ -60,7 +60,7 @@ const create_researcherTable = () => {
 };
 const create_CSR = () => {
   const create_CSR = `
-  CREATE TABLE IF NOT EXISTS CSR (
+  CREATE TABLE IF NOT EXISTS csr (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_account_id INT,
     CSRName VARCHAR(100),
@@ -338,7 +338,7 @@ WHERE
     ua.email AS useraccount_email,
     ua.accountType
 FROM 
-    CSR o
+    csr o
 JOIN 
     city c ON o.city = c.id
 JOIN 
@@ -513,9 +513,9 @@ const updateAccount = (req, callback) => {
                   values = [CommitteeMemberName, cnic, phoneNumber, fullAddress, city, district, country, OrganizationName, committeetype, user_account_id];
                   break;
                 case "CSR":
-                  fetchQuery = "SELECT * FROM CSR WHERE user_account_id = ?";
+                  fetchQuery = "SELECT * FROM csr WHERE user_account_id = ?";
                   updateQuery = `
-                      UPDATE CSR SET 
+                      UPDATE csr SET 
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                         country = ? WHERE user_account_id = ?
                     `;
@@ -767,7 +767,7 @@ if (req.file) {
                 break;
 
               case "CSR":
-                query = `INSERT INTO CSR (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country,status) 
+                query = `INSERT INTO csr (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country,status) 
                            VALUES ( ?, ?, ?, ?, ?, ?, ?,?)`;
                 values = [
                   userAccountId,
@@ -998,7 +998,7 @@ const loginAccount = (data, callback) => {
       }
       else if (user.accountType === 'CSR') {
         const CSRQuery =
-          `SELECT status FROM CSR WHERE user_account_id = ?`;
+          `SELECT status FROM csr WHERE user_account_id = ?`;
 
         mysqlConnection.query(CSRQuery, [user.id], (err, CSRResults) => {
           if (err) {
