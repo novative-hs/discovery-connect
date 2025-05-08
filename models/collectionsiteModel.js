@@ -2,6 +2,39 @@ const mysqlConnection = require("../config/db");
 const mysqlPool = require("../config/db");
 const { sendEmail } = require("../config/email");
 
+
+const create_collectionsiteTable = () => {
+  const create_collectionsiteTable = `
+    CREATE TABLE IF NOT EXISTS collectionsite (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_account_id INT,
+      CollectionSiteType VARCHAR(50),
+      CollectionSiteName VARCHAR(100),
+      fullAddress TEXT,
+      city INT,
+      district INT,
+      country INT,
+      logo LONGBLOB,
+      phoneNumber VARCHAR(15),
+      status ENUM('active', 'inactive') DEFAULT 'inactive',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
+      FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
+      FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+  )`;
+
+  mysqlConnection.query(create_collectionsiteTable, (err, results) => {
+    if (err) {
+      console.error("Error Collection site table: ", err);
+    } else {
+      console.log("Collection site table created Successfully");
+    }
+  });
+};
+
+
 const getAllCollectionSites = (callback) => {
   const query = `
     SELECT 
@@ -427,6 +460,7 @@ const updateCollectionSiteStatus = async (id, status) => {
 };
 
 module.exports = {
+  create_collectionsiteTable,
   getCollectionSiteDetail,
   createCollectionSite,
   updateCollectionSiteDetail,

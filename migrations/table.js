@@ -3,13 +3,18 @@ const committememberModel = require("../models/committeememberModel");
 const sampledispatchModel = require("../models/sampledispatchModel");
 const samplereceiveModel = require("../models/samplereceiveModel")
 const sampleModel = require("../models/sampleModel");
-const signupModel = require("../models/registrationModel");
+const userModel = require("../models/registrationModel");
 
 const wishlistModel = require("../models/wishlistModel");
 const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
+const biobankModel=require("../models/biobankModel");
+const collectionsiteModel=require("../models/collectionsiteModel")
+const csrModel=require("../models/CSRModel")
+const  organizationModel=require("../models/organizationModel")
+const  researcherModel=require("../models/researcherModel")
 const newtablefieldModel = require("../models/newtablefieldModel")
 
 
@@ -28,12 +33,12 @@ function Database() {
   historyModel.registrationadmin_history();
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
-  signupModel.create_collectionsiteTable();
-  signupModel.create_biobankTable();
-  signupModel.create_organizationTable();
-  signupModel.create_researcherTable();
-  signupModel.create_CSR();
-  signupModel.createuser_accountTable();
+  collectionsiteModel.create_collectionsiteTable();
+  biobankModel.create_biobankTable();
+  organizationModel.create_organizationTable();
+  researcherModel.create_researcherTable();
+  csrModel.create_CSRTable();
+  userModel.createuser_accountTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();

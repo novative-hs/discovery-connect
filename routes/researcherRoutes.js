@@ -2,6 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const researcherController = require('../controller/researcherController');
+
+router.post('/create-researcher-table', researcherController.create_researcherTable);
+
 router.post('/researcher/post', researcherController.createResearcher);
 router.get('/researcher/get/:id', researcherController.getResearchersByOrganization);
 router.get('/researcher/get', researcherController.getAllResearchers);

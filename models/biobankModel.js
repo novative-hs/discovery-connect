@@ -2,6 +2,24 @@ const mysqlConnection = require("../config/db");
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
+const create_biobankTable = () => {
+  const create_biobankTable = `
+  CREATE TABLE IF NOT EXISTS biobank (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_account_id INT,
+    Name VARCHAR(100),
+    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+)`;
+
+  mysqlConnection.query(create_biobankTable, (err, results) => {
+    if (err) {
+      console.error("Error biobank table: ", err);
+    } else {
+      console.log("Biobank table created Successfully");
+    }
+  });
+};
+
 const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
@@ -207,6 +225,7 @@ const getQuarantineStock = (callback) => {
 
 
 module.exports = {
+  create_biobankTable,
   getBiobankSamples,
   createBiobankSample,
   updateBiobankSample,

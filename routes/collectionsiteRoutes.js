@@ -8,6 +8,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Route Definitions
+
+router.post('/create-collectionsite-table', collectionsiteController.create_collectionsiteTable);
 router.get('/collectionsitenames', collectionsiteController.getAllCollectionSiteNames);
 router.get('/get', collectionsiteController.getAllCollectionSites);
 router.get('/:id', collectionsiteController.getCollectionSiteById);

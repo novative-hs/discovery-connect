@@ -1,5 +1,10 @@
 const csrModel = require("../models/CSRModel");
 
+
+const create_CSRTable = (req, res) => {
+  csrModel.create_CSRTable();
+  res.status(200).json({ message: "CSR table creation process started" });
+};
 // Controller to get all organizations
 const getAllCSR = (req, res) => {
     csrModel.getAllCSR((err, results) => {
@@ -39,6 +44,7 @@ const  deleteCSR=(req, res)=> {
       }
   }
 module.exports={
+  create_CSRTable,
     getAllCSR,
     deleteCSR,
     updateCSRStatus

@@ -1,6 +1,39 @@
 const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 
+const create_researcherTable = () => {
+  const create_researcherTable = `
+    CREATE TABLE IF NOT EXISTS researcher (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_account_id INT,
+      ResearcherName VARCHAR(100),
+      nameofOrganization INT,
+      phoneNumber VARCHAR(15),
+      city INT,
+      district INT,
+      country INT,
+      fullAddress TEXT,
+      CNIC LONGBLOB,
+      organization_card LONGBLOB,
+      status ENUM('pending', 'approved', 'unapproved') DEFAULT 'pending',
+      added_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
+      FOREIGN KEY (nameofOrganization) REFERENCES organization(id) ON DELETE CASCADE,
+      FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
+      FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+  )`;
+  mysqlConnection.query(create_researcherTable, (err, results) => {
+    if (err) {
+      console.error("Error creating researcher table: ", err);
+    } else {
+      console.log("Researcher table created Successfully");
+    }
+  });
+};
+
 function createResearcher(data, callback) {
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
@@ -323,6 +356,7 @@ const updateResearcherStatus = async (id, status) => {
 
 
 module.exports = {
+  create_researcherTable,
   createResearcher,
   updateResearcherDetail,
   getResearchersByOrganization,

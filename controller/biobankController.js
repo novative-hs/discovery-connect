@@ -1,6 +1,12 @@
 const BioBankModel = require('../models/biobankModel');
 const moment = require('moment');
 
+
+
+const create_biobankTable = (req, res) => {
+  BioBankModel.create_biobankTable();
+  res.status(200).json({ message: "bio bank table creation process started" });
+};
 // Controller to create a sample
 const getBiobankSamples = (req, res) => {
   const id = parseInt(req.params.id);
@@ -111,6 +117,7 @@ const UpdateSampleStatus = (req, res) => {
   });
 };
 module.exports = {
+  create_biobankTable,
   getBiobankSamples,
   createBiobankSample,
   updateBiobankSample,

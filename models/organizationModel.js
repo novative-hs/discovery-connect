@@ -1,6 +1,41 @@
 const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 // Function to fetch all organizations
+
+
+const create_organizationTable = () => {
+  const create_organizationTable = `
+    CREATE TABLE IF NOT EXISTS organization (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_account_id INT,
+      type VARCHAR(50),
+      OrganizationName VARCHAR(100),
+      HECPMDCRegistrationNo VARCHAR(50),
+      city INT,
+      district INT,
+      country INT,
+      phoneNumber VARCHAR(15),
+      ntnNumber VARCHAR(50),
+      fullAddress TEXT,
+      logo LONGBLOB,
+      status ENUM('active', 'inactive') DEFAULT 'inactive',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
+      FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
+      FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+  )`;
+
+  mysqlConnection.query(create_organizationTable, (err, results) => {
+    if (err) {
+      console.error("Error creating organization table: ", err);
+    } else {
+      console.log("Organization table created Successfully");
+    }
+  });
+};
+
 const getAllOrganizations = (callback) => {
   const query = `
     SELECT 
@@ -231,6 +266,7 @@ const deleteOrganization = async (id, status) => {
 };
 
 module.exports = {
+  create_organizationTable,
   getCurrentOrganizationById,
   getOrganizationById,
   getAllOrganizations,

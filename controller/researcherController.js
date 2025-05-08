@@ -1,6 +1,11 @@
 // controllers/researcherController.js
 const researcherModel = require("../models/researcherModel");
 
+const create_researcherTable = (req, res) => {
+  researcherModel.create_researcherTable();
+  res.status(200).json({ message: "Researcher table creation process started" });
+};
+
 function getResearchersByOrganization(req, res) {
   const organizationId = req.params.id; // Get the ID from the route parameter
 
@@ -176,6 +181,7 @@ const updateResearcherStatus = async (req, res) => {
 
 
 module.exports = {
+  create_researcherTable,
   getResearchersByOrganization,
   getAllResearchers,
   getResearcherById,
