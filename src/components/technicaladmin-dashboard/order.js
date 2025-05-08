@@ -61,27 +61,26 @@ const OrderPage = () => {
     try {
       const { searchField, searchValue } = filters;
       setLoading(true);
-      let responseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}`;
-
+  
+      let responseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Accepted`;
+  
       if (searchField && searchValue) {
         responseUrl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
+  
       const response = await axios.get(responseUrl);
-
       const { data, totalCount } = response.data;
-      const sampleOrders = data.filter(
-        (sample) => sample.technical_admin_status !== "Rejected"
-      );
-      console.log("response", response.data);
-      setOrders(sampleOrders);
-      setAllOrders(sampleOrders); // Only necessary if you need full copy
-      setTotalPages(Math.ceil(sampleOrders.length / pageSize));
+  
+      setTotalPages(Math.ceil(totalCount / pageSize)); // <-- Fixed here
+      setOrders(data);
+      setAllOrders(data);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);
       setLoading(false);
     }
   };
+  
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed

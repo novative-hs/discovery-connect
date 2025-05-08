@@ -46,15 +46,15 @@ const tablesAndColumns = [
       },
     ],
   },
-  {
-    table:'csr',
-    columnsToAdd:[
-      {
-        column: "status",
-        type: "ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending'",
-      },
-    ]
-  },
+  // {
+  //   table:'csr',
+  //   columnsToAdd:[
+  //     {
+  //       column: "status",
+  //       type: "ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending'",
+  //     },
+  //   ]
+  // },
 
   {
     table:'organization',
@@ -72,6 +72,25 @@ const tablesAndColumns = [
         column:"quantity_allocated",
         type:"INT",
          nullable: true,
+      },
+      {
+        column:"sample_status",
+        type:"ENUM('Public', 'Private') DEFAULT 'Public'",
+      }
+    ]
+  },
+  {
+    table:'sample_history',
+    columnsToAdd:[
+      {
+        column:"status",
+        type:"VARCHAR(50)",
+         nullable: true,
+      },
+      {
+        column:"comments",
+        type:"TEXT",
+        nullable: true,
       }
     ]
   },

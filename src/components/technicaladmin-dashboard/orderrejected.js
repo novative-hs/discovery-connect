@@ -61,7 +61,7 @@ const OrderRejectedPage = () => {
     try {
       const { searchField, searchValue } = filters;
       setLoading(true);
-      let responseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}`;
+      let responseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Rejected`;
 
       if (searchField && searchValue) {
         responseUrl += `&searchField=${searchField}&searchValue=${searchValue}`;
@@ -70,12 +70,11 @@ const OrderRejectedPage = () => {
 
       const { data, totalCount } = response.data;
 
-      const rejectedOrders = data.filter(
-        (sample) => sample.technical_admin_status === "Rejected"
-      );
-      setOrders(rejectedOrders);
-      setAllOrders(rejectedOrders); // Only necessary if you need full copy
-      setTotalPages(Math.ceil(rejectedOrders.length / pageSize));
+    
+      console.log(data)
+      setOrders(data);
+      setAllOrders(data); // Only necessary if you need full copy
+      setTotalPages(Math.ceil(totalCount / pageSize)); // <-- Fixed here
       setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);

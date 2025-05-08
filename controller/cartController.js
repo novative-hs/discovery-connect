@@ -112,12 +112,13 @@ const getAllOrder = (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const searchField = req.query.searchField || null;
   const searchValue = req.query.searchValue || null;
+  const status = req.query.status || null;
 
-  cartModel.getAllOrder(page, limit, searchField, searchValue, (err, result) => {
+  cartModel.getAllOrder(page, limit, searchField, searchValue, status,(err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching cart list" });
     }
-    const { results: data, totalCount } = result;
+    const { results: data, totalCount} = result;
 
     res.status(200).json({
       data,
