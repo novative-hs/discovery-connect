@@ -63,13 +63,14 @@ const SampleArea = () => {
     locationids: "",
     samplename: "",
     age: "",
+    phoneNumber:"",
     gender: "",
     ethnicity: "",
     samplecondition: "",
     storagetemp: "",
     ContainerType: "",
     CountryOfCollection: "",
-    quantity: "",
+    quantity: 0,
     QuantityUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
@@ -131,8 +132,8 @@ const SampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: "",
   });
-
-
+const [showAdditionalFields, setShowAdditionalFields] = useState(false);
+const [logoPreview, setLogoPreview] = useState(null); 
 
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
@@ -184,6 +185,7 @@ const SampleArea = () => {
 
   const logoHandler = (file) => {
     const imageUrl = URL.createObjectURL(file);
+     setLogoPreview(imageUrl);
     setLogo(imageUrl);  // Update the preview with the new image URL
     setFormData((prev) => ({
       ...prev,
@@ -203,82 +205,89 @@ const SampleArea = () => {
   }, [currentPage, searchField, searchValue]);
 
 
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
-      if (!id) {
-        console.error("ID is missing.");
-        return;
-      }
+const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { searchField, searchValue } = filters;
 
-      // Construct URLs
-      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      // Fetch own samples
-      const ownResponse = await axios.get(ownResponseurl);
-      const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
-
-      const ownSamples = ownSampleData.map((sample) => {
-        // Convert logo BLOB into base64
-        let base64Logo = "";
-        if (sample.logo && sample.logo.data) {
-          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
-          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
-        }
-
-        return {
-          ...sample,
-          quantity: Number(sample.quantity) || 0,
-          logo: base64Logo, // Replace logo BLOB with base64 string
-        };
-      });
-
-      // Fetch received samples
-      const receivedResponse = await axios.get(receivedResponseurl);
-      const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
-
-      const receivedSamples = receivedSampleData.map((sample) => ({
-        ...sample,
-        quantity: Number(sample.Quantity) || 0,
-      }));
-
-      // Merge and sum duplicate quantities
-      const sampleMap = new Map();
-
-      [...ownSamples, ...receivedSamples].forEach((sample) => {
-        const sampleId = sample.id;
-        if (sampleMap.has(sampleId)) {
-          const existingSample = sampleMap.get(sampleId);
-          existingSample.quantity += sample.quantity;
-          sampleMap.set(sampleId, existingSample);
-        } else {
-          sampleMap.set(sampleId, { ...sample });
-        }
-      });
-
-      let combinedSamples = Array.from(sampleMap.values());
-      combinedSamples = combinedSamples.filter((sample) => sample.quantity > 0);
-
-      // ✅ Merge total counts from both APIs
-      const combinedTotalCount = (ownTotalCount || 0) + (receivedTotalCount || 0);
-      const totalPages = Math.ceil(combinedTotalCount / pageSize);
-
-      setTotalPages(totalPages);
-      setfiltertotal(totalPages);
-      setSamples(combinedSamples);
-      setFilteredSamplename(combinedSamples);
-    } catch (error) {
-      console.error("Error fetching samples:", error);
+    if (!id) {
+      console.error("ID is missing.");
+      return;
     }
-  };
+
+    // Construct URLs
+    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+    if (searchField && searchValue) {
+      ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+    }
+
+    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
+    if (searchField && searchValue) {
+      receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+    }
+
+    // Fetch own samples
+    const ownResponse = await axios.get(ownResponseurl);
+    const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
+
+    const ownSamples = ownSampleData.map((sample) => {
+      let base64Logo = "";
+      if (sample.logo && sample.logo.data) {
+        const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+        base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+      }
+
+      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+
+      return {
+        ...sample,
+        quantity,
+        logo: base64Logo,
+      };
+    });
+
+    // Fetch received samples
+    const receivedResponse = await axios.get(receivedResponseurl);
+    const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
+
+    const receivedSamples = receivedSampleData.map((sample) => {
+      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+      return {
+        ...sample,
+        quantity,
+      };
+    });
+
+    // Merge and sum duplicate quantities
+    const sampleMap = new Map();
+
+    [...ownSamples, ...receivedSamples].forEach((sample) => {
+      const sampleId = sample.id;
+      if (sampleMap.has(sampleId)) {
+        const existingSample = sampleMap.get(sampleId);
+        existingSample.quantity += sample.quantity;
+        sampleMap.set(sampleId, existingSample);
+      } else {
+        sampleMap.set(sampleId, { ...sample });
+      }
+    });
+
+    // ✅ No filtering — show all samples, even with quantity = 0
+    const combinedSamples = Array.from(sampleMap.values());
+
+    const combinedTotalCount = (ownTotalCount || 0) + (receivedTotalCount || 0);
+    const totalPages = Math.ceil(combinedTotalCount / pageSize);
+
+    setTotalPages(totalPages);
+    setfiltertotal(totalPages);
+    setSamples(combinedSamples);
+    setFilteredSamplename(combinedSamples);
+
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+  }
+};
+
+
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -386,15 +395,9 @@ const SampleArea = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
 
       // Reset form
-      setFormData({
-        samplename: "",
-        age: "",
-        gender: "",
-        // ...other fields
-        user_account_id: id,
-        logo: "",
-      });
-
+      resetFormData()
+setLogoPreview(false);
+setShowAdditionalFields(false)
       setShowAddModal(false);
     } catch (error) {
       console.error("Error adding sample:", error);
@@ -521,6 +524,7 @@ const SampleArea = () => {
       locationids: formattedLocationId,
       samplename: sample.samplename,
       age: sample.age,
+      phoneNumber:sample.phoneNumber,
       gender: sample.gender,
       ethnicity: sample.ethnicity,
       samplecondition: sample.samplecondition,
@@ -549,6 +553,15 @@ const SampleArea = () => {
       user_account_id: sample.user_account_id,
       logo: sample.logo,
     });
+     const logoPreviewUrl =
+      typeof sample.logo === "string"
+        ? sample.logo
+        : sample.logo?.data
+        ? URL.createObjectURL(
+            new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
+          )
+        : null;
+    setLogoPreview(logoPreviewUrl);
     // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
       (c) =>
@@ -564,12 +577,13 @@ const SampleArea = () => {
       samplename: "",
       age: "",
       gender: "",
+      phoneNumber:"",
       ethnicity: "",
       samplecondition: "",
       storagetemp: "",
       ContainerType: "",
       CountryOfCollection: "",
-      quantity: "",
+      quantity: 0,
       QuantityUnit: "",
       SampleTypeMatrix: "",
       SmokingStatus: "",
@@ -591,6 +605,8 @@ const SampleArea = () => {
       user_account_id: id,
       logo: "",
     });
+     setShowAdditionalFields(false);
+    setLogoPreview(null)
   };
 
   const handleUpdate = async (e) => {
@@ -614,39 +630,7 @@ const SampleArea = () => {
       setSuccessMessage("Sample updated successfully.");
 
       // Reset formData after update
-      setFormData({
-        locationids: "",
-        samplename: "",
-        age: "",
-        gender: "",
-        ethnicity: "",
-        samplecondition: "",
-        storagetemp: "",
-        ContainerType: "",
-        CountryOfCollection: "",
-        quantity: "",
-        QuantityUnit: "",
-        SampleTypeMatrix: "",
-        SmokingStatus: "",
-        AlcoholOrDrugAbuse: "",
-        InfectiousDiseaseTesting: "",
-        InfectiousDiseaseResult: "",
-        FreezeThawCycles: "",
-        DateOfCollection: "",
-        ConcurrentMedicalConditions: "",
-        ConcurrentMedications: "",
-        DiagnosisTestParameter: "",
-        TestResult: "",
-        TestResultUnit: "",
-        TestMethod: "",
-        TestKitManufacturer: "",
-        TestSystem: "",
-        TestSystemManufacturer: "",
-        status: "In Stock",
-        user_account_id: id,
-        logo: "",
-      });
-
+    resetFormData()
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -773,7 +757,7 @@ const SampleArea = () => {
                         className="text-center text-truncate"
                         style={{ maxWidth: "150px" }}
                       >
-                        {sample[key] || "N/A"}
+                        {sample[key] || "----"}
                       </td>
                     ))}
                     <td className="text-center">
@@ -827,7 +811,7 @@ const SampleArea = () => {
         {(showAddModal || showEditModal) && (
           <>
             {/* Bootstrap Backdrop with Blur */}
-            <div
+           <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>
@@ -839,15 +823,20 @@ const SampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "50px",
+                top: "40px",
                 left: "50%",
                 transform: "translateX(-50%)",
+                width: "100%", // ensures responsiveness
               }}
             >
               <div
                 className="modal-dialog"
                 role="document"
-                style={{ maxWidth: "90vw", width: "95vw" }}
+                style={{
+                  maxWidth: showAdditionalFields ? "95vw" : "30vw", // 👈 dynamic width
+                  width: "100%",
+                  transition: "all 0.3s ease-in-out", // smooth animation
+                }}
               >
                 <div className="modal-content">
                   <div
@@ -881,54 +870,12 @@ const SampleArea = () => {
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
                         {/* Column 1 */}
-                        <div className="col-md-2">
-                          {showAddModal && (
-                            <div className="form-group">
-                              <label>Donor ID</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="donorID"
-                                value={formData.donorID}
-                                onChange={handleInputChange}
-                                required
-                                style={{
-                                  height: "45px",
-                                  fontSize: "14px",
-                                  backgroundColor: formData.donorID
-                                    ? "#f0f0f0"
-                                    : "#f0f0f0",
-                                  color: "black",
-                                }}
-                              />
-                            </div>
-                          )}
-                          <div className="form-group">
-                            <label>Location (IDs)</label>
-                            <InputMask
-                              mask="99-99-99"
-                              maskChar={null}
-                              value={formData.locationids}
-                              onChange={handleInputChange}
-                            >
-                              {(inputProps) => (
-                                <input
-                                  {...inputProps}
-                                  type="text"
-                                  className="form-control"
-                                  name="locationids"
-                                  placeholder="00-00-00"
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                  required
-                                />
-                              )}
-                            </InputMask>
-                          </div>
+                          <div
+                          className={
+                            showAdditionalFields ? "col-md-2" : "col-md-10"
+                          }
+                        >
+                        
                           <div className="form-group">
                             <label>Sample Name</label>
                             <input
@@ -991,8 +938,69 @@ const SampleArea = () => {
                               <option value="Female">Female</option>
                             </select>
                           </div>
+                            <div className="form-group">
+                            <label>Phone Number</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                            <div className="form-group">
+                            <label>Sample Logo</label>
+                            <div className="d-flex align-items-center">
+                              <input
+                                name="logo"
+                                type="file"
+                                id="logo"
+                                accept="image/*"
+                                onChange={(e) => logoHandler(e.target.files[0])}
+                                className="form-control"
+                                style={{
+                                  fontSize: "14px",
+                                  height: "45px",
+                                  backgroundColor: "#f0f0f0",
+                                  color: "black",
+                                }}
+                              />
+                              {/* Add image preview next to the file input */}
+                              {logoPreview && (
+                                <img
+                                  src={logoPreview}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{
+                                    marginLeft: "20px",
+                                    borderRadius: "5px",
+                                  }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          <div className="form-check my-3">
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="toggleDetails"
+                              checked={showAdditionalFields}
+                              onChange={() =>
+                                setShowAdditionalFields(!showAdditionalFields)
+                              }
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor="toggleDetails"
+                            >
+                              Add Additional Details
+                            </label>
+                          </div>
                         </div>
                         {/* Column 2 */}
+                         {showAdditionalFields && (
+                           <>
                         <div className="col-md-2">
                           <div className="form-group">
                             <label>Ethnicity</label>
@@ -1699,38 +1707,16 @@ const SampleArea = () => {
                               )}
                             </select>
                           </div>
-                          <div className="form-group">
-                            <label>Sample Logo</label>
-                            <div className="d-flex align-items-center">
-                              <input
-                                name="logo"
-                                type="file"
-                                id="logo"
-                                accept="image/*"
-                                onChange={(e) => logoHandler(e.target.files[0])}
-                                className="form-control"
-                                style={{
-                                  fontSize: "14px",
-                                  height: "45px",
-                                  backgroundColor: "#f0f0f0",
-                                  color: "black",
-                                }}
-                              />
-                              {/* Add image preview next to the file input */}
-                              {formData.logo && (
-                                <img
-                                  src={formData.logo}
-                                  alt="Logo Preview"
-                                  width="80"
-                                  style={{ marginLeft: "20px", borderRadius: "5px" }}
-                                />
-                              )}
-                            </div>
-                          </div>
+                        
                         </div>
+                        </>
+                         )}
                       </div>
+                      
                     </div>
                     <div className="modal-footer d-flex justify-content-between w-100">
+                       {showAdditionalFields && (
+                           <>
                       <div className="text-start text-muted fs-6">
                         <strong>Note:</strong>{" "}
                         <code>
@@ -1738,6 +1724,7 @@ const SampleArea = () => {
                           Location ID's = Room Number, Freezer ID and Box ID
                         </code>
                       </div>
+                       </>)}
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}
                       </button>

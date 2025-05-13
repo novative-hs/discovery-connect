@@ -114,15 +114,7 @@ const createSample = (req, res) => {
   // Attach file buffer to the sampleData
   sampleData.logo = file?.buffer;
   // Required fields validation
-  const requiredFields = [
-    'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer', 'logo'
-  ];
 
-  for (const field of requiredFields) {
-    if (!sampleData[field]) {
-      return res.status(400).json({ error: `Field "${field}" is required` });
-    }
-  }
 
   // DateOfCollection will show data only before today
   const today = new Date();
@@ -158,14 +150,22 @@ const updateSample = (req, res) => {
 
   SampleModel.updateSample(id, sampleData, (err, result) => {
     if (err) {
+      console.error('Error updating sample:', err);
       return res.status(500).json({ error: "Error updating sample" });
     }
-    if (result.affectedRows === 0) {
+
+    // Log the result to check what is being returned
+    console.log('Update Result:', result);
+
+    // Check if result is not undefined and contains affectedRows
+    if (result && result.affectedRows === 0) {
       return res.status(404).json({ error: "Sample not found" });
     }
+
     res.status(200).json({ message: "Sample updated successfully" });
   });
 };
+
 
 const getFilteredSamples = (req, res) => {
   const { price, smokingStatus } = req.query;

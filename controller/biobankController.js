@@ -54,18 +54,6 @@ const createBiobankSample = (req, res) => {
   // Attach file buffer to the sampleData
   sampleData.logo = file?.buffer;
 
-  // Required fields validation
-  const requiredFields = [
-    'donorID', 'samplename', 'age', 'gender', 'ethnicity', 'samplecondition', 'storagetemp', 'ContainerType', 'CountryOfCollection', 'price', 'SamplePriceCurrency', 'quantity', 'QuantityUnit', 'SampleTypeMatrix', 'SmokingStatus', 'AlcoholOrDrugAbuse', 'InfectiousDiseaseTesting', 'InfectiousDiseaseResult', 'FreezeThawCycles', 'DateOfCollection', 'ConcurrentMedicalConditions', 'ConcurrentMedications', 'DiagnosisTestParameter', 'TestResult', 'TestResultUnit', 'TestMethod', 'TestKitManufacturer', 'TestSystem', 'TestSystemManufacturer'
-  ];
-
-  for (const field of requiredFields) {
-    if (!sampleData[field]) {
-      return res.status(400).json({ error: `Field "${field}" is required` });
-    }
-  }
-
-  // DateOfCollection will show data only before today
   const today = new Date();
   const dateOfCollection = new Date(sampleData.DateOfCollection);
 
@@ -89,12 +77,22 @@ const updateBiobankSample = (req, res) => {
   const sampleData = req.body;
   const file = req.file;
 
-  // Attach file buffer to the sampleData
-  sampleData.logo = file?.buffer;
+  // Check if a new logo is uploaded, otherwise retain the current logo
+  if (file) {
+    sampleData.logo = req.file.buffer;
+  }
+ else if (sampleData.logo?.data) {
+  // Reconvert from serialized buffer object
+  sampleData.logo = Buffer.from(sampleData.logo.data);
+}
+  // Handle Date format
   if (sampleData.DateOfCollection) {
     sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
   }
 
+  // Handle logo (priority: uploaded file > body)
+ 
+  // Call model
   BioBankModel.updateBiobankSample(id, sampleData, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error updating sample" });
@@ -105,6 +103,7 @@ const updateBiobankSample = (req, res) => {
     res.status(200).json({ message: "Sample updated successfully" });
   });
 };
+
 
 const UpdateSampleStatus = (req, res) => {
   const sampleId = req.params.id;

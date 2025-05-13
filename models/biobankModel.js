@@ -95,12 +95,12 @@ const createBiobankSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, phoneNumber,age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename,data.phoneNumber, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -135,22 +135,25 @@ const createBiobankSample = (data, callback) => {
 
 // Function to update a sample by its ID
 const updateBiobankSample = (id, data, callback) => {
-  console.log('Updating sample with status:', data.status);
 
+  // Initialize to null instead of 'null' string
   let room_number = null;
   let freezer_id = null;
   let box_id = null;
 
+  // Ensure locationids is split into the expected components and check if each part is a valid number
   if (data.locationids) {
     const parts = data.locationids.split("-");
-    room_number = parts[0] || null;
-    freezer_id = parts[1] || null;
-    box_id = parts[2] || null;
+
+    // Check if each part is a valid number, otherwise set to null
+    room_number = isNaN(parts[0]) ? null : Number(parts[0]);
+    freezer_id = isNaN(parts[1]) ? null : Number(parts[1]);
+    box_id = isNaN(parts[2]) ? null : Number(parts[2]);
   }
 
   const query = `
     UPDATE sample
-    SET room_number = ?, freezer_id = ?, box_id = ?, samplename = ?, age = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+    SET room_number = ?, freezer_id = ?, box_id = ?, samplename = ?, age = ?, phoneNumber= ?, gender = ?, ethnicity = ?, samplecondition = ?,
         storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, price = ?, SamplePriceCurrency = ?,
         quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, 
         InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, 
@@ -160,7 +163,7 @@ const updateBiobankSample = (id, data, callback) => {
   `;
 
   const values = [
-    room_number, freezer_id, box_id, data.samplename, data.age, data.gender, data.ethnicity, data.samplecondition,
+    room_number, freezer_id, box_id, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
     data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse,
     data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
@@ -192,8 +195,9 @@ const updateBiobankSample = (id, data, callback) => {
   });
 };
 
+
+
 const UpdateSampleStatus = (id, status, callback) => {
-  console.log("Updating sample ID:", id, "with status:", status);
 
   const query = `
     UPDATE sample

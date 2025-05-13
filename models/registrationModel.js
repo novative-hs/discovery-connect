@@ -766,7 +766,7 @@ const updateAccount = (req, callback) => {
 const loginAccount = (data, callback) => {
   
   const { email, password } = data;
-  console.log(email,password)
+
   // Check if all fields are provided
   if (!email || !password) {
     return callback({ status: "fail", message: "Email and password are required" });
@@ -828,10 +828,10 @@ const loginAccount = (data, callback) => {
             return callback(err, null); // Pass error to the controller
           }
 
-          if (collectionsiteResults.length > 0 && collectionsiteResults[0].status === 'approved') {
+          if (collectionsiteResults.length > 0 && collectionsiteResults[0].status === 'active') {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
+            return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
       }

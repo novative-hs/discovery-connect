@@ -205,7 +205,7 @@ if (userType === "researcher") {
               ]
               : userType == "committeemember"
                 ? [
-                  { label: "Order Sample List", tab: "samples" },
+                  { label: "Pending Review List", tab: "samples" },
                 ]
                 : userType == "technicaladmin"
                   ? [

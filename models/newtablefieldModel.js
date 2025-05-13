@@ -1,6 +1,15 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
 
+  {
+    table: "sample",
+    columnsToAdd: [
+      {
+        column: "phoneNumber",
+        type: "VARCHAR(15)",
+      },
+    ]
+  }
   // {
   //   table: "cart",
   //   columnsToAdd: [
@@ -160,42 +169,7 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
   });
-  await executeSequentially([
-    () =>
-      ensureColumnsExist("user_account", [
-        { column: "OTP", type: "VARCHAR(4)", nullable: true },
-        { column: "otpExpiry", type: "TIMESTAMP", nullable: true },
-      ]),
-    () =>
-      updateEnumColumn("user_account", "accountType", [
-        "Researcher",
-        "Organization",
-        "CollectionSites",
-        "DatabaseAdmin",
-        "TechnicalAdmin",
-        "biobank",
-        "Committeemember",
-        "CSR"
-      ]),
-    () =>
-      updateEnumColumn("organization", "status", [
-        "pending",
-        "active",
-        "inactive"
-      ]),
-    () =>
-      updateEnumColumn("csr", "status", [
-        "pending",
-        "active",
-        "inactive"
-      ]),
-    () =>
-      updateEnumColumn("committeesampleapproval", "committee_status", [
-        "UnderReview",
-        "Approved",
-        "Refused",
-      ]),
-  ]);
+
 };
 
 module.exports = {
