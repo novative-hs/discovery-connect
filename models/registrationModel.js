@@ -692,6 +692,7 @@ const updateAccount = (req, callback) => {
 const loginAccount = (data, callback) => {
 
   const { email, password } = data;
+
   console.log(email, password)
   // Check if all fields are provided
   if (!email || !password) {
@@ -757,7 +758,7 @@ const loginAccount = (data, callback) => {
           if (collectionsiteResults.length > 0 && collectionsiteResults[0].status === 'active') {
             return callback(null, user); // Return user info if approved
           } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
+            return callback({ status: "fail", message: "Account is not active" }, null);
           }
         });
       }

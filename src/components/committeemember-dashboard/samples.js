@@ -269,7 +269,7 @@ const SampleArea = () => {
   };
 
   useEffect(() => {
-    if (showModal) {
+    if (showModal ||showCommentModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -278,7 +278,7 @@ const SampleArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showModal]);
+  }, [showModal,showCommentModal]);
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -290,7 +290,7 @@ const SampleArea = () => {
           </div>
         )}
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
-          Sample Orders & Documents
+          Pending Review List
         </h4>
         
         {/* Table */}
@@ -405,24 +405,29 @@ const SampleArea = () => {
                     )}
                   </td>
                 ))}
-                <td className="text-center">
-                  <div className="d-flex justify-content-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="btn btn-outline-success btn-sm"
-                      onClick={() => handleOpenModal("Approved", sample)}
-                      title="Approve Sample"
-                    >
-                      <FontAwesomeIcon icon={faCheck} size="sm" />
-                    </button>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => handleOpenModal("Refused", sample)}
-                      title="Refuse Sample"
-                    >
-                      <FontAwesomeIcon icon={faTimes} size="sm" />
-                    </button>
-                  </div>
-                </td>
+               <td className="text-center">
+  <div className="d-flex justify-content-center gap-2" onClick={(e) => e.stopPropagation()}>
+    {sample.committee_status !== "Refused" && (
+      <button
+        className="btn btn-outline-success btn-sm"
+        onClick={() => handleOpenModal("Approved", sample)}
+        title="Approve Sample"
+      >
+        <FontAwesomeIcon icon={faCheck} size="sm" />
+      </button>
+    )}
+    {sample.committee_status !== "Approved" && (
+      <button
+        className="btn btn-outline-danger btn-sm"
+        onClick={() => handleOpenModal("Refused", sample)}
+        title="Refuse Sample"
+      >
+        <FontAwesomeIcon icon={faTimes} size="sm" />
+      </button>
+    )}
+  </div>
+</td>
+
               </tr>
             ))
           ) : (
@@ -472,9 +477,9 @@ const SampleArea = () => {
         {showCommentModal && (
           <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
             <Modal.Header closeButton>
-              <Modal.Title className="h6">Additional Mechanism by Researcher</Modal.Title>
+              <Modal.Title className="h6" sty>Comments</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="overflow-auto" style={{ maxHeight: '600px' }}>
               <p>{selectedComment}</p>
             </Modal.Body>
           </Modal>

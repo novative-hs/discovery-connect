@@ -1,6 +1,15 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
 
+  {
+    table: "sample",
+    columnsToAdd: [
+      {
+        column: "phoneNumber",
+        type: "VARCHAR(15)",
+      },
+    ]
+  }
   // {
   //   table: "cart",
   //   columnsToAdd: [
