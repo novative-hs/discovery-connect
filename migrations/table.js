@@ -5,20 +5,17 @@ const samplereceiveModel = require("../models/samplereceiveModel")
 const sampleModel = require("../models/sampleModel");
 const userModel = require("../models/registrationModel");
 
-const wishlistModel = require("../models/wishlistModel");
 const cartModel = require("../models/cartModel");
 const cityModel = require("../models/cityModel");
 const countryModel = require("../models/countryModel");
 const districtModel = require("../models/districtModel");
-const biobankModel=require("../models/biobankModel");
-const collectionsiteModel=require("../models/collectionsiteModel")
-const csrModel=require("../models/CSRModel")
-const  organizationModel=require("../models/organizationModel")
-const  researcherModel=require("../models/researcherModel")
-const newtablefieldModel = require("../models/newtablefieldModel")
+const biobankModel = require("../models/biobankModel");
+const collectionsiteModel = require("../models/collectionsiteModel")
+const csrModel = require("../models/CSRModel")
+const organizationModel = require("../models/organizationModel")
+const researcherModel = require("../models/researcherModel")
+// const newtablefieldModel = require("../models/newtablefieldModel")
 
-
-// const newtablefieldsModel = require("../models/newtablefieldsModel");
 const sample_approvalModel = require("../models/sampleapprovalModel")
 const paymentModel = require('../models/paymentModals')
 const samplefieldsModel = require('../models/samplefieldsModel')
@@ -30,7 +27,7 @@ function Database() {
 
 
   cityModel.createCityTable();
-  historyModel.databaseadmin_history();
+  historyModel.registrationadmin_history();
   countryModel.createCountryTable();
   districtModel.createDistrictTable();
   collectionsiteModel.create_collectionsiteTable();
@@ -43,7 +40,6 @@ function Database() {
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
-  //wishlistModel.createWishlistTable();
   cartModel.createCartTable();
   paymentModel.createPaymentTable();
   sample_approvalModel.createSampleApprovalTable();
@@ -62,10 +58,10 @@ function Database() {
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
-  historyModel.databaseadmin_history();
+  historyModel.registrationadmin_history();
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();
-  newtablefieldModel.createOrUpdateTables();
+  // newtablefieldModel.createOrUpdateTables();
 }
 Database();

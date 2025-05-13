@@ -701,7 +701,7 @@ const StorageTemperatureArea = () => {
                                                                 }}
                                                               >
                                                                 <b>Sample temperature:</b> {created_name} was <b>added</b>{" "}
-                                                                by Database Admin at{" "}
+                                                                by Registration Admin at{" "}
                                                                 {moment(created_at).format(
                                                                   "DD MMM YYYY, h:mm A"
                                                                 )}
@@ -723,7 +723,7 @@ const StorageTemperatureArea = () => {
                                                                   }}
                                                                 >
                                                                   <b>Sample temperature:</b> {updated_name} was{" "}
-                                                                  <b>updated</b> by Database Admin at{" "}
+                                                                  <b>updated</b> by Registration Admin at{" "}
                                                                   {moment(updated_at).format(
                                                                     "DD MMM YYYY, h:mm A"
                                                                   )}

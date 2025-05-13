@@ -13,7 +13,17 @@ router.post('/create-collectionsite-table', collectionsiteController.create_coll
 router.get('/collectionsitenames', collectionsiteController.getAllCollectionSiteNames);
 router.get('/get', collectionsiteController.getAllCollectionSites);
 router.get('/:id', collectionsiteController.getCollectionSiteById);
-router.post('/post', collectionsiteController.createCollectionSite); 
+
+// Register Collection site from Database Admin dashboard
+router.post(
+  '/createcollsite',
+  upload.fields([
+    { name: 'logo', maxCount: 1 },
+  ]),
+  collectionsiteController.createCollectionSite
+);
+
+// router.post('/post', collectionsiteController.createCollectionSite); 
 // router.put('/edit/:id', collectionsiteController.updateCollectionSiteStatus);
 router.delete('/edit/:id', collectionsiteController.updateCollectionSiteStatus);  // Route to update Collection Site status (active/inactive)
 router.delete('/delete/:id', collectionsiteController.deleteCollectionSite);

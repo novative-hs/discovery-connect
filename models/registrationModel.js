@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'DatabaseAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -24,7 +24,6 @@ const createuser_accountTable = () => {
     }
   });
 };
-
 
 const getAccountDetail = (id, callback) => {
   // Query to verify email and password for any account type
@@ -232,6 +231,7 @@ WHERE
     }
   });
 };
+
 // Function to Create Account
 const createAccount = (req, callback) => {
   const {
@@ -239,10 +239,6 @@ const createAccount = (req, callback) => {
     email,
     password,
     ResearcherName,
-    CSRName,
-    OrganizationName,
-    CollectionSiteName,
-    CollectionSiteType,
     phoneNumber,
     fullAddress,
     city,
@@ -254,17 +250,17 @@ const createAccount = (req, callback) => {
     ntnNumber,
     status,
     added_by,
-    
+
   } = req.body;
 
   const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
-const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
-let logo = null;
-if (req.file) {
-  logo = req.file.buffer;
-} else if (req.files?.logo?.[0]) {
-  logo = req.files.logo[0].buffer;
-}
+  const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
+  let logo = null;
+  if (req.file) {
+    logo = req.file.buffer;
+  } else if (req.files?.logo?.[0]) {
+    logo = req.files.logo[0].buffer;
+  }
 
   mysqlPool.getConnection((err, connection) => {
     if (err) {
@@ -330,59 +326,9 @@ if (req.file) {
                 ];
                 break;
 
-              case "Organization":
-                query = `INSERT INTO organization (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo,status) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
-                values = [
-                  userAccountId,
-                  OrganizationName,
-                  type,
-                  HECPMDCRegistrationNo,
-                  ntnNumber,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  logo,
-                  status
-                ];
-                break;
-
-              case "CollectionSites":
-                query = `INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, logo) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                values = [
-                  userAccountId,
-                  CollectionSiteName,
-                  CollectionSiteType,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  logo,
-                ];
-                break;
-
-              case "CSR":
-                query = `INSERT INTO csr (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country,status) 
-                           VALUES ( ?, ?, ?, ?, ?, ?, ?,?)`;
-                values = [
-                  userAccountId,
-                  CSRName,
-                  phoneNumber,
-                  fullAddress,
-                  city,
-                  district,
-                  country,
-                  status
-
-                ];
-                break;
-
               case "TechnicalAdmin":
               case "biobank":
+              case "RegistrationAdmin":
                 return callback(null, {
                   message: `${accountType} account registered successfully`,
                   userId: userAccountId,
@@ -411,43 +357,27 @@ if (req.file) {
                 CSRId = null,
                 collectionsiteId = null;
 
-              if (accountType === "Organization") {
-                name = OrganizationName
-                organizationId = userId;
-              }
               if (accountType === "Researcher") {
                 name = ResearcherName
                 researcherId = userId;
               }
-              if (accountType === "CollectionSites") {
-                collectionsiteId = userId;
-                name = CollectionSiteName
-              }
-              if (accountType === "CSR") {
-                CSRId = userId;
-                name = CSRName
-              }
 
               const historyQuery = `
                 INSERT INTO history (
-                  email, password, ResearcherName, CollectionSiteName, OrganizationName, CSRName,
-                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, CollectionSiteType, phoneNumber, 
+                  email, password, ResearcherName,
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
-                  researcher_id, collectionsite_id, CSR_id,status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, ?)`;
+                  researcher_id, collectionsite_id, csr_id, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
                 password,
                 ResearcherName || null,
-                CollectionSiteName || null,
-                OrganizationName || null,
-                CSRName || null,
                 HECPMDCRegistrationNo || null,
                 ntnNumber || null,
                 nameofOrganization || null,
                 type || null,
-                CollectionSiteType || null,
                 phoneNumber,
                 fullAddress,
                 city,
@@ -484,14 +414,6 @@ if (req.file) {
                     ` Dear ${name},\n\nYour account status is currently pending. 
                     Please wait for approval.\n\nBest regards,\n LabHazir`
                   );
-
-                  connection.release(); // Always release the connection!
-                  sendEmail(
-                    email,
-                    "Welcome to Discovery Connect",
-                    ` Dear ${name},\n\nYour account status is currently pending. 
-                      Please wait for approval.\n\nBest regards,\n LabHazir`
-                  );
                   callback(null, {
                     message: "Account registered successfully",
                     userId: userAccountId,
@@ -509,7 +431,6 @@ if (req.file) {
 // Function to update account (Researcher, Organization, Collection Sites)
 const updateAccount = (req, callback) => {
   const {
-    
     useraccount_email,
     useraccount_password,
     accountType,
@@ -541,7 +462,7 @@ const updateAccount = (req, callback) => {
   else if (req.files?.logo?.[0]) {
     logo = req.files.logo[0].buffer;
   }
- 
+
 
   mysqlConnection.getConnection((err, connection) => {
     if (err) {
@@ -580,7 +501,7 @@ const updateAccount = (req, callback) => {
           // Update user account table
           let updateUserAccountQuery = `UPDATE user_account SET email = ?`;
           const updateUserAccountValues = [useraccount_email];
-          
+
           if (useraccount_password) {
             updateUserAccountQuery += `, password = ?`;
             updateUserAccountValues.push(useraccount_password);
@@ -674,7 +595,7 @@ const updateAccount = (req, callback) => {
                   let researcherID = null;
                   let collectionSiteID = null;
                   let committeemember_id = null;
-                  let CSR_id = null
+                  let csr_id = null
                   if (previousData.OrganizationName) {
                     organizationID = previousData.id; // Organization
                   } else if (previousData.ResearcherName) {
@@ -683,7 +604,7 @@ const updateAccount = (req, callback) => {
                     collectionSiteID = previousData.id; // Collection Site
                   }
                   else if (previousData.CSRName) {
-                    CSR_id = previousData.id; // Collection Site
+                    csr_id = previousData.id; // Collection Site
                   }
                   else if (previousData.CommitteeMemberName) {
                     committeemember_id = previousData.id; // Committee Member
@@ -694,7 +615,7 @@ const updateAccount = (req, callback) => {
                       email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
                       HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
-                      researcher_id, collectionsite_id, committeemember_id, CSR_id,status
+                      researcher_id, collectionsite_id, committeemember_id, csr_id,status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
 
@@ -724,7 +645,7 @@ const updateAccount = (req, callback) => {
                     researcherID || null,
                     collectionSiteID || null,
                     committeemember_id || null,  // Fix: Correct spelling
-                    CSR_id || null,
+                    csr_id || null,
                     "updated",
                   ];
 
@@ -763,10 +684,12 @@ const updateAccount = (req, callback) => {
   });
 };
 
+// Function to Login Account
 const loginAccount = (data, callback) => {
-  
+
   const { email, password } = data;
 
+  console.log(email, password)
   // Check if all fields are provided
   if (!email || !password) {
     return callback({ status: "fail", message: "Email and password are required" });
@@ -973,8 +896,6 @@ const verifyOTP = (email, otp, callback) => {
   });
 };
 
-
-
 const sendOTP = (req, callback) => {
   const { email } = req.body;
 
@@ -1020,7 +941,6 @@ module.exports = {
   loginAccount,
   getAccountDetail,
   getUserEmail,
-  
   createAccount,
   updateAccount,
   getEmail,

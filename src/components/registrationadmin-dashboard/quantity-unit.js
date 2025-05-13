@@ -1,63 +1,73 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
-import Pagination from "@ui/Pagination";
+import {
+  faEdit,
+  faTrash,
+  faQuestionCircle,
+  faPlus,
+  faHistory,
+} from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
-const CityArea = () => {
+import Pagination from "@ui/Pagination";
+import moment from "moment";
+const QuantityUnitArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on city page is:", id);
+    ("account_id on quantityunit page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedcitynameId, setSelectedcitynameId] = useState(null); // Store ID of City to delete
+  const [historyData, setHistoryData] = useState([]);
+  const [selectedquantityunitnameId, setSelectedquantityunitnameId] =
+    useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
-    cityname: "",
+    name: "",
     added_by: id,
   });
-  const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
-  const [cityname, setcityname] = useState([]); // Store all cities
-  const [filteredCityname, setFilteredCityname] = useState([]); // Store filtered cities
+  const [editquantityunitname, setEditquantityunitname] = useState(null); // State for selected City to edit
+  const [quantityunitname, setquantityunitname] = useState([]); // State to hold fetched City
+  const [successMessage, setSuccessMessage] = useState("");
+  const [filteredQuantityunitname, setFilteredQuantityunitname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Calculate total pages dynamically
-
-  const [successMessage, setSuccessMessage] = useState("");
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  // Fetch City from backend when component loads
+
+  // Fetch quantityunit from backend when component loads
   useEffect(() => {
-    fetchcityname(); // Call the function when the component mounts
+    fetchQuantityunitname(); // Call the function when the component mounts
   }, []);
-  const fetchcityname = async () => {
+  const fetchQuantityunitname = async () => {
     try {
-      const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data);
-      setFilteredCityname(response.data); // Initialize filtered list
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/quantityunit`
+      );
+      setFilteredQuantityunitname(response.data); // Initialize filtered list
+      setquantityunitname(response.data); // Store fetched City in state
     } catch (error) {
-      console.error("Error fetching City:", error);
+      console.error("Error fetching Quantity Unit:", error);
     }
   };
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredCityname.length / itemsPerPage)
+      Math.ceil(filteredQuantityunitname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCityname]);
+  }, [filteredQuantityunitname]);
 
-  const currentData = filteredCityname.slice(
+  const currentData = filteredQuantityunitname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -70,14 +80,17 @@ const CityArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = cityname; // Show all if filter is empty
+      filtered = quantityunitname; // Show all if filter is empty
     } else {
-      filtered = cityname.filter((city) =>
-        city[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = quantityunitname.filter((quantityunit) =>
+        quantityunit[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
       );
     }
 
-    setFilteredCityname(filtered);
+    setFilteredQuantityunitname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -101,58 +114,57 @@ const CityArea = () => {
   };
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
+    
     e.preventDefault();
     try {
       // POST request to your backend API
-      const response = await axios.post(`${url}/city/post-city`, formData);
-    
-
-      setSuccessMessage("City added successfully.");
+      const response = await axios.post(
+        `${url}/samplefields/post-samplefields/quantityunit`,
+        formData
+      );
+      
+      setSuccessMessage("Quantityunit added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      fetchcityname();
-
-      // Clear form after submission
-      setFormData({
-        cityname: "",
-        added_by: id,
-      });
+      fetchQuantityunitname();
+      resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding city:", error);
+      console.error("Error adding quantityunit:", error);
     }
   };
 
   const handleDelete = async () => {
     try {
       // Send delete request to backend
-      await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
-    
+      await axios.delete(
+        `${url}/samplefields/delete-samplefields/quantityunit/${selectedquantityunitnameId}`
+      );
+     
       // Set success message
-      setSuccessMessage("cityname deleted successfully.");
+      setSuccessMessage("Quantity unit Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      fetchcityname();
-
+      fetchQuantityunitname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedcitynameId(null);
+      setSelectedquantityunitnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Committe Member with ID ${selectedcitynameId}:`,
+        `Error deleting quantityunit with ID ${selectedquantityunitnameId}:`,
         error
       );
     }
@@ -170,13 +182,14 @@ const CityArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (cityname) => {
-   
-    setSelectedcitynameId(cityname.id);
-    setEditcityname(cityname);
+  const handleEditClick = (quantityunitname) => {
+    
+
+    setSelectedquantityunitnameId(quantityunitname.id);
+    setEditquantityunitname(quantityunitname);
 
     setFormData({
-      cityname: cityname.name,
+      name: quantityunitname.name,
       added_by: id,
     });
 
@@ -188,33 +201,24 @@ const CityArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/city/put-city/${selectedcitynameId}`,
+        `${url}/samplefields/put-samplefields/quantityunit/${selectedquantityunitnameId}`,
         formData
       );
-    
+      
 
-      fetchcityname();
+      fetchQuantityunitname();
 
       setShowEditModal(false);
-      setSuccessMessage("City updated successfully.");
-
+      setSuccessMessage("Quantity unit updated successfully.");
+      resetFormData();
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      setFormData({
-        cityname: "",
-        added_by: id,
-      });
     } catch (error) {
       console.error(
-        `Error updating cityname with ID ${selectedcitynameId}:`,
+        `Error updating Quantity unit name with ID ${selectedquantityunitnameId}:`,
         error
       );
-    } finally {
-      setFormData({
-        cityname: "",
-        added_by: id,
-      });
     }
   };
 
@@ -229,58 +233,50 @@ const CityArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-
   const handleFileUpload = async (e) => {
+    
     const file = e.target.files[0];
     if (!file) return;
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
+      // Add 'added_by' field (ensure 'id' is defined in the state)
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
+        added_by: id, // Ensure 'id' is defined in the component
       }));
 
+    
+
       try {
-        // POST data to API
+        // POST request inside the same function
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/post-city`,
+          `${url}/samplefields/post-samplefields/quantityunit`,
           { bulkData: dataWithAddedBy }
         );
-       
-        setSuccessMessage("Cities uploaded successfully");
+        
 
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
-        );
-        setFilteredCityname(newResponse.data);
-        setcityname(newResponse.data);
+        fetchQuantityunitname();
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error adding Quantity unit:", error);
       }
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
+  };
+
+  const resetFormData = () => {
+    setFormData({
+      name: "",
+      added_by: id,
+    });
   };
 
   return (
@@ -291,52 +287,56 @@ const CityArea = () => {
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
-              <div className="alert alert-success mb-3" role="alert">
+              <div
+                className="alert alert-success w-100 text-start mb-2"
+                role="alert"
+              >
                 {successMessage}
               </div>
             )}
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">City List</h5>
+              <h5 className="m-0 fw-bold ">Quantity Unit List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add City Button */}
+                {/* Add Quantity Unit Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2", // soft blue
+                    backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "10px 20px",
+                    padding: "8px 16px", 
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px", 
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add City
+                  <i className="fas fa-plus"></i> Add Quantity Unit
                 </button>
 
-                {/* Upload City List Button */}
                 <label
                   style={{
-                    backgroundColor: "#f1f1f1", // soft gray
+                    backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "10px 20px",
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload City List
+                  <i className="fas fa-upload"></i> Upload List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -348,38 +348,42 @@ const CityArea = () => {
             </div>
           </div>
 
-          {/* Table Section */}
+          {/* Table with responsive scroll */}
           <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    //{ label: "ID", placeholder: "Search ID", field: "id" },
+                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                     {
-                      label: "City Name",
-                      placeholder: "Search City Name",
+                      label: "Quantity Unit",
+                      placeholder: "Search Quantity Unit",
                       field: "name",
+                      width: "col-md-1",
                     },
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
                       field: "added_by",
+                      width: "col-md-1",
                     },
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
                       field: "created_at",
+                      width: "col-md-1",
                     },
                     {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
+                      width: "col-md-1",
                     },
-                  ].map(({ label, placeholder, field }) => (
-                    <th key={field} className="col-md-1 px-2">
+                  ].map(({ label, placeholder, field, width }) => (
+                    <th key={field} className={`${width} px-2`}>
                       <input
                         type="text"
-                        className="form-control w-100 mx-auto"
+                        className="form-control w-100 px-2 py-1 mx-auto"
                         placeholder={placeholder}
                         onChange={(e) =>
                           handleFilterChange(field, e.target.value)
@@ -388,61 +392,74 @@ const CityArea = () => {
                       {label}
                     </th>
                   ))}
-                  <th className="col-1">Action</th>
+                  <th className="col-md-1">Action</th>
                 </tr>
               </thead>
+
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((cityname) => (
-                    <tr key={cityname.id}>
-                      {/* <td>{cityname.id}</td> */}
-                      <td>{cityname.name}</td>
-                      {/* <td>{cityname.added_by}</td> */}
-                      <td>DB Admin</td>
-                      <td>{formatDate(cityname.created_at)}</td>
-                      <td>{formatDate(cityname.updated_at)}</td>
-                      <td>
-                        <div className="d-flex justify-content-center gap-3">
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(cityname)}
-                            title="Edit City"
-                          >
-                            <FontAwesomeIcon icon={faEdit} size="xs" />
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => {
-                              setSelectedcitynameId(cityname.id);
-                              setShowDeleteModal(true);
-                            }}
-                            title="Delete City"
-                          >
-                            <FontAwesomeIcon icon={faTrash} size="xs" />
-                          </button>
-                          <button
-                            className="btn btn-info btn-sm"
-                            onClick={() =>
-                              handleShowHistory("city", cityname.id)
-                            }
-                            title="History Sample"
-                          >
-                            <FontAwesomeIcon icon={faHistory} size="xs" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  currentData.map(
+                    ({ id, name, added_by, created_at, updated_at }) => (
+                      <tr key={id}>
+                        {/* <td>{id}</td> */}
+                        <td>{name}</td>
+                        {/* <td>{added_by}</td> */}
+                        <td>DB Admin</td>
+                        <td>{formatDate(created_at)}</td>
+                        <td>{formatDate(updated_at)}</td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-3">
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() =>
+                                handleEditClick({
+                                  id,
+                                  name,
+                                  added_by,
+                                  created_at,
+                                  updated_at,
+                                })
+                              }
+                              title="Edit Quantity Unit"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                setSelectedquantityunitnameId(id);
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete Quantity Unit"
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() =>
+                                handleShowHistory("quantityunit", id)
+                              }
+                              title="History Quantity unit"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No City Available
+                      No Quantity Unit Available
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
           {totalPages >= 0 && (
             <Pagination
               handlePageClick={handlePageChange}
@@ -450,6 +467,8 @@ const CityArea = () => {
               focusPage={currentPage}
             />
           )}
+
+          {/* Modal for Adding Committe members */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -475,7 +494,7 @@ const CityArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add City" : "Edit City"}
+                        {showAddModal ? "Add Ethnicity" : "Edit Ethnicity"}
                       </h5>
                       <button
                         type="button"
@@ -483,10 +502,7 @@ const CityArea = () => {
                         onClick={() => {
                           setShowAddModal(false);
                           setShowEditModal(false);
-                          setFormData({
-                            cityname: "",
-                            added_by: id,
-                          });
+                          resetFormData(); // Reset form data when closing the modal
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -506,12 +522,12 @@ const CityArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>City Name</label>
+                          <label>Quantity Unit Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="cityname"
-                            value={formData.cityname}
+                            name="name" // Fix here
+                            value={formData.name}
                             onChange={handleInputChange}
                             required
                           />
@@ -520,7 +536,7 @@ const CityArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update City"}
+                          {showAddModal ? "Save" : "Update Quantity Unit"}
                         </button>
                       </div>
                     </form>
@@ -530,6 +546,60 @@ const CityArea = () => {
             </>
           )}
 
+          {/* Modal for Deleting cityname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">Delete Quantity Unit</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this Quantity Unit?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button className="btn btn-danger" onClick={handleDelete}>
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -615,8 +685,8 @@ const CityArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>City:</b> {created_name} was <b>added</b> by
-                                Database Admin at{" "}
+                                <b>Quantity unit:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -636,8 +706,8 @@ const CityArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>City:</b> {updated_name} was <b>updated</b>{" "}
-                                  by Database Admin at{" "}
+                                  <b>Quantity unit:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -655,65 +725,10 @@ const CityArea = () => {
               </div>
             </>
           )}
-
-          {/* Modal for Deleting cityname */}
-          {showDeleteModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div
-                      className="modal-header"
-                      style={{ backgroundColor: "transparent" }}
-                    >
-                      <h5 className="modal-title">Delete City</h5>
-                      <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setShowDeleteModal(false)}
-                      ></button>
-                    </div>
-                    <div className="modal-body">
-                      <p>Are you sure you want to delete this city?</p>
-                    </div>
-                    <div className="modal-footer">
-                      <button className="btn btn-danger" onClick={handleDelete}>
-                        Delete
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowDeleteModal(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </section>
   );
 };
 
-export default CityArea;
+export default QuantityUnitArea;

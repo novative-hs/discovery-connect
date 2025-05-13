@@ -6,7 +6,7 @@ import SEO from "@components/seo";
 import Wrapper from "@layout/wrapper";
 import DashboardFooter from "@layout/dashboardfooter";
 
-import DatabaseAdminDashboard from "@components/databaseadmin-dashboard/dashboard-area";
+import RegistrationAdminDashboard from "@components/registrationadmin-dashboard/dashboard-area";
 import TechnicalAdminDashboard from "@components/technicaladmin-dashboard/dashboard-area";
 import BiobankDashboard from "@components/biobank-dashboard/dashboard-area";
 import CollectionSideDashboard from "@components/collectionsite-dashboard/dashboard-area";
@@ -34,8 +34,8 @@ const UserOrdersPage = () => {
     switch (userType) {
       case "technicaladmin":
         return <TechnicalAdminDashboard />;
-        case "databaseadmin":
-          return <DatabaseAdminDashboard />;
+        case "registrationadmin":
+          return <RegistrationAdminDashboard />;
       case "biobank":
         return <BiobankDashboard />;
       case "collectionsites":

@@ -1,20 +1,20 @@
 const mysqlConnection = require("../config/db");
 
-const databaseadmin_history = () => {
+const registrationadmin_history = () => {
   const createregistrationadmin_historyTable = `
-    CREATE TABLE IF NOT EXISTS databaseadmin_history (
+    CREATE TABLE IF NOT EXISTS registrationadmin_history (
       id INT AUTO_INCREMENT PRIMARY KEY,
       created_name VARCHAR(255),
       updated_name VARCHAR(255),
       added_by INT,
       organization_id INT,
       collectionsite_id INT,
-      resaercher_id INT,
+      researcher_id INT,
       city_id INT,
       country_id INT,
       district_id INT,
       sample_id VARCHAR(36),
-      CSR_id  INT,
+      csr_id  INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive', 'unapproved', 'approved','pending') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -33,8 +33,8 @@ const databaseadmin_history = () => {
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
-      FOREIGN KEY (CSR_id) REFERENCES csr(id) ON DELETE CASCADE,
-      FOREIGN KEY (resaercher_id) REFERENCES researcher(id) ON DELETE CASCADE,
+      FOREIGN KEY (csr_id) REFERENCES csr(id) ON DELETE CASCADE,
+      FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
       FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
       FOREIGN KEY (city_id) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
@@ -69,7 +69,7 @@ const getHistory = (filterType, id, callback) => {
   column = `${filterType}_id`;
   if (!column) return callback(new Error("Invalid filter type"), null);
 
-  const query = `SELECT * FROM databaseadmin_history WHERE ${column} = ?`;
+  const query = `SELECT * FROM registrationadmin_history WHERE ${column} = ?`;
 
   mysqlConnection.query(query, [id], (err, results) => {
     if (err || results.length === 0) {
@@ -128,7 +128,7 @@ const create_historyTable = () => {
     collectionsite_id INT,
     committeemember_id INT,
     researcher_id INT,
-    CSR_id INT,
+    csr_id INT,
     sample_id VARCHAR(36),
     added_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -140,7 +140,7 @@ const create_historyTable = () => {
     FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
     FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
-    FOREIGN KEY (CSR_id) REFERENCES csr(id) ON DELETE CASCADE,
+    FOREIGN KEY (csr_id) REFERENCES csr(id) ON DELETE CASCADE,
     FOREIGN KEY (committeemember_id) REFERENCES committee_member(id) ON DELETE CASCADE,
     FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
@@ -229,7 +229,7 @@ const getSampleHistory = (sampleId, callback) => {
 
 
 module.exports = {
-  databaseadmin_history,
+  registrationadmin_history,
   getHistory,
   create_historyTable,
   create_samplehistoryTable,

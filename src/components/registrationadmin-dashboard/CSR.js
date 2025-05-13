@@ -61,7 +61,7 @@ const CSRArea = () => {
   const fetchCSR = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/get`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/get`
       );
       setCSR(response.data);
       setAllCSR(response.data);
@@ -142,7 +142,7 @@ const CSRArea = () => {
   const handleStatusClick = async (id, option) => {
     try {
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/CSR/edit/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/edit/${id}`,
          { status: option } ,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -158,47 +158,44 @@ const CSRArea = () => {
     }
   };
 
-  const onSubmit = (event) => {
-    event.preventDefault();
 
-    const newformData = new FormData();
+const onSubmit = async (event) => {
+  event.preventDefault();
 
-    // Append form fields
-    newformData.append("email", formData.email);
-    newformData.append("password", formData.password);
-    newformData.append("accountType", "CSR");
-    newformData.append("CSRName", formData.CSRName);
-    newformData.append("phoneNumber", formData.phoneNumber);
-    newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
-    newformData.append("status", "inactive");
-    // Debug log to inspect FormData entries
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
+  const data = {
+    email: formData.email,
+    password: formData.password,
+    accountType: "CSR",
+    CSRName: formData.CSRName,
+    phoneNumber: formData.phoneNumber,
+    fullAddress: formData.fullAddress,
+    city: formData.city,
+    district: formData.district,
+    country: formData.country,
+    status: "inactive",
+  };
 
-    // Call the mutation (assuming the function is available)
-    registerUser(newformData)
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Register Failed";
-          notifyError(errorMessage);
-        } else {
-          notifySuccess("Organization Registered Successfully");
-          fetchCSR()
-          setShowAddModal(false);
-        }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/createcsr`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    // Reset state and form (if necessary)
+    notifySuccess("CSR created successfully");
+    fetchCSR();
     setShowAddModal(false);
     resetFormData();
-  };
+  } catch (error) {
+    const errorMessage =
+      error?.response?.data?.error || "CSR creation failed";
+    notifyError(errorMessage);
+  }
+};
 
   const handleEditClick = (CSR) => {
     setSelectedCSRId(CSR.id);
@@ -811,7 +808,7 @@ const CSRArea = () => {
                                   }}
                                 >
                                   <b>CSR:</b> {CSRName} was <b>{status}</b> by
-                                  Database Admin at{" "}
+                                  Registration Admin at{" "}
                                   {moment(created_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -833,7 +830,7 @@ const CSRArea = () => {
                                   }}
                                 >
                                   <b>CSR:</b> {CSRName} was <b>{status}</b> by
-                                  Database Admin at{" "}
+                                  Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

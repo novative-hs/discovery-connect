@@ -316,7 +316,7 @@ const ResearcherArea = () => {
                             <button
                               className="btn btn-info btn-sm"
                               onClick={() =>
-                                handleShowHistory("resaercher", researcher.id)
+                                handleShowHistory("researcher", researcher.id)
                               }
                               title="History"
                             >
@@ -550,7 +550,7 @@ const ResearcherArea = () => {
                                 }}
                               >
                                 <b>Researcher:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -571,7 +571,7 @@ const ResearcherArea = () => {
                                   }}
                                 >
                                   <b>Researcher:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

@@ -11,63 +11,63 @@ import {
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const TestMethodArea = () => {
+const EthnicityArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on TestMethod page is:", id);
+    console.log("account_id on Ethnicity page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedTestMethodnameId, setSelectedTestMethodnameId] =
-    useState(null); // Store ID of Plasma to delete
+  const [selectedethnicitynameId, setSelectedethnicitynameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestMethodname, setEditTestMethodname] = useState(null); // State for selected TestMethod to edit
-  const [testmethodname, setTestMethodname] = useState([]); // State to hold fetched City
+  const [editethnicityname, setEditethnicityname] = useState(null); // State for selected City to edit
+  const [ethnicityname, setethnicityname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+  const [filteredEthnicityname, setFilteredEthnicityname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
-  const [filteredTestMethod, setFilteredTestMethod] = useState([]);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // Fetch City from backend when component loads
   useEffect(() => {
-    fetchTestMethodname(); // Call the function when the component mounts
+    fetchEthnicityname(); // Call the function when the component mounts
   }, []);
-  const fetchTestMethodname = async () => {
+  const fetchEthnicityname = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testmethod`
+        `${url}/samplefields/get-samplefields/ethnicity`
       );
-      setFilteredTestMethod(response.data);
-      setTestMethodname(response.data); // Store fetched TestMethod in state
+      setFilteredEthnicityname(response.data); // Initialize filtered list
+      setethnicityname(response.data); // Store fetched City in state
     } catch (error) {
-      console.error("Error fetching TestMethod :", error);
+      console.error("Error fetching City:", error);
     }
   };
+
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestMethod.length / itemsPerPage)
+      Math.ceil(filteredEthnicityname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestMethod]);
+  }, [filteredEthnicityname]);
 
-  const currentData = filteredTestMethod.slice(
+  const currentData = filteredEthnicityname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -80,17 +80,14 @@ const TestMethodArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = testmethodname; // Show all if filter is empty
+      filtered = ethnicityname; // Show all if filter is empty
     } else {
-      filtered = testmethodname.filter((testmethod) =>
-        testmethod[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
+      filtered = ethnicityname.filter((ethnicity) =>
+        ethnicity[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
 
-    setFilteredTestMethod(filtered);
+    setFilteredEthnicityname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -112,6 +109,7 @@ const TestMethodArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -124,28 +122,21 @@ const TestMethodArea = () => {
     
     e.preventDefault();
     try {
-      // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testmethod`,
+        `${url}/samplefields/post-samplefields/ethnicity`,
         formData
       );
-      
-      setSuccessMessage("Test Method Name deleted successfully.");
 
-      // Clear success message after 3 seconds
+      fetchEthnicityname();
+      setSuccessMessage("Ethnicity added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-
-      fetchTestMethodname();
       // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
+      resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Test Method ", error);
+      console.error("Error adding Ethnicity:", error);
     }
   };
 
@@ -153,24 +144,30 @@ const TestMethodArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/testmethod/${selectedTestMethodnameId}`
+        `${url}/samplefields/delete-samplefields/ethnicity/${selectedethnicitynameId}`
       );
-     
+    
+
       // Set success message
-      setSuccessMessage("Test Method Name deleted successfully.");
+      setSuccessMessage("Ethnicity Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestMethodname();
+      // Refresh the cityname list after deletion
+      const newResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/get-samplefields/ethnicity`
+      );
+      setethnicityname(newResponse.data);
+
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedTestMethodnameId(null);
+      setSelectedethnicitynameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test Method  with ID ${selectedTestMethodnameId}:`,
+        `Error deleting Ethnicity with ID ${selectedethnicitynameId}:`,
         error
       );
     }
@@ -188,14 +185,14 @@ const TestMethodArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (testmethodname) => {
+  const handleEditClick = (ethnicityname) => {
    
 
-    setSelectedTestMethodnameId(testmethodname.id);
-    setEditTestMethodname(testmethodname);
+    setSelectedethnicitynameId(ethnicityname.id);
+    setEditethnicityname(ethnicityname);
 
     setFormData({
-      name: testmethodname.name,
+      name: ethnicityname.name,
       added_by: id,
     });
 
@@ -207,23 +204,22 @@ const TestMethodArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`,
+        `${url}/samplefields/put-samplefields/ethnicity/${selectedethnicitynameId}`,
         formData
       );
-      
+     
 
-      fetchTestMethodname();
+      fetchEthnicityname();
 
       setShowEditModal(false);
-      setSuccessMessage("Test Method updated successfully.");
+      setSuccessMessage("Ethnicity updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Test Method name with ID ${selectedTestMethodnameId}:`,
+        `Error updating Ethnicity name with ID ${selectedethnicitynameId}:`,
         error
       );
     }
@@ -241,10 +237,10 @@ const TestMethodArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    
+   
     const file = e.target.files[0];
     if (!file) return;
-    
+   
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -260,21 +256,19 @@ const TestMethodArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      
+     
 
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testmethod`,
-          {
-            bulkData: dataWithAddedBy,
-          }
+          `${url}/samplefields/post-samplefields/ethnicity`,
+          { bulkData: dataWithAddedBy }
         );
-        
+       
 
-        fetchTestMethodname();
+        fetchEthnicityname();
       } catch (error) {
-        console.error("Error adding Test Method :", error);
+        console.error("Error adding Ethnicity:", error);
       }
     };
 
@@ -292,6 +286,7 @@ const TestMethodArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
+
           {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
@@ -306,16 +301,16 @@ const TestMethodArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Test Method List</h5>
+              <h5 className="m-0 fw-bold ">Ethnicity List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Test Method Button */}
+                {/* Add Ethnicity Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
                     backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px",
+                    padding: "8px 16px", 
                     borderRadius: "6px",
                     fontWeight: "500",
                     fontSize: "14px", 
@@ -325,7 +320,7 @@ const TestMethodArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Test Method
+                  <i className="fas fa-plus"></i> Add Ethnicity
                 </button>
 
                 <label
@@ -333,10 +328,10 @@ const TestMethodArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -363,29 +358,34 @@ const TestMethodArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                   // { label: "ID", placeholder: "Search ID", field: "id" },
+                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                     {
-                      label: "Test Method",
-                      placeholder: "Search Test Method",
+                      label: "Ethnicity Name",
+                      placeholder: "Search Ethnicity Name",
                       field: "name",
+                      width: "col-md-1"
                     },
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
                       field: "added_by",
+                      width: "col-md-1"
                     },
+
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
                       field: "created_at",
+                      width: "col-md-1"
                     },
                     {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
+                      width: "col-md-1"
                     },
-                  ].map(({ label, placeholder, field }) => (
-                    <th key={field} className="col-md-2 px-1">
+                  ].map(({ label, placeholder, field, width }) => (
+                    <th key={field} className={`${width} px-2`}>
                       <input
                         type="text"
                         className="form-control w-100 px-2 py-1 mx-auto"
@@ -397,7 +397,7 @@ const TestMethodArea = () => {
                       {label}
                     </th>
                   ))}
-                  <th className="col-md-1">Action</th>
+                  <th className="col-1">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -412,9 +412,9 @@ const TestMethodArea = () => {
                         <td>{formatDate(created_at)}</td>
                         <td>{formatDate(updated_at)}</td>
                         <td>
-                          <div className="d-flex justify-content-around gap-2">
+                          <div className="d-flex justify-content-center gap-3">
                             <button
-                              className="btn btn-success btn-sm"
+                              className="btn btn-success btn-sm py-1 px-2"
                               onClick={() =>
                                 handleEditClick({
                                   id,
@@ -424,26 +424,26 @@ const TestMethodArea = () => {
                                   updated_at,
                                 })
                               }
-                              title="Edit Test Method"
+                              title="Edit Ethnicity"
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
-                              className="btn btn-danger btn-sm "
+                              className="btn btn-danger btn-sm py-1 px-2"
                               onClick={() => {
-                                setSelectedTestMethodnameId(id);
+                                setSelectedethnicitynameId(id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Test Method"
+                              title="Delete Ethnicity"
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
-                              className="btn btn-info btn-sm "
+                              className="btn btn-info btn-sm py-1 px-2"
                               onClick={() =>
-                                handleShowHistory("testmethod", id)
+                                handleShowHistory("ethnicity", id)
                               }
-                              title="History Test Method"
+                              title="History Ethnicity"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
@@ -455,7 +455,7 @@ const TestMethodArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Test Method Available
+                      No Ethnicity Available
                     </td>
                   </tr>
                 )}
@@ -498,7 +498,7 @@ const TestMethodArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add Test Method" : "Edit Test Method"}
+                        {showAddModal ? "Add Ethnicity" : "Edit Ethnicity"}
                       </h5>
                       <button
                         type="button"
@@ -526,7 +526,7 @@ const TestMethodArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Test Method Name</label>
+                          <label>Ethnicity Name</label>
                           <input
                             type="text"
                             className="form-control"
@@ -540,7 +540,7 @@ const TestMethodArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Test Method"}
+                          {showAddModal ? "Save" : "Update Ethnicity"}
                         </button>
                       </div>
                     </form>
@@ -578,7 +578,7 @@ const TestMethodArea = () => {
                       className="modal-header"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <h5 className="modal-title">Delete Test Method</h5>
+                      <h5 className="modal-title">Delete Ethnicity</h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -586,10 +586,13 @@ const TestMethodArea = () => {
                       ></button>
                     </div>
                     <div className="modal-body">
-                      <p>Are you sure you want to delete this Test Method?</p>
+                      <p>Are you sure you want to delete this Ethnicity?</p>
                     </div>
                     <div className="modal-footer">
-                      <button className="btn btn-danger" onClick={handleDelete}>
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
+                      >
                         Delete
                       </button>
                       <button
@@ -689,8 +692,8 @@ const TestMethodArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Test Method:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>Ethnicity:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -703,15 +706,16 @@ const TestMethodArea = () => {
                                     padding: "10px 15px",
                                     borderRadius: "15px",
                                     backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Test Method:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>Ethnicity:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -729,10 +733,11 @@ const TestMethodArea = () => {
               </div>
             </>
           )}
+
         </div>
       </div>
     </section>
   );
 };
 
-export default TestMethodArea;
+export default EthnicityArea;

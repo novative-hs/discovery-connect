@@ -29,7 +29,7 @@ const cityRoutes = require("./routes/cityRoutes");
 const DistrictRoutes = require("./routes/districtRoutes");
 const CountryRoutes = require("./routes/countryRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
-const CSRRoutes=require("./routes/CSRRoutes")
+const CSRRoutes = require("./routes/CSRRoutes")
 const {
   fetchProducts,
   getProductById,
@@ -40,10 +40,10 @@ const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoute
 const samplefieldsRoutes = require("./routes/samplefieldsRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const contactusRoutes = require("./routes/contactusRoutes");
-const committeesampleapproval=require("./routes/committeesampleapprovalRoutes")
+const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
 
 // Routes
-app.use('/api', historyRoutes); 
+app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);
 app.use("/api/city", cityRoutes);
@@ -56,9 +56,9 @@ app.use("/api", researcherRoutes);
 app.use("/api/committeemember", committeememberRoutes);
 app.use("/api", sampleRoutes);
 app.use("/api/committeesampleapproval", committeesampleapproval);
-app.use("/api/payment", paymentRoutes);app.use("/api/sampledispatch", sampleDispatchRoutes);
+app.use("/api/payment", paymentRoutes); app.use("/api/sampledispatch", sampleDispatchRoutes);
 app.use("/api/samplereceive", sampleReceiveRoutes);
-app.use("/api/collectionsite", collectionSiteRoutes);
+app.use("/api/admin/collectionsite", collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
 app.use("/api", cartRoutes);
@@ -66,7 +66,7 @@ app.use("/api", biobankRoutes);
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);
 app.use("/api/samplefields", samplefieldsRoutes);
 app.use("/api", contactusRoutes);
-app.use("/api/CSR",CSRRoutes)
+app.use("/api/admin/csr", CSRRoutes);
 // Start the server
 app.listen(5000, () => {
   console.log("Server running on port 5000");
