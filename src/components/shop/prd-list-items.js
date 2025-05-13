@@ -10,17 +10,15 @@ const ProductListItems = ({ itemsPerPage, items, setShowingListItems }) => {
   // side effect
   useEffect(() => {
     const endOffset = itemOffset + itemsPerPage;
-    const current = items?.slice(itemOffset, endOffset);
-    setCurrentItems(current);
+    setCurrentItems(items?.slice(itemOffset, endOffset));
     setPageCount(Math.ceil(items.length / itemsPerPage));
-    if (setShowingListItems) {
-      setShowingListItems({
-        start: itemOffset + 1,
-        end: Math.min(endOffset, items.length),
-        total: items.length,
-      });
+  }, [itemOffset, itemsPerPage, items]);
+
+  useEffect(() => {
+    if (currentItems && setShowingListItems) {
+      setShowingListItems(currentItems.length);
     }
-  }, [itemOffset, itemsPerPage, items, setShowingListItems]);
+  }, [currentItems, setShowingListItems]);
 
   // handlePageClick
   const handlePageClick = (event) => {
