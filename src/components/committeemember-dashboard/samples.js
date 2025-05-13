@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDownload, faCheck, faTimes, faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import {
+  faDownload,
+  faCheck,
+  faTimes,
+  faFilePdf,
+} from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import { notifyError, notifySuccess } from "@utils/toast";
 
@@ -48,36 +53,38 @@ const SampleArea = () => {
   const [selectedSample, setSelectedSample] = useState(null);
   const [searchField, setSearchField] = useState("");
   const [searchValue, setSearchValue] = useState("");
-  
+
   // Fetch samples from backend when component loads
   useEffect(() => {
-      if (id) {
-        fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
-      }
-    
+    if (id) {
+      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+    }
   }, [currentPage, searchField, searchValue]);
-  
-  
 
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
       const { searchField, searchValue } = filters;
-  
+
       if (!id) {
         console.error("Committee member ID is missing.");
         return;
       }
-  
+
       // Fields that belong to document API
-      const docFields = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"];
-  
+      const docFields = [
+        "study_copy",
+        "reporting_mechanism",
+        "irb_file",
+        "nbc_file",
+      ];
+
       // Decide which API needs the filter
       const filterForDoc = docFields.includes(searchField);
-  
+
       // Build URLs
       let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
       let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
-  
+
       if (searchField && searchValue) {
         const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
         if (filterForDoc) {
@@ -86,17 +93,17 @@ const SampleArea = () => {
           orderUrl += filter;
         }
       }
-  
+
       // Fetch both APIs
       const [orderRes, docRes] = await Promise.all([
         axios.get(orderUrl),
         axios.get(docUrl),
       ]);
-  
+
       const orders = orderRes.data.results || [];
       const totalCount = orderRes.data.totalCount || 0;
       const documents = docRes.data.results || [];
-  
+
       // ✅ Create docMap BEFORE using it
       const docMap = {};
       documents.forEach((doc) => {
@@ -104,8 +111,8 @@ const SampleArea = () => {
           docMap[doc.cart_id] = doc;
         }
       });
-  console.log("Documents",documents)
-  console.log("Sample",orders)
+      console.log("Documents", documents);
+      console.log("Sample", orders);
       // ✅ Merge: flatten document fields directly into order object
       const merged = orders.map((order) => {
         const document = docMap[order.cart_id] || {};
@@ -114,9 +121,9 @@ const SampleArea = () => {
           ...document,
         };
       });
-  
+
       console.log("Merged Orders with Documents:", merged);
-  
+
       // Update state
       setSamples(merged);
       setFilteredSamplename(merged);
@@ -125,22 +132,17 @@ const SampleArea = () => {
       console.error("Error fetching data:", error);
     }
   };
-  
-   
-  
-  
-  useEffect(() => {
-      if (currentPage > totalPages && totalPages > 0) {
-        setCurrentPage(totalPages); // Adjust down if needed
-      }
-    }, [totalPages]);
 
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages); // Adjust down if needed
+    }
+  }, [totalPages]);
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
-  
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
@@ -214,7 +216,6 @@ const SampleArea = () => {
     setSelectedSample(null); // Ensure the selected sample is set
     setActionType(null);
     setShowModal(false);
-    
   };
   const handleSubmit = async () => {
     const trimmedComment = comment.trim();
@@ -237,18 +238,17 @@ const SampleArea = () => {
       );
 
       if (response.data.success) {
-        notifySuccess(response.data.message)
+        notifySuccess(response.data.message);
         setShowModal(false);
         setComment("");
-        fetchSamples(); 
-        setCurrentPage(1)
+        fetchSamples();
+        setCurrentPage(1);
       } else {
-        notifyError("Failed to update committee status. Please try again.")
+        notifyError("Failed to update committee status. Please try again.");
       }
     } catch (error) {
       console.error("❌ Error updating committee status:", error);
       if (error.response?.data?.error) {
-
         notifyError(`Error: ${error.response.data.error}`);
       } else {
         notifyError("Unexpected error occurred.");
@@ -257,10 +257,11 @@ const SampleArea = () => {
   };
   const handleScroll = (e) => {
     const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
-  
+
     if (isVerticalScroll) {
-      const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
-  
+      const bottom =
+        e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+
       if (bottom && currentPage < totalPages) {
         setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
         fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
@@ -269,7 +270,7 @@ const SampleArea = () => {
   };
 
   useEffect(() => {
-    if (showModal ||showCommentModal) {
+    if (showModal || showCommentModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -278,7 +279,7 @@ const SampleArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showModal,showCommentModal]);
+  }, [showModal, showCommentModal]);
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -292,155 +293,163 @@ const SampleArea = () => {
         <h4 className="tp-8 fw-bold text-success text-center pb-2">
           Pending Review List
         </h4>
-        
+
         {/* Table */}
         <div
           onScroll={handleScroll}
           className="table-responsive"
           style={{ overflowX: "auto" }}
         >
-      <table className="table table-bordered table-hover text-center align-middle">
-        <thead className="table-primary text-dark">
-          <tr>
-            {tableHeaders.map(({ label, key }, index) => (
-              <th key={index} className="px-2">
-                <div className="d-flex flex-column align-items-center">
-                  <input
-                    type="text"
-                    className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                    placeholder={`Search ${label}`}
-                    onChange={(e) => handleFilterChange(key, e.target.value)}
-                    style={{ minWidth: "100px" }}  // Adjusted minWidth
-                  />
-                  <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
-                    {label}
-                  </span>
-                </div>
-              </th>
-            ))}
-            <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody className="table-light">
-          {currentData.length > 0 ? (
-            currentData.map((sample) => (
-              <tr
-                key={sample.id}
-                onClick={() => {
-                  setSelectedSample(sample);
-                  setSampleShowModal(true);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                {tableHeaders.map(({ key }, index) => (
-                  <td
-                    key={index}
-                    className="text-center"
-                    style={{
-                      maxWidth: "150px", 
-                      wordWrap: "break-word",
-                      whiteSpace: "normal",
+          <table className="table table-bordered table-hover text-center align-middle">
+            <thead className="table-primary text-dark">
+              <tr>
+                {tableHeaders.map(({ label, key }, index) => (
+                  <th key={index} className="px-2">
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) =>
+                          handleFilterChange(key, e.target.value)
+                        }
+                        style={{ minWidth: "100px" }} // Adjusted minWidth
+                      />
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                        {label}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+                <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-light">
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr
+                    key={sample.id}
+                    onClick={() => {
+                      setSelectedSample(sample);
+                      setSampleShowModal(true);
                     }}
+                    style={{ cursor: "pointer" }}
                   >
-                    {["study_copy", "irb_file", "nbc_file"].includes(key) ? (
-                      <button
-                        className={`btn btn-sm ${
-                          viewedDocuments[sample.cart_id]?.[key]
-                            ? "btn-outline-primary"
-                            : "btn-outline-primary"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDocument(sample[key], key, sample.cart_id);
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className="text-center"
+                        style={{
+                          maxWidth: "150px",
+                          wordWrap: "break-word",
+                          whiteSpace: "normal",
                         }}
                       >
-                        Download
-                        <FontAwesomeIcon icon={faDownload} size="sm" />
-                      </button>
-                    ) : key === "reporting_mechanism" && sample[key] ? (
-                      sample[key].length > 50 ? (
-                        <span
-                          className="text-primary"
-                          style={{
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedComment(sample[key]);
-                            setShowCommentModal(true);
-                          }}
-                          title={sample[key]}
-                        >
-                          Click to View
-                        </span>
-                      ) : (
-                        <span title={sample[key]}>{sample[key]}</span>
-                      )
-                    ) :  key === "comments" && sample[key] ? (
-                      sample[key].length > 50 ? (
-                        <span
-                          className="text-primary"
-                          style={{
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedComment(sample[key]);
-                            setShowCommentModal(true);
-                          }}
-                          title={sample[key]}
-                        >
-                          Click to View
-                        </span>
-                      ) : (
-                        <span title={sample[key]}>{sample[key]}</span>
-                      )
-                    ):
-                    (
-                      sample[key] || "----"
-                    )}
+                        {["study_copy", "irb_file", "nbc_file"].includes(
+                          key
+                        ) ? (
+                          <button
+                            className={`btn btn-sm ${
+                              viewedDocuments[sample.cart_id]?.[key]
+                                ? "btn-outline-primary"
+                                : "btn-outline-primary"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDocument(
+                                sample[key],
+                                key,
+                                sample.cart_id
+                              );
+                            }}
+                          >
+                            Download
+                            <FontAwesomeIcon icon={faDownload} size="sm" />
+                          </button>
+                        ) : key === "reporting_mechanism" && sample[key] ? (
+                          sample[key].length > 50 ? (
+                            <span
+                              className="text-primary"
+                              style={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedComment(sample[key]);
+                                setShowCommentModal(true);
+                              }}
+                              title={sample[key]}
+                            >
+                              Click to View
+                            </span>
+                          ) : (
+                            <span title={sample[key]}>{sample[key]}</span>
+                          )
+                        ) : key === "comments" && sample[key] ? (
+                          sample[key].length > 50 ? (
+                            <span
+                              className="text-primary"
+                              style={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedComment(sample[key]);
+                                setShowCommentModal(true);
+                              }}
+                              title={sample[key]}
+                            >
+                              Click to View
+                            </span>
+                          ) : (
+                            <span title={sample[key]}>{sample[key]}</span>
+                          )
+                        ) : (
+                          sample[key] || "----"
+                        )}
+                      </td>
+                    ))}
+                    <td className="text-center">
+                      <div
+                        className="d-flex justify-content-center gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {sample.committee_status !== "Refused" && (
+                          <button
+                            className="btn btn-outline-success btn-sm"
+                            onClick={() => handleOpenModal("Approved", sample)}
+                            title="Approve Sample"
+                          >
+                            <FontAwesomeIcon icon={faCheck} size="sm" />
+                          </button>
+                        )}
+                        {sample.committee_status !== "Approved" && (
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => handleOpenModal("Refused", sample)}
+                            title="Refuse Sample"
+                          >
+                            <FontAwesomeIcon icon={faTimes} size="sm" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="30" className="text-center">
+                    No samples available
                   </td>
-                ))}
-               <td className="text-center">
-  <div className="d-flex justify-content-center gap-2" onClick={(e) => e.stopPropagation()}>
-    {sample.committee_status !== "Refused" && (
-      <button
-        className="btn btn-outline-success btn-sm"
-        onClick={() => handleOpenModal("Approved", sample)}
-        title="Approve Sample"
-      >
-        <FontAwesomeIcon icon={faCheck} size="sm" />
-      </button>
-    )}
-    {sample.committee_status !== "Approved" && (
-      <button
-        className="btn btn-outline-danger btn-sm"
-        onClick={() => handleOpenModal("Refused", sample)}
-        title="Refuse Sample"
-      >
-        <FontAwesomeIcon icon={faTimes} size="sm" />
-      </button>
-    )}
-  </div>
-</td>
-
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="30" className="text-center">
-                No samples available
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {showModal && (
           <Modal show={showModal} onHide={handleCloseModal}>
@@ -475,11 +484,19 @@ const SampleArea = () => {
 
         {/* Additional Mechanism Modal */}
         {showCommentModal && (
-          <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
+          <Modal
+            show={showCommentModal}
+            onHide={() => setShowCommentModal(false)}
+          >
             <Modal.Header closeButton>
-              <Modal.Title className="h6" sty>Comments</Modal.Title>
+              <Modal.Title className="h6" sty>
+                Comments
+              </Modal.Title>
             </Modal.Header>
-            <Modal.Body className="overflow-auto" style={{ maxHeight: '600px' }}>
+            <Modal.Body
+              className="overflow-auto"
+              style={{ maxHeight: "600px" }}
+            >
               <p>{selectedComment}</p>
             </Modal.Body>
           </Modal>
@@ -490,7 +507,7 @@ const SampleArea = () => {
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage - 1} 
+            focusPage={currentPage - 1}
           />
         )}
         {showSampleModal && selectedSample && (
@@ -531,7 +548,10 @@ const SampleArea = () => {
               }}
             >
               {/* Modal Header */}
-              <div className="modal-header d-flex justify-content-between align-items-center" style={{ backgroundColor: "#cfe2ff", color: "#000" }}>
+              <div
+                className="modal-header d-flex justify-content-between align-items-center"
+                style={{ backgroundColor: "#cfe2ff", color: "#000" }}
+              >
                 <h5 className="fw-bold">{selectedSample.samplename}</h5>
                 <button
                   type="button"
@@ -564,8 +584,7 @@ const SampleArea = () => {
                       </p>
                       <p>
                         <strong>Country of Collection:</strong>{" "}
-                        {selectedSample.CountryofCollection
-                        }
+                        {selectedSample.CountryofCollection}
                       </p>
                       {/* <p>
                         <strong>Status:</strong> {selectedSample.status}
