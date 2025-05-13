@@ -30,12 +30,11 @@ const ContainerTypeArea = () => {
   const [editContainerTypename, setEditContainerTypename] = useState(null); // State for selected City to edit
   const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+  const [filteredContainertypename, setFilteredContainertypename] = useState([]); // Store filtered cities
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+
   // Calculate total pages
-  const [filteredContainertypename, setFilteredContainertypename] = useState(
-    []
-  ); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -125,7 +124,7 @@ const ContainerTypeArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -133,7 +132,7 @@ const ContainerTypeArea = () => {
         `${url}/samplefields/post-samplefields/containertype`,
         formData
       );
-      
+
       setSuccessMessage("Container Type  Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -159,7 +158,7 @@ const ContainerTypeArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Container Type Name deleted successfully.");
 
@@ -194,7 +193,7 @@ const ContainerTypeArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (containertypename) => {
-   
+
 
     setSelectedContainerTypenameId(containertypename.id);
     setEditContainerTypename(containertypename);
@@ -215,7 +214,7 @@ const ContainerTypeArea = () => {
         `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
         formData
       );
-      
+
 
       fetchContainerTypename();
 
@@ -244,11 +243,12 @@ const ContainerTypeArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-   
+
     const file = e.target.files[0];
     if (!file) return;
-    
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -264,7 +264,7 @@ const ContainerTypeArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-     
+
 
       try {
         // POST request inside the same function
@@ -272,7 +272,7 @@ const ContainerTypeArea = () => {
           `${url}/samplefields/post-samplefields/containertype`,
           { bulkData: dataWithAddedBy }
         );
-      
+
 
         fetchContainerTypename();
       } catch (error) {
@@ -288,6 +288,21 @@ const ContainerTypeArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredContainertypename.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Container Type");
+
+    XLSX.writeFile(workbook, "Container-Type-List.xlsx");
   };
 
   return (
@@ -310,6 +325,27 @@ const ContainerTypeArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Container Type List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Container Type Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -320,10 +356,10 @@ const ContainerTypeArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -335,10 +371,10 @@ const ContainerTypeArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",

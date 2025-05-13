@@ -32,8 +32,8 @@ const TestResultUnitArea = () => {
   const [editTestResultUnitname, setEditTestResultUnitname] = useState(null); // State for selected TestMethod to edit
   const [testResultUnitname, setTestResultUnitname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+  const [filteredTestResultunitname, setFilteredTestResultunitname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [filteredTestResultunit, setFilteredTestResultunit] = useState([]);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
@@ -49,7 +49,7 @@ const TestResultUnitArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testresultunit`
       );
-      setFilteredTestResultunit(response.data);
+      setFilteredTestResultunitname(response.data);
       setTestResultUnitname(response.data); // Store fetched TestMethod in state
     } catch (error) {
       console.error("Error fetching Test ResultUnit :", error);
@@ -58,16 +58,16 @@ const TestResultUnitArea = () => {
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestResultunit.length / itemsPerPage)
+      Math.ceil(filteredTestResultunitname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestResultunit]);
+  }, [filteredTestResultunitname]);
 
-  const currentData = filteredTestResultunit.slice(
+  const currentData = filteredTestResultunitname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -90,7 +90,7 @@ const TestResultUnitArea = () => {
       );
     }
 
-    setFilteredTestResultunit(filtered);
+    setFilteredTestResultunitname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -122,7 +122,7 @@ const TestResultUnitArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -130,7 +130,7 @@ const TestResultUnitArea = () => {
         `${url}/samplefields/post-samplefields/testresultunit`,
         formData
       );
-    
+
       setSuccessMessage("Test ResultUnit Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -153,7 +153,7 @@ const TestResultUnitArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`
       );
-    
+
 
       // Set success message
       setSuccessMessage("Test ResultUnit Name deleted successfully.");
@@ -188,7 +188,7 @@ const TestResultUnitArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testResultUnitname) => {
-    
+
 
     setSelectedTestResultUnitnameId(testResultUnitname.id);
     setEditTestResultUnitname(testResultUnitname);
@@ -209,7 +209,7 @@ const TestResultUnitArea = () => {
         `${url}/samplefields/put-samplefields/testresultUnit/${selectedTestResultUnitnameId}`,
         formData
       );
-      
+
 
       fetchTestResultUnitname();
 
@@ -239,11 +239,12 @@ const TestResultUnitArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-    
+
     const file = e.target.files[0];
     if (!file) return;
-   
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -259,7 +260,7 @@ const TestResultUnitArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-     
+
 
       try {
         // POST request inside the same function
@@ -267,7 +268,7 @@ const TestResultUnitArea = () => {
           `${url}/samplefields/post-samplefields/testresultunit`,
           { bulkData: dataWithAddedBy }
         );
-        
+
         fetchTestResultUnitname();
       } catch (error) {
         console.error("Error adding Test ResultUnit :", error);
@@ -282,6 +283,21 @@ const TestResultUnitArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestResultunitname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test Result Unit");
+
+    XLSX.writeFile(workbook, "Test-Result-Unit-List.xlsx");
   };
 
   return (
@@ -305,6 +321,27 @@ const TestResultUnitArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Test Result Unit List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Test Result Unit Button */}
                 <button
                   onClick={() => setShowAddModal(true)}

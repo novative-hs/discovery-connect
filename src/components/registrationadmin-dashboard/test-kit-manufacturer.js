@@ -28,11 +28,10 @@ const TestKitManufacturerArea = () => {
     name: "",
     added_by: id,
   });
-  const [editTestKitManufacturername, setEditTestKitManufacturername] =
-    useState(null); // State for selected TestMethod to edit
-  const [testKitManufacturername, setTestKitManufacturername] = useState([]); // State to hold fetched TestKitManufacturer
+  const [editTestKitManufacturername, setEditTestKitManufacturername] = useState(null); // State for selected City to edit
+  const [testKitManufacturername, setTestKitManufacturername] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestkitmanufacturer, setFilteredTestkitmanufacturer] = useState([])
+  const [filteredTestkitmanufacturername, setFilteredTestkitmanufacturername] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -49,7 +48,7 @@ const TestKitManufacturerArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testkitmanufacturer`
       );
-      setFilteredTestkitmanufacturer(response.data); // Initialize filtered list
+      setFilteredTestkitmanufacturername(response.data); // Initialize filtered list
       setTestKitManufacturername(response.data); // Store fetched TestMethod in state
     } catch (error) {
       console.error("Error fetching Test KitManufacturer :", error);
@@ -57,16 +56,16 @@ const TestKitManufacturerArea = () => {
   };
 
   useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturer.length / itemsPerPage));
+    const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturername.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestkitmanufacturer]);
+  }, [filteredTestkitmanufacturername]);
 
 
-  const currentData = filteredTestkitmanufacturer.slice(
+  const currentData = filteredTestkitmanufacturername.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -86,7 +85,7 @@ const TestKitManufacturerArea = () => {
       );
     }
 
-    setFilteredTestkitmanufacturer(filtered);
+    setFilteredTestkitmanufacturername(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -118,7 +117,7 @@ const TestKitManufacturerArea = () => {
   };
 
   const handleSubmit = async (e) => {
-   
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -126,7 +125,7 @@ const TestKitManufacturerArea = () => {
         `${url}/samplefields/post-samplefields/testkitmanufacturer`,
         formData
       );
-     
+
       setSuccessMessage("Test Kit Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -149,7 +148,7 @@ const TestKitManufacturerArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Test Kit Manufacturer  Name deleted successfully.");
 
@@ -184,7 +183,7 @@ const TestKitManufacturerArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testkitmanufacturername) => {
-   
+
 
     setSelectedTestKitManufacturernameId(testkitmanufacturername.id);
     setEditTestKitManufacturername(testkitmanufacturername);
@@ -205,7 +204,7 @@ const TestKitManufacturerArea = () => {
         `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
         formData
       );
-    
+
 
       fetchTestKitManufacturername();
 
@@ -235,11 +234,12 @@ const TestKitManufacturerArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-   
+
     const file = e.target.files[0];
     if (!file) return;
-  
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -255,7 +255,7 @@ const TestKitManufacturerArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-    
+
 
       try {
         // POST request inside the same function
@@ -263,7 +263,7 @@ const TestKitManufacturerArea = () => {
           `${url}/samplefields/post-samplefields/testkitmanufacturer`,
           { bulkData: dataWithAddedBy }
         );
-        
+
 
         fetchTestKitManufacturername();
       } catch (error) {
@@ -279,6 +279,21 @@ const TestKitManufacturerArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestkitmanufacturername.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test Kit Manufacturer");
+
+    XLSX.writeFile(workbook, "Test-Kit-Manufacturer-List.xlsx");
   };
 
   return (
@@ -302,6 +317,27 @@ const TestKitManufacturerArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Test Kit Manufacturer List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Test Kit Manufacturer Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -312,10 +348,10 @@ const TestKitManufacturerArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -327,10 +363,10 @@ const TestKitManufacturerArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",

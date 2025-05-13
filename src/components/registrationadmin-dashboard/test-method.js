@@ -32,8 +32,8 @@ const TestMethodArea = () => {
   const [editTestMethodname, setEditTestMethodname] = useState(null); // State for selected TestMethod to edit
   const [testmethodname, setTestMethodname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+  const [filteredTestMethodname, setFilteredTestMethodname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [filteredTestMethod, setFilteredTestMethod] = useState([]);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
@@ -49,7 +49,7 @@ const TestMethodArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testmethod`
       );
-      setFilteredTestMethod(response.data);
+      setFilteredTestMethodname(response.data);
       setTestMethodname(response.data); // Store fetched TestMethod in state
     } catch (error) {
       console.error("Error fetching TestMethod :", error);
@@ -58,16 +58,16 @@ const TestMethodArea = () => {
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestMethod.length / itemsPerPage)
+      Math.ceil(filteredTestMethodname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestMethod]);
+  }, [filteredTestMethodname]);
 
-  const currentData = filteredTestMethod.slice(
+  const currentData = filteredTestMethodname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -90,7 +90,7 @@ const TestMethodArea = () => {
       );
     }
 
-    setFilteredTestMethod(filtered);
+    setFilteredTestMethodname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -121,7 +121,7 @@ const TestMethodArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -129,7 +129,7 @@ const TestMethodArea = () => {
         `${url}/samplefields/post-samplefields/testmethod`,
         formData
       );
-      
+
       setSuccessMessage("Test Method Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -155,7 +155,7 @@ const TestMethodArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testmethod/${selectedTestMethodnameId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Test Method Name deleted successfully.");
 
@@ -189,7 +189,7 @@ const TestMethodArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testmethodname) => {
-   
+
 
     setSelectedTestMethodnameId(testmethodname.id);
     setEditTestMethodname(testmethodname);
@@ -210,7 +210,7 @@ const TestMethodArea = () => {
         `${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`,
         formData
       );
-      
+
 
       fetchTestMethodname();
 
@@ -240,11 +240,12 @@ const TestMethodArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-    
+
     const file = e.target.files[0];
     if (!file) return;
-    
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -260,7 +261,7 @@ const TestMethodArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      
+
 
       try {
         // POST request inside the same function
@@ -270,7 +271,7 @@ const TestMethodArea = () => {
             bulkData: dataWithAddedBy,
           }
         );
-        
+
 
         fetchTestMethodname();
       } catch (error) {
@@ -286,6 +287,21 @@ const TestMethodArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestMethodname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test Method");
+
+    XLSX.writeFile(workbook, "Test-Method-List.xlsx");
   };
 
   return (
@@ -308,6 +324,27 @@ const TestMethodArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Test Method List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Test Method Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -318,10 +355,10 @@ const TestMethodArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -333,10 +370,10 @@ const TestMethodArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -363,7 +400,7 @@ const TestMethodArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                   // { label: "ID", placeholder: "Search ID", field: "id" },
+                    // { label: "ID", placeholder: "Search ID", field: "id" },
                     {
                       label: "Test Method",
                       placeholder: "Search Test Method",

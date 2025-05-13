@@ -23,22 +23,15 @@ const TestSystemManufacturerArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState();
-  const [
-    selectedTestSystemManufacturernameId,
-    setSelectedTestSystemManufacturernameId,
-  ] = useState(null); // Store ID of Plasma to delete
+  const [ selectedTestSystemManufacturernameId, setSelectedTestSystemManufacturernameId,] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestSystemManufacturername, setEditTestSystemManufacturername] =
-    useState(null); // State for selected TestMethod to edit
-  const [testsystemmanufacturername, setTestSystemManufacturername] = useState(
-    []
-  ); // State to hold fetched City
+  const [editTestSystemManufacturername, setEditTestSystemManufacturername] = useState(null); // State for selected City to edit
+  const [testsystemmanufacturername, setTestSystemManufacturername] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestSystemmanufacturer, setFilteredTestSystemmanufacturer] =
-    useState([]);
+  const [filteredTestSystemmanufacturername, setFilteredTestSystemmanufacturername] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -55,7 +48,7 @@ const TestSystemManufacturerArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testsystemmanufacturer`
       );
-      setFilteredTestSystemmanufacturer(response.data);
+      setFilteredTestSystemmanufacturername(response.data);
       setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
     } catch (error) {
       console.error("Error fetching Test System :", error);
@@ -64,16 +57,16 @@ const TestSystemManufacturerArea = () => {
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestSystemmanufacturer.length / itemsPerPage)
+      Math.ceil(filteredTestSystemmanufacturername.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestSystemmanufacturer]);
+  }, [filteredTestSystemmanufacturername]);
 
-  const currentData = filteredTestSystemmanufacturer.slice(
+  const currentData = filteredTestSystemmanufacturername.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -96,7 +89,7 @@ const TestSystemManufacturerArea = () => {
       );
     }
 
-    setFilteredTestSystemmanufacturer(filtered);
+    setFilteredTestSystemmanufacturername(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -128,7 +121,7 @@ const TestSystemManufacturerArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -136,7 +129,7 @@ const TestSystemManufacturerArea = () => {
         `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
         formData
       );
-     
+
       setSuccessMessage("Test System Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -159,7 +152,7 @@ const TestSystemManufacturerArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Test System Manufacturer Name deleted successfully.");
 
@@ -193,7 +186,7 @@ const TestSystemManufacturerArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (testsystemmanufacturername) => {
-   
+
 
     setSelectedTestSystemManufacturernameId(testsystemmanufacturername.id);
     setEditTestSystemManufacturername(testsystemmanufacturername);
@@ -214,7 +207,7 @@ const TestSystemManufacturerArea = () => {
         `${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`,
         formData
       );
-     
+
 
       fetchTestSystemManufacturername();
 
@@ -245,10 +238,10 @@ const TestSystemManufacturerArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-   
+
     const file = e.target.files[0];
     if (!file) return;
-    
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -264,7 +257,7 @@ const TestSystemManufacturerArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-     
+
 
       try {
         // POST request inside the same function
@@ -272,7 +265,7 @@ const TestSystemManufacturerArea = () => {
           `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
           { bulkData: dataWithAddedBy }
         );
-      
+
 
         fetchTestSystemManufacturername();
       } catch (error) {
@@ -288,6 +281,21 @@ const TestSystemManufacturerArea = () => {
       testsystemmanufacturername: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestSystemmanufacturername.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test System Manufacturer");
+
+    XLSX.writeFile(workbook, "Test-System-Manufacturer-List.xlsx");
   };
 
   return (
@@ -310,6 +318,27 @@ const TestSystemManufacturerArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Test System Manufacturer List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Test System Manufacturer Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -320,10 +349,10 @@ const TestSystemManufacturerArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -338,7 +367,7 @@ const TestSystemManufacturerArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",

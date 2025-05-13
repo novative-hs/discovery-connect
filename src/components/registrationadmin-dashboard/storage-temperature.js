@@ -21,19 +21,17 @@ const StorageTemperatureArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-    const [historyData, setHistoryData] = useState([]);
-  const [selectedstoragetemperaturenameId, setSelectedStoragetemperaturenameId] =
-    useState(null); // Store ID of City to delete
-   const [formData, setFormData] = useState({
+  const [historyData, setHistoryData] = useState([]);
+  const [selectedstoragetemperaturenameId, setSelectedStoragetemperaturenameId] = useState(null); // Store ID of City to delete
+  const [formData, setFormData] = useState({
     name: "",
-      added_by: id,
-    });
-  const [editStoragetemperaturename, setEditStoragetemperaturename] =
-    useState(null); // State for selected City to edit
+    added_by: id,
+  });
+  const [editStoragetemperaturename, setEditStoragetemperaturename] = useState(null); // State for selected City to edit
   const [storagetemperaturename, setStoragetemperaturename] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+  const [filteredStoragetemperaturename, setFilteredStoragetemperaturename] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
-   const [filteredSampletemperaturename, setFilteredSampletemperaturename] = useState([]); // Store filtered cities
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
@@ -42,7 +40,7 @@ const StorageTemperatureArea = () => {
 
   // Fetch City from backend when component loads
   useEffect(() => {
-    
+
     fetchStoragetemperaturename(); // Call the function when the component mounts
   }, []);
   const fetchStoragetemperaturename = async () => {
@@ -50,7 +48,7 @@ const StorageTemperatureArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/storagetemperature`
       );
-      setFilteredSampletemperaturename(response.data); // Initialize filtered list
+      setFilteredStoragetemperaturename(response.data); // Initialize filtered list
       setStoragetemperaturename(response.data); // Store fetched City in state
     } catch (error) {
       console.error("Error fetching Storage Temperature:", error);
@@ -58,58 +56,58 @@ const StorageTemperatureArea = () => {
   };
 
   useEffect(() => {
-      const pages = Math.max(1, Math.ceil(filteredSampletemperaturename.length / itemsPerPage));
-      setTotalPages(pages);
-      
-      if (currentPage >= pages) {
-        setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-      }
-    }, [filteredSampletemperaturename]);
-    
-   
-     const currentData = filteredSampletemperaturename.slice(
-       currentPage * itemsPerPage,
-       (currentPage + 1) * itemsPerPage
-     );
-   
-     const handlePageChange = (event) => {
-       setCurrentPage(event.selected);
-     };
-   
-     const handleFilterChange = (field, value) => {
-       let filtered = [];
-   
-       if (value.trim() === "") {
-         filtered = samplecondition; // Show all if filter is empty
-       } else {
-         filtered = samplecondition.filter((samplecondition) =>
-          samplecondition[field]?.toString().toLowerCase().includes(value.toLowerCase())
-         );
-       }
-   
-       setFilteredSampletemperaturename(filtered);
-       setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-       setCurrentPage(0); // Reset to first page after filtering
-     };
-   
-     const fetchHistory = async (filterType, id) => {
-       try {
-         const response = await fetch(
-           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-         );
-         const data = await response.json();
-         setHistoryData(data);
-       } catch (error) {
-         console.error("Error fetching history:", error);
-       }
-     };
-   
-     // Call this function when opening the modal
-     const handleShowHistory = (filterType, id) => {
-       fetchHistory(filterType, id);
-       setShowHistoryModal(true);
-     };
-  
+    const pages = Math.max(1, Math.ceil(filteredStoragetemperaturename.length / itemsPerPage));
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredStoragetemperaturename]);
+
+
+  const currentData = filteredStoragetemperaturename.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
+
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = samplecondition; // Show all if filter is empty
+    } else {
+      filtered = samplecondition.filter((samplecondition) =>
+        samplecondition[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      );
+    }
+
+    setFilteredStoragetemperaturename(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
+  };
+
+  const fetchHistory = async (filterType, id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
+      );
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -120,7 +118,7 @@ const StorageTemperatureArea = () => {
   };
 
   const handleSubmit = async (e) => {
-   
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -128,14 +126,14 @@ const StorageTemperatureArea = () => {
         `${url}/samplefields/post-samplefields/storagetemperature`,
         formData
       );
-      
+
       setSuccessMessage("Storage Temperature added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
       fetchStoragetemperaturename();
       // Clear form after submission
-    resetFormData()
+      resetFormData()
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding Storage temperature:", error);
@@ -148,7 +146,7 @@ const StorageTemperatureArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Storage temperature Name deleted successfully.");
 
@@ -157,7 +155,7 @@ const StorageTemperatureArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-    fetchStoragetemperaturename();
+      fetchStoragetemperaturename();
 
       // Close modal after deletion
       setShowDeleteModal(false);
@@ -180,10 +178,10 @@ const StorageTemperatureArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal,showHistoryModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (storagetemperaturename) => {
-   
+
 
     setSelectedStoragetemperaturenameId(storagetemperaturename.id);
     setEditStoragetemperaturename(storagetemperaturename);
@@ -204,7 +202,7 @@ const StorageTemperatureArea = () => {
         `${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`,
         formData
       );
-    
+
 
       fetchStoragetemperaturename();
 
@@ -233,11 +231,12 @@ const StorageTemperatureArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-   
+
     const file = e.target.files[0];
     if (!file) return;
-  
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -253,7 +252,7 @@ const StorageTemperatureArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-     
+
 
       try {
         // POST request inside the same function
@@ -261,7 +260,7 @@ const StorageTemperatureArea = () => {
           `${url}/samplefields/post-samplefields/storagetemperature`,
           { bulkData: dataWithAddedBy }
         );
-        
+
 
         fetchStoragetemperaturename();
       } catch (error) {
@@ -279,27 +278,63 @@ const StorageTemperatureArea = () => {
     });
   };
 
+  const handleExportToExcel = () => {
+    const dataToExport = filteredStoragetemperaturename.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Storage Temperature");
+
+    XLSX.writeFile(workbook, "Storage-Temperature-List.xlsx");
+  };
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
-    <div className="container">
-      <div className="row justify-content-center">
-       
-              {/* Button Container */}
-              <div className="d-flex flex-column w-100">
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    className="alert alert-success w-100 text-start mb-2"
-                    role="alert"
-                  >
-                    {successMessage}
-                  </div>
-                )}
+      <div className="container">
+        <div className="row justify-content-center">
 
-                {/* Button Container */}
-                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+          {/* Button Container */}
+          <div className="d-flex flex-column w-100">
+            {/* Success Message */}
+            {successMessage && (
+              <div
+                className="alert alert-success w-100 text-start mb-2"
+                role="alert"
+              >
+                {successMessage}
+              </div>
+            )}
+
+            {/* Button Container */}
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Storage Temperature List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Storage Temperature Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -313,7 +348,7 @@ const StorageTemperatureArea = () => {
                     fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -347,404 +382,404 @@ const StorageTemperatureArea = () => {
                 </label>
               </div>
             </div>
-              </div>
+          </div>
 
-              {/* Table with responsive scroll */}
-              <div className="table-responsive w-100">
+          {/* Table with responsive scroll */}
+          <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
-                      {[
-                       // { label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2" },
-                        {
-                          label: "Storage Temperature",
-                          placeholder: "Search Storage temperature",
-                          field: "name",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Added By",
-                          placeholder: "Search Added by",
-                          field: "added_by",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Created At",
-                          placeholder: "Search Created at",
-                          field: "created_at",
-                          width: "col-md-1"
-                        },
-                        {
-                          label: "Updated At",
-                          placeholder: "Search Updated at",
-                          field: "updated_at",
-                          width: "col-md-1"
-                        },
-                      ].map(({ label, placeholder, field ,width}) => (
-                        <th key={field} className={`${width} px-2`}>
-                        <input
-                          type="text"
-                          className="form-control w-100 px-2 py-1 mx-auto"
-                          placeholder={placeholder}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
-                        />
-                          {label}
-                        </th>
-                      ))}
-                      <th className="col-md-1">Action</th>
-                    </tr>
-                  </thead>
+                  {[
+                    // { label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2" },
+                    {
+                      label: "Storage Temperature",
+                      placeholder: "Search Storage temperature",
+                      field: "name",
+                      width: "col-md-1"
+                    },
+                    {
+                      label: "Added By",
+                      placeholder: "Search Added by",
+                      field: "added_by",
+                      width: "col-md-1"
+                    },
+                    {
+                      label: "Created At",
+                      placeholder: "Search Created at",
+                      field: "created_at",
+                      width: "col-md-1"
+                    },
+                    {
+                      label: "Updated At",
+                      placeholder: "Search Updated at",
+                      field: "updated_at",
+                      width: "col-md-1"
+                    },
+                  ].map(({ label, placeholder, field, width }) => (
+                    <th key={field} className={`${width} px-2`}>
+                      <input
+                        type="text"
+                        className="form-control w-100 px-2 py-1 mx-auto"
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
+                      />
+                      {label}
+                    </th>
+                  ))}
+                  <th className="col-md-1">Action</th>
+                </tr>
+              </thead>
 
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map(
-                        ({ id, name, added_by, created_at, updated_at }) => (
-                          <tr key={id}>
-                            {/* <td>{id}</td> */}
-                            <td>{name}</td>
-                            {/* <td>{added_by}</td> */}
-                            <td>DB Admin</td>
-                            <td>{formatDate(created_at)}</td>
-                            <td>{formatDate(updated_at)}</td>
-                            <td>
-                            <div className="d-flex justify-content-center gap-3">
-                                <button
-                                  className="btn btn-success btn-sm "
-                                  onClick={() =>
-                                    handleEditClick({
-                                      id,
-                                      name,
-                                      added_by,
-                                      created_at,
-                                      updated_at,
-                                    })
-                                  }
-                                  title="Edit Storage temperature"
-                                >
-                                  <FontAwesomeIcon icon={faEdit} size="xs" />
-                                </button>
-                                <button
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => {
-                                    setSelectedStoragetemperaturenameId(id);
-                                    setShowDeleteModal(true);
-                                  }}
-                                  title="Delete Storage temperature"
-                                >
-                                  <FontAwesomeIcon icon={faTrash} size="sm" />
-                                </button>
-                                 <button
-                                                                                                className="btn btn-info btn-sm"
-                                                                                                onClick={() =>
-                                                                                                  handleShowHistory("storagetemperature", id)
-                                                                                                }
-                                                                                                title="History Storage temperature"
-                                                                                              >
-                                                                                                <FontAwesomeIcon icon={faHistory} size="sm" />
-                                                                                              </button>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      )
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="text-center">
-                          No Storage temperature Available
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination Controls */}
-              { totalPages >=0 && (
-  <Pagination
-    handlePageClick={handlePageChange}
-    pageCount={totalPages}
-    focusPage={currentPage}
-  />
-)}
-
-
-              {/* Modal for Adding Committe members */}
-              {(showAddModal || showEditModal) && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">
-                            {showAddModal
-                              ? "Add StorageTemperature"
-                              : "Edit StorageTemperature"}
-                          </h5>
-                          <button
-                            type="button"
-                            className="close"
-                            onClick={() => {
-                              setShowAddModal(false);
-                              setShowEditModal(false);
-                              resetFormData(); // Reset form data when closing the modal
-                            }}
-                            style={{
-                              fontSize: "1.5rem",
-                              position: "absolute",
-                              right: "10px",
-                              top: "10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span>&times;</span>
-                          </button>
-                        </div>
-
-                        <form
-                          onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
-                        >
-                          <div className="modal-body">
-                            {/* Form Fields */}
-                            <div className="form-group">
-                              <label>Storage temperature Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="name" // Fix here
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <div className="modal-footer">
-                            <button type="submit" className="btn btn-primary">
-                              {showAddModal
-                                ? "Save"
-                                : "Update Storagetemperature"}
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map(
+                    ({ id, name, added_by, created_at, updated_at }) => (
+                      <tr key={id}>
+                        {/* <td>{id}</td> */}
+                        <td>{name}</td>
+                        {/* <td>{added_by}</td> */}
+                        <td>DB Admin</td>
+                        <td>{formatDate(created_at)}</td>
+                        <td>{formatDate(updated_at)}</td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-3">
+                            <button
+                              className="btn btn-success btn-sm "
+                              onClick={() =>
+                                handleEditClick({
+                                  id,
+                                  name,
+                                  added_by,
+                                  created_at,
+                                  updated_at,
+                                })
+                              }
+                              title="Edit Storage temperature"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                setSelectedStoragetemperaturenameId(id);
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete Storage temperature"
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() =>
+                                handleShowHistory("storagetemperature", id)
+                              }
+                              title="History Storage temperature"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
                           </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Modal for Deleting cityname */}
-              {showDeleteModal && (
-                <>
-                  {/* Bootstrap Backdrop with Blur */}
-                  <div
-                    className="modal-backdrop fade show"
-                    style={{ backdropFilter: "blur(5px)" }}
-                  ></div>
-
-                  {/* Modal Content */}
-                  <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    role="dialog"
-                    style={{
-                      zIndex: 1050,
-                      position: "fixed",
-                      top: "120px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="modal-dialog" role="document">
-                      <div className="modal-content">
-                        <div
-                          className="modal-header"
-                          style={{ backgroundColor: "transparent" }}
-                        >
-                          <h5 className="modal-title">
-                            Delete Storage temperature
-                          </h5>
-                          <button
-                            type="button"
-                            className="btn-close"
-                            onClick={() => setShowDeleteModal(false)}
-                          ></button>
-                        </div>
-                        <div className="modal-body">
-                          <p>
-                            Are you sure you want to delete this Storage
-                            temperature?
-                          </p>
-                        </div>
-                        <div className="modal-footer">
-                          <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              {showHistoryModal && (
-                                            <>
-                                              {/* Bootstrap Backdrop with Blur */}
-                                              <div
-                                                className="modal-backdrop fade show"
-                                                style={{ backdropFilter: "blur(5px)" }}
-                                              ></div>
-                            
-                                              {/* Modal Content */}
-                                              <div
-                                                className="modal show d-block"
-                                                tabIndex="-1"
-                                                role="dialog"
-                                                style={{
-                                                  zIndex: 1050,
-                                                  position: "fixed",
-                                                  top: "100px",
-                                                  left: "50%",
-                                                  transform: "translateX(-50%)",
-                                                }}
-                                              >
-                                                <div className="modal-dialog modal-md" role="document">
-                                                  <div className="modal-content">
-                                                    {/* Modal Header */}
-                                                    <div className="modal-header">
-                                                      <h5 className="modal-title">History</h5>
-                                                      <button
-                                                        type="button"
-                                                        className="close"
-                                                        onClick={() => setShowHistoryModal(false)}
-                                                        style={{
-                                                          fontSize: "1.5rem",
-                                                          position: "absolute",
-                                                          right: "10px",
-                                                          top: "10px",
-                                                          cursor: "pointer",
-                                                        }}
-                                                      >
-                                                        <span>&times;</span>
-                                                      </button>
-                                                    </div>
-                            
-                                                    {/* Chat-style Modal Body */}
-                                                    <div
-                                                      className="modal-body"
-                                                      style={{
-                                                        maxHeight: "500px",
-                                                        overflowY: "auto",
-                                                        backgroundColor: "#e5ddd5", // WhatsApp-style background
-                                                        padding: "15px",
-                                                        borderRadius: "10px",
-                                                      }}
-                                                    >
-                                                      {historyData && historyData.length > 0 ? (
-                                                        historyData.map((log, index) => {
-                                                          const {
-                                                            created_name,
-                                                            updated_name,
-                                                            added_by,
-                                                            created_at,
-                                                            updated_at,
-                                                          } = log;
-                            
-                                                          return (
-                                                            <div
-                                                              key={index}
-                                                              style={{
-                                                                display: "flex",
-                                                                flexDirection: "column",
-                                                                alignItems: "flex-start",
-                                                                marginBottom: "10px",
-                                                              }}
-                                                            >
-                                                              {/* Message for Sample Temperature Addition */}
-                                                              <div
-                                                                style={{
-                                                                  padding: "10px 15px",
-                                                                  borderRadius: "15px",
-                                                                  backgroundColor: "#ffffff",
-                                                                  boxShadow:
-                                                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                                                  maxWidth: "75%",
-                                                                  fontSize: "14px",
-                                                                  textAlign: "left",
-                                                                }}
-                                                              >
-                                                                <b>Sample temperature:</b> {created_name} was <b>added</b>{" "}
-                                                                by Registration Admin at{" "}
-                                                                {moment(created_at).format(
-                                                                  "DD MMM YYYY, h:mm A"
-                                                                )}
-                                                              </div>
-                            
-                                                              {/* Message for City Update (Only if it exists) */}
-                                                              {updated_name && updated_at && (
-                                                                <div
-                                                                  style={{
-                                                                    padding: "10px 15px",
-                                                                    borderRadius: "15px",
-                                                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                                                    boxShadow:
-                                                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                                                    maxWidth: "75%",
-                                                                    fontSize: "14px",
-                                                                    textAlign: "left",
-                                                                    marginTop: "5px", // Spacing between messages
-                                                                  }}
-                                                                >
-                                                                  <b>Sample temperature:</b> {updated_name} was{" "}
-                                                                  <b>updated</b> by Registration Admin at{" "}
-                                                                  {moment(updated_at).format(
-                                                                    "DD MMM YYYY, h:mm A"
-                                                                  )}
-                                                                </div>
-                                                              )}
-                                                            </div>
-                                                          );
-                                                        })
-                                                      ) : (
-                                                        <p className="text-left">No history available.</p>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </>
-                                          )}
-            
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center">
+                      No Storage temperature Available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage}
+            />
+          )}
+
+
+          {/* Modal for Adding Committe members */}
+          {(showAddModal || showEditModal) && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">
+                        {showAddModal
+                          ? "Add StorageTemperature"
+                          : "Edit StorageTemperature"}
+                      </h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => {
+                          setShowAddModal(false);
+                          setShowEditModal(false);
+                          resetFormData(); // Reset form data when closing the modal
+                        }}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    <form
+                      onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
+                    >
+                      <div className="modal-body">
+                        {/* Form Fields */}
+                        <div className="form-group">
+                          <label>Storage temperature Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="name" // Fix here
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="modal-footer">
+                        <button type="submit" className="btn btn-primary">
+                          {showAddModal
+                            ? "Save"
+                            : "Update Storagetemperature"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Modal for Deleting cityname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">
+                        Delete Storage temperature
+                      </h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>
+                        Are you sure you want to delete this Storage
+                        temperature?
+                      </p>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          {showHistoryModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "100px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog modal-md" role="document">
+                  <div className="modal-content">
+                    {/* Modal Header */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">History</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowHistoryModal(false)}
+                        style={{
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>&times;</span>
+                      </button>
+                    </div>
+
+                    {/* Chat-style Modal Body */}
+                    <div
+                      className="modal-body"
+                      style={{
+                        maxHeight: "500px",
+                        overflowY: "auto",
+                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        padding: "15px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            created_name,
+                            updated_name,
+                            added_by,
+                            created_at,
+                            updated_at,
+                          } = log;
+
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Message for Sample Temperature Addition */}
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow:
+                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                <b>Sample temperature:</b> {created_name} was <b>added</b>{" "}
+                                by Registration Admin at{" "}
+                                {moment(created_at).format(
+                                  "DD MMM YYYY, h:mm A"
+                                )}
+                              </div>
+
+                              {/* Message for City Update (Only if it exists) */}
+                              {updated_name && updated_at && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#dcf8c6", // Light green for updates
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                    marginTop: "5px", // Spacing between messages
+                                  }}
+                                >
+                                  <b>Sample temperature:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
+                                  {moment(updated_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
-      
+      </div>
+
     </section>
   );
 };

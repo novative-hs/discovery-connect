@@ -122,7 +122,7 @@ const QuantityUnitArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -130,7 +130,7 @@ const QuantityUnitArea = () => {
         `${url}/samplefields/post-samplefields/quantityunit`,
         formData
       );
-      
+
       setSuccessMessage("Quantityunit added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
@@ -149,7 +149,7 @@ const QuantityUnitArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/quantityunit/${selectedquantityunitnameId}`
       );
-     
+
       // Set success message
       setSuccessMessage("Quantity unit Name deleted successfully.");
 
@@ -183,7 +183,7 @@ const QuantityUnitArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (quantityunitname) => {
-    
+
 
     setSelectedquantityunitnameId(quantityunitname.id);
     setEditquantityunitname(quantityunitname);
@@ -204,7 +204,7 @@ const QuantityUnitArea = () => {
         `${url}/samplefields/put-samplefields/quantityunit/${selectedquantityunitnameId}`,
         formData
       );
-      
+
 
       fetchQuantityunitname();
 
@@ -233,11 +233,12 @@ const QuantityUnitArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-    
+
     const file = e.target.files[0];
     if (!file) return;
-    
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -253,7 +254,7 @@ const QuantityUnitArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-    
+
 
       try {
         // POST request inside the same function
@@ -261,7 +262,7 @@ const QuantityUnitArea = () => {
           `${url}/samplefields/post-samplefields/quantityunit`,
           { bulkData: dataWithAddedBy }
         );
-        
+
 
         fetchQuantityunitname();
       } catch (error) {
@@ -277,6 +278,21 @@ const QuantityUnitArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredQuantityunitname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Quantity Unit");
+
+    XLSX.writeFile(workbook, "Quantity-Unit-List.xlsx");
   };
 
   return (
@@ -299,6 +315,27 @@ const QuantityUnitArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Quantity Unit List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Quantity Unit Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -306,13 +343,13 @@ const QuantityUnitArea = () => {
                     backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >

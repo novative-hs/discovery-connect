@@ -124,7 +124,7 @@ const ConcurrentMedicalConditionsArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -132,7 +132,7 @@ const ConcurrentMedicalConditionsArea = () => {
         `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
         formData
       );
-     
+
       setSuccessMessage(
         "Concurrent Medical ConditionsRoutes Name deleted successfully."
       );
@@ -160,7 +160,7 @@ const ConcurrentMedicalConditionsArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`
       );
-     
+
       setSuccessMessage(
         "Concurrent Medical Conditions Name deleted successfully."
       );
@@ -195,7 +195,7 @@ const ConcurrentMedicalConditionsArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (concurrentmedicalname) => {
-    
+
 
     setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
     setEditConcurrentMedicalname(concurrentmedicalname);
@@ -216,7 +216,7 @@ const ConcurrentMedicalConditionsArea = () => {
         `${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`,
         formData
       );
-    
+
       fetchConcurrentMedicalname();
 
       setShowEditModal(false);
@@ -245,11 +245,12 @@ const ConcurrentMedicalConditionsArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-  
+
     const file = e.target.files[0];
     if (!file) return;
-   
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -265,7 +266,7 @@ const ConcurrentMedicalConditionsArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-    
+
 
       try {
         // POST request inside the same function
@@ -289,6 +290,21 @@ const ConcurrentMedicalConditionsArea = () => {
     });
   };
 
+  const handleExportToExcel = () => {
+    const dataToExport = filteredMedicalConditionname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Concurrent Medical Conditions");
+
+    XLSX.writeFile(workbook, "Concurrent-Medical-Conditions-List.xlsx");
+  };
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -310,6 +326,27 @@ const ConcurrentMedicalConditionsArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Concurrent Medical Conditions List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Concurrent Medical Conditions Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -320,10 +357,10 @@ const ConcurrentMedicalConditionsArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -335,10 +372,10 @@ const ConcurrentMedicalConditionsArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",

@@ -119,7 +119,7 @@ const EthnicityArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       const response = await axios.post(
@@ -146,7 +146,7 @@ const EthnicityArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/ethnicity/${selectedethnicitynameId}`
       );
-    
+
 
       // Set success message
       setSuccessMessage("Ethnicity Name deleted successfully.");
@@ -186,8 +186,6 @@ const EthnicityArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (ethnicityname) => {
-   
-
     setSelectedethnicitynameId(ethnicityname.id);
     setEditethnicityname(ethnicityname);
 
@@ -207,7 +205,7 @@ const EthnicityArea = () => {
         `${url}/samplefields/put-samplefields/ethnicity/${selectedethnicitynameId}`,
         formData
       );
-     
+
 
       fetchEthnicityname();
 
@@ -236,11 +234,12 @@ const EthnicityArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-   
+
     const file = e.target.files[0];
     if (!file) return;
-   
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -256,7 +255,7 @@ const EthnicityArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-     
+
 
       try {
         // POST request inside the same function
@@ -264,7 +263,7 @@ const EthnicityArea = () => {
           `${url}/samplefields/post-samplefields/ethnicity`,
           { bulkData: dataWithAddedBy }
         );
-       
+
 
         fetchEthnicityname();
       } catch (error) {
@@ -280,6 +279,21 @@ const EthnicityArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredEthnicityname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Ethnicities");
+
+    XLSX.writeFile(workbook, "Ethnicity_List.xlsx");
   };
 
   return (
@@ -303,6 +317,27 @@ const EthnicityArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Ethnicity List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Ethnicity Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -310,13 +345,13 @@ const EthnicityArea = () => {
                     backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -607,6 +642,7 @@ const EthnicityArea = () => {
               </div>
             </>
           )}
+
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}

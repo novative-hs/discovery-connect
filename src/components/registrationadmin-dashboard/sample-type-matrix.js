@@ -29,8 +29,7 @@ const SampleTypeMatrixArea = () => {
     name: "",
     added_by: id,
   });
-  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] =
-    useState(null); // State for selected City to edit
+  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] = useState(null); // State for selected City to edit
   const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
   const [filteredSampletypematrixname, setFilteredSampletypematrixname] =
@@ -124,7 +123,7 @@ const SampleTypeMatrixArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
     try {
       // POST request to your backend API
@@ -132,7 +131,7 @@ const SampleTypeMatrixArea = () => {
         `${url}/samplefields/post-samplefields/sampletypematrix`,
         formData
       );
-      
+
       setSuccessMessage("Sample Type Matrix Name deleted successfully.");
 
       // Clear success message after 3 seconds
@@ -158,7 +157,7 @@ const SampleTypeMatrixArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
       );
-      
+
 
       // Set success message
       setSuccessMessage("Sample Type Matrix Name deleted successfully.");
@@ -195,7 +194,7 @@ const SampleTypeMatrixArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (sampletypematrix) => {
-    
+
 
     setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
     setEditSampleTypeMatrixname(sampletypematrix);
@@ -216,7 +215,7 @@ const SampleTypeMatrixArea = () => {
         `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
         formData
       );
-     
+
 
       fetchSampleTypeMatrixname();
 
@@ -246,11 +245,12 @@ const SampleTypeMatrixArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleFileUpload = async (e) => {
-    
+
     const file = e.target.files[0];
     if (!file) return;
-    
+
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -266,7 +266,7 @@ const SampleTypeMatrixArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-      
+
 
       try {
         // POST request inside the same function
@@ -274,7 +274,7 @@ const SampleTypeMatrixArea = () => {
           `${url}/samplefields/post-samplefields/sampletypematrix`,
           { bulkData: dataWithAddedBy }
         );
-        
+
 
         fetchSampleTypeMatrixname();
       } catch (error) {
@@ -290,6 +290,21 @@ const SampleTypeMatrixArea = () => {
       name: "",
       added_by: id,
     });
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredSampletypematrixname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Type Matrix");
+
+    XLSX.writeFile(workbook, "Sample-Type-Matrix-List.xlsx");
   };
 
   return (
@@ -312,6 +327,27 @@ const SampleTypeMatrixArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Sample Type Matrix List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
+
+                {/* Export to Excel button */}
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+
                 {/* Add Sample Type Matrix Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -322,10 +358,10 @@ const SampleTypeMatrixArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -337,10 +373,10 @@ const SampleTypeMatrixArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
