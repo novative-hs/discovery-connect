@@ -324,7 +324,7 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     const fetchCollectionSiteNames = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/collectionsitenames/${id}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/collectionsitenames/${id}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch collection site names");

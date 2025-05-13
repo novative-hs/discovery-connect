@@ -14,7 +14,7 @@ const collectionsiteModel = require("../models/collectionsiteModel")
 const csrModel = require("../models/CSRModel")
 const organizationModel = require("../models/organizationModel")
 const researcherModel = require("../models/researcherModel")
-// const newtablefieldModel = require("../models/newtablefieldModel")
+const newtablefieldModel = require("../models/newtablefieldModel")
 
 const sample_approvalModel = require("../models/sampleapprovalModel")
 const paymentModel = require('../models/paymentModals')
@@ -62,6 +62,6 @@ function Database() {
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();
-  // newtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 }
 Database();

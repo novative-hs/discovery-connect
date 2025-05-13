@@ -1,6 +1,15 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
-
+{table:"csr",
+  columnsToAdd:[
+     {
+        column: "collectionsite_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "collectionsite", column: "id" },
+      },
+  ]
+},
   {
     table: "sample",
     columnsToAdd: [
@@ -9,7 +18,41 @@ const tablesAndColumns = [
         type: "VARCHAR(15)",
       },
     ]
+  },
+  {
+  table: "user_account",
+   columnsToAdd: [
+  //   {
+  //     column: "accountType",
+  //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
+  //   },
+    {
+    column: "password",
+    type: "VARCHAR(255) DEFAULT NULL"
   }
+  ]
+},
+{
+  table: "organization",
+ columnsToDelete: ["ntnNumber"],
+ columnsToAdd: [
+      {
+        column: "website",
+        type: "VARCHAR(250) Null",
+      },
+ ]
+},
+
+{
+  table: "history",
+ columnsToDelete: ["ntnNumber"],
+ columnsToAdd: [
+      {
+        column: "website",
+        type: "VARCHAR(250) Null",
+      },
+ ]
+},
   // {
   //   table: "cart",
   //   columnsToAdd: [
@@ -169,42 +212,42 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
   });
-  await executeSequentially([
-    () =>
-      ensureColumnsExist("user_account", [
-        { column: "OTP", type: "VARCHAR(4)", nullable: true },
-        { column: "otpExpiry", type: "TIMESTAMP", nullable: true },
-      ]),
-    () =>
-      updateEnumColumn("user_account", "accountType", [
-        "Researcher",
-        "Organization",
-        "CollectionSites",
-        "RegistrationAdmin",
-        "TechnicalAdmin",
-        "biobank",
-        "Committeemember",
-        "CSR"
-      ]),
-    () =>
-      updateEnumColumn("organization", "status", [
-        "pending",
-        "active",
-        "inactive"
-      ]),
-    () =>
-      updateEnumColumn("csr", "status", [
-        "pending",
-        "active",
-        "inactive"
-      ]),
-    () =>
-      updateEnumColumn("committeesampleapproval", "committee_status", [
-        "UnderReview",
-        "Approved",
-        "Refused",
-      ]),
-  ]);
+  // await executeSequentially([
+  //   () =>
+  //     ensureColumnsExist("user_account", [
+  //       { column: "OTP", type: "VARCHAR(4)", nullable: true },
+  //       { column: "otpExpiry", type: "TIMESTAMP", nullable: true },
+  //     ]),
+  //   () =>
+  //     updateEnumColumn("user_account", "accountType", [
+  //       "Researcher",
+  //       "Organization",
+  //       "CollectionSites",
+  //       "RegistrationAdmin",
+  //       "TechnicalAdmin",
+  //       "biobank",
+  //       "Committeemember",
+  //       "CSR"
+  //     ]),
+  //   () =>
+  //     updateEnumColumn("organization", "status", [
+  //       "pending",
+  //       "active",
+  //       "inactive"
+  //     ]),
+  //   () =>
+  //     updateEnumColumn("csr", "status", [
+  //       "pending",
+  //       "active",
+  //       "inactive"
+  //     ]),
+  //   () =>
+  //     updateEnumColumn("committeesampleapproval", "committee_status", [
+  //       "UnderReview",
+  //       "Approved",
+  //       "Refused",
+  //     ]),
+  // ]);
 };
 
 module.exports = {
