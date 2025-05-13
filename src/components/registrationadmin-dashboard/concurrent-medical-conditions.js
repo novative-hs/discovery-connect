@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -11,87 +10,94 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
-const DistrictArea = () => {
+import moment from "moment";
+const ConcurrentMedicalConditionsArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on district page is:", id);
+    console.log("account_id on ConcurrentMedicalConditions Area page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selecteddistrictnameId, setselecteddistrictnameId] = useState(null); // Store ID of District to delete
+  const [selectedConcurrentMedicalnameId, setSelectedConcurrentMedicalnameId] =
+    useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
-    districtname: "",
+    name: "",
     added_by: id,
   });
-  const [editDistrictname, setEditDistrictname] = useState(null); // State for selected District to edit
-  const [districtname, setDistrictname] = useState([]); // State to hold fetched District
-  const [filteredDistrictname, setFilteredDistrictname] = useState([]); // Store filtered cities
+  const [editConcurrentMedicalname, setEditConcurrentMedicalname] =
+    useState(null); // State for selected ConcurrentMedical to edit
+  const [concurrentmedicalname, setConcurrentMedicalname] = useState([]); // State to hold fetched TestKitManufacturer
+  const [successMessage, setSuccessMessage] = useState("");
+  const [filteredMedicalConditionname, setFilteredMedicalConditionname] =
+    useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-
-  const [successMessage, setSuccessMessage] = useState("");
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch District from backend when component loads
+  // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    fetchdistrictname(); // Call the function when the component mounts
+    fetchConcurrentMedicalname(); // Call the function when the component mounts
   }, []);
-  const fetchdistrictname = async () => {
+  const fetchConcurrentMedicalname = async () => {
     try {
-      const response = await axios.get(`${url}/district/get-district`);
-      setFilteredDistrictname(response.data);
-      setDistrictname(response.data); // Store fetched District in state
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/concurrentmedicalconditions`
+      );
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data); // Store fetched TestMethod in state
     } catch (error) {
-      console.error("Error fetching District:", error);
+      console.error("Error fetching Concurrent Medical Conditions :", error);
     }
   };
+
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredDistrictname.length / itemsPerPage)
+      Math.ceil(filteredMedicalConditionname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredDistrictname]);
+  }, [filteredMedicalConditionname]);
 
-  const currentData = filteredDistrictname.slice(
+  const currentData = filteredMedicalConditionname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
+
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected); // React Paginate uses 0-based index
+    setCurrentPage(event.selected);
   };
+
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = districtname; // Show all if filter is empty
+      filtered = concurrentmedicalname; // Show all if filter is empty
     } else {
-      filtered = districtname.filter((district) =>
-        district[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = concurrentmedicalname.filter((concurrentmedicalconditions) =>
+        concurrentmedicalconditions[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
       );
     }
 
-    setFilteredDistrictname(filtered);
+    setFilteredMedicalConditionname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
@@ -109,31 +115,42 @@ const DistrictArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
 
+  const handleSubmit = async (e) => {
+    
+    e.preventDefault();
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/district/post-district`,
+        `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
         formData
       );
-      
-      setSuccessMessage("District added successfully.");
+     
+      setSuccessMessage(
+        "Concurrent Medical ConditionsRoutes Name deleted successfully."
+      );
 
+      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      fetchdistrictname();
 
+      fetchConcurrentMedicalname();
       // Clear form after submission
       setFormData({
-        districtname: "",
+        name: "",
         added_by: id,
       });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding district:", error);
+      console.error("Error adding Concurrent Medical Conditions ", error);
     }
   };
 
@@ -141,29 +158,30 @@ const DistrictArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/delete-district/${selecteddistrictnameId}`
+        `${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`
       );
      
-      // Set success message
-      setSuccessMessage("districtname deleted successfully.");
+      setSuccessMessage(
+        "Concurrent Medical Conditions Name deleted successfully."
+      );
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the districtname list after deletion
-      fetchdistrictname();
+      fetchConcurrentMedicalname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setselecteddistrictnameId(null);
+      setSelectedConcurrentMedicalnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting district with ID ${selecteddistrictnameId}:`,
+        `Error deleting concurrent medical conditions  with ID ${selectedConcurrentMedicalnameId}:`,
         error
       );
     }
   };
+
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
@@ -176,15 +194,18 @@ const DistrictArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (districtname) => {
+  const handleEditClick = (concurrentmedicalname) => {
     
-    setselecteddistrictnameId(districtname.id);
-    setEditDistrictname(districtname); // Store the District data to edit
-    setShowEditModal(true); // Show the edit modal
+
+    setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
+    setEditConcurrentMedicalname(concurrentmedicalname);
+
     setFormData({
-      districtname: districtname.name, // Ensure it's 'districtname' and not 'name'
+      name: concurrentmedicalname.name,
       added_by: id,
     });
+
+    setShowEditModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -192,22 +213,22 @@ const DistrictArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/district/put-district/${selecteddistrictnameId}`,
+        `${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`,
         formData
       );
-      
-
-      fetchdistrictname();
+    
+      fetchConcurrentMedicalname();
 
       setShowEditModal(false);
-      setSuccessMessage("District updated successfully.");
+      setSuccessMessage("Concurrent Medical Conditions updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating districtname with ID ${selecteddistrictnameId}:`,
+        `Error updating Concurrent Medical Conditions name with ID ${selectedConcurrentMedicalnameId}:`,
         error
       );
     }
@@ -224,66 +245,56 @@ const DistrictArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const resetFormData = () => {
-    setFormData({ districtname: "", added_by: id }); // Reset to empty state
-  };
   const handleFileUpload = async (e) => {
+  
     const file = e.target.files[0];
     if (!file) return;
+   
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
+      // Add 'added_by' field (ensure 'id' is defined in the state)
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
+        added_by: id, // Ensure 'id' is defined in the component
       }));
 
+    
+
       try {
-        // POST data to API
+        // POST request inside the same function
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
+          `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
           { bulkData: dataWithAddedBy }
         );
-        
-        setSuccessMessage("Districts Uploaded Successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the district list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
-        );
-        setFilteredDistrictname(newResponse.data);
-        setDistrictname(newResponse.data);
+        fetchConcurrentMedicalname();
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error adding Concurrent Medical Conditions :", error);
       }
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
+  };
+
+  const resetFormData = () => {
+    setFormData({
+      name: "",
+      added_by: id,
+    });
   };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
+
+          {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
@@ -294,47 +305,49 @@ const DistrictArea = () => {
                 {successMessage}
               </div>
             )}
+
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">District List</h5>
+              <h5 className="m-0 fw-bold ">Concurrent Medical Conditions List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add City Button */}
+                {/* Add Concurrent Medical Conditions Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2", // soft blue
+                    backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
-                    padding: "10px 20px",
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px", 
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add District
+                  <i className="fas fa-plus"></i> Add Concurrent Medical Conditions
                 </button>
 
-                {/* Upload District List Button */}
                 <label
                   style={{
-                    backgroundColor: "#f1f1f1", // soft gray
+                    backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "10px 20px",
+                    padding: "8px 16px", 
                     borderRadius: "6px",
                     fontWeight: "500",
+                    fontSize: "14px", 
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "6px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload District List
+                  <i className="fas fa-upload"></i> Upload List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -345,16 +358,23 @@ const DistrictArea = () => {
               </div>
             </div>
           </div>
-          {/* Table Section */}
+
+          {/* Table with responsive scroll */}
           <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    // { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
+                    // {
+                    //   label: "ID",
+                    //   placeholder: "Search ID",
+                    //   field: "id",
+                    //   width: "col-md-2",
+                    // },
                     {
-                      label: "District Name",
-                      placeholder: "Search District Name",
+                      label: "Concurrent Medical Conditions",
+                      placeholder:
+                        "Search Concurrent Medical Conditions",
                       field: "name",
                       width: "col-md-1",
                     },
@@ -374,7 +394,7 @@ const DistrictArea = () => {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
-                      width: "col-md-1", // Increased width
+                      width: "col-md-1",
                     },
                   ].map(({ label, placeholder, field, width }) => (
                     <th key={field} className={`${width} px-2`}>
@@ -382,67 +402,82 @@ const DistrictArea = () => {
                         type="text"
                         className="form-control w-100 px-2 py-1 mx-auto"
                         placeholder={placeholder}
-                        onChange={(e) => handleFilterChange(field, e.target.value)}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
                       />
                       {label}
                     </th>
                   ))}
-                  <th className="col-1">Action</th>
+                  <th className="col-md-1">Action</th>
                 </tr>
-
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((districtname) => (
-                    <tr key={districtname.id}>
-                      {/* <td>{districtname.id}</td> */}
-                      <td>{districtname.name}</td>
-                      {/* <td>{districtname.added_by}</td> */}
-                      <td>DB Admin</td>
-                      <td>{formatDate(districtname.created_at)}</td>
-                      <td>{formatDate(districtname.updated_at)}</td>
-                      <td>
-                        <div className="d-flex justify-content-center gap-3">
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(districtname)}
-                            title="Edit District" // This is the text that will appear on hover
-                          >
-                            <FontAwesomeIcon icon={faEdit} size="xs" />
-                          </button>{" "}
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => {
-                              setselecteddistrictnameId(districtname.id);
-                              setShowDeleteModal(true);
-                            }}
-                            title="Delete District" // This is the text that will appear on hover
-                          >
-                            <FontAwesomeIcon icon={faTrash} size="sm" />
-                          </button>
-                          <button
-                            className="btn btn-info btn-sm"
-                            onClick={() =>
-                              handleShowHistory("district", districtname.id)
-                            }
-                            title="History Sample"
-                          >
-                            <FontAwesomeIcon icon={faHistory} size="sm" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  currentData.map(
+                    ({ id, name, added_by, created_at, updated_at }) => (
+                      <tr key={id}>
+                        {/* <td>{id}</td> */}
+                        <td>{name}</td>
+                        {/* <td>{added_by}</td> */}
+                        <td>DB Admin</td>
+                        <td>{formatDate(created_at)}</td>
+                        <td>{formatDate(updated_at)}</td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-3">
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() =>
+                                handleEditClick({
+                                  id,
+                                  name,
+                                  added_by,
+                                  created_at,
+                                  updated_at,
+                                })
+                              }
+                              title="Edit Concurrent Medical Conditions"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="xs" />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                setSelectedConcurrentMedicalnameId(id);
+                                setShowDeleteModal(true);
+                              }}
+                              title="Delete Concurrent Medical Conditions"
+                            >
+                              <FontAwesomeIcon icon={faTrash} size="sm" />
+                            </button>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() =>
+                                handleShowHistory(
+                                  "concurrentmedicalconditions",
+                                  id
+                                )
+                              }
+                              title="History Concurrent Medical Conditions"
+                            >
+                              <FontAwesomeIcon icon={faHistory} size="sm" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No District Available
+                      No Concurrent Medical Conditions Available
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
           {/* Pagination Controls */}
           {totalPages >= 0 && (
             <Pagination
@@ -452,7 +487,7 @@ const DistrictArea = () => {
             />
           )}
 
-          {/* Modal for Adding districts */}
+          {/* Modal for Adding Committe members */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -478,7 +513,9 @@ const DistrictArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add District" : "Edit District"}
+                        {showAddModal
+                          ? "Add Concurrent Medical Conditions"
+                          : "Edit Concurrent Medical Conditions"}
                       </h5>
                       <button
                         type="button"
@@ -486,7 +523,7 @@ const DistrictArea = () => {
                         onClick={() => {
                           setShowAddModal(false);
                           setShowEditModal(false);
-                          resetFormData();
+                          resetFormData(); // Reset form data when closing the modal
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -506,12 +543,12 @@ const DistrictArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>District Name</label>
+                          <label>Concurrent Medical Conditions Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="districtname"
-                            value={formData.districtname}
+                            name="name" // Fix here
+                            value={formData.name}
                             onChange={handleInputChange}
                             required
                           />
@@ -520,7 +557,9 @@ const DistrictArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update District"}
+                          {showAddModal
+                            ? "Save"
+                            : "Update Concurrent Medical Conditions"}
                         </button>
                       </div>
                     </form>
@@ -530,6 +569,68 @@ const DistrictArea = () => {
             </>
           )}
 
+          {/* Modal for Deleting cityname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">
+                        Delete Concurrent Medical Conditions
+                      </h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>
+                        Are you sure you want to delete this Concurrent
+                        Medical Conditions?
+                      </p>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -615,8 +716,9 @@ const DistrictArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>District:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>Concurrent Medical Condition:</b>{" "}
+                                {created_name} was <b>added</b> by
+                                Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -637,8 +739,9 @@ const DistrictArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>District:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>Concurrent Medical Condition:</b>{" "}
+                                  {updated_name} was <b>updated</b> by
+                                  Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -656,65 +759,6 @@ const DistrictArea = () => {
               </div>
             </>
           )}
-          {/* Edit districtname Modal */}
-
-          {/* Modal for Deleting Districtname */}
-          {showDeleteModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div
-                      className="modal-header"
-                      style={{ backgroundColor: "transparent" }}
-                    >
-                      <h5 className="modal-title">Delete District</h5>
-                      <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setShowDeleteModal(false)}
-                      ></button>
-                    </div>
-                    <div className="modal-body">
-                      <p>Are you sure you want to delete this District?</p>
-                    </div>
-                    <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowDeleteModal(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
 
         </div>
       </div>
@@ -722,4 +766,4 @@ const DistrictArea = () => {
   );
 };
 
-export default DistrictArea;
+export default ConcurrentMedicalConditionsArea;

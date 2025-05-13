@@ -34,7 +34,6 @@ const create_collectionsiteTable = () => {
   });
 };
 
-
 const getAllCollectionSites = (callback) => {
   const query = `
     SELECT 
@@ -61,71 +60,196 @@ const getAllCollectionSites = (callback) => {
   });
 };
 
-// Function to insert a new collection site
-const createCollectionSite = (data, callback) => {
+// Function to register a new collection site in Registration Dashboard
+const createCollectionSite = (req, callback) => {
   const {
-    CollectionSiteName,
     email,
     password,
+    CollectionSiteName,
     CollectionSiteType,
     phoneNumber,
     fullAddress,
     city,
     district,
     country,
-  } = data;
+    added_by,
+  } = req.body;
 
-  const checkEmailQuery = `SELECT * FROM user_account WHERE email = ?`;
+  const logo = req.files?.logo?.[0]?.buffer || null;
 
-  mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
+  mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 
-    if (results.length > 0) {
-      return callback(new Error("Email already exists in user_account"), null);
-    }
+    connection.beginTransaction(err => {
+      if (err) {
+        connection.release();
+        return callback(err, null);
+      }
 
-    const userAccountQuery = `
-      INSERT INTO user_account (email, password, accountType) 
-      VALUES (?, ?, ?)
-    `;
+      const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
+      connection.query(checkEmailQuery, [email], (err, results) => {
+        if (err || results.length > 0) {
+          return connection.rollback(() => {
+            connection.release();
+            if (results.length > 0) return callback(new Error("Email already exists"), null);
+            return callback(err, null);
+          });
+        }
 
-    mysqlConnection.query(userAccountQuery, [email, password, "CollectionSites"], (err, result) => {
-      if (err) return callback(err, null);
+        const insertUserQuery = `INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)`;
+        connection.query(insertUserQuery, [email, password, 'CollectionSites'], (err, userResults) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              callback(err, null);
+            });
+          }
 
-      const userAccountId = result.insertId; // Get inserted user ID
+          const userId = userResults.insertId;
 
-      const collectionSiteQuery = `
-        INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      mysqlConnection.query(
-        collectionSiteQuery,
-        [userAccountId, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country],
-        (err, result) => {
-          if (err) return callback(err, null);
-
-          const collectionSiteId = result.insertId; // ✅ Get collection site ID
-
-          // ✅ Insert into history table with collection site ID
-          const historyQuery = `
-            INSERT INTO history (email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, status, collectionsite_id)
-            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          const insertCSQuery = `
+            INSERT INTO collectionsite (
+              user_account_id, CollectionSiteName, CollectionSiteType, 
+              phoneNumber, fullAddress, city, district, country, logo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
 
-          mysqlConnection.query(
-            historyQuery,
-            [email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, "added", collectionSiteId],
-            (err) => {
-              if (err) console.error("Error inserting into history:", err);
-              callback(err, result);
+          const csValues = [
+            userId,
+            CollectionSiteName,
+            CollectionSiteType,
+            phoneNumber,
+            fullAddress,
+            city,
+            district,
+            country,
+            logo
+          ];
+
+          connection.query(insertCSQuery, csValues, (err, csResults) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                callback(err, null);
+              });
             }
-          );
-        }
-      );
+
+            const collectionSiteId = csResults.insertId;
+
+            const insertHistory = `
+              INSERT INTO history (
+                email, password, CollectionSiteName, CollectionSiteType,
+                phoneNumber, fullAddress, city, district, country, logo,
+                added_by, collectionsite_id, status
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            const historyValues = [
+              email, password, CollectionSiteName, CollectionSiteType,
+              phoneNumber, fullAddress, city, district, country, logo,
+              added_by, collectionSiteId, 'added'
+            ];
+
+            connection.query(insertHistory, historyValues, (err) => {
+              if (err) {
+                return connection.rollback(() => callback(err, null));
+              }
+
+              connection.commit(err => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    callback(err, null);
+                  });
+                }
+
+                connection.release();
+
+                // Send confirmation email
+                sendEmail(
+                  email,
+                  'Welcome to Discovery Connect',
+                  `Dear ${CollectionSiteName},\n\nYour account status is currently pending.\nPlease wait for approval.\n\nRegards,\nLabHazir`
+                );
+
+                callback(null, {
+                  message: 'Collection site registered successfully',
+                  userId
+                });
+              });
+            });
+          });
+        });
+      });
     });
   });
 };
+
+// Function to insert a new collection site
+// const createCollectionSite = (data, callback) => {
+//   const {
+//     CollectionSiteName,
+//     email,
+//     password,
+//     CollectionSiteType,
+//     phoneNumber,
+//     fullAddress,
+//     city,
+//     district,
+//     country,
+//   } = data;
+
+//   const checkEmailQuery = `SELECT * FROM user_account WHERE email = ?`;
+
+//   mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
+//     if (err) return callback(err, null);
+
+//     if (results.length > 0) {
+//       return callback(new Error("Email already exists in user_account"), null);
+//     }
+
+//     const userAccountQuery = `
+//       INSERT INTO user_account (email, password, accountType) 
+//       VALUES (?, ?, ?)
+//     `;
+
+//     mysqlConnection.query(userAccountQuery, [email, password, "CollectionSites"], (err, result) => {
+//       if (err) return callback(err, null);
+
+//       const userAccountId = result.insertId; // Get inserted user ID
+
+//       const collectionSiteQuery = `
+//         INSERT INTO collectionsite (user_account_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country) 
+//         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+//       `;
+
+//       mysqlConnection.query(
+//         collectionSiteQuery,
+//         [userAccountId, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country],
+//         (err, result) => {
+//           if (err) return callback(err, null);
+
+//           const collectionSiteId = result.insertId; // ✅ Get collection site ID
+
+//           // ✅ Insert into history table with collection site ID
+//           const historyQuery = `
+//             INSERT INTO history (email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, status, collectionsite_id)
+//             VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//           `;
+
+//           mysqlConnection.query(
+//             historyQuery,
+//             [email, password, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, city, district, country, "added", collectionSiteId],
+//             (err) => {
+//               if (err) console.error("Error inserting into history:", err);
+//               callback(err, result);
+//             }
+//           );
+//         }
+//       );
+//     });
+//   });
+// };
 
 // Function to update a collection site
 const updateCollectionSite = (id, data, callback) => {

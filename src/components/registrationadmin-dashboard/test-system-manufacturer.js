@@ -11,31 +11,34 @@ import {
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const ContainerTypeArea = () => {
+const TestSystemManufacturerArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Container Type page is:", id);
+    console.log("account_id on Test System Manufacturer page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedContainerTypenameId, setSelectedContainerTypenameId] =
-    useState(null); // Store ID of ContainerType to delete
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState();
+  const [
+    selectedTestSystemManufacturernameId,
+    setSelectedTestSystemManufacturernameId,
+  ] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editContainerTypename, setEditContainerTypename] = useState(null); // State for selected City to edit
-  const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
-  // Calculate total pages
-  const [filteredContainertypename, setFilteredContainertypename] = useState(
+  const [editTestSystemManufacturername, setEditTestSystemManufacturername] =
+    useState(null); // State for selected TestMethod to edit
+  const [testsystemmanufacturername, setTestSystemManufacturername] = useState(
     []
-  ); // Store filtered cities
+  ); // State to hold fetched City
+  const [successMessage, setSuccessMessage] = useState("");
+  const [filteredTestSystemmanufacturer, setFilteredTestSystemmanufacturer] =
+    useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -43,34 +46,34 @@ const ContainerTypeArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch ContainerType from backend when component loads
+  // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    fetchContainerTypename(); // Call the function when the component mounts
+    fetchTestSystemManufacturername(); // Call the function when the component mounts
   }, []);
-  const fetchContainerTypename = async () => {
+  const fetchTestSystemManufacturername = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/containertype`
+        `${url}/samplefields/get-samplefields/testsystemmanufacturer`
       );
-      setFilteredContainertypename(response.data); // Initialize filtered list
-      setContainerTypename(response.data); // Store fetched ContainerType in state
+      setFilteredTestSystemmanufacturer(response.data);
+      setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
     } catch (error) {
-      console.error("Error fetching Container Type :", error);
+      console.error("Error fetching Test System :", error);
     }
   };
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredContainertypename.length / itemsPerPage)
+      Math.ceil(filteredTestSystemmanufacturer.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredContainertypename]);
+  }, [filteredTestSystemmanufacturer]);
 
-  const currentData = filteredContainertypename.slice(
+  const currentData = filteredTestSystemmanufacturer.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -83,17 +86,17 @@ const ContainerTypeArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = containertypename; // Show all if filter is empty
+      filtered = testsystemmanufacturername; // Show all if filter is empty
     } else {
-      filtered = containertypename.filter((containertype) =>
-        containertype[field]
+      filtered = testsystemmanufacturername.filter((testsystemmanufacturer) =>
+        testsystemmanufacturer[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
       );
     }
 
-    setFilteredContainertypename(filtered);
+    setFilteredTestSystemmanufacturer(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -130,26 +133,23 @@ const ContainerTypeArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/containertype`,
+        `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
         formData
       );
-      
-      setSuccessMessage("Container Type  Name deleted successfully.");
+     
+      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchContainerTypename();
+      fetchTestSystemManufacturername();
       // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
+      resetFormData();
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding ContainerType ", error);
+      console.error("Error adding Test System Manufacturer", error);
     }
   };
 
@@ -157,25 +157,24 @@ const ContainerTypeArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
+        `${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`
       );
      
       // Set success message
-      setSuccessMessage("Container Type Name deleted successfully.");
+      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchContainerTypename();
-
+      fetchTestSystemManufacturername();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedContainerTypenameId(null);
+      setSelectedTestSystemManufacturernameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Container Type with ID ${selectedContainerTypenameId}:`,
+        `Error deleting Test System Manufacturer with ID ${selectedTestSystemManufacturernameId}:`,
         error
       );
     }
@@ -193,14 +192,14 @@ const ContainerTypeArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (containertypename) => {
+  const handleEditClick = (testsystemmanufacturername) => {
    
 
-    setSelectedContainerTypenameId(containertypename.id);
-    setEditContainerTypename(containertypename);
+    setSelectedTestSystemManufacturernameId(testsystemmanufacturername.id);
+    setEditTestSystemManufacturername(testsystemmanufacturername);
 
     setFormData({
-      name: containertypename.name,
+      name: testsystemmanufacturername.name,
       added_by: id,
     });
 
@@ -212,22 +211,23 @@ const ContainerTypeArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
+        `${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`,
         formData
       );
-      
+     
 
-      fetchContainerTypename();
+      fetchTestSystemManufacturername();
 
       setShowEditModal(false);
-      setSuccessMessage("Container Type updated successfully.");
-      resetFormData();
+      setSuccessMessage("Test System Manufacturer updated successfully.");
+
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Container Type name with ID ${selectedContainerTypenameId}:`,
+        `Error updating Test System Manufacturer name with ID ${selectedTestSystemManufacturernameId}:`,
         error
       );
     }
@@ -269,14 +269,14 @@ const ContainerTypeArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/containertype`,
+          `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
           { bulkData: dataWithAddedBy }
         );
       
 
-        fetchContainerTypename();
+        fetchTestSystemManufacturername();
       } catch (error) {
-        console.error("Error adding Container Type:", error);
+        console.error("Error adding Test System  Manufacturer:", error);
       }
     };
 
@@ -285,7 +285,7 @@ const ContainerTypeArea = () => {
 
   const resetFormData = () => {
     setFormData({
-      name: "",
+      testsystemmanufacturername: "",
       added_by: id,
     });
   };
@@ -308,9 +308,9 @@ const ContainerTypeArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Container Type List</h5>
+              <h5 className="m-0 fw-bold ">Test System Manufacturer List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Container Type Button */}
+                {/* Add Test System Manufacturer Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -327,7 +327,7 @@ const ContainerTypeArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Container Type
+                  <i className="fas fa-plus"></i> Add Test System Manufacturer
                 </button>
 
                 <label
@@ -335,7 +335,7 @@ const ContainerTypeArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px", 
+                    padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
                     fontSize: "14px", 
@@ -365,10 +365,10 @@ const ContainerTypeArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
+                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                     {
-                      label: "Container Type",
-                      placeholder: "Search Container Type",
+                      label: "Test System Manufacturer",
+                      placeholder: "Search Test System Manufacturer",
                       field: "name",
                       width: "col-md-1",
                     },
@@ -378,6 +378,7 @@ const ContainerTypeArea = () => {
                       field: "added_by",
                       width: "col-md-1",
                     },
+
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
@@ -403,7 +404,7 @@ const ContainerTypeArea = () => {
                       {label}
                     </th>
                   ))}
-                  <th className="col-md-1">Action</th>
+                  <th className="col-1">Action</th>
                 </tr>
               </thead>
 
@@ -431,26 +432,26 @@ const ContainerTypeArea = () => {
                                   updated_at,
                                 })
                               }
-                              title="Edit ContainerType"
+                              title="Edit Test System Manufacturer"
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedContainerTypenameId(id);
+                                setSelectedTestSystemManufacturernameId(id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Container Type"
+                              title="Delete Test System Manufacturer"
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-info btn-sm"
                               onClick={() =>
-                                handleShowHistory("containertype", id)
+                                handleShowHistory("testsystemmanufacturer", id)
                               }
-                              title="History Container Type"
+                              title="History Test System Maufacturer"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
@@ -462,7 +463,7 @@ const ContainerTypeArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Container Type Available
+                      No Test System Manufacturer Available
                     </td>
                   </tr>
                 )}
@@ -478,7 +479,6 @@ const ContainerTypeArea = () => {
               focusPage={currentPage}
             />
           )}
-
           {/* Modal for Adding Committe members */}
           {(showAddModal || showEditModal) && (
             <>
@@ -506,8 +506,8 @@ const ContainerTypeArea = () => {
                     <div className="modal-header">
                       <h5 className="modal-title">
                         {showAddModal
-                          ? "Add Container Type"
-                          : "Edit Container Type"}
+                          ? "Add Test System Manufacturer"
+                          : "Edit Test System Manufacturer"}
                       </h5>
                       <button
                         type="button"
@@ -535,7 +535,7 @@ const ContainerTypeArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Container Type Name</label>
+                          <label>Test System Manufacturer Name</label>
                           <input
                             type="text"
                             className="form-control"
@@ -549,7 +549,9 @@ const ContainerTypeArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Container Type"}
+                          {showAddModal
+                            ? "Save"
+                            : "Update Test System Manufacturer"}
                         </button>
                       </div>
                     </form>
@@ -587,7 +589,9 @@ const ContainerTypeArea = () => {
                       className="modal-header"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <h5 className="modal-title">Delete Container Type</h5>
+                      <h5 className="modal-title">
+                        Delete Test System Manufacturer
+                      </h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -596,7 +600,8 @@ const ContainerTypeArea = () => {
                     </div>
                     <div className="modal-body">
                       <p>
-                        Are you sure you want to delete this Container Type?
+                        Are you sure you want to delete this Test System
+                        Manufacturer?
                       </p>
                     </div>
                     <div className="modal-footer">
@@ -700,8 +705,8 @@ const ContainerTypeArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Container type:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>Test System Manufacturer:</b> {created_name}{" "}
+                                was <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -721,8 +726,9 @@ const ContainerTypeArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Container type:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>Test System Manufacturer:</b>{" "}
+                                  {updated_name} was <b>updated</b> by
+                                  Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -746,4 +752,4 @@ const ContainerTypeArea = () => {
   );
 };
 
-export default ContainerTypeArea;
+export default TestSystemManufacturerArea;

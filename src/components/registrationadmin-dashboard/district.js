@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -10,97 +11,87 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
-import moment from "moment";
-const TestSystemManufacturerArea = () => {
+const DistrictArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Test System Manufacturer page is:", id);
+    console.log("account_id on district page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyData, setHistoryData] = useState();
-  const [
-    selectedTestSystemManufacturernameId,
-    setSelectedTestSystemManufacturernameId,
-  ] = useState(null); // Store ID of Plasma to delete
+  const [historyData, setHistoryData] = useState([]);
+  const [selecteddistrictnameId, setselecteddistrictnameId] = useState(null); // Store ID of District to delete
   const [formData, setFormData] = useState({
-    name: "",
+    districtname: "",
     added_by: id,
   });
-  const [editTestSystemManufacturername, setEditTestSystemManufacturername] =
-    useState(null); // State for selected TestMethod to edit
-  const [testsystemmanufacturername, setTestSystemManufacturername] = useState(
-    []
-  ); // State to hold fetched City
-  const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestSystemmanufacturer, setFilteredTestSystemmanufacturer] =
-    useState([]);
+  const [editDistrictname, setEditDistrictname] = useState(null); // State for selected District to edit
+  const [districtname, setDistrictname] = useState([]); // State to hold fetched District
+  const [filteredDistrictname, setFilteredDistrictname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
+
+  const [successMessage, setSuccessMessage] = useState("");
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // Fetch District from backend when component loads
   useEffect(() => {
-    fetchTestSystemManufacturername(); // Call the function when the component mounts
+    fetchdistrictname(); // Call the function when the component mounts
   }, []);
-  const fetchTestSystemManufacturername = async () => {
+  const fetchdistrictname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testsystemmanufacturer`
-      );
-      setFilteredTestSystemmanufacturer(response.data);
-      setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
+      const response = await axios.get(`${url}/district/get-district`);
+      setFilteredDistrictname(response.data);
+      setDistrictname(response.data); // Store fetched District in state
     } catch (error) {
-      console.error("Error fetching Test System :", error);
+      console.error("Error fetching District:", error);
     }
   };
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestSystemmanufacturer.length / itemsPerPage)
+      Math.ceil(filteredDistrictname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestSystemmanufacturer]);
+  }, [filteredDistrictname]);
 
-  const currentData = filteredTestSystemmanufacturer.slice(
+  const currentData = filteredDistrictname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
-
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+    setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
-
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = testsystemmanufacturername; // Show all if filter is empty
+      filtered = districtname; // Show all if filter is empty
     } else {
-      filtered = testsystemmanufacturername.filter((testsystemmanufacturer) =>
-        testsystemmanufacturer[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
+      filtered = districtname.filter((district) =>
+        district[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
 
-    setFilteredTestSystemmanufacturer(filtered);
+    setFilteredDistrictname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
 
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
@@ -118,38 +109,31 @@ const TestSystemManufacturerArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
-
   const handleSubmit = async (e) => {
-    
     e.preventDefault();
+
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
+        `${url}/district/post-district`,
         formData
       );
-     
-      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
+      
+      setSuccessMessage("District added successfully.");
 
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      fetchdistrictname();
 
-      fetchTestSystemManufacturername();
       // Clear form after submission
-      resetFormData();
+      setFormData({
+        districtname: "",
+        added_by: id,
+      });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Test System Manufacturer", error);
+      console.error("Error adding district:", error);
     }
   };
 
@@ -157,29 +141,29 @@ const TestSystemManufacturerArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/delete-district/${selecteddistrictnameId}`
       );
      
       // Set success message
-      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
+      setSuccessMessage("districtname deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestSystemManufacturername();
+      // Refresh the districtname list after deletion
+      fetchdistrictname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedTestSystemManufacturernameId(null);
+      setselecteddistrictnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test System Manufacturer with ID ${selectedTestSystemManufacturernameId}:`,
+        `Error deleting district with ID ${selecteddistrictnameId}:`,
         error
       );
     }
   };
-
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
@@ -192,18 +176,15 @@ const TestSystemManufacturerArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (testsystemmanufacturername) => {
-   
-
-    setSelectedTestSystemManufacturernameId(testsystemmanufacturername.id);
-    setEditTestSystemManufacturername(testsystemmanufacturername);
-
+  const handleEditClick = (districtname) => {
+    
+    setselecteddistrictnameId(districtname.id);
+    setEditDistrictname(districtname); // Store the District data to edit
+    setShowEditModal(true); // Show the edit modal
     setFormData({
-      name: testsystemmanufacturername.name,
+      districtname: districtname.name, // Ensure it's 'districtname' and not 'name'
       added_by: id,
     });
-
-    setShowEditModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -211,23 +192,22 @@ const TestSystemManufacturerArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`,
+        `${url}/district/put-district/${selecteddistrictnameId}`,
         formData
       );
-     
+      
 
-      fetchTestSystemManufacturername();
+      fetchdistrictname();
 
       setShowEditModal(false);
-      setSuccessMessage("Test System Manufacturer updated successfully.");
+      setSuccessMessage("District updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Test System Manufacturer name with ID ${selectedTestSystemManufacturernameId}:`,
+        `Error updating districtname with ID ${selecteddistrictnameId}:`,
         error
       );
     }
@@ -244,57 +224,66 @@ const TestSystemManufacturerArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+  const resetFormData = () => {
+    setFormData({ districtname: "", added_by: id }); // Reset to empty state
+  };
   const handleFileUpload = async (e) => {
-   
     const file = e.target.files[0];
     if (!file) return;
-    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const arrayBuffer = event.target.result;
+      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
+        type: "array",
+      });
+
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Add 'added_by' field (ensure 'id' is defined in the state)
+      // Ensure 'id' is available
+      if (!id) {
+        console.error("Error: 'id' is not defined.");
+        return;
+      }
+
+      // Add 'added_by' field
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
+        added_by: id, // Ensure `id` is defined in the state
       }));
 
-     
-
       try {
-        // POST request inside the same function
+        // POST data to API
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
           { bulkData: dataWithAddedBy }
         );
-      
+        
+        setSuccessMessage("Districts Uploaded Successfully");
 
-        fetchTestSystemManufacturername();
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
+        // Refresh the district list
+        const newResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
+        );
+        setFilteredDistrictname(newResponse.data);
+        setDistrictname(newResponse.data);
       } catch (error) {
-        console.error("Error adding Test System  Manufacturer:", error);
+        console.error("Error uploading file:", error);
       }
     };
 
-    reader.readAsBinaryString(file);
-  };
-
-  const resetFormData = () => {
-    setFormData({
-      testsystemmanufacturername: "",
-      added_by: id,
-    });
+    reader.readAsArrayBuffer(file);
   };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
-          {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
@@ -305,49 +294,47 @@ const TestSystemManufacturerArea = () => {
                 {successMessage}
               </div>
             )}
-
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Test System Manufacturer List</h5>
+              <h5 className="m-0 fw-bold ">District List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Test System Manufacturer Button */}
+                {/* Add City Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2",
+                    backgroundColor: "#4a90e2", // soft blue
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px",
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Test System Manufacturer
+                  <i className="fas fa-plus"></i> Add District
                 </button>
 
+                {/* Upload District List Button */}
                 <label
                   style={{
-                    backgroundColor: "#f1f1f1",
+                    backgroundColor: "#f1f1f1", // soft gray
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px",
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload List
+                  <i className="fas fa-upload"></i> Upload District List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -358,17 +345,16 @@ const TestSystemManufacturerArea = () => {
               </div>
             </div>
           </div>
-
-          {/* Table with responsive scroll */}
+          {/* Table Section */}
           <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                    // { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
                     {
-                      label: "Test System Manufacturer",
-                      placeholder: "Search Test System Manufacturer",
+                      label: "District Name",
+                      placeholder: "Search District Name",
                       field: "name",
                       width: "col-md-1",
                     },
@@ -378,7 +364,6 @@ const TestSystemManufacturerArea = () => {
                       field: "added_by",
                       width: "col-md-1",
                     },
-
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
@@ -389,7 +374,7 @@ const TestSystemManufacturerArea = () => {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
-                      width: "col-md-1",
+                      width: "col-md-1", // Increased width
                     },
                   ].map(({ label, placeholder, field, width }) => (
                     <th key={field} className={`${width} px-2`}>
@@ -397,80 +382,67 @@ const TestSystemManufacturerArea = () => {
                         type="text"
                         className="form-control w-100 px-2 py-1 mx-auto"
                         placeholder={placeholder}
-                        onChange={(e) =>
-                          handleFilterChange(field, e.target.value)
-                        }
+                        onChange={(e) => handleFilterChange(field, e.target.value)}
                       />
                       {label}
                     </th>
                   ))}
                   <th className="col-1">Action</th>
                 </tr>
-              </thead>
 
+              </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map(
-                    ({ id, name, added_by, created_at, updated_at }) => (
-                      <tr key={id}>
-                        {/* <td>{id}</td> */}
-                        <td>{name}</td>
-                        {/* <td>{added_by}</td> */}
-                        <td>DB Admin</td>
-                        <td>{formatDate(created_at)}</td>
-                        <td>{formatDate(updated_at)}</td>
-                        <td>
-                          <div className="d-flex justify-content-center gap-3">
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() =>
-                                handleEditClick({
-                                  id,
-                                  name,
-                                  added_by,
-                                  created_at,
-                                  updated_at,
-                                })
-                              }
-                              title="Edit Test System Manufacturer"
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="xs" />
-                            </button>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => {
-                                setSelectedTestSystemManufacturernameId(id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete Test System Manufacturer"
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={() =>
-                                handleShowHistory("testsystemmanufacturer", id)
-                              }
-                              title="History Test System Maufacturer"
-                            >
-                              <FontAwesomeIcon icon={faHistory} size="sm" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )
+                  currentData.map((districtname) => (
+                    <tr key={districtname.id}>
+                      {/* <td>{districtname.id}</td> */}
+                      <td>{districtname.name}</td>
+                      {/* <td>{districtname.added_by}</td> */}
+                      <td>DB Admin</td>
+                      <td>{formatDate(districtname.created_at)}</td>
+                      <td>{formatDate(districtname.updated_at)}</td>
+                      <td>
+                        <div className="d-flex justify-content-center gap-3">
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleEditClick(districtname)}
+                            title="Edit District" // This is the text that will appear on hover
+                          >
+                            <FontAwesomeIcon icon={faEdit} size="xs" />
+                          </button>{" "}
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => {
+                              setselecteddistrictnameId(districtname.id);
+                              setShowDeleteModal(true);
+                            }}
+                            title="Delete District" // This is the text that will appear on hover
+                          >
+                            <FontAwesomeIcon icon={faTrash} size="sm" />
+                          </button>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() =>
+                              handleShowHistory("district", districtname.id)
+                            }
+                            title="History Sample"
+                          >
+                            <FontAwesomeIcon icon={faHistory} size="sm" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Test System Manufacturer Available
+                      No District Available
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
           {/* Pagination Controls */}
           {totalPages >= 0 && (
             <Pagination
@@ -479,7 +451,8 @@ const TestSystemManufacturerArea = () => {
               focusPage={currentPage}
             />
           )}
-          {/* Modal for Adding Committe members */}
+
+          {/* Modal for Adding districts */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -505,9 +478,7 @@ const TestSystemManufacturerArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal
-                          ? "Add Test System Manufacturer"
-                          : "Edit Test System Manufacturer"}
+                        {showAddModal ? "Add District" : "Edit District"}
                       </h5>
                       <button
                         type="button"
@@ -515,7 +486,7 @@ const TestSystemManufacturerArea = () => {
                         onClick={() => {
                           setShowAddModal(false);
                           setShowEditModal(false);
-                          resetFormData(); // Reset form data when closing the modal
+                          resetFormData();
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -535,12 +506,12 @@ const TestSystemManufacturerArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Test System Manufacturer Name</label>
+                          <label>District Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="name" // Fix here
-                            value={formData.name}
+                            name="districtname"
+                            value={formData.districtname}
                             onChange={handleInputChange}
                             required
                           />
@@ -549,9 +520,7 @@ const TestSystemManufacturerArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal
-                            ? "Save"
-                            : "Update Test System Manufacturer"}
+                          {showAddModal ? "Save" : "Update District"}
                         </button>
                       </div>
                     </form>
@@ -561,65 +530,6 @@ const TestSystemManufacturerArea = () => {
             </>
           )}
 
-          {/* Modal for Deleting cityname */}
-          {showDeleteModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div
-                      className="modal-header"
-                      style={{ backgroundColor: "transparent" }}
-                    >
-                      <h5 className="modal-title">
-                        Delete Test System Manufacturer
-                      </h5>
-                      <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setShowDeleteModal(false)}
-                      ></button>
-                    </div>
-                    <div className="modal-body">
-                      <p>
-                        Are you sure you want to delete this Test System
-                        Manufacturer?
-                      </p>
-                    </div>
-                    <div className="modal-footer">
-                      <button className="btn btn-danger" onClick={handleDelete}>
-                        Delete
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowDeleteModal(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -705,8 +615,8 @@ const TestSystemManufacturerArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Test System Manufacturer:</b> {created_name}{" "}
-                                was <b>added</b> by Database Admin at{" "}
+                                <b>District:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -719,16 +629,16 @@ const TestSystemManufacturerArea = () => {
                                     padding: "10px 15px",
                                     borderRadius: "15px",
                                     backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    boxShadow:
+                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Test System Manufacturer:</b>{" "}
-                                  {updated_name} was <b>updated</b> by
-                                  Database Admin at{" "}
+                                  <b>District:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -746,10 +656,70 @@ const TestSystemManufacturerArea = () => {
               </div>
             </>
           )}
+          {/* Edit districtname Modal */}
+
+          {/* Modal for Deleting Districtname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">Delete District</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this District?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
       </div>
     </section>
   );
 };
 
-export default TestSystemManufacturerArea;
+export default DistrictArea;

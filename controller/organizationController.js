@@ -5,6 +5,20 @@ const create_organizationTable = (req, res) => {
   organizationModel.create_organizationTable();
   res.status(200).json({ message: "Organization table creation process started" });
 };
+
+// Controller to create organizations
+const createOrganization = (req, res) => {
+  organizationModel.createOrganization(req, (err, result) => {
+    if (err) {
+      if (err.message === "Email already exists") {
+        return res.status(400).json({ error: err.message });
+      }
+      return res.status(500).json({ error: err.message });
+    }
+    res.status(201).json(result);
+  });
+};
+
 // Controller to get all organizations
 const getAllOrganizations = (req, res) => {
   organizationModel.getAllOrganizations((err, results) => {
@@ -77,6 +91,7 @@ const updateOrganizationStatus = async (req, res) => {
 
 module.exports = {
   create_organizationTable,
+  createOrganization,
   getOrganizationById,
   updateOrganization,
   getCurrentOrganizationById,

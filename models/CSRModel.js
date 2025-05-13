@@ -1,7 +1,8 @@
 const mysqlConnection = require("../config/db");
+const mysqlPool = require('../config/db');
 const { sendEmail } = require("../config/email");
-// Function to fetch all CSR
 
+// Function to fetch all CSR
 const create_CSRTable = () => {
   const create_CSR = `
   CREATE TABLE IF NOT EXISTS csr (
@@ -13,7 +14,7 @@ const create_CSRTable = () => {
     city INT,
     district INT,
     country INT,
-    status ENUM( 'active', 'inactive') DEFAULT,
+    status ENUM('active', 'inactive') DEFAULT 'inactive',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
@@ -29,6 +30,106 @@ const create_CSRTable = () => {
     }
   });
 }
+
+// Function to create CSR through registration admin dashboard
+const createCSR = (data, callback) => {
+  const {
+    email,
+    password,
+    accountType,
+    CSRName,
+    phoneNumber,
+    fullAddress,
+    city,
+    district,
+    country,
+    status,
+  } = data;
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err, null);
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        return callback(err, null);
+      }
+
+      const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
+      connection.query(checkEmailQuery, [email], (err, results) => {
+        if (err) return rollback(err);
+
+        if (results.length > 0) {
+          return rollback(new Error("Email already exists"));
+        }
+
+        const userAccountQuery = 'INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)';
+        connection.query(userAccountQuery, [email, password, accountType], (err, accountResult) => {
+          if (err) return rollback(err);
+
+          const user_account_id = accountResult.insertId;
+
+          const csrInsertQuery = `
+            INSERT INTO csr (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+          const csrValues = [
+            user_account_id,
+            CSRName,
+            phoneNumber,
+            fullAddress,
+            city,
+            district,
+            country,
+            status,
+          ];
+
+          connection.query(csrInsertQuery, csrValues, (err, csrResult) => {
+            if (err) return rollback(err);
+
+            const csrId = csrResult.insertId;
+
+            const historyQuery = `
+              INSERT INTO history (
+                email, password, CSRName, phoneNumber, fullAddress, city,
+                district, country, status, csr_id
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            const historyValues = [
+              email,
+              password,
+              CSRName,
+              phoneNumber,
+              fullAddress,
+              city,
+              district,
+              country,
+              'added',
+              csrId,
+            ];
+
+            connection.query(historyQuery, historyValues, (err) => {
+              if (err) return rollback(err);
+
+              connection.commit((err) => {
+                if (err) return rollback(err);
+                connection.release();
+                callback(null, { message: "CSR registered successfully", userId: user_account_id });
+              });
+            });
+          });
+        });
+      });
+
+      function rollback(error) {
+        connection.rollback(() => {
+          connection.release();
+          callback(error, null);
+        });
+      }
+    });
+  });
+};
 
 const getAllCSR = (callback) => {
   const query = `SELECT c.*, user_account.id AS user_account_id, 
@@ -48,6 +149,7 @@ const getAllCSR = (callback) => {
     callback(err, results);
   });
 };
+
 const deleteCSR = (id, status, callback) => {
   const query = 'UPDATE csr SET status = ? WHERE id = ?';
   mysqlConnection.query(query, [status, id], (err, result) => {
@@ -58,7 +160,7 @@ const deleteCSR = (id, status, callback) => {
 const updateCSRStatus = async (id, status) => {
   const updateQuery = "UPDATE csr SET status = ? WHERE id = ?";
   const insertHistoryQuery = `
-      INSERT INTO databaseadmin_history (CSR_id, status)
+      INSERT INTO registrationadmin_history (csr_id, status)
       VALUES (?, ?)
     `;
   const getEmailQuery = `
@@ -115,9 +217,10 @@ const updateCSRStatus = async (id, status) => {
     throw error;
   }
 };
+
 module.exports = {
-  
   create_CSRTable,
+  createCSR,
   getAllCSR,
   deleteCSR,
   updateCSRStatus

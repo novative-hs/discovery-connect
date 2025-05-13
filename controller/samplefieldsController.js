@@ -23,15 +23,10 @@ const createSampleFields = (req, res) => {
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return res.status(400).json({ error: "Invalid table name" });
   }
-
-  
-
   samplefieldsModel.createSampleFields(tableName, newSampleFieldsData, (err, result) => {
     if (err) {
-      
       return res.status(500).json({ error: "Error creating sample fields" });
     }
-    
     res.status(201).json({ message: "Sample fields added successfully", id: result.insertId });
   });
 };

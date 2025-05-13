@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -10,88 +11,87 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
-import moment from "moment";
-const EthnicityArea = () => {
+const CountryArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Ethnicity page is:", id);
+    console.log("account_id on country page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedethnicitynameId, setSelectedethnicitynameId] = useState(null); // Store ID of City to delete
+  const [selectedcountrynameId, setselectedcountrynameId] = useState(null); // Store ID of Country to delete
   const [formData, setFormData] = useState({
-    name: "",
+    countryname: "",
     added_by: id,
   });
-  const [editethnicityname, setEditethnicityname] = useState(null); // State for selected City to edit
-  const [ethnicityname, setethnicityname] = useState([]); // State to hold fetched City
-  const [successMessage, setSuccessMessage] = useState("");
-  const [filteredEthnicityname, setFilteredEthnicityname] = useState([]); // Store filtered cities
+  const [editCountryname, setEditCountryname] = useState(null); // State for selected Country to edit
+  const [countryname, setCountryname] = useState([]); // State to hold fetched Country
+  const [filteredCountryname, setFilteredCountryname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
+
+  const [successMessage, setSuccessMessage] = useState("");
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch City from backend when component loads
+  // Fetch Country from backend when component loads
   useEffect(() => {
-    fetchEthnicityname(); // Call the function when the component mounts
+    fetchcountryname(); // Call the function when the component mounts
   }, []);
-  const fetchEthnicityname = async () => {
+  const fetchcountryname = async () => {
     try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/ethnicity`
-      );
-      setFilteredEthnicityname(response.data); // Initialize filtered list
-      setethnicityname(response.data); // Store fetched City in state
+      const response = await axios.get(`${url}/country/get-country`);
+      setFilteredCountryname(response.data);
+      setCountryname(response.data); // Store fetched Country in state
     } catch (error) {
-      console.error("Error fetching City:", error);
+      console.error("Error fetching Country:", error);
     }
   };
-
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredEthnicityname.length / itemsPerPage)
+      Math.ceil(filteredCountryname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredEthnicityname]);
+  }, [filteredCountryname]);
 
-  const currentData = filteredEthnicityname.slice(
+  const currentData = filteredCountryname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
-
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+    setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
-
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = ethnicityname; // Show all if filter is empty
+      filtered = countryname; // Show all if filter is empty
     } else {
-      filtered = ethnicityname.filter((ethnicity) =>
-        ethnicity[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = countryname.filter((country) =>
+        country[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
 
-    setFilteredEthnicityname(filtered);
+    setFilteredCountryname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
 
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
@@ -109,34 +109,31 @@ const EthnicityArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
-
   const handleSubmit = async (e) => {
-    
     e.preventDefault();
+
     try {
+      // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/ethnicity`,
+        `${url}/country/post-country`,
         formData
       );
+      
+      setSuccessMessage("Country added successfully.");
 
-      fetchEthnicityname();
-      setSuccessMessage("Ethnicity added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+      fetchcountryname();
+
       // Clear form after submission
-      resetFormData();
+      setFormData({
+        countryname: "",
+        added_by: id,
+      });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Ethnicity:", error);
+      console.error("Error adding country:", error);
     }
   };
 
@@ -144,35 +141,30 @@ const EthnicityArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/ethnicity/${selectedethnicitynameId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
       );
     
 
       // Set success message
-      setSuccessMessage("Ethnicity Name deleted successfully.");
+      setSuccessMessage("countryname deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      // Refresh the cityname list after deletion
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/get-samplefields/ethnicity`
-      );
-      setethnicityname(newResponse.data);
-
+      // Refresh the countryname list after deletion
+      fetchcountryname();
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedethnicitynameId(null);
+      setselectedcountrynameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Ethnicity with ID ${selectedethnicitynameId}:`,
+        `Error deleting country with ID ${selectedcountrynameId}:`,
         error
       );
     }
   };
-
   useEffect(() => {
     if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
@@ -185,18 +177,15 @@ const EthnicityArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (ethnicityname) => {
-   
-
-    setSelectedethnicitynameId(ethnicityname.id);
-    setEditethnicityname(ethnicityname);
-
+  const handleEditClick = (countryname) => {
+    
+    setselectedcountrynameId(countryname.id);
+    setEditCountryname(countryname); // Store the Country data to edit
+    setShowEditModal(true); // Show the edit modal
     setFormData({
-      name: ethnicityname.name,
+      countryname: countryname.name, // Ensure it's 'countryname' and not 'name'
       added_by: id,
     });
-
-    setShowEditModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -204,22 +193,22 @@ const EthnicityArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/ethnicity/${selectedethnicitynameId}`,
+        `${url}/country/put-country/${selectedcountrynameId}`,
         formData
       );
-     
+      
 
-      fetchEthnicityname();
+      fetchcountryname();
 
       setShowEditModal(false);
-      setSuccessMessage("Ethnicity updated successfully.");
+      setSuccessMessage("Country updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
     } catch (error) {
       console.error(
-        `Error updating Ethnicity name with ID ${selectedethnicitynameId}:`,
+        `Error updating countryname with ID ${selectedcountrynameId}:`,
         error
       );
     }
@@ -236,58 +225,66 @@ const EthnicityArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+  const resetFormData = () => {
+    setFormData({ countryname: "", added_by: id }); // Reset to empty state
+  };
   const handleFileUpload = async (e) => {
-   
     const file = e.target.files[0];
     if (!file) return;
-   
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const arrayBuffer = event.target.result;
+      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
+        type: "array",
+      });
+
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
 
-      // Add 'added_by' field (ensure 'id' is defined in the state)
+      // Ensure 'id' is available
+      if (!id) {
+        console.error("Error: 'id' is not defined.");
+        return;
+      }
+
+      // Add 'added_by' field
       const dataWithAddedBy = data.map((row) => ({
         name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
+        added_by: id, // Ensure `id` is defined in the state
       }));
 
-     
-
       try {
-        // POST request inside the same function
+        // POST data to API
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/ethnicity`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/post-country`,
           { bulkData: dataWithAddedBy }
         );
-       
+        
+        setSuccessMessage("Countries Uploaded Successfully");
 
-        fetchEthnicityname();
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
+        // Refresh the country list
+        const newResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
+        );
+        setFilteredCountryname(newResponse.data);
+        setCountryname(newResponse.data);
       } catch (error) {
-        console.error("Error adding Ethnicity:", error);
+        console.error("Error uploading file:", error);
       }
     };
 
-    reader.readAsBinaryString(file);
-  };
-
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
-    });
+    reader.readAsArrayBuffer(file);
   };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
-
-          {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
@@ -298,49 +295,47 @@ const EthnicityArea = () => {
                 {successMessage}
               </div>
             )}
-
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Ethnicity List</h5>
+              <h5 className="m-0 fw-bold ">Country List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Ethnicity Button */}
+                {/* Add City Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2",
+                    backgroundColor: "#4a90e2", // soft blue
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px", 
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px", 
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Ethnicity
+                  <i className="fas fa-plus"></i> Add Country
                 </button>
 
+                {/* Upload Country List Button */}
                 <label
                   style={{
-                    backgroundColor: "#f1f1f1",
+                    backgroundColor: "#f1f1f1", // soft gray
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px",
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload List
+                  <i className="fas fa-upload"></i> Upload Country List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -351,38 +346,36 @@ const EthnicityArea = () => {
               </div>
             </div>
           </div>
-
-          {/* Table with responsive scroll */}
+          {/* Table Section */}
           <div className="table-responsive w-100">
             <table className="table table-hover table-bordered text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                   // { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
                     {
-                      label: "Ethnicity Name",
-                      placeholder: "Search Ethnicity Name",
+                      label: "Country Name",
+                      placeholder: "Search Country Name",
                       field: "name",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
                       field: "added_by",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
-
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
                       field: "created_at",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
-                      width: "col-md-1"
+                      width: "col-md-1", // Increased width
                     },
                   ].map(({ label, placeholder, field, width }) => (
                     <th key={field} className={`${width} px-2`}>
@@ -390,79 +383,67 @@ const EthnicityArea = () => {
                         type="text"
                         className="form-control w-100 px-2 py-1 mx-auto"
                         placeholder={placeholder}
-                        onChange={(e) =>
-                          handleFilterChange(field, e.target.value)
-                        }
+                        onChange={(e) => handleFilterChange(field, e.target.value)}
                       />
                       {label}
                     </th>
                   ))}
                   <th className="col-1">Action</th>
                 </tr>
+
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map(
-                    ({ id, name, added_by, created_at, updated_at }) => (
-                      <tr key={id}>
-                        {/* <td>{id}</td> */}
-                        <td>{name}</td>
-                        {/* <td>{added_by}</td> */}
-                        <td>DB Admin</td>
-                        <td>{formatDate(created_at)}</td>
-                        <td>{formatDate(updated_at)}</td>
-                        <td>
-                          <div className="d-flex justify-content-center gap-3">
-                            <button
-                              className="btn btn-success btn-sm py-1 px-2"
-                              onClick={() =>
-                                handleEditClick({
-                                  id,
-                                  name,
-                                  added_by,
-                                  created_at,
-                                  updated_at,
-                                })
-                              }
-                              title="Edit Ethnicity"
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="xs" />
-                            </button>
-                            <button
-                              className="btn btn-danger btn-sm py-1 px-2"
-                              onClick={() => {
-                                setSelectedethnicitynameId(id);
-                                setShowDeleteModal(true);
-                              }}
-                              title="Delete Ethnicity"
-                            >
-                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                            </button>
-                            <button
-                              className="btn btn-info btn-sm py-1 px-2"
-                              onClick={() =>
-                                handleShowHistory("ethnicity", id)
-                              }
-                              title="History Ethnicity"
-                            >
-                              <FontAwesomeIcon icon={faHistory} size="sm" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )
+                  currentData.map((countryname) => (
+                    <tr key={countryname.id}>
+                      {/* <td>{countryname.id}</td> */}
+                      <td>{countryname.name}</td>
+                      {/* <td>{countryname.added_by}</td> */}
+                      <td>DB Admin</td>
+                      <td>{formatDate(countryname.created_at)}</td>
+                      <td>{formatDate(countryname.updated_at)}</td>
+                      <td>
+                      <div className="d-flex justify-content-center gap-3">
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleEditClick(countryname)}
+                            title="Edit Country" // This is the text that will appear on hover
+                          >
+                            <FontAwesomeIcon icon={faEdit} size="xs" />
+                          </button>{" "}
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => {
+                              setselectedcountrynameId(countryname.id);
+                              setShowDeleteModal(true);
+                            }}
+                            title="Delete Country" // This is the text that will appear on hover
+                          >
+                            <FontAwesomeIcon icon={faTrash} size="sm" />
+                          </button>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() =>
+                              handleShowHistory("country", countryname.id)
+                            }
+                            title="History Sample"
+                          >
+                            <FontAwesomeIcon icon={faHistory} size="sm" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Ethnicity Available
+                      No Country Available
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
           {/* Pagination Controls */}
           {totalPages >= 0 && (
             <Pagination
@@ -472,7 +453,7 @@ const EthnicityArea = () => {
             />
           )}
 
-          {/* Modal for Adding Committe members */}
+          {/* Modal for Adding countrys */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -498,7 +479,7 @@ const EthnicityArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add Ethnicity" : "Edit Ethnicity"}
+                        {showAddModal ? "Add Country" : "Edit Country"}
                       </h5>
                       <button
                         type="button"
@@ -506,7 +487,7 @@ const EthnicityArea = () => {
                         onClick={() => {
                           setShowAddModal(false);
                           setShowEditModal(false);
-                          resetFormData(); // Reset form data when closing the modal
+                          resetFormData();
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -526,12 +507,12 @@ const EthnicityArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Ethnicity Name</label>
+                          <label>Country Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="name" // Fix here
-                            value={formData.name}
+                            name="countryname"
+                            value={formData.countryname}
                             onChange={handleInputChange}
                             required
                           />
@@ -540,7 +521,7 @@ const EthnicityArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Ethnicity"}
+                          {showAddModal ? "Save" : "Update Country"}
                         </button>
                       </div>
                     </form>
@@ -550,63 +531,6 @@ const EthnicityArea = () => {
             </>
           )}
 
-          {/* Modal for Deleting cityname */}
-          {showDeleteModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div
-                      className="modal-header"
-                      style={{ backgroundColor: "transparent" }}
-                    >
-                      <h5 className="modal-title">Delete Ethnicity</h5>
-                      <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setShowDeleteModal(false)}
-                      ></button>
-                    </div>
-                    <div className="modal-body">
-                      <p>Are you sure you want to delete this Ethnicity?</p>
-                    </div>
-                    <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowDeleteModal(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -692,8 +616,8 @@ const EthnicityArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Ethnicity:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>Country:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -714,8 +638,8 @@ const EthnicityArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Ethnicity:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>Country:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -733,6 +657,65 @@ const EthnicityArea = () => {
               </div>
             </>
           )}
+          {/* Edit countryname Modal */}
+
+          {/* Modal for Deleting Countryname */}
+          {showDeleteModal && (
+            <>
+              {/* Bootstrap Backdrop with Blur */}
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+
+              {/* Modal Content */}
+              <div
+                className="modal show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{
+                  zIndex: 1050,
+                  position: "fixed",
+                  top: "120px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <div className="modal-dialog" role="document">
+                  <div className="modal-content">
+                    <div
+                      className="modal-header"
+                      style={{ backgroundColor: "transparent" }}
+                    >
+                      <h5 className="modal-title">Delete Country</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Are you sure you want to delete this Country?</p>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn btn-danger"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
         </div>
       </div>
@@ -740,4 +723,4 @@ const EthnicityArea = () => {
   );
 };
 
-export default EthnicityArea;
+export default CountryArea;

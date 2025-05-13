@@ -171,7 +171,7 @@ const createOrUpdateTables = async () => {
         "Researcher",
         "Organization",
         "CollectionSites",
-        "DatabaseAdmin",
+        "RegistrationAdmin",
         "TechnicalAdmin",
         "biobank",
         "Committeemember",

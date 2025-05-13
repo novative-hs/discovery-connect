@@ -160,7 +160,7 @@ if (userType === "researcher") {
           { label: "Sample List", tab: "samples" },
           { label: "My Order Samples", tab: "my-samples" },
         ]
-        : userType == "databaseadmin"
+        : userType == "registrationadmin"
           ? [
             { label: "Profile", tab: "order-info" },
             { label: "City", tab: "city" },
@@ -328,12 +328,12 @@ if (userType === "researcher") {
                   Welcome Technical Admin!
                 </span>
               )}
-              {userType === "databaseadmin" && (
+              {userType === "registrationadmin" && (
                 <span
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
-                  Welcome Database Admin!
+                  Welcome Registration Admin!
                 </span>
               )}
 
@@ -369,7 +369,7 @@ if (userType === "researcher") {
                       zIndex: 9999,
                     }}
                   >
-                    {userType !== "technicaladmin" && userType !== "biobank" && userType !== "databaseadmin" && (
+                    {userType !== "technicaladmin" && userType !== "biobank" && userType !== "registrationadmin" && (
                       <li>
                         <button
                           className="dropdown-item fs-7"

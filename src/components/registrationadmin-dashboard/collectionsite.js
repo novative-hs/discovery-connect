@@ -51,7 +51,7 @@ const CollectionSiteArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  const [registerUser, { }] = useRegisterUserMutation();
+  // const [registerUser, { }] = useRegisterUserMutation();
   const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
@@ -73,58 +73,47 @@ const CollectionSiteArea = () => {
   ];
 
 
-  const onSubmit = (event) => {
-    console.log("formData before appending logo:", formData);
-    event.preventDefault();
+const onSubmit = async (event) => {
+  event.preventDefault();
 
-    const newformData = new FormData();
+  const newformData = new FormData();
+  newformData.append("email", formData.email);
+  newformData.append("password", formData.password);
+  newformData.append("CollectionSiteName", formData.CollectionSiteName);
+  newformData.append("CollectionSiteType", formData.CollectionSiteType);
+  newformData.append("phoneNumber", formData.phoneNumber);
+  newformData.append("fullAddress", formData.fullAddress);
+  newformData.append("city", formData.city);
+  newformData.append("district", formData.district);
+  newformData.append("country", formData.country);
+  newformData.append("status", "inactive");
 
-    // Append form fields
-    newformData.append("email", formData.email);
-    newformData.append("password", formData.password);
-    newformData.append("accountType", "CollectionSites");
-    newformData.append("CollectionSiteName", formData.CollectionSiteName);
-    newformData.append("CollectionSiteType", formData.CollectionSiteType);
-    newformData.append("phoneNumber", formData.phoneNumber);
-    newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
-    newformData.append("status", "inactive");
-    // Ensure logo is a file before appending
-    if (formData.logo) {
-      console.log("Appending logo:", formData.logo);
-      newformData.append("logo", formData.logo);
-    } else {
-      console.log("No logo found in formData at submission.");
-    }
+  if (formData.logo) {
+    newformData.append("logo", formData.logo);
+  }
 
-    // Debug log to inspect FormData entries
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/createcollsite`,
+      newformData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
-    // Call the mutation (assuming the function is available)
-    registerUser(newformData)
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Register Failed";
-          notifyError(errorMessage);
-        } else {
-          fetchCollectionsites()
-          notifySuccess("Collectionsite Registered Successfully");
-          fetchCollectionsites()
-          setShowAddModal(false);
-        }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
-
-    // Reset state and form (if necessary)
+    notifySuccess("Collection Site Registered Successfully");
+    fetchCollectionsites(); // Refresh list
     setShowAddModal(false);
     resetFormData();
-  };
+  } catch (error) {
+    console.error("Registration Error:", error);
+    const errMsg =
+      error.response?.data?.error || error.message || "An error occurred";
+    notifyError(errMsg);
+  }
+};
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -156,7 +145,7 @@ const CollectionSiteArea = () => {
   const fetchCollectionsites = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/get`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
       );
       console.log(response.data)
       setAllCollectionsites(response.data);
@@ -356,7 +345,7 @@ const CollectionSiteArea = () => {
     try {
       // Send status update request to backend
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/edit/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/edit/${id}`,
         { data: { status: option } },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -975,7 +964,7 @@ const CollectionSiteArea = () => {
                                   }}
                                 >
                                   <b>Collectionsite:</b> {CollectionSiteName} was{" "}
-                                  <b>{status}</b> by Database Admin at{" "}
+                                  <b>{status}</b> by Registration Admin at{" "}
                                   {moment(created_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -997,7 +986,7 @@ const CollectionSiteArea = () => {
                                   }}
                                 >
                                   <b>Collectionsite:</b> {CollectionSiteName} was{" "}
-                                  <b>{status}</b> by Database Admin at{" "}
+                                  <b>{status}</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

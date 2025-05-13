@@ -31,17 +31,27 @@ const getCollectionSiteById = (req, res) => {
   });
 };
 
-// Controller to create a collection site
+// Controller to register a collection site in Registration Admin Dashboard
 const createCollectionSite = (req, res) => {
-  const newMemberData = req.body;
-  collectionsiteModel.createCollectionSite(newMemberData, (err, result) => {
+  collectionsiteModel.createCollectionSite(req, (err, result) => {
     if (err) {
-      console.error("Error creating collection site:", err); // Add this line
-      return res.status(500).json({ error: "Error creating collection site" });
+      return res.status(500).json({ error: err.message });
     }
-    res.status(201).json({ message: "Collection site created successfully", id: result.insertId });
+    res.status(201).json(result);
   });
 };
+
+// Controller to create a collection site
+// const createCollectionSite = (req, res) => {
+//   const newMemberData = req.body;
+//   collectionsiteModel.createCollectionSite(newMemberData, (err, result) => {
+//     if (err) {
+//       console.error("Error creating collection site:", err); // Add this line
+//       return res.status(500).json({ error: "Error creating collection site" });
+//     }
+//     res.status(201).json({ message: "Collection site created successfully", id: result.insertId });
+//   });
+// };
 
 //Controller to delete a collection site
 const deleteCollectionSite = async (req, res) => {

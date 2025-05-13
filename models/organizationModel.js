@@ -1,8 +1,8 @@
 const mysqlConnection = require("../config/db");
+const mysqlPool = require("../config/db");
 const { sendEmail } = require("../config/email");
+
 // Function to fetch all organizations
-
-
 const create_organizationTable = () => {
   const create_organizationTable = `
     CREATE TABLE IF NOT EXISTS organization (
@@ -33,6 +33,122 @@ const create_organizationTable = () => {
     } else {
       console.log("Organization table created Successfully");
     }
+  });
+};
+
+// Function to create organizations
+const createOrganization = (req, callback) => {
+  const {
+    email,
+    password,
+    OrganizationName,
+    type,
+    HECPMDCRegistrationNo,
+    ntnNumber,
+    phoneNumber,
+    fullAddress,
+    city,
+    district,
+    country,
+    status
+  } = req.body;
+
+  const logo = req.files?.logo?.[0]?.buffer || null;
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err, null);
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        return callback(err, null);
+      }
+
+      const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
+      connection.query(checkEmailQuery, [email], (err, results) => {
+        if (err || results.length > 0) {
+          connection.rollback(() => connection.release());
+          return callback(new Error("Email already exists"), null);
+        }
+
+        const insertUserQuery = `INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)`;
+        connection.query(insertUserQuery, [email, password, 'Organization'], (err, userResult) => {
+          if (err) {
+            return connection.rollback(() => connection.release());
+          }
+
+          const userAccountId = userResult.insertId;
+
+          const insertOrgQuery = `INSERT INTO organization 
+            (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+          const orgValues = [
+            userAccountId,
+            OrganizationName,
+            type,
+            HECPMDCRegistrationNo,
+            ntnNumber,
+            phoneNumber,
+            fullAddress,
+            city,
+            district,
+            country,
+            logo,
+            status
+          ];
+
+          connection.query(insertOrgQuery, orgValues, (err, orgResult) => {
+            if (err) {
+              return connection.rollback(() => connection.release());
+            }
+
+            const organizationId = orgResult.insertId;
+
+            const insertHistory = `
+              INSERT INTO history (
+                email, password, OrganizationName, HECPMDCRegistrationNo, ntnNumber, type, phoneNumber,
+                fullAddress, city, district, country, logo, organization_id, status
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            const historyValues = [
+              email,
+              password,
+              OrganizationName,
+              HECPMDCRegistrationNo,
+              ntnNumber,
+              type,
+              phoneNumber,
+              fullAddress,
+              city,
+              district,
+              country,
+              logo,
+              organizationId,
+              'added'
+            ];
+
+            connection.query(insertHistory, historyValues, (err) => {
+              if (err) return connection.rollback(() => connection.release());
+
+              connection.commit((err) => {
+                if (err) return connection.rollback(() => connection.release());
+
+                connection.release();
+                sendEmail(email, "Welcome to Discovery Connect", `
+                  Dear ${OrganizationName},\n\nYour account is pending approval.\n\nRegards,\nLabHazir
+                `);
+                callback(null, {
+                  message: "Organization registered successfully",
+                  userId: userAccountId
+                });
+              });
+            });
+          });
+        });
+      });
+    });
   });
 };
 
@@ -70,12 +186,12 @@ function getCurrentOrganizationById(id, callback) {
 function getOrganizationById(id, callback) {
   const query = 'SELECT * FROM organization WHERE id = ?';
   mysqlConnection.query(query, [id], callback);
-} 
+}
 
 // Function to update organization status
 const updateOrganizationStatus = async (id, status) => {
   const insertHistoryQuery = `
-  INSERT INTO databaseadmin_history (organization_id, status)
+  INSERT INTO registrationadmin_history (organization_id, status)
   VALUES (?, ?)
 `;
   const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
@@ -102,7 +218,7 @@ const updateOrganizationStatus = async (id, status) => {
     }
 
     const email = emailResults[0].email;
-    const name=emailResults[0].OrganizationName;
+    const name = emailResults[0].OrganizationName;
     let emailText = `
   Dear ${name},
 
@@ -120,8 +236,8 @@ const updateOrganizationStatus = async (id, status) => {
   The Discovery Connect Team
 `;
 
-if (status === "active") {
-  emailText = `
+    if (status === "active") {
+      emailText = `
   Dear ${name},
 
   Congratulations! 🎉
@@ -138,7 +254,7 @@ if (status === "active") {
   The Discovery Connect Team
 `;
 
-}
+    }
 
 
     // Send email asynchronously (does not block response)
@@ -152,8 +268,6 @@ if (status === "active") {
     throw error;
   }
 };
-
-
 
 const updateOrganization = (data, user_account_id, callback) => {
   const {
@@ -209,7 +323,7 @@ const updateOrganization = (data, user_account_id, callback) => {
 // Function to delete a collection site
 const deleteOrganization = async (id, status) => {
   const insertHistoryQuery = `
-  INSERT INTO databaseadmin_history (organization_id, status)
+  INSERT INTO registrationadmin_history (organization_id, status)
   VALUES (?, ?)
 `;
   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
@@ -251,7 +365,7 @@ const deleteOrganization = async (id, status) => {
       Best regards,  
       The Discovery Connect Team
       `;
-    } 
+    }
 
     // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)
@@ -267,6 +381,7 @@ const deleteOrganization = async (id, status) => {
 
 module.exports = {
   create_organizationTable,
+  createOrganization,
   getCurrentOrganizationById,
   getOrganizationById,
   getAllOrganizations,

@@ -11,28 +11,31 @@ import {
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const TestSystemArea = () => {
+const ContainerTypeArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Test System page is:", id);
+    console.log("account_id on Container Type page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyData, setHistoryData] = useState();
-  const [selectedTestSystemnameId, setSelectedTestSystemnameId] =
-    useState(null); // Store ID of Plasma to delete
+  const [selectedContainerTypenameId, setSelectedContainerTypenameId] =
+    useState(null); // Store ID of ContainerType to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestSystemname, setEditTestSystemname] = useState(null); // State for selected TestMethod to edit
-  const [testsystemname, setTestSystemname] = useState([]); // State to hold fetched City
+  const [editContainerTypename, setEditContainerTypename] = useState(null); // State for selected City to edit
+  const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestSystem, setFilteredTestSystem] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  // Calculate total pages
+  const [filteredContainertypename, setFilteredContainertypename] = useState(
+    []
+  ); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -40,34 +43,34 @@ const TestSystemArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // Fetch ContainerType from backend when component loads
   useEffect(() => {
-    fetchTestSystemname(); // Call the function when the component mounts
+    fetchContainerTypename(); // Call the function when the component mounts
   }, []);
-  const fetchTestSystemname = async () => {
+  const fetchContainerTypename = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testsystem`
+        `${url}/samplefields/get-samplefields/containertype`
       );
-      setFilteredTestSystem(response.data);
-      setTestSystemname(response.data); // Store fetched TestMethod in state
+      setFilteredContainertypename(response.data); // Initialize filtered list
+      setContainerTypename(response.data); // Store fetched ContainerType in state
     } catch (error) {
-      console.error("Error fetching Test System :", error);
+      console.error("Error fetching Container Type :", error);
     }
   };
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestSystem.length / itemsPerPage)
+      Math.ceil(filteredContainertypename.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestSystem]);
+  }, [filteredContainertypename]);
 
-  const currentData = filteredTestSystem.slice(
+  const currentData = filteredContainertypename.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -80,17 +83,17 @@ const TestSystemArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = testsystemname; // Show all if filter is empty
+      filtered = containertypename; // Show all if filter is empty
     } else {
-      filtered = testsystemname.filter((testsystem) =>
-        testsystem[field]
+      filtered = containertypename.filter((containertype) =>
+        containertype[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
       );
     }
 
-    setFilteredTestSystem(filtered);
+    setFilteredContainertypename(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -122,28 +125,31 @@ const TestSystemArea = () => {
   };
 
   const handleSubmit = async (e) => {
-   
+    
     e.preventDefault();
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testsystem`,
+        `${url}/samplefields/post-samplefields/containertype`,
         formData
       );
-     
-      setSuccessMessage("Test System Name deleted successfully.");
+      
+      setSuccessMessage("Container Type  Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestSystemname();
+      fetchContainerTypename();
       // Clear form after submission
-      resetFormData();
+      setFormData({
+        name: "",
+        added_by: id,
+      });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Test System ", error);
+      console.error("Error adding ContainerType ", error);
     }
   };
 
@@ -151,24 +157,25 @@ const TestSystemArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/testsystem/${selectedTestSystemnameId}`
+        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
       );
      
       // Set success message
-      setSuccessMessage("Test System Name deleted successfully.");
+      setSuccessMessage("Container Type Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestSystemname();
+      fetchContainerTypename();
+
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedTestSystemnameId(null);
+      setSelectedContainerTypenameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test System with ID ${selectedTestSystemnameId}:`,
+        `Error deleting Container Type with ID ${selectedContainerTypenameId}:`,
         error
       );
     }
@@ -186,14 +193,14 @@ const TestSystemArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (testsystemname) => {
+  const handleEditClick = (containertypename) => {
    
 
-    setSelectedTestSystemnameId(testsystemname.id);
-    setEditTestSystemname(testsystemname);
+    setSelectedContainerTypenameId(containertypename.id);
+    setEditContainerTypename(containertypename);
 
     setFormData({
-      name: testsystemname.name,
+      name: containertypename.name,
       added_by: id,
     });
 
@@ -205,23 +212,22 @@ const TestSystemArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testsystem/${selectedTestSystemnameId}`,
+        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
         formData
       );
       
 
-      fetchTestSystemname();
+      fetchContainerTypename();
 
       setShowEditModal(false);
-      setSuccessMessage("Test System updated successfully.");
-
+      setSuccessMessage("Container Type updated successfully.");
+      resetFormData();
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Test System name with ID ${selectedTestSystemnameId}:`,
+        `Error updating Container Type name with ID ${selectedContainerTypenameId}:`,
         error
       );
     }
@@ -239,7 +245,7 @@ const TestSystemArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-    
+   
     const file = e.target.files[0];
     if (!file) return;
     
@@ -263,14 +269,14 @@ const TestSystemArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testsystem`,
+          `${url}/samplefields/post-samplefields/containertype`,
           { bulkData: dataWithAddedBy }
         );
       
 
-        fetchTestSystemname();
+        fetchContainerTypename();
       } catch (error) {
-        console.error("Error adding Test System :", error);
+        console.error("Error adding Container Type:", error);
       }
     };
 
@@ -302,9 +308,9 @@ const TestSystemArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Test System List</h5>
+              <h5 className="m-0 fw-bold ">Container Type List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Test System Button */}
+                {/* Add Container Type Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -317,11 +323,11 @@ const TestSystemArea = () => {
                     fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "6px", 
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Test System
+                  <i className="fas fa-plus"></i> Add Container Type
                 </button>
 
                 <label
@@ -361,8 +367,8 @@ const TestSystemArea = () => {
                   {[
                     //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                     {
-                      label: "Test System Name",
-                      placeholder: "Search Test System Name",
+                      label: "Container Type",
+                      placeholder: "Search Container Type",
                       field: "name",
                       width: "col-md-1",
                     },
@@ -425,26 +431,26 @@ const TestSystemArea = () => {
                                   updated_at,
                                 })
                               }
-                              title="Edit Test System"
+                              title="Edit ContainerType"
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedTestSystemnameId(id);
+                                setSelectedContainerTypenameId(id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Test System"
+                              title="Delete Container Type"
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-info btn-sm"
                               onClick={() =>
-                                handleShowHistory("testsystem", id)
+                                handleShowHistory("containertype", id)
                               }
-                              title="History Test System"
+                              title="History Container Type"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
@@ -456,7 +462,7 @@ const TestSystemArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Test System Available
+                      No Container Type Available
                     </td>
                   </tr>
                 )}
@@ -472,6 +478,7 @@ const TestSystemArea = () => {
               focusPage={currentPage}
             />
           )}
+
           {/* Modal for Adding Committe members */}
           {(showAddModal || showEditModal) && (
             <>
@@ -498,7 +505,9 @@ const TestSystemArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add Test System" : "Edit Test System"}
+                        {showAddModal
+                          ? "Add Container Type"
+                          : "Edit Container Type"}
                       </h5>
                       <button
                         type="button"
@@ -526,7 +535,7 @@ const TestSystemArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Test System Name</label>
+                          <label>Container Type Name</label>
                           <input
                             type="text"
                             className="form-control"
@@ -540,7 +549,7 @@ const TestSystemArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Test System"}
+                          {showAddModal ? "Save" : "Update Container Type"}
                         </button>
                       </div>
                     </form>
@@ -578,7 +587,7 @@ const TestSystemArea = () => {
                       className="modal-header"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <h5 className="modal-title">Delete Test System</h5>
+                      <h5 className="modal-title">Delete Container Type</h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -586,7 +595,9 @@ const TestSystemArea = () => {
                       ></button>
                     </div>
                     <div className="modal-body">
-                      <p>Are you sure you want to delete this Test System?</p>
+                      <p>
+                        Are you sure you want to delete this Container Type?
+                      </p>
                     </div>
                     <div className="modal-footer">
                       <button className="btn btn-danger" onClick={handleDelete}>
@@ -689,8 +700,8 @@ const TestSystemArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Test System:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>Container type:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -710,8 +721,8 @@ const TestSystemArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Test System:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>Container type:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -735,4 +746,4 @@ const TestSystemArea = () => {
   );
 };
 
-export default TestSystemArea;
+export default ContainerTypeArea;

@@ -8,66 +8,68 @@ import {
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
+import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-import * as XLSX from "xlsx";
-const TestResultUnitArea = () => {
+const SampleTypeMatrixArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on Test ResultUnit page is:", id);
+    console.log("account_id on SampleTypeMatrix page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedTestResultUnitnameId, setSelectedTestResultUnitnameId] =
+  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] =
     useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestResultUnitname, setEditTestResultUnitname] = useState(null); // State for selected TestMethod to edit
-  const [testResultUnitname, setTestResultUnitname] = useState([]); // State to hold fetched City
+  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] =
+    useState(null); // State for selected City to edit
+  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
+  const [filteredSampletypematrixname, setFilteredSampletypematrixname] =
+    useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [filteredTestResultunit, setFilteredTestResultunit] = useState([]);
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // Fetch ContainerType from backend when component loads
   useEffect(() => {
-    fetchTestResultUnitname(); // Call the function when the component mounts
+    fetchSampleTypeMatrixname(); // Call the function when the component mounts
   }, []);
-  const fetchTestResultUnitname = async () => {
+  const fetchSampleTypeMatrixname = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testresultunit`
+        `${url}/samplefields/get-samplefields/sampletypematrix`
       );
-      setFilteredTestResultunit(response.data);
-      setTestResultUnitname(response.data); // Store fetched TestMethod in state
+      setFilteredSampletypematrixname(response.data); // Initialize filtered list
+      setSampleTypeMatrixname(response.data); // Store fetched SampleTypeMatrix in state
     } catch (error) {
-      console.error("Error fetching Test ResultUnit :", error);
+      console.error("Error fetching Sample Type Matrix :", error);
     }
   };
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredTestResultunit.length / itemsPerPage)
+      Math.ceil(filteredSampletypematrixname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestResultunit]);
+  }, [filteredSampletypematrixname]);
 
-  const currentData = filteredTestResultunit.slice(
+  const currentData = filteredSampletypematrixname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -80,17 +82,17 @@ const TestResultUnitArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = testResultUnitname; // Show all if filter is empty
+      filtered = sampletypematrixname; // Show all if filter is empty
     } else {
-      filtered = testResultUnitname.filter((testresultUnit) =>
-        testresultUnit[field]
+      filtered = sampletypematrixname.filter((sampletypematrix) =>
+        sampletypematrix[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
       );
     }
 
-    setFilteredTestResultunit(filtered);
+    setFilteredSampletypematrixname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -127,23 +129,26 @@ const TestResultUnitArea = () => {
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testresultunit`,
+        `${url}/samplefields/post-samplefields/sampletypematrix`,
         formData
       );
-    
-      setSuccessMessage("Test ResultUnit Name deleted successfully.");
+      
+      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestResultUnitname();
+      fetchSampleTypeMatrixname();
       // Clear form after submission
-      resetFormData();
+      setFormData({
+        name: "",
+        added_by: id,
+      });
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Test ResultUnit ", error);
+      console.error("Error adding SampleTypeMatrix ", error);
     }
   };
 
@@ -151,25 +156,27 @@ const TestResultUnitArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`
+        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
       );
-    
+      
 
       // Set success message
-      setSuccessMessage("Test ResultUnit Name deleted successfully.");
+      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchTestResultUnitname();
+      // Refresh the cityname list after deletion
+      fetchSampleTypeMatrixname();
+
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedTestResultUnitnameId(null)
+      setSelectedSampleTypeMatrixnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test ResultUnit  with ID ${selectedTestResultUnitnameId}:`,
+        `Error deleting SampleTypeMatrix  with ID ${selectedSampleTypeMatrixnameId}:`,
         error
       );
     }
@@ -187,14 +194,14 @@ const TestResultUnitArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (testResultUnitname) => {
+  const handleEditClick = (sampletypematrix) => {
     
 
-    setSelectedTestResultUnitnameId(testResultUnitname.id);
-    setEditTestResultUnitname(testResultUnitname);
+    setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
+    setEditSampleTypeMatrixname(sampletypematrix);
 
     setFormData({
-      name: testResultUnitname.name,
+      name: sampletypematrix.name,
       added_by: id,
     });
 
@@ -206,23 +213,23 @@ const TestResultUnitArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testresultUnit/${selectedTestResultUnitnameId}`,
+        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
         formData
       );
-      
+     
 
-      fetchTestResultUnitname();
+      fetchSampleTypeMatrixname();
 
       setShowEditModal(false);
-      setSuccessMessage("Test ResultUnit updated successfully.");
+      setSuccessMessage("Sample Type Matrix updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      resetFormData()
+      resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Test ResultUnit name with ID ${selectedTestResultUnitnameId}:`,
+        `Error updating Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId}:`,
         error
       );
     }
@@ -243,7 +250,7 @@ const TestResultUnitArea = () => {
     
     const file = e.target.files[0];
     if (!file) return;
-   
+    
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -259,18 +266,19 @@ const TestResultUnitArea = () => {
         added_by: id, // Ensure 'id' is defined in the component
       }));
 
-     
+      
 
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testresultunit`,
+          `${url}/samplefields/post-samplefields/sampletypematrix`,
           { bulkData: dataWithAddedBy }
         );
         
-        fetchTestResultUnitname();
+
+        fetchSampleTypeMatrixname();
       } catch (error) {
-        console.error("Error adding Test ResultUnit :", error);
+        console.error("Error adding Sample Type Matrix :", error);
       }
     };
 
@@ -288,7 +296,6 @@ const TestResultUnitArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
-
           {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
@@ -303,9 +310,9 @@ const TestResultUnitArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Test Result Unit List</h5>
+              <h5 className="m-0 fw-bold ">Sample Type Matrix List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Test Result Unit Button */}
+                {/* Add Sample Type Matrix Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -315,14 +322,14 @@ const TestResultUnitArea = () => {
                     padding: "8px 16px",
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px",
+                    fontSize: "14px", 
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "6px", 
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Test Result Unit
+                  <i className="fas fa-plus"></i> Add Sample type Matrix
                 </button>
 
                 <label
@@ -330,10 +337,10 @@ const TestResultUnitArea = () => {
                     backgroundColor: "#f1f1f1",
                     color: "#333",
                     border: "1px solid #ccc",
-                    padding: "8px 16px",
+                    padding: "8px 16px", 
                     borderRadius: "6px",
                     fontWeight: "500",
-                    fontSize: "14px",
+                    fontSize: "14px", 
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -360,30 +367,30 @@ const TestResultUnitArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
+                    //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                     {
-                      label: "Test Result Unit",
-                      placeholder: "Search Test Result Unit",
+                      label: "Sample Type Matrix",
+                      placeholder: "Search Sample Type Matrix",
                       field: "name",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
                       field: "added_by",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
                       field: "created_at",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                   ].map(({ label, placeholder, field, width }) => (
                     <th key={field} className={`${width} px-2`}>
@@ -416,7 +423,7 @@ const TestResultUnitArea = () => {
                         <td>
                           <div className="d-flex justify-content-center gap-3">
                             <button
-                              className="btn btn-success btn-sm "
+                              className="btn btn-success"
                               onClick={() =>
                                 handleEditClick({
                                   id,
@@ -426,26 +433,26 @@ const TestResultUnitArea = () => {
                                   updated_at,
                                 })
                               }
-                              title="Edit Test Result Unit"
+                              title="Edit SampleTypeMatrix"
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedTestResultUnitnameId(id);
+                                setSelectedSampleTypeMatrixnameId(id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Test Result Unit"
+                              title="Delete Sample Type Matrix"
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
-                              className="btn btn-info btn-sm "
+                              className="btn btn-info btn-sm"
                               onClick={() =>
-                                handleShowHistory("testresultunit", id)
+                                handleShowHistory("sampletypematrix", id)
                               }
-                              title="History Test Result Unit"
+                              title="History Sample type matrix"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
@@ -457,7 +464,7 @@ const TestResultUnitArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Test ResultUnit Available
+                      No Sample Type Matrix Available
                     </td>
                   </tr>
                 )}
@@ -501,8 +508,8 @@ const TestResultUnitArea = () => {
                     <div className="modal-header">
                       <h5 className="modal-title">
                         {showAddModal
-                          ? "Add Test Result Unit"
-                          : "Edit Test Result Unit"}
+                          ? "Add Sample Type Matrix"
+                          : "Edit Sample Type Matrix"}
                       </h5>
                       <button
                         type="button"
@@ -530,7 +537,7 @@ const TestResultUnitArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Test Result Unit Name</label>
+                          <label>Sample Type Matrix Name</label>
                           <input
                             type="text"
                             className="form-control"
@@ -544,9 +551,7 @@ const TestResultUnitArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal
-                            ? "Save"
-                            : "Update Test Result Unit"}
+                          {showAddModal ? "Save" : "Update Sample Type Matrix"}
                         </button>
                       </div>
                     </form>
@@ -584,9 +589,7 @@ const TestResultUnitArea = () => {
                       className="modal-header"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <h5 className="modal-title">
-                        Delete Test Result Unit
-                      </h5>
+                      <h5 className="modal-title">Delete Sample Type Matrix</h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -595,15 +598,11 @@ const TestResultUnitArea = () => {
                     </div>
                     <div className="modal-body">
                       <p>
-                        Are you sure you want to delete this Test Result
-                        Unit?
+                        Are you sure you want to delete this Sample Type Matrix?
                       </p>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
+                      <button className="btn btn-danger" onClick={handleDelete}>
                         Delete
                       </button>
                       <button
@@ -697,15 +696,14 @@ const TestResultUnitArea = () => {
                                   padding: "10px 15px",
                                   borderRadius: "15px",
                                   backgroundColor: "#ffffff",
-                                  boxShadow:
-                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                   maxWidth: "75%",
                                   fontSize: "14px",
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Test Result Unit:</b> {created_name} was{" "}
-                                <b>added</b> by Database Admin at{" "}
+                                <b>Sample Type Matrix:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -718,16 +716,15 @@ const TestResultUnitArea = () => {
                                     padding: "10px 15px",
                                     borderRadius: "15px",
                                     backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow:
-                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Test Result Unit:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Database Admin at{" "}
+                                  <b>Sample Type Matrix:</b> {updated_name} was{" "}
+                                  <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -745,12 +742,10 @@ const TestResultUnitArea = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
-
     </section>
   );
 };
 
-export default TestResultUnitArea;
+export default SampleTypeMatrixArea;

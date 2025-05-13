@@ -53,97 +53,71 @@ const OrganizationArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  const [registerUser, { }] = useRegisterUserMutation();
+  // const [registerUser, { }] = useRegisterUserMutation();
   const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-    {
-      label: "Password",
-      placeholder: "Search Password",
-      field: "useraccount_password",
-    },
+    { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
-    {
-      label: "HECPMDCRegistrationNo",
-      placeholder: "Search HECPMDCRegistrationNo",
-      field: "HECPMDCRegistrationNo",
-    },
-    {
-      label: "NTN Number",
-      placeholder: "Search NTN Number",
-      field: "ntnNumber",
-    },
-    {
-      label: "Type",
-      placeholder: "Search Type",
-      field: "type",
-    },
+    { label: "HECPMDCRegistrationNo", placeholder: "Search HECPMDCRegistrationNo", field: "HECPMDCRegistrationNo" },
+    { label: "NTN Number", placeholder: "Search NTN Number", field: "ntnNumber" },
+    { label: "Type", placeholder: "Search Type", field: "type" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 
+ const onSubmit = async (event) => {
+  event.preventDefault();
 
-  const onSubmit = (event) => {
-    console.log("formData before appending logo:", formData);
-    event.preventDefault();
+  const newformData = new FormData();
 
-    const newformData = new FormData();
+  // Append all the form data
+  newformData.append("email", formData.email);
+  newformData.append("password", formData.password);
+  newformData.append("accountType", "Organization");
+  newformData.append("OrganizationName", formData.OrganizationName);
+  newformData.append("phoneNumber", formData.phoneNumber);
+  newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
+  newformData.append("ntnNumber", formData.ntnNumber);
+  newformData.append("fullAddress", formData.fullAddress);
+  newformData.append("city", formData.city);
+  newformData.append("district", formData.district);
+  newformData.append("country", formData.country);
+  newformData.append("status", "inactive");
+  newformData.append("type", formData.type);
 
-    // Append form fields
-    newformData.append("email", formData.email);
-    newformData.append("password", formData.password);
-    newformData.append("accountType", "Organization");
-    newformData.append("OrganizationName", formData.OrganizationName);
-    newformData.append("phoneNumber", formData.phoneNumber);
-    newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
-    newformData.append("ntnNumber", formData.ntnNumber);
-    newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
-    newformData.append("status", "inactive");
-    newformData.append("type", formData.type);
-    // Ensure logo is a file before appending
-    if (formData.logo) {
-      console.log("Appending logo:", formData.logo);
-      newformData.append("logo", formData.logo);
-    } else {
-      console.log("No logo found in formData at submission.");
-    }
+  if (formData.logo) {
+    newformData.append("logo", formData.logo);
+  }
 
-    // Debug log to inspect FormData entries
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/createorg`,
+      newformData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
-    // Call the mutation (assuming the function is available)
-    registerUser(newformData)
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Register Failed";
-          notifyError(errorMessage);
-        } else {
-          fetchOrganizations()
-          notifySuccess("Organization Registered Successfully");
-          fetchOrganizations()
-          setShowAddModal(false);
-        }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
-
-    // Reset state and form (if necessary)
+    notifySuccess("Organization Registered Successfully");
+    fetchOrganizations(); // refresh list
     setShowAddModal(false);
     resetFormData();
-  };
+  } catch (error) {
+    const errorMsg =
+      error?.response?.data?.error || "Failed to register organization";
+    notifyError(errorMsg);
+  }
+};
+
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -151,7 +125,7 @@ const OrganizationArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log("histor",data)
+      console.log("histor", data)
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -185,6 +159,7 @@ const OrganizationArea = () => {
       console.error("Error fetching organizations:", error);
     }
   };
+
   const fetchcityname = async () => {
     try {
       const response = await axios.get(`${url}/city/get-city`);
@@ -193,6 +168,7 @@ const OrganizationArea = () => {
       console.error("Error fetching City:", error);
     }
   };
+
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(`${url}/district/get-district`);
@@ -201,6 +177,7 @@ const OrganizationArea = () => {
       console.error("Error fetching District:", error);
     }
   };
+
   const fetchcountryname = async () => {
     try {
       const response = await axios.get(
@@ -381,17 +358,13 @@ const OrganizationArea = () => {
       // Send status update request to backend
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/edit/${id}`,
-         { status: option } , 
+        { status: option },
         { headers: { "Content-Type": "application/json" } }
       );
 
       // Assuming the response is successful, set success message and hide the dropdown
       setSuccessMessage(response.data.message);
-
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-
-      // Refresh the organization list
       fetchOrganizations();
 
       // Close the dropdown after status change
@@ -637,6 +610,8 @@ const OrganizationArea = () => {
               focusPage={currentPage}
             />
           )}
+
+          {/* Add and Edit Modal */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -941,6 +916,8 @@ const OrganizationArea = () => {
               </div>
             </>
           )}
+
+          {/* History Modal */}
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -1017,29 +994,29 @@ const OrganizationArea = () => {
                               }}
                             >
                               {/* Message for City Addition */}
-                              {status==='added' && (
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor: "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "75%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                }}
-                              >
-                                <b>Organization:</b> {OrganizationName} was{" "}
-                                <b>{status}</b> by Database Admin at{" "}
-                                {moment(created_at).format(
-                                  "DD MMM YYYY, h:mm A"
-                                )}
-                              </div>
+                              {status === 'added' && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#ffffff",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  <b>Organization:</b> {OrganizationName} was{" "}
+                                  <b>{status}</b> by Registration Admin at{" "}
+                                  {moment(created_at).format(
+                                    "DD MMM YYYY, h:mm A"
+                                  )}
+                                </div>
                               )}
-                              
+
 
                               {/* Message for City Update (Only if it exists) */}
-                              {status==='updated' && (
+                              {status === 'updated' && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
@@ -1053,7 +1030,7 @@ const OrganizationArea = () => {
                                   }}
                                 >
                                   <b>Organization:</b> {OrganizationName} was{" "}
-                                  <b>{status}</b> by Database Admin at{" "}
+                                  <b>{status}</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}

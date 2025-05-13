@@ -8,33 +8,31 @@ import {
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
-import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-const ConcurrentMedicalConditionsArea = () => {
+import * as XLSX from "xlsx";
+const TestKitManufacturerArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
-    console.log("account_id on ConcurrentMedicalConditions Area page is:", id);
+    console.log("account_id on Test Kit Manufacturer Area page is:", id);
   }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedConcurrentMedicalnameId, setSelectedConcurrentMedicalnameId] =
-    useState(null); // Store ID of Plasma to delete
+  const [selectedTestKitManufacturernameId, setSelectedTestKitManufacturernameId,] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editConcurrentMedicalname, setEditConcurrentMedicalname] =
-    useState(null); // State for selected ConcurrentMedical to edit
-  const [concurrentmedicalname, setConcurrentMedicalname] = useState([]); // State to hold fetched TestKitManufacturer
+  const [editTestKitManufacturername, setEditTestKitManufacturername] =
+    useState(null); // State for selected TestMethod to edit
+  const [testKitManufacturername, setTestKitManufacturername] = useState([]); // State to hold fetched TestKitManufacturer
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredMedicalConditionname, setFilteredMedicalConditionname] =
-    useState([]); // Store filtered cities
+  const [filteredTestkitmanufacturer, setFilteredTestkitmanufacturer] = useState([])
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -44,33 +42,31 @@ const ConcurrentMedicalConditionsArea = () => {
 
   // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    fetchConcurrentMedicalname(); // Call the function when the component mounts
+    fetchTestKitManufacturername(); // Call the function when the component mounts
   }, []);
-  const fetchConcurrentMedicalname = async () => {
+  const fetchTestKitManufacturername = async () => {
     try {
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/concurrentmedicalconditions`
+        `${url}/samplefields/get-samplefields/testkitmanufacturer`
       );
-      setFilteredMedicalConditionname(response.data);
-      setConcurrentMedicalname(response.data); // Store fetched TestMethod in state
+      setFilteredTestkitmanufacturer(response.data); // Initialize filtered list
+      setTestKitManufacturername(response.data); // Store fetched TestMethod in state
     } catch (error) {
-      console.error("Error fetching Concurrent Medical Conditions :", error);
+      console.error("Error fetching Test KitManufacturer :", error);
     }
   };
 
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredMedicalConditionname.length / itemsPerPage)
-    );
+    const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturer.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredMedicalConditionname]);
+  }, [filteredTestkitmanufacturer]);
 
-  const currentData = filteredMedicalConditionname.slice(
+
+  const currentData = filteredTestkitmanufacturer.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -83,17 +79,14 @@ const ConcurrentMedicalConditionsArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = concurrentmedicalname; // Show all if filter is empty
+      filtered = testKitManufacturername; // Show all if filter is empty
     } else {
-      filtered = concurrentmedicalname.filter((concurrentmedicalconditions) =>
-        concurrentmedicalconditions[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
+      filtered = testKitManufacturername.filter((testkitmanufacturer) =>
+        testkitmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
 
-    setFilteredMedicalConditionname(filtered);
+    setFilteredTestkitmanufacturer(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
@@ -115,6 +108,7 @@ const ConcurrentMedicalConditionsArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -124,33 +118,28 @@ const ConcurrentMedicalConditionsArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    
+   
     e.preventDefault();
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
+        `${url}/samplefields/post-samplefields/testkitmanufacturer`,
         formData
       );
      
-      setSuccessMessage(
-        "Concurrent Medical ConditionsRoutes Name deleted successfully."
-      );
+      setSuccessMessage("Test Kit Manufacturer Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchConcurrentMedicalname();
+      fetchTestKitManufacturername();
       // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
+      resetFormData()
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
-      console.error("Error adding Concurrent Medical Conditions ", error);
+      console.error("Error adding Test KitManufacturer ", error);
     }
   };
 
@@ -158,25 +147,25 @@ const ConcurrentMedicalConditionsArea = () => {
     try {
       // Send delete request to backend
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`
+        `${url}/samplefields/delete-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`
       );
      
-      setSuccessMessage(
-        "Concurrent Medical Conditions Name deleted successfully."
-      );
+      // Set success message
+      setSuccessMessage("Test Kit Manufacturer  Name deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchConcurrentMedicalname();
+      fetchTestKitManufacturername();
+
       // Close modal after deletion
       setShowDeleteModal(false);
-      setSelectedConcurrentMedicalnameId(null);
+      setSelectedTestKitManufacturernameId(null);
     } catch (error) {
       console.error(
-        `Error deleting concurrent medical conditions  with ID ${selectedConcurrentMedicalnameId}:`,
+        `Error deleting Test KitManufacturer  with ID ${selectedTestKitManufacturernameId}:`,
         error
       );
     }
@@ -194,14 +183,14 @@ const ConcurrentMedicalConditionsArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const handleEditClick = (concurrentmedicalname) => {
-    
+  const handleEditClick = (testkitmanufacturername) => {
+   
 
-    setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
-    setEditConcurrentMedicalname(concurrentmedicalname);
+    setSelectedTestKitManufacturernameId(testkitmanufacturername.id);
+    setEditTestKitManufacturername(testkitmanufacturername);
 
     setFormData({
-      name: concurrentmedicalname.name,
+      name: testkitmanufacturername.name,
       added_by: id,
     });
 
@@ -213,14 +202,15 @@ const ConcurrentMedicalConditionsArea = () => {
 
     try {
       const response = await axios.put(
-        `${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`,
+        `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
         formData
       );
     
-      fetchConcurrentMedicalname();
+
+      fetchTestKitManufacturername();
 
       setShowEditModal(false);
-      setSuccessMessage("Concurrent Medical Conditions updated successfully.");
+      setSuccessMessage("Test Kit Manufacturer updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
@@ -228,7 +218,7 @@ const ConcurrentMedicalConditionsArea = () => {
       resetFormData();
     } catch (error) {
       console.error(
-        `Error updating Concurrent Medical Conditions name with ID ${selectedConcurrentMedicalnameId}:`,
+        `Error updating Test Kit Manufacturer name with ID ${selectedTestKitManufacturernameId}:`,
         error
       );
     }
@@ -246,10 +236,10 @@ const ConcurrentMedicalConditionsArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleFileUpload = async (e) => {
-  
+   
     const file = e.target.files[0];
     if (!file) return;
-   
+  
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -270,12 +260,14 @@ const ConcurrentMedicalConditionsArea = () => {
       try {
         // POST request inside the same function
         const response = await axios.post(
-          `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
+          `${url}/samplefields/post-samplefields/testkitmanufacturer`,
           { bulkData: dataWithAddedBy }
         );
-        fetchConcurrentMedicalname();
+        
+
+        fetchTestKitManufacturername();
       } catch (error) {
-        console.error("Error adding Concurrent Medical Conditions :", error);
+        console.error("Error adding Test System :", error);
       }
     };
 
@@ -308,9 +300,9 @@ const ConcurrentMedicalConditionsArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Concurrent Medical Conditions List</h5>
+              <h5 className="m-0 fw-bold ">Test Kit Manufacturer List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Concurrent Medical Conditions Button */}
+                {/* Add Test Kit Manufacturer Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -327,7 +319,7 @@ const ConcurrentMedicalConditionsArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Concurrent Medical Conditions
+                  <i className="fas fa-plus"></i> Add Test kit Manufacturer
                 </button>
 
                 <label
@@ -365,36 +357,30 @@ const ConcurrentMedicalConditionsArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    // {
-                    //   label: "ID",
-                    //   placeholder: "Search ID",
-                    //   field: "id",
-                    //   width: "col-md-2",
-                    // },
+                    //{ label: "ID", placeholder: "Search ID", field: "id",width: "col-md-2" },
                     {
-                      label: "Concurrent Medical Conditions",
-                      placeholder:
-                        "Search Concurrent Medical Conditions",
+                      label: "Test Kit Manufacturer",
+                      placeholder: "Search Test KitManufacturer",
                       field: "name",
-                      width: "col-md-1",
+                      width: "col-md-1"
                     },
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
                       field: "added_by",
-                      width: "col-md-1",
+                      width: "col-md-1"
                     },
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
                       field: "created_at",
-                      width: "col-md-1",
+                      width: "col-md-1"
                     },
                     {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
-                      width: "col-md-1",
+                      width: "col-md-1"
                     },
                   ].map(({ label, placeholder, field, width }) => (
                     <th key={field} className={`${width} px-2`}>
@@ -412,6 +398,7 @@ const ConcurrentMedicalConditionsArea = () => {
                   <th className="col-md-1">Action</th>
                 </tr>
               </thead>
+
               <tbody>
                 {currentData.length > 0 ? (
                   currentData.map(
@@ -436,29 +423,26 @@ const ConcurrentMedicalConditionsArea = () => {
                                   updated_at,
                                 })
                               }
-                              title="Edit Concurrent Medical Conditions"
+                              title="Edit Test KitManufacturer"
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedConcurrentMedicalnameId(id);
+                                setSelectedTestKitManufacturernameId(id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Concurrent Medical Conditions"
+                              title="Delete Test KitManufacturer"
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-info btn-sm"
                               onClick={() =>
-                                handleShowHistory(
-                                  "concurrentmedicalconditions",
-                                  id
-                                )
+                                handleShowHistory("testkitmanufacturer", id)
                               }
-                              title="History Concurrent Medical Conditions"
+                              title="History Test kit manufacturer"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
@@ -470,7 +454,7 @@ const ConcurrentMedicalConditionsArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Concurrent Medical Conditions Available
+                      No Test KitManufacturer Available
                     </td>
                   </tr>
                 )}
@@ -514,8 +498,8 @@ const ConcurrentMedicalConditionsArea = () => {
                     <div className="modal-header">
                       <h5 className="modal-title">
                         {showAddModal
-                          ? "Add Concurrent Medical Conditions"
-                          : "Edit Concurrent Medical Conditions"}
+                          ? "Add Test KitManufacturer"
+                          : "Edit Test KitManufacturer"}
                       </h5>
                       <button
                         type="button"
@@ -543,7 +527,7 @@ const ConcurrentMedicalConditionsArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Concurrent Medical Conditions Name</label>
+                          <label>Test Kit Manufacturer Name</label>
                           <input
                             type="text"
                             className="form-control"
@@ -559,7 +543,7 @@ const ConcurrentMedicalConditionsArea = () => {
                         <button type="submit" className="btn btn-primary">
                           {showAddModal
                             ? "Save"
-                            : "Update Concurrent Medical Conditions"}
+                            : "Update Test KitManufacturer"}
                         </button>
                       </div>
                     </form>
@@ -598,7 +582,7 @@ const ConcurrentMedicalConditionsArea = () => {
                       style={{ backgroundColor: "transparent" }}
                     >
                       <h5 className="modal-title">
-                        Delete Concurrent Medical Conditions
+                        Delete Test KitManufacturer
                       </h5>
                       <button
                         type="button"
@@ -608,8 +592,8 @@ const ConcurrentMedicalConditionsArea = () => {
                     </div>
                     <div className="modal-body">
                       <p>
-                        Are you sure you want to delete this Concurrent
-                        Medical Conditions?
+                        Are you sure you want to delete this Test
+                        KitManufacturer?
                       </p>
                     </div>
                     <div className="modal-footer">
@@ -710,15 +694,15 @@ const ConcurrentMedicalConditionsArea = () => {
                                   padding: "10px 15px",
                                   borderRadius: "15px",
                                   backgroundColor: "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  boxShadow:
+                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                   maxWidth: "75%",
                                   fontSize: "14px",
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Concurrent Medical Condition:</b>{" "}
-                                {created_name} was <b>added</b> by
-                                Database Admin at{" "}
+                                <b>Test Kit Manufacturer:</b> {created_name}{" "}
+                                was <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -739,9 +723,9 @@ const ConcurrentMedicalConditionsArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Concurrent Medical Condition:</b>{" "}
+                                  <b>Test Kit Manufacturer:</b>{" "}
                                   {updated_name} was <b>updated</b> by
-                                  Database Admin at{" "}
+                                  Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -762,8 +746,9 @@ const ConcurrentMedicalConditionsArea = () => {
 
         </div>
       </div>
+
     </section>
   );
 };
 
-export default ConcurrentMedicalConditionsArea;
+export default TestKitManufacturerArea;
