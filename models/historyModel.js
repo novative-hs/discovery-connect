@@ -20,6 +20,7 @@ const registrationadmin_history = () => {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       ethnicity_id INT,
       samplecondition_id INT,
+      samplepricecurrency_id INT,
       storagetemperature_id INT,
       containertype_id INT,
       quantityunit_id INT,
@@ -41,6 +42,7 @@ const registrationadmin_history = () => {
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (ethnicity_id) REFERENCES ethnicity(id) ON DELETE CASCADE,
       FOREIGN KEY (samplecondition_id) REFERENCES samplecondition(id) ON DELETE CASCADE,
+      FOREIGN KEY (samplepricecurrency_id) REFERENCES samplepricecurrency(id) ON DELETE CASCADE,
       FOREIGN KEY (storagetemperature_id) REFERENCES storagetemperature(id) ON DELETE CASCADE,
       FOREIGN KEY (containertype_id) REFERENCES containertype(id) ON DELETE CASCADE,
       FOREIGN KEY (quantityunit_id) REFERENCES quantityunit(id) ON DELETE CASCADE,
@@ -168,9 +170,9 @@ const create_samplehistoryTable = () => {
 
   mysqlConnection.query(create_historyTable, (err, results) => {
     if (err) {
-      console.error("Error creating Sample History table: ", err); 
+      console.error("Error creating Sample History table: ", err);
     } else {
-      console.log("Sample History table created or already exists"); 
+      console.log("Sample History table created or already exists");
     }
   });
 };

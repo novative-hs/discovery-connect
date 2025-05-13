@@ -36,7 +36,7 @@ const DashboardArea = () => {
       .split("; ")
       .find((row) => row.startsWith("authToken="))
       ?.split("=")[1];
-   
+
     if (!token) {
       router.push("/login"); // Redirect to login if token is missing
     }
@@ -46,7 +46,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-     
+
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");
@@ -73,8 +73,8 @@ const DashboardArea = () => {
         return <CommitteeMemberArea />;
       case "organization":
         return <Organization />;
-        case "CSR":
-          return <CSRArea/>;
+      case "CSR":
+        return <CSRArea />;
       case "collectionsite":
         return <CollectionsiteArea />;
       case "ethnicity":
@@ -112,29 +112,29 @@ const DashboardArea = () => {
 
   return (
     <>
-      <Header setActiveTab={setActiveTab} activeTab={activeTab}/>
+      <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <div className="d-flex justify-content-end me-3 mt-2 bg-light">
         <p className="fs-7">
-          {`Admin Dashboard / ${
-            activeTab === "order-info"
+          {`Admin Dashboard / ${activeTab === "order-info"
               ? "Profile"
               : [
-                  "ethnicity",
-                  "sample-condition",
-                  "storage-temperature",
-                  "container-type",
-                  "quantity-unit",
-                  "sample-type-matrix",
-                  "test-method",
-                  "test-result-unit",
-                  "concurrent-medical-conditions",
-                  "test-kit-manufacturer",
-                  "test-system",
-                  "test-system-manufacturer",
-                ].includes(activeTab)
-              ? `Sample / ${activeTab.replace(/-/g, " ")}`
-              : activeTab.replace(/-/g, " ")
-          }`}
+                "ethnicity",
+                "sample-condition",
+                "sample-price-currency",
+                "storage-temperature",
+                "container-type",
+                "quantity-unit",
+                "sample-type-matrix",
+                "test-method",
+                "test-result-unit",
+                "concurrent-medical-conditions",
+                "test-kit-manufacturer",
+                "test-system",
+                "test-system-manufacturer",
+              ].includes(activeTab)
+                ? `Sample / ${activeTab.replace(/-/g, " ")}`
+                : activeTab.replace(/-/g, " ")
+            }`}
         </p>
       </div>
 
@@ -144,7 +144,7 @@ const DashboardArea = () => {
             <ProfileShapes />
             <div className="row justify-content-center">
               <div className="col-xxl-10 col-lg-12 col-md-10 col-sm-12">
-              <div className="container p-4 rounded shadow-sm bg-white">
+                <div className="container p-4 rounded shadow-sm bg-white">
                   {/* Dynamically render content based on activeTab */}
                   {renderContent()}
                 </div>

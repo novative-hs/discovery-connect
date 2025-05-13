@@ -20,6 +20,7 @@ const createEthnicityTable = () => {
     }
   });
 };
+
 const createSampleConditionTable = () => {
   const createsampleconditionTable = `
     CREATE TABLE IF NOT EXISTS samplecondition (
@@ -82,7 +83,7 @@ const createStorageTemperatureTable = () => {
     }
   });
 };
-// CONTAINER TYPE
+
 // Function to create the containertype table
 const createContainerTypeTable = () => {
   const createContainerTypeTable = `
@@ -104,7 +105,7 @@ const createContainerTypeTable = () => {
     }
   });
 };
-// QUANTITY UNIT
+
 // Function to create the QuantityUnit table
 const createQuantityUnitTable = () => {
   const createQuantityUnitTable = `
@@ -126,7 +127,7 @@ const createQuantityUnitTable = () => {
     }
   });
 };
-// SAMPLE TYPE MATRIX
+
 // Function to create the SampleTypeMatrix table
 const createSampleTypeMatrixTable = () => {
   const createSampleTypeMatrixTable = `
@@ -170,6 +171,7 @@ const createTestMethodTable = () => {
     }
   });
 };
+
 const createTestResultUnitTable = () => {
   const createTestResultUnitTable = `
     CREATE TABLE IF NOT EXISTS testresultunit (
@@ -190,6 +192,7 @@ const createTestResultUnitTable = () => {
     }
   });
 };
+
 // Function to create the concurrentmedicalconditions table
 const createConcurrentMedicalConditionsTable = () => {
   const createConcurrentMedicalConditionsTable = `
@@ -217,6 +220,7 @@ const createConcurrentMedicalConditionsTable = () => {
     }
   );
 };
+
 // Function to create the Test Kit Manufacturer table
 const createTestKitManufacturerTable = () => {
   const createtestkitmanufacturer = `
@@ -237,6 +241,7 @@ const createTestKitManufacturerTable = () => {
     }
   });
 };
+
 const createTestSystemTable = () => {
   const createTestSystem = `
     CREATE TABLE IF NOT EXISTS testsystem (
@@ -256,6 +261,7 @@ const createTestSystemTable = () => {
     }
   });
 };
+
 const createTestSystemManufacturerTable = () => {
   const createTestSystemManufacturerTable = `
     CREATE TABLE IF NOT EXISTS testsystemmanufacturer (
@@ -275,6 +281,7 @@ const createTestSystemManufacturerTable = () => {
     }
   });
 };
+
 // Function to get all SampleFields
 const getAllSampleFields = (tableName, callback) => {
   // Validate table name to prevent SQL injection

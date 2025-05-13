@@ -193,8 +193,6 @@ const SamplePriceCurrencyArea = () => {
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (samplepricecurrency) => {
-
-
     setSelectedSamplePriceCurrencynameId(samplepricecurrency.id);
     setEditSamplePriceCurrencyname(samplepricecurrency);
 
@@ -244,12 +242,10 @@ const SamplePriceCurrencyArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const handleFileUpload = async (e) => {
 
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-
     const reader = new FileReader();
     reader.onload = async (event) => {
       const binaryStr = event.target.result;
