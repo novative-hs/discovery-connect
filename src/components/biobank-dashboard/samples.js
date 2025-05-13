@@ -221,7 +221,7 @@ const BioBankSampleArea = () => {
     }
   };
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
       try {
         const response = await fetch(
