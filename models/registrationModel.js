@@ -25,7 +25,6 @@ const createuser_accountTable = () => {
   });
 };
 
-
 const getAccountDetail = (id, callback) => {
   // Query to verify email and password for any account type
   const query = `SELECT id, email, accountType 
@@ -362,17 +361,13 @@ const createAccount = (req, callback) => {
                 name = ResearcherName
                 researcherId = userId;
               }
-              if (accountType === "CSR") {
-                CSRId = userId;
-                name = CSRName
-              }
 
               const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName,
                   HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
-                  researcher_id, collectionsite_id, csr_id,status
+                  researcher_id, collectionsite_id, csr_id, status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
@@ -689,6 +684,7 @@ const updateAccount = (req, callback) => {
   });
 };
 
+// Function to Login Account
 const loginAccount = (data, callback) => {
 
   const { email, password } = data;
@@ -900,8 +896,6 @@ const verifyOTP = (email, otp, callback) => {
   });
 };
 
-
-
 const sendOTP = (req, callback) => {
   const { email } = req.body;
 
@@ -947,7 +941,6 @@ module.exports = {
   loginAccount,
   getAccountDetail,
   getUserEmail,
-
   createAccount,
   updateAccount,
   getEmail,
