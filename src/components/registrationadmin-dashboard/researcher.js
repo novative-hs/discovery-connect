@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash, faHistory, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+import * as XLSX from "xlsx";
 const ResearcherArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+  const [orderhistoryData, setOrderHistoryData] = useState([]);
+  const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
   const [editResearcher, setEditResearcher] = useState(null);
   const [selectedResearcherId, setSelectedResearcherId] = useState(null);
   const [allResearchers, setAllResearchers] = useState([]);
@@ -153,9 +156,24 @@ const ResearcherArea = () => {
       console.error("Error fetching history:", error);
     }
   };
+    const fetchOrderHistory = async (id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/orderhistory/${id}`
+      );
+      const data = await response.json();
+      setOrderHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
+  };
+   const handleShowOrderHistory = (id) => {
+    fetchOrderHistory(id);
+    setShowOrderHistoryModal(true);
   };
   const handleInputChange = (e) => {
     setFormData({
@@ -195,7 +213,29 @@ const ResearcherArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+const handleExportToExcel = () => {
+  console.log(filteredResearchers)
+    const dataToExport = filteredResearchers.map((item) => ({
+      email:item.email,
+      password:item.password,
+      ResearcherName: item.ResearcherName,
+      OrganizationName: item.OrganizationName,
+    phoneNumber:item.phoneNumber,
+    city:item.cityname,
+    country:item.countryname,
+    district:item.districtname,
+   fullAddress:item.fullAddress,
+  status:item.status,
+      "Created At": formatDate(item.created_at), // Assuming you have `created_at` field
+      "Updated At": formatDate(item.updated_at), // Assuming you have `created_at` field
+    }));
 
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Researcher");
+
+    XLSX.writeFile(workbook, "Researcher_List.xlsx");
+  };
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -214,22 +254,50 @@ const ResearcherArea = () => {
               )}
               <h5 className="m-0 fw-bold ">Researcher List</h5>
               {/* Status Filter */}
-              <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100">
-                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
-                  Status:
-                </label>
+             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-3 mb-3">
+  
+  {/* Filter Section (left-aligned) */}
+  <div className="d-flex flex-column flex-sm-row align-items-center gap-2">
+    <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+      Status:
+    </label>
 
-                <select
-                  id="statusFilter"
-                  className="form-control mb-2"
-                  style={{ width: "auto" }}
-                  onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
-                >
-                  <option value="">All</option>
-                  <option value="pending">pending</option>
-                  <option value="approved">approved</option>
-                </select>
-              </div>
+    <select
+      id="statusFilter"
+      className="form-control"
+      style={{ width: "auto" }}
+      onChange={(e) => handleFilterChange("status", e.target.value)}
+    >
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+    </select>
+  </div>
+
+  {/* Export Button (right-aligned) */}
+  <div>
+    <button
+      onClick={handleExportToExcel}
+      style={{
+        backgroundColor: "#28a745",
+        color: "#fff",
+        border: "none",
+        padding: "8px 16px",
+        borderRadius: "6px",
+        fontWeight: "500",
+        fontSize: "14px",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      }}
+    >
+      <i className="fas fa-file-excel"></i> Export to Excel
+    </button>
+  </div>
+</div>
+
+              
             </div>
 
             {/* Table */}
@@ -321,6 +389,15 @@ const ResearcherArea = () => {
                               title="History"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
+                            </button>
+                             <button
+                              className="btn btn-success btn-sm"
+                              onClick={() =>
+                                handleShowOrderHistory(researcher.id)
+                              }
+                              title="History"
+                            >
+                              <FontAwesomeIcon icon={faShoppingCart} size="sm" />
                             </button>
                           </div>
                         </td>
@@ -651,6 +728,73 @@ const ResearcherArea = () => {
               </div>
             </>
           )}
+
+       {showOrderHistoryModal && (
+  <div className="modal show d-block" tabIndex="-1" role="dialog">
+    <div className="modal-dialog modal-xl" role="document">
+      <div className="modal-content shadow-lg border-0">
+        <div className="modal-header bg-primary text-white">
+          <h5 className="modal-title">Order History</h5>
+          <button
+            type="button"
+            className="btn-close btn-close-white"
+            onClick={() => setShowOrderHistoryModal(false)}
+          ></button>
+        </div>
+
+        <div className="modal-body">
+          {orderhistoryData.length === 0 ? (
+            <div className="alert alert-info text-center py-4">
+              No order history found.
+            </div>
+          ) : (
+            <>
+              {/* Researcher Name Styling */}
+              <div className="mb-4 text-center">
+                <span className="h5 fw-bold text-primary">Researcher: </span>
+                <span className="h5 text-dark">{orderhistoryData[0]?.researcher_name}</span>
+              </div>
+
+              {/* Table with modern styling */}
+              <div className="table-responsive">
+                <table className="table table-hover table-striped align-middle">
+                  <thead className="table-dark">
+                    <tr>
+                      <th>Sample Name</th>
+                      <th>Price</th>
+                      <th>Quantity</th>
+                      <th>Total</th>
+                      <th>Order Status</th>
+                      <th>Technical Admin Status</th>
+                      <th>Scientific CommitteeMember Status</th>
+                      <th>Ethical CommitteeMember Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderhistoryData.map((order, index) => (
+                      <tr key={index}>
+                        <td>{order.sampleName}</td>
+                        <td>{order.price}</td>
+                        <td>{order.quantity}</td>
+                        <td>{order.totalpayment}</td>
+                        <td>{order.order_status}</td>
+                        <td>{order.technicaladmin_status}</td>
+                        <td>{order.scientific_committee_status}</td>
+                        <td>{order.ethical_committee_status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
         </div>
       </div>
     </section>

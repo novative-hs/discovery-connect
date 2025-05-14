@@ -169,7 +169,7 @@ const createCollectionSite = (req, callback) => {
                 sendEmail(
                   email,
                   'Welcome to Discovery Connect',
-                  `Dear ${CollectionSiteName},\n\nYour account status is currently pending.\nPlease wait for approval.\n\nRegards,\nLabHazir`
+                  `Dear ${CollectionSiteName},\n\nYour account status is currently pending.\nPlease wait for approval.\n\nRegards,\nDiscovery Connect`
                 );
 
                 callback(null, {
@@ -280,8 +280,8 @@ const deleteCollectionSite = async (id) => {
   `;
 
   try {
-    // Set the status here (e.g., 'unapproved' for deletion)
-    const status = 'unapproved';
+    // Set the status here (e.g., 'inactive' for deletion)
+    const status = 'unactive';
 
     // Update CollectionSite status
     const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
@@ -306,13 +306,13 @@ const deleteCollectionSite = async (id) => {
   
     Thank you for registering with Discovery Connect! 
   
-    We appreciate your interest in our platform. However, we regret to inform you that your account is currently <b>UNAPPROVED</b>. This means that you will not be able to log in or access the platform until the admin completes the review and approval process.
+    We appreciate your interest in our platform. However, we regret to inform you that your account is currently <b>INACTIVE</b>. This means that you will not be able to log in or access the platform until the admin completes the review and approval process.
   
     We understand this might be disappointing, but rest assured, we are working hard to process your registration as quickly as possible.
   
-    Once your account is approved, you'll be able to explore all the exciting features and resources that Discovery Connect has to offer!
+    Once your account is active, you'll be able to explore all the exciting features and resources that Discovery Connect has to offer!
   
-    We will notify you via email as soon as your account is approved. In the meantime, if you have any questions or need further assistance, feel free to reach out to us.
+    We will notify you via email as soon as your account is active. In the meantime, if you have any questions or need further assistance, feel free to reach out to us.
   
     We appreciate your patience and look forward to having you on board soon!
   
@@ -340,7 +340,7 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
     SELECT CollectionSiteName, user_account_id 
     FROM collectionsite 
     WHERE user_account_id != ?
-    AND status = 'approved';
+    AND status = 'active';
   `;
   mysqlConnection.query(collectionSiteQuery, [user_account_id], (err, results) => {
     if (err) {
@@ -376,7 +376,7 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
       SELECT CollectionSiteName, user_account_id 
       FROM collectionsite 
       WHERE user_account_id != ?
-      AND status = 'approved';
+      AND status = 'active';
     `;
 
     mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
@@ -390,6 +390,28 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
     });
   });
 };
+
+
+const getAllNameinCSR=(callback)=>{
+  const collectionSiteQuery=`SELECT CollectionSiteName, id FROM collectionsite WHERE status = 'active'`
+ mysqlConnection.query(collectionSiteQuery, (err, results) => {
+    if (err) {
+      
+      callback({ error: "Database query failed" }, null);
+      return;
+    }
+
+    if (!results || results.length === 0) {
+      
+      callback({ error: "Collection site not found" }, null);
+      return;
+    }
+
+    callback(null, results);
+  });
+
+}
+
 
 function updateCollectionSiteDetail(id, data, callback) {
   const {
@@ -595,4 +617,5 @@ module.exports = {
   updateCollectionSite,
   updateCollectionSiteStatus,
   deleteCollectionSite,
+  getAllNameinCSR
 };

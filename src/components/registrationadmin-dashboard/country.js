@@ -280,7 +280,20 @@ const CountryArea = () => {
 
     reader.readAsArrayBuffer(file);
   };
+const handleExportToExcel = () => {
+    const dataToExport = filteredCountryname.map((item) => ({
+      Name: item.name,
+      "Added By": "Registration Admin",
+      "Created At": formatDate(item.created_at), // Assuming you have `created_at` field
+      "Updated At": formatDate(item.updated_at), // Assuming you have `created_at` field
+    }));
 
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Country");
+
+    XLSX.writeFile(workbook, "Country_List.xlsx");
+  };
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -343,6 +356,24 @@ const CountryArea = () => {
                     onChange={(e) => handleFileUpload(e)}
                   />
                 </label>
+                 <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
               </div>
             </div>
           </div>

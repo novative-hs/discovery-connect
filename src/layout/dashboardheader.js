@@ -154,65 +154,66 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   const menuItems =
-    userType == "researcher"
-      ? [
-        { label: "Book Samples", tab: "Booksamples" },
-        { label: "Sample List", tab: "samples" },
-        { label: "My Order Samples", tab: "my-samples" },
-      ]
-      : userType == "registrationadmin"
+  userType == "researcher"
         ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "City", tab: "city" },
-          { label: "Country", tab: "country" },
-          { label: "District", tab: "district" },
-          { label: "Researcher List", tab: "researcher" },
-          { label: "Organization List", tab: "organization" },
-          { label: "Collection Site List", tab: "collectionsite" },
-          { label: "Committee Members List", tab: "committee-members" },
-          { label: "CSR List", tab: "CSR" },
-          {
-            label: "Sample",
-            tab: "sample",
-            dropdown: [
-              { label: "Ethnicity", tab: "ethnicity" },
-              { label: "Sample Condition", tab: "sample-condition" },
-              { label: "Sample Price Currency", tab: "sample-price-currency" },
-              { label: "Storage Temperature", tab: "storage-temperature" },
-              { label: "Container Type", tab: "container-type" },
-              { label: "Quantity Unit", tab: "quantity-unit" },
-              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
-              { label: "Test Method", tab: "test-method" },
-              { label: "Test Result Unit", tab: "test-result-unit" },
-              { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions" },
-              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
-              { label: "Test System", tab: "test-system" },
-              { label: "Test System Manufacturer", tab: "test-system-manufacturer" },
-            ],
-          },
+          { label: "Book Samples", tab: "Booksamples" },
+          { label: "Sample List", tab: "samples" },
+          { label: "My Order Samples", tab: "my-samples" },
         ]
-        : userType == "collectionsites"
+        : userType == "registrationadmin"
           ? [
-            { label: "Sample List", tab: "samples" },
-            { label: "Sample Dispatch", tab: "sample-dispatch" },
+            { label: "Profile", tab: "order-info" },
+            { label: "City", tab: "city" },
+            { label: "Country", tab: "country" },
+            { label: "District", tab: "district" },
+            { label: "Researcher List", tab: "researcher" },
+            { label: "Organization List", tab: "organization" },
+            { label: "Collection Site List", tab: "collectionsite" },
+            { label: "Collection Site Staff List", tab: "collectionsitestaff" },
+            { label: "Committee Members List", tab: "committee-members" },
+            { label: "CSR List", tab: "CSR" },
+            {
+              label: "Sample",
+              tab: "sample",
+              dropdown: [
+                { label: "Ethnicity", tab: "ethnicity" },
+                { label: "Sample Condition", tab: "sample-condition" },
+                { label: "Sample Price Currency", tab: "sample-price-currency" },
+                { label: "Storage Temperature", tab: "storage-temperature" },
+                { label: "Container Type", tab: "container-type" },
+                { label: "Quantity Unit", tab: "quantity-unit" },
+                { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+                { label: "Test Method", tab: "test-method" },
+                { label: "Test Result Unit", tab: "test-result-unit" },
+                { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions"},
+                { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+                { label: "Test System", tab: "test-system" },
+                { label: "Test System Manufacturer", tab: "test-system-manufacturer"},
+              ],
+            },
           ]
-          : userType == "biobank"
+          : userType == "collectionsites"
             ? [
               { label: "Sample List", tab: "samples" },
               { label: "Sample Dispatch", tab: "sample-dispatch" },
-              { label: "Quarantine Stock", tab: "Quarantine-Stock" },
-              { label: "Sample Visibility", tab: "Sample-Visibility" },
             ]
-            : userType == "committeemember"
+            : userType == "biobank"
               ? [
-                { label: "Pending Review List", tab: "samples" },
+                { label: "Sample List", tab: "samples" },
+                { label: "Sample Dispatch", tab: "sample-dispatch" },
+                { label: "Quarantine Stock", tab: "Quarantine-Stock" },
+                { label: "Sample Visibility", tab: "Sample-Visibility" },
               ]
-              : userType == "technicaladmin"
+              : userType == "committeemember"
                 ? [
-                  { label: "Profile", tab: "order-info" },
-                  { label: "Order List", tab: "order" },
-                  { label: "Order Rejected List", tab: "orderrejected" },
-                  { label: "Contact us List", tab: "contactus" },
+                  { label: "Pending Review List", tab: "samples" },
+                ]
+                : userType == "technicaladmin"
+                  ? [
+                    { label: "Profile", tab: "order-info" },
+                    { label: "Order List", tab: "order" },
+                    {label:"Order Rejected List",tab:"orderrejected"},
+                    { label: "Contact us List", tab: "contactus" },
 
                 ]
                 : userType == "csr"

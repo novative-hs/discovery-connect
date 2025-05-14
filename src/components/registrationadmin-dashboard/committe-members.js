@@ -9,14 +9,22 @@ import {
   faHistory,
   faEye,
   faEyeSlash,
+  faTimeline,
+  faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
+import * as XLSX from "xlsx"
 import moment from "moment";
 const CommitteeMemberArea = () => {
+  const [visibleCommentIndex, setVisibleCommentIndex] = useState(null);
+const [expandedRowIndex, setExpandedRowIndex] = useState(null);
+
   const [historyData, setHistoryData] = useState([]);
+  const [orderhistoryData, setOrderHistoryData] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
   // const [showCommitteTypeOptions, setshowCommitteeTypeOptions] = useState(false);
   const [showCommitteeTypeOptions, setShowCommitteeTypeOptions] = useState({});
   const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
@@ -192,9 +200,26 @@ const CommitteeMemberArea = () => {
       console.error("Error fetching history:", error);
     }
   };
+  const fetchOrderHistory = async (id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeemember/orderhistory/${id}`
+      );
+      const data = await response.json();
+console.log(data)
+      setOrderHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
+  };
+
+  const handleShowOrderHistory = (id) => {
+    fetchOrderHistory(id);
+    setShowOrderHistoryModal(true);
   };
   const handleDelete = async () => {
     try {
@@ -438,7 +463,31 @@ const CommitteeMemberArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
+const handleExportToExcel = () => {
+  const dataToExport = filteredCommitteemembers.map((item) => {
+    // Convert buffer to base64 string if available
+   
+    return {
+      email: item.email,
+      password: item.password,
+    name:item.CommitteeMemberName,
+      phoneNumber: item.phoneNumber,
+      city: item.city_name,
+      country: item.country_name,
+      district: item.district_name,
+      fullAddress: item.fullAddress,
+      status: item.status,
+      "Created At": formatDate(item.created_at),
+      //"Updated At": formatDate(item.updated_at),
+    };
+  });
 
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Committeemember");
+
+  XLSX.writeFile(workbook, "Committeemember_List.xlsx");
+};
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -491,6 +540,24 @@ const CommitteeMemberArea = () => {
                   }}
                 >
                   <i className="fas fa-plus"></i> Add Committee Member
+                </button>
+                 <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
                 </button>
               </div>
             </div>
@@ -650,6 +717,15 @@ const CommitteeMemberArea = () => {
                           >
                             <FontAwesomeIcon icon={faHistory} size="sm" />
                           </button>
+                          <button
+  className="btn btn-success btn-sm"
+  onClick={() => handleShowOrderHistory(committeemember.id)}
+  title="Committee Member Order History"
+>
+  <FontAwesomeIcon icon={faShoppingCart} size="sm" />
+</button>
+
+
                         </div>
                       </td>
                     </tr>
@@ -1037,6 +1113,149 @@ const CommitteeMemberArea = () => {
               </div>
             </>
           )}
+       {showOrderHistoryModal && (
+  <div className="modal show d-block" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }} role="dialog">
+    <div className="modal-dialog modal-xl" role="document">
+      <div className="modal-content shadow-lg">
+        <div className="modal-header bg-primary text-white">
+          <h5 className="modal-title">Order History</h5>
+          <button
+            type="button"
+            className="btn-close btn-close-white"
+            onClick={() => setShowOrderHistoryModal(false)}
+          ></button>
+        </div>
+
+        <div className="modal-body">
+          {orderhistoryData.length === 0 ? (
+            <div className="alert alert-info text-center">No order history found.</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover table-striped align-middle">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Researcher Name</th>
+                    <th>Sample Name</th>
+                    <th>Quantity</th>
+                    <th>Comments</th>
+                    <th>Documents</th>
+                    <th>Additional Mechanism</th>
+                  </tr>
+                </thead>
+                <tbody>
+                 {orderhistoryData.map((order, index) => (
+  <React.Fragment key={index}>
+    <tr>
+      <td>{order.researcher_name}</td>
+      <td>{order.sampleName}</td>
+      <td>{order.quantity}</td>
+      
+      <td>
+        <button
+          className="btn btn-sm btn-outline-info"
+          onClick={() =>
+            setVisibleCommentIndex(visibleCommentIndex === index ? null : index)
+          }
+        >
+          {visibleCommentIndex === index ? "Hide" : "View"}
+        </button>
+      </td>
+    <td>
+  {/* IRB File Download Button */}
+  {order.irb_file && order.irb_file.data && (
+    <button
+      className="btn btn-sm btn-outline-success me-1 mb-1"
+      onClick={() => {
+        const byteArray = new Uint8Array(order.irb_file.data);
+        const blob = new Blob([byteArray], { type: 'application/pdf' }); // adjust MIME if needed
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'IRB_File.pdf'; // or dynamically name it
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }}
+    >
+      Download IRB
+    </button>
+  )}
+
+  {/* NBC File (null in your data, so just check if exists) */}
+  {order.nbc_file && order.nbc_file.data && (
+    <button
+      className="btn btn-sm btn-outline-warning me-1 mb-1"
+      onClick={() => {
+        const byteArray = new Uint8Array(order.nbc_file.data);
+        const blob = new Blob([byteArray], { type: 'application/pdf' }); // change if needed
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'NBC_File.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }}
+    >
+      Download NBC
+    </button>
+  )}
+</td>
+<td>
+  <button
+    className="btn btn-sm btn-outline-primary mb-2"
+    onClick={() =>
+      setExpandedRowIndex(expandedRowIndex === index ? null : index)
+    }
+  >
+    {expandedRowIndex === index ? "Hide Reporting" : "View Reporting"}
+  </button>
+
+  {expandedRowIndex === index && (
+    <div
+      className="border rounded p-2 bg-light text-dark shadow-sm"
+      style={{ whiteSpace: "pre-wrap", maxWidth: "300px", marginTop: "5px" }}
+    >
+      <strong>Additional Info:</strong>
+      <div>{order.reporting_mechanism}</div>
+    </div>
+  )}
+</td>
+
+
+
+    </tr>
+
+    {visibleCommentIndex === index && (
+      <tr>
+        <td colSpan="6">
+          <div className="alert alert-secondary mb-0">
+            <strong>Comment:</strong> {order.committee_comments || "No comments available."}
+          </div>
+        </td>
+      </tr>
+    )}
+  </React.Fragment>
+))}
+
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        
+      </div>
+    </div>
+  </div>
+)}
+
+
+
 
         </div>
       </div>

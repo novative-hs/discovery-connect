@@ -113,10 +113,12 @@ const create_historyTable = () => {
     CommitteeMemberName VARCHAR(100) NULL,
     OrganizationName VARCHAR(100) NULL,
     CSRName VARCHAR(100) NULL,
+    staffName VARCHAR(100) NULL,
+    action VARCHAR(20) NULL,
     HECPMDCRegistrationNo VARCHAR(50),
     cnic VARCHAR(50),
     CommitteeType VARCHAR(50),
-    ntnNumber VARCHAR(50),
+    website VARCHAR(250) NULL,
     nameofOrganization INT,
     type VARCHAR(50),
     CollectionSiteType VARCHAR(50),
@@ -130,12 +132,13 @@ const create_historyTable = () => {
     collectionsite_id INT,
     committeemember_id INT,
     researcher_id INT,
+    collectionsitestaff_id INT,
     csr_id INT,
     sample_id VARCHAR(36),
     added_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    status ENUM('added', 'updated', 'deleted') DEFAULT 'added',
+    status ENUM('added', 'updated', 'deleted','active','inactive') DEFAULT 'added',
     FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
     FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
     FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
@@ -145,7 +148,8 @@ const create_historyTable = () => {
     FOREIGN KEY (csr_id) REFERENCES csr(id) ON DELETE CASCADE,
     FOREIGN KEY (committeemember_id) REFERENCES committee_member(id) ON DELETE CASCADE,
     FOREIGN KEY (researcher_id) REFERENCES researcher(id) ON DELETE CASCADE,
-    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
+    FOREIGN KEY (collectionsitestaff_id) REFERENCES collectionsitestaff(id) ON DELETE CASCADE
   )`;
 
   mysqlConnection.query(create_historyTable, (err, results) => {
