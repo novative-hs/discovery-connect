@@ -398,7 +398,7 @@ const DistrictArea = () => {
                       {/* <td>{districtname.id}</td> */}
                       <td>{districtname.name}</td>
                       {/* <td>{districtname.added_by}</td> */}
-                      <td>DB Admin</td>
+                      <td>Registration Admin</td>
                       <td>{formatDate(districtname.created_at)}</td>
                       <td>{formatDate(districtname.updated_at)}</td>
                       <td>

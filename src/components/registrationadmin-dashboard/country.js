@@ -399,7 +399,7 @@ const CountryArea = () => {
                       {/* <td>{countryname.id}</td> */}
                       <td>{countryname.name}</td>
                       {/* <td>{countryname.added_by}</td> */}
-                      <td>DB Admin</td>
+                      <td>Registration Admin</td>
                       <td>{formatDate(countryname.created_at)}</td>
                       <td>{formatDate(countryname.updated_at)}</td>
                       <td>

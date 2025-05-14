@@ -398,7 +398,7 @@ const CityArea = () => {
                       {/* <td>{cityname.id}</td> */}
                       <td>{cityname.name}</td>
                       {/* <td>{cityname.added_by}</td> */}
-                      <td>DB Admin</td>
+                      <td>Registration Admin</td>
                       <td>{formatDate(cityname.created_at)}</td>
                       <td>{formatDate(cityname.updated_at)}</td>
                       <td>

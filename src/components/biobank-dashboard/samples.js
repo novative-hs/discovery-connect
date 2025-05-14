@@ -221,11 +221,11 @@ const BioBankSampleArea = () => {
     }
   };
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchCollectionSiteNames = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/collectionsitenamesinbiobank/${selectedSampleId}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/collectionsitenamesinbiobank/${selectedSampleId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch collection site names");
@@ -414,7 +414,7 @@ const BioBankSampleArea = () => {
         samplename: "",
         age: "",
         gender: "",
-        phoneNumber:"",
+        phoneNumber: "",
         ethnicity: "",
         samplecondition: "",
         storagetemp: "",
@@ -444,8 +444,8 @@ const BioBankSampleArea = () => {
         user_account_id: id,
         logo: "",
       });
-setLogoPreview(false);
-setShowAdditionalFields(false)
+      setLogoPreview(false);
+      setShowAdditionalFields(false)
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding sample:", error);
@@ -617,10 +617,10 @@ setShowAdditionalFields(false)
       typeof sample.logo === "string"
         ? sample.logo
         : sample.logo?.data
-        ? URL.createObjectURL(
+          ? URL.createObjectURL(
             new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
           )
-        : null;
+          : null;
     setLogoPreview(logoPreviewUrl);
     // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
@@ -653,7 +653,7 @@ setShowAdditionalFields(false)
       setFormData({
         locationids: "",
         samplename: "",
-        phoneNumber:"",
+        phoneNumber: "",
         age: "",
         gender: "",
         ethnicity: "",
@@ -733,7 +733,7 @@ setShowAdditionalFields(false)
       storagetemp: "",
       ContainerType: "",
       CountryOfCollection: "",
-      price:0,
+      price: 0,
       quantity: 0,
       QuantityUnit: "",
       SampleTypeMatrix: "",
@@ -792,7 +792,7 @@ setShowAdditionalFields(false)
         )}
         <div className="text-danger fw-bold" style={{ marginTop: "-40px" }}>
           <h6>
-            Note: Click on Edit Icon to Add Price and Currency for Sample.
+            Note: Click on Edit Icon to Add Price and Price Currency for Sample.
           </h6>
         </div>
 
@@ -959,7 +959,7 @@ setShowAdditionalFields(false)
                 top: "40px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "100%", // ensures responsiveness
+                width: "100%",
               }}
             >
               <div
@@ -1003,133 +1003,120 @@ setShowAdditionalFields(false)
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
                         {/* Column 1 */}
-                        <div
-                          className={
-                            showAdditionalFields ? "col-md-2" : "col-md-10"
-                          }
-                        >
-                          <div className="form-group">
-                            <label>Sample Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="samplename"
-                              value={formData.samplename}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.samplename
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Age</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              name="age"
-                              value={formData.age}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                height: "45px",
-                                fontSize: "14px",
-                                backgroundColor: formData.age
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              name="phoneNumber"
-                              value={formData.phoneNumber}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Sample Logo</label>
-                            <div className="d-flex align-items-center">
+                        {!showAdditionalFields && (
+                          <div className="col-md-10">
+                            <div className="form-group">
+                              <label>Sample Name</label>
                               <input
-                                name="logo"
-                                type="file"
-                                id="logo"
-                                accept="image/*"
-                                onChange={(e) => logoHandler(e.target.files[0])}
+                                type="text"
                                 className="form-control"
+                                name="samplename"
+                                value={formData.samplename}
+                                onChange={handleInputChange}
+                                required
                                 style={{
-                                  fontSize: "14px",
                                   height: "45px",
-                                  backgroundColor: "#f0f0f0",
+                                  fontSize: "14px",
+                                  backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
                                   color: "black",
                                 }}
                               />
-                              {/* Add image preview next to the file input */}
-                              {logoPreview && (
-                                <img
-                                  src={logoPreview}
-                                  alt="Logo Preview"
-                                  width="80"
+                            </div>
+                            <div className="form-group">
+                              <label>Age</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                name="age"
+                                value={formData.age}
+                                onChange={handleInputChange}
+                                required
+                                style={{
+                                  height: "45px",
+                                  fontSize: "14px",
+                                  backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                  color: "black",
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Phone Number</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                name="phoneNumber"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                               <div className="form-group">
+                              <label>Gender</label>
+                              <select
+                                className="form-control"
+                                name="gender"
+                                value={formData.gender}
+                                onChange={handleInputChange}
+                                required
+                                style={{
+                                  fontSize: "14px",
+                                  height: "45px",
+                                  backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
+                                  color: "black",
+                                }}
+                              >
+                                <option value="" hidden>
+                                  Select Gender
+                                </option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label>Sample Logo</label>
+                              <div className="d-flex align-items-center">
+                                <input
+                                  name="logo"
+                                  type="file"
+                                  id="logo"
+                                  accept="image/*"
+                                  onChange={(e) => logoHandler(e.target.files[0])}
+                                  className="form-control"
                                   style={{
-                                    marginLeft: "20px",
-                                    borderRadius: "5px",
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: "#f0f0f0",
+                                    color: "black",
                                   }}
                                 />
-                              )}
+                                {logoPreview && (
+                                  <img
+                                    src={logoPreview}
+                                    alt="Logo Preview"
+                                    width="80"
+                                    style={{
+                                      marginLeft: "20px",
+                                      borderRadius: "5px",
+                                    }}
+                                  />
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div className="form-group">
-                            <label>Gender</label>
-                            <select
-                              className="form-control"
-                              name="gender"
-                              value={formData.gender}
-                              onChange={handleInputChange}
-                              required
-                              style={{
-                                fontSize: "14px",
-                                height: "45px",
-                                backgroundColor: formData.gender
-                                  ? "#f0f0f0"
-                                  : "#f0f0f0",
-                                color: "black",
-                              }}
-                            >
-                              <option value="" hidden>
-                                Select Gender
-                              </option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                            </select>
-                          </div>
-                          <div className="form-check my-3">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              id="toggleDetails"
-                              checked={showAdditionalFields}
-                              onChange={() =>
-                                setShowAdditionalFields(!showAdditionalFields)
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor="toggleDetails"
-                            >
-                              Add Additional Details
-                            </label>
-                          </div>
+                        )}
+                        <div className="form-check my-3">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="toggleDetails"
+                            checked={showAdditionalFields}
+                            onChange={() => setShowAdditionalFields(!showAdditionalFields)}
+                          />
+                          <label className="form-check-label" htmlFor="toggleDetails">
+                            Add Additional Details
+                          </label>
                         </div>
+
                         {/* Column 2 */}
                         {showAdditionalFields && (
                           <>
@@ -1292,10 +1279,7 @@ setShowAdditionalFields(false)
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-2">
-                              <div className="form-group position-relative">
+                                <div className="form-group position-relative">
                                 <label>Country Of Collection</label>
                                 <input
                                   type="text"
@@ -1342,10 +1326,10 @@ setShowAdditionalFields(false)
                                       .filter((country) =>
                                         searchCountry
                                           ? country.name
-                                              .toLowerCase()
-                                              .includes(
-                                                searchCountry.toLowerCase()
-                                              )
+                                            .toLowerCase()
+                                            .includes(
+                                              searchCountry.toLowerCase()
+                                            )
                                           : true
                                       )
                                       .map((country) => (
@@ -1361,12 +1345,12 @@ setShowAdditionalFields(false)
                                             handleSelectCountry(country)
                                           }
                                           onMouseEnter={(e) =>
-                                            (e.currentTarget.style.backgroundColor =
-                                              "#e2e2e2")
+                                          (e.currentTarget.style.backgroundColor =
+                                            "#e2e2e2")
                                           }
                                           onMouseLeave={(e) =>
-                                            (e.currentTarget.style.backgroundColor =
-                                              "#f0f0f0")
+                                          (e.currentTarget.style.backgroundColor =
+                                            "#f0f0f0")
                                           }
                                         >
                                           {country.name}
@@ -1375,6 +1359,9 @@ setShowAdditionalFields(false)
                                   </ul>
                                 )}
                               </div>
+                            </div>
+                            {/* {Column 3} */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Price</label>
                                 <input
@@ -1497,10 +1484,7 @@ setShowAdditionalFields(false)
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
+                                <div className="form-group">
                                 <label className="form-label">
                                   Smoking Status
                                 </label>
@@ -1550,7 +1534,9 @@ setShowAdditionalFields(false)
                                   </div>
                                 </div>
                               </div>
-
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label className="form-label">
                                   Alcohol Or Drug Abuse
@@ -1718,10 +1704,7 @@ setShowAdditionalFields(false)
                                   }}
                                 />
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
+                                 <div className="form-group">
                                 <label>Concurrent Medical Conditions</label>
                                 <select
                                   className="form-control"
@@ -1751,6 +1734,9 @@ setShowAdditionalFields(false)
                                   )}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Concurrent Medications</label>
                                 <input
@@ -1837,10 +1823,7 @@ setShowAdditionalFields(false)
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 6} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
+                               <div className="form-group">
                                 <label>Test Method</label>
                                 <select
                                   className="form-control"
@@ -1897,6 +1880,9 @@ setShowAdditionalFields(false)
                                   )}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 6} */}
+                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Test System</label>
                                 <select
@@ -2224,7 +2210,7 @@ setShowAdditionalFields(false)
         )}
 
         {/* Modal for History of Samples */}
- {showHistoryModal && (
+        {showHistoryModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div

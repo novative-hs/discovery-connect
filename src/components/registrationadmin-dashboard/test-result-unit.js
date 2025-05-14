@@ -447,7 +447,7 @@ const TestResultUnitArea = () => {
                         {/* <td>{id}</td> */}
                         <td>{name}</td>
                         {/* <td>{added_by}</td> */}
-                        <td>DB Admin</td>
+                        <td>Registration Admin</td>
                         <td>{formatDate(created_at)}</td>
                         <td>{formatDate(updated_at)}</td>
                         <td>

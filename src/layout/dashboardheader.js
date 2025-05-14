@@ -63,7 +63,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
       );
-    
+
       setUser(response.data[0]); // Store fetched organization data
     } catch (error) {
       console.error("Error fetching Organization:", error);
@@ -76,7 +76,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
 
-     
+
 
       if (
         response.data.length > 0 &&
@@ -84,7 +84,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       ) {
         setCartCount(response.data[0].Count);
         sessionStorage.setItem("cartCount", response.data[0].Count);
-      
+
       } else {
         console.warn("Unexpected API response format");
         sessionStorage.setItem("cartCount", 0);
@@ -101,7 +101,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         setShowSampleDropdown(null);
       }
     };
-  
+
     document.addEventListener("click", handleClickOutside); // <== CHANGED from 'mousedown' to 'click'
     return () => {
       document.removeEventListener("click", handleClickOutside);
@@ -126,7 +126,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (userType === "biobank") {
       return;
     }
-if (userType === "researcher") {
+    if (userType === "researcher") {
       setActiveTab("update-user");
     } else if (userType === "collectionsites") {
       setActiveTab("update-collectionsite");
@@ -154,75 +154,75 @@ if (userType === "researcher") {
   };
 
   const menuItems =
-  userType == "researcher"
+    userType == "researcher"
+      ? [
+        { label: "Book Samples", tab: "Booksamples" },
+        { label: "Sample List", tab: "samples" },
+        { label: "My Order Samples", tab: "my-samples" },
+      ]
+      : userType == "registrationadmin"
         ? [
-          { label: "Book Samples", tab: "Booksamples" },
-          { label: "Sample List", tab: "samples" },
-          { label: "My Order Samples", tab: "my-samples" },
+          { label: "Profile", tab: "order-info" },
+          { label: "City", tab: "city" },
+          { label: "Country", tab: "country" },
+          { label: "District", tab: "district" },
+          { label: "Researcher List", tab: "researcher" },
+          { label: "Organization List", tab: "organization" },
+          { label: "Collection Site List", tab: "collectionsite" },
+          { label: "Committee Members List", tab: "committee-members" },
+          { label: "CSR List", tab: "CSR" },
+          {
+            label: "Sample",
+            tab: "sample",
+            dropdown: [
+              { label: "Ethnicity", tab: "ethnicity" },
+              { label: "Sample Condition", tab: "sample-condition" },
+              { label: "Sample Price Currency", tab: "sample-price-currency" },
+              { label: "Storage Temperature", tab: "storage-temperature" },
+              { label: "Container Type", tab: "container-type" },
+              { label: "Quantity Unit", tab: "quantity-unit" },
+              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+              { label: "Test Method", tab: "test-method" },
+              { label: "Test Result Unit", tab: "test-result-unit" },
+              { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions" },
+              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+              { label: "Test System", tab: "test-system" },
+              { label: "Test System Manufacturer", tab: "test-system-manufacturer" },
+            ],
+          },
         ]
-        : userType == "registrationadmin"
+        : userType == "collectionsites"
           ? [
-            { label: "Profile", tab: "order-info" },
-            { label: "City", tab: "city" },
-            { label: "Country", tab: "country" },
-            { label: "District", tab: "district" },
-            { label: "Researcher List", tab: "researcher" },
-            { label: "Organization List", tab: "organization" },
-            { label: "Collection Site List", tab: "collectionsite" },
-            { label: "Committee Members List", tab: "committee-members" },
-            { label: "CSR List", tab: "CSR" },
-            {
-              label: "Sample",
-              tab: "sample",
-              dropdown: [
-                { label: "Ethnicity", tab: "ethnicity" },
-                { label: "Sample Condition", tab: "sample-condition" },
-                { label: "Sample Price Currency", tab: "sample-price-currency" },
-                { label: "Storage Temperature", tab: "storage-temperature" },
-                { label: "Container Type", tab: "container-type" },
-                { label: "Quantity Unit", tab: "quantity-unit" },
-                { label: "Sample Type Matrix", tab: "sample-type-matrix" },
-                { label: "Test Method", tab: "test-method" },
-                { label: "Test Result Unit", tab: "test-result-unit" },
-                { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions"},
-                { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
-                { label: "Test System", tab: "test-system" },
-                { label: "Test System Manufacturer", tab: "test-system-manufacturer"},
-              ],
-            },
+            { label: "Sample List", tab: "samples" },
+            { label: "Sample Dispatch", tab: "sample-dispatch" },
           ]
-          : userType == "collectionsites"
+          : userType == "biobank"
             ? [
               { label: "Sample List", tab: "samples" },
               { label: "Sample Dispatch", tab: "sample-dispatch" },
+              { label: "Quarantine Stock", tab: "Quarantine-Stock" },
+              { label: "Sample Visibility", tab: "Sample-Visibility" },
             ]
-            : userType == "biobank"
+            : userType == "committeemember"
               ? [
-                { label: "Sample List", tab: "samples" },
-                { label: "Sample Dispatch", tab: "sample-dispatch" },
-                { label: "Quarantine Stock", tab: "Quarantine-Stock" },
-                { label: "Sample Visibility", tab: "Sample-Visibility" },
+                { label: "Pending Review List", tab: "samples" },
               ]
-              : userType == "committeemember"
+              : userType == "technicaladmin"
                 ? [
-                  { label: "Pending Review List", tab: "samples" },
+                  { label: "Profile", tab: "order-info" },
+                  { label: "Order List", tab: "order" },
+                  { label: "Order Rejected List", tab: "orderrejected" },
+                  { label: "Contact us List", tab: "contactus" },
+
                 ]
-                : userType == "technicaladmin"
+                : userType == "csr"
                   ? [
                     { label: "Profile", tab: "order-info" },
-                    { label: "Order List", tab: "order" },
-                    {label:"Order Rejected List",tab:"orderrejected"},
-                    { label: "Contact us List", tab: "contactus" },
-
+                    { label: "Order Dispatch List", tab: "dispatchorder" },
+                    { label: "Order Packaging List", tab: "shippingorder" },
+                    { label: "Order Completed List", tab: "completedorder" },
                   ]
-                  : userType == "csr"
-                    ? [
-                      { label: "Profile", tab: "order-info" },
-                      { label: "Order Dispatch List", tab: "dispatchorder" },
-                      { label: "Order Packaging List", tab: "shippingorder" },
-                      { label: "Order Completed List", tab: "completedorder" },
-                    ]
-                    : [];
+                  : [];
 
 
   return (
@@ -334,6 +334,14 @@ if (userType === "researcher") {
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
                   Welcome Registration Admin!
+                </span>
+              )}
+              {userType === "biobank" && (
+                <span
+                  className="text-primary fw-bold fs-6"
+                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+                >
+                  Welcome BioBank!
                 </span>
               )}
 
