@@ -15,7 +15,7 @@ const create_organizationTable = () => {
       district INT,
       country INT,
       phoneNumber VARCHAR(15),
-      ntnNumber VARCHAR(50),
+      website VARCHAR(250),
       fullAddress TEXT,
       logo LONGBLOB,
       status ENUM('active', 'inactive') DEFAULT 'inactive',
@@ -40,7 +40,7 @@ const create_organizationTable = () => {
 const createOrganization = (req, callback) => {
   const {
     email,
-    password,
+    website,
     OrganizationName,
     type,
     HECPMDCRegistrationNo,
@@ -55,11 +55,23 @@ const createOrganization = (req, callback) => {
 
   const logo = req.files?.logo?.[0]?.buffer || null;
 
+  // Convert city, district, country to integers (if they should be numbers)
+  const cityInt = parseInt(city);
+  const districtInt = parseInt(district);
+  const countryInt = parseInt(country);
+
+  console.log("Received data:", req.body);
+  console.log("Logo buffer length:", logo ? logo.length : "No logo");
+
   mysqlPool.getConnection((err, connection) => {
-    if (err) return callback(err, null);
+    if (err) {
+      console.error("Connection error:", err);
+      return callback(err, null);
+    }
 
     connection.beginTransaction((err) => {
       if (err) {
+        console.error("Transaction start error:", err);
         connection.release();
         return callback(err, null);
       }
@@ -67,20 +79,23 @@ const createOrganization = (req, callback) => {
       const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
       connection.query(checkEmailQuery, [email], (err, results) => {
         if (err || results.length > 0) {
+          console.error("Email check error:", err || "Email already exists.");
           connection.rollback(() => connection.release());
           return callback(new Error("Email already exists"), null);
         }
 
-        const insertUserQuery = `INSERT INTO user_account (email, password, accountType) VALUES (?, ?, ?)`;
-        connection.query(insertUserQuery, [email, password, 'Organization'], (err, userResult) => {
+        const insertUserQuery = `INSERT INTO user_account (email, accountType) VALUES (?, ?)`;
+        connection.query(insertUserQuery, [email, 'Organization'], (err, userResult) => {
           if (err) {
+            console.error("Insert user error:", err);
             return connection.rollback(() => connection.release());
           }
 
           const userAccountId = userResult.insertId;
+          console.log("User inserted with ID:", userAccountId);
 
           const insertOrgQuery = `INSERT INTO organization 
-            (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo, status)
+            (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, website, phoneNumber, fullAddress, city, district, country, logo, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
           const orgValues = [
@@ -88,57 +103,67 @@ const createOrganization = (req, callback) => {
             OrganizationName,
             type,
             HECPMDCRegistrationNo,
-            ntnNumber,
+            website,
             phoneNumber,
             fullAddress,
-            city,
-            district,
-            country,
+            cityInt,
+            districtInt,
+            countryInt,
             logo,
             status
           ];
 
           connection.query(insertOrgQuery, orgValues, (err, orgResult) => {
             if (err) {
+              console.error("Insert organization error:", err);
               return connection.rollback(() => connection.release());
             }
 
             const organizationId = orgResult.insertId;
+            console.log("Organization inserted with ID:", organizationId);
 
             const insertHistory = `
               INSERT INTO history (
-                email, password, OrganizationName, HECPMDCRegistrationNo, ntnNumber, type, phoneNumber,
+                email, OrganizationName, HECPMDCRegistrationNo, website, type, phoneNumber,
                 fullAddress, city, district, country, logo, organization_id, status
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const historyValues = [
               email,
-              password,
               OrganizationName,
               HECPMDCRegistrationNo,
-              ntnNumber,
+              website,
               type,
               phoneNumber,
               fullAddress,
-              city,
-              district,
-              country,
+              cityInt,
+              districtInt,
+              countryInt,
               logo,
               organizationId,
               'added'
             ];
 
             connection.query(insertHistory, historyValues, (err) => {
-              if (err) return connection.rollback(() => connection.release());
+              if (err) {
+                console.error("Insert history error:", err);
+                return connection.rollback(() => connection.release());
+              }
 
               connection.commit((err) => {
-                if (err) return connection.rollback(() => connection.release());
+                if (err) {
+                  console.error("Transaction commit error:", err);
+                  return connection.rollback(() => connection.release());
+                }
 
                 connection.release();
+                console.log("Transaction committed successfully.");
+
+                // Send confirmation email
                 sendEmail(email, "Welcome to Discovery Connect", `
                   Dear ${OrganizationName},\n\nYour account is pending approval.\n\nRegards,\nLabHazir
                 `);
+
                 callback(null, {
                   message: "Organization registered successfully",
                   userId: userAccountId
@@ -152,13 +177,13 @@ const createOrganization = (req, callback) => {
   });
 };
 
+
 const getAllOrganizations = (callback) => {
   const query = `
     SELECT 
       organization.*, 
       user_account.id AS user_account_id, 
       user_account.email AS useraccount_email, 
-      user_account.password AS useraccount_password,
       city.name AS city,
       city.id AS cityid,
       district.name AS district,
@@ -279,7 +304,7 @@ const updateOrganization = (data, user_account_id, callback) => {
     city,
     district,
     country,
-    ntnNumber,
+    website,
     useraccount_email,
   } = data;
 
@@ -295,7 +320,7 @@ const updateOrganization = (data, user_account_id, callback) => {
       org.city = ?, 
       org.district = ?, 
       org.country = ?, 
-      org.ntnNumber = ?, 
+      org.website = ?, 
       ua.email = ?
     WHERE org.user_account_id= ?;
   `;
@@ -309,7 +334,7 @@ const updateOrganization = (data, user_account_id, callback) => {
     city,
     district,
     country,
-    ntnNumber,
+    website,
     useraccount_email,
     user_account_id,
   ];

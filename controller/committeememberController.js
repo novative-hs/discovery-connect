@@ -5,6 +5,17 @@ const createCommitteeMemberTable = (req, res) => {
   committeememberModel.createCommitteeMemberTable();
   res.status(200).json({ message: "Committee member table creation process started" });
 };
+const getCommitteeOrderHistory = (req, res) => {
+  const committeeMemberId = req.params.id;
+
+  committeememberModel.fetchCommitteeOrderHistory(committeeMemberId, (err, results) => {
+    if (err) {
+      console.error("Error fetching committee order history:", err);
+      return res.status(500).json({ error: "Something went wrong" });
+    }
+    res.status(200).json(results);
+  });
+};
 
 // Controller to get all committee members
 const getAllCommitteeMembers = (req, res) => {
@@ -98,5 +109,6 @@ module.exports = {
   updateCommitteeMember,
   updateCommitteeMemberStatus,
   updateCommitteeMemberType,
-  deleteCommitteeMember
+  deleteCommitteeMember,
+  getCommitteeOrderHistory
 };

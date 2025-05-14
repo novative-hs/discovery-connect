@@ -5,6 +5,16 @@ const create_researcherTable = (req, res) => {
   researcherModel.create_researcherTable();
   res.status(200).json({ message: "Researcher table creation process started" });
 };
+const fetchOrderHistory = (req, res) => {
+  const researcherId = req.params.id;
+  researcherModel.fetchOrderHistory(researcherId, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to fetch order history" });
+    }
+    res.status(200).json(results);
+  });
+};
+
 
 function getResearchersByOrganization(req, res) {
   const organizationId = req.params.id; // Get the ID from the route parameter
@@ -190,4 +200,5 @@ module.exports = {
   deleteResearcher,
   getResearchersAdmin,
   updateResearcherStatus,
+  fetchOrderHistory
 };

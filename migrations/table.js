@@ -14,7 +14,7 @@ const collectionsiteModel = require("../models/collectionsiteModel")
 const csrModel = require("../models/CSRModel")
 const organizationModel = require("../models/organizationModel")
 const researcherModel = require("../models/researcherModel")
-// const newtablefieldModel = require("../models/newtablefieldModel")
+const newtablefieldModel = require("../models/newtablefieldModel")
 
 const sample_approvalModel = require("../models/sampleapprovalModel")
 const paymentModel = require('../models/paymentModals')
@@ -22,6 +22,8 @@ const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
 const contactusModel = require("../models/contactusModel");
 const committeesampleapprovalModel = require("../models/committeesampleapproval")
+const collectionsitestaffModel=require("../models/collectionsitestaffModel")
+
 // Function to initialize all tables
 function Database() {
 
@@ -36,6 +38,7 @@ function Database() {
   researcherModel.create_researcherTable();
   csrModel.create_CSRTable();
   userModel.createuser_accountTable();
+  collectionsitestaffModel.create_collectionsitestaffTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();
@@ -62,6 +65,6 @@ function Database() {
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();
-  // newtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 }
 Database();

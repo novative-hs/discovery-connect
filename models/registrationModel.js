@@ -8,8 +8,8 @@ const createuser_accountTable = () => {
     CREATE TABLE IF NOT EXISTS user_account (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
+    password VARCHAR(255) NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites','CollectionSitesStaff', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -436,6 +436,7 @@ const updateAccount = (req, callback) => {
     accountType,
     ResearcherName,
     OrganizationName,
+    collectionsitename,
     CollectionSiteName,
     CollectionSiteType,
     CommitteeMemberName,
@@ -449,7 +450,6 @@ const updateAccount = (req, callback) => {
     nameofOrganization,
     type,
     HECPMDCRegistrationNo,
-    ntnNumber,
     committeetype,
     added_by
   } = req.body;
@@ -538,7 +538,7 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM organization WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE organization SET 
-                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, ntnNumber = ?, 
+                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, website = ?, 
                       phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
                     WHERE user_account_id = ?
                   `;
@@ -568,9 +568,9 @@ const updateAccount = (req, callback) => {
                   updateQuery = `
                       UPDATE csr SET 
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
-                        country = ? WHERE user_account_id = ?
+                        country = ?,collectionsite_id=? WHERE user_account_id = ?
                     `;
-                  values = [CSRName, phoneNumber, fullAddress, city, district, country, user_account_id];
+                  values = [CSRName, phoneNumber, fullAddress, city, district, country,collectionsitename, user_account_id];
                   break;
 
                 default:
@@ -613,7 +613,7 @@ const updateAccount = (req, callback) => {
                   const historyQuery = `
                     INSERT INTO history (
                       email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
-                      HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
+                      HECPMDCRegistrationNo, CNIC, CommitteeType, website, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, csr_id,status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
@@ -631,7 +631,7 @@ const updateAccount = (req, callback) => {
                     previousData.HECPMDCRegistrationNo || null,
                     previousData.cnic || null,
                     previousData.committeetype || null,
-                    previousData.ntnNumber || null,
+                    previousData.website || null,
                     previousData.nameofOrganization ? previousData.nameofOrganization : previousData.organization || null,
                     previousData.type || null,
                     previousData.phoneNumber || null,

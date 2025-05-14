@@ -34,6 +34,67 @@ const create_researcherTable = () => {
   });
 };
 
+const baseCommitteeStatus = (committeeType) => `
+  (
+    SELECT 
+      CASE 
+        WHEN NOT EXISTS (
+            SELECT 1 
+            FROM committeesampleapproval ca
+            JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+            WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType}'
+        ) AND EXISTS (
+            SELECT 1 
+            FROM committeesampleapproval ca
+            JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+            WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
+        ) THEN 'Not Sent'
+        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
+        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
+        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+        ELSE NULL
+      END
+    FROM committeesampleapproval ca 
+    JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+    WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType}'
+  )
+`;
+
+const fetchOrderHistory = (researcherId, callback) => {
+  const query = `
+    SELECT 
+      r.ResearcherName AS researcher_name,
+      s.sampleName,
+      c.quantity,
+      c.totalpayment,
+      c.price,
+      c.order_status,
+      ta.technical_admin_status AS technicaladmin_status,  -- Technical Admin status
+      ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,  -- Scientific committee status
+      ${baseCommitteeStatus('Ethical')} AS ethical_committee_status  -- Ethical committee status
+    FROM cart c
+    JOIN user_account ua ON c.user_id = ua.id
+    JOIN researcher r ON ua.id = r.user_account_id
+    JOIN sample s ON c.sample_id = s.id
+    LEFT JOIN technicaladminsampleapproval ta ON c.id = ta.cart_id  -- Join to get technical admin status
+    WHERE r.id = ?
+    ORDER BY c.id DESC
+  `;
+
+  mysqlConnection.query(query, [researcherId], (err, results) => {
+    if (err) {
+      console.error("Error fetching researcher cart order history:", err);
+      return callback(err, null);
+    }
+
+    callback(null, results);
+  });
+};
+
+
+
+
+
 function createResearcher(data, callback) {
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo, added_by } = data;
   const query = `
@@ -46,15 +107,23 @@ function createResearcher(data, callback) {
 
 // Function to fetch all researchers
 function getAllResearchers(callback) {
-  const query = `
-    SELECT researcher.id,researcher.added_by,researcher.created_at, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.status,
+const query = `
+    SELECT researcher.id, researcher.added_by,researcher.fullAddress,researcher.phoneNumber, researcher.created_at,researcher.updated_at, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.status,
            user_account.email,
-           organization.id AS organization_id, organization.OrganizationName
+           user_account.password,
+           organization.id AS organization_id, organization.OrganizationName,
+           city.name AS cityname,
+           district.name AS districtname,
+           country.name AS countryname
     FROM researcher
+    LEFT JOIN city ON researcher.city = city.id
+    LEFT JOIN district ON researcher.district = district.id
+    LEFT JOIN country ON researcher.country = country.id
     JOIN user_account ON researcher.user_account_id = user_account.id
     JOIN organization ON researcher.nameofOrganization = organization.id
     ORDER BY researcher.id DESC
-  `;
+`;
+
   mysqlConnection.query(query, callback);
 }
 
@@ -365,4 +434,5 @@ module.exports = {
   updateResearcher,
   deleteResearcher,
   updateResearcherStatus,
+  fetchOrderHistory
 };

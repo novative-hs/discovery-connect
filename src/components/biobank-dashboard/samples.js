@@ -225,7 +225,7 @@ const BioBankSampleArea = () => {
     const fetchCollectionSiteNames = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/collectionsite/collectionsitenamesinbiobank/${selectedSampleId}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/collectionsitenamesinbiobank/${selectedSampleId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch collection site names");

@@ -14,12 +14,14 @@ const create_CSRTable = () => {
     city INT,
     district INT,
     country INT,
+    collectionsite_id INT,
     status ENUM('active', 'inactive') DEFAULT 'inactive',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
     FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
     FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
+    FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 )`;
   mysqlConnection.query(create_CSR, (err, results) => {
@@ -44,6 +46,7 @@ const createCSR = (data, callback) => {
     district,
     country,
     status,
+    collectionsitename
   } = data;
 
   mysqlPool.getConnection((err, connection) => {
@@ -70,11 +73,13 @@ const createCSR = (data, callback) => {
           const user_account_id = accountResult.insertId;
 
           const csrInsertQuery = `
-            INSERT INTO csr (user_account_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-          `;
+  INSERT INTO csr (user_account_id, collectionsite_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
           const csrValues = [
             user_account_id,
+            collectionsitename,
             CSRName,
             phoneNumber,
             fullAddress,
@@ -139,11 +144,14 @@ const getAllCSR = (callback) => {
       district.name AS district,
       district.id AS districtid,
       country.name AS country,
+       collectionsite.CollectionSiteName AS collectionsitename,
+      collectionsite.id AS collectionsiteid,
       country.id AS countryid FROM csr c 
       JOIN user_account ON c.user_account_id = user_account.id
        LEFT JOIN city ON c.city = city.id
     LEFT JOIN district ON c.district = district.id
     LEFT JOIN country ON c.country = country.id
+     LEFT JOIN collectionsite ON c.collectionsite_id = collectionsite.id
       ORDER BY c.id DESC`;
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
