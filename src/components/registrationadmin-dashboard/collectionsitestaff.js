@@ -27,7 +27,7 @@ const CollectionSiteStaffArea = () => {
     staffName: "",
     email: "",
     password: "",
-    action: "add",
+    permission: "add",
     created_at: "",
     status: "inactive",
   });
@@ -54,7 +54,7 @@ const CollectionSiteStaffArea = () => {
       placeholder: "Search Password",
       field: "useraccount_password",
     },
-    { label: "Action", placeholder: "Search Acton", field: "action" },
+    { label: "Permission", placeholder: "Search permission", field: "permission" },
     { label: "Status", placeholder: "Search Status", field: "status" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Updated at", placeholder: "Search Date", field: "updated_at" },
@@ -200,7 +200,7 @@ const CollectionSiteStaffArea = () => {
       staffName: collectionsitestaff.staffName,
       email: collectionsitestaff.useraccount_email,
       password: collectionsitestaff.useraccount_password,
-      action: collectionsitestaff.action,
+      permission: collectionsitestaff.permission,
       status: collectionsitestaff.status
     });
   };
@@ -284,7 +284,7 @@ const CollectionSiteStaffArea = () => {
       email: "",
       password: "",
       status: "inactive",
-      action: "add"
+      permission: "add"
     });
   };
   useEffect(() => {
@@ -346,7 +346,7 @@ const CollectionSiteStaffArea = () => {
         Password: item.useraccount_password,
         CollectionsiteName: item.collectionsite_name,
         StaffName: item.staffName,
-        Action: item.action,
+        Permission: item.permission,
         Status: item.status,
         "Created At": formatDate(item.created_at),
         "Updated At": formatDate(item.updated_at),
@@ -686,15 +686,15 @@ const CollectionSiteStaffArea = () => {
                           </select>
                         </div>
                         <div className="form-group">
-                          <label>Action</label>
+                          <label>Permission</label>
                           <select
                             className="form-control p-2"
-                            name="action"
-                            value={formData.action}
+                            name="permission"
+                            value={formData.permission}
                             onChange={handleInputChange}
                             required
                           >
-                            <option value="">Select Action</option>
+                            <option value="">Select Permission</option>
                             <option value="all">All Pages Access</option>
                             <option value="add">Add Sample Permission</option>
                             <option value="edit">Edit Sample Permission</option>
@@ -773,7 +773,7 @@ const CollectionSiteStaffArea = () => {
                         historyData.map((log, index) => {
                           const {
                             staffName,
-                            action,
+                            permission,
                             created_at,
                             updated_at,
                             status

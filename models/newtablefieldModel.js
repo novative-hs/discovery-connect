@@ -1,15 +1,17 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
-{table:"csr",
-  columnsToAdd:[
-     {
+  
+  {
+    table: "csr",
+    columnsToAdd: [
+      {
         column: "collectionsite_id",
         type: "INT",
         nullable: true, // Change to true
         references: { table: "collectionsite", column: "id" },
       },
-  ]
-},
+    ]
+  },
   {
     table: "sample",
     columnsToAdd: [
@@ -20,47 +22,50 @@ const tablesAndColumns = [
     ]
   },
   {
-  table: "user_account",
-   columnsToAdd: [
-  //   {
-  //     column: "accountType",
-  //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
-  //   },
-    {
-    column: "password",
-    type: "VARCHAR(255) DEFAULT NULL"
-  }
-  ]
-},
-{
-  table: "organization",
- columnsToDelete: ["ntnNumber"],
- columnsToAdd: [
+    table: "user_account",
+    columnsToAdd: [
+      //   {
+      //     column: "accountType",
+      //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
+      //   },
+      {
+        column: "password",
+        type: "VARCHAR(255) DEFAULT NULL"
+      }
+    ]
+  },
+  {
+    table: "organization",
+    columnsToDelete: ["ntnNumber"],
+    columnsToAdd: [
       {
         column: "website",
         type: "VARCHAR(250) Null",
       },
- ]
-},
+    ]
+  },
 
-{
-  table: "history",
- columnsToDelete: ["ntnNumber"],
- columnsToAdd: [
+  {
+    table: "history",
+    columnsToDelete: ["ntnNumber"],
+    columnsToAdd: [
       {
         column: "website",
-        type: "VARCHAR(250) Null",
+        type: "VARCHAR(250)",
+        nullable: true, // Change to true
       },
       {
         column: "staffName",
-        type: "VARCHAR(1000) Null",
+        type: "VARCHAR(1000)",
+        nullable: true, // Change to true
       },
       {
         column: "action",
-        type: "VARCHAR(20) Null",
+        type: "VARCHAR(20)",
+        nullable: true, // Change to true
       },
-      
-       {
+
+      {
         column: "collectionsitestaff_id",
         type: "INT",
         nullable: true, // Change to true
@@ -70,8 +75,9 @@ const tablesAndColumns = [
         column: "status",
         type: "ENUM('added', 'updated', 'deleted', 'active','inactive') NULL DEFAULT 'added'",
       },
- ]
-},
+    ]
+  },
+  
   // {
   //   table: "cart",
   //   columnsToAdd: [
@@ -218,6 +224,34 @@ const deleteColumns = (table, columns) => {
   });
 };
 
+const renameColumn = (table, oldColumn, newColumn, type) => {
+  const checkColumnQuery = `
+    SELECT COUNT(*) AS count
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE table_name = '${table}' AND column_name = '${oldColumn}' AND table_schema = DATABASE()
+  `;
+
+  mysqlConnection.query(checkColumnQuery, (err, results) => {
+    if (err) {
+      console.error(`Error checking column ${oldColumn} in table ${table}:`, err);
+      return;
+    }
+
+    if (results[0].count > 0) {
+      const renameQuery = `ALTER TABLE ${table} CHANGE ${oldColumn} ${newColumn} ${type}`;
+
+      mysqlConnection.query(renameQuery, (err) => {
+        if (err) {
+          console.error(`Error renaming column ${oldColumn} to ${newColumn} in table ${table}:`, err);
+        } else {
+          console.log(`Column ${oldColumn} successfully renamed to ${newColumn} in table ${table}.`);
+        }
+      });
+    } else {
+      console.log(`Column ${oldColumn} does not exist in table ${table}.`);
+    }
+  });
+};
 
 
 // Function to iterate through all tables and ensure columns exist or delete columns
@@ -231,6 +265,10 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
   });
+  
+renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
+renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
+
   // await executeSequentially([
   //   () =>
   //     ensureColumnsExist("user_account", [

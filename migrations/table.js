@@ -65,6 +65,6 @@ function Database() {
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();
-  //newtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 }
 Database();
