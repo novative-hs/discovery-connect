@@ -1427,7 +1427,7 @@ const BioBankSampleArea = () => {
                                   </ul>
                                 )}
                               </div>
-                               <div className="form-group">
+                              <div className="form-group">
                                 <label>Quantity Unit</label>
                                 <select
                                   className="form-control"
@@ -1456,7 +1456,7 @@ const BioBankSampleArea = () => {
                               </div>
                             </div>
                             {/* {Column 3} */}
-                            <div className="col-md-3">           
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Sample Type Matrix</label>
                                 <select
@@ -1683,7 +1683,7 @@ const BioBankSampleArea = () => {
                               </div>
                             </div>
                             {/* Column 4 */}
-                            <div className="col-md-3">  
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Date Of Collection</label>
                                 <input
@@ -1793,7 +1793,7 @@ const BioBankSampleArea = () => {
                                   }}
                                 />
                               </div>
-                               <div className="form-group">
+                              <div className="form-group">
                                 <label>Test Result Unit</label>
                                 <select
                                   className="form-control"
