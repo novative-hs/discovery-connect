@@ -25,9 +25,14 @@ const OrderInfo = ({ setActiveTab }) => {
   const [countCompleted, setCountCompleted] = useState(null);
   
   const router = useRouter();
-  
+  const id = sessionStorage.getItem("userID");
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  } else {
+    console.log("Order packaging Id on sample page is:", id);
+  }
   useEffect(() => {
-    fetchSamples(); // Call the function initially when the component mounts
+   
 
     // Set an interval to refresh data every 5 seconds (5000ms)
     const interval = setInterval(() => {
@@ -43,7 +48,10 @@ const OrderInfo = ({ setActiveTab }) => {
       
   
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
+        {
+        params: { csrUserId: id }
+      }
       );
   
       const samples = response.data;

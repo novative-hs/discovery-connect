@@ -189,7 +189,7 @@ const onSubmit = async (event) => {
     country: formData.country,
     status: "inactive",
   };
-console.log(data)
+
   try {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/createcsr`,
@@ -225,7 +225,7 @@ console.log(data)
       city: CSR.cityid,
       country: CSR.countryid,
       district: CSR.districtid,
-      collectionsitename: CSR.collectionsiteid,
+      collectionsitename: CSR.collection_id,
       fullAddress: CSR.fullAddress,
       status: CSR.status,
     });
@@ -379,7 +379,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
         email: item.useraccount_email,
         password: item.useraccount_password,
       name:item.CSRName,
-      collectionsitename:item.collectionsitename,
+      collectionsitename:item.name,
         phoneNumber: item.phoneNumber,
         city: item.city,
         country: item.country,
@@ -486,7 +486,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
           { label: "Name", placeholder: "Search Name", field: "CSRName" },
           { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
           { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
-          { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "collectionsitename" },
+          { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
           { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
           { label: "City", placeholder: "Search City", field: "city" },
           { label: "Country", placeholder: "Search Country", field: "country" },
@@ -515,7 +515,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
                         <td>{CSR.CSRName}</td>
                         <td>{CSR.useraccount_email}</td>
                         <td>{CSR.useraccount_password}</td>
-                        <td>{CSR.collectionsitename}</td>
+                        <td>{CSR.name}</td>
                         <td>{CSR.phoneNumber}</td>
                         <td>{CSR.city}</td>
                         <td>{CSR.country}</td>
@@ -743,8 +743,8 @@ newformData.append("collectionsitename",formData.collectionsitename)
                               Select Collectionsite Name
                             </option>
                             {collectionsitename.map((collectionsite) => (
-                              <option key={collectionsite.id} value={collectionsite.id}>
-                                {collectionsite.CollectionSiteName}
+                              <option key={collectionsite.user_id} value={collectionsite.user_id}>
+                                {collectionsite.name}
                               </option>
                             ))}
                           </select>

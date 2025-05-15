@@ -247,7 +247,7 @@ const createAccount = (req, callback) => {
     nameofOrganization,
     type,
     HECPMDCRegistrationNo,
-    ntnNumber,
+    
     status,
     added_by,
 
@@ -365,17 +365,16 @@ const createAccount = (req, callback) => {
               const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName,
-                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
+                  HECPMDCRegistrationNo, nameofOrganization, type, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
                   researcher_id, collectionsite_id, csr_id, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
                 password,
                 ResearcherName || null,
                 HECPMDCRegistrationNo || null,
-                ntnNumber || null,
                 nameofOrganization || null,
                 type || null,
                 phoneNumber,

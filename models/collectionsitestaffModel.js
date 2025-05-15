@@ -9,7 +9,7 @@ const create_collectionsitestaffTable = () => {
       user_account_id INT,
       staffName VARCHAR(100),
       collectionsite_id INT,
-      action ENUM('add', 'edit','dispatch','receive') DEFAULT 'add',
+      action ENUM('add', 'edit','dispatch','receive','all') DEFAULT 'add',
       status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
