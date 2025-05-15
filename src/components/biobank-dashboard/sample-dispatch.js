@@ -94,7 +94,7 @@ const BioBankSampleDispatchArea = () => {
   });
 
   const handleTransferClick = (sample) => {
-   
+
     setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
     setShowReceiveModal(true); // Show the modal
   };
@@ -194,7 +194,7 @@ const BioBankSampleDispatchArea = () => {
     }
 
     try {
-      
+
       // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/post/${selectedSampleId}`,
@@ -203,7 +203,7 @@ const BioBankSampleDispatchArea = () => {
           ReceivedByCollectionSite: userID, // Pass user ID along with receiverName
         }
       );
-      
+
 
       setSuccessMessage("Sample received successfully.");
 
@@ -296,7 +296,7 @@ const BioBankSampleDispatchArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
-                        <td key={index}>{sample[key] || "N/A"}</td>
+                        <td key={index}>{sample[key] || "----"}</td>
                       ))}
                       <td>
                         <div

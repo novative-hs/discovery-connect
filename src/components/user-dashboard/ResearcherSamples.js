@@ -249,7 +249,7 @@ const SampleArea = () => {
                               {sample.price
                                 ? `${sample.price} ${sample.SamplePriceCurrency || ""
                                 }`
-                                : "N/A"}
+                                : "----"}
                             </td>
                           );
                         }
@@ -261,7 +261,7 @@ const SampleArea = () => {
                               {sample.totalpayment
                                 ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""
                                 }`
-                                : "N/A"}
+                                : "----"}
                             </td>
                           );
                         }
@@ -304,7 +304,7 @@ const SampleArea = () => {
                                 onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                                 onMouseOut={(e) => (e.target.style.color = "")}
                               >
-                                {sample.samplename || "N/A"}
+                                {sample.samplename || "----"}
                               </span>
                             </td>
                           );
@@ -315,7 +315,7 @@ const SampleArea = () => {
                           <td key={index}>
                             {render
                               ? render(sample[key])
-                              : sample[key] || "N/A"}
+                              : sample[key] || "----"}
                           </td>
                         );
                       })}
@@ -396,7 +396,7 @@ const SampleArea = () => {
                           >
                             {selectedSample[key]
                               ? selectedSample[key].toString()
-                              : "N/A"}
+                              : "----"}
                           </td>
                         </tr>
                       )

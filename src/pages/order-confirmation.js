@@ -97,7 +97,7 @@ const OrderConfirmation = () => {
   }, [orderStatus, technical_admin_status, committee_status]);
 
   const formatDateTime = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "----";
     const formattedDate = moment(dateString).format("MMMM Do YYYY, h:mm:ss a");
     return moment(formattedDate).isValid() ? formattedDate : "Invalid Date";
   };
@@ -123,8 +123,8 @@ const OrderConfirmation = () => {
 
         <Card className="mt-4 p-4 shadow-lg rounded-4 border-0 bg-light">
           <p className="text-dark fs-6">
-            Order <strong>#{id || "N/A"}</strong> was placed on{" "}
-            <strong>{(created_at) }</strong> and is currently in progress.
+            Order <strong>#{id || "----"}</strong> was placed on{" "}
+            <strong>{(created_at)}</strong> and is currently in progress.
           </p>
 
           {/* Progress Bar */}
@@ -157,7 +157,7 @@ const OrderConfirmation = () => {
                   icon = <i className="bi bi-x-lg"></i>;
                   color = "danger";
                 }
-                
+
 
                 if (idx === 2 && (committee_status === "rejected")) {
                   icon = <i className="bi bi-x-lg"></i>;
@@ -166,7 +166,7 @@ const OrderConfirmation = () => {
 
                 if (idx === 2 && !committee_status && technical_admin_status === "Accepted" && orderStatus !== "Rejected") {
                   icon = <i className="bi bi-hourglass-split"></i>; // Pending hourglass icon
-                  color = "warning"; 
+                  color = "warning";
                 }
 
                 return (

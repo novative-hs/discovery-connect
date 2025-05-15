@@ -286,7 +286,7 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
                       currentData.map((sample) => (
                         <tr key={sample.id}>
                           {tableHeaders.map(({ key }, index) => (
-                            <td key={index}>{sample[key] || "N/A"}</td>
+                            <td key={index}>{sample[key] || "----"}</td>
                           ))}
                           <td>
                             <div

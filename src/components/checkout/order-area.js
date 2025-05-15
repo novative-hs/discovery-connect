@@ -7,13 +7,13 @@ import { useRouter } from "next/router";
 import { notifyError, notifySuccess } from "@utils/toast";
 import PaymentCardElement from "@components/order/pay-card-element";
 const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
-  
+
 
   const { cart_products } = useSelector((state) => state.cart);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [showOrderDetails, setShowOrderDetails] = useState(false);
-  
+
   const dispatch = useDispatch();
   const router = useRouter();
   // Calculate subtotal
@@ -84,7 +84,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
       const result = response.data;
 
-      
+
       const cartIds = result.result.results.map((item) => item.cartId);
       const created_at = result.result.results[0].created_at;
 
@@ -112,7 +112,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       console.error("Error placing order:", error);
       notifyError(
         error.response?.data?.error ||
-          "Failed to place order. Please try again."
+        "Failed to place order. Please try again."
       );
       return false;
     }
@@ -125,7 +125,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
         <button
           className="btn text-white"
           onClick={() => setShowOrderDetails(!showOrderDetails)}
-          style={{ fontSize: "16px", padding: "8px 20px" ,backgroundColor: "#0a1d4e",}}
+          style={{ fontSize: "16px", padding: "8px 20px", backgroundColor: "#0a1d4e", }}
         >
           {showOrderDetails ? "Hide Order Details" : "View Your Order"}
         </button>
@@ -147,14 +147,14 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
               {cart_products?.length > 0 ? (
                 cart_products.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.samplename || "N/A"}</td>
+                    <td>{item.samplename || "----"}</td>
                     <td>{(item.price || 0).toFixed(2)}</td>
                     <td>{item.orderQuantity || 0}</td>
                     <td>
                       {((item.orderQuantity || 0) * (item.price || 0)).toFixed(
                         2
                       )}{" "}
-                      {item.SamplePriceCurrency || "N/A"}
+                      {item.SamplePriceCurrency || "----"}
                     </td>
                   </tr>
                 ))
@@ -174,8 +174,8 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
                 <td className="fw-bold text-primary">
                   {subtotal.toFixed(2)}{" "}
                   {cart_products.length > 0
-                    ? cart_products[0].SamplePriceCurrency || "N/A"
-                    : "N/A"}
+                    ? cart_products[0].SamplePriceCurrency || "----"
+                    : "----"}
                 </td>
               </tr>
             </tfoot>
@@ -185,38 +185,38 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
       {/* Payment Accordion */}
       <div className="accordion" id="paymentAccordion">
-  <div className="accordion-item">
-    <h2 className="accordion-header" id="headingOne">
-      <button
-        className="accordion-button"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#collapseOne"
-        aria-expanded="false"  // It should be false for collapse
-        aria-controls="collapseOne"
-      >
-        Direct Bank Transfer
-      </button>
-    </h2>
-    <div
-      id="collapseOne"
-      className="accordion-collapse collapse"  // Remove the "show" class
-      aria-labelledby="headingOne"
-      data-bs-parent="#paymentAccordion"
-    >
-      <div className="accordion-body">
-        <PaymentCardElement
-          stripe={stripe}
-          cardError={error}
-          cart_products={cart_products}
-          isCheckoutSubmit={isCheckoutSubmit}
-          handleSubmit={handleSubmit}
-          validateDocuments={validateDocuments}
-        />
+        <div className="accordion-item">
+          <h2 className="accordion-header" id="headingOne">
+            <button
+              className="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseOne"
+              aria-expanded="false"  // It should be false for collapse
+              aria-controls="collapseOne"
+            >
+              Direct Bank Transfer
+            </button>
+          </h2>
+          <div
+            id="collapseOne"
+            className="accordion-collapse collapse"  // Remove the "show" class
+            aria-labelledby="headingOne"
+            data-bs-parent="#paymentAccordion"
+          >
+            <div className="accordion-body">
+              <PaymentCardElement
+                stripe={stripe}
+                cardError={error}
+                cart_products={cart_products}
+                isCheckoutSubmit={isCheckoutSubmit}
+                handleSubmit={handleSubmit}
+                validateDocuments={validateDocuments}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
     </div>
   );

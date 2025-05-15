@@ -11,7 +11,7 @@ import Pagination from "@ui/Pagination";
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
-    return <div>Loading...</div>; 
+    return <div>Loading...</div>;
   } else {
     console.log("Collection site Id on sample page is:", id);
   }
@@ -20,7 +20,7 @@ const BioBankSampleArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedSampleId, setSelectedSampleId] = useState(null); 
+  const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
     { label: "Sample Name", key: "samplename" },
     { label: "Age", key: "age" },
@@ -64,8 +64,8 @@ const BioBankSampleArea = () => {
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
   ];
-  const [samples, setSamples] = useState([]); 
-  const [filteredSamples, setFilteredSamples] = useState(samples); 
+  const [samples, setSamples] = useState([]);
+  const [filteredSamples, setFilteredSamples] = useState(samples);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
@@ -77,7 +77,7 @@ const BioBankSampleArea = () => {
     const fetchAndStoreSamples = async () => {
       const sampleData = await fetchSamples();
       setSamples(sampleData);
-      setFilteredSamples(sampleData); 
+      setFilteredSamples(sampleData);
     };
 
     fetchAndStoreSamples();
@@ -100,7 +100,7 @@ const BioBankSampleArea = () => {
       return [];
     }
   };
-  
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -109,7 +109,7 @@ const BioBankSampleArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); 
+      setCurrentPage(0);
     }
   }, [filteredSamples]);
 
@@ -145,9 +145,9 @@ const BioBankSampleArea = () => {
       );
       console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
       const sampleData = await fetchSamples();
-      setSamples(sampleData); 
-      setFilteredSamples(sampleData); 
-  
+      setSamples(sampleData);
+      setFilteredSamples(sampleData);
+
       setShowDeleteModal(false);
       setSelectedSampleId(null);
     } catch (error) {
@@ -157,7 +157,7 @@ const BioBankSampleArea = () => {
       );
     }
   };
-  
+
 
   useEffect(() => {
     if (
@@ -174,13 +174,13 @@ const BioBankSampleArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [
- showDeleteModal,
- showHistoryModal,
+    showDeleteModal,
+    showHistoryModal,
 
   ]);
 
   const openModal = (sample) => {
-    
+
     setSelectedSample(sample);
     setShowModal(true);
   };
@@ -201,12 +201,12 @@ const BioBankSampleArea = () => {
       console.error("Error fetching history:", error);
     }
   };
-    // Call this function when opening the modal
-    const handleShowHistory = (filterType, id) => {
+  // Call this function when opening the modal
+  const handleShowHistory = (filterType, id) => {
 
-      fetchHistory(filterType, id);
-      setShowHistoryModal(true);
-    };
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -250,62 +250,62 @@ const BioBankSampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                  {tableHeaders.map(({ key }, index) => (
-                    <td
-                      key={index}
-                      className={
-                        key === "price"
-                          ? "text-end"
-                          : key === "samplename"
-                          ? ""
-                          : "text-center text-truncate"
-                      }
-                      style={{ maxWidth: "150px" }}
-                    >
-                      {key === "samplename" ? (
-                        <span
-                          className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                          role="button"
-                          title="Sample Details"
-                          onClick={() => openModal(sample)}
-                          style={{
-                            cursor: "pointer",
-                            transition: "color 0.2s",
-                          }}
-                          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                          onMouseOut={(e) => (e.target.style.color = "")}
-                        >
-                          {sample.samplename || "N/A"}
-                        </span>
-                      ) : (
-                        sample[key] || "N/A"
-                      )}
-                    </td>
-                  ))}
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : key === "samplename"
+                              ? ""
+                              : "text-center text-truncate"
+                        }
+                        style={{ maxWidth: "150px" }}
+                      >
+                        {key === "samplename" ? (
+                          <span
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openModal(sample)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.samplename || "----"}
+                          </span>
+                        ) : (
+                          sample[key] || "----"
+                        )}
+                      </td>
+                    ))}
                     <td>
-                                        <div className="d-flex justify-content-center gap-3">
-                                     
-                                            <button
-                                              className="btn btn-danger btn-sm"
-                                              onClick={() => {
-                                                setSelectedSampleId(sample.id);
-                                                setShowDeleteModal(true);
-                                              }}
-                                              title="Delete Country" // This is the text that will appear on hover
-                                            >
-                                              <FontAwesomeIcon icon={faTrash} size="sm" />
-                                            </button>
-                                            <button
+                      <div className="d-flex justify-content-center gap-3">
+
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => {
+                            setSelectedSampleId(sample.id);
+                            setShowDeleteModal(true);
+                          }}
+                          title="Delete Country" // This is the text that will appear on hover
+                        >
+                          <FontAwesomeIcon icon={faTrash} size="sm" />
+                        </button>
+                        <button
                           className="btn btn-outline-success btn-sm"
                           onClick={() => handleShowHistory("sample", sample.id)}
                           title="History"
                         >
                           <i className="fa fa-history"></i>
                         </button>
-                                          </div>
-                                        </td>
-                </tr>
-                
+                      </div>
+                    </td>
+                  </tr>
+
                 ))
               ) : (
                 <tr>
@@ -314,7 +314,7 @@ const BioBankSampleArea = () => {
                   </td>
                 </tr>
               )}
-            
+
             </tbody>
           </table>
         </div>
@@ -383,148 +383,148 @@ const BioBankSampleArea = () => {
             </div>
           </>
         )}
-     {/* Modal for History of Samples */}
-     {showHistoryModal && (
-  <>
-    {/* Bootstrap Backdrop with Blur */}
-    <div
-      className="modal-backdrop fade show"
-      style={{ backdropFilter: "blur(5px)" }}
-    ></div>
+        {/* Modal for History of Samples */}
+        {showHistoryModal && (
+          <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
 
-    {/* Modal Content */}
-    <div
-      className="modal show d-block"
-      tabIndex="-1"
-      role="dialog"
-      style={{
-        zIndex: 1050,
-        position: "fixed",
-        top: "100px",
-        left: "50%",
-        transform: "translateX(-50%)",
-      }}
-    >
-      <div className="modal-dialog modal-md" role="document">
-        <div className="modal-content">
-          {/* Modal Header */}
-          <div className="modal-header">
-            <h5 className="modal-title">History</h5>
-            <button
-              type="button"
-              className="close"
-              onClick={() => setShowHistoryModal(false)}
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
               style={{
-                fontSize: "1.5rem",
-                position: "absolute",
-                right: "10px",
-                top: "10px",
-                cursor: "pointer",
+                zIndex: 1050,
+                position: "fixed",
+                top: "100px",
+                left: "50%",
+                transform: "translateX(-50%)",
               }}
             >
-              <span>&times;</span>
-            </button>
-          </div>
-
-          {/* Chat-style Modal Body */}
-          <div
-            className="modal-body"
-            style={{
-              maxHeight: "500px",
-              overflowY: "auto",
-              backgroundColor: "#e5ddd5", // WhatsApp-style background
-              padding: "15px",
-              borderRadius: "10px",
-            }}
-          >
-            {historyData && historyData.length > 0 ? (
-              historyData.map((log, index) => {
-                // Only include the desired fields
-                const filteredLog = {
-                  sample_status: log.sample_status,
-                  comment: log.comments,
-                  created_at: log.created_at,
-                  updated_at: log.updated_at,
-                  
-                };
-
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <div
+              <div className="modal-dialog modal-md" role="document">
+                <div className="modal-content">
+                  {/* Modal Header */}
+                  <div className="modal-header">
+                    <h5 className="modal-title">History</h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => setShowHistoryModal(false)}
                       style={{
-                        padding: "10px 15px",
-                        borderRadius: "15px",
-                        backgroundColor: "#ffffff",
-                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                        maxWidth: "75%",
-                        fontSize: "14px",
-                        textAlign: "left",
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
                       }}
                     >
-                      {Object.entries(filteredLog).map(([key, value]) => (
-                        <div key={key}>
-                          <b>{key.replace(/_/g, " ")}:</b> {value}
-                        </div>
-                      ))}
-                    </div>
+                      <span>&times;</span>
+                    </button>
                   </div>
-                );
-              })
-            ) : (
-              <p className="text-left">No history available.</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-)}
 
-      </div>
-      <Modal   show={showModal}
-  onHide={closeModal}
-  size="lg"
-  centered
-  backdrop="static"
-  keyboard={false}>
-  <Modal.Header closeButton className="border-0">
-    <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
-  </Modal.Header>
+                  {/* Chat-style Modal Body */}
+                  <div
+                    className="modal-body"
+                    style={{
+                      maxHeight: "500px",
+                      overflowY: "auto",
+                      backgroundColor: "#e5ddd5", // WhatsApp-style background
+                      padding: "15px",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    {historyData && historyData.length > 0 ? (
+                      historyData.map((log, index) => {
+                        // Only include the desired fields
+                        const filteredLog = {
+                          sample_status: log.sample_status,
+                          comment: log.comments,
+                          created_at: log.created_at,
+                          updated_at: log.updated_at,
 
-  <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
-    {selectedSample ? (
-      <div className="p-3">
-        <div className="row g-3">
-          {fieldsToShowInOrder.map(({ key, label }) => {
-            const value = selectedSample[key];
-            if (value === undefined) return null;
+                        };
 
-            return (
-              <div className="col-md-6" key={key}>
-                <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                  <span className="text-muted small fw-bold mb-1">{label}</span>
-                  <span className="fs-6 text-dark">{value?.toString() || "N/A"}</span>
+                        return (
+                          <div
+                            key={index}
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-start",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                padding: "10px 15px",
+                                borderRadius: "15px",
+                                backgroundColor: "#ffffff",
+                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                maxWidth: "75%",
+                                fontSize: "14px",
+                                textAlign: "left",
+                              }}
+                            >
+                              {Object.entries(filteredLog).map(([key, value]) => (
+                                <div key={key}>
+                                  <b>{key.replace(/_/g, " ")}:</b> {value}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-left">No history available.</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    ) : (
-      <div className="text-center text-muted p-3">No details to show</div>
-    )}
-  </Modal.Body>
+            </div>
+          </>
+        )}
 
-  <Modal.Footer className="border-0"></Modal.Footer>
-</Modal>
+      </div>
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={key}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };
