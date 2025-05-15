@@ -26,6 +26,7 @@ import TestKitManufacturerArea from "./test-kit-manufacturer";
 import TestSystemArea from "./test-system";
 import TestSystemManufacturerArea from "./test-system-manufacturer";
 import CSRArea from './CSR'
+import CollectionSiteStaffArea from './collectionsitestaff'
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
@@ -77,6 +78,8 @@ const DashboardArea = () => {
         return <CSRArea />;
       case "collectionsite":
         return <CollectionsiteArea />;
+        case "collectionsitestaff":
+          return <CollectionSiteStaffArea/>
       case "ethnicity":
         return <EthnicityArea />;
       case "sample-condition":

@@ -8,113 +8,120 @@ import {
 } from "src/redux/features/auth/authApi";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-import * as XLSX  from "xlsx"
+import * as XLSX from "xlsx"
 import { notifyError, notifySuccess } from "@utils/toast";
-const CollectionSiteArea = () => {
+const CollectionSiteStaffArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected Collectionsite to edit
-  const [selectedCollectionsiteId, setSelectedCollectionSiteId] = useState(null); // Store ID of Collectionsite to delete
-  const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
+  const [editCollectionsitestaff, setEditCollectionsiteStaff] = useState(null); // State for selected Collectionsite to edit
+  const [selectedCollectionsiteStaffId, setSelectedCollectionSiteStaffId] = useState(null); // Store ID of Collectionsite to delete
   const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
-  const [cityname, setcityname] = useState([]);
-  const [districtname, setdistrictname] = useState([]);
-  const [countryname, setCountryname] = useState([]);
+  const [allcollectionsitesstaff, setAllCollectionsitesstaff] = useState([]); // State to hold fetched collectionsites
+  const [collectionsitesstaff, setCollectionsitesstaff] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
-  const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
-    user_account_id: "",
-    CollectionSiteName: "",
-    CollectionSiteType: "",
+    collectionsitesid: "",
+    staffName: "",
     email: "",
     password: "",
-    phoneNumber: "",
-    city: "",
-    district: "",
-    country: "",
-    fullAddress: "",
-    logo: "",
-    logoPreview: null,
+    action: "add",
     created_at: "",
-    status: "",
+    status: "inactive",
   });
   const [historyData, setHistoryData] = useState([]);
-  const [filteredCollectionsites, setFilteredCollectionsites] = useState([]);
+  const [filteredCollectionsitesstaff, setFilteredCollectionsitesstaff] = useState([]);
   const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
   const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
-  const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
+
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
   const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
-    { label: "Name", placeholder: "Search Name", field: "CollectionSiteName" },
-    { label: "Name", placeholder: "Search Name", field: "CollectionSiteType" },
+    { label: "Name", placeholder: "Search Name", field: "staffName" },
+    { label: "Collectionsite Name", placeholder: "Search Collection site Name", field: "collectionsite_name" },
+
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
     {
       label: "Password",
       placeholder: "Search Password",
       field: "useraccount_password",
     },
-    { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
-    { label: "City", placeholder: "Search City", field: "city" },
-    { label: "District", placeholder: "Search District", field: "district" },
-    { label: "Country", placeholder: "Search Country", field: "country" },
-    { label: "Created at", placeholder: "Search Date", field: "created_at" },
+    { label: "Action", placeholder: "Search Acton", field: "action" },
     { label: "Status", placeholder: "Search Status", field: "status" },
+    { label: "Created at", placeholder: "Search Date", field: "created_at" },
+    { label: "Updated at", placeholder: "Search Date", field: "updated_at" },
+
   ];
+  const baseStyle = {
+    padding: "10px 15px",
+    borderRadius: "15px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+    maxWidth: "75%",
+    fontSize: "14px",
+    textAlign: "left",
+  };
 
+  useEffect(() => {
+    fetchCollectionsites(); // Call the function when the component mounts
+    fetchCollectionsiteStaff();
 
-const onSubmit = async (event) => {
-  event.preventDefault();
+  }, []);
 
-  const newformData = new FormData();
-  newformData.append("email", formData.email);
-  newformData.append("password", formData.password);
-  newformData.append("CollectionSiteName", formData.CollectionSiteName);
-  newformData.append("CollectionSiteType", formData.CollectionSiteType);
-  newformData.append("phoneNumber", formData.phoneNumber);
-  newformData.append("fullAddress", formData.fullAddress);
-  newformData.append("city", formData.city);
-  newformData.append("district", formData.district);
-  newformData.append("country", formData.country);
-  newformData.append("status", "inactive");
+  const fetchCollectionsiteStaff = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/get`
+      );
+      console.log(response.data)
+      setAllCollectionsitesstaff(response.data);
+      setCollectionsitesstaff(response.data); // Store fetched collectionsites in state
+    } catch (error) {
+      console.error("Error fetching collectionsites:", error);
+    }
+  };
+  const fetchCollectionsites = async () => {
+    try {
 
-  if (formData.logo) {
-    newformData.append("logo", formData.logo);
-  }
+      const response = await axios.get(`${url}/admin/csr/getCollectionsiteName`);
+      console.log(response.data)
+      setCollectionsites(response.data); // Store fetched collectionsites in state
+    } catch (error) {
+      console.error("Error fetching collectionsites:", error);
+    }
+  };
+  const onSubmit = async (event) => {
+    event.preventDefault();
 
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/createcollsite`,
-      newformData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    // Log form data to ensure it's structured correctly
+    console.log("Form Data to Submit:", formData);
 
-    notifySuccess("Collection Site Registered Successfully");
-    fetchCollectionsites(); // Refresh list
-    setShowAddModal(false);
-    resetFormData();
-  } catch (error) {
-    console.error("Registration Error:", error);
-    const errMsg =
-      error.response?.data?.error || error.message || "An error occurred";
-    notifyError(errMsg);
-  }
-};
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
+        formData,
+      );
+
+      notifySuccess("Collection Site Staff Registered Successfully");
+      fetchCollectionsiteStaff(); // Refresh list
+      setShowAddModal(false);
+      resetFormData();
+    } catch (error) {
+      console.error("Registration Error:", error);
+      const errMsg =
+        error.response?.data?.error || error.message || "An error occurred";
+      notifyError(errMsg);
+    }
+  };
+
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -122,6 +129,7 @@ const onSubmit = async (event) => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
+      console.log("data", data)
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -135,202 +143,88 @@ const onSubmit = async (event) => {
     setShowHistoryModal(true);
   };
 
-  // Fetch collectionsites from backend when component loads
-  useEffect(() => {
-    fetchCollectionsites(); // Call the function when the component mounts
-    fetchcityname();
-    fetchdistrictname();
-    fetchcountryname();
-  }, []);
-
-  const fetchCollectionsites = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
-      );
-      console.log(response.data)
-      setAllCollectionsites(response.data);
-      setCollectionsites(response.data); // Store fetched collectionsites in state
-    } catch (error) {
-      console.error("Error fetching collectionsites:", error);
-    }
-  };
-  const fetchcityname = async () => {
-    try {
-      const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data); // Store fetched City in state
-    } catch (error) {
-      console.error("Error fetching City:", error);
-    }
-  };
-  const fetchdistrictname = async () => {
-    try {
-      const response = await axios.get(`${url}/district/get-district`);
-      setdistrictname(response.data); // Store fetched District in state
-    } catch (error) {
-      console.error("Error fetching District:", error);
-    }
-  };
-  const fetchcountryname = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
-      );
-      setCountryname(response.data); // Store fetched Country in state
-    } catch (error) {
-      console.error("Error fetching Country:", error);
-    }
-  };
-
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
 
     if (!value) {
-      setCollectionsites(allcollectionsites);
+      setAllCollectionsitesstaff(allcollectionsitesstaff);
     } else {
-      const filtered = allcollectionsites.filter((collectionsite) => {
+      const filtered = allcollectionsitesstaff.filter((collectionsite) => {
         return collectionsite[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase());
       });
-      setCollectionsites(filtered);
+      setCollectionsitesstaff(filtered);
     }
 
     setCurrentPage(0); // Reset to first page when filtering
   };
   useEffect(() => {
-    const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
+    const updatedFilteredCollectionsitestaff = collectionsitesstaff.filter((collectionsite) => {
       if (!statusFilter) return true;
       return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
     });
 
-    setFilteredCollectionsites(updatedFilteredCollectionsite);
+    setFilteredCollectionsitesstaff(updatedFilteredCollectionsitestaff);
     setCurrentPage(0); // Reset to first page when filtering
-  }, [collectionsites, statusFilter]);
+  }, [collectionsitesstaff, statusFilter]);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
-  const currentData = filteredCollectionsites.slice(
+  const currentData = filteredCollectionsitesstaff.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
 
   const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-
-    if (name === "logo") {
-      // If the name is "logo", handle the file selection
-      const file = files[0];
-      if (file) {
-        const validTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/jpg",
-          "image/gif",
-        ];
-        if (!validTypes.includes(file.type)) {
-          alert("Please select a valid image file.");
-          return;
-        }
-
-        // Update formData with the selected file and preview URL
-        setFormData((prev) => ({
-          ...prev,
-          logo: file,
-          logoPreview: URL.createObjectURL(file),
-        }));
-      }
-    } else {
-      // For other input fields, update the formData with the input value
-      setFormData((prevState) => ({
-        ...prevState,
-        [name]: value,
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  const handleEditClick = (collectionsite) => {
-    let logoPreview = "";
-    let logodata = "";
-    if (collectionsite.logo?.data) {
-      const binary = new Uint8Array(collectionsite.logo.data).reduce(
-        (acc, byte) => acc + String.fromCharCode(byte),
-        ""
-      );
-      logoPreview = `data:image/png;base64,${btoa(binary)}`;
-    }
 
-    if (collectionsite.logo && collectionsite.logo.data) {
-      const blob = new Blob([new Uint8Array(collectionsite.logo.data)], {
-        type: "image/jpeg",
-      });
-      const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
-      logodata = file;
-    }
-    setSelectedCollectionSiteId(collectionsite.id);
-    setEditCollectionsite(collectionsite);
+  const handleEditClick = (collectionsitestaff) => {
+
+    setSelectedCollectionSiteStaffId(collectionsitestaff.id);
+    setEditCollectionsiteStaff(collectionsitestaff);
     setShowEditModal(true);
+
     setFormData({
-      user_account_id: collectionsite.user_account_id,
-      CollectionSiteName: collectionsite.CollectionSiteName,
-      CollectionSiteType: collectionsite.CollectionSiteType,
-      email: collectionsite.useraccount_email,
-      password: collectionsite.useraccount_password,
-      city: collectionsite.cityid,
-      district: collectionsite.districtid,
-      country: collectionsite.countryid,
-      phoneNumber: collectionsite.phoneNumber,
-      fullAddress: collectionsite.fullAddress,
-      logo: logodata,
-      logoPreview: logoPreview, // ✅ use the correctly computed value
-      status: collectionsite.status
+      user_account_id: collectionsitestaff.user_account_id,
+      collectionsitesid: collectionsitestaff.collectionsite_id,
+      staffName: collectionsitestaff.staffName,
+      email: collectionsitestaff.useraccount_email,
+      password: collectionsitestaff.useraccount_password,
+      action: collectionsitestaff.action,
+      status: collectionsitestaff.status
     });
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    const newformData = new FormData();
-    newformData.append("useraccount_email", formData.email);
-    newformData.append("useraccount_password", formData.password);
-    newformData.append("accountType", "CollectionSites");
-    newformData.append("CollectionSiteName", formData.CollectionSiteName);
-    newformData.append("CollectionSiteType", formData.CollectionSiteType);
-    newformData.append("phoneNumber", formData.phoneNumber);
-    newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
-    newformData.append("status", "inactive");
-    if (formData.logo) {
-      newformData.append("logo", formData.logo);
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/updatedetail/${selectedCollectionsiteStaffId}`,
+        formData,
+      );
+
+      notifySuccess("Collection Site Staff Updated Successfully");
+      fetchCollectionsiteStaff();
+      setSelectedCollectionSiteStaffId("");
+      setEditCollectionsiteStaff("");
+      setShowEditModal(false);
+      resetFormData();
+    } catch (error) {
+      console.error("Updation Error:", error);
+      const errMsg =
+        error.response?.data?.error || error.message || "An error occurred";
+      notifyError(errMsg);
     }
-
-    // Debug
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
-    const id = formData.user_account_id;
-
-    updateUser({ id, formData: newformData })
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Update Failed";
-          notifyError(errorMessage);
-        } else {
-          notifySuccess("Update collection site Successfully");
-          setShowEditModal(false);
-        }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
-
-    setShowEditModal(false);
-    resetFormData();
   };
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
@@ -345,8 +239,8 @@ const onSubmit = async (event) => {
     console.log(id, option)
     try {
       // Send status update request to backend
-      const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/edit/${id}`,
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/edit/${id}`,
         { data: { status: option } },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -358,7 +252,7 @@ const onSubmit = async (event) => {
       setTimeout(() => setSuccessMessage(""), 3000);
 
       // Refresh the collectionsite list
-      fetchCollectionsites();
+      fetchCollectionsiteStaff();
 
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({
@@ -384,18 +278,13 @@ const onSubmit = async (event) => {
 
   const resetFormData = () => {
     setFormData({
-      CollectionSiteName: "",
-      CollectionSiteType: "",
+
+      collectionsitesid: "",
+      staffName: "",
       email: "",
       password: "",
-      phoneNumber: "",
-      city: "",
-      district: "",
-      country: "",
-      fullAddress: "",
-      logo: "",
-      created_at: "",
-      status: "",
+      status: "inactive",
+      action: "add"
     });
   };
   useEffect(() => {
@@ -427,7 +316,7 @@ const onSubmit = async (event) => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-   const formatDate = (date) => {
+  const formatDate = (date) => {
     const options = {
       year: "2-digit",
       month: "short",
@@ -448,38 +337,28 @@ const onSubmit = async (event) => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-const handleExportToExcel = () => {
-  const dataToExport = filteredCollectionsites.map((item) => {
-    // Convert buffer to base64 string if available
-    let logoUrl = "";
-    if (item.logo && item.logo.data) {
-      const buffer = Buffer.from(item.logo.data);
-      logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
-    }
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCollectionsitesstaff.map((item) => {
+      // Convert buffer to base64 string if available
 
-    return {
-      email: item.useraccount_email,
-      password: item.useraccount_password,
-    name:item.CollectionSiteName,
-      type: item.CollectionSiteType,
-      phoneNumber: item.phoneNumber,
-      city: item.city,
-      country: item.country,
-      district: item.district,
-      fullAddress: item.fullAddress,
-      status: item.status,
-     // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
-      "Created At": formatDate(item.created_at),
-      "Updated At": formatDate(item.updated_at),
-    };
-  });
+      return {
+        Email: item.useraccount_email,
+        Password: item.useraccount_password,
+        CollectionsiteName: item.collectionsite_name,
+        StaffName: item.staffName,
+        Action: item.action,
+        Status: item.status,
+        "Created At": formatDate(item.created_at),
+        "Updated At": formatDate(item.updated_at),
+      };
+    });
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsitestaff");
 
-  XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
-};
+    XLSX.writeFile(workbook, "Collectionsite Staff_List.xlsx");
+  };
 
 
   return (
@@ -498,7 +377,7 @@ const handleExportToExcel = () => {
               </div>
             )}
 
-            <h5 className="m-0 fw-bold">Collection Site List</h5>
+            <h5 className="m-0 fw-bold">Collection Site Staff List</h5>
 
             {/* Status Filter and Add Button in Same Row */}
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
@@ -517,27 +396,27 @@ const handleExportToExcel = () => {
                   <option value="active">Active</option>
                 </select>
               </div>
-<div className="d-flex flex-wrap gap-3 align-items-center">
-              {/* Add collection site Button */}
-              <button
-                onClick={() => setShowAddModal(true)}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  margin: 10,
-                }}
-              >
-                <i className="fas fa-plus"></i> Add Collection Site
-              </button>
-               <button
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add collection site Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    margin: 10,
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add Collection Site Staff
+                </button>
+                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",
@@ -555,7 +434,7 @@ const handleExportToExcel = () => {
                 >
                   <i className="fas fa-file-excel"></i> Export to Excel
                 </button>
-                </div>
+              </div>
             </div>
           </div>
 
@@ -580,20 +459,20 @@ const handleExportToExcel = () => {
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((collectionsite) => (
-                    <tr key={collectionsite.id}>
+                  currentData.map((collectionsitestaff) => (
+                    <tr key={collectionsitestaff.id}>
                       {columns.map(({ field }) => (
                         <td key={field}>
-                          {field === "created_at"
-                            ? moment(collectionsite[field]).format("YYYY-MM-DD")
-                            : collectionsite[field]}
+                          {(field === "created_at" || field === "updated_at")
+                            ? moment(collectionsitestaff[field]).format("YYYY-MM-DD")
+                            : collectionsitestaff[field]}
                         </td>
                       ))}
                       <td className="position-relative">
                         <div className="d-flex justify-content-center gap-2">
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(collectionsite)}
+                            onClick={() => handleEditClick(collectionsitestaff)}
                             title="Edit"
                           >
                             <FontAwesomeIcon icon={faEdit} />
@@ -602,16 +481,16 @@ const handleExportToExcel = () => {
                           <div className="btn-group">
                             <button
                               className="btn btn-primary btn-sm"
-                              onClick={() => handleToggleStatusOptions(collectionsite.id)}
+                              onClick={() => handleToggleStatusOptions(collectionsitestaff.id)}
                               title="Edit Status"
                             >
                               <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
                             </button>
 
-                            {statusOptionsVisibility[collectionsite.id] && (
+                            {statusOptionsVisibility[collectionsitestaff.id] && (
                               <div
                                 className="dropdown-menu show"
-                                data-id={collectionsite.id}
+                                data-id={collectionsitestaff.id}
                                 style={{
                                   position: "absolute",
                                   top: "100%",
@@ -623,13 +502,13 @@ const handleExportToExcel = () => {
                               >
                                 <button
                                   className="dropdown-item"
-                                  onClick={() => handleStatusClick(collectionsite.id, "active")}
+                                  onClick={() => handleStatusClick(collectionsitestaff.id, "active")}
                                 >
                                   Active
                                 </button>
                                 <button
                                   className="dropdown-item"
-                                  onClick={() => handleStatusClick(collectionsite.id, "inactive")}
+                                  onClick={() => handleStatusClick(collectionsitestaff.id, "inactive")}
                                 >
                                   InActive
                                 </button>
@@ -639,7 +518,7 @@ const handleExportToExcel = () => {
 
                           <button
                             className="btn btn-info btn-sm"
-                            onClick={() => handleShowHistory("collectionsite", collectionsite.id)}
+                            onClick={() => handleShowHistory("collectionsitestaff", collectionsitestaff.id)}
                             title="History"
                           >
                             <FontAwesomeIcon icon={faHistory} />
@@ -652,7 +531,7 @@ const handleExportToExcel = () => {
                 ) : (
                   <tr>
                     <td colSpan={columns.length + 1} className="text-center">
-                      No collectionsites available
+                      No collectionsites staff available
                     </td>
                   </tr>
                 )}
@@ -660,12 +539,12 @@ const handleExportToExcel = () => {
             </table>
           </div>
           {/* Pagination */}
-          {filteredCollectionsites.length >= 0 && (
+          {filteredCollectionsitesstaff.length >= 0 && (
             <Pagination
               handlePageClick={handlePageChange}
               pageCount={Math.max(
                 1,
-                Math.ceil(filteredCollectionsites.length / itemsPerPage)
+                Math.ceil(filteredCollectionsitesstaff.length / itemsPerPage)
               )}
               focusPage={currentPage}
             />
@@ -724,93 +603,6 @@ const handleExportToExcel = () => {
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
                         <div className="form-group">
-                          <div
-                            className="mt-2"
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center", // To center content vertically
-                            }}
-                          >
-                            {formData.logoPreview ? (
-                              <img
-                                src={formData.logoPreview}
-                                alt="Logo Preview"
-                                style={{
-                                  maxHeight: "120px",
-                                  objectFit: "contain",
-                                  border: "2px solid black",
-                                  borderRadius: "50%",
-                                  padding: "5px",
-                                }}
-                              />
-                            ) : (
-                              <i
-                                className="fa fa-user"
-                                style={{
-                                  fontSize: "60px",
-                                  color: "#000",
-                                  border: "2px solid black",
-                                  borderRadius: "50%",
-                                  padding: "20px",
-                                }}
-                              />
-                            )}
-                          </div>
-
-                          <label>Logo</label>
-
-                          <input
-                            id="logo"
-                            type="file"
-                            className="form-control"
-                            name="logo"
-                            accept="image/*"
-                            onChange={handleInputChange}
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter Name"
-                            name="CollectionSiteName"
-                            value={formData.CollectionSiteName}
-                            onChange={handleInputChange}
-                            pattern="^[A-Za-z\s]+$"
-                            title="Only letters and spaces are allowed."
-                            required
-                          />
-                          {!/^[A-Za-z\s]*$/.test(formData.CollectionSiteName) && (
-                            <small className="text-danger">
-                              Only letters and spaces are allowed.
-                            </small>
-                          )}
-                        </div>
-                        <div className="form-group">
-                          <label>Collection Site Type</label>
-                          <select
-                            name="CollectionSiteType"
-                            value={formData.CollectionSiteType} // Bind the value to formData.CollectionSiteType
-                            id="CollectionSiteType"
-                            style={{
-                              width: "100%",
-                              height: "50px",
-                              paddingLeft: "50px",
-                              borderColor: "#f0f0f0",
-                              color: "#808080",
-                            }}
-                            onChange={handleInputChange} // Ensure onChange updates formData.type
-                          >
-                            <option value="">Select Type</option>
-                            <option value="Hospital">Hospital</option>
-                            <option value="Independent Lab">Independent Lab</option>
-                            <option value="Blood Bank">Blood Bank</option>
-                          </select>
-                        </div>
-                        <div className="form-group">
                           <label>Email</label>
                           <input
                             type="email"
@@ -819,6 +611,7 @@ const handleExportToExcel = () => {
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder="Enter Email"
+                            autocomplete="email"
                             required
                           />
                         </div>
@@ -835,7 +628,9 @@ const handleExportToExcel = () => {
                               pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
                               title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
                               required
+                              autocomplete="new-password" // ✅ Add this line
                             />
+
                             <span
                               className="input-group-text"
                               style={{ cursor: "pointer" }}
@@ -852,88 +647,62 @@ const handleExportToExcel = () => {
                           </div>
                         </div>
                         <div className="form-group">
-                          <label>Phone Number</label>
+                          <label>Staff Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
+                            placeholder="Enter Name"
+                            name="staffName"
+                            value={formData.staffName}
                             onChange={handleInputChange}
-                            required
-                            pattern="^\d{4}-\d{7}$"
-                            placeholder="0123-4567890"
-                            title="Phone number must be in the format 0123-4567890 and numeric"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>Full Address</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="fullAddress"
-                            placeholder="Enter Full Address"
-                            value={formData.fullAddress}
-                            onChange={handleInputChange}
+                            pattern="^[A-Za-z\s]+$"
+                            title="Only letters and spaces are allowed."
                             required
                           />
+                          {!/^[A-Za-z\s]*$/.test(formData.staffName) && (
+                            <small className="text-danger">
+                              Only letters and spaces are allowed.
+                            </small>
+                          )}
                         </div>
+
                         <div className="form-group">
-                          <label>City</label>
+                          <label>Collectionsite</label>
                           <select
                             className="form-control p-2"
-                            name="city"
-                            value={formData.city} // Store the selected city ID in formData
+                            name="collectionsitesid"
+                            value={formData.collectionsitesid} // Store the selected city ID in formData
                             onChange={handleInputChange} // Handle change to update formData
                             required
                           >
                             <option value="" disabled>
-                              Select City
+                              Select Collectionsites
                             </option>
-                            {cityname.map((city) => (
-                              <option key={city.id} value={city.id}>
-                                {city.name}
+                            {collectionsites.map((collectionsites) => (
+                              <option key={collectionsites.id} value={collectionsites.id}>
+                                {collectionsites.name}
                               </option>
                             ))}
                           </select>
                         </div>
                         <div className="form-group">
-                          <label>District</label>
-                          <select
-                            className="form-control  p-2"
-                            name="district"
-                            value={formData.district}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="" disabled>
-                              Select District
-                            </option>
-                            {districtname.map((district) => (
-                              <option key={district.id} value={district.id}>
-                                {district.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Country</label>
+                          <label>Action</label>
                           <select
                             className="form-control p-2"
-                            name="country"
-                            value={formData.country}
+                            name="action"
+                            value={formData.action}
                             onChange={handleInputChange}
                             required
                           >
-                            <option value="" disabled>
-                              Select Country
-                            </option>
-                            {countryname.map((country) => (
-                              <option key={country.id} value={country.id}>
-                                {country.name}
-                              </option>
-                            ))}
+                            <option value="">Select Action</option>
+                            <option value="all">All Pages Access</option>
+                            <option value="add">Add Sample Permission</option>
+                            <option value="edit">Edit Sample Permission</option>
+                            <option value="dispatch">Dispatch Sample Permission</option>
+                            <option value="receive">Receive Sample Permission</option>
                           </select>
                         </div>
+
                       </div>
 
                       <div className="modal-footer">
@@ -1003,10 +772,8 @@ const handleExportToExcel = () => {
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
                           const {
-                            created_name,
-                            updated_name,
-                            CollectionSiteName,
-                            added_by,
+                            staffName,
+                            action,
                             created_at,
                             updated_at,
                             status
@@ -1024,46 +791,33 @@ const handleExportToExcel = () => {
                             >
                               {/* Message for City Addition */}
                               {status === 'added' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <b>Collectionsite:</b> {CollectionSiteName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
+                                <div style={baseStyle}>
+                                  <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{action}</b> by Registration Admin at{" "}
+                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                                 </div>
                               )}
 
-                              {/* Message for City Update (Only if it exists) */}
                               {status === 'updated' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
-                                  }}
-                                >
-                                  <b>Collectionsite:</b> {CollectionSiteName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
+                                <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
+                                  <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{action}</b> by Registration Admin at{" "}
+                                  {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                                 </div>
                               )}
+
+                              {status === 'active' && (
+                                <div style={baseStyle}>
+                                  <b>Collectionsite staff:</b> {staffName} is <b>active</b> with <b>{action}</b> permission as of{" "}
+                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                                </div>
+                              )}
+
+                              {status === 'inactive' && (
+                                <div style={baseStyle}>
+                                  <b>Collectionsite staff:</b> {staffName} was marked <b>inactive</b> and <b>{action}</b> by Registration Admin at{" "}
+                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                                </div>
+                              )}
+
                             </div>
                           );
                         })
@@ -1083,4 +837,4 @@ const handleExportToExcel = () => {
   );
 };
 
-export default CollectionSiteArea;
+export default CollectionSiteStaffArea;

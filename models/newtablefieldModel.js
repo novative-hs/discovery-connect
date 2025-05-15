@@ -51,6 +51,25 @@ const tablesAndColumns = [
         column: "website",
         type: "VARCHAR(250) Null",
       },
+      {
+        column: "staffName",
+        type: "VARCHAR(1000) Null",
+      },
+      {
+        column: "action",
+        type: "VARCHAR(20) Null",
+      },
+      
+       {
+        column: "collectionsitestaff_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "collectionsitestaff", column: "id" },
+      },
+      {
+        column: "status",
+        type: "ENUM('added', 'updated', 'deleted', 'active','inactive') NULL DEFAULT 'added'",
+      },
  ]
 },
   // {

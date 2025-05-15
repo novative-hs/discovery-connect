@@ -8,6 +8,7 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
+import * as XLSX from "xlsx";
 import {
   useRegisterUserMutation,
   useUpdateProfileMutation,
@@ -28,6 +29,7 @@ const CSRArea = () => {
   const [allCSR, setAllCSR] = useState([]);
   const [CSR, setCSR] = useState([]);
   const [cityname, setcityname] = useState([]);
+  const [collectionsitename, setcollectionsitename] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
   const [filteredCSR, setFilteredCSR] = useState([]);
@@ -46,6 +48,7 @@ const CSRArea = () => {
     city: "",
     district: "",
     country: "",
+    collectionsitename:"",
     fullAddress: "",
     created_at: "",
     status: "",
@@ -53,6 +56,7 @@ const CSRArea = () => {
 
   useEffect(() => {
     fetchCSR();
+    fetchCollectionsitename()
     fetchcityname();
     fetchdistrictname();
     fetchcountryname();
@@ -62,7 +66,7 @@ const CSRArea = () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/get`
-      );
+      );      
       setCSR(response.data);
       setAllCSR(response.data);
     } catch (error) {
@@ -77,6 +81,16 @@ const CSRArea = () => {
       console.error("Error fetching City:", error);
     }
   };
+  const fetchCollectionsitename = async () => {
+  try {
+    const response = await axios.get(`${url}/admin/csr/getCollectionsiteName`);
+    
+    setcollectionsitename(response.data);
+  } catch (error) {
+    console.error("Error fetching Collectionsite:", error);
+  }
+};
+
   const fetchdistrictname = async () => {
     try {
       const response = await axios.get(`${url}/district/get-district`);
@@ -167,6 +181,7 @@ const onSubmit = async (event) => {
     password: formData.password,
     accountType: "CSR",
     CSRName: formData.CSRName,
+    collectionsitename:formData.collectionsitename,
     phoneNumber: formData.phoneNumber,
     fullAddress: formData.fullAddress,
     city: formData.city,
@@ -210,6 +225,7 @@ const onSubmit = async (event) => {
       city: CSR.cityid,
       country: CSR.countryid,
       district: CSR.districtid,
+      collectionsitename: CSR.collection_id,
       fullAddress: CSR.fullAddress,
       status: CSR.status,
     });
@@ -226,7 +242,7 @@ const onSubmit = async (event) => {
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
     newformData.append("country", formData.country);
-
+newformData.append("collectionsitename",formData.collectionsitename)
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
     }
@@ -285,6 +301,7 @@ const onSubmit = async (event) => {
       fullAddress: "",
       created_at: "",
       status: "",
+      collectionsitename:""
     });
   };
   useEffect(() => {
@@ -332,6 +349,55 @@ const onSubmit = async (event) => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+ const formatDate = (date) => {
+    const options = {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+    };
+
+    const formatted = new Date(date).toLocaleString("en-GB", options);
+
+    const [datePart, timePart] = formatted.split(", ");
+    const [day, month, year] = datePart.split(" ");
+
+    const formattedMonth =
+      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+
+    return `${day}-${formattedMonth}-${year}`;
+  };
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCSR.map((item) => {
+      // Convert buffer to base64 string if available
+    
+  
+      return {
+        email: item.useraccount_email,
+        password: item.useraccount_password,
+      name:item.CSRName,
+      collectionsitename:item.name,
+        phoneNumber: item.phoneNumber,
+        city: item.city,
+        country: item.country,
+        district: item.district,
+        fullAddress: item.fullAddress,
+        status: item.status,
+
+        "Created At": formatDate(item.created_at),
+        "Updated At": formatDate(item.updated_at),
+      };
+    });
+  
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
+  
+    XLSX.writeFile(workbook, "CSR_List.xlsx");
+  };
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -369,7 +435,7 @@ const onSubmit = async (event) => {
                     <option value="active">Active</option>
                   </select>
                 </div>
-
+<div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Add Organization Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -389,6 +455,25 @@ const onSubmit = async (event) => {
                 >
                   <i className="fas fa-plus"></i> Add CSR
                 </button>
+                  <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+                </div>
               </div>
             </div>
 
@@ -401,6 +486,7 @@ const onSubmit = async (event) => {
           { label: "Name", placeholder: "Search Name", field: "CSRName" },
           { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
           { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
+          { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
           { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
           { label: "City", placeholder: "Search City", field: "city" },
           { label: "Country", placeholder: "Search Country", field: "country" },
@@ -429,6 +515,7 @@ const onSubmit = async (event) => {
                         <td>{CSR.CSRName}</td>
                         <td>{CSR.useraccount_email}</td>
                         <td>{CSR.useraccount_password}</td>
+                        <td>{CSR.name}</td>
                         <td>{CSR.phoneNumber}</td>
                         <td>{CSR.city}</td>
                         <td>{CSR.country}</td>
@@ -643,7 +730,25 @@ const onSubmit = async (event) => {
                             title="Phone number must be in the format 0123-4567890 and numeric"
                           />
                         </div>
-
+<div className="form-group">
+                          <label>Collection site Name</label>
+                          <select
+                            className="form-control p-2"
+                            name="collectionsitename"
+                            value={formData.collectionsitename} // Store the selected city ID in formData
+                            onChange={handleInputChange} // Handle change to update formData
+                            required
+                          >
+                            <option value="" disabled>
+                              Select Collectionsite Name
+                            </option>
+                            {collectionsitename.map((collectionsite) => (
+                              <option key={collectionsite.user_id} value={collectionsite.user_id}>
+                                {collectionsite.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         <div className="form-group">
                           <label>City</label>
                           <select

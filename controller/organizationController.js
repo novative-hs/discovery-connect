@@ -8,6 +8,7 @@ const create_organizationTable = (req, res) => {
 
 // Controller to create organizations
 const createOrganization = (req, res) => {
+  
   organizationModel.createOrganization(req, (err, result) => {
     if (err) {
       if (err.message === "Email already exists") {
@@ -43,13 +44,10 @@ const getCurrentOrganizationById = (req, res) => {
 
 const updateOrganization = (req, res) => {
 
-  const { user_account_id, OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, ntnNumber, useraccount_email } = req.body;
+  const { user_account_id, OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, website, useraccount_email } = req.body;
 
 
-  if (!user_account_id || !OrganizationName || !type || !ntnNumber || !phoneNumber || !fullAddress || !city || !district || !country || !useraccount_email) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
-  }
-  const data = { OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, ntnNumber, useraccount_email };
+  const data = { OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, website, useraccount_email };
   organizationModel.updateOrganization(data, user_account_id, (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Error updating researcher' });

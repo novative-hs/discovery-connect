@@ -22,6 +22,8 @@ const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
 const contactusModel = require("../models/contactusModel");
 const committeesampleapprovalModel = require("../models/committeesampleapproval")
+const collectionsitestaffModel=require("../models/collectionsitestaffModel")
+
 // Function to initialize all tables
 function Database() {
 
@@ -36,6 +38,7 @@ function Database() {
   researcherModel.create_researcherTable();
   csrModel.create_CSRTable();
   userModel.createuser_accountTable();
+  collectionsitestaffModel.create_collectionsitestaffTable();
   committememberModel.createCommitteeMemberTable();
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();
@@ -62,6 +65,6 @@ function Database() {
   historyModel.create_historyTable();
   historyModel.create_samplehistoryTable();
   contactusModel.createContactUsTable();
-  newtablefieldModel.createOrUpdateTables();
+  //newtablefieldModel.createOrUpdateTables();
 }
 Database();

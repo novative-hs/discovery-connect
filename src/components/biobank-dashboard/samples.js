@@ -6,6 +6,7 @@ import {
   faTrash,
   faQuestionCircle,
   faExchangeAlt,
+  faDollarSign,
 } from "@fortawesome/free-solid-svg-icons";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Pagination from "@ui/Pagination";
@@ -21,6 +22,10 @@ const BioBankSampleArea = () => {
   }
 
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [selectedSampleForPricing, setSelectedSampleForPricing] = useState(null);
+  const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState('');
 
   const [filtertotal, setfiltertotal] = useState(null);
   const [quarantineComment, setQuarantineComment] = useState("");
@@ -399,11 +404,8 @@ const BioBankSampleArea = () => {
           },
         }
       );
-
       fetchSamples(); // This will refresh the samples list
-
       setSuccessMessage("Sample added successfully.");
-
       // Clear the success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
@@ -510,6 +512,44 @@ const BioBankSampleArea = () => {
       } else {
         // Something else happened
         console.error("Error dispatching sample:", error.message);
+        alert("An unexpected error occurred.");
+      }
+    }
+  };
+
+  const handlePriceSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!price || !currency) {
+      alert("Both price and currency are required.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/postprice/${selectedSampleId}`,
+        {
+          sampleId: selectedSampleForPricing.id,
+          price,
+          SamplePriceCurrency: currency,
+        }
+      );
+
+      alert("Price and currency added successfully!");
+      setShowPriceModal(false);
+      setSelectedSampleForPricing(null);
+      setPrice('');
+      setCurrency('');
+      fetchSamples(); // Refresh your data
+    } catch (error) {
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        alert(`Error: ${error.response.data.message}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("No response received from server.");
+      } else {
+        console.error("Error submitting price/currency:", error.message);
         alert("An unexpected error occurred.");
       }
     }
@@ -628,6 +668,13 @@ const BioBankSampleArea = () => {
     );
     setSelectedCountry(matchedCountry || null);
     setSearchCountry(matchedCountry ? matchedCountry.name : "");
+  };
+
+  const handlePriceCurrencyClick = (sample) => {
+    setSelectedSampleForPricing(sample);
+    setPrice(sample.price || '');
+    setCurrency(sample.currency || '');
+    setShowPriceModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -893,6 +940,13 @@ const BioBankSampleArea = () => {
                           <FontAwesomeIcon icon={faEdit} size="sm" />
                         </button>
                         <button
+                          className="btn btn-warning btn-sm"
+                          onClick={() => handlePriceCurrencyClick(sample)}
+                          title="Set Price & Currency"
+                        >
+                          <FontAwesomeIcon icon={faDollarSign} size="sm" />
+                        </button>
+                        <button
                           className="btn btn-danger btn-sm py-0 px-1"
                           onClick={() => {
                             setSelectedSampleId(sample.id);
@@ -1050,7 +1104,7 @@ const BioBankSampleArea = () => {
                                 required
                               />
                             </div>
-                               <div className="form-group">
+                            <div className="form-group">
                               <label>Gender</label>
                               <select
                                 className="form-control"
@@ -1120,7 +1174,7 @@ const BioBankSampleArea = () => {
                         {/* Column 2 */}
                         {showAdditionalFields && (
                           <>
-                            <div className="col-md-2">
+                            <div className="col-md-3">
                               {showAddModal && (
                                 <div className="form-group">
                                   <label>Donor ID</label>
@@ -1279,7 +1333,10 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                                <div className="form-group position-relative">
+                            </div>
+                            {/* {Column 3} */}
+                            <div className="col-md-3">
+                               <div className="form-group position-relative">
                                 <label>Country Of Collection</label>
                                 <input
                                   type="text"
@@ -1359,58 +1416,6 @@ const BioBankSampleArea = () => {
                                   </ul>
                                 )}
                               </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
-                                <label>Price</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="price"
-                                  value={formData.price}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: formData.price
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Price Currency</label>
-                                <select
-                                  className="form-control"
-                                  name="SamplePriceCurrency"
-                                  value={formData.SamplePriceCurrency}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor:
-                                      formData.SamplePriceCurrency
-                                        ? "#f0f0f0"
-                                        : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Sample Price Currency
-                                  </option>
-                                  {samplepricecurrencyNames.map(
-                                    (name, index) => (
-                                      <option key={index} value={name}>
-                                        {name}
-                                      </option>
-                                    )
-                                  )}
-                                </select>
-                              </div>
                               <div className="form-group">
                                 <label>Quantity</label>
                                 <input
@@ -1484,7 +1489,7 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                                <div className="form-group">
+                              <div className="form-group">
                                 <label className="form-label">
                                   Smoking Status
                                 </label>
@@ -1534,10 +1539,7 @@ const BioBankSampleArea = () => {
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-2">
-                              <div className="form-group">
+                               <div className="form-group">
                                 <label className="form-label">
                                   Alcohol Or Drug Abuse
                                 </label>
@@ -1584,7 +1586,10 @@ const BioBankSampleArea = () => {
                                   </div>
                                 </div>
                               </div>
-                              <div className="form-group">
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-3">
+                               <div className="form-group">
                                 <label>
                                   Infectious Disease Testing (HIV, HBV, HCV)
                                 </label>
@@ -1704,7 +1709,7 @@ const BioBankSampleArea = () => {
                                   }}
                                 />
                               </div>
-                                 <div className="form-group">
+                              <div className="form-group">
                                 <label>Concurrent Medical Conditions</label>
                                 <select
                                   className="form-control"
@@ -1734,10 +1739,7 @@ const BioBankSampleArea = () => {
                                   )}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-2">
-                              <div className="form-group">
+                                 <div className="form-group">
                                 <label>Concurrent Medications</label>
                                 <input
                                   type="text"
@@ -1757,6 +1759,10 @@ const BioBankSampleArea = () => {
                                   }}
                                 />
                               </div>
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-3">
+                           
                               <div className="form-group">
                                 <label>Diagnosis Test Parameter</label>
                                 <input
@@ -1823,7 +1829,7 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                               <div className="form-group">
+                              <div className="form-group">
                                 <label>Test Method</label>
                                 <select
                                   className="form-control"
@@ -1880,9 +1886,6 @@ const BioBankSampleArea = () => {
                                   )}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 6} */}
-                            <div className="col-md-2">
                               <div className="form-group">
                                 <label>Test System</label>
                                 <select
@@ -1955,6 +1958,81 @@ const BioBankSampleArea = () => {
               </div>
             </div>
           </>
+        )}
+
+        {/* Modal for Adding Samples Prices and Currency */}
+        {showPriceModal && (
+          <div className="modal show d-block" tabIndex="-1" role="dialog">
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
+                <form onSubmit={handlePriceSubmit}>
+                  <div className="modal-header">
+                    <h5 className="modal-title">Set Price & Currency</h5>
+                    <button type="button" className="close" onClick={() => setShowPriceModal(false)}>
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label>Price</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        required
+                        style={{
+                          height: "45px",
+                          fontSize: "14px",
+                          backgroundColor: "#f0f0f0",
+                          color: "black",
+                        }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Sample Price Currency</label>
+                      <select
+                        className="form-control"
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                        required
+                        style={{
+                          fontSize: "14px",
+                          height: "45px",
+                          backgroundColor: "#f0f0f0",
+                          color: "black",
+                        }}
+                      >
+                        <option value="" hidden>
+                          Select Sample Price Currency
+                        </option>
+                        {samplepricecurrencyNames.map((name, index) => (
+                          <option key={index} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowPriceModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Modal for transfreing Samples */}
@@ -2149,6 +2227,7 @@ const BioBankSampleArea = () => {
             </div>
           </div>
         )}
+
         {showQuarantineModal && (
           <>
             <div

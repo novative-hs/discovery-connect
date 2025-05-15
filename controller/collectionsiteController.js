@@ -16,6 +16,20 @@ const getAllCollectionSites = (req, res) => {
   });
 };
 
+const getAllCollectionSiteNamesInCSR = (req, res) => {
+  
+  collectionsiteModel.getAllNameinCSR((err, results) => {
+    if (err) {
+          console.error("Error in getAllCollectionSiteNamesInCSR:", err); // Log real error
+
+      // Send more informative error message
+      return res.status(500).json({ error: err.error || 'An unexpected error occurred' });
+    }
+    res.status(200).json(results);
+  });
+};
+
+
 // Controller to get a collection site by ID
 const getCollectionSiteById = (req, res) => {
   const { id } = req.params;
@@ -188,5 +202,6 @@ module.exports = {
   getAllCollectionSites,
   getCollectionSiteById,
   updateCollectionSiteStatus,
-  deleteCollectionSite
+  deleteCollectionSite,
+  getAllCollectionSiteNamesInCSR
 };

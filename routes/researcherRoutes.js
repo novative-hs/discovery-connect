@@ -11,7 +11,7 @@ router.get('/researcher/get', researcherController.getAllResearchers);
 router.get('/researchers/:id', researcherController.getResearcherById);
 // router.put('/researchers/edit/:id', researcherController.updateResearcher);
 router.delete('/researchers/delete/:id', researcherController.deleteResearcher);
-
+router.get('/admin/researcher/orderhistory/:id',researcherController.fetchOrderHistory)
 // technical Admin
 router.get('/admin/researcher/get', researcherController.getResearchersAdmin);
 router.put('/admin/researchers/edit/:id', researcherController.updateResearcherStatus);

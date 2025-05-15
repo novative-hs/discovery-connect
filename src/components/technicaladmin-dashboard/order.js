@@ -359,7 +359,7 @@ const OrderPage = () => {
                               <FontAwesomeIcon icon={faCheck} size="sm" />
                             </button>
 
-                            {/* ❌ Reject Button (Cross Icon) */}
+                            {order.technical_admin_status !== "Accepted" && (
                             <button
                               className="btn btn-sm btn-outline-danger"
                               onClick={(e) => {
@@ -372,6 +372,7 @@ const OrderPage = () => {
                             >
                               <FontAwesomeIcon icon={faTimes} size="sm" />
                             </button>
+                            )}
                           </div>
                           {/* Send Approval Button */}
                           {order.technical_admin_status === "Accepted" &&

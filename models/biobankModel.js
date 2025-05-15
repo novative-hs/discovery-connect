@@ -76,7 +76,6 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
   });
 };
 
-
 // Function to create a new sample
 const createBiobankSample = (data, callback) => {
   const id = uuidv4(); // Generate a secure unique ID
@@ -128,6 +127,37 @@ const createBiobankSample = (data, callback) => {
         // 🟰 Now everything is successful
         callback(null, { insertId: id, masterID: masterID });
       });
+    });
+  });
+};
+
+// Function to add price and sample price currency from biobank
+const postSamplePrice = (data, callback) => {
+  const updateQuery = `
+    UPDATE sample 
+    SET price = ?, SamplePriceCurrency = ?
+    WHERE id = ?
+  `;
+
+  mysqlConnection.query(updateQuery, [data.price, data.SamplePriceCurrency, data.sampleId], (err, results) => {
+    if (err) {
+      console.error('Error adding price and currency into sample:', err);
+      return callback(err, null);
+    }
+
+    // Insert into sample_history table
+    const historyQuery = `
+      INSERT INTO sample_history (sample_id)
+      VALUES (?)
+    `;
+
+    mysqlConnection.query(historyQuery, [data.sampleId], (err, historyResults) => {
+      if (err) {
+        console.error('Error inserting into sample_history:', err);
+        return callback(err, null);
+      }
+
+      return callback(null, { insertId: data.sampleId });
     });
   });
 };
@@ -195,8 +225,6 @@ const updateBiobankSample = (id, data, callback) => {
   });
 };
 
-
-
 const UpdateSampleStatus = (id, status, callback) => {
 
   const query = `
@@ -217,7 +245,6 @@ const UpdateSampleStatus = (id, status, callback) => {
   });
 };
 
-
 const getQuarantineStock = (callback) => {
   const query = `SELECT * FROM sample WHERE status =  "Quarantine" and is_deleted = false`;
 
@@ -232,6 +259,7 @@ module.exports = {
   create_biobankTable,
   getBiobankSamples,
   createBiobankSample,
+  postSamplePrice,
   updateBiobankSample,
   getQuarantineStock,
   UpdateSampleStatus

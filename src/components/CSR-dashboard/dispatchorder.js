@@ -34,7 +34,7 @@ const DispatchSampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    fetchSamples(); // Call the function initially when the component mounts
+    //fetchSamples(); // Call the function initially when the component mounts
 
     // Set an interval to refresh data every 5 seconds (5000ms)
     const interval = setInterval(() => {
@@ -48,7 +48,10 @@ const DispatchSampleArea = () => {
   const fetchSamples = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
+         {
+        params: { csrUserId: id }
+      }
       );
 
       // Filter only the samples where order_status is 'Dispatched'

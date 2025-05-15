@@ -110,12 +110,8 @@ const createSample = (req, res) => {
 
   const sampleData = req.body;
   const file = req.file;
-
   // Attach file buffer to the sampleData
   sampleData.logo = file?.buffer;
-  // Required fields validation
-
-
   // DateOfCollection will show data only before today
   const today = new Date();
   const dateOfCollection = new Date(sampleData.DateOfCollection);
@@ -123,15 +119,11 @@ const createSample = (req, res) => {
   if (dateOfCollection >= today) {
     return res.status(400).json({ error: "DateOfCollection must be before today" });
   }
-
-
-
   SampleModel.createSample(sampleData, (err, result) => {
     if (err) {
       console.error('Error creating sample:', err);
       return res.status(500).json({ error: "Error creating sample" });
     }
-
     res.status(201).json({ message: "Sample created successfully", id: result.insertId });
   });
 };

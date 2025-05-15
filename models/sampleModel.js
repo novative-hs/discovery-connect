@@ -429,8 +429,6 @@ const createSample = (data, callback) => {
   });
 };
 
-
-
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
 
@@ -476,7 +474,6 @@ const updateSample = (id, data, callback) => {
   });
 };
 
-
 // Function to update a sample's status
 const updateSampleStatus = (id, status, callback) => {
   const query = `
@@ -490,6 +487,7 @@ const updateSampleStatus = (id, status, callback) => {
 };
 
 
+// Function to delete a sample by its ID
 const deleteSample = (id, callback) => {
   mysqlConnection.getConnection((err, connection) => {
     if (err) return callback(err);

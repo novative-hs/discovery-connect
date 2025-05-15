@@ -9,6 +9,7 @@ import {
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
+import * as XLSX from "xlsx";
 const OrganizationArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -22,13 +23,12 @@ const OrganizationArea = () => {
   const [cityname, setcityname] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
-  const [showPassword, setShowPassword] = useState(false);
+  
   const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
     user_account_id: "",
     OrganizationName: "",
     email: "",
-    password: "",
     phoneNumber: "",
     city: "",
     district: "",
@@ -36,7 +36,7 @@ const OrganizationArea = () => {
     fullAddress: "",
     type: "",
     HECPMDCRegistrationNo: "",
-    ntnNumber: "",
+    website: "",
     logo: "",
     logoPreview: null,
     created_at: "",
@@ -59,14 +59,14 @@ const OrganizationArea = () => {
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-    { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
+    
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "HECPMDCRegistrationNo", placeholder: "Search HECPMDCRegistrationNo", field: "HECPMDCRegistrationNo" },
-    { label: "NTN Number", placeholder: "Search NTN Number", field: "ntnNumber" },
+    { label: "Website", placeholder: "Search Website", field: "website" },
     { label: "Type", placeholder: "Search Type", field: "type" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
@@ -79,12 +79,11 @@ const OrganizationArea = () => {
 
   // Append all the form data
   newformData.append("email", formData.email);
-  newformData.append("password", formData.password);
   newformData.append("accountType", "Organization");
   newformData.append("OrganizationName", formData.OrganizationName);
   newformData.append("phoneNumber", formData.phoneNumber);
   newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
-  newformData.append("ntnNumber", formData.ntnNumber);
+  newformData.append("website", formData.website);
   newformData.append("fullAddress", formData.fullAddress);
   newformData.append("city", formData.city);
   newformData.append("district", formData.district);
@@ -284,7 +283,6 @@ const OrganizationArea = () => {
       user_account_id: organization.user_account_id,
       OrganizationName: organization.OrganizationName,
       email: organization.useraccount_email,
-      password: organization.useraccount_password,
       city: organization.cityid,
       district: organization.districtid,
       country: organization.countryid,
@@ -292,7 +290,7 @@ const OrganizationArea = () => {
       fullAddress: organization.fullAddress,
       type: organization.type,
       HECPMDCRegistrationNo: organization.HECPMDCRegistrationNo,
-      ntnNumber: organization.ntnNumber,
+      website: organization.website,
       logo: logodata,
       logoPreview: logoPreview, // ✅ use the correctly computed value
       status: organization.status
@@ -303,12 +301,11 @@ const OrganizationArea = () => {
     e.preventDefault();
     const newformData = new FormData();
     newformData.append("useraccount_email", formData.email);
-    newformData.append("useraccount_password", formData.password);
     newformData.append("accountType", "Organization");
     newformData.append("OrganizationName", formData.OrganizationName);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
-    newformData.append("ntnNumber", formData.ntnNumber);
+    newformData.append("website", formData.website);
     newformData.append("fullAddress", formData.fullAddress);
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
@@ -393,7 +390,6 @@ const OrganizationArea = () => {
     setFormData({
       OrganizationName: "",
       email: "",
-      password: "",
       phoneNumber: "",
       city: "",
       district: "",
@@ -401,7 +397,7 @@ const OrganizationArea = () => {
       fullAddress: "",
       type: "",
       HECPMDCRegistrationNo: "",
-      ntnNumber: "",
+      website: "",
       logo: "",
       created_at: "",
       status: "",
@@ -436,6 +432,60 @@ const OrganizationArea = () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+   const formatDate = (date) => {
+    const options = {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
+    };
+
+    const formatted = new Date(date).toLocaleString("en-GB", options);
+
+    const [datePart, timePart] = formatted.split(", ");
+    const [day, month, year] = datePart.split(" ");
+
+    const formattedMonth =
+      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+
+    return `${day}-${formattedMonth}-${year}`;
+  };
+const handleExportToExcel = () => {
+  const dataToExport = filteredOrganizations.map((item) => {
+    // Convert buffer to base64 string if available
+    let logoUrl = "";
+    if (item.logo && item.logo.data) {
+      const buffer = Buffer.from(item.logo.data);
+      logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+    }
+
+    return {
+      email: item.useraccount_email,
+      OrganizationName: item.OrganizationName,
+      type: item.type,
+      phoneNumber: item.phoneNumber,
+      HECPMDCRegistrationNo: item.HECPMDCRegistrationNo,
+      city: item.city,
+      country: item.country,
+      district: item.district,
+      fullAddress: item.fullAddress,
+     // website:item.website,
+      status: item.status,
+     // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
+      "Created At": formatDate(item.created_at),
+      "Updated At": formatDate(item.updated_at),
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Organization");
+
+  XLSX.writeFile(workbook, "Organization_List.xlsx");
+};
 
 
 
@@ -477,6 +527,7 @@ const OrganizationArea = () => {
               </div>
 
               {/* Add Organization Button */}
+              <div className="d-flex flex-wrap gap-3 align-items-center">
               <button
                 onClick={() => setShowAddModal(true)}
                 style={{
@@ -495,6 +546,25 @@ const OrganizationArea = () => {
               >
                 <i className="fas fa-plus"></i> Add Organization
               </button>
+               <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+                </div>
             </div>
           </div>
 
@@ -744,35 +814,7 @@ const OrganizationArea = () => {
                             required
                           />
                         </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Password</label>
-                          <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                            />
-                            <span
-                              className="input-group-text"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i
-                                className={
-                                  showPassword
-                                    ? "fa-regular fa-eye"
-                                    : "fa-regular fa-eye-slash"
-                                }
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
+                       
                         <div className="form-group">
                           <label>Type</label>
                           <select
@@ -823,13 +865,13 @@ const OrganizationArea = () => {
                           />
                         </div>
                         <div className="form-group">
-                          <label>ntnNumber</label>
+                          <label>Website</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="ntnNumber"
-                            placeholder="Enter ntn Number"
-                            value={formData.ntnNumber}
+                            name="website"
+                            placeholder="Enter Website"
+                            value={formData.website}
                             onChange={handleInputChange}
                             required
                           />

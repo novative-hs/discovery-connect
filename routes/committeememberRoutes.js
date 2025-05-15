@@ -10,5 +10,6 @@ router.put('/edit/:id', committeememberController.updateCommitteeMember);
 router.put('/status/edit/:id', committeememberController.updateCommitteeMemberStatus);
 router.put('/committeetype/edit/:id', committeememberController.updateCommitteeMemberType);
 router.delete('/delete/:id', committeememberController.deleteCommitteeMember);
+router.get("/orderhistory/:id", committeememberController.getCommitteeOrderHistory);
 
 module.exports = router;
