@@ -14,14 +14,14 @@ const create_CSRTable = () => {
     city INT,
     district INT,
     country INT,
-    collectionsite_id INT,
+    collection_id INT,
     status ENUM('active', 'inactive') DEFAULT 'inactive',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
     FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
     FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
-    FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
+    FOREIGN KEY (collection_id) REFERENCES user_account(id) ON DELETE CASCADE,
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 )`;
   mysqlConnection.query(create_CSR, (err, results) => {
@@ -73,7 +73,7 @@ const createCSR = (data, callback) => {
           const user_account_id = accountResult.insertId;
 
           const csrInsertQuery = `
-  INSERT INTO csr (user_account_id, collectionsite_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
+  INSERT INTO csr (user_account_id, collection_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
@@ -137,26 +137,56 @@ const createCSR = (data, callback) => {
 };
 
 const getAllCSR = (callback) => {
-  const query = `SELECT c.*, user_account.id AS user_account_id, 
-      user_account.email AS useraccount_email, 
-      user_account.password AS useraccount_password, city.name AS city,
+  const query = `
+    SELECT 
+      c.*, 
+      ua.id AS user_account_id, 
+      ua.email AS useraccount_email, 
+      ua.password AS useraccount_password, 
+      ua.accountType,
+      
+      city.name AS city,
       city.id AS cityid,
       district.name AS district,
       district.id AS districtid,
       country.name AS country,
-       collectionsite.CollectionSiteName AS collectionsitename,
-      collectionsite.id AS collectionsiteid,
-      country.id AS countryid FROM csr c 
-      JOIN user_account ON c.user_account_id = user_account.id
-       LEFT JOIN city ON c.city = city.id
+      country.id AS countryid,
+
+      -- Get collection name from the user account linked via collection_id
+      CASE 
+        WHEN cs.CollectionSiteName IS NOT NULL THEN cs.CollectionSiteName
+        WHEN bb.Name IS NOT NULL THEN bb.Name
+        ELSE NULL
+      END AS name,
+
+      cs.id AS collectionsiteid,
+      bb.id AS biobankid
+
+    FROM csr c 
+    JOIN user_account ua ON c.user_account_id = ua.id
+    LEFT JOIN city ON c.city = city.id
     LEFT JOIN district ON c.district = district.id
     LEFT JOIN country ON c.country = country.id
-     LEFT JOIN collectionsite ON c.collectionsite_id = collectionsite.id
-      ORDER BY c.id DESC`;
+
+    -- Join collection user account from collection_id
+    LEFT JOIN user_account collacc ON c.collection_id = collacc.id
+
+    -- Join collectionsite and biobank using that user_account.id
+    LEFT JOIN collectionsite cs ON cs.user_account_id = collacc.id
+    LEFT JOIN biobank bb ON bb.user_account_id = collacc.id
+
+    ORDER BY c.id DESC;
+  `;
+
   mysqlConnection.query(query, (err, results) => {
+    console.log(results);
     callback(err, results);
   });
 };
+
+
+
+
 
 const deleteCSR = (id, status, callback) => {
   const query = 'UPDATE csr SET status = ? WHERE id = ?';

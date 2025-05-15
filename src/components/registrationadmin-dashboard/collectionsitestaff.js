@@ -695,6 +695,7 @@ const handleExportToExcel = () => {
     required
   >
     <option value="">Select Action</option>
+    <option value="all">All Pages Access</option>
     <option value="add">Add Sample Permission</option>
     <option value="edit">Edit Sample Permission</option>
     <option value="dispatch">Dispatch Sample Permission</option>

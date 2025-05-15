@@ -43,25 +43,31 @@ const ShippingSampleArea = () => {
 
   useEffect(() => {
     fetchSamples();
-    const interval = setInterval(fetchSamples, 5000);
-    return () => clearInterval(interval);
+    
   }, []);
 
   const fetchSamples = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`
-      );
-      const shippingSamples = response.data.filter(
-        (sample) => sample.order_status === "Dispatched"
-      );
+  try {
+    console.log("Sending csrUserId:", id); // Confirm value exists
 
-      setSamples(shippingSamples);
-      setFilteredSamplename(shippingSamples);
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  };
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
+      {
+        params: { csrUserId: id }
+      }
+    );
+
+    const shippingSamples = response.data.filter(
+      (sample) => sample.order_status === "Dispatched"
+    );
+
+    setSamples(shippingSamples);
+    setFilteredSamplename(shippingSamples);
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+  }
+};
+
 
   useEffect(() => {
     const pages = Math.max(

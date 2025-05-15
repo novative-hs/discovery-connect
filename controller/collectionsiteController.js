@@ -20,10 +20,11 @@ const getAllCollectionSiteNamesInCSR = (req, res) => {
   
   collectionsiteModel.getAllNameinCSR((err, results) => {
     if (err) {
-      
-      return res.status(500).json({ error: 'An error occurred' });
+          console.error("Error in getAllCollectionSiteNamesInCSR:", err); // Log real error
+
+      // Send more informative error message
+      return res.status(500).json({ error: err.error || 'An unexpected error occurred' });
     }
-    
     res.status(200).json(results);
   });
 };

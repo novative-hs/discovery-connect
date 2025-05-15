@@ -392,25 +392,30 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
 };
 
 
-const getAllNameinCSR=(callback)=>{
-  const collectionSiteQuery=`SELECT CollectionSiteName, id FROM collectionsite WHERE status = 'active'`
- mysqlConnection.query(collectionSiteQuery, (err, results) => {
+const getAllNameinCSR = (callback) => {
+  const query = `
+    SELECT cs.id, cs.CollectionSiteName AS name, ua.id as user_id,ua.accountType AS type
+    FROM collectionsite cs
+    JOIN user_account ua ON cs.user_account_id = ua.id
+    WHERE cs.status = 'active' AND ua.accountType = 'CollectionSites'
+    
+    UNION
+    
+    SELECT b.id, b.Name AS name, ua.id as user_id,ua.accountType AS type
+    FROM biobank b
+    JOIN user_account ua ON b.user_account_id = ua.id
+    WHERE  ua.accountType = 'biobank'
+  `;
+
+  mysqlConnection.query(query, (err, results) => {
     if (err) {
-      
-      callback({ error: "Database query failed" }, null);
-      return;
+      return callback({ error: "Database query failed" }, null);
     }
-
-    if (!results || results.length === 0) {
-      
-      callback({ error: "Collection site not found" }, null);
-      return;
-    }
-
     callback(null, results);
   });
+};
 
-}
+
 
 
 function updateCollectionSiteDetail(id, data, callback) {
