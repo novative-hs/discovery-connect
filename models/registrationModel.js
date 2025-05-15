@@ -252,7 +252,7 @@ const createAccount = (req, callback) => {
     added_by,
 
   } = req.body;
-
+console.log("data is ", req.data)
   const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
   const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
   let logo = null;
