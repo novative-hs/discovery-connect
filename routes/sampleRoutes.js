@@ -14,7 +14,7 @@ router.get('/sample/getAll', SampleController.getAllSamples);
 router.get('/sample/getResearcherSamples/:id', SampleController.getResearcherSamples);
 router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById); 
-router.post('/samples/postsample', upload.single("logo"),SampleController.createSample); 
+router.post('/samples/postsample', upload.single("logo"), SampleController.createSample); 
 router.put('/samples/edit/:id', upload.single("logo"),SampleController.updateSample); 
 router.delete('/samples/delete/:id', SampleController.deleteSample); 
 router.put('/samples/QuarantineSamples/:id',SampleController.updateQuarantineSamples); 

@@ -71,6 +71,21 @@ const createBiobankSample = (req, res) => {
   });
 };
 
+// Controller to add price and price currency of a sample
+const postSamplePrice = (req, res) => {
+  const sampleData = req.body;
+
+  BioBankModel.postSamplePrice(sampleData, (err, result) => {
+    if (err) {
+      console.error('Error adding price of a sample:', err);
+      return res.status(500).json({ error: "Error adding price of a sample" });
+    }
+
+    res.status(201).json({ message: "Sample price added successfully", id: result.insertId });
+  });
+};
+
+
 // Controller to update a sample
 const updateBiobankSample = (req, res) => {
   const { id } = req.params;
@@ -104,7 +119,6 @@ const updateBiobankSample = (req, res) => {
   });
 };
 
-
 const UpdateSampleStatus = (req, res) => {
   const sampleId = req.params.id;
   const { sample_status } = req.body;
@@ -118,6 +132,7 @@ const UpdateSampleStatus = (req, res) => {
 module.exports = {
   create_biobankTable,
   getBiobankSamples,
+  postSamplePrice,
   createBiobankSample,
   updateBiobankSample,
   getQuarantineStock,
