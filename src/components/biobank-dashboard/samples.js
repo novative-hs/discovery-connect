@@ -1010,17 +1010,19 @@ const BioBankSampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "40px",
+                top: showAdditionalFields ? "10px" : "40px", // 👈 Adjust upward if additional fields are shown
                 left: "50%",
                 transform: "translateX(-50%)",
                 width: "100%",
+                overflow: "hidden",
+                transition: "top 0.3s ease-in-out", // 👈 Add smooth transition
               }}
             >
               <div
                 className="modal-dialog"
                 role="document"
                 style={{
-                  maxWidth: showAdditionalFields ? "95vw" : "30vw", // 👈 dynamic width
+                  maxWidth: showAdditionalFields ? "70vw" : "30vw", // 👈 dynamic width
                   width: "100%",
                   transition: "all 0.3s ease-in-out", // smooth animation
                 }}
@@ -1059,144 +1061,27 @@ const BioBankSampleArea = () => {
                         {/* Column 1 */}
                         {!showAdditionalFields && (
                           <div className="col-md-10">
-                            <div className="form-group">
-                              <label>Sample Name</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="samplename"
-                                value={formData.samplename}
-                                onChange={handleInputChange}
-                                required
-                                style={{
-                                  height: "45px",
-                                  fontSize: "14px",
-                                  backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
-                                  color: "black",
-                                }}
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Age</label>
-                              <input
-                                type="number"
-                                className="form-control"
-                                name="age"
-                                value={formData.age}
-                                onChange={handleInputChange}
-                                required
-                                style={{
-                                  height: "45px",
-                                  fontSize: "14px",
-                                  backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
-                                  color: "black",
-                                }}
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Phone Number</label>
-                              <input
-                                type="text"
-                                className="form-control"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Gender</label>
-                              <select
-                                className="form-control"
-                                name="gender"
-                                value={formData.gender}
-                                onChange={handleInputChange}
-                                required
-                                style={{
-                                  fontSize: "14px",
-                                  height: "45px",
-                                  backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
-                                  color: "black",
-                                }}
-                              >
-                                <option value="" hidden>
-                                  Select Gender
-                                </option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                              </select>
-                            </div>
-                            <div className="form-group">
-                              <label>Sample Logo</label>
-                              <div className="d-flex align-items-center">
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Donor ID</label>
                                 <input
-                                  name="logo"
-                                  type="file"
-                                  id="logo"
-                                  accept="image/*"
-                                  onChange={(e) => logoHandler(e.target.files[0])}
+                                  type="text"
                                   className="form-control"
+                                  name="donorID"
+                                  value={formData.donorID}
+                                  onChange={handleInputChange}
+                                  required
                                   style={{
-                                    fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: "#f0f0f0",
+                                    fontSize: "14px",
+                                    backgroundColor: formData.donorID
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
                                     color: "black",
                                   }}
                                 />
-                                {logoPreview && (
-                                  <img
-                                    src={logoPreview}
-                                    alt="Logo Preview"
-                                    width="80"
-                                    style={{
-                                      marginLeft: "20px",
-                                      borderRadius: "5px",
-                                    }}
-                                  />
-                                )}
                               </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="form-check my-3">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="toggleDetails"
-                            checked={showAdditionalFields}
-                            onChange={() => setShowAdditionalFields(!showAdditionalFields)}
-                          />
-                          <label className="form-check-label" htmlFor="toggleDetails">
-                            Add Additional Details
-                          </label>
-                        </div>
-
-                        {/* Column 2 */}
-                        {showAdditionalFields && (
-                          <>
-                            <div className="col-md-3">
-                              {showAddModal && (
-                                <div className="form-group">
-                                  <label>Donor ID</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    name="donorID"
-                                    value={formData.donorID}
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      height: "45px",
-                                      fontSize: "14px",
-                                      backgroundColor: formData.donorID
-                                        ? "#f0f0f0"
-                                        : "#f0f0f0",
-                                      color: "black",
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              <div className="form-group">
+                              <div className="form-group col-md-6">
                                 <label>Location (IDs)</label>
                                 <InputMask
                                   mask="99-99-99"
@@ -1222,6 +1107,136 @@ const BioBankSampleArea = () => {
                                   )}
                                 </InputMask>
                               </div>
+                            </div>
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Sample Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="samplename"
+                                  value={formData.samplename}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                />
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Age</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="age"
+                                  value={formData.age}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Phone Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Gender</label>
+                                <select
+                                  className="form-control"
+                                  name="gender"
+                                  value={formData.gender}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Gender
+                                  </option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Quantity</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="quantity"
+                                  value={formData.quantity}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: formData.quantity
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                />
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Sample Logo</label>
+                                <div className="d-flex align-items-center">
+                                  <input
+                                    name="logo"
+                                    type="file"
+                                    id="logo"
+                                    accept="image/*"
+                                    onChange={(e) => logoHandler(e.target.files[0])}
+                                    className="form-control"
+                                    style={{
+                                      fontSize: "14px",
+                                      height: "45px",
+                                      backgroundColor: "#f0f0f0",
+                                      color: "black",
+                                    }}
+                                  />
+                                  {logoPreview && (
+                                    <img
+                                      src={logoPreview}
+                                      alt="Logo Preview"
+                                      width="80"
+                                      style={{
+                                        marginLeft: "20px",
+                                        borderRadius: "5px",
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Column 2 */}
+                        {showAdditionalFields && (
+                          <>
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Ethnicity</label>
                                 <select
@@ -1249,7 +1264,6 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-
                               <div className="form-group">
                                 <label>Sample Condition</label>
                                 <select
@@ -1333,10 +1347,7 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-3">
-                               <div className="form-group position-relative">
+                              <div className="form-group position-relative">
                                 <label>Country Of Collection</label>
                                 <input
                                   type="text"
@@ -1416,26 +1427,7 @@ const BioBankSampleArea = () => {
                                   </ul>
                                 )}
                               </div>
-                              <div className="form-group">
-                                <label>Quantity</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="quantity"
-                                  value={formData.quantity}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: formData.quantity
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
-                              <div className="form-group">
+                               <div className="form-group">
                                 <label>Quantity Unit</label>
                                 <select
                                   className="form-control"
@@ -1462,6 +1454,9 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 3} */}
+                            <div className="col-md-3">           
                               <div className="form-group">
                                 <label>Sample Type Matrix</label>
                                 <select
@@ -1539,7 +1534,7 @@ const BioBankSampleArea = () => {
                                   </div>
                                 </div>
                               </div>
-                               <div className="form-group">
+                              <div className="form-group">
                                 <label className="form-label">
                                   Alcohol Or Drug Abuse
                                 </label>
@@ -1586,10 +1581,7 @@ const BioBankSampleArea = () => {
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-3">
-                               <div className="form-group">
+                              <div className="form-group">
                                 <label>
                                   Infectious Disease Testing (HIV, HBV, HCV)
                                 </label>
@@ -1689,6 +1681,9 @@ const BioBankSampleArea = () => {
                                   <option value="Four">Four</option>
                                 </select>
                               </div>
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-3">  
                               <div className="form-group">
                                 <label>Date Of Collection</label>
                                 <input
@@ -1739,7 +1734,7 @@ const BioBankSampleArea = () => {
                                   )}
                                 </select>
                               </div>
-                                 <div className="form-group">
+                              <div className="form-group">
                                 <label>Concurrent Medications</label>
                                 <input
                                   type="text"
@@ -1759,10 +1754,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 />
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-3">
-                           
                               <div className="form-group">
                                 <label>Diagnosis Test Parameter</label>
                                 <input
@@ -1802,7 +1793,7 @@ const BioBankSampleArea = () => {
                                   }}
                                 />
                               </div>
-                              <div className="form-group">
+                               <div className="form-group">
                                 <label>Test Result Unit</label>
                                 <select
                                   className="form-control"
@@ -1829,6 +1820,9 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Test Method</label>
                                 <select
@@ -1948,7 +1942,19 @@ const BioBankSampleArea = () => {
                         )}
                       </div>
                     </div>
-                    <div className="modal-footer">
+                    <div className="modal-footer d-flex justify-content-between align-items-center">
+                      <div className="form-check my-3">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="toggleDetails"
+                          checked={showAdditionalFields}
+                          onChange={() => setShowAdditionalFields(!showAdditionalFields)}
+                        />
+                        <label className="form-check-label" htmlFor="toggleDetails">
+                          Add Additional Details
+                        </label>
+                      </div>
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}
                       </button>
