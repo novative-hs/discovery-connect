@@ -486,13 +486,78 @@ const updateSampleStatus = (id, status, callback) => {
   });
 };
 
-// Function to delete a sample by its ID
+
 const deleteSample = (id, callback) => {
-  const query = 'UPDATE sample SET is_deleted = TRUE WHERE id = ?';
-  mysqlConnection.query(query, [id], (err, result) => {
-    callback(err, result);
+  mysqlConnection.getConnection((err, connection) => {
+    if (err) return callback(err);
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        return callback(err);
+      }
+
+      const getStatusQuery = 'SELECT status FROM sample WHERE id = ?';
+      connection.query(getStatusQuery, [id], (err, results) => {
+        if (err) return connection.rollback(() => { connection.release(); callback(err); });
+
+        if (results.length === 0) {
+          return connection.rollback(() => {
+            connection.release();
+            callback(null, { message: 'Sample not found.' });
+          });
+        }
+
+        const status = results[0].status;
+
+        if (status === 'Quarantine') {
+          // Step 1: Delete from sampledispatch
+          const deleteDispatchQuery = 'DELETE FROM sampledispatch WHERE sampleID = ?';
+          connection.query(deleteDispatchQuery, [id], (err) => {
+            if (err) return connection.rollback(() => { connection.release(); callback(err); });
+
+            // Step 2: Delete from registrationadminsampleapproval
+            const deleteApprovalQuery = `
+              DELETE FROM registrationadminsampleapproval 
+              WHERE cart_id IN (SELECT id FROM cart WHERE sample_id = ?)`;
+            connection.query(deleteApprovalQuery, [id], (err) => {
+              if (err) return connection.rollback(() => { connection.release(); callback(err); });
+
+              // Step 3: Delete from cart
+              const deleteCartQuery = 'DELETE FROM cart WHERE sample_id = ?';
+              connection.query(deleteCartQuery, [id], (err) => {
+                if (err) return connection.rollback(() => { connection.release(); callback(err); });
+
+                // Step 4: Delete from sample
+                const deleteSampleQuery = 'DELETE FROM sample WHERE id = ?';
+                connection.query(deleteSampleQuery, [id], (err, result) => {
+                  if (err) return connection.rollback(() => { connection.release(); callback(err); });
+
+                  connection.commit((err) => {
+                    if (err) return connection.rollback(() => { connection.release(); callback(err); });
+                    connection.release();
+                    return callback(null, { message: 'Sample and related records deleted.', result });
+                  });
+                });
+              });
+            });
+          });
+        } else {
+          // Soft delete
+          const softDeleteQuery = 'UPDATE sample SET is_deleted = TRUE WHERE id = ?';
+          connection.query(softDeleteQuery, [id], (err, result) => {
+            connection.release();
+            if (err) return callback(err);
+            return callback(null, { message: 'Sample soft-deleted.', result });
+          });
+        }
+      });
+    });
   });
 };
+
+
+
 
 const getFilteredSamples = (price, smokingStatus, callback) => {
   let query = "SELECT * FROM sample WHERE is_deleted = FALSE";
