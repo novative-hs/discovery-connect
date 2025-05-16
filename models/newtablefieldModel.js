@@ -1,6 +1,6 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
-  
+
   {
     table: "csr",
     columnsToAdd: [
@@ -42,6 +42,10 @@ const tablesAndColumns = [
         column: "website",
         type: "VARCHAR(250) Null",
       },
+      {
+        column: "email",
+        type: "VARCHAR(255) NULL",
+      },
     ]
   },
 
@@ -77,7 +81,7 @@ const tablesAndColumns = [
       },
     ]
   },
-  
+
   // {
   //   table: "cart",
   //   columnsToAdd: [
@@ -265,9 +269,9 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
   });
-  
-// renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
-// renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
+
+  // renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
+  // renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
 
   // await executeSequentially([
   //   () =>

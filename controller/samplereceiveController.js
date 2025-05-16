@@ -9,7 +9,7 @@ const createSampleReceiveTable = (req, res) => {
 
 // Controller to get all sample receivees in "In Transit" status
 const getSampleReceiveInTransit = (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; // CollectionSiteStaff user_account_id
   const { searchField, searchValue } = req.query;
 
   if (!id) {
@@ -21,108 +21,136 @@ const getSampleReceiveInTransit = (req, res) => {
   const offset = (page - 1) * pageSize;
 
   let searchClause = "";
-  const queryParams = [id];
-
   if (searchField && searchValue) {
     searchClause = ` AND s.${searchField} LIKE ?`;
-    queryParams.push(`%${searchValue}%`);
   }
 
-  queryParams.push(pageSize, offset);
-
-  const query = `
-    SELECT 
-      s.id,
-      s.masterID,
-      s.donorID,
-      s.samplename,
-      s.age,
-      s.gender,
-      s.ethnicity,
-      s.samplecondition,
-      s.storagetemp,
-      s.ContainerType,
-      s.CountryOfCollection,
-      s.price,
-      s.SamplePriceCurrency,
-      s.QuantityUnit,
-      s.SampleTypeMatrix,
-      s.SmokingStatus,
-      s.AlcoholOrDrugAbuse,
-      s.InfectiousDiseaseTesting,
-      s.InfectiousDiseaseResult,
-      s.FreezeThawCycles,
-      s.DateOfCollection,
-      s.ConcurrentMedicalConditions,
-      s.ConcurrentMedications,
-      s.DiagnosisTestParameter,
-      s.TestResult,
-      s.TestResultUnit,
-      s.TestMethod,
-      s.TestKitManufacturer,
-      s.TestSystem,
-      s.TestSystemManufacturer,
-      sr.ReceivedByCollectionSite,
-      s.status,
-      COALESCE(sd.TotalQuantity, 0) AS Quantity
-    FROM sample s
-    LEFT JOIN samplereceive sr ON sr.sampleID = s.id
-    LEFT JOIN (
-      SELECT sampleID, SUM(Quantity) AS TotalQuantity
-      FROM sampledispatch
-      WHERE status = 'In Stock'
-      GROUP BY sampleID
-    ) sd ON sd.sampleID = s.id
-    WHERE sr.ReceivedByCollectionSite = ?
-      AND s.status = 'In Stock'
-      AND sr.sampleID IS NOT NULL
-      ${searchClause}
-    GROUP BY s.id
-    ORDER BY s.id
-    LIMIT ? OFFSET ?;
+  // First, find the TransferTo user_account_id for this collection site staff user (id)
+  const findTransferToQuery = `
+    SELECT ua.id AS user_account_id
+    FROM collectionsite c
+    JOIN user_account ua ON c.user_account_id = ua.id
+    WHERE c.id = (
+      SELECT cs.collectionsite_id FROM collectionsitestaff cs WHERE cs.user_account_id = ?
+    )
+    LIMIT 1;
   `;
 
-  mysqlConnection.query(query, queryParams, (err, results) => {
-    if (err) {
-      console.error('Error fetching sample receive:', err);
-      return res.status(500).json({ error: "Error fetching sample receive" });
+  mysqlConnection.query(findTransferToQuery, [id], (err2, rows) => {
+    if (err2) {
+      console.error("Error finding TransferTo:", err2);
+      return res.status(500).json({ error: "Error finding TransferTo" });
     }
 
-    const countQuery = `
-      SELECT COUNT(*) AS totalCount
+    if (!rows.length) {
+      return res.status(404).json({ error: "No matching TransferTo found" });
+    }
+
+    const transferToUserAccountId = rows[0].user_account_id;
+
+    const query = `
+      SELECT 
+        s.id,
+        s.masterID,
+        s.donorID,
+        s.samplename,
+        s.age,
+        s.gender,
+        s.ethnicity,
+        s.samplecondition,
+        s.storagetemp,
+        s.ContainerType,
+        s.CountryOfCollection,
+        s.price,
+        s.SamplePriceCurrency,
+        s.QuantityUnit,
+        s.SampleTypeMatrix,
+        s.SmokingStatus,
+        s.AlcoholOrDrugAbuse,
+        s.InfectiousDiseaseTesting,
+        s.InfectiousDiseaseResult,
+        s.FreezeThawCycles,
+        s.DateOfCollection,
+        s.ConcurrentMedicalConditions,
+        s.ConcurrentMedications,
+        s.DiagnosisTestParameter,
+        s.TestResult,
+        s.TestResultUnit,
+        s.TestMethod,
+        s.TestKitManufacturer,
+        s.TestSystem,
+        s.TestSystemManufacturer,
+        sr.ReceivedByCollectionSite,
+        s.status,
+        COALESCE(sd.TotalQuantity, 0) AS Quantity
       FROM sample s
       LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+      LEFT JOIN (
+        SELECT sampleID, SUM(Quantity) AS TotalQuantity
+        FROM sampledispatch
+        WHERE status = 'In Stock' AND TransferTo = ?
+        GROUP BY sampleID
+      ) sd ON sd.sampleID = s.id
       WHERE sr.ReceivedByCollectionSite = ?
         AND s.status = 'In Stock'
         AND sr.sampleID IS NOT NULL
-        ${searchClause};
+        ${searchClause}
+      GROUP BY s.id
+      ORDER BY s.id
+      LIMIT ? OFFSET ?;
     `;
 
-    const countParams = [id];
+    // Build query parameters in correct order for the above query
+    const queryParams = [];
+    queryParams.push(transferToUserAccountId); // For TransferTo = ?
+    queryParams.push(id); // For sr.ReceivedByCollectionSite = ?
     if (searchField && searchValue) {
-      countParams.push(`%${searchValue}%`);
+      queryParams.push(`%${searchValue}%`);
     }
+    queryParams.push(pageSize, offset);
 
-    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+    mysqlConnection.query(query, queryParams, (err, results) => {
       if (err) {
-        console.error('Error fetching total count:', err);
-        return res.status(500).json({ error: "Error fetching total count" });
+        console.error("Error fetching sample receive:", err);
+        return res.status(500).json({ error: "Error fetching sample receive" });
       }
 
-      const totalCount = countResults[0].totalCount;
-      const totalPages = Math.ceil(totalCount / pageSize);
+      const countQuery = `
+        SELECT COUNT(*) AS totalCount
+        FROM sample s
+        LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+        WHERE sr.ReceivedByCollectionSite = ?
+          AND s.status = 'In Stock'
+          AND sr.sampleID IS NOT NULL
+          ${searchClause};
+      `;
 
-      res.status(200).json({
-        samples: results,
-        totalPages,
-        currentPage: page,
-        pageSize,
-        totalCount,
+      // Parameters for count query
+      const countParams = [id];
+      if (searchField && searchValue) {
+        countParams.push(`%${searchValue}%`);
+      }
+
+      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+        if (err) {
+          console.error("Error fetching total count:", err);
+          return res.status(500).json({ error: "Error fetching total count" });
+        }
+
+        const totalCount = countResults[0].totalCount;
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        res.status(200).json({
+          samples: results,
+          totalPages,
+          currentPage: page,
+          pageSize,
+          totalCount,
+        });
       });
     });
   });
 };
-
 
 // Controller to create a new sample receive
 const createSampleReceive = (req, res) => {
@@ -139,7 +167,7 @@ const createSampleReceive = (req, res) => {
       console.error('Database error during INSERT:', err);
       return res.status(500).json({ error: 'Error creating receive record' });
     }
-console.log(ReceivedByCollectionSite)
+    console.log(ReceivedByCollectionSite)
     // Step 2: Find TransferTo user_account id from ReceivedByCollectionSite
     const findTransferToQuery = `
       SELECT ua.id AS user_account_id
@@ -179,7 +207,7 @@ LIMIT 1;
         res.status(201).json({ message: 'Sample Receive created and status updated successfully', id: result.insertId });
       });
     });
-   });
+  });
 };
 
 

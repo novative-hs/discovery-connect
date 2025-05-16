@@ -74,11 +74,7 @@ const CommitteeMemberArea = () => {
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "Organization", placeholder: "Search Org", field: "organization" },
-    {
-      label: "Committee Type",
-      placeholder: "Search Committee Type",
-      field: "committeetype",
-    },
+    { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
@@ -228,11 +224,7 @@ const CommitteeMemberArea = () => {
       await axios.delete(
         `${url}/committeemember/delete/${selectedCommitteememberId}`
       );
-
-      // Set success message
       setSuccessMessage("Committeemember deleted successfully.");
-
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -280,7 +272,6 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
-
 
       fetchCommitteemembers();
       setShowEditModal(false);
@@ -450,7 +441,6 @@ const CommitteeMemberArea = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
 
   const currentData = filteredCommitteemembers.slice(
     currentPage * itemsPerPage,
@@ -645,7 +635,6 @@ const CommitteeMemberArea = () => {
                           >
                             <FontAwesomeIcon icon={faEdit} size="xs" />
                           </button>
-
                           <div
                             className="btn-group"
                             ref={(el) => (committeeTypeRefs.current[committeemember.id] = el)}
@@ -680,7 +669,6 @@ const CommitteeMemberArea = () => {
                               </div>
                             )}
                           </div>
-
                           <div
                             className="btn-group"
                             ref={(el) => (statusRefs.current[committeemember.id] = el)}
@@ -713,8 +701,6 @@ const CommitteeMemberArea = () => {
                               </div>
                             )}
                           </div>
-
-
                           <button
                             className="btn btn-danger btn-sm py-0 px-1"
                             onClick={() => {
@@ -1269,8 +1255,6 @@ const CommitteeMemberArea = () => {
                       </div>
                     )}
                   </div>
-
-
                 </div>
               </div>
             </div>

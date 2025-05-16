@@ -1,5 +1,5 @@
 const mysqlConnection = require("../config/db");
-const {sendEmail}=require("../config/email");
+const { sendEmail } = require("../config/email");
 
 // Function to create the committee_member table
 const createCommitteeMemberTable = () => {
@@ -218,7 +218,7 @@ const updateCommitteeMember = (id, data, callback) => {
 
   mysqlConnection.query(checkEmailQuery, [email], (err, results) => {
     if (err) return callback(err, null);
-    
+
     if (results.length === 0) {
       return callback(new Error("Email does not exist in user_account"), null);
     }
@@ -256,7 +256,7 @@ const updateCommitteeMember = (id, data, callback) => {
           previousData.organization,
           previousData.committeetype,
           previousData.id
-,          "updated",
+          , "updated",
         ],
         (err) => {
           if (err) console.error("Error inserting previous record into history:", err);

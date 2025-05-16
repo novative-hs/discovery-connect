@@ -27,7 +27,6 @@ const OrganizationArea = () => {
   const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
     OrganizationName: "",
-    email: "",
     phoneNumber: "",
     city: "",
     district: "",
@@ -53,12 +52,10 @@ const OrganizationArea = () => {
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
-  const [updateUser, { }] = useUpdateProfileMutation();
+  // const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
-    { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
     { label: "City", placeholder: "Search City", field: "city" },
@@ -77,8 +74,6 @@ const OrganizationArea = () => {
     const newformData = new FormData();
 
     // Append all the form data
-    newformData.append("email", formData.email);
-    newformData.append("accountType", "Organization");
     newformData.append("OrganizationName", formData.OrganizationName);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
@@ -280,7 +275,6 @@ const OrganizationArea = () => {
     setShowEditModal(true);
     setFormData({
       OrganizationName: organization.OrganizationName,
-      email: organization.useraccount_email,
       city: organization.cityid,
       district: organization.districtid,
       country: organization.countryid,
@@ -297,9 +291,8 @@ const OrganizationArea = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+
     const newformData = new FormData();
-    newformData.append("useraccount_email", formData.email);
-    newformData.append("accountType", "Organization");
     newformData.append("OrganizationName", formData.OrganizationName);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
@@ -310,32 +303,39 @@ const OrganizationArea = () => {
     newformData.append("country", formData.country);
     newformData.append("status", "inactive");
     newformData.append("type", formData.type);
+
     if (formData.logo) {
       newformData.append("logo", formData.logo);
     }
 
-    // Debug
+    // Optional: log form data for debugging
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
     }
 
-    updateUser({ id, formData: newformData })
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Update Failed";
-          notifyError(errorMessage);
-        } else {
-          notifySuccess("Update Organization Successfully");
-          setShowEditModal(false);
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
+        newformData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
+      );
 
-    setShowEditModal(false);
-    resetFormData();
+      notifySuccess("Update Organization Successfully");
+      setShowEditModal(false);
+      resetFormData();
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.error || "An unexpected error occurred";
+      notifyError(errorMessage);
+      setShowEditModal(false);
+    }
   };
+
+
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
       ...prev,
@@ -385,7 +385,6 @@ const OrganizationArea = () => {
   const resetFormData = () => {
     setFormData({
       OrganizationName: "",
-      email: "",
       phoneNumber: "",
       city: "",
       district: "",
@@ -459,7 +458,6 @@ const OrganizationArea = () => {
       }
 
       return {
-        email: item.useraccount_email,
         OrganizationName: item.OrganizationName,
         type: item.type,
         phoneNumber: item.phoneNumber,
@@ -765,9 +763,7 @@ const OrganizationArea = () => {
                               />
                             )}
                           </div>
-
                           <label>Logo</label>
-
                           <input
                             id="logo"
                             type="file"
@@ -777,7 +773,6 @@ const OrganizationArea = () => {
                             onChange={handleInputChange}
                           />
                         </div>
-
                         <div className="form-group">
                           <label>Name</label>
                           <input
@@ -797,20 +792,6 @@ const OrganizationArea = () => {
                             </small>
                           )}
                         </div>
-
-                        <div className="form-group">
-                          <label>Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            required
-                          />
-                        </div>
-
                         <div className="form-group">
                           <label>Type</label>
                           <select
