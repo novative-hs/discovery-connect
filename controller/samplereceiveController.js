@@ -146,7 +146,7 @@ console.log(ReceivedByCollectionSite)
 FROM collectionsite c
 JOIN user_account ua ON c.user_account_id = ua.id
 WHERE c.id = (
-  SELECT cs.collectionsite_id FROM collectionsitestaff cs WHERE cs.user_account_id = 15
+  SELECT cs.collectionsite_id FROM collectionsitestaff cs WHERE cs.user_account_id = ?
 )
 LIMIT 1;
     `;

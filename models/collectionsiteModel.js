@@ -349,14 +349,19 @@ const deleteCollectionSite = async (id) => {
 
 // Function to GET collectionsite names in collectionsite dashboard
 const getAllCollectionSiteNames = (user_account_id, callback) => {
-  // Query to fetch collectionsite data
   const collectionSiteQuery = `
-    SELECT CollectionSiteName, user_account_id 
-    FROM collectionsite 
-    WHERE user_account_id != ?
-    AND status = 'active';
+    SELECT cs.CollectionSiteName, cs.user_account_id 
+    FROM collectionsite cs
+    WHERE cs.user_account_id != ?
+      AND cs.status = 'active'
+      AND NOT EXISTS (
+        SELECT 1 
+        FROM collectionsitestaff css
+        WHERE css.user_account_id = ?
+          AND css.collectionsite_id = cs.id
+      );
   `;
-  mysqlConnection.query(collectionSiteQuery, [user_account_id], (err, results) => {
+  mysqlConnection.query(collectionSiteQuery, [user_account_id, user_account_id], (err, results) => {
     if (err) {
       console.error('SQL Error (CollectionSite):', err);
       callback(err, null);
@@ -365,6 +370,7 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
     callback(null, results);
   });
 };
+
 
 // Function to GET collectionsite names in biobank dashboard
 const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
