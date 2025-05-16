@@ -16,9 +16,12 @@ const getAllCollectionsitestaff=(req,res)=>{
         res.status(200).json(results)
     })
 }
+
 const createCollectionsiteStaff=(req,res)=>{
      const { email, password, staffName, collectionsitesid, permission, status } = req.body;
+     const { email, password, staffName, collectionsitesid, permission, status } = req.body;
 
+  if (!email || !password || !staffName || !collectionsitesid || !permission || !status) {
   if (!email || !password || !staffName || !collectionsitesid || !permission || !status) {
     return res.status(400).json({ error: "All fields are required" });
   }

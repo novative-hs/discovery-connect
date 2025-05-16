@@ -692,7 +692,6 @@ const loginAccount = (data, callback) => {
 
   const { email, password } = data;
 
-  console.log(email, password)
   // Check if all fields are provided
   if (!email || !password) {
     return callback({ status: "fail", message: "Email and password are required" });
@@ -761,6 +760,26 @@ const loginAccount = (data, callback) => {
           }
         });
       }
+      else if (user.accountType === 'CollectionSitesStaff') {
+  const collectionsiteQuery =
+    `SELECT status, permission,collectionsite_id AS collection_id FROM collectionsitestaff WHERE user_account_id = ?`;
+
+  mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsitestaffResults) => {
+    if (err) {
+      return callback(err, null); // Pass error to the controller
+    }
+
+    if (collectionsitestaffResults.length > 0 && collectionsitestaffResults[0].status === 'active') {
+      // Attach action to the user object
+      user.action = collectionsitestaffResults[0].permission;
+      
+      return callback(null, user); // Return user with action included
+    } else {
+      return callback({ status: "fail", message: "Account is not active" }, null);
+    }
+  });
+}
+
       else if (user.accountType === 'Committeemember') {
         const CommitteememberQuery =
           `SELECT status FROM committee_member WHERE user_account_id = ?`;

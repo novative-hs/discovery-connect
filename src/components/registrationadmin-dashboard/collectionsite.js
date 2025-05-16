@@ -57,7 +57,7 @@ const CollectionSiteArea = () => {
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "CollectionSiteName" },
-    { label: "Name", placeholder: "Search Name", field: "CollectionSiteType" },
+    { label: "CollectionSite Type", placeholder: "Search CollectionSite Type", field: "CollectionSiteType" },
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
     {
       label: "Password",

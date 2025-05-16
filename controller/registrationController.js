@@ -109,6 +109,7 @@ const loginAccount = (req, res) => {
         id: result.id,
         accountType: result.accountType,
         email: result.email,
+        action: result.action || null, 
         authToken: "mockAuthToken", // Replace with JWT or real token logic
       },
     });

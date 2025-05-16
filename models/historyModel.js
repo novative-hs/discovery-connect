@@ -15,6 +15,7 @@ const registrationadmin_history = () => {
       district_id INT,
       sample_id VARCHAR(36),
       csr_id  INT,
+      
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive', 'unapproved', 'approved','pending') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -114,7 +115,7 @@ const create_historyTable = () => {
     OrganizationName VARCHAR(100) NULL,
     CSRName VARCHAR(100) NULL,
     staffName VARCHAR(100) NULL,
-    action VARCHAR(20) NULL,
+    permission VARCHAR(20) NULL,
     HECPMDCRegistrationNo VARCHAR(50),
     cnic VARCHAR(50),
     CommitteeType VARCHAR(50),

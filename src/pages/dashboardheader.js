@@ -38,7 +38,7 @@ const UserOrdersPage = () => {
           return <RegistrationAdminDashboard />;
       case "biobank":
         return <BiobankDashboard />;
-      case "collectionsites":
+      case "collectionsitesstaff":
         return <CollectionSideDashboard />;
       case "researcher":
         return <ResearcherDashboard />;

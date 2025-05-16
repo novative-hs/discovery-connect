@@ -8,6 +8,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 const SampleDispatchArea = () => {
+
+
+  const [staffAction, setStaffAction] = useState("");
+ 
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
@@ -27,7 +31,7 @@ const SampleDispatchArea = () => {
     { label: "Storage Temp", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity", key: "Quantity" },
+    { label: "Quantity", key: "TotalQuantity" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Smoking Status", key: "SmokingStatus" },
@@ -77,7 +81,10 @@ const SampleDispatchArea = () => {
     TestSystemManufacturer: "",
     // logo: ""
   });
-
+ useEffect(() => {
+    const action = sessionStorage.getItem("staffAction");
+    setStaffAction(action);
+  }, []);
   const [successMessage, setSuccessMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
    const itemsPerPage = 10;
@@ -180,6 +187,7 @@ const [filteredSamplename, setFilteredSamplename] = useState([]);
 
     const { receiverName } = transferDetails;
     const userID = sessionStorage.getItem("userID"); // Retrieve user ID from sessionStorage
+    
 
     // Validate input before making the API call
     if (!receiverName) {

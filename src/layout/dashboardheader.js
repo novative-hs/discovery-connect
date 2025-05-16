@@ -12,7 +12,7 @@ import useCartInfo from "@hooks/use-cart-info";
 
 const Header = ({ setActiveTab, activeTab }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
+  const [staffAction, setStaffAction] = useState("");
   const id = sessionStorage.getItem("userID");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
@@ -41,6 +41,8 @@ const Header = ({ setActiveTab, activeTab }) => {
 
   useEffect(() => {
     const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
+    const action = sessionStorage.getItem("staffAction");
+    setStaffAction(action);
     if (type) {
       setUserType(type);
     } else {
@@ -76,15 +78,12 @@ const Header = ({ setActiveTab, activeTab }) => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
 
-
-
       if (
         response.data.length > 0 &&
         typeof response.data[0].Count === "number"
       ) {
         setCartCount(response.data[0].Count);
         sessionStorage.setItem("cartCount", response.data[0].Count);
-
       } else {
         console.warn("Unexpected API response format");
         sessionStorage.setItem("cartCount", 0);
@@ -113,8 +112,8 @@ const Header = ({ setActiveTab, activeTab }) => {
       setUserLogo(
         user?.logo?.data
           ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-            "base64"
-          )}`
+              "base64"
+            )}`
           : null
       );
     }
@@ -132,8 +131,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-collectionsite");
     } else if (userType === "biobank") {
       setActiveTab("update-biobank");
-    }
-    else if (userType === "committeemember") {
+    } else if (userType === "committeemember") {
       setActiveTab("update-committeemember");
     } else {
       setActiveTab("update-profile");
@@ -154,77 +152,83 @@ const Header = ({ setActiveTab, activeTab }) => {
   };
 
   const menuItems =
-  userType == "researcher"
-        ? [
+    userType == "researcher"
+      ? [
           { label: "Book Samples", tab: "Booksamples" },
           { label: "Sample List", tab: "samples" },
           { label: "My Order Samples", tab: "my-samples" },
         ]
-        : userType == "registrationadmin"
-          ? [
-            { label: "Profile", tab: "order-info" },
-            { label: "City", tab: "city" },
-            { label: "Country", tab: "country" },
-            { label: "District", tab: "district" },
-            { label: "Researcher List", tab: "researcher" },
-            { label: "Organization List", tab: "organization" },
-            { label: "Collection Site List", tab: "collectionsite" },
-            { label: "Collection Site Staff List", tab: "collectionsitestaff" },
-            { label: "Committee Members List", tab: "committee-members" },
-            { label: "CSR List", tab: "CSR" },
-            {
-              label: "Sample",
-              tab: "sample",
-              dropdown: [
-                { label: "Ethnicity", tab: "ethnicity" },
-                { label: "Sample Condition", tab: "sample-condition" },
-                { label: "Sample Price Currency", tab: "sample-price-currency" },
-                { label: "Storage Temperature", tab: "storage-temperature" },
-                { label: "Container Type", tab: "container-type" },
-                { label: "Quantity Unit", tab: "quantity-unit" },
-                { label: "Sample Type Matrix", tab: "sample-type-matrix" },
-                { label: "Test Method", tab: "test-method" },
-                { label: "Test Result Unit", tab: "test-result-unit" },
-                { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions"},
-                { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
-                { label: "Test System", tab: "test-system" },
-                { label: "Test System Manufacturer", tab: "test-system-manufacturer"},
-              ],
-            },
-          ]
-          : userType == "collectionsites"
-            ? [
-              { label: "Sample List", tab: "samples" },
-              { label: "Sample Dispatch", tab: "sample-dispatch" },
-            ]
-            : userType == "biobank"
-              ? [
-                { label: "Sample List", tab: "samples" },
-                { label: "Sample Dispatch", tab: "sample-dispatch" },
-                { label: "Quarantine Stock", tab: "Quarantine-Stock" },
-                { label: "Sample Visibility", tab: "Sample-Visibility" },
-              ]
-              : userType == "committeemember"
-                ? [
-                  { label: "Pending Review List", tab: "samples" },
-                ]
-                : userType == "technicaladmin"
-                  ? [
-                    { label: "Profile", tab: "order-info" },
-                    { label: "Order List", tab: "order" },
-                    {label:"Order Rejected List",tab:"orderrejected"},
-                    { label: "Contact us List", tab: "contactus" },
-
-                ]
-                : userType == "csr"
-                  ? [
-                    { label: "Profile", tab: "order-info" },
-                    { label: "Order Dispatch List", tab: "dispatchorder" },
-                    { label: "Order Packaging List", tab: "shippingorder" },
-                    { label: "Order Completed List", tab: "completedorder" },
-                  ]
-                  : [];
-
+      : userType == "registrationadmin"
+      ? [
+          { label: "Profile", tab: "order-info" },
+          { label: "City", tab: "city" },
+          { label: "Country", tab: "country" },
+          { label: "District", tab: "district" },
+          { label: "Researcher List", tab: "researcher" },
+          { label: "Organization List", tab: "organization" },
+          { label: "Collection Site List", tab: "collectionsite" },
+          { label: "Collection Site Staff List", tab: "collectionsitestaff" },
+          { label: "Committee Members List", tab: "committee-members" },
+          { label: "CSR List", tab: "CSR" },
+          {
+            label: "Sample",
+            tab: "sample",
+            dropdown: [
+              { label: "Ethnicity", tab: "ethnicity" },
+              { label: "Sample Condition", tab: "sample-condition" },
+              { label: "Sample Price Currency", tab: "sample-price-currency" },
+              { label: "Storage Temperature", tab: "storage-temperature" },
+              { label: "Container Type", tab: "container-type" },
+              { label: "Quantity Unit", tab: "quantity-unit" },
+              { label: "Sample Type Matrix", tab: "sample-type-matrix" },
+              { label: "Test Method", tab: "test-method" },
+              { label: "Test Result Unit", tab: "test-result-unit" },
+              {
+                label: "Concurrent Medical Conditions",
+                tab: "concurrent-medical-conditions",
+              },
+              { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
+              { label: "Test System", tab: "test-system" },
+              {
+                label: "Test System Manufacturer",
+                tab: "test-system-manufacturer",
+              },
+            ],
+          },
+        ]
+      : userType === "collectionsitesstaff"
+      ? [
+          ...(["add","edit", "dispatch", "history", "all"].includes(staffAction)
+            ? [{ label: "Sample List", tab: "samples" }]
+            : []),
+          ...(["receive", "all"].includes(staffAction)
+            ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
+            : []),
+        ]
+      : userType == "biobank"
+      ? [
+          { label: "Sample List", tab: "samples" },
+          { label: "Sample Dispatch", tab: "sample-dispatch" },
+          { label: "Quarantine Stock", tab: "Quarantine-Stock" },
+          { label: "Sample Visibility", tab: "Sample-Visibility" },
+        ]
+      : userType == "committeemember"
+      ? [{ label: "Pending Review List", tab: "samples" }]
+      : userType == "technicaladmin"
+      ? [
+          { label: "Profile", tab: "order-info" },
+          { label: "Order List", tab: "order" },
+          { label: "Order Rejected List", tab: "orderrejected" },
+          { label: "Contact us List", tab: "contactus" },
+        ]
+      : userType == "csr"
+      ? [
+          { label: "Profile", tab: "order-info" },
+          { label: "Order Dispatch List", tab: "dispatchorder" },
+          { label: "Order Packaging List", tab: "shippingorder" },
+          { label: "Order Completed List", tab: "completedorder" },
+        ]
+      : [];
 
   return (
     <>
@@ -257,8 +261,9 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
                 >
                   <button
-                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ? "text-primary" : "text-dark"
-                      } fs-7`}
+                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
+                      activeTab === tab ? "text-primary" : "text-dark"
+                    } fs-7`}
                     onClick={() => {
                       if (!dropdown) {
                         setActiveTab(tab);
@@ -268,10 +273,11 @@ const Header = ({ setActiveTab, activeTab }) => {
                     <small>{label}</small> {/* Makes text smaller */}
                     {label === "Sample" && (
                       <i
-                        className={`ms-2 fas ${showSampleDropdown === index
-                          ? "fa-caret-up"
-                          : "fa-caret-down"
-                          } text-black`}
+                        className={`ms-2 fas ${
+                          showSampleDropdown === index
+                            ? "fa-caret-up"
+                            : "fa-caret-down"
+                        } text-black`}
                       ></i>
                     )}
                   </button>
@@ -369,7 +375,9 @@ const Header = ({ setActiveTab, activeTab }) => {
                     )}
                   </button>
                   <ul
-                    className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""}`}
+                    className={`dropdown-menu dropdown-menu-end ${
+                      showDropdown ? "show" : ""
+                    }`}
                     style={{
                       right: 0,
                       left: "auto",
@@ -378,16 +386,18 @@ const Header = ({ setActiveTab, activeTab }) => {
                       zIndex: 9999,
                     }}
                   >
-                    {userType !== "technicaladmin" && userType !== "biobank" && userType !== "registrationadmin" && (
-                      <li>
-                        <button
-                          className="dropdown-item fs-7"
-                          onClick={handleUpdateProfile}
-                        >
-                          Update Profile
-                        </button>
-                      </li>
-                    )}
+                    {userType !== "technicaladmin" &&
+                      userType !== "biobank" &&
+                      userType !== "registrationadmin" && (
+                        <li>
+                          <button
+                            className="dropdown-item fs-7"
+                            onClick={handleUpdateProfile}
+                          >
+                            Update Profile
+                          </button>
+                        </li>
+                      )}
                     <li>
                       <button
                         className="dropdown-item fs-7"
@@ -407,7 +417,6 @@ const Header = ({ setActiveTab, activeTab }) => {
                   </ul>
                 </div>
                 {userType === "researcher" && (
-
                   <Link
                     href={{
                       pathname: router.pathname, // stays on the same dashboard route
@@ -422,7 +431,6 @@ const Header = ({ setActiveTab, activeTab }) => {
                       </span>
                     )}
                   </Link>
-
                 )}
               </div>
             </div>

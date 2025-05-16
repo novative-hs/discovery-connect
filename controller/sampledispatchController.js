@@ -9,58 +9,61 @@ const createSampleDispatchTable = (req, res) => {
 
 // Controller to get all sample dispatches in "In Transit" status
 const getDispatchedwithInTransitStatus = (req, res) => {
-  const id = req.params.id;
+  const userId = req.params.id;
 
-  if (!id) {
+  if (!userId) {
     return res.status(400).json({ error: "ID parameter is missing" });
   }
 
-  // SQL query to fetch samples where the logged-in user is the recipient (TransferTo)
   const query = `
-   SELECT 
-    s.id,
-    s.masterID,
-    s.donorID,
-    s.samplename,
-    s.age,
-    s.gender,
-    s.ethnicity,
-    s.samplecondition,
-    s.storagetemp,
-    s.ContainerType,
-    s.CountryOfCollection,
-    s.price,
-    s.SamplePriceCurrency,
-    s.QuantityUnit,
-    s.SampleTypeMatrix,
-    s.SmokingStatus,
-    s.AlcoholOrDrugAbuse,      
-    s.InfectiousDiseaseTesting,
-    s.InfectiousDiseaseResult,
-    s.FreezeThawCycles,
-    s.DateOfCollection,
-    s.ConcurrentMedicalConditions,
-    s.ConcurrentMedications,
-    s.DiagnosisTestParameter,
-    s.TestResult,
-    s.TestResultUnit,
-    s.TestMethod,
-    s.TestKitManufacturer,
-    s.TestSystem,
-    s.TestSystemManufacturer,
-    s.user_account_id,
-    sd.TransferTo,
-    SUM(sd.Quantity) AS Quantity,  
-    sd.status
+  SELECT 
+  s.id,
+  s.masterID,
+  s.donorID,
+  s.samplename,
+  s.age,
+  s.gender,
+  s.ethnicity,
+  s.samplecondition,
+  s.storagetemp,
+  s.ContainerType,
+  s.CountryOfCollection,
+  s.price,
+  s.SamplePriceCurrency,
+  s.QuantityUnit,
+  s.SampleTypeMatrix,
+  s.SmokingStatus,
+  s.AlcoholOrDrugAbuse,
+  s.InfectiousDiseaseTesting,
+  s.InfectiousDiseaseResult,
+  s.FreezeThawCycles,
+  s.DateOfCollection,
+  s.ConcurrentMedicalConditions,
+  s.ConcurrentMedications,
+  s.DiagnosisTestParameter,
+  s.TestResult,
+  s.TestResultUnit,
+  s.TestMethod,
+  s.TestKitManufacturer,
+  s.TestSystem,
+  s.TestSystemManufacturer,
+  s.user_account_id,
+  sd.TransferTo,
+  SUM(sd.Quantity) AS Quantity,
+  sd.status
 FROM sampledispatch sd
-INNER JOIN sample s ON sd.sampleID = s.id
-WHERE sd.TransferTo = ? AND sd.status = 'In Transit'
-GROUP BY 
-    s.id, sd.TransferTo, sd.status
+JOIN sample s ON sd.sampleID = s.id
+JOIN user_account ua_transfer ON sd.TransferTo = ua_transfer.id
+JOIN collectionsite cs ON ua_transfer.id = cs.user_account_id
+JOIN collectionsitestaff cs_loggedin ON cs_loggedin.collectionsite_id = cs.id
+WHERE cs_loggedin.user_account_id = ?
+  AND sd.status = 'In Transit'
+GROUP BY s.id, sd.TransferTo, sd.status;
+
   `;
 
-  // Execute the query using the logged-in user's `user_account_id`
-  mysqlConnection.query(query, [id], (err, results) => {
+  mysqlConnection.query(query, [userId], (err, results) => {
+    
     if (err) {
       console.error("Database error fetching samples:", err.message);
       return res.status(500).json({ error: "An error occurred while fetching samples" });
@@ -69,6 +72,7 @@ GROUP BY
     res.status(200).json({ data: results });
   });
 };
+
 
 
 // Controller to create a new sample dispatch

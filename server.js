@@ -56,7 +56,8 @@ app.use("/api", researcherRoutes);
 app.use("/api/committeemember", committeememberRoutes);
 app.use("/api", sampleRoutes);
 app.use("/api/committeesampleapproval", committeesampleapproval);
-app.use("/api/payment", paymentRoutes); app.use("/api/sampledispatch", sampleDispatchRoutes);
+app.use("/api/payment", paymentRoutes); 
+app.use("/api/sampledispatch", sampleDispatchRoutes);
 app.use("/api/samplereceive", sampleReceiveRoutes);
 app.use("/api/admin/collectionsitestaff",collectionsiteStaffRoutes)
 app.use("/api/admin/collectionsite", collectionSiteRoutes);
