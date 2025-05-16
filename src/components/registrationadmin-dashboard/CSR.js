@@ -16,8 +16,8 @@ import {
 import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
 const CSRArea = () => {
-  const [registerUser, {}] = useRegisterUserMutation();
-  const [updateUser, {}] = useUpdateProfileMutation();
+  const [registerUser, { }] = useRegisterUserMutation();
+  const [updateUser, { }] = useUpdateProfileMutation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -48,7 +48,7 @@ const CSRArea = () => {
     city: "",
     district: "",
     country: "",
-    collectionsitename:"",
+    collectionsitename: "",
     fullAddress: "",
     created_at: "",
     status: "",
@@ -66,7 +66,7 @@ const CSRArea = () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/get`
-      );      
+      );
       setCSR(response.data);
       setAllCSR(response.data);
     } catch (error) {
@@ -82,14 +82,14 @@ const CSRArea = () => {
     }
   };
   const fetchCollectionsitename = async () => {
-  try {
-    const response = await axios.get(`${url}/admin/csr/getCollectionsiteName`);
-    
-    setcollectionsitename(response.data);
-  } catch (error) {
-    console.error("Error fetching Collectionsite:", error);
-  }
-};
+    try {
+      const response = await axios.get(`${url}/admin/csr/getCollectionsiteName`);
+
+      setcollectionsitename(response.data);
+    } catch (error) {
+      console.error("Error fetching Collectionsite:", error);
+    }
+  };
 
   const fetchdistrictname = async () => {
     try {
@@ -157,7 +157,7 @@ const CSRArea = () => {
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/edit/${id}`,
-         { status: option } ,
+        { status: option },
         { headers: { "Content-Type": "application/json" } }
       );
       setSuccessMessage("CSR status updated successfully.");
@@ -173,44 +173,44 @@ const CSRArea = () => {
   };
 
 
-const onSubmit = async (event) => {
-  event.preventDefault();
+  const onSubmit = async (event) => {
+    event.preventDefault();
 
-  const data = {
-    email: formData.email,
-    password: formData.password,
-    accountType: "CSR",
-    CSRName: formData.CSRName,
-    collectionsitename:formData.collectionsitename,
-    phoneNumber: formData.phoneNumber,
-    fullAddress: formData.fullAddress,
-    city: formData.city,
-    district: formData.district,
-    country: formData.country,
-    status: "inactive",
+    const data = {
+      email: formData.email,
+      password: formData.password,
+      accountType: "CSR",
+      CSRName: formData.CSRName,
+      collectionsitename: formData.collectionsitename,
+      phoneNumber: formData.phoneNumber,
+      fullAddress: formData.fullAddress,
+      city: formData.city,
+      district: formData.district,
+      country: formData.country,
+      status: "inactive",
+    };
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/createcsr`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      notifySuccess("CSR created successfully");
+      fetchCSR();
+      setShowAddModal(false);
+      resetFormData();
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.error || "CSR creation failed";
+      notifyError(errorMessage);
+    }
   };
-
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/createcsr`,
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    notifySuccess("CSR created successfully");
-    fetchCSR();
-    setShowAddModal(false);
-    resetFormData();
-  } catch (error) {
-    const errorMessage =
-      error?.response?.data?.error || "CSR creation failed";
-    notifyError(errorMessage);
-  }
-};
 
   const handleEditClick = (CSR) => {
     setSelectedCSRId(CSR.id);
@@ -242,7 +242,7 @@ const onSubmit = async (event) => {
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
     newformData.append("country", formData.country);
-newformData.append("collectionsitename",formData.collectionsitename)
+    newformData.append("collectionsitename", formData.collectionsitename)
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
     }
@@ -273,7 +273,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -301,7 +301,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
       fullAddress: "",
       created_at: "",
       status: "",
-      collectionsitename:""
+      collectionsitename: ""
     });
   };
   useEffect(() => {
@@ -349,7 +349,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
- const formatDate = (date) => {
+  const formatDate = (date) => {
     const options = {
       year: "2-digit",
       month: "short",
@@ -373,13 +373,13 @@ newformData.append("collectionsitename",formData.collectionsitename)
   const handleExportToExcel = () => {
     const dataToExport = filteredCSR.map((item) => {
       // Convert buffer to base64 string if available
-    
-  
+
+
       return {
         email: item.useraccount_email,
         password: item.useraccount_password,
-      name:item.CSRName,
-      collectionsitename:item.name,
+        name: item.CSRName,
+        collectionsitename: item.name,
         phoneNumber: item.phoneNumber,
         city: item.city,
         country: item.country,
@@ -391,11 +391,11 @@ newformData.append("collectionsitename",formData.collectionsitename)
         "Updated At": formatDate(item.updated_at),
       };
     });
-  
+
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
-  
+
     XLSX.writeFile(workbook, "CSR_List.xlsx");
   };
   return (
@@ -435,78 +435,78 @@ newformData.append("collectionsitename",formData.collectionsitename)
                     <option value="active">Active</option>
                   </select>
                 </div>
-<div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Organization Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    backgroundColor: "#4a90e2",
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    margin: 10,
-                  }}
-                >
-                  <i className="fas fa-plus"></i> Add CSR
-                </button>
+                <div className="d-flex flex-wrap gap-3 align-items-center">
+                  {/* Add Organization Button */}
                   <button
-                  onClick={handleExportToExcel}
-                  style={{
-                    backgroundColor: "#28a745",
-                    color: "#fff",
-                    border: "none",
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <i className="fas fa-file-excel"></i> Export to Excel
-                </button>
+                    onClick={() => setShowAddModal(true)}
+                    style={{
+                      backgroundColor: "#4a90e2",
+                      color: "#fff",
+                      border: "none",
+                      padding: "10px 20px",
+                      borderRadius: "6px",
+                      fontWeight: "500",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                      margin: 10,
+                    }}
+                  >
+                    <i className="fas fa-plus"></i> Add CSR
+                  </button>
+                  <button
+                    onClick={handleExportToExcel}
+                    style={{
+                      backgroundColor: "#28a745",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontWeight: "500",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <i className="fas fa-file-excel"></i> Export to Excel
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Table */}
             <div className="table-responsive" style={{ overflowX: "auto" }}>
-  <table className="table table-hover table-bordered text-center align-middle w-100">
-    <thead className="table-primary text-dark">
-      <tr>
-        {[
-          { label: "Name", placeholder: "Search Name", field: "CSRName" },
-          { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-          { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
-          { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
-          { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-          { label: "City", placeholder: "Search City", field: "city" },
-          { label: "Country", placeholder: "Search Country", field: "country" },
-          { label: "District", placeholder: "Search District", field: "district" },
-          { label: "Full Address", placeholder: "Search Full Address", field: "fullAddress" },
-          { label: "Status", placeholder: "Search Status", field: "status" },
-        ].map(({ label, placeholder, field }) => (
-          <th key={field} style={{ minWidth: "180px" }}>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder={placeholder}
-              onChange={(e) => handleFilterChange(field, e.target.value)}
-            />
-            <div className="fw-bold mt-1">{label}</div>
-          </th>
-        ))}
-        <th style={{ minWidth: "100px" }}>Action</th>
-      </tr>
-    </thead>
+              <table className="table table-hover table-bordered text-center align-middle w-100">
+                <thead className="table-primary text-dark">
+                  <tr>
+                    {[
+                      { label: "Name", placeholder: "Search Name", field: "CSRName" },
+                      { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
+                      { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
+                      { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
+                      { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
+                      { label: "City", placeholder: "Search City", field: "city" },
+                      { label: "Country", placeholder: "Search Country", field: "country" },
+                      { label: "District", placeholder: "Search District", field: "district" },
+                      { label: "Full Address", placeholder: "Search Full Address", field: "fullAddress" },
+                      { label: "Status", placeholder: "Search Status", field: "status" },
+                    ].map(({ label, placeholder, field }) => (
+                      <th key={field} style={{ minWidth: "180px" }}>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder={placeholder}
+                          onChange={(e) => handleFilterChange(field, e.target.value)}
+                        />
+                        <div className="fw-bold mt-1">{label}</div>
+                      </th>
+                    ))}
+                    <th style={{ minWidth: "100px" }}>Action</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {currentData.length > 0 ? (
                     currentData.map((CSR) => (
@@ -730,7 +730,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
                             title="Phone number must be in the format 0123-4567890 and numeric"
                           />
                         </div>
-<div className="form-group">
+                        <div className="form-group">
                           <label>Collection site Name</label>
                           <select
                             className="form-control p-2"
@@ -900,7 +900,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
                               }}
                             >
                               {/* Message for City Addition */}
-                             { (status === "active" || status === "added" )&&(
+                              {(status === "active" || status === "added") && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
@@ -921,7 +921,7 @@ newformData.append("collectionsitename",formData.collectionsitename)
                               )}
 
                               {/* Message for City Update (Only if it exists) */}
-                              {status === "updated"|| status==='inactive' && (
+                              {status === "updated" || status === 'inactive' && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
@@ -961,4 +961,3 @@ newformData.append("collectionsitename",formData.collectionsitename)
 };
 
 export default CSRArea;
-

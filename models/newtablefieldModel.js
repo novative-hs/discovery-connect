@@ -5,7 +5,7 @@ const tablesAndColumns = [
     table: "csr",
     columnsToAdd: [
       {
-        column: "collectionsite_id",
+        column: "collection_id",
         type: "INT",
         nullable: true, // Change to true
         references: { table: "collectionsite", column: "id" },
