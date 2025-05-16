@@ -9,7 +9,6 @@ import {
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX from "xlsx"
-import * as XLSX from "xlsx"
 import { notifyError, notifySuccess } from "@utils/toast";
 const CollectionSiteStaffArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -23,13 +22,12 @@ const CollectionSiteStaffArea = () => {
   const [allcollectionsitesstaff, setAllCollectionsitesstaff] = useState([]); // State to hold fetched collectionsites
   const [collectionsitesstaff, setCollectionsitesstaff] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     collectionsitesid: "",
     staffName: "",
     email: "",
     password: "",
-    permission: "add",
+    permission: "all",
     created_at: "",
     status: "inactive",
   });
@@ -42,7 +40,6 @@ const CollectionSiteStaffArea = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
-
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
   const [updateUser, { }] = useUpdateProfileMutation();
@@ -51,7 +48,6 @@ const CollectionSiteStaffArea = () => {
     { label: "Name", placeholder: "Search Name", field: "staffName" },
     { label: "Collectionsite Name", placeholder: "Search Collection site Name", field: "collectionsite_name" },
 
-
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
     {
       label: "Password",
@@ -59,23 +55,11 @@ const CollectionSiteStaffArea = () => {
       field: "useraccount_password",
     },
     { label: "Permission", placeholder: "Search permission", field: "permission" },
-    { label: "Permission", placeholder: "Search permission", field: "permission" },
     { label: "Status", placeholder: "Search Status", field: "status" },
-    { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Updated at", placeholder: "Search Date", field: "updated_at" },
 
-
   ];
-  const baseStyle = {
-    padding: "10px 15px",
-    borderRadius: "15px",
-    backgroundColor: "#ffffff",
-    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-    maxWidth: "75%",
-    fontSize: "14px",
-    textAlign: "left",
-  };
   const baseStyle = {
     padding: "10px 15px",
     borderRadius: "15px",
@@ -93,7 +77,6 @@ const CollectionSiteStaffArea = () => {
   }, []);
 
   const fetchCollectionsiteStaff = async () => {
-  const fetchCollectionsiteStaff = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/get`
@@ -109,43 +92,26 @@ const CollectionSiteStaffArea = () => {
   const fetchCollectionsites = async () => {
     try {
 
-      const response = await axios.get(`${url}/admin/csr/getCollectionsiteName`);
-      console.log(response.data)
-      setCollectionsites(response.data); // Store fetched collectionsites in state
+      const response = await axios.get(`${url}/admin/collectionsite/getAll`);
+      console.log("collection", response.data)
+      setCollectionsites(response.data);
     } catch (error) {
       console.error("Error fetching collectionsites:", error);
     }
   };
+
   const onSubmit = async (event) => {
     event.preventDefault();
 
     // Log form data to ensure it's structured correctly
     console.log("Form Data to Submit:", formData);
-    // Log form data to ensure it's structured correctly
-    console.log("Form Data to Submit:", formData);
 
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
         formData,
       );
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
-        formData,
-      );
 
-      notifySuccess("Collection Site Staff Registered Successfully");
-      fetchCollectionsiteStaff(); // Refresh list
-      setShowAddModal(false);
-      resetFormData();
-    } catch (error) {
-      console.error("Registration Error:", error);
-      const errMsg =
-        error.response?.data?.error || error.message || "An error occurred";
-      notifyError(errMsg);
-    }
-  };
       notifySuccess("Collection Site Staff Registered Successfully");
       fetchCollectionsiteStaff(); // Refresh list
       setShowAddModal(false);
@@ -165,7 +131,6 @@ const CollectionSiteStaffArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log("data", data)
       console.log("data", data)
       setHistoryData(data);
       "Data", data;
@@ -223,31 +188,20 @@ const CollectionSiteStaffArea = () => {
       [name]: value,
     }));
   };
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
 
 
   const handleEditClick = (collectionsitestaff) => {
-
 
     setSelectedCollectionSiteStaffId(collectionsitestaff.id);
     setEditCollectionsiteStaff(collectionsitestaff);
     setShowEditModal(true);
 
-
     setFormData({
       user_account_id: collectionsitestaff.user_account_id,
       collectionsitesid: collectionsitestaff.collectionsite_id,
       staffName: collectionsitestaff.staffName,
-      staffName: collectionsitestaff.staffName,
       email: collectionsitestaff.useraccount_email,
       password: collectionsitestaff.useraccount_password,
-      permission: collectionsitestaff.permission,
       permission: collectionsitestaff.permission,
       status: collectionsitestaff.status
     });
@@ -260,24 +214,7 @@ const CollectionSiteStaffArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/updatedetail/${selectedCollectionsiteStaffId}`,
         formData,
       );
-    try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/updatedetail/${selectedCollectionsiteStaffId}`,
-        formData,
-      );
 
-      notifySuccess("Collection Site Staff Updated Successfully");
-      fetchCollectionsiteStaff();
-      setSelectedCollectionSiteStaffId("");
-      setEditCollectionsiteStaff("");
-      setShowEditModal(false);
-      resetFormData();
-    } catch (error) {
-      console.error("Updation Error:", error);
-      const errMsg =
-        error.response?.data?.error || error.message || "An error occurred";
-      notifyError(errMsg);
-    }
       notifySuccess("Collection Site Staff Updated Successfully");
       fetchCollectionsiteStaff();
       setSelectedCollectionSiteStaffId("");
@@ -344,13 +281,11 @@ const CollectionSiteStaffArea = () => {
   const resetFormData = () => {
     setFormData({
 
-
       collectionsitesid: "",
       staffName: "",
       email: "",
       password: "",
       status: "inactive",
-      permission: "add"
       permission: "add"
     });
   };
@@ -383,7 +318,6 @@ const CollectionSiteStaffArea = () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-  const formatDate = (date) => {
   const formatDate = (date) => {
     const options = {
       year: "2-digit",
@@ -420,31 +354,11 @@ const CollectionSiteStaffArea = () => {
         "Updated At": formatDate(item.updated_at),
       };
     });
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCollectionsitesstaff.map((item) => {
-      // Convert buffer to base64 string if available
-
-      return {
-        Email: item.useraccount_email,
-        Password: item.useraccount_password,
-        CollectionsiteName: item.collectionsite_name,
-        StaffName: item.staffName,
-        Permission: item.permission,
-        Status: item.status,
-        "Created At": formatDate(item.created_at),
-        "Updated At": formatDate(item.updated_at),
-      };
-    });
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsitestaff");
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsitestaff");
 
-    XLSX.writeFile(workbook, "Collectionsite Staff_List.xlsx");
-  };
     XLSX.writeFile(workbook, "Collectionsite Staff_List.xlsx");
   };
 
@@ -505,27 +419,6 @@ const CollectionSiteStaffArea = () => {
                   <i className="fas fa-plus"></i> Add Collection Site Staff
                 </button>
                 <button
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add collection site Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    backgroundColor: "#4a90e2",
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    margin: 10,
-                  }}
-                >
-                  <i className="fas fa-plus"></i> Add Collection Site Staff
-                </button>
-                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",
@@ -543,7 +436,6 @@ const CollectionSiteStaffArea = () => {
                 >
                   <i className="fas fa-file-excel"></i> Export to Excel
                 </button>
-              </div>
               </div>
             </div>
           </div>
@@ -573,7 +465,6 @@ const CollectionSiteStaffArea = () => {
                     <tr key={collectionsitestaff.id}>
                       {columns.map(({ field }) => (
                         <td key={field}>
-                          {(field === "created_at" || field === "updated_at")
                           {(field === "created_at" || field === "updated_at")
                             ? moment(collectionsitestaff[field]).format("YYYY-MM-DD")
                             : collectionsitestaff[field]}
@@ -714,7 +605,6 @@ const CollectionSiteStaffArea = () => {
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
                         <div className="form-group">
-                        <div className="form-group">
                           <label>Email</label>
                           <input
                             type="email"
@@ -724,25 +614,12 @@ const CollectionSiteStaffArea = () => {
                             onChange={handleInputChange}
                             placeholder="Enter Email"
                             autocomplete="email"
-                            autocomplete="email"
                             required
                           />
                         </div>
                         <div className="col-md-12">
                           <label className="form-label">Password</label>
                           <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                              autocomplete="new-password" // ✅ Add this line
-                            />
                             <input
                               type={showPassword ? "text" : "password"}
                               className="form-control"
@@ -791,7 +668,6 @@ const CollectionSiteStaffArea = () => {
                           )}
                         </div>
 
-
                         <div className="form-group">
                           <label>Collectionsite</label>
                           <select
@@ -807,26 +683,8 @@ const CollectionSiteStaffArea = () => {
                             {collectionsites.map((collectionsites) => (
                               <option key={collectionsites.id} value={collectionsites.id}>
                                 {collectionsites.name}
-                                {collectionsites.name}
                               </option>
                             ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Permission</label>
-                          <select
-                            className="form-control p-2"
-                            name="permission"
-                            value={formData.permission}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select Permission</option>
-                            <option value="all">All Pages Access</option>
-                            <option value="add">Add Sample Permission</option>
-                            <option value="edit">Edit Sample Permission</option>
-                            <option value="dispatch">Dispatch Sample Permission</option>
-                            <option value="receive">Receive Sample Permission</option>
                           </select>
                         </div>
                         <div className="form-group">
@@ -918,7 +776,6 @@ const CollectionSiteStaffArea = () => {
                           const {
                             staffName,
                             permission,
-                            permission,
                             created_at,
                             updated_at,
                             status
@@ -937,28 +794,28 @@ const CollectionSiteStaffArea = () => {
                               {/* Message for City Addition */}
                               {status === 'added' && (
                                 <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{action}</b> by Registration Admin at{" "}
+                                  <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
                                   {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                                 </div>
                               )}
 
                               {status === 'updated' && (
                                 <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
-                                  <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{action}</b> by Registration Admin at{" "}
+                                  <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
                                   {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                                 </div>
                               )}
 
                               {status === 'active' && (
                                 <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} is <b>active</b> with <b>{action}</b> permission as of{" "}
+                                  <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
                                   {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                                 </div>
                               )}
 
                               {status === 'inactive' && (
                                 <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} was marked <b>inactive</b> and <b>{action}</b> by Registration Admin at{" "}
+                                  <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
                                   {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                                 </div>
                               )}
