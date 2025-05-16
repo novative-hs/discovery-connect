@@ -247,12 +247,12 @@ const createAccount = (req, callback) => {
     nameofOrganization,
     type,
     HECPMDCRegistrationNo,
-    
+
     status,
     added_by,
 
   } = req.body;
-
+  console.log("data is ", req.data)
   const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
   const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
   let logo = null;
@@ -541,7 +541,7 @@ const updateAccount = (req, callback) => {
                       phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
                     WHERE user_account_id = ?
                   `;
-                  values = [OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+                  values = [OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
                   break;
 
                 case "CollectionSites":
@@ -569,7 +569,7 @@ const updateAccount = (req, callback) => {
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
                         country = ?,collection_id=? WHERE user_account_id = ?
                     `;
-                  values = [CSRName, phoneNumber, fullAddress, city, district, country,collectionsitename, user_account_id];
+                  values = [CSRName, phoneNumber, fullAddress, city, district, country, collectionsitename, user_account_id];
                   break;
 
                 default:
@@ -588,7 +588,11 @@ const updateAccount = (req, callback) => {
                 const previousData = previousResults[0] || {};
 
                 connection.query(updateQuery, values, (err) => {
-                  if (err) return mysqlConnection.rollback(() => callback(err, null));
+                  if (err) return connection.rollback(() => {
+                    connection.release();
+                    callback(err, null);
+                  });
+
 
                   let organizationID = null;
                   let researcherID = null;

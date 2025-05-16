@@ -93,8 +93,8 @@ const CollectionSiteStaffArea = () => {
     try {
 
       const response = await axios.get(`${url}/admin/collectionsite/getAll`);
-      console.log("collection",response.data)
-      setCollectionsites(response.data); 
+      console.log("collection", response.data)
+      setCollectionsites(response.data);
     } catch (error) {
       console.error("Error fetching collectionsites:", error);
     }

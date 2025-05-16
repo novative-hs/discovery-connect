@@ -245,7 +245,7 @@ const OfferPopularProduct = () => {
                         <div className="col-6" key={index} data-aos="zoom-in" data-aos-delay={index * 100}>
                           <div className="border rounded p-2 h-100 bg-light">
                             <small className="text-muted d-block">{item.label}</small>
-                            <strong>{item.value || "N/A"}</strong>
+                            <strong>{item.value || "----"}</strong>
                           </div>
                         </div>
                       ))}

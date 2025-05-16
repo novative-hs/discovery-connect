@@ -23,12 +23,10 @@ const OrganizationArea = () => {
   const [cityname, setcityname] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
-  
+
   const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
-    user_account_id: "",
     OrganizationName: "",
-    email: "",
     phoneNumber: "",
     city: "",
     district: "",
@@ -54,12 +52,10 @@ const OrganizationArea = () => {
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
-  const [updateUser, { }] = useUpdateProfileMutation();
+  // const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
-    { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-    
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
     { label: "City", placeholder: "Search City", field: "city" },
@@ -72,50 +68,48 @@ const OrganizationArea = () => {
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 
- const onSubmit = async (event) => {
-  event.preventDefault();
+  const onSubmit = async (event) => {
+    event.preventDefault();
 
-  const newformData = new FormData();
+    const newformData = new FormData();
 
-  // Append all the form data
-  newformData.append("email", formData.email);
-  newformData.append("accountType", "Organization");
-  newformData.append("OrganizationName", formData.OrganizationName);
-  newformData.append("phoneNumber", formData.phoneNumber);
-  newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
-  newformData.append("website", formData.website);
-  newformData.append("fullAddress", formData.fullAddress);
-  newformData.append("city", formData.city);
-  newformData.append("district", formData.district);
-  newformData.append("country", formData.country);
-  newformData.append("status", "inactive");
-  newformData.append("type", formData.type);
+    // Append all the form data
+    newformData.append("OrganizationName", formData.OrganizationName);
+    newformData.append("phoneNumber", formData.phoneNumber);
+    newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
+    newformData.append("website", formData.website);
+    newformData.append("fullAddress", formData.fullAddress);
+    newformData.append("city", formData.city);
+    newformData.append("district", formData.district);
+    newformData.append("country", formData.country);
+    newformData.append("status", "inactive");
+    newformData.append("type", formData.type);
 
-  if (formData.logo) {
-    newformData.append("logo", formData.logo);
-  }
+    if (formData.logo) {
+      newformData.append("logo", formData.logo);
+    }
 
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/createorg`,
-      newformData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/createorg`,
+        newformData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    notifySuccess("Organization Registered Successfully");
-    fetchOrganizations(); // refresh list
-    setShowAddModal(false);
-    resetFormData();
-  } catch (error) {
-    const errorMsg =
-      error?.response?.data?.error || "Failed to register organization";
-    notifyError(errorMsg);
-  }
-};
+      notifySuccess("Organization Registered Successfully");
+      fetchOrganizations(); // refresh list
+      setShowAddModal(false);
+      resetFormData();
+    } catch (error) {
+      const errorMsg =
+        error?.response?.data?.error || "Failed to register organization";
+      notifyError(errorMsg);
+    }
+  };
 
 
   const fetchHistory = async (filterType, id) => {
@@ -280,9 +274,7 @@ const OrganizationArea = () => {
     setEditOrganization(organization);
     setShowEditModal(true);
     setFormData({
-      user_account_id: organization.user_account_id,
       OrganizationName: organization.OrganizationName,
-      email: organization.useraccount_email,
       city: organization.cityid,
       district: organization.districtid,
       country: organization.countryid,
@@ -299,9 +291,8 @@ const OrganizationArea = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+
     const newformData = new FormData();
-    newformData.append("useraccount_email", formData.email);
-    newformData.append("accountType", "Organization");
     newformData.append("OrganizationName", formData.OrganizationName);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
@@ -312,34 +303,39 @@ const OrganizationArea = () => {
     newformData.append("country", formData.country);
     newformData.append("status", "inactive");
     newformData.append("type", formData.type);
+
     if (formData.logo) {
       newformData.append("logo", formData.logo);
     }
 
-    // Debug
+    // Optional: log form data for debugging
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
     }
 
-    const id = formData.user_account_id;
-
-    updateUser({ id, formData: newformData })
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Update Failed";
-          notifyError(errorMessage);
-        } else {
-          notifySuccess("Update Organization Successfully");
-          setShowEditModal(false);
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
+        newformData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
+      );
 
-    setShowEditModal(false);
-    resetFormData();
+      notifySuccess("Update Organization Successfully");
+      setShowEditModal(false);
+      resetFormData();
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.error || "An unexpected error occurred";
+      notifyError(errorMessage);
+      setShowEditModal(false);
+    }
   };
+
+
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
       ...prev,
@@ -389,7 +385,6 @@ const OrganizationArea = () => {
   const resetFormData = () => {
     setFormData({
       OrganizationName: "",
-      email: "",
       phoneNumber: "",
       city: "",
       district: "",
@@ -432,7 +427,7 @@ const OrganizationArea = () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-   const formatDate = (date) => {
+  const formatDate = (date) => {
     const options = {
       year: "2-digit",
       month: "short",
@@ -453,39 +448,38 @@ const OrganizationArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-const handleExportToExcel = () => {
-  const dataToExport = filteredOrganizations.map((item) => {
-    // Convert buffer to base64 string if available
-    let logoUrl = "";
-    if (item.logo && item.logo.data) {
-      const buffer = Buffer.from(item.logo.data);
-      logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
-    }
+  const handleExportToExcel = () => {
+    const dataToExport = filteredOrganizations.map((item) => {
+      // Convert buffer to base64 string if available
+      let logoUrl = "";
+      if (item.logo && item.logo.data) {
+        const buffer = Buffer.from(item.logo.data);
+        logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+      }
 
-    return {
-      email: item.useraccount_email,
-      OrganizationName: item.OrganizationName,
-      type: item.type,
-      phoneNumber: item.phoneNumber,
-      HECPMDCRegistrationNo: item.HECPMDCRegistrationNo,
-      city: item.city,
-      country: item.country,
-      district: item.district,
-      fullAddress: item.fullAddress,
-     // website:item.website,
-      status: item.status,
-     // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
-      "Created At": formatDate(item.created_at),
-      "Updated At": formatDate(item.updated_at),
-    };
-  });
+      return {
+        OrganizationName: item.OrganizationName,
+        type: item.type,
+        phoneNumber: item.phoneNumber,
+        HECPMDCRegistrationNo: item.HECPMDCRegistrationNo,
+        city: item.city,
+        country: item.country,
+        district: item.district,
+        fullAddress: item.fullAddress,
+        // website:item.website,
+        status: item.status,
+        // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
+        "Created At": formatDate(item.created_at),
+        "Updated At": formatDate(item.updated_at),
+      };
+    });
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Organization");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Organization");
 
-  XLSX.writeFile(workbook, "Organization_List.xlsx");
-};
+    XLSX.writeFile(workbook, "Organization_List.xlsx");
+  };
 
 
 
@@ -528,25 +522,25 @@ const handleExportToExcel = () => {
 
               {/* Add Organization Button */}
               <div className="d-flex flex-wrap gap-3 align-items-center">
-              <button
-                onClick={() => setShowAddModal(true)}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  margin: 10,
-                }}
-              >
-                <i className="fas fa-plus"></i> Add Organization
-              </button>
-               <button
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    margin: 10,
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add Organization
+                </button>
+                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",
@@ -564,7 +558,7 @@ const handleExportToExcel = () => {
                 >
                   <i className="fas fa-file-excel"></i> Export to Excel
                 </button>
-                </div>
+              </div>
             </div>
           </div>
 
@@ -769,9 +763,7 @@ const handleExportToExcel = () => {
                               />
                             )}
                           </div>
-
                           <label>Logo</label>
-
                           <input
                             id="logo"
                             type="file"
@@ -781,7 +773,6 @@ const handleExportToExcel = () => {
                             onChange={handleInputChange}
                           />
                         </div>
-
                         <div className="form-group">
                           <label>Name</label>
                           <input
@@ -801,20 +792,6 @@ const handleExportToExcel = () => {
                             </small>
                           )}
                         </div>
-
-                        <div className="form-group">
-                          <label>Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            required
-                          />
-                        </div>
-                       
                         <div className="form-group">
                           <label>Type</label>
                           <select

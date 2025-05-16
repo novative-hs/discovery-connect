@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -25,9 +25,10 @@ const CommitteeMemberArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
-  // const [showCommitteTypeOptions, setshowCommitteeTypeOptions] = useState(false);
   const [showCommitteeTypeOptions, setShowCommitteeTypeOptions] = useState({});
   const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
+  const committeeTypeRefs = useRef({});
+  const statusRefs = useRef({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCommitteememberId, setSelectedCommitteememberId] =
     useState(null); // Store ID of Committee Members to delete
@@ -73,11 +74,7 @@ const CommitteeMemberArea = () => {
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "Organization", placeholder: "Search Org", field: "organization" },
-    {
-      label: "Committee Type",
-      placeholder: "Search Committee Type",
-      field: "committeetype",
-    },
+    { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
@@ -227,11 +224,7 @@ const CommitteeMemberArea = () => {
       await axios.delete(
         `${url}/committeemember/delete/${selectedCommitteememberId}`
       );
-
-      // Set success message
       setSuccessMessage("Committeemember deleted successfully.");
-
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -279,7 +272,6 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
-
 
       fetchCommitteemembers();
       setShowEditModal(false);
@@ -421,6 +413,35 @@ const CommitteeMemberArea = () => {
     }));
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Loop over all committeeType dropdowns
+      Object.entries(committeeTypeRefs.current).forEach(([id, ref]) => {
+        if (ref && !ref.contains(event.target)) {
+          setShowCommitteeTypeOptions((prev) => ({
+            ...prev,
+            [id]: false,
+          }));
+        }
+      });
+
+      // Loop over all status dropdowns
+      Object.entries(statusRefs.current).forEach(([id, ref]) => {
+        if (ref && !ref.contains(event.target)) {
+          setStatusOptionsVisibility((prev) => ({
+            ...prev,
+            [id]: false,
+          }));
+        }
+      });
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const currentData = filteredCommitteemembers.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
@@ -463,6 +484,7 @@ const CommitteeMemberArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
+
   const handleExportToExcel = () => {
     const dataToExport = filteredCommitteemembers.map((item) => {
       // Convert buffer to base64 string if available
@@ -488,6 +510,7 @@ const CommitteeMemberArea = () => {
 
     XLSX.writeFile(workbook, "Committeemember_List.xlsx");
   };
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -612,14 +635,14 @@ const CommitteeMemberArea = () => {
                           >
                             <FontAwesomeIcon icon={faEdit} size="xs" />
                           </button>
-
-                          <div className="btn-group">
+                          <div
+                            className="btn-group"
+                            ref={(el) => (committeeTypeRefs.current[committeemember.id] = el)}
+                          >
                             <button
                               className="btn btn-warning btn-sm py-0 px-1"
                               onClick={() =>
-                                handleToggleCommitteeTypeOptions(
-                                  committeemember.id
-                                )
+                                handleToggleCommitteeTypeOptions(committeemember.id)
                               }
                               title="Edit Committee Type"
                             >
@@ -630,10 +653,7 @@ const CommitteeMemberArea = () => {
                                 <button
                                   className="dropdown-item"
                                   onClick={() =>
-                                    handleCommitteeTypeClick(
-                                      committeemember.id,
-                                      "Scientific"
-                                    )
+                                    handleCommitteeTypeClick(committeemember.id, "Scientific")
                                   }
                                 >
                                   Scientific
@@ -641,10 +661,7 @@ const CommitteeMemberArea = () => {
                                 <button
                                   className="dropdown-item"
                                   onClick={() =>
-                                    handleCommitteeTypeClick(
-                                      committeemember.id,
-                                      "Ethical"
-                                    )
+                                    handleCommitteeTypeClick(committeemember.id, "Ethical")
                                   }
                                 >
                                   Ethical
@@ -652,29 +669,23 @@ const CommitteeMemberArea = () => {
                               </div>
                             )}
                           </div>
-
-                          <div className="btn-group">
+                          <div
+                            className="btn-group"
+                            ref={(el) => (statusRefs.current[committeemember.id] = el)}
+                          >
                             <button
                               className="btn btn-primary btn-sm py-0 px-1"
-                              onClick={() =>
-                                handleToggleStatusOptions(committeemember.id)
-                              }
+                              onClick={() => handleToggleStatusOptions(committeemember.id)}
                               title="Edit Status"
                             >
-                              <FontAwesomeIcon
-                                icon={faQuestionCircle}
-                                size="xs"
-                              />
+                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
                             </button>
                             {statusOptionsVisibility[committeemember.id] && (
                               <div className="dropdown-menu show">
                                 <button
                                   className="dropdown-item"
                                   onClick={() =>
-                                    handleStatusClick(
-                                      committeemember.id,
-                                      "Active"
-                                    )
+                                    handleStatusClick(committeemember.id, "Active")
                                   }
                                 >
                                   Active
@@ -682,10 +693,7 @@ const CommitteeMemberArea = () => {
                                 <button
                                   className="dropdown-item"
                                   onClick={() =>
-                                    handleStatusClick(
-                                      committeemember.id,
-                                      "Inactive"
-                                    )
+                                    handleStatusClick(committeemember.id, "Inactive")
                                   }
                                 >
                                   Inactive
@@ -693,7 +701,6 @@ const CommitteeMemberArea = () => {
                               </div>
                             )}
                           </div>
-
                           <button
                             className="btn btn-danger btn-sm py-0 px-1"
                             onClick={() => {
@@ -724,8 +731,6 @@ const CommitteeMemberArea = () => {
                           >
                             <FontAwesomeIcon icon={faShoppingCart} size="sm" />
                           </button>
-
-
                         </div>
                       </td>
                     </tr>
@@ -1004,7 +1009,7 @@ const CommitteeMemberArea = () => {
               </div>
             </>
           )}
-          
+
           {/* Modal for Deleting Committeemembers */}
           {showDeleteModal && (
             <>
@@ -1250,8 +1255,6 @@ const CommitteeMemberArea = () => {
                       </div>
                     )}
                   </div>
-
-
                 </div>
               </div>
             </div>

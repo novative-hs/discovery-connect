@@ -49,9 +49,9 @@ const CompletedSampleArea = () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
-         {
-        params: { csrUserId: id }
-      }
+        {
+          params: { csrUserId: id }
+        }
       );
 
       // Filter only the samples where order_status is 'Dispatched'
@@ -62,7 +62,7 @@ const CompletedSampleArea = () => {
       // Update state
       setSamples(shippingSamples);
       setFilteredSamplename(shippingSamples); // Assuming you want to use the filtered samples
-      
+
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
@@ -115,9 +115,9 @@ const CompletedSampleArea = () => {
         </h4>
         {/* Table */}
         <div className="table-responsive w-100">
-        <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
+          <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
 
-<thead className="table-primary text-white">
+            <thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
@@ -143,7 +143,7 @@ const CompletedSampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                    <td>{sample.id || "N/A"}</td>
+                    <td>{sample.id || "----"}</td>
                     <td>{sample.researcher_name}</td>
                     <td>{sample.samplename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>

@@ -44,7 +44,7 @@ const ContactUS = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contactus/get-all`
       );
-      
+
       setContact_us(response.data);
       setFilteredContactus(response.data);
     } catch (error) {
@@ -99,18 +99,18 @@ const ContactUS = () => {
       <div className="container">
         {/* Table */}
         <div className="w-100" style={{ overflowX: "auto" }}>
-        <table class="table table-striped table-hover table-bordered text-center align-middle shadow-sm">
+          <table class="table table-striped table-hover table-bordered text-center align-middle shadow-sm">
 
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
                     <div className="d-flex flex-column align-items-center">
-                    <input
-  type="text"
-  class="form-control form-control-sm bg-light border-0 shadow-sm text-center"
-  placeholder="Search Name"
-/>
+                      <input
+                        type="text"
+                        class="form-control form-control-sm bg-light border-0 shadow-sm text-center"
+                        placeholder="Search Name"
+                      />
 
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
                         {label}
@@ -137,9 +137,9 @@ const ContactUS = () => {
                       >
                         {key === "created_at"
                           ? new Date(contact_us[key])
-                              .toISOString()
-                              .split("T")[0] // Extracts only YYYY-MM-DD
-                          : contact_us[key] || "N/A"}
+                            .toISOString()
+                            .split("T")[0] // Extracts only YYYY-MM-DD
+                          : contact_us[key] || "----"}
                       </td>
                     ))}
                   </tr>
