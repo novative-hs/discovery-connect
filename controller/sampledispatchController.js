@@ -77,152 +77,139 @@ GROUP BY s.id, sd.TransferTo, sd.status;
 
 // Controller to create a new sample dispatch
 const createSampleDispatch = (req, res) => {
-    const { id } = req.params; // Sample ID
-    
-  
-    const { TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = req.body;
-  
-    if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber || !Quantity) {
-      return res.status(400).json({ error: 'All required fields must be provided' });
+  const { id } = req.params; // sampleID
+  const {
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity,
+  } = req.body;
+
+  if (!TransferTo || !dispatchVia || !dispatcherName || !dispatchReceiptNumber || !Quantity) {
+    return res.status(400).json({ error: 'All required fields must be provided' });
+  }
+
+  const parsedQuantity = parseInt(Quantity, 10);
+  if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+    return res.status(400).json({ error: 'Quantity must be a valid positive number' });
+  }
+
+  // Step 1: Get sample details, especially TransferFrom and current quantity
+  const getSampleQuery = `
+    SELECT user_account_id AS TransferFrom, Quantity AS currentQuantity
+    FROM sample
+    WHERE id = ?
+  `;
+
+  mysqlConnection.query(getSampleQuery, [id], (err, results) => {
+    if (err) {
+      console.error('Database error fetching sample:', err);
+      return res.status(500).json({ error: 'Database error fetching sample' });
     }
-  
-    const parsedQuantity = parseInt(Quantity, 10);
-    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
-      return res.status(400).json({ error: 'Quantity must be a valid positive number' });
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Sample not found' });
     }
-  
-    // Get TransferFrom, current quantity, and sample status
-    const getTransferFromQuery = `
-      SELECT user_account_id, Quantity AS currentQuantity, status 
-      FROM sample 
-      WHERE id = ?
+
+    const TransferFrom = results[0].TransferFrom;
+    const currentQuantity = parseInt(results[0].currentQuantity, 10);
+
+    // Step 2: Get collectionsite_id for both users
+    const getSitesQuery = `
+      SELECT user_account_id, id AS collectionsite_id
+      FROM collectionsite
+      WHERE user_account_id IN (?, ?)
     `;
-  
-    mysqlConnection.query(getTransferFromQuery, [id], (err, results) => {
-      if (err) {
-        console.error('Database error fetching TransferFrom:', err);
-        return res.status(500).json({ error: 'Error fetching TransferFrom' });
+
+    mysqlConnection.query(getSitesQuery, [TransferFrom, TransferTo], (siteErr, siteResults) => {
+      if (siteErr) {
+        console.error('Error fetching collection site IDs:', siteErr);
+        return res.status(500).json({ error: 'Error fetching collection site IDs' });
       }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Sample not found' });
-      }
-  
-      const TransferFrom = results[0].user_account_id;
-      let currentQuantity = parseInt(results[0].currentQuantity, 10);
-      let sampleStatus = results[0].status;
-  
-      if (currentQuantity < parsedQuantity) {
-        return res.status(400).json({ error: 'Insufficient quantity available for dispatch' });
-      }
-  
-      // Check if the sample is already dispatched to TransferTo
-      const checkExistingDispatchQuery = `
-        SELECT id, Quantity, status 
-        FROM sampledispatch 
-        WHERE sampleID = ? AND TransferFrom = ? AND TransferTo = ?
-      `;
-  
-      mysqlConnection.query(checkExistingDispatchQuery, [id, TransferFrom, TransferTo], (checkErr, dispatchResults) => {
-        if (checkErr) {
-          console.error('Database error checking existing dispatch:', checkErr);
-          return res.status(500).json({ error: 'Error checking existing dispatch' });
+
+      // Find sites for each user
+      const fromSite = siteResults.find(u => u.user_account_id === TransferFrom)?.collectionsite_id;
+      const toSite = siteResults.find(u => u.user_account_id === TransferTo)?.collectionsite_id;
+
+      // Determine if this is a return dispatch: both sites exist and are the same
+      const isReturn = fromSite && toSite && fromSite === toSite;
+
+      function createForwardDispatch() {
+        if (currentQuantity < parsedQuantity) {
+          return res.status(400).json({ error: 'Insufficient quantity for dispatch' });
         }
-  
-        if (dispatchResults.length > 0) {
-          const existingDispatch = dispatchResults[0];
-          const newQuantity = parseInt(existingDispatch.Quantity, 10) + parsedQuantity;
-  
-          // **Case 1: If status is 'In Transit', update quantity**
-          if (existingDispatch.status === 'In Transit') {
-            const updateDispatchQuery = `
-              UPDATE sampledispatch
-              SET Quantity = ?
-              WHERE id = ?
-            `;
-  
-            mysqlConnection.query(updateDispatchQuery, [newQuantity, existingDispatch.id], (updateErr) => {
-              if (updateErr) {
-                console.error('Database error updating dispatch quantity:', updateErr);
-                return res.status(500).json({ error: 'An error occurred while updating the dispatch quantity' });
-              }
-  
-              // Deduct the dispatched quantity from sample table
-              const updateSampleQuantityQuery = `
-                UPDATE sample
-                SET Quantity = Quantity - ?
-                WHERE id = ?
-              `;
-  
-              mysqlConnection.query(updateSampleQuantityQuery, [parsedQuantity, id], (updateSampleErr) => {
-                if (updateSampleErr) {
-                  console.error('Database error updating sample quantity:', updateSampleErr);
-                  return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
-                }
-  
-                res.status(200).json({ message: 'Sample quantity updated successfully' });
-              });
-            });
-          } else {
-            // **Case 2: If status is 'In Stock', insert a new dispatch record**
-            sampleDispatchModel.createSampleDispatch(
-              { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity: parsedQuantity },
-              id,
-              (insertErr, result) => {
-                if (insertErr) {
-                  console.error('Database error during INSERT:', insertErr);
-                  return res.status(500).json({ error: 'An error occurred while creating the dispatch' });
-                }
-  
-                // Deduct dispatched quantity from sample table
-                const updateQuantityQuery = `
-                  UPDATE sample
-                  SET Quantity = Quantity - ?
-                  WHERE id = ?
-                `;
-  
-                mysqlConnection.query(updateQuantityQuery, [parsedQuantity, id], (updateErr) => {
-                  if (updateErr) {
-                    console.error('Database error during quantity update:', updateErr);
-                    return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
-                  }
-  
-                  res.status(201).json({ message: 'Sample Dispatch created successfully', id: result.insertId });
-                });
-              }
-            );
+
+        const dispatchData = {
+          TransferFrom,
+          TransferTo,
+          dispatchVia,
+          dispatcherName,
+          dispatchReceiptNumber,
+          Quantity: parsedQuantity,
+          status: 'In Transit'
+        };
+
+        sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
+          if (insertErr) {
+            console.error('Failed to insert dispatch record:', insertErr);
+            return res.status(500).json({ error: 'Failed to insert dispatch record' });
           }
-        } else {
-          // **Case 3: No existing dispatch, insert new dispatch**
-          sampleDispatchModel.createSampleDispatch(
-            { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity: parsedQuantity },
-            id,
-            (insertErr, result) => {
-              if (insertErr) {
-                console.error('Database error during INSERT:', insertErr);
-                return res.status(500).json({ error: 'An error occurred while creating the dispatch' });
-              }
-  
-              // Deduct dispatched quantity from sample table
-              const updateQuantityQuery = `
-                UPDATE sample
-                SET Quantity = Quantity - ?
-                WHERE id = ?
-              `;
-  
-              mysqlConnection.query(updateQuantityQuery, [parsedQuantity, id], (updateErr) => {
-                if (updateErr) {
-                  console.error('Database error during quantity update:', updateErr);
-                  return res.status(500).json({ error: 'An error occurred while updating the sample quantity' });
-                }
-  
-                res.status(201).json({ message: 'Sample Dispatch created successfully', id: result.insertId });
-              });
+
+          const updateSample = `UPDATE sample SET Quantity = Quantity - ? WHERE id = ?`;
+          mysqlConnection.query(updateSample, [parsedQuantity, id], (updateErr) => {
+            if (updateErr) {
+              console.error('Sample quantity update failed:', updateErr);
+              return res.status(500).json({ error: 'Sample quantity update failed' });
             }
-          );
-        }
-      });
+
+            return res.status(201).json({ message: 'Dispatch created successfully', id: result.insertId });
+          });
+        });
+      }
+
+      function createReturnDispatch() {
+        const dispatchData = {
+          TransferFrom,
+          TransferTo,
+          dispatchVia,
+          dispatcherName,
+          dispatchReceiptNumber,
+          Quantity: parsedQuantity,
+          status: 'Return'
+        };
+
+        sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
+          if (insertErr) {
+            console.error('Failed to insert return dispatch record:', insertErr);
+            return res.status(500).json({ error: 'Failed to insert return dispatch record' });
+          }
+
+          // Do NOT update sample quantity on return
+
+          return res.status(201).json({ message: 'Return dispatch created successfully', id: result.insertId });
+        });
+      }
+
+      // If either user has no collection site, treat as forward dispatch
+      if (!fromSite || !toSite) {
+        return createForwardDispatch();
+      }
+
+      if (!isReturn) {
+        createForwardDispatch();
+      } else {
+        createReturnDispatch();
+      }
     });
-  };
+  });
+};
+
+
+
+
+
+
+
 
 
 module.exports = {

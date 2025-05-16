@@ -31,7 +31,7 @@ const SampleDispatchArea = () => {
     { label: "Storage Temp", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity", key: "TotalQuantity" },
+    { label: "Quantity", key: "Quantity" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Smoking Status", key: "SmokingStatus" },

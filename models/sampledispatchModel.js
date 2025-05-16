@@ -113,14 +113,39 @@ ORDER BY s.id;
 
 // Function to transfer sample 
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
-  const { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = dispatchData;
+  const {
+    TransferFrom,
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity,
+    status
+  } = dispatchData;
 
   const query = `
-    INSERT INTO sampledispatch (TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO sampledispatch (
+      TransferFrom,
+      TransferTo,
+      dispatchVia,
+      dispatcherName,
+      dispatchReceiptNumber,
+      Quantity,
+      sampleID,
+      status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  mysqlConnection.query(query, [TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID], callback);
+  mysqlConnection.query(query, [
+    TransferFrom,
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity,
+    sampleID,
+    status
+  ], callback);
 };
 
 

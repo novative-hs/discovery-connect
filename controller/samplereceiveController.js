@@ -1,15 +1,17 @@
 const mysqlConnection = require("../config/db");
-const sampleReceiveModel = require('../models/samplereceiveModel');
+const sampleReceiveModel = require("../models/samplereceiveModel");
 
 // Controller for creating the sample receive table
 const createSampleReceiveTable = (req, res) => {
   sampleReceiveModel.createSampleReceiveTable();
-  res.status(200).json({ message: "Sample receive table creation process started" });
+  res
+    .status(200)
+    .json({ message: "Sample receive table creation process started" });
 };
 
 // Controller to get all sample receivees in "In Transit" status
 const getSampleReceiveInTransit = (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; // CollectionSiteStaff user_account_id
   const { searchField, searchValue } = req.query;
 
   if (!id) {
@@ -21,103 +23,163 @@ const getSampleReceiveInTransit = (req, res) => {
   const offset = (page - 1) * pageSize;
 
   let searchClause = "";
-  const queryParams = [id];
-
   if (searchField && searchValue) {
     searchClause = ` AND s.${searchField} LIKE ?`;
-    queryParams.push(`%${searchValue}%`);
   }
 
-  queryParams.push(pageSize, offset);
-
-  const query = `
-    SELECT 
-      s.id,
-      s.masterID,
-      s.donorID,
-      s.samplename,
-      s.age,
-      s.gender,
-      s.ethnicity,
-      s.samplecondition,
-      s.storagetemp,
-      s.ContainerType,
-      s.CountryOfCollection,
-      s.price,
-      s.SamplePriceCurrency,
-      s.QuantityUnit,
-      s.SampleTypeMatrix,
-      s.SmokingStatus,
-      s.AlcoholOrDrugAbuse,
-      s.InfectiousDiseaseTesting,
-      s.InfectiousDiseaseResult,
-      s.FreezeThawCycles,
-      s.DateOfCollection,
-      s.ConcurrentMedicalConditions,
-      s.ConcurrentMedications,
-      s.DiagnosisTestParameter,
-      s.TestResult,
-      s.TestResultUnit,
-      s.TestMethod,
-      s.TestKitManufacturer,
-      s.TestSystem,
-      s.TestSystemManufacturer,
-      sr.ReceivedByCollectionSite,
-      s.status,
-      COALESCE(sd.TotalQuantity, 0) AS Quantity
-    FROM sample s
-    LEFT JOIN samplereceive sr ON sr.sampleID = s.id
-    LEFT JOIN (
-      SELECT sampleID, SUM(Quantity) AS TotalQuantity
-      FROM sampledispatch
-      WHERE status = 'In Stock'
-      GROUP BY sampleID
-    ) sd ON sd.sampleID = s.id
-    WHERE sr.ReceivedByCollectionSite = ?
-      AND s.status = 'In Stock'
-      AND sr.sampleID IS NOT NULL
-      ${searchClause}
-    GROUP BY s.id
-    ORDER BY s.id
-    LIMIT ? OFFSET ?;
+  // First, find the TransferTo user_account_id for this collection site staff user (id)
+  const findTransferToQuery = `
+    SELECT ua.id AS user_account_id
+    FROM collectionsite c
+    JOIN user_account ua ON c.user_account_id = ua.id
+    WHERE c.id = (
+      SELECT cs.collectionsite_id FROM collectionsitestaff cs WHERE cs.user_account_id = ?
+    )
+    LIMIT 1;
   `;
 
-  mysqlConnection.query(query, queryParams, (err, results) => {
-    if (err) {
-      console.error('Error fetching sample receive:', err);
-      return res.status(500).json({ error: "Error fetching sample receive" });
+  mysqlConnection.query(findTransferToQuery, [id], (err2, rows) => {
+    if (err2) {
+      console.error("Error finding TransferTo:", err2);
+      return res.status(500).json({ error: "Error finding TransferTo" });
     }
 
-    const countQuery = `
-      SELECT COUNT(*) AS totalCount
+    if (!rows.length) {
+      return res.status(404).json({ error: "No matching TransferTo found" });
+    }
+
+    const transferToUserAccountId = rows[0].user_account_id;
+
+    // Updated query to join latest dispatch per sample and filter based on latest status & transferTo
+    const query = `
+      SELECT 
+        s.id,
+        s.masterID,
+        s.donorID,
+        s.samplename,
+        s.age,
+        s.gender,
+        s.ethnicity,
+        s.samplecondition,
+        s.storagetemp,
+        s.ContainerType,
+        s.CountryOfCollection,
+        s.price,
+        s.SamplePriceCurrency,
+        s.QuantityUnit,
+        s.SampleTypeMatrix,
+        s.SmokingStatus,
+        s.AlcoholOrDrugAbuse,
+        s.InfectiousDiseaseTesting,
+        s.InfectiousDiseaseResult,
+        s.FreezeThawCycles,
+        s.DateOfCollection,
+        s.ConcurrentMedicalConditions,
+        s.ConcurrentMedications,
+        s.DiagnosisTestParameter,
+        s.TestResult,
+        s.TestResultUnit,
+        s.TestMethod,
+        s.TestKitManufacturer,
+        s.TestSystem,
+        s.TestSystemManufacturer,
+        sr.ReceivedByCollectionSite,
+        s.status,
+        COALESCE(sd.TotalQuantity, 0) AS Quantity
       FROM sample s
       LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+      LEFT JOIN (
+        SELECT sampleID, SUM(Quantity) AS TotalQuantity
+        FROM sampledispatch
+        WHERE status = 'In Stock' AND TransferTo = ?
+        GROUP BY sampleID
+      ) sd ON sd.sampleID = s.id
+      LEFT JOIN (
+        -- Get the latest dispatch record per sample
+        SELECT sd1.sampleID, sd1.TransferTo, sd1.status
+        FROM sampledispatch sd1
+        INNER JOIN (
+          SELECT sampleID, MAX(id) AS max_id
+          FROM sampledispatch
+          GROUP BY sampleID
+        ) latest ON sd1.sampleID = latest.sampleID AND sd1.id = latest.max_id
+      ) last_dispatch ON last_dispatch.sampleID = s.id
       WHERE sr.ReceivedByCollectionSite = ?
         AND s.status = 'In Stock'
         AND sr.sampleID IS NOT NULL
-        ${searchClause};
+        -- Only show if no dispatch yet or latest dispatch is to this site and in stock
+        AND (
+          last_dispatch.sampleID IS NULL
+          OR (last_dispatch.TransferTo = ? AND last_dispatch.status = 'In Stock')
+        )
+        ${searchClause}
+      GROUP BY s.id
+      ORDER BY s.id
+      LIMIT ? OFFSET ?;
     `;
 
-    const countParams = [id];
+    const queryParams = [
+      transferToUserAccountId, // For TotalQuantity subquery TransferTo = ?
+      id,                     // For sr.ReceivedByCollectionSite = ?
+      transferToUserAccountId, // For last_dispatch.TransferTo = ?
+    ];
+
     if (searchField && searchValue) {
-      countParams.push(`%${searchValue}%`);
+      queryParams.push(`%${searchValue}%`);
     }
 
-    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+    queryParams.push(pageSize, offset);
+
+    mysqlConnection.query(query, queryParams, (err, results) => {
       if (err) {
-        console.error('Error fetching total count:', err);
-        return res.status(500).json({ error: "Error fetching total count" });
+        console.error("Error fetching sample receive:", err);
+        return res.status(500).json({ error: "Error fetching sample receive" });
       }
 
-      const totalCount = countResults[0].totalCount;
-      const totalPages = Math.ceil(totalCount / pageSize);
+      const countQuery = `
+        SELECT COUNT(*) AS totalCount
+        FROM sample s
+        LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+        LEFT JOIN (
+          SELECT sd1.sampleID, sd1.TransferTo, sd1.status
+          FROM sampledispatch sd1
+          INNER JOIN (
+            SELECT sampleID, MAX(id) AS max_id
+            FROM sampledispatch
+            GROUP BY sampleID
+          ) latest ON sd1.sampleID = latest.sampleID AND sd1.id = latest.max_id
+        ) last_dispatch ON last_dispatch.sampleID = s.id
+        WHERE sr.ReceivedByCollectionSite = ?
+          AND s.status = 'In Stock'
+          AND sr.sampleID IS NOT NULL
+          AND (
+            last_dispatch.sampleID IS NULL
+            OR (last_dispatch.TransferTo = ? AND last_dispatch.status = 'In Stock')
+          )
+          ${searchClause};
+      `;
 
-      res.status(200).json({
-        samples: results,
-        totalPages,
-        currentPage: page,
-        pageSize,
-        totalCount,
+      const countParams = [id, transferToUserAccountId];
+      if (searchField && searchValue) {
+        countParams.push(`%${searchValue}%`);
+      }
+
+      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+        if (err) {
+          console.error("Error fetching total count:", err);
+          return res.status(500).json({ error: "Error fetching total count" });
+        }
+
+        const totalCount = countResults[0].totalCount;
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        res.status(200).json({
+          samples: results,
+          totalPages,
+          currentPage: page,
+          pageSize,
+          totalCount,
+        });
       });
     });
   });
@@ -130,18 +192,23 @@ const createSampleReceive = (req, res) => {
   const { receiverName, ReceivedByCollectionSite } = req.body;
 
   if (!receiverName || !ReceivedByCollectionSite) {
-    return res.status(400).json({ error: 'All required fields must be provided' });
+    return res
+      .status(400)
+      .json({ error: "All required fields must be provided" });
   }
 
   //Step 1: Create the sample receive record
-  sampleReceiveModel.createSampleReceive({ receiverName, ReceivedByCollectionSite }, id, (err, result) => {
-    if (err) {
-      console.error('Database error during INSERT:', err);
-      return res.status(500).json({ error: 'Error creating receive record' });
-    }
-console.log(ReceivedByCollectionSite)
-    // Step 2: Find TransferTo user_account id from ReceivedByCollectionSite
-    const findTransferToQuery = `
+  sampleReceiveModel.createSampleReceive(
+    { receiverName, ReceivedByCollectionSite },
+    id,
+    (err, result) => {
+      if (err) {
+        console.error("Database error during INSERT:", err);
+        return res.status(500).json({ error: "Error creating receive record" });
+      }
+
+      // Step 2: Find TransferTo user_account id from ReceivedByCollectionSite
+      const findTransferToQuery = `
       SELECT ua.id AS user_account_id
 FROM collectionsite c
 JOIN user_account ua ON c.user_account_id = ua.id
@@ -151,40 +218,55 @@ WHERE c.id = (
 LIMIT 1;
     `;
 
-    mysqlConnection.query(findTransferToQuery, [ReceivedByCollectionSite], (err2, rows) => {
-      if (err2) {
-        console.error('Error finding TransferTo:', err2);
-        return res.status(500).json({ error: 'Error finding TransferTo' });
-      }
+      mysqlConnection.query(
+        findTransferToQuery,
+        [ReceivedByCollectionSite],
+        (err2, rows) => {
+          if (err2) {
+            console.error("Error finding TransferTo:", err2);
+            return res.status(500).json({ error: "Error finding TransferTo" });
+          }
 
-      if (!rows.length) {
-        return res.status(404).json({ error: 'No matching TransferTo found' });
-      }
+          if (!rows.length) {
+            return res
+              .status(404)
+              .json({ error: "No matching TransferTo found" });
+          }
 
-      const transferToUserAccountId = rows[0].user_account_id;
+          const transferToUserAccountId = rows[0].user_account_id;
 
-      // Step 3: Update sampledispatch with the correct TransferTo
-      const updateDispatchStatusQuery = `
+          // Step 3: Update sampledispatch with the correct TransferTo
+          const updateDispatchStatusQuery = `
         UPDATE sampledispatch
         SET status = 'In Stock'
         WHERE sampleID = ? AND TransferTo = ?
       `;
 
-      mysqlConnection.query(updateDispatchStatusQuery, [id, transferToUserAccountId], (err3) => {
-        if (err3) {
-          console.error('Error updating sampledispatch status:', err3);
-          return res.status(500).json({ error: 'Error updating dispatch status' });
+          mysqlConnection.query(
+            updateDispatchStatusQuery,
+            [id, transferToUserAccountId],
+            (err3) => {
+              if (err3) {
+                console.error("Error updating sampledispatch status:", err3);
+                return res
+                  .status(500)
+                  .json({ error: "Error updating dispatch status" });
+              }
+
+              res
+                .status(201)
+                .json({
+                  message:
+                    "Sample Receive created and status updated successfully",
+                  id: result.insertId,
+                });
+            }
+          );
         }
-
-        res.status(201).json({ message: 'Sample Receive created and status updated successfully', id: result.insertId });
-      });
-    });
-   });
+      );
+    }
+  );
 };
-
-
-
-
 
 module.exports = {
   createSampleReceiveTable,
