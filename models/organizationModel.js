@@ -7,7 +7,6 @@ const create_organizationTable = () => {
   const create_organizationTable = `
     CREATE TABLE IF NOT EXISTS organization (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      user_account_id INT,
       type VARCHAR(50),
       OrganizationName VARCHAR(100),
       HECPMDCRegistrationNo VARCHAR(50),
@@ -24,7 +23,6 @@ const create_organizationTable = () => {
       FOREIGN KEY (city) REFERENCES city(id) ON DELETE CASCADE,
       FOREIGN KEY (district) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (country) REFERENCES country(id) ON DELETE CASCADE,
-      FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
   )`;
 
   mysqlConnection.query(create_organizationTable, (err, results) => {
@@ -44,7 +42,6 @@ const createOrganization = (req, callback) => {
     OrganizationName,
     type,
     HECPMDCRegistrationNo,
-    ntnNumber,
     phoneNumber,
     fullAddress,
     city,
@@ -55,7 +52,6 @@ const createOrganization = (req, callback) => {
 
   const logo = req.files?.logo?.[0]?.buffer || null;
 
-  // Convert city, district, country to integers (if they should be numbers)
   const cityInt = parseInt(city);
   const districtInt = parseInt(district);
   const countryInt = parseInt(country);
@@ -76,99 +72,78 @@ const createOrganization = (req, callback) => {
         return callback(err, null);
       }
 
-      const checkEmailQuery = 'SELECT * FROM user_account WHERE email = ?';
-      connection.query(checkEmailQuery, [email], (err, results) => {
-        if (err || results.length > 0) {
-          console.error("Email check error:", err || "Email already exists.");
-          connection.rollback(() => connection.release());
-          return callback(new Error("Email already exists"), null);
+      const insertOrgQuery = `
+        INSERT INTO organization 
+        (OrganizationName, type, HECPMDCRegistrationNo, website, phoneNumber, fullAddress, city, district, country, logo, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+      const orgValues = [
+        OrganizationName,
+        type,
+        HECPMDCRegistrationNo,
+        website,
+        phoneNumber,
+        fullAddress,
+        cityInt,
+        districtInt,
+        countryInt,
+        logo,
+        status
+      ];
+
+      connection.query(insertOrgQuery, orgValues, (err, orgResult) => {
+        if (err) {
+          console.error("Insert organization error:", err);
+          return connection.rollback(() => connection.release());
         }
 
-        const insertUserQuery = `INSERT INTO user_account (email, accountType) VALUES (?, ?)`;
-        connection.query(insertUserQuery, [email, 'Organization'], (err, userResult) => {
+        const organizationId = orgResult.insertId;
+        console.log("Organization inserted with ID:", organizationId);
+
+        const insertHistory = `
+          INSERT INTO history (
+            email, OrganizationName, HECPMDCRegistrationNo, website, type, phoneNumber,
+            fullAddress, city, district, country, logo, organization_id, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const historyValues = [
+          email,
+          OrganizationName,
+          HECPMDCRegistrationNo,
+          website,
+          type,
+          phoneNumber,
+          fullAddress,
+          cityInt,
+          districtInt,
+          countryInt,
+          logo,
+          organizationId,
+          'added'
+        ];
+
+        connection.query(insertHistory, historyValues, (err) => {
           if (err) {
-            console.error("Insert user error:", err);
+            console.error("Insert history error:", err);
             return connection.rollback(() => connection.release());
           }
 
-          const userAccountId = userResult.insertId;
-          console.log("User inserted with ID:", userAccountId);
-
-          const insertOrgQuery = `INSERT INTO organization 
-            (user_account_id, OrganizationName, type, HECPMDCRegistrationNo, website, phoneNumber, fullAddress, city, district, country, logo, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-          const orgValues = [
-            userAccountId,
-            OrganizationName,
-            type,
-            HECPMDCRegistrationNo,
-            website,
-            phoneNumber,
-            fullAddress,
-            cityInt,
-            districtInt,
-            countryInt,
-            logo,
-            status
-          ];
-
-          connection.query(insertOrgQuery, orgValues, (err, orgResult) => {
+          connection.commit((err) => {
             if (err) {
-              console.error("Insert organization error:", err);
+              console.error("Transaction commit error:", err);
               return connection.rollback(() => connection.release());
             }
 
-            const organizationId = orgResult.insertId;
-            console.log("Organization inserted with ID:", organizationId);
+            connection.release();
+            console.log("Transaction committed successfully.");
 
-            const insertHistory = `
-              INSERT INTO history (
-                email, OrganizationName, HECPMDCRegistrationNo, website, type, phoneNumber,
-                fullAddress, city, district, country, logo, organization_id, status
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            sendEmail(email, "Welcome to Discovery Connect", `
+              Dear ${OrganizationName},\n\nYour organization registration is pending approval.\n\nRegards,\nLabHazir
+            `);
 
-            const historyValues = [
-              email,
-              OrganizationName,
-              HECPMDCRegistrationNo,
-              website,
-              type,
-              phoneNumber,
-              fullAddress,
-              cityInt,
-              districtInt,
-              countryInt,
-              logo,
-              organizationId,
-              'added'
-            ];
-
-            connection.query(insertHistory, historyValues, (err) => {
-              if (err) {
-                console.error("Insert history error:", err);
-                return connection.rollback(() => connection.release());
-              }
-
-              connection.commit((err) => {
-                if (err) {
-                  console.error("Transaction commit error:", err);
-                  return connection.rollback(() => connection.release());
-                }
-
-                connection.release();
-                console.log("Transaction committed successfully.");
-
-                // Send confirmation email
-                sendEmail(email, "Welcome to Discovery Connect", `
-                  Dear ${OrganizationName},\n\nYour account is pending approval.\n\nRegards,\nLabHazir
-                `);
-
-                callback(null, {
-                  message: "Organization registered successfully",
-                  userId: userAccountId
-                });
-              });
+            callback(null, {
+              message: "Organization registered successfully",
+              organizationId: organizationId
             });
           });
         });
@@ -176,6 +151,7 @@ const createOrganization = (req, callback) => {
     });
   });
 };
+
 
 
 const getAllOrganizations = (callback) => {

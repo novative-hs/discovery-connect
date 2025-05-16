@@ -36,7 +36,7 @@ const tablesAndColumns = [
   },
   {
     table: "organization",
-    columnsToDelete: ["ntnNumber"],
+    columnsToDelete: ["ntnNumber", "user_account_id"],
     columnsToAdd: [
       {
         column: "website",
@@ -266,8 +266,8 @@ const createOrUpdateTables = async () => {
     }
   });
   
-renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
-renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
+// renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
+// renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
 
   // await executeSequentially([
   //   () =>

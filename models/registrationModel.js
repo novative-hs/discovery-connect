@@ -541,7 +541,7 @@ const updateAccount = (req, callback) => {
                       phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
                     WHERE user_account_id = ?
                   `;
-                  values = [OrganizationName, type, HECPMDCRegistrationNo, ntnNumber, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
+                  values = [OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, logo, user_account_id];
                   break;
 
                 case "CollectionSites":
