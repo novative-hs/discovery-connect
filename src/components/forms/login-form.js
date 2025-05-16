@@ -19,7 +19,7 @@ const schema = Yup.object().shape({
 
 const LoginForm = () => {
   const [showPass, setShowPass] = useState(false);
-  const [loginUser, { }] = useLoginUserMutation();
+  const [loginUser, {}] = useLoginUserMutation();
   const router = useRouter();
   // react hook form
   const {
@@ -43,20 +43,25 @@ const LoginForm = () => {
         const errorData = result.error?.data;
 
         const errorMsg =
-          errorData?.message || 
+          errorData?.message ||
           errorData?.error || // If backend sends it under `error`
           result.error?.statusText || // Generic HTTP error
           "Internal Server Error"; // Fallback
 
         notifyError(errorMsg);
       } else {
-        const { id, accountType, authToken } = result?.data?.user || {};
+        const { id, accountType, action, authToken } = result?.data?.user || {};
+        console.log("Login result full object:", result);
+
         if (!id) {
           return notifyError("Unexpected error: User ID is missing.");
         }
 
         sessionStorage.setItem("userID", id);
         sessionStorage.setItem("accountType", accountType);
+        if (typeof action !== "undefined") {
+          sessionStorage.setItem("staffAction", action);
+        }
         notifySuccess("Login successfully");
 
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
@@ -70,16 +75,15 @@ const LoginForm = () => {
       }
     } catch (error) {
       console.error("Login request failed:", error);
-  
+
       const fallbackMessage =
-        error?.response?.data?.error ||  // Custom backend error
-        error?.message ||                // JS error
+        error?.response?.data?.error || // Custom backend error
+        error?.message || // JS error
         "Something went wrong. Please try again."; // Fallback
-  
+
       notifyError(fallbackMessage);
     }
   };
-
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

@@ -62,8 +62,8 @@ const createSampleTable = () => {
 };
 
 // Function to get all samples with 'In Stock' status
-const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
-  const user_account_id = parseInt(id);
+const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
+  const user_account_id = parseInt(userId, 10);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
   }
@@ -72,62 +72,68 @@ const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
   const pageSizeInt = parseInt(pageSize, 10) || 50;
   const offset = (pageInt - 1) * pageSizeInt;
 
-  // Base conditions
-  let baseWhereClause = `
-    s.status = "In Stock"
-    AND s.is_deleted = FALSE
-    AND ua.accountType = "CollectionSites"
-    AND s.user_account_id = ?
-  `;
-
+  // Search filtering
+  let searchClause = "";
   const params = [user_account_id];
-
-  // Optional search condition
   if (searchField && searchValue) {
-    baseWhereClause += ` AND ?? LIKE ? `;
-    params.push(searchField, `%${searchValue}%`);
+    const allowedFields = ["s.samplename", "s.sampletype", "s.samplecode"];
+    if (!allowedFields.includes(searchField)) {
+      return callback(new Error("Invalid search field"), null);
+    }
+    searchClause = ` AND ${searchField} LIKE ?`;
+    params.push(`%${searchValue}%`);
   }
 
+  // Pagination
+  params.push(pageSizeInt, offset);
 
   const query = `
     SELECT s.*
     FROM sample s
-    JOIN user_account ua ON s.user_account_id = ua.id
-    WHERE ${baseWhereClause}
+    JOIN user_account ua_sample ON s.user_account_id = ua_sample.id
+    JOIN collectionsitestaff cs_sample ON ua_sample.id = cs_sample.user_account_id
+
+    -- Join to get the collection_id of the logged-in user
+    JOIN collectionsitestaff cs_user ON cs_user.user_account_id = ?
+    
+    WHERE cs_sample.collectionsite_id = cs_user.collectionsite_id
+      AND s.quantity > 0
+      AND s.status = "In Stock"
+      AND s.is_deleted = FALSE
+      AND ua_sample.accountType = "CollectionSitesStaff"
+      ${searchClause}
     ORDER BY s.created_at DESC
     LIMIT ? OFFSET ?;
   `;
 
-  params.push(pageSizeInt, offset);
 
   mysqlConnection.query(query, params, (err, results) => {
-    if (err) {
-      return callback(err, null);
-    }
+    if (err) return callback(err, null);
 
-    // Count query with same WHERE logic
+    // Count query
+    const countParams = params.slice(0, -2); // remove limit/offset
     const countQuery = `
       SELECT COUNT(*) AS totalCount
       FROM sample s
-      JOIN user_account ua ON s.user_account_id = ua.id
-      WHERE ${baseWhereClause};
+      JOIN user_account ua_sample ON s.user_account_id = ua_sample.id
+      JOIN collectionsitestaff cs_sample ON ua_sample.id = cs_sample.user_account_id
+      JOIN collectionsitestaff cs_user ON cs_user.user_account_id = ?
+      WHERE cs_sample.collectionsite_id = cs_user.collectionsite_id
+        AND s.status = "In Stock"
+        AND s.is_deleted = FALSE
+        AND ua_sample.accountType = "CollectionSitesStaff"
+        ${searchClause};
     `;
 
-    mysqlConnection.query(countQuery, params.slice(0, -2), (err, countResults) => {
-      if (err) {
-        return callback(err, null);
-      }
-
-      const totalCount = countResults[0].totalCount;
-console.log(results)
+    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+      if (err) return callback(err, null);
       callback(null, {
         results,
-        totalCount,
+        totalCount: countResults[0].totalCount,
       });
     });
   });
 };
-
 
 
 const getAllSamples = (callback) => {

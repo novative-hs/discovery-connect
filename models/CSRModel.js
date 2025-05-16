@@ -179,7 +179,6 @@ const getAllCSR = (callback) => {
   `;
 
   mysqlConnection.query(query, (err, results) => {
-    console.log(results);
     callback(err, results);
   });
 };

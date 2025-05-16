@@ -9,7 +9,7 @@ const create_collectionsitestaffTable = () => {
       user_account_id INT,
       staffName VARCHAR(100),
       collectionsite_id INT,
-      action ENUM('add', 'edit','dispatch','receive','all') DEFAULT 'add',
+      permission ENUM('add', 'edit','dispatch','receive','all') DEFAULT 'add',
       status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -52,7 +52,7 @@ const createCollectionsiteStaff = (req, callback) => {
     password,
     staffName,
     collectionsitesid,
-    action,
+    permission,
     status
   } = req.body;
 
@@ -88,7 +88,7 @@ const createCollectionsiteStaff = (req, callback) => {
 
           const insertCSQuery = `
             INSERT INTO collectionsitestaff (
-              user_account_id, collectionsite_id, staffName, action, status
+              user_account_id, collectionsite_id, staffName, permission, status
             ) VALUES (?, ?, ?, ?, ?)
           `;
 
@@ -96,7 +96,7 @@ const createCollectionsiteStaff = (req, callback) => {
             userId,
             collectionsitesid,
             staffName,
-            action,
+            permission,
             status
           ];
 
@@ -112,7 +112,7 @@ const createCollectionsiteStaff = (req, callback) => {
 
             const historyQuery = `
               INSERT INTO history (
-                email, password, staffName, action, collectionsite_id, collectionsitestaff_id, status
+                email, password, staffName, permission, collectionsite_id, collectionsitestaff_id, status
               ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
 
@@ -120,7 +120,7 @@ const createCollectionsiteStaff = (req, callback) => {
               email,
               password,
               staffName || null,
-              action,
+              permission,
               collectionsitesid,
               collectionsitestaffId, // ✅ inserted ID from previous query
               status
@@ -237,7 +237,7 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
     user_account_id,
     staffName,
     collectionsitesid,
-    action,
+    permission,
     status
   } = req.body;
 
@@ -257,13 +257,13 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
         // 2. Update collectionsitestaff
         const updateCSQuery = `
           UPDATE collectionsitestaff 
-          SET collectionsite_id = ?, staffName = ?, action = ?, status = ? 
+          SET collectionsite_id = ?, staffName = ?, permission = ?, status = ? 
           WHERE user_account_id = ?
         `;
         await conn.query(updateCSQuery, [
           collectionsitesid,
           staffName,
-          action,
+          permission,
           status,
           user_account_id
         ]);
@@ -282,14 +282,14 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
         // 4. Insert into history table
         const insertHistoryQuery = `
           INSERT INTO history (
-            email, password, staffName, action, collectionsite_id, collectionsitestaff_id, status
+            email, password, staffName, permission, collectionsite_id, collectionsitestaff_id, status
           ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
         const historyValues = [
           email,
           password,
           staffName || null,
-          action,
+          permission,
           collectionsitesid,
           collectionsitestaffId,
           status

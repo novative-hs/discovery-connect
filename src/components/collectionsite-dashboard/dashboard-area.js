@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { React, useState, useEffect } from "react";
-import { useRouter } from "next/router";  // Importing useRouter for redirect
-// internal
+import { useRouter } from "next/router";
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import UpdateCollectionsite from './update-collectionsite';
 import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
+
 const DashboardArea = () => {
-  const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
-  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("samples"); // Default
   const [id, setUserID] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     const token = document.cookie
@@ -20,24 +20,38 @@ const DashboardArea = () => {
       ?.split("=")[1];
 
     if (!token) {
-      router.push("/login"); // Redirect to login if token is missing
+      router.push("/login");
     }
   }, [router]);
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
+    const staffAction = sessionStorage.getItem("staffAction");
+
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Collection site  ID:", storedUserID); // Verify storedUserID
+      console.log("Collection site ID:", storedUserID);
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");
     }
+
+    // Set tab based on staffAction
+    if (staffAction) {
+      const sampleTabs = ["add", "edit", "dispatch", "history", "all"];
+      const dispatchTabs = ["receive", "all"];
+      if (sampleTabs.includes(staffAction)) {
+        setActiveTab("samples");
+      } else if (dispatchTabs.includes(staffAction)) {
+        setActiveTab("sample-dispatch");
+      }
+    }
   }, [router]);
 
   if (!id) {
-    return <div>Loading...</div>; // Or redirect to login
+    return <div>Loading...</div>;
   }
+
   const renderContent = () => {
     switch (activeTab) {
       case "samples":
@@ -58,23 +72,17 @@ const DashboardArea = () => {
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area py-2 h-auto d-flex align-items-center my-4">
         <div className="container profile__inner position-relative">
-          {/* <ProfileShapes /> */}
-          <div className=" row justify-content-center">
+          <div className="row justify-content-center">
             <div className="col-xl-10 col-lg-7 col-md-9 col-sm-10 col-12">
-            <div
-              className="profile__tab-content mx-auto w-60 p-3 my-1 h-auto"
-             // style={{ backgroundColor: " #EDF4F8" }}
-            >
-              {renderContent()}
+              <div className="profile__tab-content mx-auto w-60 p-3 my-1 h-auto">
+                {renderContent()}
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </section>
     </>
   );
-  
-  
 };
 
 export default DashboardArea;

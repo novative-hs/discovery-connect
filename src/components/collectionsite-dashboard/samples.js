@@ -12,11 +12,13 @@ import { getsessionStorage } from "@utils/sessionStorage";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
+  
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
     console.log("Collection site Id on sample page is:", id);
   }
+  const [staffAction, setStaffAction] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -135,16 +137,11 @@ const SampleArea = () => {
 const [showAdditionalFields, setShowAdditionalFields] = useState(false);
 const [logoPreview, setLogoPreview] = useState(null); 
 
-  const handleSelectCountry = (country) => {
-    setSelectedCountry(country);
-    setFormData((prev) => ({
-      ...prev,
-      CountryOfCollection: country.name, // or country.id if you store ID
-    }));
-    setSearchCountry(country.name);
-    setShowCountryDropdown(false);
-  };
-
+  
+useEffect(() => {
+  const action = sessionStorage.getItem("staffAction");
+  setStaffAction(action);
+}, []);
   // Fetch countries from backend
   useEffect(() => {
     const fetchData = async (url, setState, label) => {
@@ -177,6 +174,15 @@ const [logoPreview, setLogoPreview] = useState(null);
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
   ];
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData((prev) => ({
+      ...prev,
+      CountryOfCollection: country.name, // or country.id if you store ID
+    }));
+    setSearchCountry(country.name);
+    setShowCountryDropdown(false);
+  };
   const handleTransferClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -224,7 +230,6 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     if (searchField && searchValue) {
       receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
     }
-
     // Fetch own samples
     const ownResponse = await axios.get(ownResponseurl);
     const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
@@ -250,13 +255,12 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
 
     const receivedSamples = receivedSampleData.map((sample) => {
-      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+      const quantity = Number(sample.Quantity ?? sample.Quantity ?? 0);
       return {
         ...sample,
         quantity,
       };
     });
-
     // Merge and sum duplicate quantities
     const sampleMap = new Map();
 
@@ -690,28 +694,31 @@ setShowAdditionalFields(false)
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
+  <div className="d-flex flex-wrap gap-3">
+    {
+     (staffAction === "add" || staffAction === "all") && (
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{
+            backgroundColor: "#4a90e2",
+            color: "#fff",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "6px",
+            fontWeight: "500",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          }}
+        >
+          <i className="fas fa-vial"></i> Add Sample
+        </button>
+      )
+    }
+  </div>
+</div>
 
-          <div className="d-flex flex-wrap gap-3 ">
-            {/* Add City Button */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              style={{
-                backgroundColor: "#4a90e2", // soft blue
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "6px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              }}
-            >
-              <i className="fas fa-vial"></i> Add Sample
-            </button>
-          </div>
-        </div>
         {/* Table */}
         <div
           onScroll={handleScroll}
@@ -742,9 +749,11 @@ setShowAdditionalFields(false)
                     </div>
                   </th>
                 ))}
-                <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-                  Action
-                </th>
+              {["edit", "dispatch", "history", "all"].includes(staffAction) && (
+      <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+        Action
+      </th>
+    )}
               </tr>
             </thead>
             <tbody className="table-light">
@@ -760,31 +769,44 @@ setShowAdditionalFields(false)
                         {sample[key] || "----"}
                       </td>
                     ))}
-                    <td className="text-center">
-                      <div className="d-flex justify-content-around gap-1">
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleEditClick(sample)}
-                          title="Edit"
-                        >
-                          <FontAwesomeIcon icon={faEdit} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleTransferClick(sample)}
-                          title="Transfer"
-                        >
-                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-outline-success btn-sm"
-                          onClick={() => handleShowHistory("sample", sample.id)}
-                          title="History"
-                        >
-                          <i className="fa fa-history"></i>
-                        </button>
-                      </div>
-                    </td>
+                   {["edit", "dispatch", "history", "all"].includes(staffAction) && (
+      
+    
+                   <td className="text-center">
+  <div className="d-flex justify-content-around gap-1">
+    {(staffAction === "edit" || staffAction === "all") && (
+      <button
+        className="btn btn-success btn-sm"
+        onClick={() => handleEditClick(sample)}
+        title="Edit"
+      >
+        <FontAwesomeIcon icon={faEdit} size="sm" />
+      </button>
+    )}
+
+    {(staffAction === "dispatch" || staffAction === "all") && (
+      <button
+        className="btn btn-primary btn-sm"
+        onClick={() => handleTransferClick(sample)}
+        title="Transfer"
+      >
+        <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+      </button>
+    )}
+
+    {(staffAction === "history" || staffAction === "all") && (
+      <button
+        className="btn btn-outline-success btn-sm"
+        onClick={() => handleShowHistory("sample", sample.id)}
+        title="History"
+      >
+        <i className="fa fa-history"></i>
+      </button>
+    )}
+  </div>
+</td>
+
+                    )}
                   </tr>
                 ))
               ) : (

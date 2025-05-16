@@ -15,6 +15,15 @@ const getAllCollectionSites = (req, res) => {
     res.status(200).json(results);
   });
 };
+const getAllCollectioninCollectionStaff=(req,res)=>{
+  collectionsiteModel.getAllCollectioninCollectionStaff((err,results)=>{
+    if (err) {
+      console.error('Error fetching collection sites:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    res.status(200).json(results);
+  })
+}
 
 const getAllCollectionSiteNamesInCSR = (req, res) => {
   
@@ -203,5 +212,6 @@ module.exports = {
   getCollectionSiteById,
   updateCollectionSiteStatus,
   deleteCollectionSite,
-  getAllCollectionSiteNamesInCSR
+  getAllCollectionSiteNamesInCSR,
+  getAllCollectioninCollectionStaff
 };
