@@ -7,61 +7,17 @@ import Button from "react-bootstrap/Button";
 const SampleArea = () => {
   const router = useRouter();
   const id = sessionStorage.getItem("userID");
-  const tableHeaders = [
+   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
-    // { label: "Age", key: "age" },
-    // { label: "Gender", key: "gender" },
-    // { label: "Ethnicity", key: "ethnicity" },
-    // { label: "Sample Condition", key: "samplecondition" },
-    // { label: "Storage Temperature", key: "storagetemp" },
-    // { label: "Container Type", key: "ContainerType" },
-    // { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Quantity", key: "quantity" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Price", key: "price" },
-    { label: "Quantity", key: "orderquantity" },
-    { label: "Total Payment", key: "totalpayment" },
-    // { label: "Quantity Unit", key: "QuantityUnit" },
-    // { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    // { label: "Smoking Status", key: "SmokingStatus" },
-    // { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-    // { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
-    // { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    // { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    // { label: "Date Of Collection", key: "DateOfCollection" },
-    // {
-    //   label: "Concurrent Medical Conditions",
-    //   key: "ConcurrentMedicalConditions",
-    // },
-    // { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    // { label: "Test Result", key: "TestResult" },
-    // { label: "Test Result Unit", key: "TestResultUnit" },
-    // { label: "Test Method", key: "TestMethod" },
-    // { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
-    // { label: "Test System", key: "TestSystem" },
-    // { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    // { label: "Status", key: "status" },
-    {
-      label: "Payment Method",
-      key: "payment_method",
-      render: (value) => (value === "DBT" ? "Bank Transfer" : value),
-    },
-    {
-      label: "Payment status",
-      key: "payment_status",
-    },
-    {
-      label: "Order status",
-      key: "order_status",
-    },
-    {
-      label: "Technical Admin status",
-      key: "technical_admin_status",
-    },
-    {
-      label: "Committee Member Status",
-      key: "committee_status",
-      render: (value) => (value === null ? "Pending Admin Action" : value),
-    },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+        { label: "Test Result", key: "TestResult" },
+    { label: "Status", key: "status" },
+    { label: "Sample Status", key: "sample_status" },
+
+
   ];
 
   const fieldsToShowInOrder = [
@@ -216,25 +172,27 @@ const SampleArea = () => {
 
                     // Render other columns normally
                     return (
-                      <th key={index} className="px-4 text-center">
-                        <div className="d-flex flex-column align-items-center">
-                          <input
-                            type="text"
-                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                            placeholder={label}
-                            onChange={(e) =>
-                              handleFilterChange(key, e.target.value)
-                            }
-                            style={{ minWidth: "150px" }}
-                          />
-                          <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
-                            {label}
-                          </span>
-                        </div>
-                      </th>
+                       <th key={index} className="col-md-1 px-2">
+
+                    <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
+
+                    </div>
+                  </th>
                     );
                   })}
-                  <th className="px-3 align-middle text-center">Action</th>
+                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                  Action
+                </th>
                 </tr>
               </thead>
               <tbody>
@@ -367,49 +325,42 @@ const SampleArea = () => {
         </div>
       </div>
       {/* Modal for sample details */}
-      <Modal show={showModal} onHide={closeModal} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Sample Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ maxHeight: "400px", overflowY: "auto" }}>
-          {selectedSample ? (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <tbody>
-                  {fieldsToShowInOrder.map(
-                    ({ key, label }) =>
-                      selectedSample[key] !== undefined && (
-                        <tr key={key} className="align-middle">
-                          <td
-                            className="bg-light fw-bold text-dark"
-                            style={{
-                              width: "35%",
-                              borderRadius: "8px 0 0 8px",
-                              padding: "12px",
-                            }}
-                          >
-                            {label}
-                          </td>
-                          <td
-                            className="text-primary"
-                            style={{ padding: "12px" }}
-                          >
-                            {selectedSample[key]
-                              ? selectedSample[key].toString()
-                              : "----"}
-                          </td>
-                        </tr>
-                      )
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-center text-muted">No details to show</p>
-          )}
-        </Modal.Body>
-        <Modal.Footer></Modal.Footer>
-      </Modal>
+           <Modal show={showModal}
+              onHide={closeModal}
+              size="lg"
+              centered
+              backdrop="static"
+              keyboard={false}>
+              <Modal.Header closeButton className="border-0">
+                <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+              </Modal.Header>
+      
+              <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                {selectedSample ? (
+                  <div className="p-3">
+                    <div className="row g-3">
+                      {fieldsToShowInOrder.map(({ key, label }) => {
+                        const value = selectedSample[key];
+                        if (value === undefined) return null;
+      
+                        return (
+                          <div className="col-md-6" key={key}>
+                            <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                              <span className="text-muted small fw-bold mb-1">{label}</span>
+                              <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted p-3">No details to show</div>
+                )}
+              </Modal.Body>
+      
+              <Modal.Footer className="border-0"></Modal.Footer>
+            </Modal>
     </section>
   );
 };

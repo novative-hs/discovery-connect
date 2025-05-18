@@ -6,6 +6,7 @@ import {
   useRegisterUserMutation,
   useUpdateProfileMutation,
 } from "src/redux/features/auth/authApi";
+import Modal from "react-bootstrap/Modal";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
@@ -14,7 +15,7 @@ const OrganizationArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-
+ const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editOrganization, setEditOrganization] = useState(null); // State for selected organization to edit
   const [selectedOrganizationId, setSelectedOrganizationId] = useState(null); // Store ID of organization to delete
@@ -23,7 +24,7 @@ const OrganizationArea = () => {
   const [cityname, setcityname] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
-  
+   const [showModal, setShowModal] = useState(false);
   const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
     user_account_id: "",
@@ -61,17 +62,19 @@ const OrganizationArea = () => {
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
     
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
-    { label: "City", placeholder: "Search City", field: "city" },
-    { label: "District", placeholder: "Search District", field: "district" },
-    { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "HECPMDCRegistrationNo", placeholder: "Search HECPMDCRegistrationNo", field: "HECPMDCRegistrationNo" },
     { label: "Website", placeholder: "Search Website", field: "website" },
     { label: "Type", placeholder: "Search Type", field: "type" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
-
+  const fieldsToShowInOrder = [
+ 
+    { label: "City", placeholder: "Search City", field: "city" },
+    { label: "District", placeholder: "Search District", field: "district" },
+    { label: "Country", placeholder: "Search Country", field: "country" },
+   { label: "Address", placeholder: "Search Address", field: "fullAddress" },
+  ];
  const onSubmit = async (event) => {
   event.preventDefault();
 
@@ -487,7 +490,16 @@ const handleExportToExcel = () => {
   XLSX.writeFile(workbook, "Organization_List.xlsx");
 };
 
+  const openModal = (sample) => {
 
+    setSelectedOrganization(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedOrganization(null);
+    setShowModal(false);
+  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -574,98 +586,132 @@ const handleExportToExcel = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {columns.map(({ label, placeholder, field }) => (
-                    <th key={field} style={{ minWidth: "180px" }}>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder={placeholder}
-                        onChange={(e) => handleFilterChange(field, e.target.value)}
-                      />
-                      <div className="fw-bold mt-1">{label}</div>
-                    </th>
-                  ))}
-                  <th style={{ minWidth: "120px" }}>Action</th>
+                         <th key={field} className="col-md-1 px-2">
+            
+                    <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
+
+                    </div>
+                  </th>
+                ))}
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
                 </tr>
               </thead>
-              <tbody>
-                {currentData.length > 0 ? (
-                  currentData.map((organization) => (
-                    <tr key={organization.id}>
-                      {columns.map(({ field }) => (
-                        <td key={field}>
-                          {field === "created_at"
-                            ? moment(organization[field]).format("YYYY-MM-DD")
-                            : organization[field]}
-                        </td>
-                      ))}
-                      <td className="position-relative">
-                        <div className="d-flex justify-content-center gap-2">
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(organization)}
-                            title="Edit"
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </button>
+         <tbody>
+  {currentData.length > 0 ? (
+    currentData.map((organization) => (
+      <tr key={organization.id}>
+        {columns.map(({ field }) => (
+          <td
+            key={field}
+            className={
+              field === "OrganizationName"
+                ? "text-end"
+                : "text-center text-truncate"
+            }
+            style={{ maxWidth: "150px" }}
+          >
+            {field === "OrganizationName" ? (
+              <span
+                className="OrganizationName text-primary fw-semibold fs-6 text-decoration-underline"
+                role="button"
+                title="Organization Details"
+                onClick={() => openModal(organization)}
+                style={{
+                  cursor: "pointer",
+                  transition: "color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                onMouseOut={(e) => (e.target.style.color = "")}
+              >
+                {organization.OrganizationName || "----"}
+              </span>
+            ) : field === "created_at" ? (
+              moment(organization[field]).format("YYYY-MM-DD")
+            ) : (
+              organization[field] || "----"
+            )}
+          </td>
+        ))}
 
-                          <div className="btn-group">
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleToggleStatusOptions(organization.id)}
-                              title="Edit Status"
-                            >
-                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
-                            </button>
+        {/* Action buttons */}
+        <td className="position-relative">
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              className="btn btn-success btn-sm"
+              onClick={() => handleEditClick(organization)}
+              title="Edit"
+            >
+              <FontAwesomeIcon icon={faEdit} />
+            </button>
 
-                            {statusOptionsVisibility[organization.id] && (
-                              <div
-                                className="dropdown-menu show"
-                                data-id={organization.id}
-                                style={{
-                                  position: "absolute",
-                                  top: "100%",
-                                  left: "0",
-                                  zIndex: 1000,
-                                  minWidth: "100px",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                <button
-                                  className="dropdown-item"
-                                  onClick={() => handleStatusClick(organization.id, "active")}
-                                >
-                                  Active
-                                </button>
-                                <button
-                                  className="dropdown-item"
-                                  onClick={() => handleStatusClick(organization.id, "inactive")}
-                                >
-                                  InActive
-                                </button>
-                              </div>
-                            )}
-                          </div>
+            <div className="btn-group">
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => handleToggleStatusOptions(organization.id)}
+                title="Edit Status"
+              >
+                <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+              </button>
 
-                          <button
-                            className="btn btn-info btn-sm"
-                            onClick={() => handleShowHistory("organization", organization.id)}
-                            title="History"
-                          >
-                            <FontAwesomeIcon icon={faHistory} />
-                          </button>
-                        </div>
-                      </td>
+              {statusOptionsVisibility[organization.id] && (
+                <div
+                  className="dropdown-menu show"
+                  data-id={organization.id}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: "0",
+                    zIndex: 1000,
+                    minWidth: "100px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusClick(organization.id, "active")}
+                  >
+                    Active
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusClick(organization.id, "inactive")}
+                  >
+                    InActive
+                  </button>
+                </div>
+              )}
+            </div>
 
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={columns.length + 1} className="text-center">
-                      No organizations available
-                    </td>
-                  </tr>
-                )}
-              </tbody>
+            <button
+              className="btn btn-info btn-sm"
+              onClick={() => handleShowHistory("organization", organization.id)}
+              title="History"
+            >
+              <FontAwesomeIcon icon={faHistory} />
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={columns.length + 1} className="text-center">
+        No data available
+      </td>
+    </tr>
+  )}
+</tbody>
+
             </table>
           </div>
 
@@ -1093,6 +1139,42 @@ const handleExportToExcel = () => {
 
         </div>
       </div>
+              <Modal show={showModal}
+                          onHide={closeModal}
+                          size="lg"
+                          centered
+                          backdrop="static"
+                          keyboard={false}>
+                          <Modal.Header closeButton className="border-0">
+                            <Modal.Title className="fw-bold text-danger"> Organization Details</Modal.Title>
+                          </Modal.Header>
+                  
+                          <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                            {selectedOrganization ? (
+                              <div className="p-3">
+                                <div className="row g-3">
+                                  {fieldsToShowInOrder.map(({ field, label }) => {
+  const value = selectedOrganization[field];
+  if (value === undefined) return null;
+
+  return (
+    <div className="col-md-6" key={field}>
+      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+        <span className="text-muted small fw-bold mb-1">{label}</span>
+        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+      </div>
+    </div>
+  );
+})}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center text-muted p-3">No details to show</div>
+                            )}
+                          </Modal.Body>
+                  
+                          <Modal.Footer className="border-0"></Modal.Footer>
+                        </Modal>
     </section>
   );
 };

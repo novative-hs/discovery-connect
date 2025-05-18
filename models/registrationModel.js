@@ -8,8 +8,8 @@ const createuser_accountTable = () => {
     CREATE TABLE IF NOT EXISTS user_account (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites','CollectionSitesStaff', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSites', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -247,12 +247,12 @@ const createAccount = (req, callback) => {
     nameofOrganization,
     type,
     HECPMDCRegistrationNo,
-    
+    ntnNumber,
     status,
     added_by,
 
   } = req.body;
-console.log("data is ", req.data)
+console.log("data is ", req.data)   
   const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
   const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
   let logo = null;
@@ -365,16 +365,17 @@ console.log("data is ", req.data)
               const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName,
-                  HECPMDCRegistrationNo, nameofOrganization, type, phoneNumber, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
                   researcher_id, collectionsite_id, csr_id, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
                 password,
                 ResearcherName || null,
                 HECPMDCRegistrationNo || null,
+                ntnNumber || null,
                 nameofOrganization || null,
                 type || null,
                 phoneNumber,
@@ -435,7 +436,6 @@ const updateAccount = (req, callback) => {
     accountType,
     ResearcherName,
     OrganizationName,
-    collectionsitename,
     CollectionSiteName,
     CollectionSiteType,
     CommitteeMemberName,
@@ -449,6 +449,7 @@ const updateAccount = (req, callback) => {
     nameofOrganization,
     type,
     HECPMDCRegistrationNo,
+    ntnNumber,
     committeetype,
     added_by
   } = req.body;
@@ -537,7 +538,7 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM organization WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE organization SET 
-                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, website = ?, 
+                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, ntnNumber = ?, 
                       phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
                     WHERE user_account_id = ?
                   `;
@@ -567,9 +568,9 @@ const updateAccount = (req, callback) => {
                   updateQuery = `
                       UPDATE csr SET 
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
-                        country = ?,collectionsite_id=? WHERE user_account_id = ?
+                        country = ? WHERE user_account_id = ?
                     `;
-                  values = [CSRName, phoneNumber, fullAddress, city, district, country,collectionsitename, user_account_id];
+                  values = [CSRName, phoneNumber, fullAddress, city, district, country, user_account_id];
                   break;
 
                 default:
@@ -612,7 +613,7 @@ const updateAccount = (req, callback) => {
                   const historyQuery = `
                     INSERT INTO history (
                       email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
-                      HECPMDCRegistrationNo, CNIC, CommitteeType, website, nameofOrganization, type, phoneNumber, 
+                      HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, csr_id,status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
@@ -630,7 +631,7 @@ const updateAccount = (req, callback) => {
                     previousData.HECPMDCRegistrationNo || null,
                     previousData.cnic || null,
                     previousData.committeetype || null,
-                    previousData.website || null,
+                    previousData.ntnNumber || null,
                     previousData.nameofOrganization ? previousData.nameofOrganization : previousData.organization || null,
                     previousData.type || null,
                     previousData.phoneNumber || null,

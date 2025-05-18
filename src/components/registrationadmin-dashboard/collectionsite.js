@@ -6,6 +6,7 @@ import {
   useRegisterUserMutation,
   useUpdateProfileMutation,
 } from "src/redux/features/auth/authApi";
+import Modal from "react-bootstrap/Modal";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX  from "xlsx"
@@ -14,7 +15,6 @@ const CollectionSiteArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected Collectionsite to edit
   const [selectedCollectionsiteId, setSelectedCollectionSiteId] = useState(null); // Store ID of Collectionsite to delete
@@ -25,6 +25,15 @@ const CollectionSiteArea = () => {
   const [countryname, setCountryname] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [selectedCollectionSite, setSelectedCollectionSite] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
+  const [filteredCollectionsites, setFilteredCollectionsites] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     user_account_id: "",
     CollectionSiteName: "",
@@ -41,13 +50,7 @@ const CollectionSiteArea = () => {
     created_at: "",
     status: "",
   });
-  const [historyData, setHistoryData] = useState([]);
-  const [filteredCollectionsites, setFilteredCollectionsites] = useState([]);
-  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
@@ -65,15 +68,27 @@ const CollectionSiteArea = () => {
       field: "useraccount_password",
     },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
-    { label: "City", placeholder: "Search City", field: "city" },
-    { label: "District", placeholder: "Search District", field: "district" },
-    { label: "Country", placeholder: "Search Country", field: "country" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 
+  const fieldsToShowInOrder = [
+ 
+    { label: "City", placeholder: "Search City", field: "city" },
+    { label: "District", placeholder: "Search District", field: "district" },
+    { label: "Country", placeholder: "Search Country", field: "country" },
+   { label: "Address", placeholder: "Search Address", field: "fullAddress" },
+  ];
+    const openModal = (sample) => {
 
+    setSelectedCollectionSite(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedCollectionSite(null);
+    setShowModal(false);
+  };
 const onSubmit = async (event) => {
   event.preventDefault();
 
@@ -565,17 +580,25 @@ const handleExportToExcel = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {columns.map(({ label, placeholder, field }) => (
-                    <th key={field} style={{ minWidth: "180px" }}>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder={placeholder}
-                        onChange={(e) => handleFilterChange(field, e.target.value)}
-                      />
-                      <div className="fw-bold mt-1">{label}</div>
-                    </th>
-                  ))}
-                  <th style={{ minWidth: "120px" }}>Action</th>
+                    <th key={field} className="col-md-1 px-2">
+            
+                    <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "145px", maxWidth: "200px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
+
+                    </div>
+                  </th>
+                ))}
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
+                
                 </tr>
               </thead>
               <tbody>
@@ -583,11 +606,37 @@ const handleExportToExcel = () => {
                   currentData.map((collectionsite) => (
                     <tr key={collectionsite.id}>
                       {columns.map(({ field }) => (
-                        <td key={field}>
-                          {field === "created_at"
-                            ? moment(collectionsite[field]).format("YYYY-MM-DD")
-                            : collectionsite[field]}
-                        </td>
+                         <td
+                                    key={field}
+                                    className={
+                                      field === "CollectionSiteName"
+                                        ? "text-end"
+                                        : "text-center text-truncate"
+                                    }
+                                    style={{ maxWidth: "150px" }}
+                                  >
+                                    {field === "CollectionSiteName" ? (
+                                      <span
+                                        className="CollectionSiteName text-primary fw-semibold fs-6 text-decoration-underline"
+                                        role="button"
+                                        title="Collection Site Details"
+                                        onClick={() => openModal(collectionsite)}
+                                        style={{
+                                          cursor: "pointer",
+                                          transition: "color 0.2s",
+                                        }}
+                                        onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                                        onMouseOut={(e) => (e.target.style.color = "")}
+                                      >
+                                        {collectionsite.CollectionSiteName || "----"}
+                                      </span>
+                                    ) : field === "created_at" ? (
+                                      moment(collectionsite[field]).format("YYYY-MM-DD")
+                                    ) : (
+                                      collectionsite[field] || "----"
+                                    )}
+                                  </td>
+                   
                       ))}
                       <td className="position-relative">
                         <div className="d-flex justify-content-center gap-2">
@@ -1079,6 +1128,42 @@ const handleExportToExcel = () => {
 
         </div>
       </div>
+      <Modal show={showModal}
+                                onHide={closeModal}
+                                size="lg"
+                                centered
+                                backdrop="static"
+                                keyboard={false}>
+                                <Modal.Header closeButton className="border-0">
+                                  <Modal.Title className="fw-bold text-danger"> Organization Details</Modal.Title>
+                                </Modal.Header>
+                        
+                                <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                                  {selectedCollectionSite ? (
+                                    <div className="p-3">
+                                      <div className="row g-3">
+                                        {fieldsToShowInOrder.map(({ field, label }) => {
+        const value = selectedCollectionSite[field];
+        if (value === undefined) return null;
+      
+        return (
+          <div className="col-md-6" key={field}>
+            <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+              <span className="text-muted small fw-bold mb-1">{label}</span>
+              <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+            </div>
+          </div>
+        );
+      })}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="text-center text-muted p-3">No details to show</div>
+                                  )}
+                                </Modal.Body>
+                        
+                                <Modal.Footer className="border-0"></Modal.Footer>
+                              </Modal>
     </section>
   );
 };

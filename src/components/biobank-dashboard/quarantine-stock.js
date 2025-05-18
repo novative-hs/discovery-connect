@@ -23,25 +23,13 @@ const BioBankSampleArea = () => {
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
     { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -50,19 +38,34 @@ const BioBankSampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    
+    { label: "Country of Collection", key: "CountryOfCollection" },
+   
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
+
   ];
-  const tableHeaders = [
+   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
-    { label: "Sample Condition", key: "samplecondition" },
-    { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
-    { label: "Price", key: "price" },
     { label: "Quantity", key: "quantity" },
     { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Price", key: "price" },
+    { label: "Currency", key: "SamplePriceCurrency" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Test Result", key: "TestResult" },
+        { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
+    { label: "Sample Status", key: "sample_status" },
+
+
   ];
   const [samples, setSamples] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState(samples);
@@ -223,17 +226,14 @@ const BioBankSampleArea = () => {
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-
-                    <div className="d-flex flex-column align-items-center">
-                      <input
-                        type="text"
-                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                        placeholder={`Search ${label}`}
-                        onChange={(e) =>
-                          handleFilterChange(key, e.target.value)
-                        }
-                        style={{ minWidth: "150px" }}
-                      />
+                          <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+/>
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>
@@ -241,7 +241,7 @@ const BioBankSampleArea = () => {
                     </div>
                   </th>
                 ))}
-                <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                   Action
                 </th>
               </tr>

@@ -79,10 +79,13 @@ const DashboardArea = () => {
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">
-        <div className="container profile__inner position-relative">
+        <div className="container-fluid profile__inner position-relative">
           <div className="row justify-content-center">
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
-              <div className="profile__tab-content mx-auto w-100 p-3 my-1 h-auto">
+             <div
+  className="profile__tab-content mx-auto p-3 my-1 h-auto"
+  style={{ maxWidth: "95%", width: "100%" }}
+>
                 {renderContent()}
               </div>
             </div>
