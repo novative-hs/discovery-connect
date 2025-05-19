@@ -8,13 +8,23 @@ import {
 } from "src/redux/features/auth/authApi";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+import Modal from "react-bootstrap/Modal";
 import * as XLSX from "xlsx"
 import { notifyError, notifySuccess } from "@utils/toast";
 const CollectionSiteStaffArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCollectionSite, setSelectedCollectionSite] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
+  const [filteredCollectionsitesstaff, setFilteredCollectionsitesstaff] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
+  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsitestaff, setEditCollectionsiteStaff] = useState(null); // State for selected Collectionsite to edit
   const [selectedCollectionsiteStaffId, setSelectedCollectionSiteStaffId] = useState(null); // Store ID of Collectionsite to delete
@@ -31,14 +41,6 @@ const CollectionSiteStaffArea = () => {
     created_at: "",
     status: "inactive",
   });
-  const [historyData, setHistoryData] = useState([]);
-  const [filteredCollectionsitesstaff, setFilteredCollectionsitesstaff] = useState([]);
-  const [statusFilter, setStatusFilter] = useState(""); // State for the selected status filter
-  const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
@@ -46,7 +48,6 @@ const CollectionSiteStaffArea = () => {
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "staffName" },
-    { label: "Collectionsite Name", placeholder: "Search Collection site Name", field: "collectionsite_name" },
 
     { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
     {
@@ -57,9 +58,24 @@ const CollectionSiteStaffArea = () => {
     { label: "Permission", placeholder: "Search permission", field: "permission" },
     { label: "Status", placeholder: "Search Status", field: "status" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
-    { label: "Updated at", placeholder: "Search Date", field: "updated_at" },
+  
 
   ];
+    const fieldsToShowInOrder = [
+ 
+    { label: "Collectionsite Name", placeholder: "Search Collection site Name", field: "collectionsite_name" },
+  { label: "Updated at", placeholder: "Search Date", field: "updated_at" },
+  ];
+    const openModal = (sample) => {
+
+    setSelectedCollectionSite(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedCollectionSite(null);
+    setShowModal(false);
+  };
   const baseStyle = {
     padding: "10px 15px",
     borderRadius: "15px",
@@ -234,7 +250,6 @@ const CollectionSiteStaffArea = () => {
       [id]: !prev[id], // Toggle the visibility of the dropdown for the given id
     }));
   };
-
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
@@ -446,17 +461,25 @@ const CollectionSiteStaffArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {columns.map(({ label, placeholder, field }) => (
-                    <th key={field} style={{ minWidth: "180px" }}>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder={placeholder}
-                        onChange={(e) => handleFilterChange(field, e.target.value)}
-                      />
-                      <div className="fw-bold mt-1">{label}</div>
-                    </th>
-                  ))}
-                  <th style={{ minWidth: "120px" }}>Action</th>
+                   <th key={field} className="col-md-1 px-2">
+            
+                    <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "150px", maxWidth: "200px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
+
+                    </div>
+                  </th>
+                ))}
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
+                
                 </tr>
               </thead>
               <tbody>
@@ -464,11 +487,38 @@ const CollectionSiteStaffArea = () => {
                   currentData.map((collectionsitestaff) => (
                     <tr key={collectionsitestaff.id}>
                       {columns.map(({ field }) => (
-                        <td key={field}>
-                          {(field === "created_at" || field === "updated_at")
-                            ? moment(collectionsitestaff[field]).format("YYYY-MM-DD")
-                            : collectionsitestaff[field]}
-                        </td>
+                    
+                          <td
+  key={field}
+  className={
+    field === "staffName"
+      ? "text-end"
+      : "text-center text-truncate"
+  }
+  style={{ maxWidth: "150px" }}
+>
+  {field === "staffName" ? (
+    <span
+      className="staffName text-primary fw-semibold fs-6 text-decoration-underline"
+      role="button"
+      title="Collection Site Details"
+      onClick={() => openModal(collectionsitestaff)}
+      style={{
+        cursor: "pointer",
+        transition: "color 0.2s",
+      }}
+      onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+      onMouseOut={(e) => (e.target.style.color = "")}
+    >
+      {collectionsitestaff[field] || "----"}
+    </span>
+  ) : field === "created_at" ||  field === "updated_at" ? (
+    moment(collectionsitestaff[field]).format("YYYY-MM-DD")
+  ) : (
+    collectionsitestaff[field] || "----"
+  )}
+</td>
+
                       ))}
                       <td className="position-relative">
                         <div className="d-flex justify-content-center gap-2">
@@ -835,6 +885,42 @@ const CollectionSiteStaffArea = () => {
 
         </div>
       </div>
+            <Modal show={showModal}
+                                      onHide={closeModal}
+                                      size="lg"
+                                      centered
+                                      backdrop="static"
+                                      keyboard={false}>
+                                      <Modal.Header closeButton className="border-0">
+                                        <Modal.Title className="fw-bold text-danger"> CollectionSite Staff Details</Modal.Title>
+                                      </Modal.Header>
+                              
+                                      <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                                        {selectedCollectionSite ? (
+                                          <div className="p-3">
+                                            <div className="row g-3">
+                                              {fieldsToShowInOrder.map(({ field, label }) => {
+              const value = selectedCollectionSite[field];
+              if (value === undefined) return null;
+            
+              return (
+                <div className="col-md-6" key={field}>
+                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                    <span className="text-muted small fw-bold mb-1">{label}</span>
+                    <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                  </div>
+                </div>
+              );
+            })}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="text-center text-muted p-3">No details to show</div>
+                                        )}
+                                      </Modal.Body>
+                              
+                                      <Modal.Footer className="border-0"></Modal.Footer>
+                                    </Modal>
     </section>
   );
 };

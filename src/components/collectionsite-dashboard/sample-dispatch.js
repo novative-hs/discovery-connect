@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Modal from "react-bootstrap/Modal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -21,26 +22,30 @@ const SampleDispatchArea = () => {
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-
-  const tableHeaders = [
+  const [showModal, setShowModal] = useState(false);
+    const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
-    { label: "Sample Condition", key: "samplecondition" },
-    { label: "Storage Temp", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity", key: "Quantity" },
+    { label: "Quantity", key: "quantity" },
     { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Price", key: "price" },
+    { label: "Currency", key: "SamplePriceCurrency" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+        { label: "Test Result", key: "TestResult" },
+    { label: "Status", key: "status" },
+    { label: "Sample Status", key: "sample_status" },
+
+
+  ];
+
+  const fieldsToShowInOrder = [
+    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Condition", key: "samplecondition" },
+    { label: "Storage Temperature", key: "storagetemp" },
+    { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -49,8 +54,23 @@ const SampleDispatchArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Status", key: "status" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    
+    { label: "Country of Collection", key: "CountryOfCollection" },
+   
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
+
   ];
+
 
   const [formData, setFormData] = useState({
     samplename: "",
@@ -87,15 +107,25 @@ const SampleDispatchArea = () => {
   }, []);
   const [successMessage, setSuccessMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const [totalPages, setTotalPages] = useState(0);
-  const [filteredSamplename, setFilteredSamplename] = useState([]);
+    const [selectedSample, setSelectedSample] = useState(null);
+   const itemsPerPage = 10;
+   // Calculate total pages
+   const [totalPages, setTotalPages] = useState(0);
+const [filteredSamplename, setFilteredSamplename] = useState([]); 
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     receiverName: "",
   });
+    const openModal = (sample) => {
 
+    setSelectedSample(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedSample(null);
+    setShowModal(false);
+  };
   const handleTransferClick = (sample) => {
 
     setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
@@ -252,59 +282,87 @@ const SampleDispatchArea = () => {
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
-      <div className="container">
-        <div className="row justify-content-center">
-          {/* Success Message */}
-          {successMessage && (
-            <div className="alert alert-success w-100 text-start mb-2 small">
-              {successMessage}
-            </div>
-          )}
+        <div className="container">
+          <div className="row justify-content-center">
+              {/* Success Message */}
+              {successMessage && (
+              <div className="alert alert-success w-100 text-start mb-2 small">
+                {successMessage}
+              </div>
+            )}
+              
+              {/* Table */}
+              <div className="table-responsive w-100">
+              <table className="table table-bordered table-hover text-center align-middle w-auto border">
+                <thead className="table-primary text-dark">
+                  <tr className="text-center">
+                      {tableHeaders.map(({ label, key }, index) => (
+                        <th key={index} className="p-2"  style={{ minWidth: "140px" }}>
+                               <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
 
-          {/* Table */}
-          <div className="table-responsive w-100">
-            <table className="table table-bordered table-hover text-center align-middle w-auto border">
-              <thead className="table-primary text-dark">
-                <tr className="text-center">
-                  {tableHeaders.map(({ label, key }, index) => (
-                    <th key={index} className="p-2" style={{ minWidth: "140px" }}>
-                      <div className="d-flex flex-column align-items-center">
-                        <input
-                          type="text"
-                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={`Search ${label}`}
-                          onChange={(e) =>
-                            handleFilterChange(key, e.target.value)
-                          }
-                          style={{ minWidth: "150px" }}
-                        />
-                        <span className="fw-bold mt-1 d-block text-nowrap text-center">
-                          {label}
-                        </span>
-                      </div>
-                    </th>
-                  ))}
-                  <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.length > 0 ? (
-                  currentData.map((sample) => (
-                    <tr key={sample.id}>
-                      {tableHeaders.map(({ key }, index) => (
-                        <td key={index}>{sample[key] || "----"}</td>
+                    </div>
+                        </th>
                       ))}
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-around",
-                            gap: "3px",
-                          }}
-                        >
-                          {/* <button
+                      <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                      Action
+                    </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentData.length > 0 ? (
+                      currentData.map((sample) => (
+                        <tr key={sample.id}>
+                          {tableHeaders.map(({ key }, index) => (
+                           <td
+            key={index}
+            className={
+              key === "price"
+                ? "text-end"
+                : key === "samplename"
+                ? ""
+                : "text-center text-truncate"
+            }
+            style={{ maxWidth: "150px" }}
+          >
+            {key === "samplename" ? (
+              <span
+                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                role="button"
+                title="Sample Details"
+                onClick={() => openModal(sample)}
+                style={{
+                  cursor: "pointer",
+                  transition: "color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                onMouseOut={(e) => (e.target.style.color = "")}
+              >
+                {sample.samplename || "----"}
+              </span>
+            ) : (
+              sample[key] || "----"
+            )}
+          </td>
+                          ))}
+                          <td>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                gap: "3px",
+                              }}
+                            >
+                              {/* <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleEditClick(sample)}
                               >
@@ -436,6 +494,42 @@ const SampleDispatchArea = () => {
           )}
         </div>
       </div>
+        <Modal show={showModal}
+                    onHide={closeModal}
+                    size="lg"
+                    centered
+                    backdrop="static"
+                    keyboard={false}>
+                    <Modal.Header closeButton className="border-0">
+                      <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+                    </Modal.Header>
+            
+                    <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                      {selectedSample ? (
+                        <div className="p-3">
+                          <div className="row g-3">
+                            {fieldsToShowInOrder.map(({ key, label }) => {
+                              const value = selectedSample[key];
+                              if (value === undefined) return null;
+            
+                              return (
+                                <div className="col-md-6" key={key}>
+                                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                                    <span className="text-muted small fw-bold mb-1">{label}</span>
+                                    <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-muted p-3">No details to show</div>
+                      )}
+                    </Modal.Body>
+            
+                    <Modal.Footer className="border-0"></Modal.Footer>
+                  </Modal>
     </section>
   );
 };

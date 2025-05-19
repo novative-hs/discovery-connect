@@ -365,16 +365,17 @@ const createAccount = (req, callback) => {
               const historyQuery = `
                 INSERT INTO history (
                   email, password, ResearcherName,
-                  HECPMDCRegistrationNo, nameofOrganization, type, phoneNumber, 
+                  HECPMDCRegistrationNo, ntnNumber, nameofOrganization, type, phoneNumber, 
                   fullAddress, city, district, country, logo, added_by, organization_id, 
                   researcher_id, collectionsite_id, csr_id, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
               const historyValues = [
                 email,
                 password,
                 ResearcherName || null,
                 HECPMDCRegistrationNo || null,
+                ntnNumber || null,
                 nameofOrganization || null,
                 type || null,
                 phoneNumber,
@@ -435,7 +436,6 @@ const updateAccount = (req, callback) => {
     accountType,
     ResearcherName,
     OrganizationName,
-    collectionsitename,
     CollectionSiteName,
     CollectionSiteType,
     CommitteeMemberName,
@@ -449,6 +449,7 @@ const updateAccount = (req, callback) => {
     nameofOrganization,
     type,
     HECPMDCRegistrationNo,
+    ntnNumber,
     committeetype,
     added_by
   } = req.body;
@@ -537,7 +538,7 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM organization WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE organization SET 
-                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, website = ?, 
+                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, ntnNumber = ?, 
                       phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
                     WHERE user_account_id = ?
                   `;
@@ -616,7 +617,7 @@ const updateAccount = (req, callback) => {
                   const historyQuery = `
                     INSERT INTO history (
                       email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
-                      HECPMDCRegistrationNo, CNIC, CommitteeType, website, nameofOrganization, type, phoneNumber, 
+                      HECPMDCRegistrationNo, CNIC, CommitteeType, ntnNumber, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, csr_id,status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
@@ -634,7 +635,7 @@ const updateAccount = (req, callback) => {
                     previousData.HECPMDCRegistrationNo || null,
                     previousData.cnic || null,
                     previousData.committeetype || null,
-                    previousData.website || null,
+                    previousData.ntnNumber || null,
                     previousData.nameofOrganization ? previousData.nameofOrganization : previousData.organization || null,
                     previousData.type || null,
                     previousData.phoneNumber || null,
