@@ -15,8 +15,8 @@ const getAllCollectionSites = (req, res) => {
     res.status(200).json(results);
   });
 };
-const getAllCollectioninCollectionStaff=(req,res)=>{
-  collectionsiteModel.getAllCollectioninCollectionStaff((err,results)=>{
+const getAllCollectioninCollectionStaff = (req, res) => {
+  collectionsiteModel.getAllCollectioninCollectionStaff((err, results) => {
     if (err) {
       console.error('Error fetching collection sites:', err);
       return res.status(500).json({ error: 'An error occurred' });
@@ -26,10 +26,10 @@ const getAllCollectioninCollectionStaff=(req,res)=>{
 }
 
 const getAllCollectionSiteNamesInCSR = (req, res) => {
-  
+
   collectionsiteModel.getAllNameinCSR((err, results) => {
     if (err) {
-          console.error("Error in getAllCollectionSiteNamesInCSR:", err); // Log real error
+      console.error("Error in getAllCollectionSiteNamesInCSR:", err); // Log real error
 
       // Send more informative error message
       return res.status(500).json({ error: err.error || 'An unexpected error occurred' });
@@ -63,18 +63,6 @@ const createCollectionSite = (req, res) => {
     res.status(201).json(result);
   });
 };
-
-// Controller to create a collection site
-// const createCollectionSite = (req, res) => {
-//   const newMemberData = req.body;
-//   collectionsiteModel.createCollectionSite(newMemberData, (err, result) => {
-//     if (err) {
-//       console.error("Error creating collection site:", err); // Add this line
-//       return res.status(500).json({ error: "Error creating collection site" });
-//     }
-//     res.status(201).json({ message: "Collection site created successfully", id: result.insertId });
-//   });
-// };
 
 //Controller to delete a collection site
 const deleteCollectionSite = async (req, res) => {
@@ -137,7 +125,7 @@ const getAllCollectionSiteNamesInBiobank = (req, res) => {
 
 const updateCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
-  const { useraccount_email, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
+  const { CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
   const file = req.file;
 
   if (!file) {
@@ -146,7 +134,6 @@ const updateCollectionSiteDetail = (req, res) => {
 
   // Use the file buffer for the logo
   const updateData = {
-    useraccount_email,
     CollectionSiteName,
     CollectionSiteType,
     phoneNumber,

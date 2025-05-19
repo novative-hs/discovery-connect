@@ -230,6 +230,7 @@ const CSRArea = () => {
       status: CSR.status,
     });
   };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     const newformData = new FormData();
@@ -283,6 +284,7 @@ const CSRArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
+
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -315,6 +317,7 @@ const CSRArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Get all the dropdown elements
@@ -373,8 +376,6 @@ const CSRArea = () => {
   const handleExportToExcel = () => {
     const dataToExport = filteredCSR.map((item) => {
       // Convert buffer to base64 string if available
-
-
       return {
         email: item.useraccount_email,
         password: item.useraccount_password,
@@ -603,7 +604,8 @@ const CSRArea = () => {
               />
             )}
           </div>
-          {/* Edit CSR Modal */}
+
+          {/* Add and Edit CSR Modal */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -735,15 +737,15 @@ const CSRArea = () => {
                           <select
                             className="form-control p-2"
                             name="collectionsitename"
-                            value={formData.collectionsitename} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
+                            value={formData.collectionsitename}
+                            onChange={handleInputChange}
                             required
                           >
                             <option value="" disabled>
                               Select Collectionsite Name
                             </option>
                             {collectionsitename.map((collectionsite) => (
-                              <option key={collectionsite.user_id} value={collectionsite.user_id}>
+                              <option key={collectionsite.id} value={collectionsite.id}>
                                 {collectionsite.name}
                               </option>
                             ))}
@@ -754,8 +756,8 @@ const CSRArea = () => {
                           <select
                             className="form-control p-2"
                             name="city"
-                            value={formData.city} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
+                            value={formData.city}
+                            onChange={handleInputChange}
                             required
                           >
                             <option value="" disabled>
@@ -831,6 +833,7 @@ const CSRArea = () => {
               </div>
             </>
           )}
+
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
