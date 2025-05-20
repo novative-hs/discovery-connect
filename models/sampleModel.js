@@ -298,16 +298,16 @@ ORDER BY s.id DESC;
 
 const getAllCSSamples = (limit, offset, callback) => {
  const dataQuery = `
-  SELECT 
+SELECT 
     s.*, 
     cs.CollectionSiteName AS CollectionSiteName,
-    st.name AS CollectionSiteStaffName,
+    st.staffName AS CollectionSiteStaffName,
     bb.Name AS BiobankName,
     c.name AS CityName,
     d.name AS DistrictName
   FROM 
-    sample s
-  LEFT JOIN staff st ON s.user_account_id = st.user_account_id
+   sample s
+  LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
   LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
   LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
   LEFT JOIN city c ON cs.city = c.id
@@ -326,11 +326,10 @@ const countQuery = `
   FROM sample s
   WHERE 
     s.status = 'In Stock' 
-    AND s.price > 0  AND
+    AND s.price > 0  
     AND s.sample_status = 'Public'
     AND (s.quantity > 0 OR s.quantity_allocated > 0)
 `;
-
 
   mysqlConnection.query(countQuery, (countErr, countResult) => {
     if (countErr) return callback(countErr, null);
@@ -339,7 +338,7 @@ const countQuery = `
 
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) return callback(dataErr, null);
-
+console.log(results)
       const imageFolder = path.join(__dirname, '../uploads/Images');
       fs.readdir(imageFolder, (fsErr, files) => {
         if (fsErr) return callback(fsErr, null);

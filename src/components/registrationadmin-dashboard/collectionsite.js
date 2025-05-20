@@ -443,36 +443,54 @@ const CollectionSiteArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCollectionsites.map((item) => {
-      // Convert buffer to base64 string if available
-      let logoUrl = "";
-      if (item.logo && item.logo.data) {
-        const buffer = Buffer.from(item.logo.data);
-        logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
-      }
+ const handleExportToExcel = () => {
+  const dataToExport = filteredCollectionsites.map((item) => {
+    let logoUrl = "";
+    if (item.logo && item.logo.data) {
+      const buffer = Buffer.from(item.logo.data);
+      logoUrl = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+    }
 
-      return {
-        name: item.CollectionSiteName,
-        type: item.CollectionSiteType,
-        phoneNumber: item.phoneNumber,
-        city: item.city,
-        country: item.country,
-        district: item.district,
-        fullAddress: item.fullAddress,
-        status: item.status,
-        // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
-        "Created At": formatDate(item.created_at),
-        "Updated At": formatDate(item.updated_at),
-      };
-    });
+    return {
+      name: item.CollectionSiteName ?? "",
+      type: item.CollectionSiteType ?? "",
+      phoneNumber: item.phoneNumber ?? "",
+      city: item.city ?? "",
+      country: item.country ?? "",
+      district: item.district ?? "",
+      fullAddress: item.fullAddress ?? "",
+      status: item.status ?? "",
+      // logo: logoUrl, // Uncomment if you want to export the logo as a base64 string
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    };
+  });
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
+  const headers = [
+    "name",
+    "type",
+    "phoneNumber",
+    "city",
+    "country",
+    "district",
+    "fullAddress",
+    "status",
+    // "logo", // Optional
+    "Created At",
+    "Updated At"
+  ];
 
-    XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
-  };
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
+
+  XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
+};
+
 
 
   return (
