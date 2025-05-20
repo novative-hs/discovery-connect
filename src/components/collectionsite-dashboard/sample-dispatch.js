@@ -94,6 +94,7 @@ const SampleDispatchArea = () => {
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     receiverName: "",
+    sampleReceive:"",
   });
 
   const handleTransferClick = (sample) => {
@@ -344,96 +345,129 @@ const SampleDispatchArea = () => {
             />
           )}
           {/* Modal for receiving Samples */}
-          {showReceiveModal && (
-            <div
+       {showReceiveModal && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1050,
+    }}
+  >
+    <div
+      style={{
+        backgroundColor: "#fff",
+        padding: "20px",
+        borderRadius: "8px",
+        width: "90%",
+        maxWidth: "400px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        zIndex: 1100,
+      }}
+    >
+      <h5 style={{ marginBottom: "20px", textAlign: "center" }}>
+        Receive Stock
+      </h5>
+      <form>
+        {/* Radio Buttons for Sample Receive */}
+        <div style={{ marginBottom: "15px" }}>
+          <label style={{ display: "block", marginBottom: "5px" }}>
+            Sample Received?
+          </label>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <label>
+              <input
+                type="radio"
+                name="sampleReceive"
+                value="yes"
+                checked={transferDetails.sampleReceive === "yes"}
+                onChange={handleInputChange}
+              />{" "}
+              Yes
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="sampleReceive"
+                value="no"
+                checked={transferDetails.sampleReceive === "no"}
+                onChange={handleInputChange}
+              />{" "}
+              No
+            </label>
+          </div>
+        </div>
+
+        {/* Conditional Receiver Name Input */}
+        {transferDetails.sampleReceive === "yes" && (
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "5px" }}>
+              Receiver Name
+            </label>
+            <input
+              type="text"
+              name="receiverName"
+              value={transferDetails.receiverName}
+              onChange={handleInputChange}
+              placeholder="Enter Receiver Name"
               style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
                 width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 1050,
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
               }}
-            >
-              <div
-                style={{
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "8px",
-                  width: "90%",
-                  maxWidth: "400px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-                  zIndex: 1100,
-                }}
-              >
-                <h5 style={{ marginBottom: "20px", textAlign: "center" }}>
-                  Receive Stock
-                </h5>
-                <form>
-                  <div style={{ marginBottom: "15px" }}>
-                    <label
-                      style={{ display: "block", marginBottom: "5px" }}
-                    >
-                      Receiver Name
-                    </label>
-                    <input
-                      type="text"
-                      name="receiverName"
-                      value={transferDetails.receiverName}
-                      onChange={handleInputChange}
-                      placeholder="Enter Receiver Name"
-                      style={{
-                        width: "100%",
-                        padding: "8px",
-                        borderRadius: "4px",
-                        border: "1px solid #ccc",
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: "20px",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={handleModalClose}
-                      style={{
-                        padding: "10px 15px",
-                        backgroundColor: "#ccc",
-                        color: "#000",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleTransferSubmit}
-                      style={{
-                        padding: "10px 15px",
-                        backgroundColor: "#007bff",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
+            />
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "20px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleModalClose}
+            style={{
+              padding: "10px 15px",
+              backgroundColor: "#ccc",
+              color: "#000",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleTransferSubmit}
+            style={{
+              padding: "10px 15px",
+              backgroundColor: "#007bff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+
         </div>
       </div>
     </section>

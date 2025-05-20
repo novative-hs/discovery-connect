@@ -211,87 +211,93 @@ useEffect(() => {
   }, [currentPage, searchField, searchValue]);
 
 
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
+const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { searchField, searchValue } = filters;
 
-      if (!id) {
-        console.error("ID is missing.");
-        return;
-      }
-
-      // Construct URLs
-      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      // Fetch own samples
-      const ownResponse = await axios.get(ownResponseurl);
-      const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
-
-      const ownSamples = ownSampleData.map((sample) => {
-        let base64Logo = "";
-        if (sample.logo && sample.logo.data) {
-          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
-          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
-        }
-
-        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-
-        return {
-          ...sample,
-          quantity,
-          logo: base64Logo,
-        };
-      });
-
-      // Fetch received samples
-      const receivedResponse = await axios.get(receivedResponseurl);
-      const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
-
-      const receivedSamples = receivedSampleData.map((sample) => {
-        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-        return {
-          ...sample,
-          quantity,
-        };
-      });
-
-      // Merge and sum duplicate quantities
-      const sampleMap = new Map();
-
-      [...ownSamples, ...receivedSamples].forEach((sample) => {
-        const sampleId = sample.id;
-        if (sampleMap.has(sampleId)) {
-          const existingSample = sampleMap.get(sampleId);
-          existingSample.quantity += sample.quantity;
-          sampleMap.set(sampleId, existingSample);
-        } else {
-          sampleMap.set(sampleId, { ...sample });
-        }
-      });
-
-      // ✅ No filtering — show all samples, even with quantity = 0
-      const combinedSamples = Array.from(sampleMap.values());
-
-      const combinedTotalCount = (ownTotalCount || 0) + (receivedTotalCount || 0);
-      const totalPages = Math.ceil(combinedTotalCount / pageSize);
-
-      setTotalPages(totalPages);
-      setfiltertotal(totalPages);
-      setSamples(combinedSamples);
-      setFilteredSamplename(combinedSamples);
-
-    } catch (error) {
-      console.error("Error fetching samples:", error);
+    if (!id) {
+      console.error("ID is missing.");
+      return;
     }
-  };
+
+    // Construct URLs
+    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+    if (searchField && searchValue) {
+      ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+    }
+
+    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
+    if (searchField && searchValue) {
+      receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+    }
+
+    // Fetch own samples
+    const ownResponse = await axios.get(ownResponseurl);
+    const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
+
+    const ownSamples = ownSampleData.map((sample) => {
+      let base64Logo = "";
+      if (sample.logo && sample.logo.data) {
+        const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+        base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+      }
+
+      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+
+      return {
+        ...sample,
+        quantity,
+        logo: base64Logo,
+      };
+    });
+
+    // Fetch received samples
+    const receivedResponse = await axios.get(receivedResponseurl);
+    const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
+
+    const receivedSamples = receivedSampleData.map((sample) => {
+      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+      return {
+        ...sample,
+        quantity,
+        isReturn: false, // 👈 mark this sample
+      };
+    });
+
+    // Merge and sum duplicate quantities
+    const sampleMap = new Map();
+
+    [...ownSamples, ...receivedSamples].forEach((sample) => {
+      const sampleId = sample.id;
+      if (sampleMap.has(sampleId)) {
+        const existingSample = sampleMap.get(sampleId);
+        existingSample.quantity += sample.quantity;
+
+        // If any source is from received, mark isReturn false
+        if (sample.isReturn === false) {
+          existingSample.isReturn = false;
+        }
+
+        sampleMap.set(sampleId, existingSample);
+      } else {
+        sampleMap.set(sampleId, { ...sample });
+      }
+    });
+
+   const combinedSamples = Array.from(sampleMap.values());
+console.log("Combined sample count:", combinedSamples.length); // Should show 16
+const totalPages = Math.ceil(combinedSamples.length / pageSize);
+
+setTotalPages(totalPages);
+setfiltertotal(totalPages); // Only if you actually need this
+setSamples(combinedSamples);
+setFilteredSamplename(combinedSamples);
+
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+  }
+};
+
 
 
 
@@ -422,66 +428,71 @@ useEffect(() => {
   }
 
   const handleTransferSubmit = async (e) => {
-    e.preventDefault();
-    const {
-      TransferTo,
-      dispatchVia,
-      dispatcherName,
-      dispatchReceiptNumber,
-      Quantity,
-    } = transferDetails;
+  e.preventDefault();
 
-    // Validate input before making the API call
-    if (
-      !TransferTo ||
-      !dispatchVia ||
-      !dispatcherName ||
-      !dispatchReceiptNumber ||
-      !Quantity
-    ) {
-      alert("All fields are required.");
-      return;
-    }
+  const {
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity,
+  } = transferDetails;
 
-    try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
-        {
-          TransferTo,
-          dispatchVia,
-          dispatcherName,
-          dispatchReceiptNumber,
-          Quantity,
-        }
-      );
+  if (
+    !TransferTo ||
+    !dispatchVia ||
+    !dispatcherName ||
+    !dispatchReceiptNumber ||
+    !Quantity
+  ) {
+    alert("All fields are required.");
+    return;
+  }
+ const isReturn = samples.some(
 
-      // Refresh the sample list
-      fetchSamples(); // Refresh only current page
-      setCurrentPage(1);
-      alert("Sample dispatched successfully!");
+      (sample) => sample.useraccount_id === TransferTo // You can modify the condition as needed
+    );
+    console.log(isReturn)
+  try {
+    // Determine if it's a return (sample being sent back to original receiver)
 
-      // Reset the input fields
-      setTransferDetails({
-        TransferTo: "",
-        dispatchVia: "",
-        dispatcherName: "",
-        dispatchReceiptNumber: "",
-        Quantity: "",
-      });
-
-      // Close the modal
-      setShowTransferModal(false);
-    } catch (error) {
-      if (error.response) {
-        alert(`Error: ${error.response.data.error}`);
-      } else if (error.request) {
-        alert("No response received from server.");
-      } else {
-        alert("An unexpected error occurred.");
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
+      {
+        TransferFrom: id,
+        TransferTo,
+        dispatchVia,
+        dispatcherName,
+        dispatchReceiptNumber,
+        Quantity,
+        isReturn:isReturn, // Add isReturn flag to the payload
       }
+    );
+
+    fetchSamples(); // Refresh the current page
+    setCurrentPage(1);
+    alert("Sample dispatched successfully!");
+
+    setTransferDetails({
+      TransferTo: "",
+      dispatchVia: "",
+      dispatcherName: "",
+      dispatchReceiptNumber: "",
+      Quantity: "",
+    });
+
+    setShowTransferModal(false);
+  } catch (error) {
+    if (error.response) {
+      alert(`Error: ${error.response.data.error}`);
+    } else if (error.request) {
+      alert("No response received from server.");
+    } else {
+      alert("An unexpected error occurred.");
     }
-  };
+  }
+};
+
 
   const handleModalClose = () => {
     setTransferDetails({

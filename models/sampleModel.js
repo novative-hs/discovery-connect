@@ -76,10 +76,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
   let searchClause = "";
   const params = [user_account_id];
   if (searchField && searchValue) {
-    const allowedFields = ["s.samplename", "s.sampletype", "s.samplecode"];
-    if (!allowedFields.includes(searchField)) {
-      return callback(new Error("Invalid search field"), null);
-    }
+   
     searchClause = ` AND ${searchField} LIKE ?`;
     params.push(`%${searchValue}%`);
   }

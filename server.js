@@ -42,6 +42,7 @@ const historyRoutes = require("./routes/historyRoutes");
 const contactusRoutes = require("./routes/contactusRoutes");
 const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
 const collectionsiteStaffRoutes=require("./routes/collectionsitestaffRoutes")
+const samplereturnRoutes=require("./routes/samplereturnRoutes")
 // Routes
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
@@ -65,6 +66,7 @@ app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", biobankRoutes);
+app.use("/api/samplereturn",samplereturnRoutes)
 app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);
 app.use("/api/samplefields", samplefieldsRoutes);
 app.use("/api", contactusRoutes);

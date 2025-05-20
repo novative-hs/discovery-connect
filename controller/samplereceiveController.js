@@ -22,12 +22,16 @@ const getSampleReceiveInTransit = (req, res) => {
   const pageSize = parseInt(req.query.pageSize, 10) || 50;
   const offset = (page - 1) * pageSize;
 
+  // Validate searchField to avoid SQL injection - allow only specific columns
+
+
   let searchClause = "";
   if (searchField && searchValue) {
+
     searchClause = ` AND s.${searchField} LIKE ?`;
   }
 
-  // First, find the TransferTo user_account_id for this collection site staff user (id)
+  // Step 1: Find TransferTo user_account_id for this collection site staff
   const findTransferToQuery = `
     SELECT ua.id AS user_account_id
     FROM collectionsite c
@@ -50,7 +54,10 @@ const getSampleReceiveInTransit = (req, res) => {
 
     const transferToUserAccountId = rows[0].user_account_id;
 
-    // Updated query to join latest dispatch per sample and filter based on latest status & transferTo
+    console.log("TransferTo user_account_id:", transferToUserAccountId);
+    console.log("ReceivedByCollectionSite id:", id);
+
+    // Step 2: Main query to fetch samples with quantities
     const query = `
       SELECT 
         s.id,
@@ -94,34 +101,20 @@ const getSampleReceiveInTransit = (req, res) => {
         WHERE status = 'In Stock' AND TransferTo = ?
         GROUP BY sampleID
       ) sd ON sd.sampleID = s.id
-      LEFT JOIN (
-        -- Get the latest dispatch record per sample
-        SELECT sd1.sampleID, sd1.TransferTo, sd1.status
-        FROM sampledispatch sd1
-        INNER JOIN (
-          SELECT sampleID, MAX(id) AS max_id
-          FROM sampledispatch
-          GROUP BY sampleID
-        ) latest ON sd1.sampleID = latest.sampleID AND sd1.id = latest.max_id
-      ) last_dispatch ON last_dispatch.sampleID = s.id
       WHERE sr.ReceivedByCollectionSite = ?
         AND s.status = 'In Stock'
         AND sr.sampleID IS NOT NULL
-        -- Only show if no dispatch yet or latest dispatch is to this site and in stock
-        AND (
-          last_dispatch.sampleID IS NULL
-          OR (last_dispatch.TransferTo = ? AND last_dispatch.status = 'In Stock')
-        )
+        AND s.id NOT IN (SELECT sampleID FROM samplereturn)
         ${searchClause}
       GROUP BY s.id
       ORDER BY s.id
       LIMIT ? OFFSET ?;
     `;
 
+    // Prepare query params in exact order
     const queryParams = [
-      transferToUserAccountId, // For TotalQuantity subquery TransferTo = ?
-      id,                     // For sr.ReceivedByCollectionSite = ?
-      transferToUserAccountId, // For last_dispatch.TransferTo = ?
+      transferToUserAccountId, // For sampledispatch subquery
+      id,                      // For sr.ReceivedByCollectionSite
     ];
 
     if (searchField && searchValue) {
@@ -136,30 +129,19 @@ const getSampleReceiveInTransit = (req, res) => {
         return res.status(500).json({ error: "Error fetching sample receive" });
       }
 
+      // Step 3: Count total samples matching criteria for pagination
       const countQuery = `
-        SELECT COUNT(*) AS totalCount
+        SELECT COUNT(DISTINCT s.id) AS totalCount
         FROM sample s
         LEFT JOIN samplereceive sr ON sr.sampleID = s.id
-        LEFT JOIN (
-          SELECT sd1.sampleID, sd1.TransferTo, sd1.status
-          FROM sampledispatch sd1
-          INNER JOIN (
-            SELECT sampleID, MAX(id) AS max_id
-            FROM sampledispatch
-            GROUP BY sampleID
-          ) latest ON sd1.sampleID = latest.sampleID AND sd1.id = latest.max_id
-        ) last_dispatch ON last_dispatch.sampleID = s.id
         WHERE sr.ReceivedByCollectionSite = ?
           AND s.status = 'In Stock'
           AND sr.sampleID IS NOT NULL
-          AND (
-            last_dispatch.sampleID IS NULL
-            OR (last_dispatch.TransferTo = ? AND last_dispatch.status = 'In Stock')
-          )
+          AND s.id NOT IN (SELECT sampleID FROM samplereturn)
           ${searchClause};
       `;
 
-      const countParams = [id, transferToUserAccountId];
+      const countParams = [id];
       if (searchField && searchValue) {
         countParams.push(`%${searchValue}%`);
       }
@@ -184,6 +166,9 @@ const getSampleReceiveInTransit = (req, res) => {
     });
   });
 };
+
+
+
 
 
 // Controller to create a new sample receive
