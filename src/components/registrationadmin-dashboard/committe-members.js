@@ -501,7 +501,7 @@ const CommitteeMemberArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
 
- const handleExportToExcelCommitteeMember = () => {
+ const handleExportToExcel = () => {
   const dataToExport = filteredCommitteemembers.map((item) => ({
     email: item.email ?? "",
     password: item.password ?? "",

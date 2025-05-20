@@ -354,7 +354,7 @@ const CollectionSiteStaffArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
- const handleExportToExcelCollectionsiteStaff = () => {
+ const handleExportToExcel = () => {
   const dataToExport = filteredCollectionsitesstaff.map((item) => ({
     Email: item.useraccount_email ?? "",
     Password: item.useraccount_password ?? "",

@@ -389,7 +389,7 @@ const CSRArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
- const handleExportToExcelCSR = () => {
+ const handleExportToExcel = () => {
   const dataToExport = filteredCSR.map((item) => ({
     email: item.useraccount_email ?? "",
     password: item.useraccount_password ?? "",
