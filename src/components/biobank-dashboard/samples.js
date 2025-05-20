@@ -1959,6 +1959,13 @@ const BioBankSampleArea = () => {
                         {showAddModal ? "Save" : "Update"}
                       </button>
                     </div>
+                    <div className="text-start text-muted fs-6 mb-3 ms-3">
+                      {/* <strong>Note:</strong>{" "} */}
+                      <code>
+                        {" "}
+                        Location ID's = Room Number, Freezer ID and Box ID
+                      </code>
+                    </div>
                   </form>
                 </div>
               </div>

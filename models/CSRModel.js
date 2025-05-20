@@ -73,9 +73,9 @@ const createCSR = (data, callback) => {
           const user_account_id = accountResult.insertId;
 
           const csrInsertQuery = `
-  INSERT INTO csr (user_account_id, collection_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-`;
+          INSERT INTO csr (user_account_id, collection_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
 
           const csrValues = [
             user_account_id,
@@ -138,54 +138,47 @@ const createCSR = (data, callback) => {
 
 const getAllCSR = (callback) => {
   const query = `
-    SELECT 
-      c.*, 
-      ua.id AS user_account_id, 
-      ua.email AS useraccount_email, 
-      ua.password AS useraccount_password, 
-      ua.accountType,
-      
-      city.name AS city,
-      city.id AS cityid,
-      district.name AS district,
-      district.id AS districtid,
-      country.name AS country,
-      country.id AS countryid,
+   SELECT 
+  c.*, 
+  ua.id AS user_account_id, 
+  ua.email AS useraccount_email, 
+  ua.password AS useraccount_password, 
+  ua.accountType,
+  
+  city.name AS city,
+  city.id AS cityid,
+  district.name AS district,
+  district.id AS districtid,
+  country.name AS country,
+  country.id AS countryid,
 
-      -- Get collection name from the user account linked via collection_id
-      CASE 
-        WHEN cs.CollectionSiteName IS NOT NULL THEN cs.CollectionSiteName
-        WHEN bb.Name IS NOT NULL THEN bb.Name
-        ELSE NULL
-      END AS name,
+  -- Get collection name from the collectionsite or biobank
+  CASE 
+    WHEN cs.CollectionSiteName IS NOT NULL THEN cs.CollectionSiteName
+    WHEN bb.Name IS NOT NULL THEN bb.Name
+    ELSE NULL
+  END AS name,
 
-      cs.id AS collectionsiteid,
-      bb.id AS biobankid
+  cs.id AS collectionsiteid,
+  bb.id AS biobankid
 
-    FROM csr c 
-    JOIN user_account ua ON c.user_account_id = ua.id
-    LEFT JOIN city ON c.city = city.id
-    LEFT JOIN district ON c.district = district.id
-    LEFT JOIN country ON c.country = country.id
+FROM csr c 
+JOIN user_account ua ON c.user_account_id = ua.id
+LEFT JOIN city ON c.city = city.id
+LEFT JOIN district ON c.district = district.id
+LEFT JOIN country ON c.country = country.id
 
-    -- Join collection user account from collection_id
-    LEFT JOIN user_account collacc ON c.collection_id = collacc.id
+-- Use collection_id to directly join with collectionsite and biobank
+LEFT JOIN collectionsite cs ON cs.id = c.collection_id
+LEFT JOIN biobank bb ON bb.id = c.collection_id
 
-    -- Join collectionsite and biobank using that user_account.id
-    LEFT JOIN collectionsite cs ON cs.user_account_id = collacc.id
-    LEFT JOIN biobank bb ON bb.user_account_id = collacc.id
-
-    ORDER BY c.id DESC;
+ORDER BY c.id DESC;
   `;
 
   mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });
 };
-
-
-
-
 
 const deleteCSR = (id, status, callback) => {
   const query = 'UPDATE csr SET status = ? WHERE id = ?';

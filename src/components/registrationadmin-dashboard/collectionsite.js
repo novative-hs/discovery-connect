@@ -2,19 +2,13 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
-import {
-  useRegisterUserMutation,
-  useUpdateProfileMutation,
-} from "src/redux/features/auth/authApi";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-import * as XLSX  from "xlsx"
+import * as XLSX from "xlsx"
 import { notifyError, notifySuccess } from "@utils/toast";
 const CollectionSiteArea = () => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected Collectionsite to edit
   const [selectedCollectionsiteId, setSelectedCollectionSiteId] = useState(null); // Store ID of Collectionsite to delete
@@ -23,14 +17,11 @@ const CollectionSiteArea = () => {
   const [cityname, setcityname] = useState([]);
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
-  const [showPassword, setShowPassword] = useState(false);
   const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
     user_account_id: "",
     CollectionSiteName: "",
     CollectionSiteType: "",
-    email: "",
-    password: "",
     phoneNumber: "",
     city: "",
     district: "",
@@ -52,18 +43,10 @@ const CollectionSiteArea = () => {
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  // const [registerUser, { }] = useRegisterUserMutation();
-  const [updateUser, { }] = useUpdateProfileMutation();
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "CollectionSiteName" },
     { label: "CollectionSite Type", placeholder: "Search CollectionSite Type", field: "CollectionSiteType" },
-    { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-    {
-      label: "Password",
-      placeholder: "Search Password",
-      field: "useraccount_password",
-    },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
     { label: "City", placeholder: "Search City", field: "city" },
@@ -73,48 +56,45 @@ const CollectionSiteArea = () => {
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 
+  const onSubmit = async (event) => {
+    event.preventDefault();
 
-const onSubmit = async (event) => {
-  event.preventDefault();
+    const newformData = new FormData();
+    newformData.append("CollectionSiteName", formData.CollectionSiteName);
+    newformData.append("CollectionSiteType", formData.CollectionSiteType);
+    newformData.append("phoneNumber", formData.phoneNumber);
+    newformData.append("fullAddress", formData.fullAddress);
+    newformData.append("city", formData.city);
+    newformData.append("district", formData.district);
+    newformData.append("country", formData.country);
+    newformData.append("status", "inactive");
 
-  const newformData = new FormData();
-  newformData.append("email", formData.email);
-  newformData.append("password", formData.password);
-  newformData.append("CollectionSiteName", formData.CollectionSiteName);
-  newformData.append("CollectionSiteType", formData.CollectionSiteType);
-  newformData.append("phoneNumber", formData.phoneNumber);
-  newformData.append("fullAddress", formData.fullAddress);
-  newformData.append("city", formData.city);
-  newformData.append("district", formData.district);
-  newformData.append("country", formData.country);
-  newformData.append("status", "inactive");
+    if (formData.logo) {
+      newformData.append("logo", formData.logo);
+    }
 
-  if (formData.logo) {
-    newformData.append("logo", formData.logo);
-  }
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/createcollsite`,
+        newformData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/createcollsite`,
-      newformData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    notifySuccess("Collection Site Registered Successfully");
-    fetchCollectionsites(); // Refresh list
-    setShowAddModal(false);
-    resetFormData();
-  } catch (error) {
-    console.error("Registration Error:", error);
-    const errMsg =
-      error.response?.data?.error || error.message || "An error occurred";
-    notifyError(errMsg);
-  }
-};
+      notifySuccess("Collection Site Registered Successfully");
+      fetchCollectionsites(); // Refresh list
+      setShowAddModal(false);
+      resetFormData();
+    } catch (error) {
+      console.error("Registration Error:", error);
+      const errMsg =
+        error.response?.data?.error || error.message || "An error occurred";
+      notifyError(errMsg);
+    }
+  };
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -155,6 +135,7 @@ const onSubmit = async (event) => {
       console.error("Error fetching collectionsites:", error);
     }
   };
+
   const fetchcityname = async () => {
     try {
       const response = await axios.get(`${url}/city/get-city`);
@@ -199,6 +180,7 @@ const onSubmit = async (event) => {
 
     setCurrentPage(0); // Reset to first page when filtering
   };
+
   useEffect(() => {
     const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
       if (!statusFilter) return true;
@@ -277,8 +259,6 @@ const onSubmit = async (event) => {
       user_account_id: collectionsite.user_account_id,
       CollectionSiteName: collectionsite.CollectionSiteName,
       CollectionSiteType: collectionsite.CollectionSiteType,
-      email: collectionsite.useraccount_email,
-      password: collectionsite.useraccount_password,
       city: collectionsite.cityid,
       district: collectionsite.districtid,
       country: collectionsite.countryid,
@@ -292,53 +272,52 @@ const onSubmit = async (event) => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+
     const newformData = new FormData();
-    newformData.append("useraccount_email", formData.email);
-    newformData.append("useraccount_password", formData.password);
-    newformData.append("accountType", "CollectionSites");
     newformData.append("CollectionSiteName", formData.CollectionSiteName);
     newformData.append("CollectionSiteType", formData.CollectionSiteType);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
+    newformData.append("cityid", formData.city);
+    newformData.append("districtid", formData.district);
+    newformData.append("countryid", formData.country);
     newformData.append("status", "inactive");
+
     if (formData.logo) {
       newformData.append("logo", formData.logo);
     }
 
-    // Debug
+    // Debugging: log the FormData
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
     }
 
-    const id = formData.user_account_id;
-
-    updateUser({ id, formData: newformData })
-      .then((result) => {
-        if (result?.error) {
-          const errorMessage = result?.error?.data?.error || "Update Failed";
-          notifyError(errorMessage);
-        } else {
-          notifySuccess("Update collection site Successfully");
-          setShowEditModal(false);
+    try {
+      const response = await axios.put(
+        `${url}/admin/collectionsite/updatedetail/${selectedCollectionsiteId}`,
+        newformData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      })
-      .catch((error) => {
-        notifyError(error?.message || "An unexpected error occurred");
-      });
+      );
 
-    setShowEditModal(false);
-    resetFormData();
+      notifySuccess("Update collection site successfully");
+      setShowEditModal(false);
+      resetFormData();
+    } catch (error) {
+      console.error("Update error:", error);
+      notifyError(error?.response?.data?.error || "An unexpected error occurred");
+    }
   };
+
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
       ...prev,
       [id]: !prev[id], // Toggle the visibility of the dropdown for the given id
     }));
   };
-
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
@@ -353,11 +332,7 @@ const onSubmit = async (event) => {
 
       // Assuming the response is successful, set success message and hide the dropdown
       setSuccessMessage(response.data.message);
-
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-
-      // Refresh the collectionsite list
       fetchCollectionsites();
 
       // Close the dropdown after status change
@@ -371,7 +346,7 @@ const onSubmit = async (event) => {
   };
 
   useEffect(() => {
-    if (showAddModal || showDeleteModal || showEditModal || showHistoryModal) {
+    if (showAddModal || showEditModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -380,14 +355,12 @@ const onSubmit = async (event) => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showAddModal || showDeleteModal, showEditModal, showHistoryModal]);
+  }, [showAddModal || showEditModal, showHistoryModal]);
 
   const resetFormData = () => {
     setFormData({
       CollectionSiteName: "",
       CollectionSiteType: "",
-      email: "",
-      password: "",
       phoneNumber: "",
       city: "",
       district: "",
@@ -398,6 +371,7 @@ const onSubmit = async (event) => {
       status: "",
     });
   };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Get all the dropdown elements
@@ -427,7 +401,8 @@ const onSubmit = async (event) => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-   const formatDate = (date) => {
+
+  const formatDate = (date) => {
     const options = {
       year: "2-digit",
       month: "short",
@@ -448,38 +423,37 @@ const onSubmit = async (event) => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-const handleExportToExcel = () => {
-  const dataToExport = filteredCollectionsites.map((item) => {
-    // Convert buffer to base64 string if available
-    let logoUrl = "";
-    if (item.logo && item.logo.data) {
-      const buffer = Buffer.from(item.logo.data);
-      logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
-    }
 
-    return {
-      email: item.useraccount_email,
-      password: item.useraccount_password,
-    name:item.CollectionSiteName,
-      type: item.CollectionSiteType,
-      phoneNumber: item.phoneNumber,
-      city: item.city,
-      country: item.country,
-      district: item.district,
-      fullAddress: item.fullAddress,
-      status: item.status,
-     // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
-      "Created At": formatDate(item.created_at),
-      "Updated At": formatDate(item.updated_at),
-    };
-  });
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCollectionsites.map((item) => {
+      // Convert buffer to base64 string if available
+      let logoUrl = "";
+      if (item.logo && item.logo.data) {
+        const buffer = Buffer.from(item.logo.data);
+        logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+      }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
+      return {
+        name: item.CollectionSiteName,
+        type: item.CollectionSiteType,
+        phoneNumber: item.phoneNumber,
+        city: item.city,
+        country: item.country,
+        district: item.district,
+        fullAddress: item.fullAddress,
+        status: item.status,
+        // logo: logoUrl, // base64 string (optional: just a placeholder link instead)
+        "Created At": formatDate(item.created_at),
+        "Updated At": formatDate(item.updated_at),
+      };
+    });
 
-  XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
-};
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
+
+    XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
+  };
 
 
   return (
@@ -517,27 +491,27 @@ const handleExportToExcel = () => {
                   <option value="active">Active</option>
                 </select>
               </div>
-<div className="d-flex flex-wrap gap-3 align-items-center">
-              {/* Add collection site Button */}
-              <button
-                onClick={() => setShowAddModal(true)}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  margin: 10,
-                }}
-              >
-                <i className="fas fa-plus"></i> Add Collection Site
-              </button>
-               <button
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add collection site Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    margin: 10,
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add Collection Site
+                </button>
+                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",
@@ -555,7 +529,7 @@ const handleExportToExcel = () => {
                 >
                   <i className="fas fa-file-excel"></i> Export to Excel
                 </button>
-                </div>
+              </div>
             </div>
           </div>
 
@@ -659,6 +633,7 @@ const handleExportToExcel = () => {
               </tbody>
             </table>
           </div>
+
           {/* Pagination */}
           {filteredCollectionsites.length >= 0 && (
             <Pagination
@@ -670,6 +645,7 @@ const handleExportToExcel = () => {
               focusPage={currentPage}
             />
           )}
+
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -811,47 +787,6 @@ const handleExportToExcel = () => {
                           </select>
                         </div>
                         <div className="form-group">
-                          <label>Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Password</label>
-                          <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                            />
-                            <span
-                              className="input-group-text"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i
-                                className={
-                                  showPassword
-                                    ? "fa-regular fa-eye"
-                                    : "fa-regular fa-eye-slash"
-                                }
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="form-group">
                           <label>Phone Number</label>
                           <input
                             type="text"
@@ -947,6 +882,7 @@ const handleExportToExcel = () => {
               </div>
             </>
           )}
+
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -1076,7 +1012,6 @@ const handleExportToExcel = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
     </section>

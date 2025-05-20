@@ -48,6 +48,10 @@ const tablesAndColumns = [
       },
     ]
   },
+  {
+    table: "collectionsite",
+    columnsToDelete: ["user_account_id"],
+  },
 
   {
     table: "history",
@@ -260,15 +264,18 @@ const renameColumn = (table, oldColumn, newColumn, type) => {
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = async () => {
-  tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
-    // Ensure columns exist for each table
+ tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
+  // Ensure columns exist for each table
+  if (Array.isArray(columnsToAdd)) {
     ensureColumnsExist(table, columnsToAdd);
+  }
 
-    // Delete columns for each table (only if columnsToDelete is defined)
-    if (columnsToDelete && columnsToDelete.length > 0) {
-      deleteColumns(table, columnsToDelete);
-    }
-  });
+  // Delete columns for each table (only if columnsToDelete is defined)
+  if (Array.isArray(columnsToDelete)) {
+    deleteColumns(table, columnsToDelete);
+  }
+});
+
 
   // renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
   // renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
@@ -283,7 +290,6 @@ const createOrUpdateTables = async () => {
   //     updateEnumColumn("user_account", "accountType", [
   //       "Researcher",
   //       "Organization",
-  //       "CollectionSites",
   //       "RegistrationAdmin",
   //       "TechnicalAdmin",
   //       "biobank",

@@ -9,7 +9,7 @@ const createuser_accountTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NULL,
-    accountType ENUM('Researcher', 'Organization', 'CollectionSites','CollectionSitesStaff', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
+    accountType ENUM('Researcher', 'Organization', 'CollectionSitesStaff', 'RegistrationAdmin', 'TechnicalAdmin', 'biobank', 'Committeemember','CSR') NOT NULL,
     OTP VARCHAR(4) NULL,
     otpExpiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
