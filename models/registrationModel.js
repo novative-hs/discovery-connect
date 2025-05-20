@@ -433,9 +433,9 @@ const updateAccount = (req, callback) => {
     useraccount_email,
     useraccount_password,
     accountType,
+    collectionsitename,
     ResearcherName,
     OrganizationName,
-    collectionsitename,
     CollectionSiteName,
     CollectionSiteType,
     CommitteeMemberName,
@@ -537,7 +537,7 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM organization WHERE user_account_id = ?";
                   updateQuery = `
                     UPDATE organization SET 
-                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, website = ?, 
+                      OrganizationName = ?, type = ?, HECPMDCRegistrationNo = ?, 
                       phoneNumber = ?, fullAddress = ?, city = ?, district = ?, country = ?, logo = ?
                     WHERE user_account_id = ?
                   `;
@@ -616,10 +616,10 @@ const updateAccount = (req, callback) => {
                   const historyQuery = `
                     INSERT INTO history (
                       email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
-                      HECPMDCRegistrationNo, CNIC, CommitteeType, website, nameofOrganization, type, phoneNumber, 
+                      HECPMDCRegistrationNo, CNIC, CommitteeType, nameofOrganization, type, phoneNumber, 
                       fullAddress, city, district, country, logo, added_by, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, csr_id,status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
 
                   const historyValues = [
@@ -634,7 +634,6 @@ const updateAccount = (req, callback) => {
                     previousData.HECPMDCRegistrationNo || null,
                     previousData.cnic || null,
                     previousData.committeetype || null,
-                    previousData.website || null,
                     previousData.nameofOrganization ? previousData.nameofOrganization : previousData.organization || null,
                     previousData.type || null,
                     previousData.phoneNumber || null,

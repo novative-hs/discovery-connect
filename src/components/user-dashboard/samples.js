@@ -8,6 +8,7 @@ import { Cart } from "@svg/index";
 import Pagination from "@ui/Pagination";
 import Link from "next/link";
 import { useSelector } from 'react-redux';
+import Modal from "react-bootstrap/Modal";
 import {
   add_cart_product,
   initialOrderQuantity,
@@ -15,43 +16,35 @@ import {
 import { useDispatch } from "react-redux";
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
+   const [showModal, setShowModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
   const isInCart = (sampleId) => {
     return cartItems.some((item) => item.id === sampleId);
   };
-  const tableHeaders = [
+  const [selectedSample, setSelectedSample] = useState(null);
+    const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
-    { label: "Sample Condition", key: "samplecondition" },
-    { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Price", key: "price" },
-    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
     { label: "Quantity", key: "quantity" },
     { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
-    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Price", key: "price" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
-    { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
-    { label: "Test Method", key: "TestMethod" },
-    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
-    { label: "Test System", key: "TestSystem" },
-    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+        { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-  ];
+    { label: "Sample Status", key: "sample_status" },
 
+
+  ];
+  const openModal = (sample) => {
+
+    setSelectedSample(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedSample(null);
+    setShowModal(false);
+  };
   const [formData, setFormData] = useState({
     samplename: "",
     age: "",
@@ -84,6 +77,39 @@ const SampleArea = () => {
     status: "In Stock",
     user_account_id: id,
   });
+const fieldsToShowInOrder = [
+    { label: "Sample Name", key: "samplename" },
+    // { label: "Price", key: "price" },
+    // { label: "Quantity", key: "orderquantity" },
+    // { label: "Total Payment", key: "totalpayment" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Ethnicity", key: "ethnicity" },
+    { label: "Sample Condition", key: "samplecondition" },
+    { label: "Storage Temperature", key: "storagetemp" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
+    { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
+    { label: "Concurrent Medications", key: "ConcurrentMedications" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Test Result", key: "TestResult" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Test Method", key: "TestMethod" },
+    { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
+    { label: "Test System", key: "TestSystem" },
+    { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
+  ];
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [quantity, setQuantity] = useState(0);
@@ -251,24 +277,26 @@ const SampleArea = () => {
               <thead className="table-primary text-dark">
                 <tr>
                   {tableHeaders.map(({ label, key }, index) => (
-                    <th key={index} className="px-4 text-center">
-                      <div className="d-flex flex-column align-items-center">
-                        <input
-                          type="text"
-                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={label}
-                          onChange={(e) =>
-                            handleFilterChange(key, e.target.value)
-                          }
-                          style={{ minWidth: "150px" }}
-                        />
-                     <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                           <th key={index} className="col-md-1 px-2">
+
+                    <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>
-                      </div>
+
+                    </div>
                     </th>
                   ))}
-                  <th className="px-3 align-middle text-center">Action</th>
+                    <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                  Action
+                </th>
                 </tr>
               </thead>
               <tbody>
@@ -276,15 +304,39 @@ const SampleArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
-                        <td
-                        key={index}
-                        className={key === "price" ? "text-end" : "text-center text-truncate"}
-                        style={{ maxWidth: "150px" }}
-                      >
-                        {key === "price" ? sample.price?.toLocaleString() : sample[key]}
-                      </td>
+                       <td
+            key={index}
+            className={
+              key === "price"
+                ? "text-end"
+                : key === "samplename"
+                ? ""
+                : "text-center text-truncate"
+            }
+            style={{ maxWidth: "150px" }}
+          >
+            {key === "samplename" ? (
+              <span
+                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                role="button"
+                title="Sample Details"
+                onClick={() => openModal(sample)}
+                style={{
+                  cursor: "pointer",
+                  transition: "color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                onMouseOut={(e) => (e.target.style.color = "")}
+              >
+                {sample.samplename || "----"}
+              </span>
+            ) : (
+              sample[key] || "----"
+            )}
+          </td>
                       ))}
-                      <td>
+                   <td className="w-auto" style={{ minWidth: "40px" }}>
+                        
                         <div className="d-flex justify-content-around gap-3">
                         {isInCart(sample.id) ? (
   <button className="btn btn-secondary btn-sm" disabled>
@@ -325,7 +377,42 @@ const SampleArea = () => {
           )}
         </div>
       </div>
-
+ <Modal show={showModal}
+              onHide={closeModal}
+              size="lg"
+              centered
+              backdrop="static"
+              keyboard={false}>
+              <Modal.Header closeButton className="border-0">
+                <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+              </Modal.Header>
+      
+              <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                {selectedSample ? (
+                  <div className="p-3">
+                    <div className="row g-3">
+                      {fieldsToShowInOrder.map(({ key, label }) => {
+                        const value = selectedSample[key];
+                        if (value === undefined) return null;
+      
+                        return (
+                          <div className="col-md-6" key={key}>
+                            <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                              <span className="text-muted small fw-bold mb-1">{label}</span>
+                              <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted p-3">No details to show</div>
+                )}
+              </Modal.Body>
+      
+              <Modal.Footer className="border-0"></Modal.Footer>
+            </Modal>
       <CartSidebar
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}

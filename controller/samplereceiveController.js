@@ -33,14 +33,11 @@ const getSampleReceiveInTransit = (req, res) => {
 
   // Step 1: Find TransferTo user_account_id for this collection site staff
   const findTransferToQuery = `
-    SELECT ua.id AS user_account_id
-    FROM collectionsite c
-    JOIN user_account ua ON c.user_account_id = ua.id
-    WHERE c.id = (
-      SELECT cs.collectionsite_id FROM collectionsitestaff cs WHERE cs.user_account_id = ?
-    )
-    LIMIT 1;
-  `;
+  SELECT collectionsite_id 
+  FROM collectionsitestaff 
+  WHERE user_account_id = ?
+  LIMIT 1;
+`;
 
   mysqlConnection.query(findTransferToQuery, [id], (err2, rows) => {
     if (err2) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Modal from "react-bootstrap/Modal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -12,44 +13,52 @@ import { getsessionStorage } from "@utils/sessionStorage";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   } else {
     console.log("Collection site Id on sample page is:", id);
   }
-  const [staffAction, setStaffAction] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-
+  const [showModal, setShowModal] = useState(false);
   const [countryname, setCountryname] = useState([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [selectedSample, setSelectedSample] = useState(null);
+  const openModal = (sample) => {
 
+    setSelectedSample(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedSample(null);
+    setShowModal(false);
+  };
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
-    { label: "Age", key: "age" },
+    { label: "Quantity", key: "quantity" },
     { label: "Gender", key: "gender" },
-    { label: "Ethnicity", key: "ethnicity" },
+    { label: "Age", key: "age" },
+    { label: "Phone Number", key: "phoneNumber" },
+    { label: "Status", key: "status" },
+    { label: "Sample Status", key: "sample_status" },
+  ];
+
+  const fieldsToShowInOrder = [
+    { label: "Sample Name", key: "samplename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
-    { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Smoking Status", key: "SmokingStatus" },
-    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
-    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
@@ -58,7 +67,14 @@ const SampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Status", key: "status" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Country of Collection", key: "CountryOfCollection" },
+    { label: "Smoking Status", key: "SmokingStatus" },
+    { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
+    { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
+    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
   const [formData, setFormData] = useState({
@@ -137,11 +153,16 @@ const SampleArea = () => {
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
 
-  
-useEffect(() => {
-  const action = sessionStorage.getItem("staffAction");
-  setStaffAction(action);
-}, []);
+  const handleSelectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData((prev) => ({
+      ...prev,
+      CountryOfCollection: country.name, // or country.id if you store ID
+    }));
+    setSearchCountry(country.name);
+    setShowCountryDropdown(false);
+  };
+
   // Fetch countries from backend
   useEffect(() => {
     const fetchData = async (url, setState, label) => {
@@ -174,15 +195,6 @@ useEffect(() => {
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
   ];
-  const handleSelectCountry = (country) => {
-    setSelectedCountry(country);
-    setFormData((prev) => ({
-      ...prev,
-      CountryOfCollection: country.name, // or country.id if you store ID
-    }));
-    setSearchCountry(country.name);
-    setShowCountryDropdown(false);
-  };
   const handleTransferClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -707,31 +719,28 @@ setFilteredSamplename(combinedSamples);
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
-  <div className="d-flex flex-wrap gap-3">
-    {
-     (staffAction === "add" || staffAction === "all") && (
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{
-            backgroundColor: "#4a90e2",
-            color: "#fff",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "6px",
-            fontWeight: "500",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-          }}
-        >
-          <i className="fas fa-vial"></i> Add Sample
-        </button>
-      )
-    }
-  </div>
-</div>
 
+          <div className="d-flex flex-wrap gap-3 ">
+            {/* Add City Button */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: "#4a90e2", // soft blue
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <i className="fas fa-vial"></i> Add Sample
+            </button>
+          </div>
+        </div>
         {/* Table */}
         <div
           onScroll={handleScroll}
@@ -746,27 +755,25 @@ setFilteredSamplename(combinedSamples);
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
+
                     <div className="d-flex flex-column align-items-center">
                       <input
                         type="text"
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
-                        onChange={(e) =>
-                          handleFilterChange(key, e.target.value)
-                        }
-                        style={{ minWidth: "150px" }}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>
+
                     </div>
                   </th>
                 ))}
-              {["edit", "dispatch", "history", "all"].includes(staffAction) && (
-      <th className="p-2 text-center" style={{ minWidth: "120px" }}>
-        Action
-      </th>
-    )}
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="table-light">
@@ -776,50 +783,60 @@ setFilteredSamplename(combinedSamples);
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
-                        className="text-center text-truncate"
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : key === "samplename"
+                              ? ""
+                              : "text-center text-truncate"
+                        }
                         style={{ maxWidth: "150px" }}
                       >
-                        {sample[key] || "----"}
+                        {key === "samplename" ? (
+                          <span
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openModal(sample)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.samplename || "----"}
+                          </span>
+                        ) : (
+                          sample[key] || "----"
+                        )}
                       </td>
                     ))}
-                   {["edit", "dispatch", "history", "all"].includes(staffAction) && (
-      
-    
-                   <td className="text-center">
-  <div className="d-flex justify-content-around gap-1">
-    {(staffAction === "edit" || staffAction === "all") && (
-      <button
-        className="btn btn-success btn-sm"
-        onClick={() => handleEditClick(sample)}
-        title="Edit"
-      >
-        <FontAwesomeIcon icon={faEdit} size="sm" />
-      </button>
-    )}
-
-    {(staffAction === "dispatch" || staffAction === "all") && (
-      <button
-        className="btn btn-primary btn-sm"
-        onClick={() => handleTransferClick(sample)}
-        title="Transfer"
-      >
-        <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-      </button>
-    )}
-
-    {(staffAction === "history" || staffAction === "all") && (
-      <button
-        className="btn btn-outline-success btn-sm"
-        onClick={() => handleShowHistory("sample", sample.id)}
-        title="History"
-      >
-        <i className="fa fa-history"></i>
-      </button>
-    )}
-  </div>
-</td>
-
-                    )}
+                    <td className="text-center">
+                      <div className="d-flex justify-content-around gap-1">
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => handleEditClick(sample)}
+                          title="Edit"
+                        >
+                          <FontAwesomeIcon icon={faEdit} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleTransferClick(sample)}
+                          title="Transfer"
+                        >
+                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleShowHistory("sample", sample.id)}
+                          title="History"
+                        >
+                          <i className="fa fa-history"></i>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -908,25 +925,26 @@ setFilteredSamplename(combinedSamples);
                         {!showAdditionalFields && (
                           <div className="col-md-10">
                             <div className="row">
-                              <div className="form-group col-md-6">
-                                <label>Donor ID</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="donorID"
-                                  value={formData.donorID}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: formData.donorID
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
+                              {showAddModal && (
+                                <div className="form-group col-md-6">
+                                  <label>Donor ID</label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="donorID"
+                                    value={formData.donorID}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
+                                      color: "black",
+                                    }}
+                                  />
+                                </div>
+                              )}
+
                               <div className="form-group col-md-6">
                                 <label>Location (IDs)</label>
                                 <InputMask
@@ -1843,27 +1861,6 @@ setFilteredSamplename(combinedSamples);
                 Stock Transfer
               </h5>
               <form>
-                {/* <div style={{ marginBottom: "15px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>Transfer From</label>
-                        <select
-                          name="TransferFrom"
-                          value={transferDetails.TransferFrom}
-                          onChange={handleInputChange}
-                          style={{
-                            width: "100%",
-                            padding: "8px",
-                            borderRadius: "4px",
-                            border: "1px solid #ccc",
-                          }}
-                        >
-                          <option value="">Select</option>
-                          {collectionSiteNames.map((site, index) => (
-                             <option key={site.user_account_id} value={site.user_account_id}>
-                             {site.CollectionSiteName}
-                           </option>
-                          ))}
-                        </select>
-                      </div> */}
                 <div style={{ marginBottom: "15px" }}>
                   <label style={{ display: "block", marginBottom: "5px" }}>
                     Transfer to Collection Site
@@ -1880,14 +1877,14 @@ setFilteredSamplename(combinedSamples);
                     }}
                   >
                     <option value="">Select</option>
-                    {collectionSiteNames.map((site, index) => (
-                      <option
-                        key={site.user_account_id}
-                        value={site.user_account_id}
-                      >
-                        {site.CollectionSiteName}
-                      </option>
-                    ))}
+                    {collectionSiteNames.map((site, index) => {
+                      console.log(site); // 👈 check the structure
+                      return (
+                        <option key={site.user_account_id} value={site.user_account_id}>
+                          {site.CollectionSiteName}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div style={{ marginBottom: "15px" }}>
@@ -2118,6 +2115,41 @@ setFilteredSamplename(combinedSamples);
           </>
         )}
       </div>
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={key}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };

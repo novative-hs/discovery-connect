@@ -248,10 +248,10 @@ const deleteCollectionSite = async (id) => {
 // Function to GET collectionsite names in collectionsite dashboard
 const getAllCollectionSiteNames = (user_account_id, callback) => {
   const collectionSiteQuery = `
-    SELECT cs.CollectionSiteName, cs.user_account_id 
+    SELECT cs.CollectionSiteName
     FROM collectionsite cs
-    WHERE cs.user_account_id != ?
-      AND cs.status = 'active'
+    WHERE
+       cs.status = 'active'
       AND NOT EXISTS (
         SELECT 1 
         FROM collectionsitestaff css
@@ -268,7 +268,6 @@ const getAllCollectionSiteNames = (user_account_id, callback) => {
     callback(null, results);
   });
 };
-
 
 // Function to GET collectionsite names in biobank dashboard
 const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {

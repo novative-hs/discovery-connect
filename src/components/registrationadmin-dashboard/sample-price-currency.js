@@ -285,6 +285,30 @@ const SamplePriceCurrencyArea = () => {
       added_by: id,
     });
   };
+   const handleExportToExcel = () => {
+        const dataToExport = filteredSamplepricecurrencyname.map((item) => ({
+          Name: item.name ?? "", // Fallback to empty string
+          "Added By": "Registration Admin",
+          "Created At": item.created_at ? formatDate(item.created_at) : "",
+          "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+        }));
+      
+        // Add an empty row with all headers if filteredCityname is empty (optional)
+        if (dataToExport.length === 0) {
+          dataToExport.push({
+            Name: "",
+            "Added By": "",
+            "Created At": "",
+            "Updated At": "",
+          });
+        }
+      
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Price Currency");
+      
+        XLSX.writeFile(workbook, "Sample_Price_Currency_List.xlsx");
+      };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
@@ -351,6 +375,24 @@ const SamplePriceCurrencyArea = () => {
                     onChange={(e) => handleFileUpload(e)}
                   />
                 </label>
+                 <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
               </div>
             </div>
           </div>

@@ -19,11 +19,12 @@ const OrderPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
-
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [actionType, setActionType] = useState("");
   const [user_id, setUserID] = useState(null);
@@ -61,16 +62,16 @@ const OrderPage = () => {
     try {
       const { searchField, searchValue } = filters;
       setLoading(true);
-  
+
       let responseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Accepted`;
-  
+
       if (searchField && searchValue) {
         responseUrl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
-  
+
       const response = await axios.get(responseUrl);
       const { data, totalCount } = response.data;
-  
+
       setTotalPages(Math.ceil(totalCount / pageSize)); // <-- Fixed here
       setOrders(data);
       setAllOrders(data);
@@ -80,7 +81,7 @@ const OrderPage = () => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
@@ -97,19 +98,6 @@ const OrderPage = () => {
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
-  };
-  const handleScroll = (e) => {
-    const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
-
-    if (isVerticalScroll) {
-      const bottom =
-        e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
-
-      if (bottom && currentPage < totalPages) {
-        setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
-        fetchOrders(currentPage + 1); // Fetch more data if bottom is reached
-      }
-    }
   };
   const handleAdminStatus = async (newStatus) => {
     if (!selectedOrderId) return;
@@ -142,7 +130,21 @@ const OrderPage = () => {
     setShowTransferModal(true);
   };
   const [expandedComments, setExpandedComments] = useState({});
+  const fieldsToShowInOrder = [
+    { label: "Researcher Name", field: "researcher_name" },
+    { label: "Organization Name", field: "organization_name" },
 
+  ];
+  const openModal = (sample) => {
+
+    setSelectedOrder(sample);
+    setShowOrderModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedOrder(null);
+    setShowOrderModal(false);
+  };
   const toggleComments = (orderId) => {
     setExpandedComments((prev) => ({
       ...prev,
@@ -196,25 +198,19 @@ const OrderPage = () => {
             {successMessage}
           </div>
         )}
-          <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
+        <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
             Order Detail
           </h4>
 
           {/* Table */}
-          <div
-            onScroll={handleScroll}
-            className="table-responsive w-100"
-            style={{ overflowX: "auto" }}
-          >
+          <div className="table-responsive" style={{ overflowX: "auto", maxWidth: "100%" }}>
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
                     { label: "Order Id", field: "order_id" },
-                    { label: "Researcher Name", field: "researcher_name" },
-                    { label: "Organization Name", field: "organization_name" },
                     { label: "Sample Name", field: "samplename" },
                     { label: "Order Status", field: "order_status" },
                     {
@@ -234,22 +230,42 @@ const OrderPage = () => {
                       field: "committee_comments",
                     },
                   ].map(({ label, field }, index) => (
-                    <th key={index} className="p-2">
+                    <th
+                      key={index}
+                      className="px-1 py-1"
+                      style={{
+                        fontSize: "12px",
+                        maxWidth: "230px",
+                        wordWrap: "break-word",
+                        whiteSpace: "normal",
+                      }}
+                    >
                       <div className="d-flex flex-column align-items-center">
                         <input
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={label}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
-                          style={{ minWidth: "200px" }}
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(field, e.target.value)}
+                          style={{ width: "100%" }}
                         />
-                        <span className="fw-bold mt-1">{label}</span>
+                        <span
+                          className="fw-bold mt-1 d-block fs-6 text-center"
+                          style={{ wordWrap: "break-word", whiteSpace: "normal" }}
+                        >
+                          {label}
+                        </span>
                       </div>
                     </th>
                   ))}
-                  <th className="p-2 text-center" style={{ minWidth: "120px" }}>
+                  <th
+                    className="px-1 py-1"
+                    style={{
+                      fontSize: "12px",
+                      maxWidth: "100px",
+                      wordWrap: "break-word",
+                      whiteSpace: "normal",
+                    }}
+                  >
                     Action
                   </th>
                 </tr>
@@ -259,9 +275,26 @@ const OrderPage = () => {
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
                     <tr key={order.order_id}>
-                      <td>{order.order_id}</td>
-                      <td>{order.researcher_name}</td>
-                      <td>{order.organization_name}</td>
+
+                      <td
+                        className="text-end"
+                        style={{ minWidth: "10px" }}
+                      >
+                        <span
+                          role="button"
+                          title="Collection Site Details"
+                          onClick={() => openModal(order)}
+                          style={{
+                            cursor: "pointer",
+                            transition: "color 0.2s",
+                          }}
+                          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                          onMouseOut={(e) => (e.target.style.color = "")}
+                        >
+                          {order.order_id || "----"}
+                        </span>
+                      </td>
+
                       <td
                         style={{
                           cursor: "pointer",
@@ -288,26 +321,26 @@ const OrderPage = () => {
                       <td>{order.order_status}</td>
                       <td>{order.technical_admin_status}</td>
                       <td>
-  {order.technical_admin_status === "Rejected" ? (
-    order.technical_admin_status === "Rejected" ? (
-      "No further processing"
-    ) : order.technical_admin_status === "Pending" ? (
-      "Pending Admin Approval"
-    ) : order.scientific_committee_status === "Refused" ? (
-      "Refused"
-    ) : !order.scientific_committee_status ? (
-      "Awaiting Admin Action"
-    ) : (
-      order.scientific_committee_status
-    )
-  ) : order.scientific_committee_status === "Refused" ? (
-    "Refused"
-  ) : !order.scientific_committee_status ? (
-    "Awaiting Admin Action"
-  ) : (
-    order.scientific_committee_status
-  )}
-</td>
+                        {order.technical_admin_status === "Rejected" ? (
+                          order.technical_admin_status === "Rejected" ? (
+                            "No further processing"
+                          ) : order.technical_admin_status === "Pending" ? (
+                            "Pending Admin Approval"
+                          ) : order.scientific_committee_status === "Refused" ? (
+                            "Refused"
+                          ) : !order.scientific_committee_status ? (
+                            "Awaiting Admin Action"
+                          ) : (
+                            order.scientific_committee_status
+                          )
+                        ) : order.scientific_committee_status === "Refused" ? (
+                          "Refused"
+                        ) : !order.scientific_committee_status ? (
+                          "Awaiting Admin Action"
+                        ) : (
+                          order.scientific_committee_status
+                        )}
+                      </td>
 
 
 
@@ -316,15 +349,15 @@ const OrderPage = () => {
                         {order.ethical_committee_status === "Refused"
                           ? "Refused"
                           : order.technical_admin_status === "Rejected"
-                          ? "No further processing"
-                          : order.ethical_committee_status === "" ||
-                          order.ethical_committee_status === null &&
-                          order.sender_id=== null
-                         ? "Not Send"
-                          : order.ethical_committee_status === "" ||
-                           order.ethical_committee_status === null
-                          ? "Awaiting Admin Action"
-                          : order.ethical_committee_status || "Awaiting Review"}
+                            ? "No further processing"
+                            : order.ethical_committee_status === "" ||
+                              order.ethical_committee_status === null &&
+                              order.sender_id === null
+                              ? "Not Send"
+                              : order.ethical_committee_status === "" ||
+                                order.ethical_committee_status === null
+                                ? "Awaiting Admin Action"
+                                : order.ethical_committee_status || "Awaiting Review"}
                       </td>
 
                       <td
@@ -343,7 +376,7 @@ const OrderPage = () => {
                       <td>
                         <div className="d-flex align-items-center gap-2 position-relative">
                           {/* Edit Status Button */}
-                          
+
                           <div className="d-flex align-items-center gap-2 position-relative">
                             {/* ✅ Accept Button (Tick Icon) */}
                             <button
@@ -360,18 +393,18 @@ const OrderPage = () => {
                             </button>
 
                             {order.technical_admin_status !== "Accepted" && (
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedOrderId(order.order_id);
-                                setShowModal(true);
-                                setActionType("Rejected"); // Track the action type
-                              }}
-                              title="Reject Order"
-                            >
-                              <FontAwesomeIcon icon={faTimes} size="sm" />
-                            </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedOrderId(order.order_id);
+                                  setShowModal(true);
+                                  setActionType("Rejected"); // Track the action type
+                                }}
+                                title="Reject Order"
+                              >
+                                <FontAwesomeIcon icon={faTimes} size="sm" />
+                              </button>
                             )}
                           </div>
                           {/* Send Approval Button */}
@@ -711,6 +744,42 @@ const OrderPage = () => {
           )}
         </div>
       </div>
+      <Modal show={showOrderModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Organization Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedOrder ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ field, label }) => {
+                  const value = selectedOrder[field];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={field}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };

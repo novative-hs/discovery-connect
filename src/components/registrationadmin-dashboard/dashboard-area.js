@@ -78,8 +78,8 @@ const DashboardArea = () => {
         return <CSRArea />;
       case "collectionsite":
         return <CollectionsiteArea />;
-        case "collectionsitestaff":
-          return <CollectionSiteStaffArea/>
+      case "collectionsitestaff":
+        return <CollectionSiteStaffArea />
       case "ethnicity":
         return <EthnicityArea />;
       case "sample-condition":
@@ -119,38 +119,37 @@ const DashboardArea = () => {
       <div className="d-flex justify-content-end me-3 mt-2 bg-light">
         <p className="fs-7">
           {`Admin Dashboard / ${activeTab === "order-info"
-              ? "Profile"
-              : [
-                "ethnicity",
-                "sample-condition",
-                "sample-price-currency",
-                "storage-temperature",
-                "container-type",
-                "quantity-unit",
-                "sample-type-matrix",
-                "test-method",
-                "test-result-unit",
-                "concurrent-medical-conditions",
-                "test-kit-manufacturer",
-                "test-system",
-                "test-system-manufacturer",
-              ].includes(activeTab)
-                ? `Sample / ${activeTab.replace(/-/g, " ")}`
-                : activeTab.replace(/-/g, " ")
+            ? "Profile"
+            : [
+              "ethnicity",
+              "sample-condition",
+              "sample-price-currency",
+              "storage-temperature",
+              "container-type",
+              "quantity-unit",
+              "sample-type-matrix",
+              "test-method",
+              "test-result-unit",
+              "concurrent-medical-conditions",
+              "test-kit-manufacturer",
+              "test-system",
+              "test-system-manufacturer",
+            ].includes(activeTab)
+              ? `Sample / ${activeTab.replace(/-/g, " ")}`
+              : activeTab.replace(/-/g, " ")
             }`}
         </p>
       </div>
 
-      <section className="profile__area pt-20 pb-80 bg-light">
-        <div className="container mt-n5">
-          <div className="profile__inner position-relative min-vh-50">
-            <ProfileShapes />
-            <div className="row justify-content-center">
-              <div className="col-xxl-10 col-lg-12 col-md-10 col-sm-12">
-                <div className="container p-4 rounded shadow-sm bg-white">
-                  {/* Dynamically render content based on activeTab */}
-                  {renderContent()}
-                </div>
+      <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">
+        <div className="container-fluid profile__inner position-relative">
+          <div className="row justify-content-center">
+            <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
+              <div
+                className="profile__tab-content mx-auto p-3 my-1 h-auto"
+                style={{ maxWidth: "91%", width: "100%" }}
+              >
+                {renderContent()}
               </div>
             </div>
           </div>

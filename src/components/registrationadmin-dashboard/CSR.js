@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Modal from "react-bootstrap/Modal";
 import {
   faEdit,
   faTrash,
@@ -16,6 +17,7 @@ import {
 import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
 const CSRArea = () => {
+  const [selectedCSR, setSelectedCSR] = useState(null);
   const [registerUser, { }] = useRegisterUserMutation();
   const [updateUser, { }] = useUpdateProfileMutation();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -39,6 +41,7 @@ const CSRArea = () => {
   const [statusOptionsVisibility, setStatusOptionsVisibility] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  const [showModal, setShowModal] = useState(false);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   const [formData, setFormData] = useState({
     CSRName: "",
@@ -53,7 +56,23 @@ const CSRArea = () => {
     created_at: "",
     status: "",
   });
+  const fieldsToShowInOrder = [
 
+    { label: "City", placeholder: "Search City", field: "city" },
+    { label: "District", placeholder: "Search District", field: "district" },
+    { label: "Country", placeholder: "Search Country", field: "country" },
+    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
+  ];
+  const openModal = (csrName) => {
+
+    setSelectedCSR(csrName);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedCSR(null);
+    setShowModal(false);
+  };
   useEffect(() => {
     fetchCSR();
     fetchCollectionsitename()
@@ -230,7 +249,6 @@ const CSRArea = () => {
       status: CSR.status,
     });
   };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     const newformData = new FormData();
@@ -256,7 +274,7 @@ const CSRArea = () => {
           const errorMessage = result?.error?.data?.error || "Update Failed";
           notifyError(errorMessage);
         } else {
-          notifySuccess("Update Organization Successfully");
+          notifySuccess("CSR Updated Successfully");
           fetchCSR();
           setShowEditModal(false);
         }
@@ -284,7 +302,6 @@ const CSRArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -317,7 +334,6 @@ const CSRArea = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Get all the dropdown elements
@@ -373,32 +389,47 @@ const CSRArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCSR.map((item) => {
-      // Convert buffer to base64 string if available
-      return {
-        email: item.useraccount_email,
-        password: item.useraccount_password,
-        name: item.CSRName,
-        collectionsitename: item.name,
-        phoneNumber: item.phoneNumber,
-        city: item.city,
-        country: item.country,
-        district: item.district,
-        fullAddress: item.fullAddress,
-        status: item.status,
+ const handleExportToExcel = () => {
+  const dataToExport = filteredCSR.map((item) => ({
+    email: item.useraccount_email ?? "",
+    password: item.useraccount_password ?? "",
+    name: item.CSRName ?? "",
+    collectionsitename: item.name ?? "",
+    phoneNumber: item.phoneNumber ?? "",
+    city: item.city ?? "",
+    country: item.country ?? "",
+    district: item.district ?? "",
+    fullAddress: item.fullAddress ?? "",
+    status: item.status ?? "",
+    "Created At": item.created_at ? formatDate(item.created_at) : "",
+    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+  }));
 
-        "Created At": formatDate(item.created_at),
-        "Updated At": formatDate(item.updated_at),
-      };
-    });
+  const headers = [
+    "email",
+    "password",
+    "name",
+    "collectionsitename",
+    "phoneNumber",
+    "city",
+    "country",
+    "district",
+    "fullAddress",
+    "status",
+    "Created At",
+    "Updated At",
+  ];
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+  }
 
-    XLSX.writeFile(workbook, "CSR_List.xlsx");
-  };
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
+  XLSX.writeFile(workbook, "CSR_List.xlsx");
+};
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -489,39 +520,57 @@ const CSRArea = () => {
                       { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
                       { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
                       { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-                      { label: "City", placeholder: "Search City", field: "city" },
-                      { label: "Country", placeholder: "Search Country", field: "country" },
-                      { label: "District", placeholder: "Search District", field: "district" },
-                      { label: "Full Address", placeholder: "Search Full Address", field: "fullAddress" },
                       { label: "Status", placeholder: "Search Status", field: "status" },
                     ].map(({ label, placeholder, field }) => (
-                      <th key={field} style={{ minWidth: "180px" }}>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder={placeholder}
-                          onChange={(e) => handleFilterChange(field, e.target.value)}
-                        />
-                        <div className="fw-bold mt-1">{label}</div>
+                      <th key={field} className="col-md-1 px-2">
+
+                        <div className="d-flex flex-column align-items-center">
+                          <input
+                            type="text"
+                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                            placeholder={`Search ${label}`}
+                            onChange={(e) => handleFilterChange(key, e.target.value)}
+                            style={{ minWidth: "170px", maxWidth: "200px", width: "100px" }}
+                          />
+                          <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                            {label}
+                          </span>
+
+                        </div>
                       </th>
                     ))}
-                    <th style={{ minWidth: "100px" }}>Action</th>
+                    <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
+
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.length > 0 ? (
                     currentData.map((CSR) => (
                       <tr key={CSR.id}>
-                        {/* <td>{researcher.id}</td> */}
-                        <td>{CSR.CSRName}</td>
+                        <td
+                          className="text-end"
+                          style={{ maxWidth: "150px" }}
+                        >
+                          <span
+                            className="CommitteeMemberName text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Collection Site Details"
+                            onClick={() => openModal(CSR)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {CSR.CSRName || "----"}
+                          </span>
+                        </td>
+
                         <td>{CSR.useraccount_email}</td>
                         <td>{CSR.useraccount_password}</td>
                         <td>{CSR.name}</td>
                         <td>{CSR.phoneNumber}</td>
-                        <td>{CSR.city}</td>
-                        <td>{CSR.country}</td>
-                        <td>{CSR.district}</td>
-                        <td>{CSR.fullAddress}</td>
                         <td>{CSR.status}</td>
                         <td>
                           <div className="d-flex justify-content-center gap-2">
@@ -604,8 +653,7 @@ const CSRArea = () => {
               />
             )}
           </div>
-
-          {/* Add and Edit CSR Modal */}
+          {/* Edit CSR Modal */}
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -737,8 +785,8 @@ const CSRArea = () => {
                           <select
                             className="form-control p-2"
                             name="collectionsitename"
-                            value={formData.collectionsitename}
-                            onChange={handleInputChange}
+                            value={formData.collectionsitename} // Store the selected city ID in formData
+                            onChange={handleInputChange} // Handle change to update formData
                             required
                           >
                             <option value="" disabled>
@@ -756,8 +804,8 @@ const CSRArea = () => {
                           <select
                             className="form-control p-2"
                             name="city"
-                            value={formData.city}
-                            onChange={handleInputChange}
+                            value={formData.city} // Store the selected city ID in formData
+                            onChange={handleInputChange} // Handle change to update formData
                             required
                           >
                             <option value="" disabled>
@@ -959,6 +1007,42 @@ const CSRArea = () => {
           {/* Modal for Deleting Researchers */}
         </div>
       </div>
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> CSR Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedCSR ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ field, label }) => {
+                  const value = selectedCSR[field];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={field}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };

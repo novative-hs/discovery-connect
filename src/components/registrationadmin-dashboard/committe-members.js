@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Modal from "react-bootstrap/Modal";
 import {
   faEdit,
   faTrash,
@@ -16,9 +17,10 @@ import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx"
 import moment from "moment";
 const CommitteeMemberArea = () => {
+  const [selectedCommitteMember, setSelectedCommitteMember] = useState(null);
   const [visibleCommentIndex, setVisibleCommentIndex] = useState(null);
   const [expandedRowIndex, setExpandedRowIndex] = useState(null);
-
+  const [showModal, setShowModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [orderhistoryData, setOrderHistoryData] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -30,8 +32,18 @@ const CommitteeMemberArea = () => {
   const committeeTypeRefs = useRef({});
   const statusRefs = useRef({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedCommitteememberId, setSelectedCommitteememberId] =
-    useState(null); // Store ID of Committee Members to delete
+  const [selectedCommitteememberId, setSelectedCommitteememberId] = useState(null); // Store ID of Committee Members to delete
+  const [editCommitteemember, setEditCommitteemember] = useState(null); // State for selected Committee Members to edit
+  const [committeemembers, setCommitteemembers] = useState([]); // State to hold fetched Committee Members
+  const [successMessage, setSuccessMessage] = useState("");
+  const [cityname, setcityname] = useState([]);
+  const [districtname, setdistrictname] = useState([]);
+  const [countryname, setCountryname] = useState([]);
+  const [organization, setOrganization] = useState();
+  const [formStep, setFormStep] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filteredCommitteemembers, setFilteredCommitteemembers] = useState([]); // Store filtered cities
+  const [currentPage, setCurrentPage] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     CommitteeMemberName: "",
@@ -48,37 +60,35 @@ const CommitteeMemberArea = () => {
     created_at: "",
     status: "",
   });
-
-  const [editCommitteemember, setEditCommitteemember] = useState(null); // State for selected Committee Members to edit
-  const [committeemembers, setCommitteemembers] = useState([]); // State to hold fetched Committee Members
-  const [successMessage, setSuccessMessage] = useState("");
-  const [cityname, setcityname] = useState([]);
-  const [districtname, setdistrictname] = useState([]);
-  const [countryname, setCountryname] = useState([]);
-  const [organization, setOrganization] = useState();
-  const [formStep, setFormStep] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [filteredCommitteemembers, setFilteredCommitteemembers] = useState([]); // Store filtered cities
-  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  // Calculate total pages
   const columns = [
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "CommitteeMemberName" },
     { label: "Email", placeholder: "Search Email", field: "email" },
     { label: "Password", placeholder: "Search Password", field: "password" },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
+    { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
+    { label: "Status", placeholder: "Search Status", field: "status" },
+  ];
+  const fieldsToShowInOrder = [
     { label: "CNIC", placeholder: "Search CNIC", field: "cnic" },
-    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
+    { label: "Organization", placeholder: "Search Org", field: "organization" },
+    { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
-    { label: "Organization", placeholder: "Search Org", field: "organization" },
-    { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
-    { label: "Created at", placeholder: "Search Date", field: "created_at" },
-    { label: "Status", placeholder: "Search Status", field: "status" },
+    { label: "Address", placeholder: "Search Address", field: "fullAddress" },
   ];
+  const openModal = (sample) => {
 
+    setSelectedCommitteMember(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedCommitteMember(null);
+    setShowModal(false);
+  };
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch Committee Members from backend when component loads
@@ -224,7 +234,11 @@ const CommitteeMemberArea = () => {
       await axios.delete(
         `${url}/committeemember/delete/${selectedCommitteememberId}`
       );
+
+      // Set success message
       setSuccessMessage("Committeemember deleted successfully.");
+
+      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
@@ -272,6 +286,7 @@ const CommitteeMemberArea = () => {
         `${url}/committeemember/edit/${selectedCommitteememberId}`,
         formData
       );
+
 
       fetchCommitteemembers();
       setShowEditModal(false);
@@ -442,6 +457,7 @@ const CommitteeMemberArea = () => {
     };
   }, []);
 
+
   const currentData = filteredCommitteemembers.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
@@ -485,31 +501,44 @@ const CommitteeMemberArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
 
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCommitteemembers.map((item) => {
-      // Convert buffer to base64 string if available
+ const handleExportToExcel = () => {
+  const dataToExport = filteredCommitteemembers.map((item) => ({
+    email: item.email ?? "",
+    password: item.password ?? "",
+    name: item.CommitteeMemberName ?? "",
+    phoneNumber: item.phoneNumber ?? "",
+    city: item.city_name ?? "",
+    country: item.country_name ?? "",
+    district: item.district_name ?? "",
+    fullAddress: item.fullAddress ?? "",
+    status: item.status ?? "",
+    "Created At": item.created_at ? formatDate(item.created_at) : "",
+    // "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+  }));
 
-      return {
-        email: item.email,
-        password: item.password,
-        name: item.CommitteeMemberName,
-        phoneNumber: item.phoneNumber,
-        city: item.city_name,
-        country: item.country_name,
-        district: item.district_name,
-        fullAddress: item.fullAddress,
-        status: item.status,
-        "Created At": formatDate(item.created_at),
-        //"Updated At": formatDate(item.updated_at),
-      };
-    });
+  const headers = [
+    "email",
+    "password",
+    "name",
+    "phoneNumber",
+    "city",
+    "country",
+    "district",
+    "fullAddress",
+    "status",
+    "Created At",
+  ];
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Committeemember");
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+  }
 
-    XLSX.writeFile(workbook, "Committeemember_List.xlsx");
-  };
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "CommitteeMember");
+  XLSX.writeFile(workbook, "CommitteeMember_List.xlsx");
+};
+
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
@@ -591,21 +620,25 @@ const CommitteeMemberArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {columns.map(({ label, field, placeholder }) => (
-                    <th key={label} className="px-4 py-2">
-                      <input
-                        type="text"
-                        className="form-control  w-100"
-                        placeholder={placeholder}
-                        style={{ minWidth: "160px" }} // Ensures visibility and alignment
-                        onChange={(e) =>
-                          handleFilterChange(field, e.target.value)
-                        }
-                      />
-                      <div className="fw-bold mt-1">{label}</div>{" "}
-                      {/* Keeps label below input */}
+                    <th key={label} className="col-md-1 px-2">
+
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{ minWidth: "130px", maxWidth: "200px", width: "100px" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                          {label}
+                        </span>
+
+                      </div>
                     </th>
                   ))}
-                  <th className="col-1">Action</th>
+                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -613,18 +646,30 @@ const CommitteeMemberArea = () => {
                   currentData.map((committeemember) => (
                     <tr key={committeemember.id}>
                       {/* <td>{committeemember.id}</td> */}
-                      <td>{committeemember.CommitteeMemberName}</td>
+                      <td
+                        className="text-end"
+                        style={{ maxWidth: "150px" }}
+                      >
+                        <span
+                          className="CommitteeMemberName text-primary fw-semibold fs-6 text-decoration-underline"
+                          role="button"
+                          title="Collection Site Details"
+                          onClick={() => openModal(committeemember)}
+                          style={{
+                            cursor: "pointer",
+                            transition: "color 0.2s",
+                          }}
+                          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                          onMouseOut={(e) => (e.target.style.color = "")}
+                        >
+                          {committeemember.CommitteeMemberName || "----"}
+                        </span>
+                      </td>
                       <td>{committeemember.email}</td>
                       <td>{committeemember.password}</td>
                       <td>{committeemember.phoneNumber}</td>
-                      <td>{committeemember.cnic}</td>
-                      <td>{committeemember.fullAddress}</td>
-                      <td>{committeemember.city_name}</td>
-                      <td>{committeemember.district_name}</td>
-                      <td>{committeemember.country_name}</td>
-                      <td>{committeemember.organization_name}</td>
                       <td>{committeemember.committeetype}</td>
-                      <td>{formatDate(committeemember.created_at)}</td>
+                      {/* <td>{committeemember.organization_name}</td> */}
                       <td>{committeemember.status}</td>
                       <td>
                         <div className="d-flex justify-content-around gap-2">
@@ -635,6 +680,7 @@ const CommitteeMemberArea = () => {
                           >
                             <FontAwesomeIcon icon={faEdit} size="xs" />
                           </button>
+
                           <div
                             className="btn-group"
                             ref={(el) => (committeeTypeRefs.current[committeemember.id] = el)}
@@ -669,6 +715,7 @@ const CommitteeMemberArea = () => {
                               </div>
                             )}
                           </div>
+
                           <div
                             className="btn-group"
                             ref={(el) => (statusRefs.current[committeemember.id] = el)}
@@ -701,6 +748,8 @@ const CommitteeMemberArea = () => {
                               </div>
                             )}
                           </div>
+
+
                           <button
                             className="btn btn-danger btn-sm py-0 px-1"
                             onClick={() => {
@@ -1255,12 +1304,50 @@ const CommitteeMemberArea = () => {
                       </div>
                     )}
                   </div>
+
+
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Organization Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedCommitteMember ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ field, label }) => {
+                  const value = selectedCommitteMember[field];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={field}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };

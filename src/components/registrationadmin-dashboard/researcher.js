@@ -214,28 +214,50 @@ const ResearcherArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
 const handleExportToExcel = () => {
-  console.log(filteredResearchers)
-    const dataToExport = filteredResearchers.map((item) => ({
-      email:item.email,
-      password:item.password,
-      ResearcherName: item.ResearcherName,
-      OrganizationName: item.OrganizationName,
-    phoneNumber:item.phoneNumber,
-    city:item.cityname,
-    country:item.countryname,
-    district:item.districtname,
-   fullAddress:item.fullAddress,
-  status:item.status,
-      "Created At": formatDate(item.created_at), // Assuming you have `created_at` field
-      "Updated At": formatDate(item.updated_at), // Assuming you have `created_at` field
-    }));
+  console.log(filteredResearchers);
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Researcher");
+  const dataToExport = filteredResearchers.map((item) => ({
+    email: item.email ?? "",
+    password: item.password ?? "",
+    ResearcherName: item.ResearcherName ?? "",
+    OrganizationName: item.OrganizationName ?? "",
+    phoneNumber: item.phoneNumber ?? "",
+    city: item.cityname ?? "",
+    country: item.countryname ?? "",
+    district: item.districtname ?? "",
+    fullAddress: item.fullAddress ?? "",
+    status: item.status ?? "",
+    "Created At": item.created_at ? formatDate(item.created_at) : "",
+    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+  }));
 
-    XLSX.writeFile(workbook, "Researcher_List.xlsx");
-  };
+  // Ensure headers are preserved even if data is empty or some columns are all null
+  const headers = [
+    "email",
+    "password",
+    "ResearcherName",
+    "OrganizationName",
+    "phoneNumber",
+    "city",
+    "country",
+    "district",
+    "fullAddress",
+    "status",
+    "Created At",
+    "Updated At"
+  ];
+
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map(key => [key, ""])));
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Researcher");
+
+  XLSX.writeFile(workbook, "Researcher_List.xlsx");
+};
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
