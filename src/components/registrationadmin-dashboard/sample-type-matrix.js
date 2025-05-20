@@ -293,19 +293,29 @@ const SampleTypeMatrixArea = () => {
   };
 
   const handleExportToExcel = () => {
-    const dataToExport = filteredSampletypematrixname.map((item) => ({
-      Name: item.name,
-      "Added By": "Registration Admin",
-      "Created At": formatDate(item.created_at),
-      "Updated At": formatDate(item.updated_at),
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Type Matrix");
-
-    XLSX.writeFile(workbook, "Sample-Type-Matrix-List.xlsx");
-  };
+      const dataToExport = filteredSampletypematrixname.map((item) => ({
+        Name: item.name ?? "", // Fallback to empty string
+        "Added By": "Registration Admin",
+        "Created At": item.created_at ? formatDate(item.created_at) : "",
+        "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+      }));
+    
+      // Add an empty row with all headers if filteredCityname is empty (optional)
+      if (dataToExport.length === 0) {
+        dataToExport.push({
+          Name: "",
+          "Added By": "",
+          "Created At": "",
+          "Updated At": "",
+        });
+      }
+    
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Type Matrix");
+    
+      XLSX.writeFile(workbook, "Sample_Type_Matrix_List.xlsx");
+    };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
