@@ -83,7 +83,7 @@ const HeroBanner = () => {
             data-aos="fade-up"
             style={{ backgroundColor: "#003366" }}
           >
-            Register Researcher Now
+            Register Yourself Now
           </a>
         </div>
       </div>

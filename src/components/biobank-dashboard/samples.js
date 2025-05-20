@@ -45,15 +45,12 @@ const BioBankSampleArea = () => {
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-        { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
-
-
   ];
 
   const fieldsToShowInOrder = [
@@ -73,21 +70,13 @@ const BioBankSampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    
     { label: "Country of Collection", key: "CountryOfCollection" },
-   
+    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
-
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
   const [formData, setFormData] = useState({
@@ -176,7 +165,7 @@ const BioBankSampleArea = () => {
     handleQuarantine(quarantineComment); // Pass the comment
   };
 
-    const openModal = (sample) => {
+  const openModal = (sample) => {
 
     setSelectedSample(sample);
     setShowModal(true);
@@ -777,7 +766,7 @@ const BioBankSampleArea = () => {
       showAddModal ||
       showEditModal ||
       showTransferModal ||
-      showHistoryModal||
+      showHistoryModal ||
       showPriceModal
     ) {
       // Prevent background scroll when modal is open
@@ -921,14 +910,14 @@ const BioBankSampleArea = () => {
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-                          <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-/>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                      />
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>
@@ -946,36 +935,36 @@ const BioBankSampleArea = () => {
                 currentData.map((sample) => (
                   <tr key={sample.id}>
                     {tableHeaders.map(({ key }, index) => (
-                          <td
-            key={index}
-            className={
-              key === "price"
-                ? "text-end"
-                : key === "samplename"
-                ? ""
-                : "text-center text-truncate"
-            }
-            style={{ maxWidth: "150px" }}
-          >
-            {key === "samplename" ? (
-              <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                role="button"
-                title="Sample Details"
-                onClick={() => openModal(sample)}
-                style={{
-                  cursor: "pointer",
-                  transition: "color 0.2s",
-                }}
-                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                onMouseOut={(e) => (e.target.style.color = "")}
-              >
-                {sample.samplename || "----"}
-              </span>
-            ) : (
-              sample[key] || "----"
-            )}
-          </td>
+                      <td
+                        key={index}
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : key === "samplename"
+                              ? ""
+                              : "text-center text-truncate"
+                        }
+                        style={{ maxWidth: "150px" }}
+                      >
+                        {key === "samplename" ? (
+                          <span
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openModal(sample)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.samplename || "----"}
+                          </span>
+                        ) : (
+                          sample[key] || "----"
+                        )}
+                      </td>
                     ))}
                     <td className="text-center">
                       <div className="d-flex justify-content-around gap-1">
@@ -2023,7 +2012,7 @@ const BioBankSampleArea = () => {
         {/* Modal for Adding Samples Prices and Currency */}
         {showPriceModal && (
           <>
-             <div
+            <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>
@@ -2039,86 +2028,86 @@ const BioBankSampleArea = () => {
                 transform: "translateX(-50%)",
               }}
             >
-            <div className="modal-dialog" role="document">
-              <div className="modal-content">
-                <form onSubmit={handlePriceSubmit}>
-                  <div className="modal-header">
-                    <h5 className="modal-title">Set Price & Currency</h5>
-                         <button
-                      type="button"
-                      className="close"
-                      onClick={() => setShowPriceModal(false)}
-                      style={{
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    ><span>&times;</span>
-                    </button>
-                  </div>
-                  <div className="modal-body">
-                    <div className="form-group">
-                      <label>Price</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        required
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <form onSubmit={handlePriceSubmit}>
+                    <div className="modal-header">
+                      <h5 className="modal-title">Set Price & Currency</h5>
+                      <button
+                        type="button"
+                        className="close"
+                        onClick={() => setShowPriceModal(false)}
                         style={{
-                          height: "45px",
-                          fontSize: "14px",
-                          backgroundColor: "#f0f0f0",
-                          color: "black",
+                          fontSize: "1.5rem",
+                          position: "absolute",
+                          right: "10px",
+                          top: "10px",
+                          cursor: "pointer",
                         }}
-                      />
+                      ><span>&times;</span>
+                      </button>
                     </div>
-                    <div className="form-group">
-                      <label>Sample Price Currency</label>
-                      <select
-                        className="form-control"
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                        required
-                        style={{
-                          fontSize: "14px",
-                          height: "45px",
-                          backgroundColor: "#f0f0f0",
-                          color: "black",
-                        }}
-                      >
-                        <option value="" hidden>
-                          Select Sample Price Currency
-                        </option>
-                        {samplepricecurrencyNames.map((name, index) => (
-                          <option key={index} value={name}>
-                            {name}
+                    <div className="modal-body">
+                      <div className="form-group">
+                        <label>Price</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          required
+                          style={{
+                            height: "45px",
+                            fontSize: "14px",
+                            backgroundColor: "#f0f0f0",
+                            color: "black",
+                          }}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Sample Price Currency</label>
+                        <select
+                          className="form-control"
+                          value={currency}
+                          onChange={(e) => setCurrency(e.target.value)}
+                          required
+                          style={{
+                            fontSize: "14px",
+                            height: "45px",
+                            backgroundColor: "#f0f0f0",
+                            color: "black",
+                          }}
+                        >
+                          <option value="" hidden>
+                            Select Sample Price Currency
                           </option>
-                        ))}
-                      </select>
+                          {samplepricecurrencyNames.map((name, index) => (
+                            <option key={index} value={name}>
+                              {name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowPriceModal(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
+                    <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setShowPriceModal(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
           </>
         )}
 
@@ -2576,42 +2565,42 @@ const BioBankSampleArea = () => {
           </>
         )}
       </div>
-         <Modal show={showModal}
-              onHide={closeModal}
-              size="lg"
-              centered
-              backdrop="static"
-              keyboard={false}>
-              <Modal.Header closeButton className="border-0">
-                <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
-              </Modal.Header>
-      
-              <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
-                {selectedSample ? (
-                  <div className="p-3">
-                    <div className="row g-3">
-                      {fieldsToShowInOrder.map(({ key, label }) => {
-                        const value = selectedSample[key];
-                        if (value === undefined) return null;
-      
-                        return (
-                          <div className="col-md-6" key={key}>
-                            <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                              <span className="text-muted small fw-bold mb-1">{label}</span>
-                              <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={key}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center text-muted p-3">No details to show</div>
-                )}
-              </Modal.Body>
-      
-              <Modal.Footer className="border-0"></Modal.Footer>
-            </Modal>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };

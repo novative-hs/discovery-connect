@@ -47,8 +47,8 @@ const DashboardArea = () => {
         return <BioBankSampleArea />;
       case "sample-dispatch":
         return <BioBankSampleDispatchArea />;
-        case "Quarantine-Stock":
-          return <QuarantineStockchArea />;
+      case "Quarantine-Stock":
+        return <QuarantineStockchArea />;
       case "change-password":
         return <ChangePassword />;
       case "Sample-Visibility":
@@ -65,10 +65,10 @@ const DashboardArea = () => {
         <div className="container-fluid profile__inner position-relative">
           <div className="row justify-content-center">
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
-             <div
-  className="profile__tab-content mx-auto p-3 my-1 h-auto"
-  style={{ maxWidth: "95%", width: "100%" }}
->
+              <div
+                className="profile__tab-content mx-auto p-3 my-1 h-auto"
+                style={{ maxWidth: "85%", width: "100%" }}
+              >
                 {renderContent()}
               </div>
             </div>
@@ -77,7 +77,7 @@ const DashboardArea = () => {
       </section>
     </>
   );
-  
+
 };
 
 export default DashboardArea;
