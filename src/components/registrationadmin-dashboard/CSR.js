@@ -389,34 +389,47 @@ const CSRArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCSR.map((item) => {
-      // Convert buffer to base64 string if available
+ const handleExportToExcelCSR = () => {
+  const dataToExport = filteredCSR.map((item) => ({
+    email: item.useraccount_email ?? "",
+    password: item.useraccount_password ?? "",
+    name: item.CSRName ?? "",
+    collectionsitename: item.name ?? "",
+    phoneNumber: item.phoneNumber ?? "",
+    city: item.city ?? "",
+    country: item.country ?? "",
+    district: item.district ?? "",
+    fullAddress: item.fullAddress ?? "",
+    status: item.status ?? "",
+    "Created At": item.created_at ? formatDate(item.created_at) : "",
+    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+  }));
 
+  const headers = [
+    "email",
+    "password",
+    "name",
+    "collectionsitename",
+    "phoneNumber",
+    "city",
+    "country",
+    "district",
+    "fullAddress",
+    "status",
+    "Created At",
+    "Updated At",
+  ];
 
-      return {
-        email: item.useraccount_email,
-        password: item.useraccount_password,
-        name: item.CSRName,
-        collectionsitename: item.name,
-        phoneNumber: item.phoneNumber,
-        city: item.city,
-        country: item.country,
-        district: item.district,
-        fullAddress: item.fullAddress,
-        status: item.status,
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+  }
 
-        "Created At": formatDate(item.created_at),
-        "Updated At": formatDate(item.updated_at),
-      };
-    });
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
+  XLSX.writeFile(workbook, "CSR_List.xlsx");
+};
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
-
-    XLSX.writeFile(workbook, "CSR_List.xlsx");
-  };
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">

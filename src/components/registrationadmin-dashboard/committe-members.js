@@ -501,31 +501,44 @@ const CommitteeMemberArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
 
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCommitteemembers.map((item) => {
-      // Convert buffer to base64 string if available
+ const handleExportToExcelCommitteeMember = () => {
+  const dataToExport = filteredCommitteemembers.map((item) => ({
+    email: item.email ?? "",
+    password: item.password ?? "",
+    name: item.CommitteeMemberName ?? "",
+    phoneNumber: item.phoneNumber ?? "",
+    city: item.city_name ?? "",
+    country: item.country_name ?? "",
+    district: item.district_name ?? "",
+    fullAddress: item.fullAddress ?? "",
+    status: item.status ?? "",
+    "Created At": item.created_at ? formatDate(item.created_at) : "",
+    // "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+  }));
 
-      return {
-        email: item.email,
-        password: item.password,
-        name: item.CommitteeMemberName,
-        phoneNumber: item.phoneNumber,
-        city: item.city_name,
-        country: item.country_name,
-        district: item.district_name,
-        fullAddress: item.fullAddress,
-        status: item.status,
-        "Created At": formatDate(item.created_at),
-        //"Updated At": formatDate(item.updated_at),
-      };
-    });
+  const headers = [
+    "email",
+    "password",
+    "name",
+    "phoneNumber",
+    "city",
+    "country",
+    "district",
+    "fullAddress",
+    "status",
+    "Created At",
+  ];
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Committeemember");
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+  }
 
-    XLSX.writeFile(workbook, "Committeemember_List.xlsx");
-  };
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "CommitteeMember");
+  XLSX.writeFile(workbook, "CommitteeMember_List.xlsx");
+};
+
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">

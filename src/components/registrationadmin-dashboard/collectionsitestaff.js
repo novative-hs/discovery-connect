@@ -354,28 +354,39 @@ const CollectionSiteStaffArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-  const handleExportToExcel = () => {
-    const dataToExport = filteredCollectionsitesstaff.map((item) => {
-      // Convert buffer to base64 string if available
+ const handleExportToExcelCollectionsiteStaff = () => {
+  const dataToExport = filteredCollectionsitesstaff.map((item) => ({
+    Email: item.useraccount_email ?? "",
+    Password: item.useraccount_password ?? "",
+    CollectionsiteName: item.collectionsite_name ?? "",
+    StaffName: item.staffName ?? "",
+    Permission: item.permission ?? "",
+    Status: item.status ?? "",
+    "Created At": item.created_at ? formatDate(item.created_at) : "",
+    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+  }));
 
-      return {
-        Email: item.useraccount_email,
-        Password: item.useraccount_password,
-        CollectionsiteName: item.collectionsite_name,
-        StaffName: item.staffName,
-        Permission: item.permission,
-        Status: item.status,
-        "Created At": formatDate(item.created_at),
-        "Updated At": formatDate(item.updated_at),
-      };
-    });
+  const headers = [
+    "Email",
+    "Password",
+    "CollectionsiteName",
+    "StaffName",
+    "Permission",
+    "Status",
+    "Created At",
+    "Updated At",
+  ];
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsitestaff");
+  if (dataToExport.length === 0) {
+    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+  }
 
-    XLSX.writeFile(workbook, "Collectionsite Staff_List.xlsx");
-  };
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "CollectionsiteStaff");
+  XLSX.writeFile(workbook, "Collectionsite_Staff_List.xlsx");
+};
+
 
 
   return (
