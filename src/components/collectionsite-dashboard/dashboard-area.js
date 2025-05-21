@@ -8,6 +8,7 @@ import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
 import SampleReturn from "./sample-return";
+import SampleLost from './sample-lost'
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default
   const [id, setUserID] = useState(null);
@@ -60,10 +61,13 @@ const DashboardArea = () => {
         return <SampleDispatchArea />;
         case "sample-return":
           return <SampleReturn/>
+           case "sample-lost":
+          return <SampleLost/>
       case "change-password":
         return <ChangePassword />;
       case "update-collectionsite":
         return <UpdateCollectionsite />;
+        
       default:
         return <SampleArea />;
     }

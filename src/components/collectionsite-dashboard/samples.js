@@ -220,6 +220,7 @@ const SampleArea = () => {
       searchField,
       searchValue,
     });
+    fetchCollectionSiteNames();
   }, [currentPage, searchField, searchValue]);
 
 
@@ -260,6 +261,7 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
         ...sample,
         quantity,
         logo: base64Logo,
+        isReturn: false,
       };
     });
 
@@ -272,7 +274,7 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
       return {
         ...sample,
         quantity,
-        isReturn: false, // 👈 mark this sample
+        isReturn: true,
       };
     });
 
@@ -299,7 +301,7 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
    const combinedSamples = Array.from(sampleMap.values());
 console.log("Combined sample count:", combinedSamples.length); // Should show 16
 const totalPages = Math.ceil(combinedSamples.length / pageSize);
-
+console.log(combinedSamples)
 setTotalPages(totalPages);
 setfiltertotal(totalPages); // Only if you actually need this
 setSamples(combinedSamples);
@@ -309,7 +311,20 @@ setFilteredSamplename(combinedSamples);
     console.error("Error fetching samples:", error);
   }
 };
-
+   const fetchCollectionSiteNames = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/getAll/${id}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch collection site names");
+        }
+        const data = await response.json();
+        setCollectionSiteNames(data);
+      } catch (error) {
+        console.error("Error fetching site names:", error);
+      }
+    };
 
 
 
@@ -343,26 +358,7 @@ setFilteredSamplename(combinedSamples);
     }
   };
   const currentData = filteredSamplename;
-  // get collectionsite names in collectionsite dashboard in stock transfer modal
-  useEffect(() => {
-    const fetchCollectionSiteNames = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/collectionsitenames/${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch collection site names");
-        }
-        const data = await response.json();
-
-        setCollectionSiteNames(data.data);
-      } catch (error) {
-        console.error("Error fetching site names:", error);
-      }
-    };
-
-    fetchCollectionSiteNames();
-  }, [id]);
+  
 
   // Sample fields Dropdown
   useEffect(() => {
@@ -440,6 +436,9 @@ setFilteredSamplename(combinedSamples);
   }
 
   const handleTransferSubmit = async (e) => {
+    const sampleToSend = samples.find(s => s.id === selectedSampleId);
+const isReturnFlag = sampleToSend?.isReturn === true;
+
   e.preventDefault();
 
   const {
@@ -460,11 +459,7 @@ setFilteredSamplename(combinedSamples);
     alert("All fields are required.");
     return;
   }
- const isReturn = samples.some(
-
-      (sample) => sample.useraccount_id === TransferTo // You can modify the condition as needed
-    );
-    console.log(isReturn)
+ 
   try {
     // Determine if it's a return (sample being sent back to original receiver)
 
@@ -477,7 +472,7 @@ setFilteredSamplename(combinedSamples);
         dispatcherName,
         dispatchReceiptNumber,
         Quantity,
-        isReturn:isReturn, // Add isReturn flag to the payload
+        isReturn:isReturnFlag,
       }
     );
 
@@ -1860,7 +1855,7 @@ setFilteredSamplename(combinedSamples);
               <h5 style={{ marginBottom: "20px", textAlign: "center" }}>
                 Stock Transfer
               </h5>
-              <form>
+              <form onSubmit={handleTransferSubmit}>
                 <div style={{ marginBottom: "15px" }}>
                   <label style={{ display: "block", marginBottom: "5px" }}>
                     Transfer to Collection Site
@@ -1878,10 +1873,9 @@ setFilteredSamplename(combinedSamples);
                   >
                     <option value="">Select</option>
                     {collectionSiteNames.map((site, index) => {
-                      console.log(site); // 👈 check the structure
                       return (
-                        <option key={site.user_account_id} value={site.user_account_id}>
-                          {site.CollectionSiteName}
+                        <option key={site.id} value={site.id}>
+                          {site.name}
                         </option>
                       );
                     })}
@@ -1983,8 +1977,8 @@ setFilteredSamplename(combinedSamples);
                     Cancel
                   </button>
                   <button
-                    type="button"
-                    onClick={handleTransferSubmit}
+                    type="submit"
+                    onClick={(e)=>{handleTransferSubmit(e)}}
                     style={{
                       padding: "10px 15px",
                       backgroundColor: "#007bff",

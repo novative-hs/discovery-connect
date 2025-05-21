@@ -16,7 +16,8 @@ const getAllCollectionSites = (req, res) => {
   });
 };
 const getAllCollectioninCollectionStaff = (req, res) => {
-  collectionsiteModel.getAllCollectioninCollectionStaff((err, results) => {
+  const {id}=req.params;
+  collectionsiteModel.getAllCollectioninCollectionStaff(id,(err, results) => {
     if (err) {
       console.error('Error fetching collection sites:', err);
       return res.status(500).json({ error: 'An error occurred' });

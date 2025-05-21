@@ -55,17 +55,16 @@ const getAllCollectionSites = (callback) => {
 };
 
 
-const getAllCollectioninCollectionStaff = (callback) => {
+const getAllCollectioninCollectionStaff = (id,callback) => {
   const query = `
    SELECT 
-  collectionsite.id,
-  collectionsite.CollectionSiteName AS name
-FROM collectionsite 
-WHERE status = 'active'
-ORDER BY collectionsite.id DESC;
-
-  `;
-  mysqlConnection.query(query, (err, results) => {
+  cs.id,
+  cs.CollectionSiteName AS name
+FROM collectionsite cs
+JOIN collectionsitestaff cstaff ON cs.id = cstaff.collectionsite_id
+WHERE cs.status = 'active' AND cstaff.user_account_id != ?
+ORDER BY cs.id DESC;`;
+  mysqlConnection.query(query,id, (err, results) => {
     callback(err, results);
   });
 }

@@ -1,90 +1,91 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
 
+  // {
+  //   table: "csr",
+  //   columnsToAdd: [
+  //     {
+  //       column: "collection_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "collectionsite", column: "id" },
+  //     },
+  //   ]
+  // },
   {
-    table: "csr",
+    table: "sampledispatch",
     columnsToAdd: [
       {
-        column: "collection_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "collectionsite", column: "id" },
+        column: "Reason",
+        type: "TEXT",
+        nullable: true, 
       },
     ]
   },
-  {
-    table: "sample",
-    columnsToAdd: [
-      {
-        column: "phoneNumber",
-        type: "VARCHAR(15)",
-      },
-    ]
-  },
-  {
-    table: "user_account",
-    columnsToAdd: [
-      //   {
-      //     column: "accountType",
-      //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
-      //   },
-      {
-        column: "password",
-        type: "VARCHAR(255) DEFAULT NULL"
-      }
-    ]
-  },
-  {
-    table: "organization",
-    columnsToDelete: ["ntnNumber", "user_account_id"],
-    columnsToAdd: [
-      {
-        column: "website",
-        type: "VARCHAR(250) Null",
-      },
-      {
-        column: "email",
-        type: "VARCHAR(255) NULL",
-      },
-    ]
-  },
-  {
-    table: "collectionsite",
-    columnsToDelete: ["user_account_id"],
-  },
+  // {
+  //   table: "user_account",
+  //   columnsToAdd: [
+  //     //   {
+  //     //     column: "accountType",
+  //     //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
+  //     //   },
+  //     {
+  //       column: "password",
+  //       type: "VARCHAR(255) DEFAULT NULL"
+  //     }
+  //   ]
+  // },
+  // {
+  //   table: "organization",
+  //   columnsToDelete: ["ntnNumber", "user_account_id"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "website",
+  //       type: "VARCHAR(250) Null",
+  //     },
+  //     {
+  //       column: "email",
+  //       type: "VARCHAR(255) NULL",
+  //     },
+  //   ]
+  // },
+  // {
+  //   table: "collectionsite",
+  //   columnsToDelete: ["user_account_id"],
+  // },
 
-  {
-    table: "history",
-    columnsToDelete: ["ntnNumber"],
-    columnsToAdd: [
-      {
-        column: "website",
-        type: "VARCHAR(250)",
-        nullable: true, // Change to true
-      },
-      {
-        column: "staffName",
-        type: "VARCHAR(1000)",
-        nullable: true, // Change to true
-      },
-      {
-        column: "action",
-        type: "VARCHAR(20)",
-        nullable: true, // Change to true
-      },
+  // {
+  //   table: "history",
+  //   columnsToDelete: ["ntnNumber"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "website",
+  //       type: "VARCHAR(250)",
+  //       nullable: true, // Change to true
+  //     },
+  //     {
+  //       column: "staffName",
+  //       type: "VARCHAR(1000)",
+  //       nullable: true, // Change to true
+  //     },
+  //     {
+  //       column: "action",
+  //       type: "VARCHAR(20)",
+  //       nullable: true, // Change to true
+  //     },
 
-      {
-        column: "collectionsitestaff_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "collectionsitestaff", column: "id" },
-      },
-      {
-        column: "status",
-        type: "ENUM('added', 'updated', 'deleted', 'active','inactive') NULL DEFAULT 'added'",
-      },
-    ]
-  },
+  //     {
+  //       column: "collectionsitestaff_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "collectionsitestaff", column: "id" },
+  //     },
+  //     {
+  //       column: "status",
+  //       type: "ENUM('added', 'updated', 'deleted', 'active','inactive') NULL DEFAULT 'added'",
+  //     },
+  //   ]
+  // },
 
   // {
   //   table: "cart",

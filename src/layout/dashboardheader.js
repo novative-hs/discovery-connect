@@ -204,8 +204,10 @@ const Header = ({ setActiveTab, activeTab }) => {
           ...(["receive", "all"].includes(staffAction)
             ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
             : []),
-               ...(["return", "all"].includes(staffAction)
-            ? [{ label: "Sample Returned", tab: "sample-return" }]
+            //    ...(["return", "all"].includes(staffAction)
+            // ? [{ label: "Sample Returned", tab: "sample-return" }]:[]),
+             ...(["return", "all"].includes(staffAction)
+            ? [{ label: "Sample Lost", tab: "sample-lost" }]
             : []),
         ]
       : userType == "biobank"

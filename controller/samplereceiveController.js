@@ -11,50 +11,39 @@ const createSampleReceiveTable = (req, res) => {
 
 // Controller to get all sample receivees in "In Transit" status
 const getSampleReceiveInTransit = (req, res) => {
-  const id = req.params.id; // CollectionSiteStaff user_account_id
+  const staffUserId = req.params.id; // Assuming this is the staff user ID (user_account_id)
   const { searchField, searchValue } = req.query;
 
-  if (!id) {
-    return res.status(400).json({ error: "ID parameter is missing" });
+  if (!staffUserId) {
+    return res.status(400).json({ error: "Staff User ID is missing" });
   }
 
   const page = parseInt(req.query.page, 10) || 1;
   const pageSize = parseInt(req.query.pageSize, 10) || 50;
   const offset = (page - 1) * pageSize;
 
-  // Validate searchField to avoid SQL injection - allow only specific columns
-
-
+  // Search filter
   let searchClause = "";
   if (searchField && searchValue) {
-
     searchClause = ` AND s.${searchField} LIKE ?`;
   }
 
-  // Step 1: Find TransferTo user_account_id for this collection site staff
-  const findTransferToQuery = `
-  SELECT collectionsite_id 
-  FROM collectionsitestaff 
-  WHERE user_account_id = ?
-  LIMIT 1;
-`;
+  // Step 1: Get the collectionsite_id for this staff user
+  const siteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
 
-  mysqlConnection.query(findTransferToQuery, [id], (err2, rows) => {
-    if (err2) {
-      console.error("Error finding TransferTo:", err2);
-      return res.status(500).json({ error: "Error finding TransferTo" });
+  mysqlConnection.query(siteQuery, [staffUserId], (siteErr, siteResults) => {
+    if (siteErr) {
+      console.error("Error fetching collection site:", siteErr);
+      return res.status(500).json({ error: "Error fetching collection site" });
     }
 
-    if (!rows.length) {
-      return res.status(404).json({ error: "No matching TransferTo found" });
+    if (!siteResults.length) {
+      return res.status(404).json({ error: "Collection site not found for staff user" });
     }
 
-    const transferToUserAccountId = rows[0].user_account_id;
+    const collectionSiteId = siteResults[0].collectionsite_id;
 
-    console.log("TransferTo user_account_id:", transferToUserAccountId);
-    console.log("ReceivedByCollectionSite id:", id);
-
-    // Step 2: Main query to fetch samples with quantities
+    // Step 2: Fetch the in-transit samples using this collectionSiteId for both receive and TransferTo
     const query = `
       SELECT 
         s.id,
@@ -89,15 +78,20 @@ const getSampleReceiveInTransit = (req, res) => {
         s.TestSystemManufacturer,
         sr.ReceivedByCollectionSite,
         s.status,
-        COALESCE(sd.TotalQuantity, 0) AS Quantity
+        s.sample_status,
+        s.phoneNumber,
+        COALESCE(sd.TotalQuantity, 0) AS quantity
       FROM sample s
       LEFT JOIN samplereceive sr ON sr.sampleID = s.id
       LEFT JOIN (
-        SELECT sampleID, SUM(Quantity) AS TotalQuantity
-        FROM sampledispatch
-        WHERE status = 'In Stock' AND TransferTo = ?
-        GROUP BY sampleID
-      ) sd ON sd.sampleID = s.id
+  SELECT 
+    sampleID,
+    SUM(CASE WHEN status = 'In Stock' THEN Quantity ELSE 0 END) -
+    SUM(CASE WHEN status = 'Lost' THEN Quantity ELSE 0 END) AS TotalQuantity
+  FROM sampledispatch
+  WHERE TransferTo = ?
+  GROUP BY sampleID
+) sd ON sd.sampleID = s.id
       WHERE sr.ReceivedByCollectionSite = ?
         AND s.status = 'In Stock'
         AND sr.sampleID IS NOT NULL
@@ -108,16 +102,10 @@ const getSampleReceiveInTransit = (req, res) => {
       LIMIT ? OFFSET ?;
     `;
 
-    // Prepare query params in exact order
-    const queryParams = [
-      transferToUserAccountId, // For sampledispatch subquery
-      id,                      // For sr.ReceivedByCollectionSite
-    ];
-
+    const queryParams = [collectionSiteId, staffUserId];
     if (searchField && searchValue) {
       queryParams.push(`%${searchValue}%`);
     }
-
     queryParams.push(pageSize, offset);
 
     mysqlConnection.query(query, queryParams, (err, results) => {
@@ -126,7 +114,7 @@ const getSampleReceiveInTransit = (req, res) => {
         return res.status(500).json({ error: "Error fetching sample receive" });
       }
 
-      // Step 3: Count total samples matching criteria for pagination
+      // Total count for pagination
       const countQuery = `
         SELECT COUNT(DISTINCT s.id) AS totalCount
         FROM sample s
@@ -138,14 +126,14 @@ const getSampleReceiveInTransit = (req, res) => {
           ${searchClause};
       `;
 
-      const countParams = [id];
+      const countParams = [staffUserId];
       if (searchField && searchValue) {
         countParams.push(`%${searchValue}%`);
       }
 
-      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-        if (err) {
-          console.error("Error fetching total count:", err);
+      mysqlConnection.query(countQuery, countParams, (countErr, countResults) => {
+        if (countErr) {
+          console.error("Error fetching total count:", countErr);
           return res.status(500).json({ error: "Error fetching total count" });
         }
 
@@ -165,14 +153,10 @@ const getSampleReceiveInTransit = (req, res) => {
 };
 
 
-
-
-
 // Controller to create a new sample receive
 const createSampleReceive = (req, res) => {
   const { id } = req.params; // sampleID
   const { receiverName, ReceivedByCollectionSite } = req.body;
-
   if (!receiverName || !ReceivedByCollectionSite) {
     return res
       .status(400)
@@ -191,12 +175,7 @@ const createSampleReceive = (req, res) => {
 
       // Step 2: Find TransferTo user_account id from ReceivedByCollectionSite
       const findTransferToQuery = `
-      SELECT ua.id AS user_account_id
-FROM collectionsite c
-JOIN user_account ua ON c.user_account_id = ua.id
-WHERE c.id = (
   SELECT cs.collectionsite_id FROM collectionsitestaff cs WHERE cs.user_account_id = ?
-)
 LIMIT 1;
     `;
 
@@ -215,7 +194,7 @@ LIMIT 1;
               .json({ error: "No matching TransferTo found" });
           }
 
-          const transferToUserAccountId = rows[0].user_account_id;
+          const transferToUserAccountId = rows[0].collectionsite_id;
 
           // Step 3: Update sampledispatch with the correct TransferTo
           const updateDispatchStatusQuery = `
