@@ -16,7 +16,7 @@ router.get('/getAll/:id', collectionsiteController.getAllCollectioninCollectionS
 router.get('/getCSinRA',collectionsiteController.getAllinRegistrationAdmin);
 router.get('/:id', collectionsiteController.getCollectionSiteById);
 router.get('/getAllNameinCSR', collectionsiteController.getAllCollectionSiteNamesInCSR)
-// Register Collection site from Database Admin dashboard
+// Register Collection site from Registration Admin dashboard
 router.post(
   '/createcollsite',
   upload.fields([
