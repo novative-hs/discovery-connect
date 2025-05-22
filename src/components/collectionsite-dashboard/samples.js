@@ -12,12 +12,8 @@ import InputMask from "react-input-mask";
 import { getsessionStorage } from "@utils/sessionStorage";
 
 const SampleArea = () => {
-  const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+
+  const [staffAction, setStaffAction] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -30,6 +26,14 @@ const SampleArea = () => {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
+
+  const id = sessionStorage.getItem("userID");
+
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  } else {
+    console.log("Collection site Id on sample page is:", id);
+  }
   const openModal = (sample) => {
 
     setSelectedSample(sample);
@@ -165,6 +169,8 @@ const SampleArea = () => {
 
   // Fetch countries from backend
   useEffect(() => {
+    const action = sessionStorage.getItem("staffAction");
+    setStaffAction(action);
     const fetchData = async (url, setState, label) => {
       try {
         const response = await axios.get(url);
@@ -224,107 +230,107 @@ const SampleArea = () => {
   }, [currentPage, searchField, searchValue]);
 
 
-const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-  try {
-    const { searchField, searchValue } = filters;
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { searchField, searchValue } = filters;
 
-    if (!id) {
-      console.error("ID is missing.");
-      return;
-    }
-
-    // Construct URLs
-    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
-    if (searchField && searchValue) {
-      ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-    }
-
-    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-    if (searchField && searchValue) {
-      receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-    }
-
-    // Fetch own samples
-    const ownResponse = await axios.get(ownResponseurl);
-    const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
-
-    const ownSamples = ownSampleData.map((sample) => {
-      let base64Logo = "";
-      if (sample.logo && sample.logo.data) {
-        const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
-        base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
+      if (!id) {
+        console.error("ID is missing.");
+        return;
       }
 
-      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+      // Construct URLs
+      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+      if (searchField && searchValue) {
+        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
 
-      return {
-        ...sample,
-        quantity,
-        logo: base64Logo,
-        isReturn: false,
-      };
-    });
+      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
+      if (searchField && searchValue) {
+        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
 
-    // Fetch received samples
-    const receivedResponse = await axios.get(receivedResponseurl);
-    const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
+      // Fetch own samples
+      const ownResponse = await axios.get(ownResponseurl);
+      const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
 
-    const receivedSamples = receivedSampleData.map((sample) => {
-      const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-      return {
-        ...sample,
-        quantity,
-        isReturn: true,
-      };
-    });
-
-    // Merge and sum duplicate quantities
-    const sampleMap = new Map();
-
-    [...ownSamples, ...receivedSamples].forEach((sample) => {
-      const sampleId = sample.id;
-      if (sampleMap.has(sampleId)) {
-        const existingSample = sampleMap.get(sampleId);
-        existingSample.quantity += sample.quantity;
-
-        // If any source is from received, mark isReturn false
-        if (sample.isReturn === false) {
-          existingSample.isReturn = false;
+      const ownSamples = ownSampleData.map((sample) => {
+        let base64Logo = "";
+        if (sample.logo && sample.logo.data) {
+          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
         }
 
-        sampleMap.set(sampleId, existingSample);
-      } else {
-        sampleMap.set(sampleId, { ...sample });
-      }
-    });
+        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
 
-   const combinedSamples = Array.from(sampleMap.values());
-console.log("Combined sample count:", combinedSamples.length); // Should show 16
-const totalPages = Math.ceil(combinedSamples.length / pageSize);
-console.log(combinedSamples)
-setTotalPages(totalPages);
-setfiltertotal(totalPages); // Only if you actually need this
-setSamples(combinedSamples);
-setFilteredSamplename(combinedSamples);
+        return {
+          ...sample,
+          quantity,
+          logo: base64Logo,
+          isReturn: false,
+        };
+      });
 
-  } catch (error) {
-    console.error("Error fetching samples:", error);
-  }
-};
-   const fetchCollectionSiteNames = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/getAll/${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch collection site names");
+      // Fetch received samples
+      const receivedResponse = await axios.get(receivedResponseurl);
+      const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
+
+      const receivedSamples = receivedSampleData.map((sample) => {
+        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
+        return {
+          ...sample,
+          quantity,
+          isReturn: true,
+        };
+      });
+
+      // Merge and sum duplicate quantities
+      const sampleMap = new Map();
+
+      [...ownSamples, ...receivedSamples].forEach((sample) => {
+        const sampleId = sample.id;
+        if (sampleMap.has(sampleId)) {
+          const existingSample = sampleMap.get(sampleId);
+          existingSample.quantity += sample.quantity;
+
+          // If any source is from received, mark isReturn false
+          if (sample.isReturn === false) {
+            existingSample.isReturn = false;
+          }
+
+          sampleMap.set(sampleId, existingSample);
+        } else {
+          sampleMap.set(sampleId, { ...sample });
         }
-        const data = await response.json();
-        setCollectionSiteNames(data);
-      } catch (error) {
-        console.error("Error fetching site names:", error);
+      });
+
+      const combinedSamples = Array.from(sampleMap.values());
+      console.log("Combined sample count:", combinedSamples.length); // Should show 16
+      const totalPages = Math.ceil(combinedSamples.length / pageSize);
+      console.log(combinedSamples)
+      setTotalPages(totalPages);
+      setfiltertotal(totalPages); // Only if you actually need this
+      setSamples(combinedSamples);
+      setFilteredSamplename(combinedSamples);
+
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
+  const fetchCollectionSiteNames = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/getAll/${id}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch collection site names");
       }
-    };
+      const data = await response.json();
+      setCollectionSiteNames(data);
+    } catch (error) {
+      console.error("Error fetching site names:", error);
+    }
+  };
 
 
 
@@ -358,7 +364,7 @@ setFilteredSamplename(combinedSamples);
     }
   };
   const currentData = filteredSamplename;
-  
+
 
   // Sample fields Dropdown
   useEffect(() => {
@@ -437,68 +443,68 @@ setFilteredSamplename(combinedSamples);
 
   const handleTransferSubmit = async (e) => {
     const sampleToSend = samples.find(s => s.id === selectedSampleId);
-const isReturnFlag = sampleToSend?.isReturn === true;
+    const isReturnFlag = sampleToSend?.isReturn === true;
 
-  e.preventDefault();
+    e.preventDefault();
 
-  const {
-    TransferTo,
-    dispatchVia,
-    dispatcherName,
-    dispatchReceiptNumber,
-    Quantity,
-  } = transferDetails;
+    const {
+      TransferTo,
+      dispatchVia,
+      dispatcherName,
+      dispatchReceiptNumber,
+      Quantity,
+    } = transferDetails;
 
-  if (
-    !TransferTo ||
-    !dispatchVia ||
-    !dispatcherName ||
-    !dispatchReceiptNumber ||
-    !Quantity
-  ) {
-    alert("All fields are required.");
-    return;
-  }
- 
-  try {
-    // Determine if it's a return (sample being sent back to original receiver)
-
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
-      {
-        TransferFrom: id,
-        TransferTo,
-        dispatchVia,
-        dispatcherName,
-        dispatchReceiptNumber,
-        Quantity,
-        isReturn:isReturnFlag,
-      }
-    );
-
-    fetchSamples(); // Refresh the current page
-    setCurrentPage(1);
-    alert("Sample dispatched successfully!");
-
-    setTransferDetails({
-      TransferTo: "",
-      dispatchVia: "",
-      dispatcherName: "",
-      dispatchReceiptNumber: "",
-      Quantity: "",
-    });
-
-    setShowTransferModal(false);
-  } catch (error) {
-    if (error.response) {
-      alert(`Error: ${error.response.data.error}`);
-    } else if (error.request) {
-      alert("No response received from server.");
-    } else {
-      alert("An unexpected error occurred.");
+    if (
+      !TransferTo ||
+      !dispatchVia ||
+      !dispatcherName ||
+      !dispatchReceiptNumber ||
+      !Quantity
+    ) {
+      alert("All fields are required.");
+      return;
     }
-  }
-};
+
+    try {
+      // Determine if it's a return (sample being sent back to original receiver)
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
+        {
+          TransferFrom: id,
+          TransferTo,
+          dispatchVia,
+          dispatcherName,
+          dispatchReceiptNumber,
+          Quantity,
+          isReturn: isReturnFlag,
+        }
+      );
+
+      fetchSamples(); // Refresh the current page
+      setCurrentPage(1);
+      alert("Sample dispatched successfully!");
+
+      setTransferDetails({
+        TransferTo: "",
+        dispatchVia: "",
+        dispatcherName: "",
+        dispatchReceiptNumber: "",
+        Quantity: "",
+      });
+
+      setShowTransferModal(false);
+    } catch (error) {
+      if (error.response) {
+        alert(`Error: ${error.response.data.error}`);
+      } else if (error.request) {
+        alert("No response received from server.");
+      } else {
+        alert("An unexpected error occurred.");
+      }
+    }
+  };
 
 
   const handleModalClose = () => {
@@ -715,26 +721,28 @@ const isReturnFlag = sampleToSend?.isReturn === true;
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
 
-          <div className="d-flex flex-wrap gap-3 ">
-            {/* Add City Button */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              style={{
-                backgroundColor: "#4a90e2", // soft blue
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "6px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              }}
-            >
-              <i className="fas fa-vial"></i> Add Sample
-            </button>
-          </div>
+          {["add", "all"].includes(staffAction) && (
+            <div className="d-flex flex-wrap gap-3">
+              <button
+                onClick={() => setShowAddModal(true)}
+                style={{
+                  backgroundColor: "#4a90e2",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                }}
+              >
+                <i className="fas fa-vial"></i> Add Sample
+              </button>
+            </div>
+          )}
+
         </div>
         {/* Table */}
         <div
@@ -766,9 +774,11 @@ const isReturnFlag = sampleToSend?.isReturn === true;
                     </div>
                   </th>
                 ))}
-                <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                  Action
-                </th>
+                {["edit", "dispatch", "history", "all"].some(action => staffAction === action) && (
+                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                    Action
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="table-light">
@@ -807,31 +817,42 @@ const isReturnFlag = sampleToSend?.isReturn === true;
                         )}
                       </td>
                     ))}
-                    <td className="text-center">
-                      <div className="d-flex justify-content-around gap-1">
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleEditClick(sample)}
-                          title="Edit"
-                        >
-                          <FontAwesomeIcon icon={faEdit} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleTransferClick(sample)}
-                          title="Transfer"
-                        >
-                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-outline-success btn-sm"
-                          onClick={() => handleShowHistory("sample", sample.id)}
-                          title="History"
-                        >
-                          <i className="fa fa-history"></i>
-                        </button>
-                      </div>
-                    </td>
+                    {["edit", "dispatch", "history", "all"].some(action => staffAction === action) && (
+                      <td className="text-center">
+                        <div className="d-flex justify-content-around gap-1">
+                          {["edit", "all"].includes(staffAction) && (
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() => handleEditClick(sample)}
+                              title="Edit"
+                            >
+                              <FontAwesomeIcon icon={faEdit} size="sm" />
+                            </button>
+                          )}
+
+                          {["dispatch", "all"].includes(staffAction) && (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleTransferClick(sample)}
+                              title="Transfer"
+                            >
+                              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                            </button>
+                          )}
+
+                          {["history", "all"].includes(staffAction) && (
+                            <button
+                              className="btn btn-outline-success btn-sm"
+                              onClick={() => handleShowHistory("sample", sample.id)}
+                              title="History"
+                            >
+                              <i className="fa fa-history"></i>
+                            </button>
+                          )}
+
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
@@ -1978,7 +1999,7 @@ const isReturnFlag = sampleToSend?.isReturn === true;
                   </button>
                   <button
                     type="submit"
-                    onClick={(e)=>{handleTransferSubmit(e)}}
+                    onClick={(e) => { handleTransferSubmit(e) }}
                     style={{
                       padding: "10px 15px",
                       backgroundColor: "#007bff",
