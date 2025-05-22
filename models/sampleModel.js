@@ -107,6 +107,13 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
   mysqlConnection.query(query, params, (err, results) => {
     if (err) return callback(err, null);
 
+ // Add locationids to each sample
+    const enrichedResults = results.map(sample => ({
+      ...sample,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+        .filter(Boolean)
+        .join("-"),
+    }));
     // Count query
     const countParams = params.slice(0, -2); // remove limit/offset
     const countQuery = `
@@ -125,7 +132,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
     mysqlConnection.query(countQuery, countParams, (err, countResults) => {
       if (err) return callback(err, null);
       callback(null, {
-        results,
+        results: enrichedResults,
         totalCount: countResults[0].totalCount,
       });
     });

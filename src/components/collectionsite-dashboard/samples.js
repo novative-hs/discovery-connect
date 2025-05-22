@@ -46,6 +46,7 @@ const SampleArea = () => {
   };
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
+    { label: "Location", key: "locationids" },
     { label: "Quantity", key: "quantity" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
@@ -1080,36 +1081,64 @@ const SampleArea = () => {
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Sample Logo</label>
-                                <div className="d-flex align-items-center">
-                                  <input
-                                    name="logo"
-                                    type="file"
-                                    id="logo"
-                                    accept="image/*"
-                                    onChange={(e) => logoHandler(e.target.files[0])}
-                                    className="form-control"
-                                    style={{
-                                      fontSize: "14px",
-                                      height: "45px",
-                                      backgroundColor: "#f0f0f0",
-                                      color: "black",
-                                    }}
-                                  />
-                                  {logoPreview && (
-                                    <img
-                                      src={logoPreview}
-                                      alt="Logo Preview"
-                                      width="80"
-                                      style={{
-                                        marginLeft: "20px",
-                                        borderRadius: "5px",
-                                      }}
-                                    />
-                                  )}
-                                </div>
+                                <label>Quantity Unit</label>
+                                <select
+                                  className="form-control"
+                                  name="QuantityUnit"
+                                  value={formData.QuantityUnit}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.QuantityUnit
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Quantity Unit
+                                  </option>
+                                  {quantityunitNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </div>
+                            <div className="form-group">
+                              <label>Sample Picture</label>
+                              <div className="d-flex align-items-center">
+                                <input
+                                  name="logo"
+                                  type="file"
+                                  id="logo"
+                                  accept="image/*"
+                                  onChange={(e) => logoHandler(e.target.files[0])}
+                                  className="form-control"
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                />
+                                {logoPreview && (
+                                  <img
+                                    src={logoPreview}
+                                    alt="Logo Preview"
+                                    width="80"
+                                    style={{
+                                      marginLeft: "20px",
+                                      borderRadius: "5px",
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                            {/* </div> */}
                           </div>
                         )}
 
@@ -1308,36 +1337,6 @@ const SampleArea = () => {
                                 )}
                               </div>
                               <div className="form-group">
-                                <label>Quantity Unit</label>
-                                <select
-                                  className="form-control"
-                                  name="QuantityUnit"
-                                  value={formData.QuantityUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.QuantityUnit
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Quantity Unit
-                                  </option>
-                                  {quantityunitNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-                            {/* {Column 3} */}
-                            <div className="col-md-3">
-                              <div className="form-group">
                                 <label>Sample Type Matrix</label>
                                 <select
                                   className="form-control"
@@ -1364,6 +1363,9 @@ const SampleArea = () => {
                                   ))}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 3} */}
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label className="form-label">
                                   Smoking Status
@@ -1561,9 +1563,6 @@ const SampleArea = () => {
                                   <option value="Four">Four</option>
                                 </select>
                               </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Date Of Collection</label>
                                 <input
@@ -1584,6 +1583,9 @@ const SampleArea = () => {
                                   }}
                                 />
                               </div>
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Concurrent Medical Conditions</label>
                                 <select
@@ -1700,9 +1702,6 @@ const SampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Test Method</label>
                                 <select
@@ -1730,6 +1729,10 @@ const SampleArea = () => {
                                   ))}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-3">
+
                               <div className="form-group">
                                 <label>Test Kit Manufacturer</label>
                                 <select
@@ -1838,6 +1841,12 @@ const SampleArea = () => {
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}
                       </button>
+                    </div>
+                    <div className="text-start text-muted fs-6 mb-3 ms-3">
+                      <code>
+                        {" "}
+                        Location ID's = Room Number, Freezer ID and Box ID
+                      </code>
                     </div>
                   </form>
                 </div>
