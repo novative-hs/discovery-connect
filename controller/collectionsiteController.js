@@ -19,13 +19,12 @@ const getAllCollectionSites = (req, res) => {
 const getAllCollectioninCollectionStaff = (req, res) => {
   collectionsiteModel.getAllCollectioninCollectionStaff((err, results) => {
     if (err) {
-      console.error('Error fetching collection sites:', err);
-      return res.status(500).json({ error: 'An error occurred' });
+      console.error("Error in getAllCollectionSiteNamesIn RA:", err);
+      return res.status(500).json({ error: err.error || 'An unexpected error occurred' });
     }
     res.status(200).json(results);
   });
 };
-
 
 const getAllCollectionSiteNamesInCSR = (req, res) => {
 

@@ -54,21 +54,21 @@ const getAllCollectionSites = (callback) => {
   });
 };
 
+const getAllCollectioninCollectionStaff = async (callback) => {
+  const CollectionSiteQuery = `SELECT CollectionSiteName as name, id 
+      FROM collectionsite 
+      WHERE status = 'active'`;
 
-const getAllCollectioninCollectionStaff = (callback) => {
-  const query = `
-    SELECT 
-      id,
-      CollectionSiteName AS name
-    FROM collectionsite
-    WHERE status = 'active'
-    ORDER BY id DESC;
-  `;
-  mysqlConnection.query(query, (err, results) => {
-    callback(err, results);
+  mysqlConnection.query(CollectionSiteQuery, (err, results) => {
+    if (err) {
+      console.error('SQL Error (CollectionSite):', err);
+      callback(err, null);
+      return;
+    }
+    console.log(results)
+    callback(null, results);
   });
-};
-
+}
 
 // Function to register a new collection site in Registration Dashboard
 const createCollectionSite = (req, callback) => {

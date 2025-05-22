@@ -12,7 +12,7 @@ const upload = multer({ storage: storage });
 router.post('/create-collectionsite-table', collectionsiteController.create_collectionsiteTable);
 router.get('/collectionsitenames', collectionsiteController.getAllCollectionSiteNames);
 router.get('/get', collectionsiteController.getAllCollectionSites);
-router.get('/getAll/:id', collectionsiteController.getAllCollectioninCollectionStaff);
+router.get('/getCSinRA', collectionsiteController.getAllCollectioninCollectionStaff)
 router.get('/:id', collectionsiteController.getCollectionSiteById);
 
 router.get('/getAllNameinCSR', collectionsiteController.getAllCollectionSiteNamesInCSR)
