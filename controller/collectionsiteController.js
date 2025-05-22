@@ -17,7 +17,18 @@ const getAllCollectionSites = (req, res) => {
 };
 
 const getAllCollectioninCollectionStaff = (req, res) => {
-  collectionsiteModel.getAllCollectioninCollectionStaff((err, results) => {
+  const {id}=req.params;
+  collectionsiteModel.getAllCollectioninCollectionStaff(id,(err, results) => {
+    if (err) {
+      console.error('Error fetching collection sites:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    res.status(200).json(results);
+  })
+}
+
+const getAllinRegistrationAdmin = (req, res) => {
+  collectionsiteModel.getAllinRegistrationAdmin((err, results) => {
     if (err) {
       console.error("Error in getAllCollectionSiteNamesIn RA:", err);
       return res.status(500).json({ error: err.error || 'An unexpected error occurred' });
@@ -25,6 +36,7 @@ const getAllCollectioninCollectionStaff = (req, res) => {
     res.status(200).json(results);
   });
 };
+
 
 const getAllCollectionSiteNamesInCSR = (req, res) => {
 
@@ -201,5 +213,6 @@ module.exports = {
   updateCollectionSiteStatus,
   deleteCollectionSite,
   getAllCollectionSiteNamesInCSR,
-  getAllCollectioninCollectionStaff
+  getAllCollectioninCollectionStaff,
+  getAllinRegistrationAdmin,
 };
