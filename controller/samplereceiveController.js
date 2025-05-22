@@ -11,8 +11,7 @@ const createSampleReceiveTable = (req, res) => {
 
 // Controller to get all sample receivees in "In Transit" status
 const getSampleReceiveInTransit = (req, res) => {
-  const staffUserId = req.params.id; // Assuming this is the staff user ID (user_account_id)
-  const { searchField, searchValue } = req.query;
+  const staffUserId = req.params.id;
 
   if (!staffUserId) {
     return res.status(400).json({ error: "Staff User ID is missing" });
@@ -22,136 +21,115 @@ const getSampleReceiveInTransit = (req, res) => {
   const pageSize = parseInt(req.query.pageSize, 10) || 50;
   const offset = (page - 1) * pageSize;
 
-  // Search filter
+  const { searchField, searchValue } = req.query;
   let searchClause = "";
   if (searchField && searchValue) {
     searchClause = ` AND s.${searchField} LIKE ?`;
   }
 
-  // Step 1: Get the collectionsite_id for this staff user
+  // Step 1: Get the collectionsite_id of the user
   const siteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
-
   mysqlConnection.query(siteQuery, [staffUserId], (siteErr, siteResults) => {
-    if (siteErr) {
-      console.error("Error fetching collection site:", siteErr);
+    if (siteErr || !siteResults.length) {
       return res.status(500).json({ error: "Error fetching collection site" });
-    }
-
-    if (!siteResults.length) {
-      return res.status(404).json({ error: "Collection site not found for staff user" });
     }
 
     const collectionSiteId = siteResults[0].collectionsite_id;
 
-    // Step 2: Fetch the in-transit samples using this collectionSiteId for both receive and TransferTo
-    const query = `
-      SELECT 
-        s.id,
-        s.masterID,
-        s.donorID,
-        s.samplename,
-        s.age,
-        s.gender,
-        s.ethnicity,
-        s.samplecondition,
-        s.storagetemp,
-        s.ContainerType,
-        s.CountryOfCollection,
-        s.price,
-        s.SamplePriceCurrency,
-        s.QuantityUnit,
-        s.SampleTypeMatrix,
-        s.SmokingStatus,
-        s.AlcoholOrDrugAbuse,
-        s.InfectiousDiseaseTesting,
-        s.InfectiousDiseaseResult,
-        s.FreezeThawCycles,
-        s.DateOfCollection,
-        s.ConcurrentMedicalConditions,
-        s.ConcurrentMedications,
-        s.DiagnosisTestParameter,
-        s.TestResult,
-        s.TestResultUnit,
-        s.TestMethod,
-        s.TestKitManufacturer,
-        s.TestSystem,
-        s.TestSystemManufacturer,
-        sr.ReceivedByCollectionSite,
-        s.status,
-        s.sample_status,
-        s.phoneNumber,
-        COALESCE(sd.TotalQuantity, 0) AS quantity
-      FROM sample s
-      LEFT JOIN samplereceive sr ON sr.sampleID = s.id
-      LEFT JOIN (
-  SELECT 
-    sampleID,
-    SUM(CASE WHEN status = 'In Stock' THEN Quantity ELSE 0 END) -
-    SUM(CASE WHEN status = 'Lost' THEN Quantity ELSE 0 END) AS TotalQuantity
-  FROM sampledispatch
-  WHERE TransferTo = ?
-  GROUP BY sampleID
-) sd ON sd.sampleID = s.id
-      WHERE sr.ReceivedByCollectionSite = ?
-        AND s.status = 'In Stock'
-        AND sr.sampleID IS NOT NULL
-        AND s.id NOT IN (SELECT sampleID FROM samplereturn)
-        ${searchClause}
-      GROUP BY s.id
-      ORDER BY s.id
-      LIMIT ? OFFSET ?;
-    `;
-
-    const queryParams = [collectionSiteId, staffUserId];
-    if (searchField && searchValue) {
-      queryParams.push(`%${searchValue}%`);
-    }
-    queryParams.push(pageSize, offset);
-
-    mysqlConnection.query(query, queryParams, (err, results) => {
-      if (err) {
-        console.error("Error fetching sample receive:", err);
-        return res.status(500).json({ error: "Error fetching sample receive" });
+    // Step 2: Get all user_account_ids in that collection site
+    const staffQuery = `SELECT user_account_id FROM collectionsitestaff WHERE collectionsite_id = ?`;
+    mysqlConnection.query(staffQuery, [collectionSiteId], (staffErr, staffResults) => {
+      if (staffErr || !staffResults.length) {
+        return res.status(500).json({ error: "No staff found for this collection site" });
       }
+      const userIds = staffResults.map(row => row.user_account_id);
+      const placeholders = userIds.map(() => '?').join(',');
 
-      // Total count for pagination
-      const countQuery = `
-        SELECT COUNT(DISTINCT s.id) AS totalCount
+      // Step 3: Fetch the samples
+      const mainQuery = `
+        SELECT DISTINCT
+          s.id, s.masterID, s.donorID, s.samplename, s.age, s.gender,
+          s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType,
+          s.CountryOfCollection, s.price, s.SamplePriceCurrency,
+          s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus,
+          s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting,
+          s.InfectiousDiseaseResult, s.FreezeThawCycles,
+          s.DateOfCollection, s.ConcurrentMedicalConditions,
+          s.ConcurrentMedications, s.DiagnosisTestParameter,
+          s.TestResult, s.TestResultUnit, s.TestMethod,
+          s.TestKitManufacturer, s.TestSystem, s.TestSystemManufacturer,
+          sr.ReceivedByCollectionSite, s.status, s.sample_status,
+          s.phoneNumber,
+          COALESCE(sd.TotalQuantity, 0) AS quantity
         FROM sample s
         LEFT JOIN samplereceive sr ON sr.sampleID = s.id
-        WHERE sr.ReceivedByCollectionSite = ?
+        LEFT JOIN (
+          SELECT 
+            sampleID,
+            SUM(CASE WHEN status = 'In Stock' THEN Quantity ELSE 0 END) -
+            SUM(CASE WHEN status = 'Lost' THEN Quantity ELSE 0 END) AS TotalQuantity
+          FROM sampledispatch
+          WHERE TransferTo = ?
+          GROUP BY sampleID
+        ) sd ON sd.sampleID = s.id
+        WHERE sr.ReceivedByCollectionSite IN (${placeholders})
           AND s.status = 'In Stock'
           AND sr.sampleID IS NOT NULL
           AND s.id NOT IN (SELECT sampleID FROM samplereturn)
-          ${searchClause};
+          ${searchClause}
+        ORDER BY s.id
+        LIMIT ? OFFSET ?
       `;
 
-      const countParams = [staffUserId];
+      // Query params order: TransferTo (collectionSiteId), userIds..., search value?, limit, offset
+      const queryParams = [collectionSiteId, ...userIds];
       if (searchField && searchValue) {
-        countParams.push(`%${searchValue}%`);
+        queryParams.push(`%${searchValue}%`);
       }
+      queryParams.push(pageSize, offset);
 
-      mysqlConnection.query(countQuery, countParams, (countErr, countResults) => {
-        if (countErr) {
-          console.error("Error fetching total count:", countErr);
-          return res.status(500).json({ error: "Error fetching total count" });
+      mysqlConnection.query(mainQuery, queryParams, (err, results) => {
+        if (err) {
+          return res.status(500).json({ error: "Error fetching samples" });
         }
 
-        const totalCount = countResults[0].totalCount;
-        const totalPages = Math.ceil(totalCount / pageSize);
+        // Count query for total results
+        const countQuery = `
+          SELECT COUNT(DISTINCT s.id) AS totalCount
+          FROM sample s
+          LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+          WHERE sr.ReceivedByCollectionSite IN (${placeholders})
+            AND s.status = 'In Stock'
+            AND sr.sampleID IS NOT NULL
+            AND s.id NOT IN (SELECT sampleID FROM samplereturn)
+            ${searchClause}
+        `;
 
-        res.status(200).json({
-          samples: results,
-          totalPages,
-          currentPage: page,
-          pageSize,
-          totalCount,
+        const countParams = [...userIds];
+        if (searchField && searchValue) {
+          countParams.push(`%${searchValue}%`);
+        }
+
+        mysqlConnection.query(countQuery, countParams, (countErr, countResults) => {
+          if (countErr) {
+            return res.status(500).json({ error: "Error counting results" });
+          }
+
+          const totalCount = countResults[0].totalCount;
+          const totalPages = Math.ceil(totalCount / pageSize);
+
+          res.status(200).json({
+            samples: results,
+            totalPages,
+            currentPage: page,
+            pageSize,
+            totalCount,
+          });
         });
       });
     });
   });
 };
-
 
 // Controller to create a new sample receive
 const createSampleReceive = (req, res) => {
