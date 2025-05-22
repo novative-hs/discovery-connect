@@ -56,17 +56,23 @@ const getAllCollectionSites = (callback) => {
 
 const getAllCollectioninCollectionStaff = (id, callback) => {
   const query = `
-   SELECT 
-  cs.id,
-  cs.CollectionSiteName AS name
-FROM collectionsite cs
-JOIN collectionsitestaff cstaff ON cs.id = cstaff.collectionsite_id
-WHERE cs.status = 'active' AND cstaff.user_account_id != ?
-ORDER BY cs.id DESC;`;
-  mysqlConnection.query(query, id, (err, results) => {
+    SELECT 
+      cs.id,
+      cs.CollectionSiteName AS name
+    FROM collectionsite cs
+    WHERE cs.status = 'active'
+      AND cs.id NOT IN (
+        SELECT collectionsite_id
+        FROM collectionsitestaff
+        WHERE user_account_id = ?
+      )
+    ORDER BY cs.id DESC;
+  `;
+  mysqlConnection.query(query, [id], (err, results) => {
     callback(err, results);
   });
-}
+};
+
 
 const getAllinRegistrationAdmin = async (callback) => {
   const CollectionSiteQuery = `SELECT CollectionSiteName as name, id 

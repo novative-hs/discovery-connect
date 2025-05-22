@@ -522,9 +522,6 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
 };
 
 
-
-
-
 const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, callback) => {
   const offset = (page - 1) * pageSize;
 
@@ -672,7 +669,6 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
   });
 };
 
-
 const getAllOrderByOrderPacking = (csrUserId, callback) => {
   const sqlQuery = `
     SELECT 
@@ -700,13 +696,20 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
     LEFT JOIN city ON r.city = city.id
     LEFT JOIN country ON r.country = country.id
     LEFT JOIN district ON r.district = district.id
-    JOIN csr ON csr.collection_id = s.user_account_id
 
+    -- Join collectionsite_staff to match sample ownership
+    JOIN collectionsitestaff cs_staff 
+      ON cs_staff.user_account_id = s.user_account_id
+
+    -- Join CSR to get the collection site they belong to
+    JOIN csr 
+      ON csr.collection_id = cs_staff.collectionsite_id
+
+    -- Only get samples where the CSR is from the same collection site
     WHERE csr.user_account_id = ?
 
     ORDER BY c.created_at ASC;
   `;
-
 
   mysqlConnection.query(sqlQuery, [csrUserId], (err, results) => {
     if (err) {
@@ -716,9 +719,6 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
     callback(null, results);
   });
 };
-
-
-
 
 
 const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
@@ -835,7 +835,6 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
   }
 };
 
-
 // Helper function to revert sample quantity if the request is rejected
 const revertSampleQuantity = async (cartId) => {
   const getQuantitySql = `
@@ -861,9 +860,6 @@ const revertSampleQuantity = async (cartId) => {
   }
 };
 
-
-
-
 const queryAsync = (sql, params) => {
   return new Promise((resolve, reject) => {
     mysqlConnection.query(sql, params, (err, results) => {
@@ -875,6 +871,7 @@ const queryAsync = (sql, params) => {
     });
   });
 };
+
 const updateCartStatus = async (cartIds, cartStatus, callback) => {
   try {
     const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
@@ -933,7 +930,6 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     }
   }
 };
-
 
 
 module.exports = {

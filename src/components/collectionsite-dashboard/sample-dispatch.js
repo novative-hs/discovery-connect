@@ -25,9 +25,8 @@ const SampleDispatchArea = () => {
   const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     { label: "Quantity", key: "Quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Test Result", key: "TestResult" },
+    { label: "Gender", key: "gender" },
+    { label: "Age", key: "age" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
   ];
@@ -49,20 +48,13 @@ const SampleDispatchArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-
     { label: "Country of Collection", key: "CountryOfCollection" },
-
+    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
   const [formData, setFormData] = useState({
@@ -351,8 +343,8 @@ const SampleDispatchArea = () => {
                             key === "price"
                               ? "text-end"
                               : key === "samplename"
-                              ? ""
-                              : "text-center text-truncate"
+                                ? ""
+                                : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px" }}
                         >

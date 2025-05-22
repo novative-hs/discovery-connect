@@ -5,7 +5,14 @@ const multer = require("multer");
 
 // Configure storage (memory or disk)
 const storage = multer.memoryStorage(); // for buffer
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
+const upload = multer({
+  storage,
+  limits: {
+    fieldSize: 2 * 1024 * 1024, // 2 MB limit per field
+    fileSize: 5 * 1024 * 1024,  // 5 MB limit for files
+  }
+});
 // Sample Routes
 router.get("/sample/filterdata", SampleController.getFilteredSamples);
 router.get('/create-table', SampleController.createSampleTable);
