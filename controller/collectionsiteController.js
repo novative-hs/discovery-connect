@@ -15,16 +15,17 @@ const getAllCollectionSites = (req, res) => {
     res.status(200).json(results);
   });
 };
+
 const getAllCollectioninCollectionStaff = (req, res) => {
-  const {id}=req.params;
-  collectionsiteModel.getAllCollectioninCollectionStaff(id,(err, results) => {
+  collectionsiteModel.getAllCollectioninCollectionStaff((err, results) => {
     if (err) {
       console.error('Error fetching collection sites:', err);
       return res.status(500).json({ error: 'An error occurred' });
     }
     res.status(200).json(results);
-  })
-}
+  });
+};
+
 
 const getAllCollectionSiteNamesInCSR = (req, res) => {
 

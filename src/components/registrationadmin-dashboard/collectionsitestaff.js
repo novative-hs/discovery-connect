@@ -108,7 +108,7 @@ const CollectionSiteStaffArea = () => {
   const fetchCollectionsites = async () => {
     try {
 
-      const response = await axios.get(`${url}/admin/collectionsite/getAll`);
+      const response = await axios.get(`${url}/admin/collectionsite/getAll/${selectedCollectionsiteStaffId}`);
       console.log("collection", response.data)
       setCollectionsites(response.data);
     } catch (error) {

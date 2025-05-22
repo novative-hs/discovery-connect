@@ -55,19 +55,20 @@ const getAllCollectionSites = (callback) => {
 };
 
 
-const getAllCollectioninCollectionStaff = (id,callback) => {
+const getAllCollectioninCollectionStaff = (callback) => {
   const query = `
-   SELECT 
-  cs.id,
-  cs.CollectionSiteName AS name
-FROM collectionsite cs
-JOIN collectionsitestaff cstaff ON cs.id = cstaff.collectionsite_id
-WHERE cs.status = 'active' AND cstaff.user_account_id != ?
-ORDER BY cs.id DESC;`;
-  mysqlConnection.query(query,id, (err, results) => {
+    SELECT 
+      id,
+      CollectionSiteName AS name
+    FROM collectionsite
+    WHERE status = 'active'
+    ORDER BY id DESC;
+  `;
+  mysqlConnection.query(query, (err, results) => {
     callback(err, results);
   });
-}
+};
+
 
 // Function to register a new collection site in Registration Dashboard
 const createCollectionSite = (req, callback) => {
