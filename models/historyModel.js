@@ -15,7 +15,7 @@ const registrationadmin_history = () => {
       district_id INT,
       sample_id VARCHAR(36),
       csr_id  INT,
-      
+      diagnosistestparameter_id INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive', 'unapproved', 'approved','pending') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -42,6 +42,7 @@ const registrationadmin_history = () => {
       FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (ethnicity_id) REFERENCES ethnicity(id) ON DELETE CASCADE,
+      FOREIGN KEY (diagnosistestparameter_id) REFERENCES diagnosistestparameter(id) ON DELETE CASCADE,
       FOREIGN KEY (samplecondition_id) REFERENCES samplecondition(id) ON DELETE CASCADE,
       FOREIGN KEY (samplepricecurrency_id) REFERENCES samplepricecurrency(id) ON DELETE CASCADE,
       FOREIGN KEY (storagetemperature_id) REFERENCES storagetemperature(id) ON DELETE CASCADE,

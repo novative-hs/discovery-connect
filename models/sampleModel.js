@@ -77,7 +77,12 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
   const params = [user_account_id];
   if (searchField && searchValue) {
 
-    searchClause = ` AND ${searchField} LIKE ?`;
+    if (searchField === "status") {
+      searchClause = ` AND s.status LIKE ?`;
+    } else {
+      // For all other fields, dynamically add field without alias
+      searchClause = ` AND ${searchField} LIKE ?`;
+    }
     params.push(`%${searchValue}%`);
   }
 
@@ -105,6 +110,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 
 
   mysqlConnection.query(query, params, (err, results) => {
+    
     if (err) return callback(err, null);
 
  // Add locationids to each sample

@@ -22,6 +22,18 @@ const tablesAndColumns = [
       },
     ]
   },
+
+   {
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "diagnosistestparameter_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "diagnosistestparameter", column: "id" },
+      },
+    ]
+  },
   // {
   //   table: "user_account",
   //   columnsToAdd: [

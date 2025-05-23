@@ -162,22 +162,23 @@ const CollectionSiteStaffArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
+  setSearchTerm(value);
 
-    if (!value) {
-      setAllCollectionsitesstaff(allcollectionsitesstaff);
-    } else {
-      const filtered = allcollectionsitesstaff.filter((collectionsite) => {
-        return collectionsite[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-      });
-      setCollectionsitesstaff(filtered);
-    }
+  if (!value) {
+    setCollectionsitesstaff(allcollectionsitesstaff); // ✅ restore full list
+  } else {
+    const filtered = allcollectionsitesstaff.filter((collectionsite) => {
+      return collectionsite[field]
+        ?.toString()
+        .toLowerCase()
+        .includes(value.toLowerCase());
+    });
+    setCollectionsitesstaff(filtered);
+  }
 
-    setCurrentPage(0); // Reset to first page when filtering
-  };
+  setCurrentPage(0); // Reset to first page when filtering
+};
+
   useEffect(() => {
     const updatedFilteredCollectionsitestaff = collectionsitesstaff.filter((collectionsite) => {
       if (!statusFilter) return true;
@@ -188,15 +189,16 @@ const CollectionSiteStaffArea = () => {
     setCurrentPage(0); // Reset to first page when filtering
   }, [collectionsitesstaff, statusFilter]);
 
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
+ 
 
   const currentData = filteredCollectionsitesstaff.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
 
+   const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -479,7 +481,7 @@ const CollectionSiteStaffArea = () => {
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          onChange={(e) => handleFilterChange(field, e.target.value)}
                           style={{ minWidth: "150px", maxWidth: "200px", width: "100px" }}
                         />
                         <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
