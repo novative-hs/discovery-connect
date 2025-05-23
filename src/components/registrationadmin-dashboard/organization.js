@@ -604,7 +604,7 @@ const OrganizationArea = () => {
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          onChange={(e) => handleFilterChange(field, e.target.value)}
                           style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
                         />
                         <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">

@@ -167,15 +167,14 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Researcher List", tab: "researcher" },
           { label: "Organization List", tab: "organization" },
           { label: "Collection Site List", tab: "collectionsite" },
-          { label: "Collection Site Staff List", tab: "collectionsitestaff" },
-          { label: "Committee Members List", tab: "committee-members" },
-          { label: "CSR List", tab: "CSR" },
+          {label:"Staff Management List ",tab:"staffManagementPage"},
           {
             label: "Sample",
             tab: "sample",
             dropdown: [
               { label: "Ethnicity", tab: "ethnicity" },
               { label: "Sample Condition", tab: "sample-condition" },
+              { label: "Diagnosis Test Parameter", tab: "diagnosistestparameter" },
               { label: "Sample Price Currency", tab: "sample-price-currency" },
               { label: "Storage Temperature", tab: "storage-temperature" },
               { label: "Container Type", tab: "container-type" },

@@ -43,7 +43,10 @@ const contactusRoutes = require("./routes/contactusRoutes");
 const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
 const collectionsiteStaffRoutes=require("./routes/collectionsitestaffRoutes")
 const samplereturnRoutes=require("./routes/samplereturnRoutes")
+const diagnosistestparameterRoutes=require("./routes/diagnosistestparameterRoutes")
 // Routes
+
+app.use('/api/diagnosis-test-parameter',diagnosistestparameterRoutes)
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);

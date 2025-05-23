@@ -24,7 +24,12 @@ const getSampleReceiveInTransit = (req, res) => {
   const { searchField, searchValue } = req.query;
   let searchClause = "";
   if (searchField && searchValue) {
-    searchClause = ` AND s.${searchField} LIKE ?`;
+    if (searchField === "quantity") {
+      searchClause = ` AND sd.TotalQuantity LIKE ?`;
+    } else {
+      // For all other fields, dynamically add field without alias
+      searchClause = ` AND ${searchField} LIKE ?`;
+    }
   }
 
   // Step 1: Get the collectionsite_id of the user
@@ -94,22 +99,31 @@ const getSampleReceiveInTransit = (req, res) => {
         }
 
         // Count query for total results
-        const countQuery = `
-          SELECT COUNT(DISTINCT s.id) AS totalCount
-          FROM sample s
-          LEFT JOIN samplereceive sr ON sr.sampleID = s.id
-          WHERE sr.ReceivedByCollectionSite IN (${placeholders})
-            AND s.status = 'In Stock'
-            AND sr.sampleID IS NOT NULL
-            AND s.id NOT IN (SELECT sampleID FROM samplereturn)
-            ${searchClause}
-        `;
+     const countQuery = `
+  SELECT COUNT(DISTINCT s.id) AS totalCount
+  FROM sample s
+  LEFT JOIN samplereceive sr ON sr.sampleID = s.id
+  LEFT JOIN (
+    SELECT 
+      sampleID,
+      SUM(CASE WHEN status = 'In Stock' THEN Quantity ELSE 0 END) -
+      SUM(CASE WHEN status = 'Lost' THEN Quantity ELSE 0 END) AS TotalQuantity
+    FROM sampledispatch
+    WHERE TransferTo = ?
+    GROUP BY sampleID
+  ) sd ON sd.sampleID = s.id
+  WHERE sr.ReceivedByCollectionSite IN (${placeholders})
+    AND s.status = 'In Stock'
+    AND sr.sampleID IS NOT NULL
+    AND s.id NOT IN (SELECT sampleID FROM samplereturn)
+    ${searchClause}
+`;
 
-        const countParams = [...userIds];
-        if (searchField && searchValue) {
-          countParams.push(`%${searchValue}%`);
-        }
 
+        const countParams = [collectionSiteId, ...userIds];
+       if (searchField && searchValue) {
+  countParams.push(`%${searchValue}%`);
+}
         mysqlConnection.query(countQuery, countParams, (countErr, countResults) => {
           if (countErr) {
             return res.status(500).json({ error: "Error counting results" });

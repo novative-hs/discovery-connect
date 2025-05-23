@@ -86,18 +86,17 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    if (id === null) {
-      return <div>Loading...</div>;
-    } else {
-      const intervalId = setInterval(() => {
-        fetchSamples();
-      }, 500); // Fetch data every 5 seconds
+ useEffect(() => {
+  if (id !== null) {
+    fetchSamples();
+    const intervalId = setInterval(() => {
+      fetchSamples();
+    }, 30000); // every 30 seconds
 
-      // Cleanup interval when component is unmounted
-      return () => clearInterval(intervalId);
-    }
-  }, []);
+    return () => clearInterval(intervalId);
+  }
+}, [id]);
+
 
   useEffect(() => {
     const pages = Math.max(1, Math.ceil(samples.length / itemsPerPage));
