@@ -23,7 +23,7 @@ const SampleDispatchArea = () => {
   const [selectedSampleTransfer, setSelectedSampleTransfer] = useState(null); // Store ID of sample to delete
   const [showModal, setShowModal] = useState(false);
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Disease Name", key: "samplename" },
     { label: "Quantity", key: "Quantity" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
@@ -32,7 +32,7 @@ const SampleDispatchArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Disease Name", key: "samplename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },

@@ -25,7 +25,7 @@ const BioBankSampleArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSample, setEditSample] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Disease Name", key: "samplename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -43,9 +43,9 @@ const BioBankSampleArea = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    
+
     { label: "Country of Collection", key: "CountryOfCollection" },
-   
+
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
 
@@ -58,7 +58,7 @@ const BioBankSampleArea = () => {
 
   ];
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Disease Name", key: "samplename" },
     { label: "Quantity", key: "quantity" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Sample Price Currency", key: "SamplePriceCurrency" },
@@ -241,13 +241,13 @@ const BioBankSampleArea = () => {
                   <th key={index} className="col-md-1 px-2">
 
                     <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-/>
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                      />
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>

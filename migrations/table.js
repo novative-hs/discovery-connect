@@ -22,8 +22,8 @@ const samplefieldsModel = require('../models/samplefieldsModel')
 const historyModel = require("../models/historyModel");
 const contactusModel = require("../models/contactusModel");
 const committeesampleapprovalModel = require("../models/committeesampleapproval")
-const collectionsitestaffModel=require("../models/collectionsitestaffModel")
-const sampleReturnModel=require("../models/sampleReturnModel")
+const collectionsitestaffModel = require("../models/collectionsitestaffModel")
+const sampleReturnModel = require("../models/sampleReturnModel")
 // Function to initialize all tables
 function Database() {
 
@@ -66,6 +66,6 @@ function Database() {
   historyModel.create_samplehistoryTable();
   sampleReturnModel.createSampleReturnTable();
   contactusModel.createContactUsTable();
- //newtablefieldModel.createOrUpdateTables();
+  // newtablefieldModel.createOrUpdateTables();
 }
 Database();

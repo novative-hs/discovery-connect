@@ -262,6 +262,24 @@ const renameColumn = (table, oldColumn, newColumn, type) => {
   });
 };
 
+const updateEnumColumn = (table, column, enumValues, isNullable = true, defaultValue = null) => {
+  const enumList = enumValues.map(val => `'${val}'`).join(", ");
+  const nullable = isNullable ? "NULL" : "NOT NULL";
+  const defaultClause = defaultValue ? `DEFAULT '${defaultValue}'` : "";
+
+  const alterQuery = `
+    ALTER TABLE ${table} 
+    MODIFY COLUMN ${column} ENUM(${enumList}) ${nullable} ${defaultClause}
+  `;
+
+  mysqlConnection.query(alterQuery, (err) => {
+    if (err) {
+      console.error(`❌ Error updating ENUM column ${column} in table ${table}:`, err);
+    } else {
+      console.log(`✅ ENUM column ${column} in table ${table} updated successfully.`);
+    }
+  });
+};
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = async () => {
@@ -275,11 +293,16 @@ const createOrUpdateTables = async () => {
   if (Array.isArray(columnsToDelete)) {
     deleteColumns(table, columnsToDelete);
   }
+  updateEnumColumn("collectionsitestaff", "permission", [
+  "add_full", 
+  "add_basic", 
+  "edit", 
+  "dispatch", 
+  "receive", 
+  "all"
+], true, "all");
 });
 
-
-  // renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
-  // renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
 
   // await executeSequentially([
   //   () =>

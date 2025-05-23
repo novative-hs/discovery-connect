@@ -44,7 +44,7 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        sample_status ENUM('Public', 'Private') DEFAULT 'Public',
+        sample_status ENUM('Public', 'Private') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,

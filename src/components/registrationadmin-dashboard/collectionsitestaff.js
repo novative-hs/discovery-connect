@@ -405,7 +405,7 @@ const CollectionSiteStaffArea = () => {
               </div>
             )}
 
-            <h5 className="m-0 fw-bold">Collection Site Staff List</h5>
+            <h5 className="m-0 fw-bold">Collection Site's Staff List</h5>
 
             {/* Status Filter and Add Button in Same Row */}
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
@@ -442,7 +442,7 @@ const CollectionSiteStaffArea = () => {
                     margin: 10,
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Collection Site Staff
+                  <i className="fas fa-plus"></i> Add Staff
                 </button>
                 <button
                   onClick={handleExportToExcel}
@@ -637,8 +637,8 @@ const CollectionSiteStaffArea = () => {
                     <div className="modal-header">
                       <h5 className="modal-title">
                         {showAddModal
-                          ? "Add Collection Site"
-                          : "Edit Collection Site"}
+                          ? "Add Staff "
+                          : "Edit Staff"}
                       </h5>
                       <button
                         type="button"
@@ -666,7 +666,7 @@ const CollectionSiteStaffArea = () => {
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
                         <div className="form-group">
-                          <label>Email</label>
+                          <label>Unique Email</label>
                           <input
                             type="email"
                             className="form-control"
@@ -759,10 +759,11 @@ const CollectionSiteStaffArea = () => {
                           >
                             <option value="">Select Permission</option>
                             <option value="all">All Pages Access</option>
-                            <option value="add">Add Sample Permission</option>
-                            <option value="edit">Edit Sample Permission</option>
-                            <option value="dispatch">Dispatch Sample Permission</option>
-                            <option value="receive">Receive Sample Permission</option>
+                            <option value="add_full">Permission to Add Sample with Full Detail</option>
+                            <option value="add_basic">Permission to Add Sample with Basic Detail</option>
+                            <option value="edit">Permission to Edit Sample</option>
+                            <option value="dispatch">Permission to Dispatch Sample</option>
+                            <option value="receive">Permission to Receive Sample</option>
                           </select>
                         </div>
 

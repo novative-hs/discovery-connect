@@ -1,5 +1,5 @@
-const mysqlConnection=require("../config/db")
-const mysqlPool=require("../config/db")
+const mysqlConnection = require("../config/db")
+const mysqlPool = require("../config/db")
 const { sendEmail } = require("../config/email");
 
 const create_collectionsitestaffTable = () => {
@@ -9,13 +9,13 @@ const create_collectionsitestaffTable = () => {
       user_account_id INT,
       staffName VARCHAR(100),
       collectionsite_id INT,
-      permission ENUM('add', 'edit','dispatch','receive','all') DEFAULT 'add',
+      permission ENUM('add_full', 'add_basic', 'edit','dispatch','receive','all') DEFAULT 'all',
       status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE
-    )`; // <-- Removed the comma before the closing parenthesis
+    )`;
 
   mysqlConnection.query(create_collectionsitestaffTable, (err, results) => {
     if (err) {
@@ -26,8 +26,8 @@ const create_collectionsitestaffTable = () => {
   });
 };
 
-const getAllCollectionsitestaff=(callback)=>{
-     const query = `
+const getAllCollectionsitestaff = (callback) => {
+  const query = `
    SELECT 
   collectionsitestaff.*, 
   user_account.id AS user_account_id, 
@@ -164,10 +164,10 @@ const createCollectionsiteStaff = (req, callback) => {
   });
 };
 
-const updateCollectonsiteStaffStatus=async(id,status)=>{
-  
-   const updateQuery = 'UPDATE collectionsitestaff SET status = ? WHERE id = ?';
-    const getEmailQuery = `
+const updateCollectonsiteStaffStatus = async (id, status) => {
+
+  const updateQuery = 'UPDATE collectionsitestaff SET status = ? WHERE id = ?';
+  const getEmailQuery = `
     SELECT ua.email, cs.staffName
     FROM collectionsitestaff cs
     JOIN user_account ua ON cs.user_account_id = ua.id

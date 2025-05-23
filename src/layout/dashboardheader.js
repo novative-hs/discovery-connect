@@ -198,7 +198,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         ]
       : userType === "collectionsitesstaff"
       ? [
-          ...(["add","edit", "dispatch", "history", "all"].includes(staffAction)
+          ...(["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(staffAction)
             ? [{ label: "Sample List", tab: "samples" }]
             : []),
           ...(["receive", "all"].includes(staffAction)
