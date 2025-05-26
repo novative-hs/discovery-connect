@@ -44,7 +44,7 @@ const BioBankSampleArea = () => {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const tableHeaders = [
     { label: "Disease Name", key: "samplename" },
-    { label: "Quantity", key: "quantity" },
+    { label: "Pack size", key: "packsize" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
@@ -82,6 +82,7 @@ const BioBankSampleArea = () => {
     locationids: "",
     samplename: "",
     age: "",
+    packsize:0,
     phoneNumber: "",
     gender: "",
     ethnicity: "",
@@ -91,7 +92,7 @@ const BioBankSampleArea = () => {
     CountryOfCollection: "",
     price: 0,
     SamplePriceCurrency: "",
-    quantity: 0,
+    quantity: 1,
     QuantityUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
@@ -149,7 +150,7 @@ const BioBankSampleArea = () => {
     dispatchVia: "",
     dispatcherName: "",
     dispatchReceiptNumber: "",
-    Quantity: "",
+    Quantity: 1,
   });
 
   const handleQuarantineClick = () => {
@@ -399,7 +400,7 @@ const BioBankSampleArea = () => {
         CountryOfCollection: "",
         price: 0,
         SamplePriceCurrency: "",
-        quantity: 0,
+        quantity: 1,
         QuantityUnit: "",
         SampleTypeMatrix: "",
         SmokingStatus: "",
@@ -420,6 +421,7 @@ const BioBankSampleArea = () => {
         status: "",
         user_account_id: id,
         logo: "",
+        packsize:0,
       });
       setLogoPreview(false);
       setShowAdditionalFields(false)
@@ -594,6 +596,7 @@ const BioBankSampleArea = () => {
       age: sample.age,
       phoneNumber: sample.phoneNumber,
       gender: sample.gender,
+      packsize:sample.packsize,
       ethnicity: sample.ethnicity,
       samplecondition: sample.samplecondition,
       storagetemp: sample.storagetemp,
@@ -679,8 +682,9 @@ const BioBankSampleArea = () => {
         ContainerType: "",
         CountryOfCollection: "",
         price: 0,
+        packsize:0,
         SamplePriceCurrency: "",
-        quantity: 0,
+        quantity: 1,
         QuantityUnit: "",
         SampleTypeMatrix: "",
         SmokingStatus: "",
@@ -743,6 +747,7 @@ const BioBankSampleArea = () => {
   const resetFormData = () => {
     setFormData({
       locationids: "",
+      packsize:0,
       samplename: "",
       age: "",
       phoneNumber: "",
@@ -753,7 +758,7 @@ const BioBankSampleArea = () => {
       ContainerType: "",
       CountryOfCollection: "",
       price: 0,
-      quantity: 0,
+      quantity: 1,
       QuantityUnit: "",
       SampleTypeMatrix: "",
       SmokingStatus: "",
@@ -917,8 +922,8 @@ const BioBankSampleArea = () => {
                           </span>
                         ) : (
                           (() => {
-                            if (key === "quantity") {
-                              return `${sample.quantity} ${sample.QuantityUnit || ""}`;
+                            if (key === "packsize") {
+                              return `${sample.packsize} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "price") {
@@ -1183,18 +1188,18 @@ const BioBankSampleArea = () => {
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Quantity</label>
+                                <label>Pack size</label>
                                 <input
                                   type="number"
                                   className="form-control"
-                                  name="quantity"
-                                  value={formData.quantity}
+                                  name="packsize"
+                                  value={formData.packsize}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.quantity
+                                    backgroundColor: formData.packsize
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
@@ -2252,24 +2257,7 @@ const BioBankSampleArea = () => {
                     }}
                   />
                 </div>
-                <div style={{ marginBottom: "15px" }}>
-                  <label style={{ display: "block", marginBottom: "5px" }}>
-                    Quantity
-                  </label>
-                  <input
-                    type="number"
-                    name="Quantity"
-                    value={transferDetails.Quantity}
-                    onChange={handleInputChange}
-                    placeholder="Enter Quantity"
-                    style={{
-                      width: "100%",
-                      padding: "8px",
-                      borderRadius: "4px",
-                      border: "1px solid #ccc",
-                    }}
-                  />
-                </div>
+
                 <div
                   style={{
                     display: "flex",

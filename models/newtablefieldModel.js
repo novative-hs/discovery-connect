@@ -22,6 +22,14 @@ const tablesAndColumns = [
       },
     ]
   },
+  {table:"sample",
+    columnsToAdd:[
+      {column:"packsize",
+        type:"DOUBLE",
+         nullable: true, 
+      }
+    ]
+  },
 
    {
     table: "registrationadmin_history",

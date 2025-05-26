@@ -27,6 +27,7 @@ const createSampleTable = () => {
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
          quantity_allocated INT,
+         packsize DOUBLE,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50),
@@ -398,12 +399,12 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, packsize,samplename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.packsize, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -439,45 +440,69 @@ const createSample = (data, callback) => {
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
-
   let room_number = null;
   let freezer_id = null;
   let box_id = null;
 
+  // Parse locationids if provided
   if (data.locationids) {
-    const parts = data.locationids.split("-");
-    room_number = parts[0] || null;
-    freezer_id = parts[1] || null;
-    box_id = parts[2] || null;
-  }
+  const parts = data.locationids.split("-");
+  room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
+  freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
+  box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
+}
+
+
+  // Handle packsize: convert empty string to null
+  const packsize = data.packsize === '' ? null : data.packsize;
+
+  // Log for debugging
+  console.log("Updating sample ID:", id);
+  console.log("Packsize value:", packsize);
 
   const query = `
     UPDATE sample
-    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, samplename = ?, age = ?, phoneNumber=?,gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?,logo=?
-    WHERE id = ?`;
+    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, packsize = ?, samplename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
+    WHERE id = ?
+  `;
 
   const values = [
-    data.donorID, room_number, freezer_id, box_id, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
+    data.donorID, room_number, freezer_id, box_id, packsize, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
     data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
     data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];
 
+  // Run update query
   mysqlConnection.query(query, values, (err, result) => {
+    if (err) {
+      console.error('❌ Error updating sample:', err);
+      return callback(err, null);
+    }
+
+    // Check if update actually affected any rows
+    if (result.affectedRows === 0) {
+      console.warn('⚠️ No rows updated. Check if the sample ID exists.');
+    } else {
+      console.log('✅ Sample updated successfully.');
+    }
+
     // Insert into sample_history
     const historyQuery = `
-     INSERT INTO sample_history (sample_id)
-     VALUES (?)`;
+      INSERT INTO sample_history (sample_id)
+      VALUES (?)
+    `;
 
     mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
       if (err) {
-        console.error('Error inserting into sample_history:', err);
+        console.error('❌ Error inserting into sample_history:', err);
         return callback(err, null);
       }
 
-      callback(err, result);
+      console.log('🕘 History logged for sample ID:', id);
+      callback(null, result);
     });
   });
 };

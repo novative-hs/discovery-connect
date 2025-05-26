@@ -24,8 +24,8 @@ const BioBankSampleDispatchArea = () => {
 
   const tableHeaders = [
     { label: "Disease Name", key: "samplename" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Pack size", key: "packsize" },
+    
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
     { label: "Date Of Collection", key: "DateOfCollection" },
@@ -73,11 +73,12 @@ const BioBankSampleDispatchArea = () => {
     age: "",
     gender: "",
     ethnicity: "",
+    packsize:0,
     samplecondition: "",
     storagetemp: "",
     ContainerType: "",
     CountryOfCollection: "",
-    Quantity: "",
+    Quantity: 1,
     QuantityUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
@@ -319,37 +320,44 @@ const BioBankSampleDispatchArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
-                        <td
-                          key={index}
-                          className={
-                            key === "price"
-                              ? "text-end"
-                              : key === "samplename"
-                                ? ""
-                                : "text-center text-truncate"
-                          }
-                          style={{ maxWidth: "150px" }}
-                        >
-                          {key === "samplename" ? (
-                            <span
-                              className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                              role="button"
-                              title="Sample Details"
-                              onClick={() => openModal(sample)}
-                              style={{
-                                cursor: "pointer",
-                                transition: "color 0.2s",
-                              }}
-                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                              onMouseOut={(e) => (e.target.style.color = "")}
-                            >
-                              {sample.samplename || "----"}
-                            </span>
-                          ) : (
-                            sample[key] || "----"
-                          )}
-                        </td>
-                      ))}
+  <td
+    key={index}
+    className={
+      key === "price"
+        ? "text-end"
+        : key === "samplename"
+        ? ""
+        : "text-center text-truncate"
+    }
+    style={{ maxWidth: "150px" }}
+  >
+    {key === "samplename" ? (
+      <span
+        className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+        role="button"
+        title="Sample Details"
+        onClick={() => openModal(sample)}
+        style={{
+          cursor: "pointer",
+          transition: "color 0.2s",
+        }}
+        onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+        onMouseOut={(e) => (e.target.style.color = "")}
+      >
+        {sample.samplename || "----"}
+      </span>
+    ) : (
+      (() => {
+        if (key === "packsize") {
+          return `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`;
+        } else {
+          return sample[key] || "----";
+        }
+      })()
+    )}
+  </td>
+))}
+
                       <td>
                         <div
                           style={{
