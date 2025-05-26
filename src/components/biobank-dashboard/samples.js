@@ -204,6 +204,8 @@ const BioBankSampleArea = () => {
   const tableNames = [
     { name: "ethnicity", setter: setEthnicityNames },
     { name: "samplecondition", setter: setSampleConditionNames },
+    { name: "diagnosistestparameter", setter: setDiagnosisTestParameterNames },
+    { name: "samplepricecurrency", setter: setSamplePriceCurrencyNames },
     { name: "storagetemperature", setter: setStorageTemperatureNames },
     { name: "containertype", setter: setContainerTypeNames },
     { name: "quantityunit", setter: setQuantityUnitNames },
@@ -214,7 +216,7 @@ const BioBankSampleArea = () => {
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
-    { name: "diagnosistestparameter", setter: setDiagnosisTestParameterNames },
+
   ];
 
   const handleTransferClick = (sample) => {
