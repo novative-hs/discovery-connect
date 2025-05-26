@@ -63,7 +63,7 @@ const BioBankSampleArea = () => {
     { label: "Date Of Collection", key: "DateOfCollection" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
 
 
   ];
@@ -441,7 +441,7 @@ const BioBankSampleArea = () => {
                       historyData.map((log, index) => {
                         // Only include the desired fields
                         const filteredLog = {
-                          sample_status: log.sample_status,
+                          sample_visibility: log.sample_visibility,
                           comment: log.comments,
                           created_at: log.created_at,
                           updated_at: log.updated_at,

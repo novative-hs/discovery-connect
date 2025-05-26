@@ -313,6 +313,9 @@ const createOrUpdateTables = async () => {
   if (Array.isArray(columnsToDelete)) {
     deleteColumns(table, columnsToDelete);
   }
+// 🔁 RENAME sample_status TO sample_visibility
+  renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
+
   updateEnumColumn("collectionsitestaff", "permission", [
   "add_full", 
   "add_basic", 

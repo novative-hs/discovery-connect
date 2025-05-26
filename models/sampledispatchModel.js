@@ -72,7 +72,7 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       sd.TransferDate,
       sd.Quantity,
       sd.status,
-      s.sample_status
+      s.sample_visibility
     FROM sampledispatch sd
     JOIN sample s ON sd.sampleID = s.id
     JOIN collectionsitestaff cs_staff ON cs_staff.user_account_id = ?

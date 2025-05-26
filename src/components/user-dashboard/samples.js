@@ -30,7 +30,7 @@ const SampleArea = () => {
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
 
 
   ];

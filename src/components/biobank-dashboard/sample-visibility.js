@@ -16,7 +16,7 @@ const BioBankSampleArea = () => {
     console.log("Collection site Id on sample page is:", id);
   }
   const [formData, setFormData] = useState({
-    sample_status: "",
+    sample_visibility: "",
     added_by: id,
   });
   const [showModal, setShowModal] = useState(false);
@@ -65,7 +65,7 @@ const BioBankSampleArea = () => {
     { label: "Date Of Collection", key: "DateOfCollection" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
   const [samples, setSamples] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState(samples);
@@ -196,7 +196,7 @@ const BioBankSampleArea = () => {
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setFormData({
-      sample_status: sample.sample_status || "",
+      sample_visibility: sample.sample_visibility || "",
       added_by: id,
     });
     setShowEditModal(true);
@@ -387,8 +387,8 @@ const BioBankSampleArea = () => {
                         <label>Sample Status</label>
                         <select
                           className="form-control"
-                          name="sample_status"
-                          value={formData.sample_status}
+                          name="sample_visibility"
+                          value={formData.sample_visibility}
                           onChange={handleInputChange}
                           required
                         >

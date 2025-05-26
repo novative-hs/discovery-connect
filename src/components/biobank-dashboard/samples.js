@@ -50,7 +50,7 @@ const BioBankSampleArea = () => {
     { label: "Price", key: "price" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [
@@ -82,7 +82,7 @@ const BioBankSampleArea = () => {
     locationids: "",
     samplename: "",
     age: "",
-    packsize:0,
+    packsize: "",
     phoneNumber: "",
     gender: "",
     ethnicity: "",
@@ -421,7 +421,7 @@ const BioBankSampleArea = () => {
         status: "",
         user_account_id: id,
         logo: "",
-        packsize:0,
+        packsize: "",
       });
       setLogoPreview(false);
       setShowAdditionalFields(false)
@@ -681,8 +681,8 @@ const BioBankSampleArea = () => {
         storagetemp: "",
         ContainerType: "",
         CountryOfCollection: "",
-        price: 0,
-        packsize:0,
+        price: "",
+        packsize: "",
         SamplePriceCurrency: "",
         quantity: 1,
         QuantityUnit: "",
@@ -747,7 +747,7 @@ const BioBankSampleArea = () => {
   const resetFormData = () => {
     setFormData({
       locationids: "",
-      packsize:0,
+      packsize: "",
       samplename: "",
       age: "",
       phoneNumber: "",
@@ -1134,7 +1134,7 @@ const BioBankSampleArea = () => {
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Age</label>
+                                <label>Age (Years)</label>
                                 <input
                                   type="number"
                                   className="form-control"

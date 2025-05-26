@@ -45,7 +45,7 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        sample_status ENUM('Public', 'Private') DEFAULT 'Private',
+        sample_visibility ENUM('Public', 'Private') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
@@ -241,7 +241,7 @@ const getResearcherSamples = (userId, callback) => {
   sm.TestSystem,
   sm.TestSystemManufacturer,
   sm.status,
-  sm.sample_status,
+  sm.sample_visibility,
   sm.logo,
   cs.CollectionSiteName,
   bb.Name AS BiobankName,
@@ -316,7 +316,7 @@ SELECT
   WHERE 
     s.status = 'In Stock' 
     AND s.price > 0 
-    AND s.sample_status = 'Public'
+    AND s.sample_visibility = 'Public'
     AND (s.quantity > 0 OR s.quantity_allocated > 0)
   LIMIT ? OFFSET ?
 `;
@@ -328,7 +328,7 @@ SELECT
   WHERE 
     s.status = 'In Stock' 
     AND s.price > 0  
-    AND s.sample_status = 'Public'
+    AND s.sample_visibility = 'Public'
     AND (s.quantity > 0 OR s.quantity_allocated > 0)
 `;
 

@@ -53,7 +53,7 @@ const SampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [
@@ -94,7 +94,7 @@ const SampleArea = () => {
     ContainerType: "",
     CountryOfCollection: "",
     quantity: 1,
-    packsize:0,
+    packsize: "",
     QuantityUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
@@ -603,7 +603,7 @@ const SampleArea = () => {
       locationids: "",
       samplename: "",
       age: "",
-      packsize:0,
+      packsize: "",
       gender: "",
       phoneNumber: "",
       ethnicity: "",
@@ -1015,7 +1015,7 @@ const SampleArea = () => {
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Age</label>
+                                <label>Age (Years)</label>
                                 <input
                                   type="number"
                                   className="form-control"

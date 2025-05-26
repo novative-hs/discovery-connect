@@ -219,7 +219,7 @@ const getSampleHistory = (sampleId, callback) => {
       s.TestKitManufacturer,
       s.TestSystem,
       s.TestSystemManufacturer,
-      s.status AS sample_status,
+      s.status AS sample_visibility,
       CAST(s.created_at AS CHAR) AS created_at 
     FROM sample_history sh
     JOIN sample s ON sh.sample_id = s.id

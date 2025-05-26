@@ -31,7 +31,7 @@ const BioBankSampleDispatchArea = () => {
     { label: "Date Of Collection", key: "DateOfCollection" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
 
 
   ];

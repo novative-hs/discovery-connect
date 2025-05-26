@@ -23,7 +23,7 @@ const SampleLost = () => {
     { label: "Pack size", key: "packsize" },
 
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
     const fieldsToShowInOrder = [
     { label: "Sample Name", key: "samplename" },

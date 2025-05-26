@@ -28,7 +28,7 @@ const SampleDispatchArea = () => {
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [

@@ -229,7 +229,7 @@ const UpdateSampleStatus = (id, status, callback) => {
 
   const query = `
     UPDATE sample
-    SET sample_status = ?
+    SET sample_visibility = ?
     WHERE id = ?
   `;
 

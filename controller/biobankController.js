@@ -121,9 +121,9 @@ const updateBiobankSample = (req, res) => {
 
 const UpdateSampleStatus = (req, res) => {
   const sampleId = req.params.id;
-  const { sample_status } = req.body;
+  const { sample_visibility } = req.body;
 
-  BioBankModel.UpdateSampleStatus(sampleId, sample_status, (err, result) => {
+  BioBankModel.UpdateSampleStatus(sampleId, sample_visibility, (err, result) => {
     if (err) return res.status(500).json({ error: 'Failed to update sample status.' });
 
     res.status(200).json(result);
