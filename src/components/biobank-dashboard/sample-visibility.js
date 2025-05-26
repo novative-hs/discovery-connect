@@ -59,8 +59,7 @@ const BioBankSampleArea = () => {
   ];
   const tableHeaders = [
     { label: "Disease Name", key: "samplename" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Pack size", key: "packsize" },
     { label: "Sample Price Currency", key: "SamplePriceCurrency" },
     { label: "Price", key: "price" },
     { label: "Date Of Collection", key: "DateOfCollection" },
@@ -260,67 +259,66 @@ const BioBankSampleArea = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="table-light">
-              {currentData.length > 0 ? (
-                currentData.map((sample) => (
-                  <tr key={sample.id}>
-                    {tableHeaders.map(({ key }, index) => (
-                      <td
-                        key={index}
-                        className={
-                          key === "price"
-                            ? "text-end"
-                            : key === "samplename"
-                              ? ""
-                              : "text-center text-truncate"
-                        }
-                        style={{ maxWidth: "150px" }}
-                      >
-                        {key === "samplename" ? (
-                          <span
-                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                            role="button"
-                            title="Sample Details"
-                            onClick={() => openModal(sample)}
-                            style={{
-                              cursor: "pointer",
-                              transition: "color 0.2s",
-                            }}
-                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                            onMouseOut={(e) => (e.target.style.color = "")}
-                          >
-                            {sample.samplename || "----"}
-                          </span>
-                        ) : (
-                          sample[key] || "----"
-                        )}
-                      </td>
-                    ))}
-                    <td>
-                      <div className="d-flex justify-content-center gap-3">
+           <tbody className="table-light">
+  {currentData.length > 0 ? (
+    currentData.map((sample) => (
+      <tr key={sample.id}>
+        {tableHeaders.map(({ key }, index) => (
+          <td
+            key={index}
+            className={
+              key === "price"
+                ? "text-end"
+                : key === "samplename"
+                ? ""
+                : "text-center text-truncate"
+            }
+            style={{ maxWidth: "150px" }}
+          >
+            {key === "samplename" ? (
+              <span
+                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                role="button"
+                title="Sample Details"
+                onClick={() => openModal(sample)}
+                style={{
+                  cursor: "pointer",
+                  transition: "color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                onMouseOut={(e) => (e.target.style.color = "")}
+              >
+                {sample.samplename || "----"}
+              </span>
+            ) : key === "packsize" ? (
+              `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
+            ) : (
+              sample[key] || "----"
+            )}
+          </td>
+        ))}
+        <td>
+          <div className="d-flex justify-content-center gap-3">
+            <button
+              className="btn btn-success btn-sm"
+              onClick={() => openEditModal(sample)}
+              title="Edit Sample Status"
+            >
+              <FontAwesomeIcon icon={faEdit} size="xs" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="8" className="text-center">
+        No samples available
+      </td>
+    </tr>
+  )}
+</tbody>
 
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => openEditModal(sample)}
-                          title="Edit Sample Status"
-                        >
-                          <FontAwesomeIcon icon={faEdit} size="xs" />
-                        </button>
-
-                      </div>
-                    </td>
-                  </tr>
-
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="text-center">
-                    No samples available
-                  </td>
-                </tr>
-              )}
-
-            </tbody>
           </table>
         </div>
 

@@ -24,7 +24,7 @@ const SampleDispatchArea = () => {
   const [showModal, setShowModal] = useState(false);
   const tableHeaders = [
     { label: "Disease Name", key: "samplename" },
-    { label: "Quantity", key: "Quantity" },
+    { label: "Packsize", key: "packsize" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
     { label: "Status", key: "status" },

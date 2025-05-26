@@ -20,7 +20,7 @@ const SampleLost = () => {
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Phone Number", key: "phoneNumber" },
-    { label: "Quantity", key: "Quantity" },
+    { label: "Pack size", key: "packsize" },
 
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },

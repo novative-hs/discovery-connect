@@ -679,21 +679,25 @@ const OrderPage = () => {
                     <div className="col-md-5 text-center">
                       <div className="mt-3 p-2 bg-light rounded text-start">
                         <p>
-                          <strong>Quantity:</strong> {selectedSample.quantity}
+                          <strong>Order Quantity:</strong> {selectedSample.quantity}
                         </p>
                         <p>
-                          <strong>Quantity unit:</strong>{" "}
-                          {selectedSample.QuantityUnit}
+                          <strong>Pack size:</strong>{" "}
+                          {selectedSample.packsize} {selectedSample.Quantityunit}
+                        </p>
+                        <p>
+                          <strong>Age:</strong> {selectedSample.age} years |{" "}
+                          <strong>Gender:</strong> {selectedSample.gender} |{" "}
+                        </p>
+                        <p>
+                          <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                          
                         </p>
                         <p>
                           <strong>Country of Collection:</strong>{" "}
                           {selectedSample.CountryofCollection}
                         </p>
-                        <p>
-                          <strong>Age:</strong> {selectedSample.age} years |{" "}
-                          <strong>Gender:</strong> {selectedSample.gender} |{" "}
-                          <strong>Ethnicity:</strong> {selectedSample.ethnicity}
-                        </p>
+                        
                       </div>
                     </div>
 
