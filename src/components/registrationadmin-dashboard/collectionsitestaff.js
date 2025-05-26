@@ -393,8 +393,6 @@ const CollectionSiteStaffArea = () => {
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
-      <div className="container">
-        <div className="row justify-content-center">
           {/* Button Container */}
           <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100">
             {/* Success Message */}
@@ -897,8 +895,8 @@ const CollectionSiteStaffArea = () => {
             </>
           )}
 
-        </div>
-      </div>
+        
+      
       <Modal show={showModal}
         onHide={closeModal}
         size="lg"

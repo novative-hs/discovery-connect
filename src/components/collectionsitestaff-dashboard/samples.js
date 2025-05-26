@@ -51,14 +51,15 @@ const SampleArea = () => {
     { label: "Packsize", key: "packsize" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Phone Number", key: "phoneNumber" },
+    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [
     { label: "Disease Name", key: "samplename" },
-    { label: "Phone Number", key: "phoneNumber" },
+    
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -999,7 +1000,31 @@ const SampleArea = () => {
                             <div className="row">
                               <div className="form-group col-md-6">
                                 <label>Disease Name</label>
-                                <input
+                                 <select
+                                  className="form-control"
+                                  name="samplename"
+                                  value={formData.samplename}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.samplename
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Disease Name
+                                  </option>
+                                  {diagnosistestparameterNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                                {/* <input
                                   type="text"
                                   className="form-control"
                                   name="samplename"
@@ -1012,7 +1037,7 @@ const SampleArea = () => {
                                     backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
                                     color: "black",
                                   }}
-                                />
+                                /> */}
                               </div>
                               <div className="form-group col-md-6">
                                 <label>Age (Years)</label>
@@ -1116,7 +1141,7 @@ const SampleArea = () => {
                               </div>
                             </div>
                             <div className="row">
-                              <div className="form-group col-md-6">
+                              {/* <div className="form-group col-md-6">
                                 <label>Diagnosis Test Parameter</label>
                                 <select
                                   className="form-control"
@@ -1142,7 +1167,7 @@ const SampleArea = () => {
                                     </option>
                                   ))}
                                 </select>
-                              </div>
+                              </div> */}
                               <div className="form-group col-md-6">
                                 <label>Sample Picture</label>
                                 <div className="d-flex align-items-center">

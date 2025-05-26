@@ -298,19 +298,15 @@ const SampleArea = () => {
                 {currentData.length > 0 ? (
                   currentData.map((sample) => (
                     <tr key={sample.id}>
-                    {tableHeaders.map(({ key }, index) => (
-  <td
-    key={index}
-    className={
-      key === "price"
-        ? "text-end"
-        : key === "samplename"
-        ? ""
-        : "text-center text-truncate"
-    }
-    style={{ maxWidth: "150px" }}
-  >
-    {key === "samplename" ? (
+                   {tableHeaders.map(({ key }, index) => {
+  let content;
+
+  if (key === "price") {
+    content = sample.price
+      ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+      : "----";
+  } else if (key === "samplename") {
+    content = (
       <span
         className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
         role="button"
@@ -325,13 +321,29 @@ const SampleArea = () => {
       >
         {sample.samplename || "----"}
       </span>
-    ) : key === "packsize" ? (
-      `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
-    ) : (
-      sample[key] || "----"
-    )}
-  </td>
-))}
+    );
+  } else if (key === "packsize") {
+    content = `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`;
+  } else {
+    content = sample[key] || "----";
+  }
+
+  return (
+    <td
+      key={index}
+      className={
+        key === "price"
+          ? "text-end"
+          : key === "samplename"
+          ? ""
+          : "text-center text-truncate"
+      }
+      style={{ maxWidth: "150px" }}
+    >
+      {content}
+    </td>
+  );
+})}
 
                       <td className="w-auto" style={{ minWidth: "40px" }}>
 

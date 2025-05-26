@@ -127,16 +127,19 @@ const Header = ({ style_2 = false }) => {
                             </li>
                           )}
                           <li>
-                            <button
-                              className="cartmini-open-btn"
-                              onClick={handleProceedToCart}
-                            >
-                              <Cart />
-                              <span className="tp-item-count">
-                                {sampleCount}
-                              </span>
-                            </button>
-                          </li>
+  <button
+    className="cartmini-open-btn"
+    onClick={handleProceedToCart}
+  >
+    <Cart />
+    {Number(sampleCount) > 0 && (
+      <span className="tp-item-count">
+        {sampleCount}
+      </span>
+    )}
+  </button>
+</li>
+
                         </ul>
                       </div>
                       <div className="header__hamburger ml-30 d-xl-none">

@@ -43,6 +43,7 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       s.samplecondition,
       s.storagetemp,
       s.ContainerType,
+      s.packsize,
       s.CountryOfCollection,
       s.price,
       s.SamplePriceCurrency,
