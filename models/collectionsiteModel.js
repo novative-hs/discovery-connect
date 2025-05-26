@@ -311,10 +311,9 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
 
     // Now fetch collection site names EXCLUDING the one that owns this sample
     const collectionSiteQuery = `
-      SELECT CollectionSiteName, user_account_id 
+      SELECT CollectionSiteName, id 
       FROM collectionsite 
-      WHERE user_account_id != ?
-      AND status = 'active';
+      WHERE status = 'active';
     `;
 
     mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
