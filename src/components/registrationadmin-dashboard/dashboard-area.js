@@ -113,8 +113,8 @@ const DashboardArea = () => {
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-      <div className="d-flex justify-content-end me-3 mt-2 bg-light">
-        <p className="fs-7">
+      
+        <p className="fs-6 text-end" style={{ margin: "10px" }}>
           {`Admin Dashboard / ${activeTab === "order-info"
             ? "Profile"
             : [
@@ -136,11 +136,11 @@ const DashboardArea = () => {
               : activeTab.replace(/-/g, " ")
             }`}
         </p>
-      </div>
+      
 
       <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">
         <div className="container-fluid profile__inner position-relative">
-          <div className="row justify-content-center">
+          
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
               <div
                 className="profile__tab-content mx-auto p-3 my-1 h-auto"
@@ -148,7 +148,7 @@ const DashboardArea = () => {
               >
                 {renderContent()}
               </div>
-            </div>
+            
           </div>
         </div>
       </section>

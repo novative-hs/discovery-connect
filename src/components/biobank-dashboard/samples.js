@@ -48,7 +48,8 @@ const BioBankSampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Phone Number", key: "phoneNumber" },
+    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
   ];
@@ -70,7 +71,6 @@ const BioBankSampleArea = () => {
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
@@ -229,31 +229,27 @@ const BioBankSampleArea = () => {
     fetchSamples(); // Call the function when the component mounts
   }, []);
   // Fetch samples from the backend
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { priceFilter, searchField, searchValue } = filters;
+ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { priceFilter, searchField, searchValue } = filters;
 
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-      if (priceFilter) {
-        url += `&priceFilter=${priceFilter}`;
-      }
+    if (priceFilter) url += `&priceFilter=${priceFilter}`;
+    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
-      if (searchField && searchValue) {
-        url += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
+    const response = await axios.get(url);
+    const { samples, totalCount } = response.data;
+console.log(samples)
+    setSamples(samples);
+    setFilteredSamples(samples);
+    setTotalPages(Math.ceil(totalCount / pageSize));
+    setfiltertotal(Math.ceil(totalCount / pageSize));
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+  }
+};
 
-      const response = await axios.get(url);
-
-      const { samples, totalCount } = response.data;
-      setSamples(samples);
-      setFilteredSamples(samples); // Ensure filteredSamples are updated
-      setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
-      setfiltertotal(Math.ceil(totalCount / pageSize));
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  };
 
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -1116,7 +1112,31 @@ const BioBankSampleArea = () => {
                             <div className="row">
                               <div className="form-group col-md-6">
                                 <label>Disease Name</label>
-                                <input
+                                 <select
+                                  className="form-control"
+                                  name="samplename"
+                                  value={formData.samplename}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.samplename
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Disease Name
+                                  </option>
+                                  {diagnosistestparameterNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                                {/* <input
                                   type="text"
                                   className="form-control"
                                   name="samplename"
@@ -1129,7 +1149,7 @@ const BioBankSampleArea = () => {
                                     backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
                                     color: "black",
                                   }}
-                                />
+                                /> */}
                               </div>
                               <div className="form-group col-md-6">
                                 <label>Age</label>
@@ -1233,7 +1253,7 @@ const BioBankSampleArea = () => {
                               </div>
                             </div>
                             <div className="row">
-                              <div className="form-group col-md-6">
+                              {/* <div className="form-group col-md-6">
                                 <label>Diagnosis Test Parameter</label>
                                 <select
                                   className="form-control"
@@ -1259,7 +1279,7 @@ const BioBankSampleArea = () => {
                                     </option>
                                   ))}
                                 </select>
-                              </div>
+                              </div> */}
                               <div className="form-group col-md-6">
                                 <label>Sample Picture</label>
                                 <div className="d-flex align-items-center">

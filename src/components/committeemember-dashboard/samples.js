@@ -579,8 +579,8 @@ const SampleArea = () => {
                         {selectedSample.SamplePriceCurrency}
                       </p>
                       <p>
-                        <strong>Quantity unit:</strong>{" "}
-                        {selectedSample.QuantityUnit}
+                        <strong>Pack size:</strong>{" "}
+                        {selectedSample.packsize} {selectedSample.QuantityUnit}
                       </p>
                       <p>
                         <strong>Country of Collection:</strong>{" "}

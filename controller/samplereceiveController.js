@@ -53,7 +53,7 @@ const getSampleReceiveInTransit = (req, res) => {
       // Step 3: Fetch the samples
       const mainQuery = `
         SELECT DISTINCT
-          s.id, s.masterID, s.donorID, s.samplename, s.age, s.gender,
+          s.id, s.masterID, s.donorID, s.samplename, s.age, s.gender,s.packsize,
           s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType,
           s.CountryOfCollection, s.price, s.SamplePriceCurrency,
           s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus,
@@ -64,6 +64,7 @@ const getSampleReceiveInTransit = (req, res) => {
           s.TestResult, s.TestResultUnit, s.TestMethod,
           s.TestKitManufacturer, s.TestSystem, s.TestSystemManufacturer,
           sr.ReceivedByCollectionSite, s.status, s.sample_status,
+           CONCAT_WS('-', s.room_number, s.freezer_id, s.box_id) AS locationids,
           s.phoneNumber,
           COALESCE(sd.TotalQuantity, 0) AS quantity
         FROM sample s
