@@ -44,19 +44,21 @@ const SampleArea = () => {
     setSelectedSample(null);
     setShowModal(false);
   };
+
   const tableHeaders = [
     { label: "Disease Name", key: "samplename" },
     { label: "Location", key: "locationids" },
     { label: "Quantity", key: "quantity" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
-    { label: "Phone Number", key: "phoneNumber" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
   ];
 
   const fieldsToShowInOrder = [
     { label: "Disease Name", key: "samplename" },
+    { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -65,7 +67,6 @@ const SampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
@@ -73,7 +74,6 @@ const SampleArea = () => {
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
@@ -132,16 +132,11 @@ const SampleArea = () => {
   const [sampletypematrixNames, setSampleTypeMatrixNames] = useState([]);
   const [testmethodNames, setTestMethodNames] = useState([]);
   const [testresultunitNames, setTestResultUnitNames] = useState([]);
-  const [
-    concurrentmedicalconditionsNames,
-    setConcurrentMedicalConditionsNames,
-  ] = useState([]);
+  const [concurrentmedicalconditionsNames, setConcurrentMedicalConditionsNames] = useState([]);
   const [testkitmanufacturerNames, setTestKitManufacturerNames] = useState([]);
   const [testsystemNames, setTestSystemNames] = useState([]);
-  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] =
-    useState([]);
-    const [diagnosistestparameterNames, setDiagnosisTestParameterNames] =
-    useState([]);
+  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
+  const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -322,6 +317,7 @@ const SampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
+
   const fetchCollectionSiteNames = async () => {
     try {
       const response = await fetch(
@@ -337,13 +333,12 @@ const SampleArea = () => {
     }
   };
 
-
-
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
     }
   }, [totalPages]);
+
   const handleFilterChange = (field, value) => {
     const trimmedValue = value.trim().toLowerCase();
     setSearchField(field);
@@ -510,7 +505,6 @@ const SampleArea = () => {
       }
     }
   };
-
 
   const handleModalClose = () => {
     setTransferDetails({
@@ -742,8 +736,8 @@ const SampleArea = () => {
               </button>
             </div>
           )}
-
         </div>
+
         {/* Table */}
         <div
           onScroll={handleScroll}
@@ -813,7 +807,15 @@ const SampleArea = () => {
                             {sample.samplename || "----"}
                           </span>
                         ) : (
-                          sample[key] || "----"
+                          (() => {
+                            if (key === "quantity") {
+                              return `${sample.quantity} ${sample.QuantityUnit || ""}`;
+                            } else if (key === "age") {
+                              return `${sample.age} years`;
+                            } else {
+                              return sample[key] || "----";
+                            }
+                          })()
                         )}
                       </td>
                     ))}
@@ -891,19 +893,19 @@ const SampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "40px",
+                top: "-10px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "100%", // ensures responsiveness
+                width: "100%",
               }}
             >
               <div
                 className="modal-dialog"
                 role="document"
                 style={{
-                  maxWidth: showAdditionalFields ? "70vw" : "30vw", // 👈 dynamic width
+                  maxWidth: showAdditionalFields ? "70vw" : "40vw",
                   width: "100%",
-                  transition: "all 0.3s ease-in-out", // smooth animation
+                  transition: "all 0.3s ease-in-out",
                 }}
               >
                 <div className="modal-content">
@@ -939,30 +941,29 @@ const SampleArea = () => {
                       <div className="row">
                         {/* Column 1 */}
                         {!showAdditionalFields && (
-                          <div className="col-md-10">
+                          <div className="col-md-12">
                             <div className="row">
                               {showAddModal && (
                                 <div className="form-group col-md-6">
                                   <label>Donor ID</label>
-                                 <input
-  type="text"
-  className="form-control"
-  name="donorID"
-  value={formData.donorID}
-  onChange={handleInputChange}
-  required
-  title="This is the ID of patient generated by hospital"
-  style={{
-    height: "45px",
-    fontSize: "14px",
-    backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
-    color: "black",
-  }}
-/>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="donorID"
+                                    value={formData.donorID}
+                                    onChange={handleInputChange}
+                                    required
+                                    title="This is the ID of patient generated by hospital"
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
+                                      color: "black",
+                                    }}
+                                  />
 
                                 </div>
                               )}
-
                               <div className="form-group col-md-6">
                                 <label>Location (IDs)</label>
                                 <InputMask
@@ -1111,7 +1112,7 @@ const SampleArea = () => {
                               </div>
                             </div>
                             <div className="row">
-                            <div className="form-group col-md-6">
+                              <div className="form-group col-md-6">
                                 <label>Diagnosis Test Parameter</label>
                                 <select
                                   className="form-control"
@@ -1138,41 +1139,39 @@ const SampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                            <div className="form-group col-md-6">
-                              <label>Sample Picture</label>
-                              <div className="d-flex align-items-center">
-                                <input
-                                  name="logo"
-                                  type="file"
-                                  id="logo"
-                                  accept="image/*"
-                                  onChange={(e) => logoHandler(e.target.files[0])}
-                                  className="form-control"
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                                {logoPreview && (
-                                  <img
-                                    src={logoPreview}
-                                    alt="Logo Preview"
-                                    width="80"
+                              <div className="form-group col-md-6">
+                                <label>Sample Picture</label>
+                                <div className="d-flex align-items-center">
+                                  <input
+                                    name="logo"
+                                    type="file"
+                                    id="logo"
+                                    accept="image/*"
+                                    onChange={(e) => logoHandler(e.target.files[0])}
+                                    className="form-control"
                                     style={{
-                                      marginLeft: "20px",
-                                      borderRadius: "5px",
+                                      fontSize: "14px",
+                                      height: "45px",
+                                      backgroundColor: "#f0f0f0",
+                                      color: "black",
                                     }}
                                   />
-                                )}
+                                  {logoPreview && (
+                                    <img
+                                      src={logoPreview}
+                                      alt="Logo Preview"
+                                      width="80"
+                                      style={{
+                                        marginLeft: "20px",
+                                        borderRadius: "5px",
+                                      }}
+                                    />
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            </div>
-                            {/* </div> */}
                           </div>
                         )}
-
                         {/* Column 2 */}
                         {showAdditionalFields && (
                           <>
@@ -1667,7 +1666,7 @@ const SampleArea = () => {
                                   }}
                                 />
                               </div>
-                             
+
                               <div className="form-group">
                                 <label className="form-label">
                                   Test Result
@@ -1774,10 +1773,6 @@ const SampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-3">
-
                               <div className="form-group">
                                 <label>Test Kit Manufacturer</label>
                                 <select
@@ -1808,6 +1803,9 @@ const SampleArea = () => {
                                   )}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Test System</label>
                                 <select
@@ -1872,19 +1870,19 @@ const SampleArea = () => {
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
                       {(staffAction === 'add_full' || staffAction === 'all') && (
-  <div className="form-check my-3">
-    <input
-      type="checkbox"
-      className="form-check-input"
-      id="toggleDetails"
-      checked={showAdditionalFields}
-      onChange={() => setShowAdditionalFields(!showAdditionalFields)}
-    />
-    <label className="form-check-label" htmlFor="toggleDetails">
-      Add Additional Details
-    </label>
-  </div>
-)}
+                        <div className="form-check my-3">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="toggleDetails"
+                            checked={showAdditionalFields}
+                            onChange={() => setShowAdditionalFields(!showAdditionalFields)}
+                          />
+                          <label className="form-check-label" htmlFor="toggleDetails">
+                            Add Additional Details
+                          </label>
+                        </div>
+                      )}
 
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}

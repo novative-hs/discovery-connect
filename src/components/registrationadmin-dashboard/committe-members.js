@@ -66,12 +66,12 @@ const CommitteeMemberArea = () => {
     { label: "Name", placeholder: "Search Name", field: "CommitteeMemberName" },
     { label: "Email", placeholder: "Search Email", field: "email" },
     { label: "Password", placeholder: "Search Password", field: "password" },
-    { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Committee Type", placeholder: "Search Committee Type", field: "committeetype" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
   const fieldsToShowInOrder = [
     { label: "CNIC", placeholder: "Search CNIC", field: "cnic" },
+    { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Organization", placeholder: "Search Org", field: "organization" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "City", placeholder: "Search City", field: "city" },
@@ -501,43 +501,43 @@ const CommitteeMemberArea = () => {
     }
   }, [showDeleteModal, showAddModal, showEditModal]);
 
- const handleExportToExcel = () => {
-  const dataToExport = filteredCommitteemembers.map((item) => ({
-    email: item.email ?? "",
-    password: item.password ?? "",
-    name: item.CommitteeMemberName ?? "",
-    phoneNumber: item.phoneNumber ?? "",
-    city: item.city_name ?? "",
-    country: item.country_name ?? "",
-    district: item.district_name ?? "",
-    fullAddress: item.fullAddress ?? "",
-    status: item.status ?? "",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    // "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCommitteemembers.map((item) => ({
+      email: item.email ?? "",
+      password: item.password ?? "",
+      name: item.CommitteeMemberName ?? "",
+      phoneNumber: item.phoneNumber ?? "",
+      city: item.city_name ?? "",
+      country: item.country_name ?? "",
+      district: item.district_name ?? "",
+      fullAddress: item.fullAddress ?? "",
+      status: item.status ?? "",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      // "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  const headers = [
-    "email",
-    "password",
-    "name",
-    "phoneNumber",
-    "city",
-    "country",
-    "district",
-    "fullAddress",
-    "status",
-    "Created At",
-  ];
+    const headers = [
+      "email",
+      "password",
+      "name",
+      "phoneNumber",
+      "city",
+      "country",
+      "district",
+      "fullAddress",
+      "status",
+      "Created At",
+    ];
 
-  if (dataToExport.length === 0) {
-    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
-  }
+    if (dataToExport.length === 0) {
+      dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "CommitteeMember");
-  XLSX.writeFile(workbook, "CommitteeMember_List.xlsx");
-};
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CommitteeMember");
+    XLSX.writeFile(workbook, "CommitteeMember_List.xlsx");
+  };
 
 
   return (
@@ -667,7 +667,7 @@ const CommitteeMemberArea = () => {
                       </td>
                       <td>{committeemember.email}</td>
                       <td>{committeemember.password}</td>
-                      <td>{committeemember.phoneNumber}</td>
+                      {/* <td>{committeemember.phoneNumber}</td> */}
                       <td>{committeemember.committeetype}</td>
                       {/* <td>{committeemember.organization_name}</td> */}
                       <td>{committeemember.status}</td>

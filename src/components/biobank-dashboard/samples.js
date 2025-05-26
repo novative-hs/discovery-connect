@@ -48,7 +48,7 @@ const BioBankSampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
-    { label: "Currency", key: "SamplePriceCurrency" },
+    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
   ];
@@ -63,7 +63,6 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
@@ -132,14 +131,11 @@ const BioBankSampleArea = () => {
   const [testmethodNames, setTestMethodNames] = useState([]);
   const [testresultunitNames, setTestResultUnitNames] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [
-    concurrentmedicalconditionsNames,
-    setConcurrentMedicalConditionsNames,
-  ] = useState([]);
+  const [concurrentmedicalconditionsNames, setConcurrentMedicalConditionsNames] = useState([]);
   const [testkitmanufacturerNames, setTestKitManufacturerNames] = useState([]);
   const [testsystemNames, setTestSystemNames] = useState([]);
-  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] =
-    useState([]);
+  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
+  const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
@@ -204,6 +200,22 @@ const BioBankSampleArea = () => {
       "Country"
     );
   }, []);
+
+  const tableNames = [
+    { name: "ethnicity", setter: setEthnicityNames },
+    { name: "samplecondition", setter: setSampleConditionNames },
+    { name: "storagetemperature", setter: setStorageTemperatureNames },
+    { name: "containertype", setter: setContainerTypeNames },
+    { name: "quantityunit", setter: setQuantityUnitNames },
+    { name: "sampletypematrix", setter: setSampleTypeMatrixNames },
+    { name: "testmethod", setter: setTestMethodNames },
+    { name: "testresultunit", setter: setTestResultUnitNames },
+    { name: "concurrentmedicalconditions", setter: setConcurrentMedicalConditionsNames },
+    { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
+    { name: "testsystem", setter: setTestSystemNames },
+    { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
+    { name: "diagnosistestparameter", setter: setDiagnosisTestParameterNames },
+  ];
 
   const handleTransferClick = (sample) => {
     setSelectedSampleId(sample.id);
@@ -282,77 +294,22 @@ const BioBankSampleArea = () => {
 
   // Sample fields Dropdown
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/ethnicity`)
-      .then((response) => response.json())
-      .then((data) => setEthnicityNames(data));
+    const fetchTableData = async (tableName, setter) => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/${tableName}`
+        );
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${tableName}`);
+        }
+        const data = await response.json();
+        setter(data);
+      } catch (error) {
+        console.error(`Error fetching ${tableName}:`, error);
+      }
+    };
 
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplecondition`
-    )
-      .then((response) => response.json())
-      .then((data) => setSampleConditionNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/samplepricecurrency`
-    )
-      .then((response) => response.json())
-      .then((data) => setSamplePriceCurrencyNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/storagetemperature`
-    )
-      .then((response) => response.json())
-      .then((data) => setStorageTemperatureNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/containertype`
-    )
-      .then((response) => response.json())
-      .then((data) => setContainerTypeNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/quantityunit`
-    )
-      .then((response) => response.json())
-      .then((data) => setQuantityUnitNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/sampletypematrix`
-    )
-      .then((response) => response.json())
-      .then((data) => setSampleTypeMatrixNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testmethod`)
-      .then((response) => response.json())
-      .then((data) => setTestMethodNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testresultunit`
-    )
-      .then((response) => response.json())
-      .then((data) => setTestResultUnitNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/concurrentmedicalconditions`
-    )
-      .then((response) => response.json())
-      .then((data) => setConcurrentMedicalConditionsNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testkitmanufacturer`
-    )
-      .then((response) => response.json())
-      .then((data) => setTestKitManufacturerNames(data));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystem`)
-      .then((response) => response.json())
-      .then((data) => setTestSystemNames(data));
-
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/testsystemmanufacturer`
-    )
-      .then((response) => response.json())
-      .then((data) => setTestSystemManufacturerNames(data));
+    tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
   useEffect(() => {
@@ -957,7 +914,17 @@ const BioBankSampleArea = () => {
                             {sample.samplename || "----"}
                           </span>
                         ) : (
-                          sample[key] || "----"
+                          (() => {
+                            if (key === "quantity") {
+                              return `${sample.quantity} ${sample.QuantityUnit || ""}`;
+                            } else if (key === "age") {
+                              return `${sample.age} years`;
+                            } else if (key === "price") {
+                              return `${sample.price || "----"} ${sample.SamplePriceCurrency || ""}`;
+                            } else {
+                              return sample[key] || "----";
+                            }
+                          })()
                         )}
                       </td>
                     ))}
@@ -1041,21 +1008,21 @@ const BioBankSampleArea = () => {
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: showAdditionalFields ? "10px" : "40px", // 👈 Adjust upward if additional fields are shown
+                top: "-10px",
                 left: "50%",
                 transform: "translateX(-50%)",
                 width: "100%",
                 overflow: "hidden",
-                transition: "top 0.3s ease-in-out", // 👈 Add smooth transition
+                transition: "top 0.3s ease-in-out",
               }}
             >
               <div
                 className="modal-dialog"
                 role="document"
                 style={{
-                  maxWidth: showAdditionalFields ? "70vw" : "30vw", // 👈 dynamic width
+                  maxWidth: showAdditionalFields ? "70vw" : "40vw",
                   width: "100%",
-                  transition: "all 0.3s ease-in-out", // smooth animation
+                  transition: "all 0.3s ease-in-out",
                 }}
               >
                 <div className="modal-content">
@@ -1091,7 +1058,7 @@ const BioBankSampleArea = () => {
                       <div className="row">
                         {/* Column 1 */}
                         {!showAdditionalFields && (
-                          <div className="col-md-10">
+                          <div className="col-md-12">
                             <div className="row">
                               <div className="form-group col-md-6">
                                 <label>Donor ID</label>
@@ -1260,39 +1227,67 @@ const BioBankSampleArea = () => {
                                 </select>
                               </div>
                             </div>
-                            <div className="form-group">
-                              <label>Sample Picture</label>
-                              <div className="d-flex align-items-center">
-                                <input
-                                  name="logo"
-                                  type="file"
-                                  id="logo"
-                                  accept="image/*"
-                                  onChange={(e) => logoHandler(e.target.files[0])}
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Diagnosis Test Parameter</label>
+                                <select
                                   className="form-control"
+                                  name="DiagnosisTestParameter"
+                                  value={formData.DiagnosisTestParameter}
+                                  onChange={handleInputChange}
+                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: "#f0f0f0",
+                                    backgroundColor: formData.DiagnosisTestParameter
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
                                     color: "black",
                                   }}
-                                />
-                                {logoPreview && (
-                                  <img
-                                    src={logoPreview}
-                                    alt="Logo Preview"
-                                    width="80"
+                                >
+                                  <option value="" hidden>
+                                    Select Diagnosis Test Parameter
+                                  </option>
+                                  {diagnosistestparameterNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Sample Picture</label>
+                                <div className="d-flex align-items-center">
+                                  <input
+                                    name="logo"
+                                    type="file"
+                                    id="logo"
+                                    accept="image/*"
+                                    onChange={(e) => logoHandler(e.target.files[0])}
+                                    className="form-control"
                                     style={{
-                                      marginLeft: "20px",
-                                      borderRadius: "5px",
+                                      fontSize: "14px",
+                                      height: "45px",
+                                      backgroundColor: "#f0f0f0",
+                                      color: "black",
                                     }}
                                   />
-                                )}
+                                  {logoPreview && (
+                                    <img
+                                      src={logoPreview}
+                                      alt="Logo Preview"
+                                      width="80"
+                                      style={{
+                                        marginLeft: "20px",
+                                        borderRadius: "5px",
+                                      }}
+                                    />
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
                         )}
-
                         {/* Column 2 */}
                         {showAdditionalFields && (
                           <>
@@ -1788,26 +1783,6 @@ const BioBankSampleArea = () => {
                                 />
                               </div>
                               <div className="form-group">
-                                <label>Diagnosis Test Parameter</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor:
-                                      formData.DiagnosisTestParameter
-                                        ? "#f0f0f0"
-                                        : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
-                              <div className="form-group">
                                 <label className="form-label">
                                   Test Result
                                 </label>
@@ -1913,9 +1888,6 @@ const BioBankSampleArea = () => {
                                   ))}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Test Kit Manufacturer</label>
                                 <select
@@ -1946,6 +1918,10 @@ const BioBankSampleArea = () => {
                                   )}
                                 </select>
                               </div>
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-3">
+
                               <div className="form-group">
                                 <label>Test System</label>
                                 <select

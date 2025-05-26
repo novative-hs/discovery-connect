@@ -67,7 +67,7 @@ const DashboardArea = () => {
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
               <div
                 className="profile__tab-content mx-auto p-3 my-1 h-auto"
-                style={{ maxWidth: "85%", width: "100%" }}
+                style={{ maxWidth: "90%", width: "100%" }}
               >
                 {renderContent()}
               </div>

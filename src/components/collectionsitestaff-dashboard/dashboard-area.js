@@ -59,15 +59,15 @@ const DashboardArea = () => {
         return <SampleArea />;
       case "sample-dispatch":
         return <SampleDispatchArea />;
-        case "sample-return":
-          return <SampleReturn/>
-           case "sample-lost":
-          return <SampleLost/>
+      case "sample-return":
+        return <SampleReturn />
+      case "sample-lost":
+        return <SampleLost />
       case "change-password":
         return <ChangePassword />;
       case "update-collectionsitestaff":
         return <UpdateCollectionSiteStaff />;
-        
+
       default:
         return <SampleArea />;
     }
@@ -82,7 +82,7 @@ const DashboardArea = () => {
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
               <div
                 className="profile__tab-content mx-auto p-3 my-1 h-auto"
-                style={{ maxWidth: "75%", width: "100%" }}
+                style={{ maxWidth: "85%", width: "100%" }}
               >
                 {renderContent()}
               </div>
