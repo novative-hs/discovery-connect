@@ -133,7 +133,11 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-biobank");
     } else if (userType === "committeemember") {
       setActiveTab("update-committeemember");
-    } else {
+    } 
+    // else if (userType === "collectionsitesstaff") {
+    //   setActiveTab("update-collectionsitestaff");
+    // } 
+    else {
       setActiveTab("update-profile");
     }
     setIsProfileOpen(true);
@@ -392,7 +396,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   >
                     {userType !== "technicaladmin" &&
                       userType !== "biobank" &&
-                      userType !== "registrationadmin" && (
+                      userType !== "registrationadmin" &&
+                      userType !== "collectionsitesstaff" && (
                         <li>
                           <button
                             className="dropdown-item fs-7"

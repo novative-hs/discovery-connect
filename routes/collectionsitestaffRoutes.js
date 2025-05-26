@@ -7,4 +7,5 @@ router.post('/createcollectionsitestaff',collectionsitestaffController.createCol
 router.get('/get',collectionsitestaffController.getAllCollectionsitestaff);
 router.put('/edit/:id',collectionsitestaffController.updateCollectonsiteStaffStatus);
 router.put('/updatedetail/:id',collectionsitestaffController.updateCollectonsiteStaffDetail);
+router.get('/get:id',collectionsitestaffController.getCollectionSiteStaffDetail)
 module.exports = router;

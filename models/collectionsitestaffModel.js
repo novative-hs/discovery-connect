@@ -46,6 +46,25 @@ ORDER BY collectionsitestaff.id DESC
   });
 }
 
+const getCollectionSiteStaffDetail=(id,callback)=>{
+   const query = `
+   SELECT 
+  collectionsitestaff.*, 
+  user_account.email AS useraccount_email
+FROM 
+  collectionsitestaff
+LEFT JOIN collectionsite 
+  ON collectionsitestaff.collectionsite_id = collectionsite.id
+LEFT JOIN user_account 
+  ON collectionsitestaff.user_account_id = user_account.id
+WHERE 
+  collectionsitestaff.user_account_id = ?
+
+  `;
+
+  mysqlConnection.query(query, [id], callback);
+}
+
 const createCollectionsiteStaff = (req, callback) => {
   const {
     email,
@@ -327,5 +346,6 @@ module.exports = {
   getAllCollectionsitestaff,
   createCollectionsiteStaff,
   updateCollectonsiteStaffStatus,
-  updateCollectonsiteStaffDetail
+  updateCollectonsiteStaffDetail,
+  getCollectionSiteStaffDetail
 }

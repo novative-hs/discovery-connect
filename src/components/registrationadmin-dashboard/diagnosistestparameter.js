@@ -98,6 +98,7 @@ const DiagnosisTestParameterArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
+      console.log("history",data)
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -478,7 +479,7 @@ const handleExportToExcel = () => {
                           <button
                             className="btn btn-info btn-sm"
                             onClick={() =>
-                              handleShowHistory("diagnosistest", diagnosisname.id)
+                              handleShowHistory("diagnosistestparameter", diagnosisname.id)
                             }
                             title="History Sample"
                           >

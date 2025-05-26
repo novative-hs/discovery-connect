@@ -24,6 +24,7 @@ const contactusModel = require("../models/contactusModel");
 const committeesampleapprovalModel = require("../models/committeesampleapproval")
 const collectionsitestaffModel = require("../models/collectionsitestaffModel")
 const sampleReturnModel = require("../models/sampleReturnModel")
+const diagnosistestparameterTable=require("../models/diagnosistestparameterModel")
 // Function to initialize all tables
 function Database() {
 
@@ -66,6 +67,7 @@ function Database() {
   historyModel.create_samplehistoryTable();
   sampleReturnModel.createSampleReturnTable();
   contactusModel.createContactUsTable();
-  // newtablefieldModel.createOrUpdateTables();
+  diagnosistestparameterTable.create_diagnosistestparameterTable()
+   newtablefieldModel.createOrUpdateTables();
 }
 Database();

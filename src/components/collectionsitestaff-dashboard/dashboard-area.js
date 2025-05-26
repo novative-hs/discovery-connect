@@ -3,7 +3,7 @@ import { React, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
-import UpdateCollectionsite from './update-collectionsite';
+import UpdateCollectionSiteStaff from './update-collectionsitestaff';
 import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
@@ -65,8 +65,8 @@ const DashboardArea = () => {
           return <SampleLost/>
       case "change-password":
         return <ChangePassword />;
-      case "update-collectionsite":
-        return <UpdateCollectionsite />;
+      case "update-collectionsitestaff":
+        return <UpdateCollectionSiteStaff />;
         
       default:
         return <SampleArea />;

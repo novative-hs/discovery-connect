@@ -9,7 +9,7 @@ import DashboardFooter from "@layout/dashboardfooter";
 import RegistrationAdminDashboard from "@components/registrationadmin-dashboard/dashboard-area";
 import TechnicalAdminDashboard from "@components/technicaladmin-dashboard/dashboard-area";
 import BiobankDashboard from "@components/biobank-dashboard/dashboard-area";
-import CollectionSideDashboard from "@components/collectionsite-dashboard/dashboard-area";
+import CollectionSidestaffDashboard from "@components/collectionsitestaff-dashboard/dashboard-area";
 import ResearcherDashboard from "@components/user-dashboard/dashboard-area";
 import CommitteememberDashboard from "@components/committeemember-dashboard/dashboard-area";
 import CSRDashboard from "@components/CSR-dashboard/dashboard-area"
@@ -39,7 +39,7 @@ const UserOrdersPage = () => {
       case "biobank":
         return <BiobankDashboard />;
       case "collectionsitesstaff":
-        return <CollectionSideDashboard />;
+        return <CollectionSidestaffDashboard />;
       case "researcher":
         return <ResearcherDashboard />;
         case "committeemember":
