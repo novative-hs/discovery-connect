@@ -63,7 +63,7 @@ const getSampleReceiveInTransit = (req, res) => {
           s.ConcurrentMedications, s.DiagnosisTestParameter,
           s.TestResult, s.TestResultUnit, s.TestMethod,
           s.TestKitManufacturer, s.TestSystem, s.TestSystemManufacturer,
-          sr.ReceivedByCollectionSite, s.status, s.sample_status,
+          sr.ReceivedByCollectionSite, s.status, s.sample_visibility,
            CONCAT_WS('-', s.room_number, s.freezer_id, s.box_id) AS locationids,
           s.phoneNumber,
           COALESCE(sd.TotalQuantity, 0) AS quantity
