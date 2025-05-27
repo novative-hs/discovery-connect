@@ -220,9 +220,8 @@ const OfferPopularProduct = () => {
                     <ul className="list-group text-start small">
                       <li className="list-group-item"><strong>Age:</strong> {selectedProduct.age}</li>
                       <li className="list-group-item"><strong>Gender:</strong> {selectedProduct.gender}</li>
-                      <li className="list-group-item"><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</li>
-                      <li className="list-group-item"><strong>Alcohol/Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</li>
-                      <li className="list-group-item"><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</li>
+                      <li className="list-group-item"><strong>Quantity Unit:</strong> {selectedProduct.QuantityUnit}</li>
+                      <li className="list-group-item"><strong>Container Type:</strong> {selectedProduct.ContainerType}</li>
                       <li className="list-group-item"><strong>Country:</strong> {selectedProduct.CountryOfCollection}</li>
                       <li className="list-group-item"><strong>Status:</strong> {selectedProduct.status}</li>
                     </ul>
@@ -231,11 +230,12 @@ const OfferPopularProduct = () => {
                   <div className="col-md-8" data-aos="fade-left">
                     <div className="row g-2">
                       {[
+                        { label: "Ethnicity", value: selectedProduct.ethnicity },
+                        { label: "Alcohol/Drug Abuse", value: selectedProduct.AlcoholOrDrugAbuse },
+                        { label: "Smoking Status", value: selectedProduct.SmokingStatus },
                         { label: "Sample Type Matrix", value: selectedProduct.SampleTypeMatrix },
-                        { label: "Quantity Unit", value: selectedProduct.QuantityUnit },
                         { label: "Sample Condition", value: selectedProduct.samplecondition },
                         { label: "Storage Temp", value: selectedProduct.storagetemp },
-                        { label: "Container Type", value: selectedProduct.ContainerType },
                         { label: "Freeze Thaw Cycles", value: selectedProduct.FreezeThawCycles },
                         { label: "Infectious Disease Testing", value: `${selectedProduct.InfectiousDiseaseTesting} ${selectedProduct.InfectiousDiseaseResult}` },
                         { label: "Diagnosis Test Parameter", value: selectedProduct.DiagnosisTestParameter },

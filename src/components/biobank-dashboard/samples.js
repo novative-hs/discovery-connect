@@ -1072,7 +1072,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                           <div className="col-md-12">
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Donor ID</label>
+                                <label>Donor ID <span className="text-danger">*</span></label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -1084,15 +1084,18 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.donorID
+                                      backgroundColor: formData.diseasename
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
+                                       borderColor: !formData.diseasename
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
                                     color: "black",
                                   }}
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Location (IDs)</label>
+                                <label>Location (IDs)<span className="text-danger">*</span></label>
                                 <InputMask
                                   mask="999-999-999"
                                   maskChar={null}
@@ -1111,6 +1114,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         fontSize: "14px",
                                         backgroundColor: "#f0f0f0",
                                         color: "black",
+                                         borderColor: !formData.locationids
+                                        ? "#dc3545"
+                                        : "#ced4da",
                                       }}
                                       required
                                       title="Location ID's = Room Number, Freezer ID and Box ID"
@@ -1121,7 +1127,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Disease Name</label>
+                                <label>Disease Name<span className="text-danger">*</span></label>
                                 <select
                                   className="form-control"
                                   name="diseasename"
@@ -1135,6 +1141,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
+                                     borderColor: !formData.diseasename
+                                        ? "#dc3545"
+                                        : "#ced4da",
+                                        borderWidth:2,
                                   }}
                                 >
                                   <option value="" hidden>
@@ -1162,7 +1172,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 /> */}
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Age (Years)</label>
+                                <label>Age (Years)<span className="text-danger">*</span></label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1171,6 +1181,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   onChange={handleInputChange}
                                   required
                                   style={{
+                                     borderColor: !formData.age
+                                        ? "#dc3545"
+                                        : "#ced4da",
                                     height: "45px",
                                     fontSize: "14px",
                                     backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
@@ -1181,18 +1194,22 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Phone Number</label>
+                                <label>Phone Number<span className="text-damger">*</span></label>
                                 <input
                                   type="text"
                                   className="form-control"
                                   name="phoneNumber"
                                   value={formData.phoneNumber}
                                   onChange={handleInputChange}
+                                  style={{ 
+                                    borderColor: !formData.phoneNumber
+                                        ? "#dc3545"
+                                        : "#ced4da",}}
                                   required
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Gender</label>
+                                <label>Gender<span className="text-danger">*</span></label>
                                 <select
                                   className="form-control"
                                   name="gender"
@@ -1203,6 +1220,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     fontSize: "14px",
                                     height: "45px",
                                     backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
+                                     borderColor: !formData.gender
+                                        ? "#dc3545"
+                                        : "#ced4da",
+                                        borderWidth:2,
                                     color: "black",
                                   }}
                                 >
@@ -1216,7 +1237,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Pack size</label>
+                                <label>Pack size<span className="text-danger">*</span></label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1230,12 +1251,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     backgroundColor: formData.packsize
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
+                                       borderColor: !formData.packsize
+                                        ? "#dc3545"
+                                        : "#ced4da",
                                     color: "black",
                                   }}
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Quantity Unit</label>
+                                <label>Quantity Unit<span className="text-danger">*</span></label>
                                 <select
                                   className="form-control"
                                   name="QuantityUnit"
@@ -1248,6 +1272,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     backgroundColor: formData.QuantityUnit
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
+                                       borderColor: !formData.QuantityUnit
+                                        ? "#dc3545"
+                                        : "#ced4da",
+                                        borderWidth:2,
                                     color: "black",
                                   }}
                                 >
@@ -1291,7 +1319,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </select>
                               </div> */}
                               <div className="form-group col-md-6">
-                                <label>Sample Picture</label>
+                                <label>Sample Picture<span className="text-danger">*</span></label>
                                 <div className="d-flex align-items-center">
                                   <input
                                     name="logo"
@@ -1305,6 +1333,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       height: "45px",
                                       backgroundColor: "#f0f0f0",
                                       color: "black",
+                                       borderColor: !formData.logo
+                                        ? "#dc3545"
+                                        : "#ced4da",
+                                        borderWidth:2
                                     }}
                                   />
                                   {logoPreview && (

@@ -111,10 +111,10 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 
 
   mysqlConnection.query(query, params, (err, results) => {
-    
+
     if (err) return callback(err, null);
 
- // Add locationids to each sample
+    // Add locationids to each sample
     const enrichedResults = results.map(sample => ({
       ...sample,
       locationids: [sample.room_number, sample.freezer_id, sample.box_id]
@@ -404,7 +404,7 @@ const createSample = (data, callback) => {
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.packsize, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.packsize, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -446,11 +446,11 @@ const updateSample = (id, data, callback) => {
 
   // Parse locationids if provided
   if (data.locationids) {
-  const parts = data.locationids.split("-");
-  room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
-  freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
-  box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
-}
+    const parts = data.locationids.split("-");
+    room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
+    freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
+    box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
+  }
 
 
   // Handle packsize: convert empty string to null

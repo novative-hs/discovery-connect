@@ -16,7 +16,7 @@ import { handleModalShow } from "src/redux/features/productSlice";
 import { Minus, Plus } from "@svg/index";
 import { decrement, increment } from "src/redux/features/cartSlice";
 const ProductModal = ({ product, discountPrd = false }) => {
-  
+
   const { id, image_url, diseasename, title, price, discount, originalPrice } = product || {};
   const { isShow } = useSelector((state) => state.product);
   const { wishlist } = useSelector((state) => state.wishlist);
@@ -33,25 +33,25 @@ const ProductModal = ({ product, discountPrd = false }) => {
 
   const handleDecrease = (item) => {
     dispatch(decrement({ id: item.id }));
-    
+
   };
   const cartItem = cart_products.find((item) => item.id === product.id);
   const displayQuantity = cartItem ? cartItem.orderQuantity : product.quantity;
-  
+
   const subtotal = cart_products.reduce(
     (acc, item) => acc + item.price * item.orderQuantity,
     0
   );
 
-   const handleAddToCart = (product) => {
-     dispatch(add_cart_product(product));
-   };
+  const handleAddToCart = (product) => {
+    dispatch(add_cart_product(product));
+  };
 
-     const cartItems = useSelector((state) => state.cart?.cart_products || []);
-     const isInCart = (sampleId) => {
-       return cartItems.some((item) => item.id === sampleId);
-     };
-     
+  const cartItems = useSelector((state) => state.cart?.cart_products || []);
+  const isInCart = (sampleId) => {
+    return cartItems.some((item) => item.id === sampleId);
+  };
+
   const handleModalClose = () => {
     dispatch(handleModalShow())
     dispatch(initialOrderQuantity())
@@ -110,9 +110,8 @@ const ProductModal = ({ product, discountPrd = false }) => {
               />
               <div className="mt-3 p-2 bg-light rounded text-start">
                 <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
-                <p><strong>Ethnicity:</strong> {product.ethnicity}</p>
-                <p><strong>Alcohol or Drug Abuse:</strong> {product.AlcoholOrDrugAbuse}</p>
-                <p><strong>Smoking Status:</strong> {product.SmokingStatus}</p>
+                <p><strong>Quantity unit:</strong> {product.QuantityUnit}</p>
+                <p><strong>Container Type:</strong> {product.ContainerType}</p>
                 <p><strong>Country of Collection:</strong> {product.CountryOfCollection}</p>
                 <p><strong>Status:</strong> {product.status}</p>
               </div>
@@ -120,31 +119,30 @@ const ProductModal = ({ product, discountPrd = false }) => {
 
             {/* Right Side: Detailed Information */}
             <div className="col-md-7">
-              <p><strong>Quantity unit:</strong> {product.QuantityUnit}</p>
+              <p><strong>Ethnicity:</strong> {product.ethnicity}</p>
+              <p><strong>Alcohol or Drug Abuse:</strong> {product.AlcoholOrDrugAbuse}</p>
+              <p><strong>Smoking Status:</strong> {product.SmokingStatus}</p>
               <p><strong>Sample Condition:</strong> {product.samplecondition}</p>
               <p><strong>Storage Temperature:</strong> {product.storagetemp}</p>
-              <p><strong>Container Type:</strong> {product.ContainerType}</p>
               <p><strong>Sample Type Matrix:</strong> {product.SampleTypeMatrix}</p>
               <p><strong>Infectious Disease Testing:</strong> {product.InfectiousDiseaseTesting} ({product.InfectiousDiseaseResult})</p>
               <p><strong>Freeze Thaw Cycles:</strong> {product.FreezeThawCycles}</p>
-              <p><strong>Diagnosis Test Parameter:</strong> {product.DiagnosisTestParameter}</p>
-              <p><strong>Test Result:</strong> {product.TestResult} {product.TestResultUnit}</p>
-              <p><strong>Test Method:</strong> {product.TestMethod}</p>
+
               {/* Add to Cart Button */}
               <div className="text-end mt-3">
-                     {product.quantity === 0 ? (
-                           <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
-                             Sample Allocated
-                           </button>
-                         ) : isInCart(product.id) ? (
-                           <button className="btn btn-secondary w-75" disabled>
-                             Added
-                           </button>
-                         ) : (
-                           <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
-                             Add to Cart
-                           </button>
-                         )}
+                {product.quantity === 0 ? (
+                  <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+                    Sample Allocated
+                  </button>
+                ) : isInCart(product.id) ? (
+                  <button className="btn btn-secondary w-75" disabled>
+                    Added
+                  </button>
+                ) : (
+                  <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+                    Add to Cart
+                  </button>
+                )}
               </div>
             </div>
           </div>

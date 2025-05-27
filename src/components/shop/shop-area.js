@@ -12,10 +12,12 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const id = sessionStorage.getItem("userID");
 
   // New filter states
-  const [selectedPrice, setSelectedPrice] = useState(null);
-  const [selectedSmokingStatus, setSelectedSmokingStatus] = useState(null); // Ensure this is initialized to null
-  const [selectedGender, setSelectedGender] = useState(null); // Ensure this is initialized to null
+
   const [selectedSampleType, setSelectedSampleType] = useState([]); // Initialize as an empty array
+  const [selectedGender, setSelectedGender] = useState(null); // Ensure this is initialized to null
+  const [selectedSmokingStatus, setSelectedSmokingStatus] = useState(null); // Ensure this is initialized to null
+  // const [selectedPrice, setSelectedPrice] = useState(null);
+  const [selectedAge, setSelectedAge] = useState(null);
   const [selectedSampleName, setSelectedSampleName] = useState([]); // Initialize as an empty array
 
   // Search state
@@ -26,30 +28,33 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   };
 
   const handleReset = () => {
-    setSelectedPrice(null);
-    setSelectedSmokingStatus(null);
-    setSelectedGender(null);
     setSelectedSampleType([]);
+    setSelectedGender(null);
+    setSelectedSmokingStatus(null);
+    // setSelectedPrice(null);
+    setSelectedAge(null);
     setSelectedSampleName([]);
     setSearchQuery("");
   };
 
   const filteredProducts = products.filter((product) => {
-    let matchesPrice =
-      !selectedPrice ||
-      (product.price >= selectedPrice.min &&
-        product.price <= selectedPrice.max);
-
-    let matchesSmoking =
-      !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
-
-    let matchesGender = !selectedGender || product.gender === selectedGender;
 
     let matchesSampleType =
       selectedSampleType.length === 0 ||
       selectedSampleType.some((type) =>
         product.SampleTypeMatrix.includes(type)
       );
+    let matchesGender = !selectedGender || product.gender === selectedGender;
+    let matchesSmoking =
+      !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
+    // let matchesPrice =
+    //   !selectedPrice ||
+    //   (product.price >= selectedPrice.min &&
+    //     product.price <= selectedPrice.max);
+    let matchesAge =
+      !selectedAge ||
+      (product.age >= selectedAge.min &&
+        product.age <= selectedAge.max);
 
     let matchesSampleName =
       selectedSampleName.length === 0 ||
@@ -60,10 +65,11 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
       product.diseasename.toLowerCase().includes(searchQuery.toLowerCase());
 
     return (
-      matchesPrice &&
-      matchesSmoking &&
-      matchesGender &&
       matchesSampleType &&
+      matchesGender &&
+      matchesSmoking &&
+      // matchesPrice &&
+      matchesAge &&
       matchesSampleName &&
       matchesSearch
     );
@@ -82,7 +88,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
             }}
           >
             Please Sign up or Log in before submitting request for Sample.
-            </p>
+          </p>
         )}
         <div className="shop__top mb-50">
           <div className="row align-items-center">
@@ -128,14 +134,16 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
             {/* Sidebar */}
             <div className="col-lg-3">
               <ShopSidebar
-                setSelectedPrice={setSelectedPrice}
-                setSelectedSmokingStatus={setSelectedSmokingStatus}
-                setSelectedGender={setSelectedGender}
                 selectedSampleType={selectedSampleType}
                 setSelectedSampleType={setSelectedSampleType}
                 selectedGender={selectedGender}
+                setSelectedGender={setSelectedGender}
                 selectedSmokingStatus={selectedSmokingStatus}
-                selectedPrice={selectedPrice}
+                setSelectedSmokingStatus={setSelectedSmokingStatus}
+                // selectedPrice={selectedPrice}
+                // setSelectedPrice={setSelectedPrice}
+                selectedAge={selectedAge}
+                setSelectedAge={setSelectedAge}
                 handleReset={handleReset}
               />
             </div>

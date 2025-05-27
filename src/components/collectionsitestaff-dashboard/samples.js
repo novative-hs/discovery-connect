@@ -105,6 +105,8 @@ const SampleArea = () => {
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
+    TestSign: "",
+    TestValue: "",
     TestResult: "",
     TestResultUnit: "",
     TestMethod: "",
@@ -705,6 +707,18 @@ const SampleArea = () => {
     }
   };
 
+  const handleTestResultChange = (field, value) => {
+    setFormData((prev) => {
+      const newForm = {
+        ...prev,
+        [field]: value,
+        TestResult: `${field === "TestSign" ? value : prev.TestSign}${field === "TestValue" ? value : prev.TestValue}`
+      };
+      return newForm;
+    });
+  };
+
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -957,8 +971,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                             <div className="row">
                               {showAddModal && (
                                 <div className="form-group col-md-6">
-                                  <label>Donor ID</label>
-                                  <input
+                                  <label>Donor ID <span className="text-danger">*</span></label>
+                                 <input
                                     type="text"
                                     className="form-control"
                                     name="donorID"
@@ -969,15 +983,46 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: formData.donorID ? "#f0f0f0" : "#f0f0f0",
-                                      color: "black",
+                                      borderColor: !formData.donorID
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
                                     }}
                                   />
-
                                 </div>
                               )}
                               <div className="form-group col-md-6">
-                                <label>Location (IDs)</label>
+                                <label>Disease Name <span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="diseasename"
+                                  value={formData.diseasename}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.diseasename
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                       borderColor: !formData.diseasename
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                    color: "black",
+                                    borderWidth:2
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Disease Name
+                                  </option>
+                                  {diagnosistestparameterNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Location (IDs) <span className="text-danger">*</span></label>
                                 <InputMask
                                   mask="999-999-999"
                                   maskChar={null}
@@ -996,6 +1041,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         fontSize: "14px",
                                         backgroundColor: "#f0f0f0",
                                         color: "black",
+                                         borderColor: !formData.locationids
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
                                       }}
                                       required
                                       title="Location ID's = Room Number, Freezer ID and Box ID"
@@ -1003,105 +1051,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   )}
                                 </InputMask>
                               </div>
-                            </div>
-                            <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Disease Name</label>
-                                <select
-                                  className="form-control"
-                                  name="diseasename"
-                                  value={formData.diseasename}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.diseasename
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Disease Name
-                                  </option>
-                                  {diagnosistestparameterNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                                {/* <input
-                                  type="text"
-                                  className="form-control"
-                                  name="diseasename"
-                                  value={formData.diseasename}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: formData.diseasename ? "#f0f0f0" : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                /> */}
-                              </div>
-                              <div className="form-group col-md-6">
-                                <label>Age (Years)</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="age"
-                                  value={formData.age}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className="row">
-                              <div className="form-group col-md-6">
-                                <label>Phone Number</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group col-md-6">
-                                <label>Gender</label>
-                                <select
-                                  className="form-control"
-                                  name="gender"
-                                  value={formData.gender}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Gender
-                                  </option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                </select>
-                              </div>
-                            </div>
-                            <div className="row">
-                              <div className="form-group col-md-6">
-                                <label>Pack size</label>
+                                <label>Pack size <span className="text-danger">*</span></label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1115,21 +1066,157 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     backgroundColor: formData.packsize
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
+                                       borderColor: !formData.packsize
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
                                     color: "black",
                                   }}
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Quantity Unit</label>
+                                <label>Phone Number <span className="text-danger">*</span></label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  style={{
+                                     borderColor: !formData.phoneNumber
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                  }}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label className="form-label">Test Result <span className="text-danger">*</span></label>
+                                <div className="d-flex align-items-center">
+                                  <div className="btn-group me-2" role="group" aria-label="Sign selector">
+                                    <button
+                                      type="button"
+                                      className={`btn btn-outline-primary ${formData.TestSign === '+' ? 'active' : ''}`}
+                                      onClick={() => handleTestResultChange("TestSign", "+")}
+                                    >
+                                      +
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`btn btn-outline-primary ${formData.TestSign === '-' ? 'active' : ''}`}
+                                      onClick={() => handleTestResultChange("TestSign", "-")}
+                                    >
+                                      -
+                                    </button>
+                                  </div>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    name="TestValue"
+                                    value={formData.TestValue}
+                                    
+                                    onChange={(e) => handleTestResultChange("TestValue", e.target.value)}
+                                    placeholder="Enter value"
+                                    style={{ maxWidth: "200px", borderColor: !formData.TestValue
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                         }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="form-group col-md-6">
+                                <label>Gender <span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="gender"
+                                  value={formData.gender}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
+                                    color: "black",
+                                     borderColor: !formData.gender
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                  </option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                </select>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Test Result Unit <span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="TestResultUnit"
+                                  value={formData.TestResultUnit}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    borderWidth:2,
+                                    backgroundColor: formData.TestResultUnit
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                    color: "black",
+                                     borderColor: !formData.TestResultUnit
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Test Result Unit
+                                  </option>
+                                  {testresultunitNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Age (Years) <span className="text-danger">*</span></label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="age"
+                                  value={formData.age}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                     borderColor: !formData.age
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                    backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
+                                    color: "black",
+                                  }}
+                                />
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Quantity <span className="text-danger">*</span></label>
                                 <select
                                   className="form-control"
                                   name="QuantityUnit"
+                                  
                                   value={formData.QuantityUnit}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
+                                    borderWidth:2,
+                                     borderColor: !formData.QuantityUnit
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
                                     backgroundColor: formData.QuantityUnit
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
@@ -1137,7 +1224,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Quantity Unit
                                   </option>
                                   {quantityunitNames.map((name, index) => (
                                     <option key={index} value={name}>
@@ -1148,35 +1234,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                               </div>
                             </div>
                             <div className="row">
-                              {/* <div className="form-group col-md-6">
-                                <label>Diagnosis Test Parameter</label>
-                                <select
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.DiagnosisTestParameter
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Diagnosis Test Parameter
-                                  </option>
-                                  {diagnosistestparameterNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div> */}
                               <div className="form-group col-md-6">
-                                <label>Sample Picture</label>
+                                <label>Sample Picture <span className="text-danger">*</span></label>
                                 <div className="d-flex align-items-center">
                                   <input
                                     name="logo"
@@ -1190,6 +1249,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       height: "45px",
                                       backgroundColor: "#f0f0f0",
                                       color: "black",
+                                      borderWidth:2,
+                                       borderColor: !formData.logo
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
                                     }}
                                   />
                                   {logoPreview && (
@@ -1204,6 +1267,37 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     />
                                   )}
                                 </div>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Sample Type Matrix <span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="SampleTypeMatrix"
+                                  value={formData.SampleTypeMatrix}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.SampleTypeMatrix
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                    color: "black",
+                                    borderWidth:2,
+                                     borderColor: !formData.SampleTypeMatrix
+                                        ? "#dc3545"
+                                        : "#ced4da", // Red border if empty
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Sample Type Matrix
+                                  </option>
+                                  {sampletypematrixNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </div>
                           </div>
@@ -1402,33 +1496,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   </ul>
                                 )}
                               </div>
-                              <div className="form-group">
-                                <label>Sample Type Matrix</label>
-                                <select
-                                  className="form-control"
-                                  name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.SampleTypeMatrix
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Sample Type Matrix
-                                  </option>
-                                  {sampletypematrixNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+
                             </div>
                             {/* {Column 3} */}
                             <div className="col-md-3">
@@ -1703,85 +1771,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 />
                               </div>
 
-                              <div className="form-group">
-                                <label className="form-label">
-                                  Test Result
-                                </label>
-                                <div>
-                                  <div
-                                    className="form-check form-check-inline"
-                                    style={{ marginRight: "10px" }}
-                                  >
-                                    <input
-                                      className="form-check-input"
-                                      type="radio"
-                                      name="TestResult"
-                                      value="Positive"
-                                      checked={
-                                        formData.TestResult ===
-                                        "Positive"
-                                      }
-                                      onChange={handleInputChange}
-                                      required
-                                      style={{ transform: "scale(0.9)" }}
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      style={{ fontSize: "14px" }}
-                                    >
-                                      Positive
-                                    </label>
-                                  </div>
-                                  <div className="form-check form-check-inline ms-3">
-                                    <input
-                                      className="form-check-input"
-                                      type="radio"
-                                      name="TestResult"
-                                      value="Negative"
-                                      checked={
-                                        formData.TestResult ===
-                                        "Negative"
-                                      }
-                                      onChange={handleInputChange}
-                                      required
-                                      style={{ transform: "scale(0.9)" }}
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      style={{ fontSize: "14px" }}
-                                    >
-                                      Negative
-                                    </label>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result Unit</label>
-                                <select
-                                  className="form-control"
-                                  name="TestResultUnit"
-                                  value={formData.TestResultUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.TestResultUnit
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Test Result Unit
-                                  </option>
-                                  {testresultunitNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+
+
                               <div className="form-group">
                                 <label>Test Method</label>
                                 <select
