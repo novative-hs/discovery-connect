@@ -257,6 +257,7 @@ const fieldsToShowInOrder = [
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
+          <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           {/* {Button} */}
           <div className="d-flex flex-column w-100">
@@ -285,7 +286,7 @@ const fieldsToShowInOrder = [
   className="form-control bg-light border form-control-sm text-center shadow-none rounded"
   placeholder={`Search ${label}`}
   onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+  style={{ minWidth: "130px", maxWidth: "200px", width: "100px" }}
 />
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
@@ -294,7 +295,7 @@ const fieldsToShowInOrder = [
                     </div>
                     </th>
                   ))}
-                    <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                    <th className="p-2 text-center" style={{ minWidth: "30px" }}>
                   Action
                 </th>
                 </tr>
@@ -317,7 +318,7 @@ const fieldsToShowInOrder = [
           >
             {key === "samplename" ? (
               <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                className="sample-name fs-6"
                 role="button"
                 title="Sample Details"
                 onClick={() => openModal(sample)}
@@ -335,7 +336,7 @@ const fieldsToShowInOrder = [
             )}
           </td>
                       ))}
-                   <td className="w-auto" style={{ minWidth: "40px" }}>
+                   <td className="w-auto" style={{ minWidth: "10px" }}>
                         
                         <div className="d-flex justify-content-around gap-3">
                         {isInCart(sample.id) ? (

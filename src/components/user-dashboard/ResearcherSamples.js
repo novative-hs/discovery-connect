@@ -141,7 +141,7 @@ const SampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
+        <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           <div className="table-responsive w-100">
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
@@ -251,7 +251,7 @@ const SampleArea = () => {
                           return (
                             <td key={index}>
                               <span
-                                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                                className="sample-name fs-6 "
                                 role="button"
                                 title="Sample Details"
                                 onClick={() => openModal(sample)}

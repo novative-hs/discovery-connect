@@ -948,7 +948,7 @@ const BioBankSampleArea = () => {
                       >
                         {key === "samplename" ? (
                           <span
-                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            className="sample-name  fs-6 "
                             role="button"
                             title="Sample Details"
                             onClick={() => openModal(sample)}
