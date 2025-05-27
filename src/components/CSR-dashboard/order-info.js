@@ -20,96 +20,87 @@ function SingleOrderInfo({ icon, info, title, onClick }) {
 }
 
 const OrderInfo = ({ setActiveTab }) => {
-  const [countShipping, setCountShipping] = useState(null);
-  const [countDispatch, setCountDispatch] = useState(null);
-  const [countCompleted, setCountCompleted] = useState(null);
-  
+  const [counts, setCounts] = useState({
+    shipping: null,
+    dispatch: null,
+    completed: null,
+  });
+
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Order packaging Id on sample page is:", id);
-  }
+  const [staffAction, setStaffAction] = useState("");
+  const id = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
+
   useEffect(() => {
-   
+    if (id) {
+      const action = sessionStorage.getItem("staffAction") || "";
+      setStaffAction(action);
+    }
+  }, [id]);
 
-    // Set an interval to refresh data every 5 seconds (5000ms)
-    const interval = setInterval(() => {
-      fetchSamples();
-    }, 500);
+  useEffect(() => {
+    if (id && staffAction) {
+      fetchSampleCounts();
+    }
+  }, [id, staffAction]);
 
-    // Clear the interval when the component unmounts to avoid memory leaks
-    return () => clearInterval(interval);
-  }, []); 
-  
-  const fetchSamples = async () => {
+  const fetchSampleCounts = async () => {
+    setLoading(true);
     try {
-      
-  
-      const response = await axios.get(
+      const { data } = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
         {
-        params: { csrUserId: id }
-      }
+          params: { csrUserId: id, staffAction: staffAction },
+        }
       );
-  
-      const samples = response.data;
-  
-      // Filter samples based on order_status
-      const shippingCount = samples.filter(sample => sample.order_status === 'Shipped').length;
-      const dispatchCount = samples.filter(sample => sample.order_status === 'Dispatched').length;
-      const completedCount = samples.filter(sample => sample.order_status === 'Completed').length;
-  
-      // Update state
-      setCountShipping(shippingCount);
-      setCountDispatch(dispatchCount);
-      setCountCompleted(completedCount);
-  
+
+      const shipping = data.filter(item => item.order_status === "Shipped").length;
+      const dispatch = data.filter(item => item.order_status === "Dispatched").length;
+      const completed = data.filter(item => item.order_status === "Completed").length;
+
+      setCounts({ shipping, dispatch, completed });
     } catch (error) {
-      console.error("Error fetching samples:", error);
+      console.error("Failed to fetch sample counts:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle navigation to different order pages
-  const handleNavigate = (orderType) => {
-    setActiveTab(orderType); // Set the active tab based on order type
+  const handleNavigate = (tabName) => {
+    setActiveTab(tabName);
   };
+
+  const showCount = (count) => (loading ? "Loading..." : count);
 
   return (
     <div className="profile__main">
-      <div className="profile__main-top pb-80">
-        <div className="row align-items-center">
-          <div className="col-md-6">
-            <div className="profile__main-inner d-flex flex-wrap align-items-center">
-              <div className="profile__main-content">
-                <h4 className="profile__main-title text-capitalize">
-                  Welcome Order Packager Supervisor
-                </h4>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="profile__main-top pb-4 d-flex justify-content-between align-items-center">
+        <h4 className="profile__main-title text-capitalize">
+          Welcome Customer Service Representative
+        </h4>
+       
       </div>
-      <div className="profile__main-info">
+
+      <div className="profile__main-info ">
         <div className="row gx-3">
           <SingleOrderInfo
-            info={countDispatch !== null ? countDispatch : "Loading..."}
+            info={showCount(counts.dispatch)}
             icon={<Truck />}
+            
             title="Dispatch Order"
-            onClick={() => handleNavigate("dispatchorder")} // Set active tab to "dispatchorder"
+            onClick={() => handleNavigate("dispatchorder")}
           />
           <SingleOrderInfo
-            info={countShipping !== null ? countShipping : "Loading..."}
+            info={showCount(counts.shipping)}
             icon={<Processing />}
             title="Shipping Order"
-            onClick={() => handleNavigate("shippingorder")} // Set active tab to "shippingorder"
+            onClick={() => handleNavigate("shippingorder")}
           />
           <SingleOrderInfo
-            info={countCompleted !== null ? countCompleted : "Loading..."}
+            info={showCount(counts.completed)}
             icon={<Delivery />}
             title="Complete Order"
-            onClick={() => handleNavigate("completedorder")} // Set active tab to "completeorder"
+            onClick={() => handleNavigate("completedorder")}
           />
         </div>
       </div>

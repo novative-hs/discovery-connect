@@ -18,8 +18,8 @@ import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
 const CSRArea = () => {
   const [selectedCSR, setSelectedCSR] = useState(null);
-  const [registerUser, { }] = useRegisterUserMutation();
-  const [updateUser, { }] = useUpdateProfileMutation();
+  const [registerUser, {}] = useRegisterUserMutation();
+  const [updateUser, {}] = useUpdateProfileMutation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -51,6 +51,7 @@ const CSRArea = () => {
     city: "",
     district: "",
     country: "",
+    permission: "",
     collectionsitename: "",
     fullAddress: "",
     created_at: "",
@@ -64,7 +65,6 @@ const CSRArea = () => {
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
   ];
   const openModal = (csrName) => {
-
     setSelectedCSR(csrName);
     setShowModal(true);
   };
@@ -75,7 +75,7 @@ const CSRArea = () => {
   };
   useEffect(() => {
     fetchCSR();
-    fetchCollectionsitename()
+    fetchCollectionsitename();
     fetchcityname();
     fetchdistrictname();
     fetchcountryname();
@@ -102,7 +102,9 @@ const CSRArea = () => {
   };
   const fetchCollectionsitename = async () => {
     try {
-      const response = await axios.get(`${url}/admin/csr/getCollectionsiteName`);
+      const response = await axios.get(
+        `${url}/admin/csr/getCollectionsiteName`
+      );
 
       setcollectionsitename(response.data);
     } catch (error) {
@@ -187,10 +189,12 @@ const CSRArea = () => {
         [id]: false,
       }));
     } catch (error) {
-      console.error(`Error changing CSR status with ID ${selectedCSRId}:`, error);
+      console.error(
+        `Error changing CSR status with ID ${selectedCSRId}:`,
+        error
+      );
     }
   };
-
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -207,6 +211,7 @@ const CSRArea = () => {
       district: formData.district,
       country: formData.country,
       status: "inactive",
+      permission: formData.permission,
     };
 
     try {
@@ -247,6 +252,7 @@ const CSRArea = () => {
       collectionsitename: CSR.collection_id,
       fullAddress: CSR.fullAddress,
       status: CSR.status,
+      permission: formData.permission,
     });
   };
   const handleUpdate = async (e) => {
@@ -261,7 +267,8 @@ const CSRArea = () => {
     newformData.append("city", formData.city);
     newformData.append("district", formData.district);
     newformData.append("country", formData.country);
-    newformData.append("collectionsitename", formData.collectionsitename)
+    newformData.append("collectionsitename", formData.collectionsitename);
+    newformData.append("permission", formData.permission);
     for (let pair of newformData.entries()) {
       console.log(pair[0], pair[1]);
     }
@@ -320,7 +327,8 @@ const CSRArea = () => {
       fullAddress: "",
       created_at: "",
       status: "",
-      collectionsitename: ""
+      collectionsitename: "",
+      permission: "",
     });
   };
   useEffect(() => {
@@ -400,6 +408,7 @@ const CSRArea = () => {
       country: item.country ?? "",
       district: item.district ?? "",
       fullAddress: item.fullAddress ?? "",
+      permission: item.permission ?? "",
       status: item.status ?? "",
       "Created At": item.created_at ? formatDate(item.created_at) : "",
       "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
@@ -415,6 +424,7 @@ const CSRArea = () => {
       "country",
       "district",
       "fullAddress",
+      "permission",
       "status",
       "Created At",
       "Updated At",
@@ -424,7 +434,9 @@ const CSRArea = () => {
       dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, {
+      header: headers,
+    });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
     XLSX.writeFile(workbook, "CSR_List.xlsx");
@@ -462,7 +474,6 @@ const CSRArea = () => {
                     }
                   >
                     <option value="">All</option>
-                    <option value="pending">Pending</option>
                     <option value="inactive">InActive</option>
                     <option value="active">Active</option>
                   </select>
@@ -515,41 +526,71 @@ const CSRArea = () => {
                 <thead className="table-primary text-dark">
                   <tr>
                     {[
-                      { label: "Name", placeholder: "Search Name", field: "CSRName" },
-                      { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
-                      { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
-                      { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
-                      { label: "Status", placeholder: "Search Status", field: "status" },
+                      {
+                        label: "Name",
+                        placeholder: "Search Name",
+                        field: "CSRName",
+                      },
+                      {
+                        label: "Email",
+                        placeholder: "Search Email",
+                        field: "useraccount_email",
+                      },
+                      {
+                        label: "Password",
+                        placeholder: "Search Password",
+                        field: "useraccount_password",
+                      },
+                      {
+                        label: "Collectionsite Name",
+                        placeholder: "Search Collectionsite Name",
+                        field: "name",
+                      },
+                      {
+                        label: "Permssion",
+                        placeholder: "Search Permisssion",
+                        field: "permission",
+                      },
+                      {
+                        label: "Status",
+                        placeholder: "Search Status",
+                        field: "status",
+                      },
                     ].map(({ label, placeholder, field }) => (
                       <th key={field} className="col-md-1 px-2">
-
                         <div className="d-flex flex-column align-items-center">
                           <input
                             type="text"
                             className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                             placeholder={`Search ${label}`}
-                            onChange={(e) => handleFilterChange(field, e.target.value)}
-                            style={{ minWidth: "170px", maxWidth: "200px", width: "100px" }}
+                            onChange={(e) =>
+                              handleFilterChange(field, e.target.value)
+                            }
+                            style={{
+                              minWidth: "170px",
+                              maxWidth: "200px",
+                              width: "100px",
+                            }}
                           />
                           <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                             {label}
                           </span>
-
                         </div>
                       </th>
                     ))}
-                    <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
-
+                    <th
+                      className="p-2 text-center"
+                      style={{ minWidth: "50px" }}
+                    >
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.length > 0 ? (
                     currentData.map((CSR) => (
                       <tr key={CSR.id}>
-                        <td
-                          className="text-end"
-                          style={{ maxWidth: "150px" }}
-                        >
+                        <td className="text-end" style={{ maxWidth: "150px" }}>
                           <span
                             className="CommitteeMemberName text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -559,7 +600,9 @@ const CSRArea = () => {
                               cursor: "pointer",
                               transition: "color 0.2s",
                             }}
-                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOver={(e) =>
+                              (e.target.style.color = "#0a58ca")
+                            }
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
                             {CSR.CSRName || "----"}
@@ -569,7 +612,17 @@ const CSRArea = () => {
                         <td>{CSR.useraccount_email}</td>
                         <td>{CSR.useraccount_password}</td>
                         <td>{CSR.name}</td>
+                        <td>
+                           {CSR.permission === "all_order"
+                          ? "All Order Access"
+                          : CSR.permission === "own_order"
+                          ? "Assigned Collection Site Orders"
+                          : "----"}
+                        </td>
+                       
+
                         {/* <td>{CSR.phoneNumber}</td> */}
+
                         <td>{CSR.status}</td>
                         <td>
                           <div className="d-flex justify-content-center gap-2">
@@ -792,7 +845,10 @@ const CSRArea = () => {
                               Select Collectionsite Name
                             </option>
                             {collectionsitename.map((collectionsite) => (
-                              <option key={collectionsite.id} value={collectionsite.id}>
+                              <option
+                                key={collectionsite.id}
+                                value={collectionsite.id}
+                              >
                                 {collectionsite.name}
                               </option>
                             ))}
@@ -867,6 +923,22 @@ const CSRArea = () => {
                             required
                           />
                         </div>
+                        <div className="form-group">
+                          <label>Permission</label>
+                          <select
+                            className="form-control p-2"
+                            name="permission"
+                            value={formData.permission}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Select Permission</option>
+                            <option value="all_order">All Orders Access</option>
+                            <option value="own_order">
+                              Assigned CollectionSites Orders Access
+                            </option>
+                          </select>
+                        </div>
                       </div>
 
                       <div className="modal-footer">
@@ -936,8 +1008,22 @@ const CSRArea = () => {
                     >
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
-                          const { CSRName, status, created_at, updated_at } =
-                            log;
+                          const {
+                            CSRName,
+                            phoneNumber,
+                            fullAddress,
+                            city_name,
+                            country_name,
+                            district_name,
+                            permission,
+                            status,
+                            created_at,
+                            updated_at,
+                          } = log;
+
+                          const formattedDate = moment(
+                            status === "updated" ? updated_at : created_at
+                          ).format("DD MMM YYYY, h:mm A");
 
                           return (
                             <div
@@ -946,51 +1032,81 @@ const CSRArea = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "flex-start",
-                                marginBottom: "10px",
+                                marginBottom: "15px",
                               }}
                             >
-                              {/* Message for City Addition */}
-                              {(status === "active" || status === "added") && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <b>CSR:</b> {CSRName} was <b>{status}</b> by
-                                  Registration Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Message for City Update (Only if it exists) */}
-                              {status === "updated" || status === 'inactive' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
-                                  }}
-                                >
-                                  <b>CSR:</b> {CSRName} was <b>{status}</b> by
-                                  Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor:
+                                    status === "updated" ||
+                                    status === "inactive"
+                                      ? "#dcf8c6"
+                                      : "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "100%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                {CSRName && (
+                                  <p>
+                                    <b>CSR Name:</b> {CSRName}
+                                  </p>
+                                )}
+                                {status && (
+                                  <p>
+                                    <b>Status:</b> {status}
+                                  </p>
+                                )}
+                                {permission && (
+                                  <p>
+                                    <b>Permission:</b>{" "}
+                                    {permission === "all_order"
+                                      ? "All Order Access"
+                                      : "My Collection Site Orders"}
+                                  </p>
+                                )}
+                                {phoneNumber && (
+                                  <p>
+                                    <b>Phone:</b> {phoneNumber}
+                                  </p>
+                                )}
+                                {fullAddress && (
+                                  <p>
+                                    <b>Address:</b> {fullAddress}
+                                  </p>
+                                )}
+                                {city_name && (
+                                  <p>
+                                    <b>City:</b> {city_name}
+                                  </p>
+                                )}
+                                {district_name && (
+                                  <p>
+                                    <b>District:</b> {district_name}
+                                  </p>
+                                )}
+                                {country_name && (
+                                  <p>
+                                    <b>Country:</b> {country_name}
+                                  </p>
+                                )}
+                                <p>
+                                  <b>
+                                    {status === "updated"
+                                      ? "Updated"
+                                      : status === "active"
+                                      ? "Updated"
+                                      : status === "inactive"
+                                      ? "Updated"
+                                      : "Created"}{" "}
+                                    At:
+                                  </b>{" "}
+                                  {formattedDate}
+                                </p>
+                              </div>
                             </div>
                           );
                         })
@@ -1006,17 +1122,25 @@ const CSRArea = () => {
           {/* Modal for Deleting Researchers */}
         </div>
       </div>
-      <Modal show={showModal}
+      <Modal
+        show={showModal}
         onHide={closeModal}
         size="lg"
         centered
         backdrop="static"
-        keyboard={false}>
+        keyboard={false}
+      >
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> CSR Details</Modal.Title>
+          <Modal.Title className="fw-bold text-danger">
+            {" "}
+            CSR Details
+          </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+        <Modal.Body
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+          className="bg-light rounded"
+        >
           {selectedCSR ? (
             <div className="p-3">
               <div className="row g-3">
@@ -1027,8 +1151,12 @@ const CSRArea = () => {
                   return (
                     <div className="col-md-6" key={field}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        <span className="text-muted small fw-bold mb-1">
+                          {label}
+                        </span>
+                        <span className="fs-6 text-dark">
+                          {value?.toString() || "----"}
+                        </span>
                       </div>
                     </div>
                   );

@@ -450,7 +450,8 @@ const updateAccount = (req, callback) => {
     type,
     HECPMDCRegistrationNo,
     committeetype,
-    added_by
+    added_by,
+    permission
   } = req.body;
   const user_account_id = req.params.id
   // Handle the logo file (if provided)
@@ -566,10 +567,10 @@ const updateAccount = (req, callback) => {
                   fetchQuery = "SELECT * FROM csr WHERE user_account_id = ?";
                   updateQuery = `
                       UPDATE csr SET 
-                        CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, 
+                        CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, permission = ?,
                         country = ?,collection_id=? WHERE user_account_id = ?
                     `;
-                  values = [CSRName, phoneNumber, fullAddress, city, district, country, collectionsitename, user_account_id];
+                  values = [CSRName, phoneNumber, fullAddress, city, district, permission,country, collectionsitename, user_account_id];
                   break;
 
                 default:
@@ -617,9 +618,9 @@ const updateAccount = (req, callback) => {
                     INSERT INTO history (
                       email, password, ResearcherName, CollectionSiteName, CollectionSiteType, OrganizationName, CommitteeMemberName,CSRName,
                       HECPMDCRegistrationNo, CNIC, CommitteeType, nameofOrganization, type, phoneNumber, 
-                      fullAddress, city, district, country, logo, added_by, organization_id, 
+                      fullAddress, city, district, country, logo, added_by,permission, organization_id, 
                       researcher_id, collectionsite_id, committeemember_id, csr_id,status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?,?,?)
                   `;
 
                   const historyValues = [
@@ -643,6 +644,7 @@ const updateAccount = (req, callback) => {
                     previousData.country || null,
                     previousData.logo || null,
                     previousData.added_by || null,
+                    previousData.permission||null,
                     organizationID || null,
                     researcherID || null,
                     collectionSiteID || null,
@@ -797,13 +799,14 @@ const loginAccount = (data, callback) => {
       }
       else if (user.accountType === 'CSR') {
         const CSRQuery =
-          `SELECT status FROM csr WHERE user_account_id = ?`;
+          `SELECT permission,status FROM csr WHERE user_account_id = ?`;
 
         mysqlConnection.query(CSRQuery, [user.id], (err, CSRResults) => {
           if (err) {
             return callback(err, null); // Pass error to the controller
           }
           if (CSRResults.length > 0 && CSRResults[0].status === 'active') {
+            user.action = CSRResults[0].permission;
             return callback(null, user); // Return user info if approved
           } else {
             return callback({ status: "fail", message: "Account is not active" }, null);

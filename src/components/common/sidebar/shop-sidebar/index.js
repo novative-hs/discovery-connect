@@ -8,7 +8,7 @@ const ShopSidebar = ({
   handleReset,
   selectedGender,
   selectedSmokingStatus,
-  selectedPrice
+  selectedPrice,
 }) => {
   const priceRanges = [
     { label: "Up to 50", min: 0, max: 50 },
@@ -22,9 +22,22 @@ const ShopSidebar = ({
   const smokingOptions = ["Smoker", "Non-Smoker"];
   const genderOptions = ["Male", "Female"];
   const SampleTypeMatrix = [
-    "Whole Blood", "Serum", "Plasma", "Urine", "Sputum", "Cerebrospinal Fluid",
-    "Synovial Fluid", "Pleural Fluid", "Amniotic Fluid", "Stool", "Semen",
-    "Tissue", "Saliva", "Sweat", "Breast Milk", "Cervical",
+    "Whole Blood",
+    "Serum",
+    "Plasma",
+    "Urine",
+    "Sputum",
+    "Cerebrospinal Fluid",
+    "Synovial Fluid",
+    "Pleural Fluid",
+    "Amniotic Fluid",
+    "Stool",
+    "Semen",
+    "Tissue",
+    "Saliva",
+    "Sweat",
+    "Breast Milk",
+    "Cervical",
   ];
   const handleSampleTypeChange = (type) => {
     setSelectedSampleType((prev) => {
@@ -41,34 +54,44 @@ const ShopSidebar = ({
         <div className="accordion" id="shop_price">
           <div className="accordion-item">
             <h2 className="accordion-header">
-              <button className="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#price_widget_collapse">
+              <button
+                className="accordion-button"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#price_widget_collapse"
+              >
                 Price
               </button>
             </h2>
-            <div id="price_widget_collapse" className="accordion-collapse collapse show">
+            <div
+              id="price_widget_collapse"
+              className="accordion-collapse collapse show"
+            >
               <div className="accordion-body">
-              {priceRanges.map((range, index) => (
-  <div key={index} className="shop__widget-list-item">
-    <input
-      type="radio"
-      name="price"
-      id={`price-${index}`}
-      checked={selectedPrice && selectedPrice.min === range.min && selectedPrice.max === range.max}
-
-      onChange={() => setSelectedPrice({ min: range.min, max: range.max })}
-    />
-    <label htmlFor={`price-${index}`}>{range.label}</label>
-  </div>
-))}
-
-
+                {priceRanges.map((range, index) => (
+                  <div key={index} className="shop__widget-list-item">
+                    <input
+                      type="radio"
+                      name="price"
+                      id={`price-${index}`}
+                      checked={
+                        selectedPrice &&
+                        selectedPrice.min === range.min &&
+                        selectedPrice.max === range.max
+                      }
+                      onChange={() =>
+                        setSelectedPrice({ min: range.min, max: range.max })
+                      }
+                    />
+                    <label htmlFor={`price-${index}`}>{range.label}</label>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="shop__widget tp-accordion" >
+      <div className="shop__widget tp-accordion">
         <div className="accordion" id="smoking">
           <div className="accordion-item">
             <h2 className="accordion-header" id="smoking__widget">
@@ -93,15 +116,13 @@ const ShopSidebar = ({
                 <div className="shop__widget-list">
                   {smokingOptions.map((status, index) => (
                     <div key={index} className="shop__widget-list-item">
-                  <input
-  type="radio"
-  name="smoking"
-  id={`smoking-${status}`}
-  checked={selectedSmokingStatus === status}
-  onChange={() => setSelectedSmokingStatus(status)}
-/>
-
-
+                      <input
+                        type="radio"
+                        name="smoking"
+                        id={`smoking-${status}`}
+                        checked={selectedSmokingStatus === status}
+                        onChange={() => setSelectedSmokingStatus(status)}
+                      />
 
                       <label htmlFor={`smoking-${status}`}>{status}</label>
                     </div>
@@ -112,7 +133,7 @@ const ShopSidebar = ({
           </div>
         </div>
       </div>
-      <div className="shop__widget tp-accordion show" >
+      <div className="shop__widget tp-accordion show">
         <div className="accordion" id="gender">
           <div className="accordion-item">
             <h2 className="accordion-header" id="gender__widget">
@@ -137,15 +158,13 @@ const ShopSidebar = ({
                 <div className="shop__widget-list">
                   {genderOptions.map((gender, index) => (
                     <div key={index} className="shop__widget-list-item">
-                    <input
-  type="radio"
-  name="gender"
-  id={`gender-${gender}`}
-  checked={selectedGender === gender}
-  onChange={() => setSelectedGender(gender)}
-/>
-
-
+                      <input
+                        type="radio"
+                        name="gender"
+                        id={`gender-${gender}`}
+                        checked={selectedGender === gender}
+                        onChange={() => setSelectedGender(gender)}
+                      />
 
                       <label htmlFor={`gender-${gender}`}>{gender}</label>
                     </div>
@@ -185,10 +204,12 @@ const ShopSidebar = ({
                       <input
                         type="checkbox"
                         id={`sample-${type}`}
-                        checked={Array.isArray(selectedSampleType) && selectedSampleType.includes(type)} // ✅ Ensure it's an array
+                        checked={
+                          Array.isArray(selectedSampleType) &&
+                          selectedSampleType.includes(type)
+                        } // ✅ Ensure it's an array
                         onChange={() => handleSampleTypeChange(type)}
                       />
-
 
                       <label htmlFor={`sample-${type}`}>{type}</label>
                     </div>

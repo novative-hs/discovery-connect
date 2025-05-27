@@ -669,8 +669,8 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
   });
 };
 
-const getAllOrderByOrderPacking = (csrUserId, callback) => {
-  const sqlQuery = `
+const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
+  let sqlQuery = `
     SELECT 
       c.*, 
       c.user_id, 
@@ -697,21 +697,24 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
     LEFT JOIN country ON r.country = country.id
     LEFT JOIN district ON r.district = district.id
 
-    -- Join collectionsite_staff to match sample ownership
-    JOIN collectionsitestaff cs_staff 
-      ON cs_staff.user_account_id = s.user_account_id
-
-    -- Join CSR to get the collection site they belong to
-    JOIN csr 
-      ON csr.collection_id = cs_staff.collectionsite_id
-
-    -- Only get samples where the CSR is from the same collection site
-    WHERE csr.user_account_id = ?
-
-    ORDER BY c.created_at ASC;
+    JOIN collectionsitestaff cs_staff ON cs_staff.user_account_id = s.user_account_id
+    JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
   `;
 
-  mysqlConnection.query(sqlQuery, [csrUserId], (err, results) => {
+  const params = [];
+
+  if (staffAction === "all_order") {
+    // Show all orders - no filtering by CSR user_account_id
+    // So no WHERE clause restricting csr.user_account_id
+  } else {
+    // Show only orders from CSR's collection site
+    sqlQuery += ` WHERE csr.user_account_id = ? `;
+    params.push(csrUserId);
+  }
+
+  sqlQuery += " ORDER BY c.created_at ASC;";
+
+  mysqlConnection.query(sqlQuery, params, (err, results) => {
     if (err) {
       console.error("Error fetching orders:", err);
       return callback(err, null);
@@ -719,6 +722,7 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
     callback(null, results);
   });
 };
+
 
 
 const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
