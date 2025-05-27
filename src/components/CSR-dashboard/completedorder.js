@@ -4,24 +4,9 @@ import { Button } from "react-bootstrap";
 import Pagination from "@ui/Pagination";
 
 const CompletedSampleArea = () => {
-  const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Order packaging Id on sample page is:", id);
-  }
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
-
-  const tableHeaders = [
-    { label: "Order ID", key: "id" },
-    { label: "User Name", key: "researcher_name" },
-    { label: "Sample Name", key: "diseasename" },
-    { label: "Order Date", key: "created_at" },
-    { label: "Status", key: "order_status" },
-  ];
-
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-
+  const [staffAction, setStaffAction] = useState("");
+  const [samples, setSamples] = useState([]);
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
@@ -139,7 +124,7 @@ const CompletedSampleArea = () => {
                   <tr key={sample.id}>
                     <td>{sample.id || "----"}</td>
                     <td>{sample.researcher_name}</td>
-                    <td>{sample.diseasename}</td>
+                    <td>{sample.samplename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>
                     <td>{sample.order_status}</td>
                   </tr>

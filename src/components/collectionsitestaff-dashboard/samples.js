@@ -26,7 +26,7 @@ const SampleArea = () => {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
-const [infectiousdiseasetestingName,setInfectiousdiseasetestingNames]=useState([]);
+  const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
   const id = sessionStorage.getItem("userID");
 
   if (id === null) {
@@ -548,6 +548,13 @@ const [infectiousdiseasetestingName,setInfectiousdiseasetestingNames]=useState([
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
 
+    // Extract TestSign and TestValue from TestResult
+    const testResult = sample.TestResult || "";
+    const testResultMatch = testResult.match(/^([<>]=?|=|\+|-)?\s*(.*)$/);
+    const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
+    const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
+
+
     setFormData({
       locationids: formattedLocationId,
       diseasename: sample.diseasename,
@@ -572,7 +579,10 @@ const [infectiousdiseasetestingName,setInfectiousdiseasetestingNames]=useState([
       ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
       ConcurrentMedications: sample.ConcurrentMedications,
       DiagnosisTestParameter: sample.DiagnosisTestParameter,
-      TestResult: sample.TestResult,
+      // TestResult: sample.TestResult,
+      TestSign,
+      TestValue,
+      TestResult: testResult,
       TestResultUnit: sample.TestResultUnit,
       TestMethod: sample.TestMethod,
       TestKitManufacturer: sample.TestKitManufacturer,
@@ -625,6 +635,8 @@ const [infectiousdiseasetestingName,setInfectiousdiseasetestingNames]=useState([
       ConcurrentMedicalConditions: "",
       ConcurrentMedications: "",
       DiagnosisTestParameter: "",
+      TestSign: "",
+      TestValue: "",
       TestResult: "",
       TestResultUnit: "",
       TestMethod: "",
@@ -710,12 +722,18 @@ const [infectiousdiseasetestingName,setInfectiousdiseasetestingNames]=useState([
 
   const handleTestResultChange = (field, value) => {
     setFormData((prev) => {
-      const newForm = {
+      const updated = {
         ...prev,
         [field]: value,
-        TestResult: `${field === "TestSign" ? value : prev.TestSign}${field === "TestValue" ? value : prev.TestValue}`
       };
-      return newForm;
+
+      const sign = field === "TestSign" ? value : prev.TestSign || "";
+      const val = field === "TestValue" ? value : prev.TestValue || "";
+
+      return {
+        ...updated,
+        TestResult: `${sign}${val}`.trim(),
+      };
     });
   };
 
@@ -973,7 +991,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               {showAddModal && (
                                 <div className="form-group col-md-6">
                                   <label>Donor ID <span className="text-danger">*</span></label>
-                                 <input
+                                  <input
                                     type="text"
                                     className="form-control"
                                     name="donorID"
@@ -1005,11 +1023,11 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     backgroundColor: formData.diseasename
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
-                                       borderColor: !formData.diseasename
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderColor: !formData.diseasename
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                     color: "black",
-                                    borderWidth:2
+                                    borderWidth: 2
                                   }}
                                 >
                                   <option value="" hidden>
@@ -1042,9 +1060,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         fontSize: "14px",
                                         backgroundColor: "#f0f0f0",
                                         color: "black",
-                                         borderColor: !formData.locationids
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                        borderColor: !formData.locationids
+                                          ? "#dc3545"
+                                          : "#ced4da", // Red border if empty
                                       }}
                                       required
                                       title="Location ID's = Room Number, Freezer ID and Box ID"
@@ -1067,9 +1085,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     backgroundColor: formData.packsize
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
-                                       borderColor: !formData.packsize
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderColor: !formData.packsize
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                     color: "black",
                                   }}
                                 />
@@ -1083,9 +1101,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   value={formData.phoneNumber}
                                   onChange={handleInputChange}
                                   style={{
-                                     borderColor: !formData.phoneNumber
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderColor: !formData.phoneNumber
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                   }}
                                   required
                                 />
@@ -1114,17 +1132,17 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     className="form-control"
                                     name="TestValue"
                                     value={formData.TestValue}
-                                    
+
                                     onChange={(e) => handleTestResultChange("TestValue", e.target.value)}
                                     placeholder="Enter value"
-                                    style={{ maxWidth: "200px", borderColor: !formData.TestValue
+                                    style={{
+                                      maxWidth: "200px", borderColor: !formData.TestValue
                                         ? "#dc3545"
                                         : "#ced4da", // Red border if empty
-                                         }}
+                                    }}
                                   />
                                 </div>
                               </div>
-
                               <div className="form-group col-md-6">
                                 <label>Gender <span className="text-danger">*</span></label>
                                 <select
@@ -1138,9 +1156,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     height: "45px",
                                     backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
                                     color: "black",
-                                     borderColor: !formData.gender
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderColor: !formData.gender
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                   }}
                                 >
                                   <option value="" hidden>
@@ -1160,14 +1178,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    borderWidth:2,
+                                    borderWidth: 2,
                                     backgroundColor: formData.TestResultUnit
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
-                                     borderColor: !formData.TestResultUnit
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderColor: !formData.TestResultUnit
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                   }}
                                 >
                                   <option value="" hidden>
@@ -1194,9 +1212,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                     borderColor: !formData.age
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderColor: !formData.age
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                     backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
                                     color: "black",
                                   }}
@@ -1207,17 +1225,17 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 <select
                                   className="form-control"
                                   name="QuantityUnit"
-                                  
+
                                   value={formData.QuantityUnit}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    borderWidth:2,
-                                     borderColor: !formData.QuantityUnit
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderWidth: 2,
+                                    borderColor: !formData.QuantityUnit
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                     backgroundColor: formData.QuantityUnit
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
@@ -1250,8 +1268,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       height: "45px",
                                       backgroundColor: "#f0f0f0",
                                       color: "black",
-                                      borderWidth:2,
-                                       borderColor: !formData.logo
+                                      borderWidth: 2,
+                                      borderColor: !formData.logo
                                         ? "#dc3545"
                                         : "#ced4da", // Red border if empty
                                     }}
@@ -1284,10 +1302,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
-                                    borderWidth:2,
-                                     borderColor: !formData.SampleTypeMatrix
-                                        ? "#dc3545"
-                                        : "#ced4da", // Red border if empty
+                                    borderWidth: 2,
+                                    borderColor: !formData.SampleTypeMatrix
+                                      ? "#dc3545"
+                                      : "#ced4da", // Red border if empty
                                   }}
                                 >
                                   <option value="" hidden>
