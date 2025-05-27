@@ -359,7 +359,7 @@ const handleExportToExcel = () => {
                         field: "status",
                       },
                     ].map(({ label, placeholder, field }) => (
-                      <th key={field} style={{ minWidth: "180px" }}>
+                      <th key={field} style={{ minWidth: "170px" }}>
                         <input
                           type="text"
                           className="form-control form-control-sm"
