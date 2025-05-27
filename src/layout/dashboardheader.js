@@ -133,7 +133,11 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-biobank");
     } else if (userType === "committeemember") {
       setActiveTab("update-committeemember");
-    } else {
+    } 
+    // else if (userType === "collectionsitesstaff") {
+    //   setActiveTab("update-collectionsitestaff");
+    // } 
+    else {
       setActiveTab("update-profile");
     }
     setIsProfileOpen(true);
@@ -167,15 +171,14 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Researcher List", tab: "researcher" },
           { label: "Organization List", tab: "organization" },
           { label: "Collection Site List", tab: "collectionsite" },
-          { label: "Collection Site Staff List", tab: "collectionsitestaff" },
-          { label: "Committee Members List", tab: "committee-members" },
-          { label: "CSR List", tab: "CSR" },
+          {label:"Staff Management List ",tab:"staffManagementPage"},
           {
             label: "Sample",
             tab: "sample",
             dropdown: [
               { label: "Ethnicity", tab: "ethnicity" },
               { label: "Sample Condition", tab: "sample-condition" },
+              { label: "Diagnosis Test Parameter", tab: "diagnosistestparameter" },
               { label: "Sample Price Currency", tab: "sample-price-currency" },
               { label: "Storage Temperature", tab: "storage-temperature" },
               { label: "Container Type", tab: "container-type" },
@@ -198,11 +201,16 @@ const Header = ({ setActiveTab, activeTab }) => {
         ]
       : userType === "collectionsitesstaff"
       ? [
-          ...(["add","edit", "dispatch", "history", "all"].includes(staffAction)
+          ...(["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(staffAction)
             ? [{ label: "Sample List", tab: "samples" }]
             : []),
           ...(["receive", "all"].includes(staffAction)
             ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
+            : []),
+            //    ...(["return", "all"].includes(staffAction)
+            // ? [{ label: "Sample Returned", tab: "sample-return" }]:[]),
+             ...(["return", "all"].includes(staffAction)
+            ? [{ label: "Sample Lost", tab: "sample-lost" }]
             : []),
         ]
       : userType == "biobank"
@@ -388,7 +396,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   >
                     {userType !== "technicaladmin" &&
                       userType !== "biobank" &&
-                      userType !== "registrationadmin" && (
+                      userType !== "registrationadmin" &&
+                      userType !== "collectionsitesstaff" && (
                         <li>
                           <button
                             className="dropdown-item fs-7"

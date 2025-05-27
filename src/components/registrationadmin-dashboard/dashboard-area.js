@@ -4,7 +4,7 @@ import Header from "../../layout/dashboardheader";
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from "./change-password";
 
-import CommitteeMemberArea from "./committe-members";
+import StaffManagementPage from "./staffManagementPage";
 import ResearcherArea from "./researcher";
 import Country from "./country";
 import City from "./city";
@@ -25,8 +25,7 @@ import ConcurrentMedicalConditionsArea from "./concurrent-medical-conditions";
 import TestKitManufacturerArea from "./test-kit-manufacturer";
 import TestSystemArea from "./test-system";
 import TestSystemManufacturerArea from "./test-system-manufacturer";
-import CSRArea from './CSR'
-import CollectionSiteStaffArea from './collectionsitestaff'
+import DiagnosisTestParameterArea from "./diagnosistestparameter";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
@@ -70,16 +69,14 @@ const DashboardArea = () => {
         return <OrderInfo setActiveTab={setActiveTab} />;
       case "researcher":
         return <ResearcherArea />;
-      case "committee-members":
-        return <CommitteeMemberArea />;
+      case "staffManagementPage":
+      return <StaffManagementPage/>;
       case "organization":
         return <Organization />;
-      case "CSR":
-        return <CSRArea />;
       case "collectionsite":
         return <CollectionsiteArea />;
-      case "collectionsitestaff":
-        return <CollectionSiteStaffArea />
+     case "diagnosistestparameter":
+      return <DiagnosisTestParameterArea/>
       case "ethnicity":
         return <EthnicityArea />;
       case "sample-condition":

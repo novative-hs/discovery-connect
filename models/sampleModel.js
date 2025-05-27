@@ -27,6 +27,7 @@ const createSampleTable = () => {
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
          quantity_allocated INT,
+         packsize DOUBLE,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50),
@@ -44,7 +45,7 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        sample_status ENUM('Public', 'Private') DEFAULT 'Public',
+        sample_status ENUM('Public', 'Private') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
@@ -76,11 +77,13 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
   let searchClause = "";
   const params = [user_account_id];
   if (searchField && searchValue) {
-    const allowedFields = ["s.samplename", "s.sampletype", "s.samplecode"];
-    if (!allowedFields.includes(searchField)) {
-      return callback(new Error("Invalid search field"), null);
+
+    if (searchField === "status") {
+      searchClause = ` AND s.status LIKE ?`;
+    } else {
+      // For all other fields, dynamically add field without alias
+      searchClause = ` AND ${searchField} LIKE ?`;
     }
-    searchClause = ` AND ${searchField} LIKE ?`;
     params.push(`%${searchValue}%`);
   }
 
@@ -108,8 +111,16 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 
 
   mysqlConnection.query(query, params, (err, results) => {
+    
     if (err) return callback(err, null);
 
+ // Add locationids to each sample
+    const enrichedResults = results.map(sample => ({
+      ...sample,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+        .filter(Boolean)
+        .join("-"),
+    }));
     // Count query
     const countParams = params.slice(0, -2); // remove limit/offset
     const countQuery = `
@@ -128,34 +139,36 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
     mysqlConnection.query(countQuery, countParams, (err, countResults) => {
       if (err) return callback(err, null);
       callback(null, {
-        results,
+        results: enrichedResults,
         totalCount: countResults[0].totalCount,
       });
     });
   });
 };
 
-
 const getAllSamples = (callback) => {
   const query = `
-SELECT 
-  s.*,
-  cs.CollectionSiteName AS Name,
-  bb.Name AS Name,
-  c.name AS CityName,
-  d.name AS DistrictName
-FROM 
-  sample s
-LEFT JOIN 
-  collectionsite cs ON s.user_account_id = cs.user_account_id
-LEFT JOIN 
-  biobank bb ON s.user_account_id = bb.id
-LEFT JOIN 
-  city c ON cs.city = c.id
-LEFT JOIN 
-  district d ON cs.district = d.id
-WHERE 
-  s.status = 'In Stock' and s.price > 0 ;
+    SELECT 
+      s.*,
+      cs.CollectionSiteName AS Name,
+      bb.Name AS BiobankName,
+      c.name AS CityName,
+      d.name AS DistrictName
+    FROM 
+      sample s
+    LEFT JOIN 
+      collectionsitestaff css ON s.user_account_id = css.user_account_id
+    LEFT JOIN 
+      collectionsite cs ON css.collectionsite_id = cs.id
+    LEFT JOIN 
+      biobank bb ON s.user_account_id = bb.id
+    LEFT JOIN 
+      city c ON cs.city = c.id
+    LEFT JOIN 
+      district d ON cs.district = d.id
+    WHERE 
+      s.status = 'In Stock' 
+      AND s.price > 0;
   `;
 
   mysqlConnection.query(query, (err, results) => {
@@ -167,19 +180,16 @@ WHERE
       if (fsErr) return callback(fsErr, null);
 
       const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-
       const totalSamples = results.length;
       const totalImages = imageFiles.length;
 
       let selectedImages = [];
 
       if (totalImages >= totalSamples) {
-        // Shuffle images and assign one per sample (no repeat)
         selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
       } else {
-        // More samples than images – allow repetition
         for (let i = 0; i < totalSamples; i++) {
-          const img = imageFiles[i % totalImages]; // cycle through
+          const img = imageFiles[i % totalImages];
           selectedImages.push(img);
         }
       }
@@ -194,80 +204,73 @@ WHERE
 
       callback(null, updatedResults);
     });
-
   });
 };
 
 
 const getResearcherSamples = (userId, callback) => {
   const query = `
-  SELECT 
-    s.*,
-    sm.samplename,
-    sm.age,
-    sm.gender,
-    sm.ethnicity,
-    sm.samplecondition,
-    sm.storagetemp,
-    sm.ContainerType,
-    sm.CountryOfCollection,
-    country.name AS CountryName, -- Fetch country name if available
-    sm.price,
-    sm.SamplePriceCurrency,
-    sm.quantity,
-    sm.QuantityUnit,
-    sm.SampleTypeMatrix,
-    sm.SmokingStatus,
-    sm.AlcoholOrDrugAbuse,
-    sm.InfectiousDiseaseTesting,
-    sm.InfectiousDiseaseResult,
-    sm.FreezeThawCycles,
-    sm.DateOfCollection,
-    sm.ConcurrentMedicalConditions,
-    sm.ConcurrentMedications,
-    sm.DiagnosisTestParameter,
-    sm.TestResult,
-    sm.TestResultUnit,
-    sm.TestMethod,
-    sm.TestKitManufacturer,
-    sm.TestSystem,
-    sm.TestSystemManufacturer,
-    sm.status,
-    sm.logo,
-    cs.CollectionSiteName,
-    bb.Name AS BiobankName,
-    c.name AS CityName,
-    d.name AS DistrictName,
-    p.payment_type AS payment_method,
-    p.payment_status AS payment_status,
-    s.quantity AS orderquantity, 
-    
-    -- Include Technical Admin Status
-    ra.technical_admin_status,
+ SELECT
+  s.*,
+  sm.samplename,
+  sm.age,
+  sm.gender,
+  sm.ethnicity,
+  sm.samplecondition,
+  sm.storagetemp,
+  sm.ContainerType,
+  sm.CountryOfCollection,
+  country.name AS CountryName,
+  sm.price,
+  sm.SamplePriceCurrency,
+  sm.QuantityUnit,
+  sm.SampleTypeMatrix,
+  sm.SmokingStatus,
+  sm.AlcoholOrDrugAbuse,
+  sm.InfectiousDiseaseTesting,
+  sm.InfectiousDiseaseResult,
+  sm.FreezeThawCycles,
+  sm.DateOfCollection,
+  sm.ConcurrentMedicalConditions,
+  sm.ConcurrentMedications,
+  sm.DiagnosisTestParameter,
+  sm.TestResult,
+  sm.TestResultUnit,
+  sm.TestMethod,
+  sm.TestKitManufacturer,
+  sm.TestSystem,
+  sm.TestSystemManufacturer,
+  sm.status,
+  sm.sample_status,
+  sm.logo,
+  cs.CollectionSiteName,
+  bb.Name AS BiobankName,
+  c.name AS CityName,
+  d.name AS DistrictName,
+  p.payment_type AS payment_method,
+  p.payment_status AS payment_status,
+  s.quantity AS orderquantity,
+ 
+  ra.technical_admin_status,
 
-    -- Determine Final Committee Status
-    CASE 
-        WHEN COUNT(ca.committee_status) = 0 THEN NULL  -- No committee records exist
-        WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 
-            THEN 'rejected'
-        WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 
-            THEN 'UnderReview'
-        ELSE 'accepted' 
-    END AS committee_status
+  CASE
+      WHEN COUNT(ca.committee_status) = 0 THEN NULL
+      WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
+      WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 THEN 'UnderReview'
+      ELSE 'accepted'
+  END AS committee_status
 
 FROM cart s
 JOIN user_account ua ON s.user_id = ua.id
-LEFT JOIN sample sm ON s.sample_id = sm.id 
-LEFT JOIN collectionsite cs ON sm.user_account_id = cs.user_account_id 
+LEFT JOIN sample sm ON s.sample_id = sm.id
+LEFT JOIN collectionsitestaff css ON sm.user_account_id = css.user_account_id
+LEFT JOIN collectionsite cs ON cs.id = css.collectionsite_id
 LEFT JOIN biobank bb ON sm.user_account_id = bb.id
 LEFT JOIN city c ON cs.city = c.id
 LEFT JOIN district d ON cs.district = d.id
-LEFT JOIN country ON sm.CountryOfCollection = country.id 
-JOIN payment p ON s.payment_id = p.id 
--- Join Technical Admin Sample Approval
+LEFT JOIN country ON sm.CountryOfCollection = country.id
+JOIN payment p ON s.payment_id = p.id
 LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
-
--- Join Committee Sample Approval
 LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
 
 WHERE s.user_id = ?
@@ -275,7 +278,6 @@ WHERE s.user_id = ?
 GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
 
 ORDER BY s.id DESC;
-
   `;
 
   mysqlConnection.query(query, [userId], (err, results) => {
@@ -295,9 +297,8 @@ ORDER BY s.id DESC;
 
 };
 
-
 const getAllCSSamples = (limit, offset, callback) => {
- const dataQuery = `
+  const dataQuery = `
 SELECT 
     s.*, 
     cs.CollectionSiteName AS CollectionSiteName,
@@ -321,7 +322,7 @@ SELECT
 `;
 
 
-const countQuery = `
+  const countQuery = `
   SELECT COUNT(*) AS total
   FROM sample s
   WHERE 
@@ -338,7 +339,7 @@ const countQuery = `
 
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) return callback(dataErr, null);
-console.log(results)
+      console.log(results)
       const imageFolder = path.join(__dirname, '../uploads/Images');
       fs.readdir(imageFolder, (fsErr, files) => {
         if (fsErr) return callback(fsErr, null);
@@ -372,7 +373,6 @@ console.log(results)
   });
 };
 
-
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -399,12 +399,12 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, samplename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, packsize,samplename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.samplename, data.age,data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.packsize, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -440,45 +440,69 @@ const createSample = (data, callback) => {
 
 // Function to update a sample by its ID (in Collectionsite)
 const updateSample = (id, data, callback) => {
-
   let room_number = null;
   let freezer_id = null;
   let box_id = null;
 
+  // Parse locationids if provided
   if (data.locationids) {
-    const parts = data.locationids.split("-");
-    room_number = parts[0] || null;
-    freezer_id = parts[1] || null;
-    box_id = parts[2] || null;
-  }
+  const parts = data.locationids.split("-");
+  room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
+  freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
+  box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
+}
+
+
+  // Handle packsize: convert empty string to null
+  const packsize = data.packsize === '' ? null : data.packsize;
+
+  // Log for debugging
+  console.log("Updating sample ID:", id);
+  console.log("Packsize value:", packsize);
 
   const query = `
     UPDATE sample
-    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, samplename = ?, age = ?, phoneNumber=?,gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?,logo=?
-    WHERE id = ?`;
+    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, packsize = ?, samplename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
+    WHERE id = ?
+  `;
 
   const values = [
-    data.donorID, room_number, freezer_id, box_id, data.samplename, data.age,data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
+    data.donorID, room_number, freezer_id, box_id, packsize, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
     data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
     data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];
 
+  // Run update query
   mysqlConnection.query(query, values, (err, result) => {
+    if (err) {
+      console.error('❌ Error updating sample:', err);
+      return callback(err, null);
+    }
+
+    // Check if update actually affected any rows
+    if (result.affectedRows === 0) {
+      console.warn('⚠️ No rows updated. Check if the sample ID exists.');
+    } else {
+      console.log('✅ Sample updated successfully.');
+    }
+
     // Insert into sample_history
     const historyQuery = `
-     INSERT INTO sample_history (sample_id)
-     VALUES (?)`;
+      INSERT INTO sample_history (sample_id)
+      VALUES (?)
+    `;
 
     mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
       if (err) {
-        console.error('Error inserting into sample_history:', err);
+        console.error('❌ Error inserting into sample_history:', err);
         return callback(err, null);
       }
 
-      callback(err, result);
+      console.log('🕘 History logged for sample ID:', id);
+      callback(null, result);
     });
   });
 };
@@ -564,9 +588,6 @@ const deleteSample = (id, callback) => {
     });
   });
 };
-
-
-
 
 const getFilteredSamples = (price, smokingStatus, callback) => {
   let query = "SELECT * FROM sample WHERE is_deleted = FALSE";

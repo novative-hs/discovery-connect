@@ -30,6 +30,22 @@ const createCollectionsiteStaff = (req, res) => {
         res.status(201).json(results);
     })
 }
+const getCollectionSiteStaffDetail=(req,res)=>{
+    const {id}=req.params;
+    console.log(id)
+    collectionsitestaffModel.getCollectionSiteStaffDetail(id,(err,results)=>{
+        
+         if (err) {
+      console.error('Error fetching collection site:', err);
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Collection site not found' });
+    }
+    res.status(200).json(results[0]);
+    })
+}
+
 const updateCollectonsiteStaffStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body.data;
@@ -60,5 +76,6 @@ module.exports = {
     getAllCollectionsitestaff,
     createCollectionsiteStaff,
     updateCollectonsiteStaffStatus,
-    updateCollectonsiteStaffDetail
+    updateCollectonsiteStaffDetail,
+    getCollectionSiteStaffDetail
 }

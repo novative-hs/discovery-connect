@@ -22,7 +22,7 @@ const BioBankSampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Disease Name", key: "samplename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -40,9 +40,9 @@ const BioBankSampleArea = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    
+
     { label: "Country of Collection", key: "CountryOfCollection" },
-   
+
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
 
@@ -54,14 +54,14 @@ const BioBankSampleArea = () => {
     },
 
   ];
-   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
-    { label: "Quantity", key: "quantity" },
+  const tableHeaders = [
+    { label: "Disease Name", key: "samplename" },
+    { label: "Packe size", key: "packsize" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-        { label: "Test Result", key: "TestResult" },
+    { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
 
@@ -226,14 +226,14 @@ const BioBankSampleArea = () => {
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-                          <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-/>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                      />
                       <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                         {label}
                       </span>
@@ -246,76 +246,76 @@ const BioBankSampleArea = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="table-light">
-              {currentData.length > 0 ? (
-                currentData.map((sample) => (
-                  <tr key={sample.id}>
-                    {tableHeaders.map(({ key }, index) => (
-                      <td
-                        key={index}
-                        className={
-                          key === "price"
-                            ? "text-end"
-                            : key === "samplename"
-                              ? ""
-                              : "text-center text-truncate"
-                        }
-                        style={{ maxWidth: "150px" }}
-                      >
-                        {key === "samplename" ? (
-                          <span
-                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                            role="button"
-                            title="Sample Details"
-                            onClick={() => openModal(sample)}
-                            style={{
-                              cursor: "pointer",
-                              transition: "color 0.2s",
-                            }}
-                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                            onMouseOut={(e) => (e.target.style.color = "")}
-                          >
-                            {sample.samplename || "----"}
-                          </span>
-                        ) : (
-                          sample[key] || "----"
-                        )}
-                      </td>
-                    ))}
-                    <td>
-                      <div className="d-flex justify-content-center gap-3">
+           <tbody className="table-light">
+  {currentData.length > 0 ? (
+    currentData.map((sample) => (
+      <tr key={sample.id}>
+        {tableHeaders.map(({ key }, index) => (
+          <td
+            key={index}
+            className={
+              key === "price"
+                ? "text-end"
+                : key === "samplename"
+                ? ""
+                : "text-center text-truncate"
+            }
+            style={{ maxWidth: "150px" }}
+          >
+            {key === "samplename" ? (
+              <span
+                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                role="button"
+                title="Sample Details"
+                onClick={() => openModal(sample)}
+                style={{
+                  cursor: "pointer",
+                  transition: "color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                onMouseOut={(e) => (e.target.style.color = "")}
+              >
+                {sample.samplename || "----"}
+              </span>
+            ) : key === "packsize" ? (
+              `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
+            ) : (
+              sample[key] || "----"
+            )}
+          </td>
+        ))}
+        <td>
+          <div className="d-flex justify-content-center gap-3">
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => {
+                setSelectedSampleId(sample.id);
+                setShowDeleteModal(true);
+              }}
+              title="Delete Sample"
+            >
+              <FontAwesomeIcon icon={faTrash} size="sm" />
+            </button>
+            <button
+              className="btn btn-outline-success btn-sm"
+              onClick={() => handleShowHistory("sample", sample.id)}
+              title="History"
+            >
+              <i className="fa fa-history"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="8" className="text-center">
+        No samples available
+      </td>
+    </tr>
+  )}
+</tbody>
 
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowDeleteModal(true);
-                          }}
-                          title="Delete Country" // This is the text that will appear on hover
-                        >
-                          <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-outline-success btn-sm"
-                          onClick={() => handleShowHistory("sample", sample.id)}
-                          title="History"
-                        >
-                          <i className="fa fa-history"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="text-center">
-                    No samples available
-                  </td>
-                </tr>
-              )}
-
-            </tbody>
           </table>
         </div>
 

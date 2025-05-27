@@ -22,21 +22,21 @@ const BioBankSampleDispatchArea = () => {
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
 
 
-    const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+  const tableHeaders = [
+    { label: "Disease Name", key: "samplename" },
+    { label: "Pack size", key: "packsize" },
+    
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
     { label: "Date Of Collection", key: "DateOfCollection" },
-        { label: "Test Result", key: "TestResult" },
+    { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Status", key: "sample_status" },
 
 
   ];
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Disease Name", key: "samplename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -54,9 +54,9 @@ const BioBankSampleDispatchArea = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    
+
     { label: "Country of Collection", key: "CountryOfCollection" },
-   
+
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
 
@@ -73,11 +73,12 @@ const BioBankSampleDispatchArea = () => {
     age: "",
     gender: "",
     ethnicity: "",
+    packsize:0,
     samplecondition: "",
     storagetemp: "",
     ContainerType: "",
     CountryOfCollection: "",
-    Quantity: "",
+    Quantity: 1,
     QuantityUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
@@ -293,21 +294,21 @@ const BioBankSampleDispatchArea = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {tableHeaders.map(({ label, key }, index) => (
-                   <th key={index} className="col-md-1 px-2">
-                          <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-/>
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                        {label}
-                      </span>
+                    <th key={index} className="col-md-1 px-2">
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                          {label}
+                        </span>
 
-                    </div>
-                  </th>
+                      </div>
+                    </th>
                   ))}
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
@@ -319,37 +320,44 @@ const BioBankSampleDispatchArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
-                         <td
-            key={index}
-            className={
-              key === "price"
-                ? "text-end"
-                : key === "samplename"
-                ? ""
-                : "text-center text-truncate"
-            }
-            style={{ maxWidth: "150px" }}
-          >
-            {key === "samplename" ? (
-              <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                role="button"
-                title="Sample Details"
-                onClick={() => openModal(sample)}
-                style={{
-                  cursor: "pointer",
-                  transition: "color 0.2s",
-                }}
-                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                onMouseOut={(e) => (e.target.style.color = "")}
-              >
-                {sample.samplename || "----"}
-              </span>
-            ) : (
-              sample[key] || "----"
-            )}
-          </td>
-                      ))}
+  <td
+    key={index}
+    className={
+      key === "price"
+        ? "text-end"
+        : key === "samplename"
+        ? ""
+        : "text-center text-truncate"
+    }
+    style={{ maxWidth: "150px" }}
+  >
+    {key === "samplename" ? (
+      <span
+        className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+        role="button"
+        title="Sample Details"
+        onClick={() => openModal(sample)}
+        style={{
+          cursor: "pointer",
+          transition: "color 0.2s",
+        }}
+        onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+        onMouseOut={(e) => (e.target.style.color = "")}
+      >
+        {sample.samplename || "----"}
+      </span>
+    ) : (
+      (() => {
+        if (key === "packsize") {
+          return `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`;
+        } else {
+          return sample[key] || "----";
+        }
+      })()
+    )}
+  </td>
+))}
+
                       <td>
                         <div
                           style={{
@@ -488,42 +496,42 @@ const BioBankSampleDispatchArea = () => {
           )}
         </div>
       </div>
-               <Modal show={showModal}
-                    onHide={closeModal}
-                    size="lg"
-                    centered
-                    backdrop="static"
-                    keyboard={false}>
-                    <Modal.Header closeButton className="border-0">
-                      <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
-                    </Modal.Header>
-            
-                    <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
-                      {selectedSample ? (
-                        <div className="p-3">
-                          <div className="row g-3">
-                            {fieldsToShowInOrder.map(({ key, label }) => {
-                              const value = selectedSample[key];
-                              if (value === undefined) return null;
-            
-                              return (
-                                <div className="col-md-6" key={key}>
-                                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                                    <span className="text-muted small fw-bold mb-1">{label}</span>
-                                    <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center text-muted p-3">No details to show</div>
-                      )}
-                    </Modal.Body>
-            
-                    <Modal.Footer className="border-0"></Modal.Footer>
-                  </Modal>
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={key}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
 
     </section>
   );

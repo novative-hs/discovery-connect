@@ -10,7 +10,7 @@ const SampleArea = () => {
    const tableHeaders = [
     { label: "Sample Name", key: "samplename" },
     { label: "Quantity", key: "quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Pack size", key: "packsize" },
     { label: "Price", key: "price" },
     { label: "Date Of Collection", key: "DateOfCollection" },
         { label: "Test Result", key: "TestResult" },
@@ -86,18 +86,17 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    if (id === null) {
-      return <div>Loading...</div>;
-    } else {
-      const intervalId = setInterval(() => {
-        fetchSamples();
-      }, 500); // Fetch data every 5 seconds
+ useEffect(() => {
+  if (id !== null) {
+    fetchSamples();
+    const intervalId = setInterval(() => {
+      fetchSamples();
+    }, 30000); // every 30 seconds
 
-      // Cleanup interval when component is unmounted
-      return () => clearInterval(intervalId);
-    }
-  }, []);
+    return () => clearInterval(intervalId);
+  }
+}, [id]);
+
 
   useEffect(() => {
     const pages = Math.max(1, Math.ceil(samples.length / itemsPerPage));
@@ -199,84 +198,94 @@ const SampleArea = () => {
                 {currentData.length > 0 ? (
                   currentData.map((sample) => (
                     <tr key={sample.id}>
-                      {tableHeaders.map(({ key, render }, index) => {
-                        // 🔁 Handle Price column with currency
-                        if (key === "price") {
-                          return (
-                            <td key={index}>
-                              {sample.price
-                                ? `${sample.price} ${sample.SamplePriceCurrency || ""
-                                }`
-                                : "----"}
-                            </td>
-                          );
-                        }
+                     {tableHeaders.map(({ key, render }, index) => {
+  // 🔁 Handle Price column with currency
+  if (key === "price") {
+    return (
+      <td key={index}>
+        {sample.price
+          ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+          : "----"}
+      </td>
+    );
+  }
 
-                        // 🔁 Handle Total Payment column with currency
-                        if (key === "totalpayment") {
-                          return (
-                            <td key={index}>
-                              {sample.totalpayment
-                                ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""
-                                }`
-                                : "----"}
-                            </td>
-                          );
-                        }
+  // 🔁 Handle Total Payment column with currency
+  if (key === "totalpayment") {
+    return (
+      <td key={index}>
+        {sample.totalpayment
+          ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""}`
+          : "----"}
+      </td>
+    );
+  }
 
-                        // ✅ Custom logic for committee_status
-                        if (key === "committee_status") {
-                          let displayValue = sample[key];
+  // ✅ Custom logic for committee_status
+  if (key === "committee_status") {
+    let displayValue = sample[key];
 
-                          if (
-                            sample.technical_admin_status === "Rejected" &&
-                            sample.committee_status === "rejected" &&
-                            sample.order_status === "Rejected"
-                          ) {
-                            displayValue = "Rejected";
-                          } else if (sample.technical_admin_status === "Rejected") {
-                            displayValue = "No further processing";
-                          } else if (
-                            sample.technical_admin_status === "Accepted" &&
-                            (displayValue === null || displayValue === undefined)
-                          ) {
-                            displayValue = "Awaiting Admin to Forward to Committee";
-                          } else if (displayValue === null || displayValue === undefined) {
-                            displayValue = "Pending Admin Action";
-                          }
+    if (
+      sample.technical_admin_status === "Rejected" &&
+      sample.committee_status === "rejected" &&
+      sample.order_status === "Rejected"
+    ) {
+      displayValue = "Rejected";
+    } else if (sample.technical_admin_status === "Rejected") {
+      displayValue = "No further processing";
+    } else if (
+      sample.technical_admin_status === "Accepted" &&
+      (displayValue === null || displayValue === undefined)
+    ) {
+      displayValue = "Awaiting Admin to Forward to Committee";
+    } else if (displayValue === null || displayValue === undefined) {
+      displayValue = "Pending Admin Action";
+    }
 
-                          return <td key={index}>{displayValue}</td>;
-                        }
-                        if (key === "samplename") {
-                          return (
-                            <td key={index}>
-                              <span
-                                className="sample-name fs-6 "
-                                role="button"
-                                title="Sample Details"
-                                onClick={() => openModal(sample)}
-                                style={{
-                                  cursor: "pointer",
-                                  transition: "color 0.2s",
-                                }}
-                                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                                onMouseOut={(e) => (e.target.style.color = "")}
-                              >
-                                {sample.samplename || "----"}
-                              </span>
-                            </td>
-                          );
-                        }
+    return <td key={index}>{displayValue}</td>;
+  }
 
-                        // 🔁 Default render for other fields
-                        return (
-                          <td key={index}>
-                            {render
-                              ? render(sample[key])
-                              : sample[key] || "----"}
-                          </td>
-                        );
-                      })}
+  // ✅ Custom logic for samplename with clickable modal
+  if (key === "samplename") {
+    return (
+      <td key={index}>
+        <span
+          className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+          role="button"
+          title="Sample Details"
+          onClick={() => openModal(sample)}
+          style={{
+            cursor: "pointer",
+            transition: "color 0.2s",
+          }}
+          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+          onMouseOut={(e) => (e.target.style.color = "")}
+        >
+          {sample.samplename || "----"}
+        </span>
+      </td>
+    );
+  }
+
+  // ✅ Custom logic for packsize + QuantityUnit
+  if (key === "packsize") {
+    return (
+      <td key={index}>
+        {sample.packsize
+          ? `${sample.packsize} ${sample.QuantityUnit || ""}`
+          : "----"}
+      </td>
+    );
+  }
+
+  // 🔁 Default render for all other fields
+  return (
+    <td key={index}>
+      {render ? render(sample[key]) : sample[key] || "----"}
+    </td>
+  );
+})}
+
 
                       {/* Handle sample name click to open modal */}
 

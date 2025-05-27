@@ -3,11 +3,12 @@ import { React, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
-import UpdateCollectionsite from './update-collectionsite';
+import UpdateCollectionSiteStaff from './update-collectionsitestaff';
 import SampleArea from './samples';
 import SampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
-
+import SampleReturn from "./sample-return";
+import SampleLost from './sample-lost'
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default
   const [id, setUserID] = useState(null);
@@ -58,10 +59,15 @@ const DashboardArea = () => {
         return <SampleArea />;
       case "sample-dispatch":
         return <SampleDispatchArea />;
+      case "sample-return":
+        return <SampleReturn />
+      case "sample-lost":
+        return <SampleLost />
       case "change-password":
         return <ChangePassword />;
-      case "update-collectionsite":
-        return <UpdateCollectionsite />;
+      case "update-collectionsitestaff":
+        return <UpdateCollectionSiteStaff />;
+
       default:
         return <SampleArea />;
     }
@@ -76,7 +82,7 @@ const DashboardArea = () => {
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
               <div
                 className="profile__tab-content mx-auto p-3 my-1 h-auto"
-                style={{ maxWidth: "75%", width: "100%" }}
+                style={{ maxWidth: "85%", width: "100%" }}
               >
                 {renderContent()}
               </div>

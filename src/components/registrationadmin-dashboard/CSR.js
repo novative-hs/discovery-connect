@@ -57,7 +57,7 @@ const CSRArea = () => {
     status: "",
   });
   const fieldsToShowInOrder = [
-
+    { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
@@ -389,46 +389,46 @@ const CSRArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
- const handleExportToExcel = () => {
-  const dataToExport = filteredCSR.map((item) => ({
-    email: item.useraccount_email ?? "",
-    password: item.useraccount_password ?? "",
-    name: item.CSRName ?? "",
-    collectionsitename: item.name ?? "",
-    phoneNumber: item.phoneNumber ?? "",
-    city: item.city ?? "",
-    country: item.country ?? "",
-    district: item.district ?? "",
-    fullAddress: item.fullAddress ?? "",
-    status: item.status ?? "",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCSR.map((item) => ({
+      email: item.useraccount_email ?? "",
+      password: item.useraccount_password ?? "",
+      name: item.CSRName ?? "",
+      collectionsitename: item.name ?? "",
+      phoneNumber: item.phoneNumber ?? "",
+      city: item.city ?? "",
+      country: item.country ?? "",
+      district: item.district ?? "",
+      fullAddress: item.fullAddress ?? "",
+      status: item.status ?? "",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  const headers = [
-    "email",
-    "password",
-    "name",
-    "collectionsitename",
-    "phoneNumber",
-    "city",
-    "country",
-    "district",
-    "fullAddress",
-    "status",
-    "Created At",
-    "Updated At",
-  ];
+    const headers = [
+      "email",
+      "password",
+      "name",
+      "collectionsitename",
+      "phoneNumber",
+      "city",
+      "country",
+      "district",
+      "fullAddress",
+      "status",
+      "Created At",
+      "Updated At",
+    ];
 
-  if (dataToExport.length === 0) {
-    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
-  }
+    if (dataToExport.length === 0) {
+      dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
-  XLSX.writeFile(workbook, "CSR_List.xlsx");
-};
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CSR");
+    XLSX.writeFile(workbook, "CSR_List.xlsx");
+  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
@@ -519,7 +519,6 @@ const CSRArea = () => {
                       { label: "Email", placeholder: "Search Email", field: "useraccount_email" },
                       { label: "Password", placeholder: "Search Password", field: "useraccount_password" },
                       { label: "Collectionsite Name", placeholder: "Search Collectionsite Name", field: "name" },
-                      { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
                       { label: "Status", placeholder: "Search Status", field: "status" },
                     ].map(({ label, placeholder, field }) => (
                       <th key={field} className="col-md-1 px-2">
@@ -529,7 +528,7 @@ const CSRArea = () => {
                             type="text"
                             className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                             placeholder={`Search ${label}`}
-                            onChange={(e) => handleFilterChange(key, e.target.value)}
+                            onChange={(e) => handleFilterChange(field, e.target.value)}
                             style={{ minWidth: "170px", maxWidth: "200px", width: "100px" }}
                           />
                           <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
@@ -570,7 +569,7 @@ const CSRArea = () => {
                         <td>{CSR.useraccount_email}</td>
                         <td>{CSR.useraccount_password}</td>
                         <td>{CSR.name}</td>
-                        <td>{CSR.phoneNumber}</td>
+                        {/* <td>{CSR.phoneNumber}</td> */}
                         <td>{CSR.status}</td>
                         <td>
                           <div className="d-flex justify-content-center gap-2">

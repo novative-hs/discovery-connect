@@ -10,11 +10,12 @@ const createSampleDispatchTable = () => {
       dispatcherName VARCHAR(255) NOT NULL,
       dispatchReceiptNumber VARCHAR(255) NOT NULL,
       Quantity VARCHAR(255) NOT NULL,
+      Reason VARCHAR(255) NULL,
       status VARCHAR(255) DEFAULT 'In Transit',
       TransferDate DATE DEFAULT (CURRENT_DATE),
       sampleID VARCHAR(36) NOT NULL,
       FOREIGN KEY (sampleID) REFERENCES sample(id),
-      FOREIGN KEY (TransferTo) REFERENCES user_account(id) ON DELETE CASCADE,
+      FOREIGN KEY (TransferTo) REFERENCES collectionsite(id) ON DELETE CASCADE,
       FOREIGN KEY (TransferFrom) REFERENCES user_account(id) ON DELETE CASCADE
     )
   `;
@@ -29,98 +30,198 @@ const createSampleDispatchTable = () => {
 };
 
 // Function to fetch dispatched samples with 'In Transit' status
-const getDispatchedwithInTransitStatus = (req, res) => {
-  const user_account_id = parseInt(id);
-  if (isNaN(user_account_id)) {
-    console.error("Invalid user_account_id:", id);
-    return callback(new Error("Invalid user_account_id"), null);
-  }
-
-  // SQL query to fetch samples where the logged-in user is the recipient (TransferTo)
+const getDispatchedwithInTransitStatus = (userId, callback) => {
   const query = `
     SELECT 
-    s.id,
-    s.masterID,
-    s.donorID,
-    s.samplename,
-    s.age,
-    s.gender,
-    s.ethnicity,
-    s.samplecondition,
-    s.storagetemp,
-    s.ContainerType,
-    s.CountryOfCollection,
-    s.price,
-    s.SamplePriceCurrency,
-    s.QuantityUnit,
-    s.SampleTypeMatrix,
-    s.SmokingStatus,
-    s.AlcoholOrDrugAbuse,
-    s.InfectiousDiseaseTesting,
-    s.InfectiousDiseaseResult,
-    s.FreezeThawCycles,
-    s.DateOfCollection,
-    s.ConcurrentMedicalConditions,
-    s.ConcurrentMedications,
-    s.DiagnosisTestParameter,
-    s.TestResult,
-    s.TestResultUnit,
-    s.TestMethod,
-    s.TestKitManufacturer,
-    s.TestSystem,
-    s.TestSystemManufacturer,
-    sr.ReceivedByCollectionSite,
-
-    -- Calculate the actual quantity available
-    COALESCE((
-        SELECT SUM(sd.Quantity) 
-        FROM sampledispatch sd 
-        WHERE sd.sampleID = s.id 
-        AND sd.TransferTo = sr.ReceivedByCollectionSite
-        AND sd.status = 'In Stock'
-    ), 0) AS Quantity, 
-
-    s.status
-
-FROM samplereceive sr
-INNER JOIN sample s ON sr.sampleID = s.id
-WHERE sr.ReceivedByCollectionSite = ? 
-AND s.status = 'In Stock'  
-AND EXISTS (
-    SELECT 1 
+      s.id,
+      s.masterID,
+      s.donorID,
+      s.samplename,
+      s.age,
+      s.gender,
+      s.ethnicity,
+      s.samplecondition,
+      s.storagetemp,
+      s.ContainerType,
+      s.CountryOfCollection,
+      s.price,
+      s.SamplePriceCurrency,
+      s.QuantityUnit,
+      s.SampleTypeMatrix,
+      s.SmokingStatus,
+      s.AlcoholOrDrugAbuse,
+      s.InfectiousDiseaseTesting,
+      s.InfectiousDiseaseResult,
+      s.FreezeThawCycles,
+      s.DateOfCollection,
+      s.ConcurrentMedicalConditions,
+      s.ConcurrentMedications,
+      s.DiagnosisTestParameter,
+      s.TestResult,
+      s.TestResultUnit,
+      s.TestMethod,
+      s.TestKitManufacturer,
+      s.TestSystem,
+      s.TestSystemManufacturer,
+      s.user_account_id,
+      sd.id as Dispatch_id,
+      sd.TransferTo,
+      sd.dispatchVia,
+      sd.dispatcherName,
+      sd.dispatchReceiptNumber,
+      sd.TransferDate,
+      sd.Quantity,
+      sd.status,
+      s.sample_status
     FROM sampledispatch sd
-    WHERE sd.sampleID = s.id 
-    AND sd.TransferTo = sr.ReceivedByCollectionSite
-    AND sd.status = 'In Stock'
-)  
-HAVING Quantity > 0
-ORDER BY s.id;
+    JOIN sample s ON sd.sampleID = s.id
+    JOIN collectionsitestaff cs_staff ON cs_staff.user_account_id = ?
+    WHERE sd.TransferTo = cs_staff.collectionsite_id
+      AND sd.status = 'In Transit';
   `;
-  // Execute the query using the logged-in user's `user_account_id`
-  mysqlConnection.query(query, [user_account_id], (err, results) => {
+
+  mysqlConnection.query(query, [userId], (err, results) => {
     if (err) {
-      console.error("Database error fetching samples:", err.message);
-      return res.status(500).json({ error: "An error occurred while fetching samples" });
+      console.error("Database error fetching dispatched samples:", err.message);
+      return callback(err);
     }
-    if (results.length === 0) {
-      return res.status(404).json({ message: "No samples found for this user" });
+    return callback(null, results);
+  });
+};
+const getSampleLost = (userId, page, pageSize, searchField, searchValue, callback) => {
+  const offset = (page - 1) * pageSize;
+  const searchClause = searchField && searchValue ? ` AND s.${searchField} LIKE ?` : '';
+  const searchParam = searchField && searchValue ? [`%${searchValue}%`] : [];
+
+  // Step 1: Get collectionsite_id for the user
+  const siteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
+
+  mysqlConnection.query(siteQuery, [userId], (siteErr, siteResults) => {
+    if (siteErr) {
+      console.error("Error fetching collectionsite_id:", siteErr.message);
+      return callback(siteErr);
     }
-    // Return the results (samples received by the user)
-    res.status(200).json({ data: results });
+
+    if (siteResults.length === 0) {
+      return callback(null, { samples: [], totalCount: 0 }); // No site found
+    }
+
+    const collectionsiteId = siteResults[0].collectionsite_id;
+
+    // Step 2: Get all user_account_ids from the same collection site
+    const staffQuery = `SELECT user_account_id FROM collectionsitestaff WHERE collectionsite_id = ?`;
+
+    mysqlConnection.query(staffQuery, [collectionsiteId], (staffErr, staffResults) => {
+      if (staffErr) {
+        console.error("Error fetching staff user_account_ids:", staffErr.message);
+        return callback(staffErr);
+      }
+
+      if (staffResults.length === 0) {
+        return callback(null, { samples: [], totalCount: 0 }); // No staff at site
+      }
+
+      const staffUserIds = staffResults.map(row => row.user_account_id);
+
+      // Step 3: Build IN clause placeholders for dynamic user IDs
+      const inClause = staffUserIds.map(() => '?').join(',');
+
+      // Step 4: Final data query to get lost samples sent FROM these staff
+      const dataQuery = `
+        SELECT 
+          s.*,
+          sd.id AS Dispatch_id,
+          sd.TransferTo,
+          sd.TransferFrom,
+          sd.dispatchVia,
+          sd.dispatcherName,
+          sd.dispatchReceiptNumber,
+          sd.TransferDate,
+          sd.Quantity,
+          sd.status,
+          sd.Reason,
+          sender.staffName AS senderStaffName
+        FROM sampledispatch sd
+        JOIN sample s ON sd.sampleID = s.id
+        LEFT JOIN collectionsitestaff sender ON sender.user_account_id = sd.TransferFrom
+        WHERE sd.TransferFrom IN (${inClause})
+          AND sd.status = 'Lost'
+          ${searchClause}
+        LIMIT ? OFFSET ?;
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*) AS totalCount
+        FROM sampledispatch sd
+        JOIN sample s ON sd.sampleID = s.id
+        WHERE sd.TransferFrom IN (${inClause})
+          AND sd.status = 'Lost'
+          ${searchClause};
+      `;
+
+      const dataParams = [...staffUserIds, ...searchParam, parseInt(pageSize), parseInt(offset)];
+      const countParams = [...staffUserIds, ...searchParam];
+
+      mysqlConnection.query(dataQuery, dataParams, (err, results) => {
+        if (err) {
+          console.error("Error fetching lost samples:", err.message);
+          return callback(err);
+        }
+
+        mysqlConnection.query(countQuery, countParams, (countErr, countResults) => {
+          if (countErr) {
+            console.error("Error counting lost samples:", countErr.message);
+            return callback(countErr);
+          }
+
+          const totalCount = countResults[0].totalCount;
+          return callback(null, { samples: results, totalCount });
+        });
+      });
+    });
   });
 };
 
 
+
+
+
+
 // Function to transfer sample 
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
-  const { TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity } = dispatchData;
+  const {
+    TransferFrom,
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity,
+    status
+  } = dispatchData;
 
   const query = `
-    INSERT INTO sampledispatch (TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO sampledispatch (
+      TransferFrom,
+      TransferTo,
+      dispatchVia,
+      dispatcherName,
+      dispatchReceiptNumber,
+      Quantity,
+      sampleID,
+      status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  mysqlConnection.query(query, [TransferFrom, TransferTo, dispatchVia, dispatcherName, dispatchReceiptNumber, Quantity, sampleID], callback);
+  mysqlConnection.query(query, [
+    TransferFrom,
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity,
+    sampleID,
+    status
+  ], callback);
 };
 
 
@@ -128,5 +229,6 @@ const createSampleDispatch = (dispatchData, sampleID, callback) => {
 module.exports = {
   createSampleDispatchTable,
   createSampleDispatch,
-  getDispatchedwithInTransitStatus
+  getDispatchedwithInTransitStatus,
+  getSampleLost
 };

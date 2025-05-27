@@ -54,21 +54,42 @@ const getAllCollectionSites = (callback) => {
   });
 };
 
-
-const getAllCollectioninCollectionStaff = (callback) => {
+const getAllCollectioninCollectionStaff = (id, callback) => {
   const query = `
-   SELECT 
-  collectionsite.id,
-  collectionsite.CollectionSiteName AS name
-FROM collectionsite 
-WHERE status = 'active'
-ORDER BY collectionsite.id DESC;
-
+    SELECT 
+      cs.id,
+      cs.CollectionSiteName AS name
+    FROM collectionsite cs
+    WHERE cs.status = 'active'
+      AND cs.id NOT IN (
+        SELECT collectionsite_id
+        FROM collectionsitestaff
+        WHERE user_account_id = ?
+      )
+    ORDER BY cs.id DESC;
   `;
-  mysqlConnection.query(query, (err, results) => {
+  mysqlConnection.query(query, [id], (err, results) => {
     callback(err, results);
   });
+};
+
+
+const getAllinRegistrationAdmin = async (callback) => {
+  const CollectionSiteQuery = `SELECT CollectionSiteName as name, id 
+      FROM collectionsite 
+      WHERE status = 'active'`;
+
+  mysqlConnection.query(CollectionSiteQuery, (err, results) => {
+    if (err) {
+      console.error('SQL Error (CollectionSite):', err);
+      callback(err, null);
+      return;
+    }
+    console.log(results)
+    callback(null, results);
+  });
 }
+
 
 // Function to register a new collection site in Registration Dashboard
 const createCollectionSite = (req, callback) => {
@@ -290,10 +311,9 @@ const getAllCollectionSiteNamesInBiobank = (sample_id, callback) => {
 
     // Now fetch collection site names EXCLUDING the one that owns this sample
     const collectionSiteQuery = `
-      SELECT CollectionSiteName, user_account_id 
+      SELECT CollectionSiteName, id 
       FROM collectionsite 
-      WHERE user_account_id != ?
-      AND status = 'active';
+      WHERE status = 'active';
     `;
 
     mysqlConnection.query(collectionSiteQuery, [sampleOwnerUserId], (err, results) => {
@@ -474,5 +494,6 @@ module.exports = {
   updateCollectionSiteStatus,
   deleteCollectionSite,
   getAllNameinCSR,
-  getAllCollectioninCollectionStaff
+  getAllCollectioninCollectionStaff,
+  getAllinRegistrationAdmin
 };

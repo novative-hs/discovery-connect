@@ -1,90 +1,111 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
 
+  // {
+  //   table: "csr",
+  //   columnsToAdd: [
+  //     {
+  //       column: "collection_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "collectionsite", column: "id" },
+  //     },
+  //   ]
+  // },
   {
-    table: "csr",
+    table: "sampledispatch",
     columnsToAdd: [
       {
-        column: "collection_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "collectionsite", column: "id" },
+        column: "Reason",
+        type: "TEXT",
+        nullable: true, 
       },
     ]
   },
-  {
-    table: "sample",
-    columnsToAdd: [
-      {
-        column: "phoneNumber",
-        type: "VARCHAR(15)",
-      },
-    ]
-  },
-  {
-    table: "user_account",
-    columnsToAdd: [
-      //   {
-      //     column: "accountType",
-      //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
-      //   },
-      {
-        column: "password",
-        type: "VARCHAR(255) DEFAULT NULL"
+  {table:"sample",
+    columnsToAdd:[
+      {column:"packsize",
+        type:"DOUBLE",
+         nullable: true, 
       }
     ]
   },
-  {
-    table: "organization",
-    columnsToDelete: ["ntnNumber", "user_account_id"],
+
+   {
+    table: "registrationadmin_history",
     columnsToAdd: [
       {
-        column: "website",
-        type: "VARCHAR(250) Null",
-      },
-      {
-        column: "email",
-        type: "VARCHAR(255) NULL",
-      },
-    ]
-  },
-  {
-    table: "collectionsite",
-    columnsToDelete: ["user_account_id"],
-  },
-
-  {
-    table: "history",
-    columnsToDelete: ["ntnNumber"],
-    columnsToAdd: [
-      {
-        column: "website",
-        type: "VARCHAR(250)",
-        nullable: true, // Change to true
-      },
-      {
-        column: "staffName",
-        type: "VARCHAR(1000)",
-        nullable: true, // Change to true
-      },
-      {
-        column: "action",
-        type: "VARCHAR(20)",
-        nullable: true, // Change to true
-      },
-
-      {
-        column: "collectionsitestaff_id",
+        column: "diagnosistestparameter_id",
         type: "INT",
         nullable: true, // Change to true
-        references: { table: "collectionsitestaff", column: "id" },
-      },
-      {
-        column: "status",
-        type: "ENUM('added', 'updated', 'deleted', 'active','inactive') NULL DEFAULT 'added'",
+        references: { table: "diagnosistestparameter", column: "id" },
       },
     ]
   },
+  // {
+  //   table: "user_account",
+  //   columnsToAdd: [
+  //     //   {
+  //     //     column: "accountType",
+  //     //     type: "ENUM('Researcher','Organization','CollectionSites','RegistrationAdmin','TechnicalAdmin','biobank','Committeemember','CSR')"
+  //     //   },
+  //     {
+  //       column: "password",
+  //       type: "VARCHAR(255) DEFAULT NULL"
+  //     }
+  //   ]
+  // },
+  // {
+  //   table: "organization",
+  //   columnsToDelete: ["ntnNumber", "user_account_id"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "website",
+  //       type: "VARCHAR(250) Null",
+  //     },
+  //     {
+  //       column: "email",
+  //       type: "VARCHAR(255) NULL",
+  //     },
+  //   ]
+  // },
+  // {
+  //   table: "collectionsite",
+  //   columnsToDelete: ["user_account_id"],
+  // },
+
+  // {
+  //   table: "history",
+  //   columnsToDelete: ["ntnNumber"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "website",
+  //       type: "VARCHAR(250)",
+  //       nullable: true, // Change to true
+  //     },
+  //     {
+  //       column: "staffName",
+  //       type: "VARCHAR(1000)",
+  //       nullable: true, // Change to true
+  //     },
+  //     {
+  //       column: "action",
+  //       type: "VARCHAR(20)",
+  //       nullable: true, // Change to true
+  //     },
+
+  //     {
+  //       column: "collectionsitestaff_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "collectionsitestaff", column: "id" },
+  //     },
+  //     {
+  //       column: "status",
+  //       type: "ENUM('added', 'updated', 'deleted', 'active','inactive') NULL DEFAULT 'added'",
+  //     },
+  //   ]
+  // },
 
   // {
   //   table: "cart",
@@ -261,6 +282,24 @@ const renameColumn = (table, oldColumn, newColumn, type) => {
   });
 };
 
+const updateEnumColumn = (table, column, enumValues, isNullable = true, defaultValue = null) => {
+  const enumList = enumValues.map(val => `'${val}'`).join(", ");
+  const nullable = isNullable ? "NULL" : "NOT NULL";
+  const defaultClause = defaultValue ? `DEFAULT '${defaultValue}'` : "";
+
+  const alterQuery = `
+    ALTER TABLE ${table} 
+    MODIFY COLUMN ${column} ENUM(${enumList}) ${nullable} ${defaultClause}
+  `;
+
+  mysqlConnection.query(alterQuery, (err) => {
+    if (err) {
+      console.error(`❌ Error updating ENUM column ${column} in table ${table}:`, err);
+    } else {
+      console.log(`✅ ENUM column ${column} in table ${table} updated successfully.`);
+    }
+  });
+};
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = async () => {
@@ -274,11 +313,16 @@ const createOrUpdateTables = async () => {
   if (Array.isArray(columnsToDelete)) {
     deleteColumns(table, columnsToDelete);
   }
+  updateEnumColumn("collectionsitestaff", "permission", [
+  "add_full", 
+  "add_basic", 
+  "edit", 
+  "dispatch", 
+  "receive", 
+  "all"
+], true, "all");
 });
 
-
-  // renameColumn("history", "action", "permission", "VARCHAR(20) NULL");
-  // renameColumn("collectionsitestaff", "action", "permission", "VARCHAR(20) NULL");
 
   // await executeSequentially([
   //   () =>
