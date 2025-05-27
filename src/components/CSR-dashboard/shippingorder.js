@@ -36,7 +36,7 @@ const ShippingSampleArea = () => {
   const tableHeaders = [
     { label: "Order ID", key: "id" },
     { label: "Researcher Name", key: "researcher_name" },
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Order Date", key: "created_at" },
     { label: "Status", key: "order_status" },
   ];
@@ -194,7 +194,7 @@ const ShippingSampleArea = () => {
                   <tr key={researcher}>
                     <td>{records[0].id}</td>
                     <td>{researcher}</td>
-                    <td>{records.map((r) => r.samplename).join(", ")}</td>
+                    <td>{records.map((r) => r.diseasename).join(", ")}</td>
                     <td>{new Date(records[0].created_at).toLocaleString()}</td>
                     <td>{records[0].order_status}</td>
                     <td>
@@ -273,7 +273,7 @@ const ShippingSampleArea = () => {
               <tbody>
                 {selectedUserSamples.map((sample, i) => (
                   <tr key={i}>
-                    <td>{sample.samplename}</td>
+                    <td>{sample.diseasename}</td>
                     <td>{sample.quantity || "-"}</td>
                     <td>{sample.price || "-"}</td>
                     <td>{sample.totalpayment || "-"}</td>

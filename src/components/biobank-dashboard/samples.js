@@ -42,11 +42,12 @@ const BioBankSampleArea = () => {
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
+    { label: "Location", key: "locationids" },
     { label: "Pack size", key: "packsize" },
     { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
     { label: "Phone Number", key: "phoneNumber" },
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
@@ -55,7 +56,7 @@ const BioBankSampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Gender", key: "gender" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -80,7 +81,7 @@ const BioBankSampleArea = () => {
 
   const [formData, setFormData] = useState({
     locationids: "",
-    samplename: "",
+    diseasename: "",
     age: "",
     packsize: "",
     phoneNumber: "",
@@ -231,26 +232,26 @@ const BioBankSampleArea = () => {
     fetchSamples(); // Call the function when the component mounts
   }, []);
   // Fetch samples from the backend
- const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-  try {
-    const { priceFilter, searchField, searchValue } = filters;
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { priceFilter, searchField, searchValue } = filters;
 
-    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-    if (priceFilter) url += `&priceFilter=${priceFilter}`;
-    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      if (priceFilter) url += `&priceFilter=${priceFilter}`;
+      if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
-    const response = await axios.get(url);
-    const { samples, totalCount } = response.data;
-console.log(samples)
-    setSamples(samples);
-    setFilteredSamples(samples);
-    setTotalPages(Math.ceil(totalCount / pageSize));
-    setfiltertotal(Math.ceil(totalCount / pageSize));
-  } catch (error) {
-    console.error("Error fetching samples:", error);
-  }
-};
+      const response = await axios.get(url);
+      const { samples, totalCount } = response.data;
+      console.log(samples)
+      setSamples(samples);
+      setFilteredSamples(samples);
+      setTotalPages(Math.ceil(totalCount / pageSize));
+      setfiltertotal(Math.ceil(totalCount / pageSize));
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
 
 
   useEffect(() => {
@@ -385,7 +386,7 @@ console.log(samples)
 
       // Clear form after submission
       setFormData({
-        samplename: "",
+        diseasename: "",
         age: "",
         gender: "",
         phoneNumber: "",
@@ -588,11 +589,11 @@ console.log(samples)
 
     setFormData({
       locationids: formattedLocationId,
-      samplename: sample.samplename,
+      diseasename: sample.diseasename,
       age: sample.age,
       phoneNumber: sample.phoneNumber,
       gender: sample.gender,
-      packsize:sample.packsize,
+      packsize: sample.packsize,
       ethnicity: sample.ethnicity,
       samplecondition: sample.samplecondition,
       storagetemp: sample.storagetemp,
@@ -668,7 +669,7 @@ console.log(samples)
       // Reset formData after update
       setFormData({
         locationids: "",
-        samplename: "",
+        diseasename: "",
         phoneNumber: "",
         age: "",
         gender: "",
@@ -744,7 +745,7 @@ console.log(samples)
     setFormData({
       locationids: "",
       packsize: "",
-      samplename: "",
+      diseasename: "",
       age: "",
       phoneNumber: "",
       gender: "",
@@ -895,13 +896,13 @@ console.log(samples)
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "samplename"
+                            : key === "diseasename"
                               ? ""
                               : "text-center text-truncate"
                         }
                         style={{ maxWidth: "150px" }}
                       >
-                        {key === "samplename" ? (
+                        {key === "diseasename" ? (
                           <span
                             className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -914,16 +915,23 @@ console.log(samples)
                             onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.samplename || "----"}
+                            {sample.diseasename || "----"}
                           </span>
                         ) : (
                           (() => {
-                            if (key === "packsize") {
+                            if (key === "locationids") {
+                              const tooltip = `${sample.room_number || "N/A"} = Room Number
+${sample.freezer_id || "N/A"} = Freezer ID
+${sample.box_id || "N/A"} = Box ID`;
+                              return (
+                                <span title={tooltip} style={{ cursor: "help" }}>
+                                  {sample.locationids || "----"}
+                                </span>
+                              );
+                            } else if (key === "packsize") {
                               return `${sample.packsize} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
-                            } else if (key === "price") {
-                              return `${sample.price || "----"} ${sample.SamplePriceCurrency || ""}`;
                             } else {
                               return sample[key] || "----";
                             }
@@ -1114,16 +1122,16 @@ console.log(samples)
                             <div className="row">
                               <div className="form-group col-md-6">
                                 <label>Disease Name</label>
-                                 <select
+                                <select
                                   className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
+                                  name="diseasename"
+                                  value={formData.diseasename}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: formData.samplename
+                                    backgroundColor: formData.diseasename
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
@@ -1141,14 +1149,14 @@ console.log(samples)
                                 {/* <input
                                   type="text"
                                   className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
+                                  name="diseasename"
+                                  value={formData.diseasename}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                    backgroundColor: formData.diseasename ? "#f0f0f0" : "#f0f0f0",
                                     color: "black",
                                   }}
                                 /> */}

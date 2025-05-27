@@ -23,7 +23,7 @@ const SampleReturn = () => {
 
   
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Ethnicity", key: "ethnicity" },

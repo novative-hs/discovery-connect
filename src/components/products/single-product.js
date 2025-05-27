@@ -50,7 +50,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
     />
   </div>
 
-  <h5 className="mb-2 fw-bold text-dark">{product.samplename}</h5>
+  <h5 className="mb-2 fw-bold text-dark">{product.diseasename}</h5>
 
   <div className="d-flex justify-content-between text-muted small mb-1">
   <span>Price: <strong className="text-dark">₨ {product.price}</strong></span>

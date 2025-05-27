@@ -36,7 +36,7 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       s.id,
       s.masterID,
       s.donorID,
-      s.samplename,
+      s.diseasename,
       s.age,
       s.gender,
       s.ethnicity,

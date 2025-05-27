@@ -291,7 +291,7 @@ const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
       s.id AS sampleid, 
-      s.samplename AS samplename,
+      s.diseasename AS diseasename,
       s.discount AS discount,
       s. user_account_id AS user_account_id,
       cs.CollectionSiteName,
@@ -441,7 +441,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       r.ResearcherName AS researcher_name, 
       org.OrganizationName AS organization_name,
       c.sample_id, 
-      s.samplename, 
+      s.diseasename, 
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
       s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
@@ -554,7 +554,7 @@ const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, ca
       r.ResearcherName AS researcher_name, 
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
-      s.samplename, 
+      s.diseasename, 
       s.age, s.gender, s.ethnicity, s.samplecondition, 
       s.storagetemp, s.ContainerType, s.CountryofCollection, 
       s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
@@ -680,7 +680,7 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
       r.fullAddress,
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
-      s.samplename, 
+      s.diseasename, 
       c.order_status,  
       c.created_at,
 

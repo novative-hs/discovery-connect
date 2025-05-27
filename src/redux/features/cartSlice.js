@@ -44,7 +44,7 @@ export const cartSlice = createSlice({
           if (item.id === payload.id) {
             if (item.quantity >= item.orderQuantity + 1) {
               item.orderQuantity += 1;
-              notifySuccess(`${item.samplename} quantity updated in cart`);
+              notifySuccess(`${item.diseasename} quantity updated in cart`);
             } else {
               notifyError("No more quantity available for this product!");
             }

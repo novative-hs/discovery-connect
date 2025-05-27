@@ -191,7 +191,7 @@ const getSampleHistory = (sampleId, callback) => {
       sh.sample_id,
       sh.comments AS comments,
       CAST(sh.updated_at AS CHAR) AS updated_at,
-      s.samplename,
+      s.diseasename,
       s.age,
       s.gender,
       s.ethnicity,

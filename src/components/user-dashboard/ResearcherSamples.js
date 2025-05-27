@@ -8,7 +8,7 @@ const SampleArea = () => {
   const router = useRouter();
   const id = sessionStorage.getItem("userID");
    const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Quantity", key: "quantity" },
     { label: "Pack size", key: "packsize" },
     { label: "Price", key: "price" },
@@ -21,7 +21,7 @@ const SampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     // { label: "Price", key: "price" },
     // { label: "Quantity", key: "orderquantity" },
     // { label: "Total Payment", key: "totalpayment" },
@@ -245,8 +245,8 @@ const SampleArea = () => {
     return <td key={index}>{displayValue}</td>;
   }
 
-  // ✅ Custom logic for samplename with clickable modal
-  if (key === "samplename") {
+  // ✅ Custom logic for diseasename with clickable modal
+  if (key === "diseasename") {
     return (
       <td key={index}>
         <span
@@ -261,7 +261,7 @@ const SampleArea = () => {
           onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
           onMouseOut={(e) => (e.target.style.color = "")}
         >
-          {sample.samplename || "----"}
+          {sample.diseasename || "----"}
         </span>
       </td>
     );

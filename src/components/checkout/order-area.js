@@ -147,7 +147,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
               {cart_products?.length > 0 ? (
                 cart_products.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.samplename || "----"}</td>
+                    <td>{item.diseasename || "----"}</td>
                     <td>{(item.price || 0).toFixed(2)}</td>
                     <td>{item.orderQuantity || 0}</td>
                     <td>

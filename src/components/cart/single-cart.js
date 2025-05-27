@@ -6,7 +6,7 @@ import {Minus,Plus} from "@svg/index";
 import { add_cart_product, quantityDecrement, remove_product } from "src/redux/features/cartSlice";
 
 const SingleCartItem = ({item}) => {
-  const {_id,samplename,price,quantity=0} = item || {};
+  const {_id,diseasename,price,quantity=0} = item || {};
   const dispatch = useDispatch()
 
   // handle add product
@@ -34,7 +34,7 @@ const SingleCartItem = ({item}) => {
         </Link> */}
       {/* </td> */}
       <td className="product-name">
-        <Link href={`product-details/${_id}`}>{samplename}</Link>
+        <Link href={`product-details/${_id}`}>{diseasename}</Link>
       </td>
 
       <td className="product-price">

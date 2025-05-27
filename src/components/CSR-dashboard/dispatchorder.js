@@ -22,7 +22,7 @@ const DispatchSampleArea = () => {
   const tableHeaders = [
     { label: "Order ID", key: "id" },
     { label: "User Name", key: "researcher_name" },
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Order Date", key: "created_at" },
     { label: "Status", key: "order_status" },
   ];
@@ -146,7 +146,7 @@ const DispatchSampleArea = () => {
                   <tr key={sample.id}>
                     <td>{sample.id || "----"}</td>
                     <td>{sample.researcher_name}</td>
-                    <td>{sample.samplename}</td>
+                    <td>{sample.diseasename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>
                     <td>{sample.order_status}</td>
                   </tr>

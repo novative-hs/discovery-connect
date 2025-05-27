@@ -46,9 +46,9 @@ const SampleArea = () => {
   };
 
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Location", key: "locationids" },
-    { label: "Packsize", key: "packsize" },
+    { label: "Pack Size", key: "packsize" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
     { label: "Phone Number", key: "phoneNumber" },
@@ -58,8 +58,6 @@ const SampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
-    
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -85,7 +83,7 @@ const SampleArea = () => {
 
   const [formData, setFormData] = useState({
     locationids: "",
-    samplename: "",
+    diseasename: "",
     age: "",
     phoneNumber: "",
     gender: "",
@@ -549,8 +547,8 @@ const SampleArea = () => {
 
     setFormData({
       locationids: formattedLocationId,
-      samplename: sample.samplename,
-      packsize:sample.packsize,
+      diseasename: sample.diseasename,
+      packsize: sample.packsize,
       age: sample.age,
       phoneNumber: sample.phoneNumber,
       gender: sample.gender,
@@ -602,7 +600,7 @@ const SampleArea = () => {
   const resetFormData = () => {
     setFormData({
       locationids: "",
-      samplename: "",
+      diseasename: "",
       age: "",
       packsize: "",
       gender: "",
@@ -790,13 +788,13 @@ const SampleArea = () => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "samplename"
+                            : key === "diseasename"
                               ? ""
                               : "text-center text-truncate"
                         }
                         style={{ maxWidth: "150px" }}
                       >
-                        {key === "samplename" ? (
+                        {key === "diseasename" ? (
                           <span
                             className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -809,11 +807,20 @@ const SampleArea = () => {
                             onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.samplename || "----"}
+                            {sample.diseasename || "----"}
                           </span>
                         ) : (
                           (() => {
-                            if (key === "packsize") {
+                            if (key === "locationids") {
+                              const tooltip = `${sample.room_number || "N/A"} = Room Number
+${sample.freezer_id || "N/A"} = Freezer ID
+${sample.box_id || "N/A"} = Box ID`;
+                              return (
+                                <span title={tooltip} style={{ cursor: "help" }}>
+                                  {sample.locationids || "----"}
+                                </span>
+                              );
+                            } else if (key === "packsize") {
                               return `${sample.packsize} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
@@ -1000,16 +1007,16 @@ const SampleArea = () => {
                             <div className="row">
                               <div className="form-group col-md-6">
                                 <label>Disease Name</label>
-                                 <select
+                                <select
                                   className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
+                                  name="diseasename"
+                                  value={formData.diseasename}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: formData.samplename
+                                    backgroundColor: formData.diseasename
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
@@ -1027,14 +1034,14 @@ const SampleArea = () => {
                                 {/* <input
                                   type="text"
                                   className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
+                                  name="diseasename"
+                                  value={formData.diseasename}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
+                                    backgroundColor: formData.diseasename ? "#f0f0f0" : "#f0f0f0",
                                     color: "black",
                                   }}
                                 /> */}
@@ -2042,7 +2049,7 @@ const SampleArea = () => {
                     }}
                   />
                 </div>
-                
+
                 <div
                   style={{
                     display: "flex",

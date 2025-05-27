@@ -17,7 +17,7 @@ import { Minus, Plus } from "@svg/index";
 import { decrement, increment } from "src/redux/features/cartSlice";
 const ProductModal = ({ product, discountPrd = false }) => {
   
-  const { id, image_url, samplename, title, price, discount, originalPrice } = product || {};
+  const { id, image_url, diseasename, title, price, discount, originalPrice } = product || {};
   const { isShow } = useSelector((state) => state.product);
   const { wishlist } = useSelector((state) => state.wishlist);
   const { image, relatedImages, tags, SKU, sku } = product || {};
@@ -82,7 +82,7 @@ const ProductModal = ({ product, discountPrd = false }) => {
           className="d-flex justify-content-between align-items-center p-2"
           style={{ backgroundColor: "#cfe2ff", color: "#000" }}
         >
-          <h5 className="fw-bold">{product.samplename}</h5>
+          <h5 className="fw-bold">{product.diseasename}</h5>
           <button
             type="button"
             onClick={handleModalClose}
@@ -104,7 +104,7 @@ const ProductModal = ({ product, discountPrd = false }) => {
             <div className="col-md-5 text-center">
               <img
                 src={product.imageUrl || "/placeholder.jpg"}
-                alt={product.samplename}
+                alt={product.diseasename}
                 className="img-fluid rounded"
                 style={{ maxHeight: "200px", objectFit: "cover" }}
               />

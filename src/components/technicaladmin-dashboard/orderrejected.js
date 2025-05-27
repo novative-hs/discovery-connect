@@ -146,7 +146,7 @@ const OrderRejectedPage = () => {
                     { label: "Order Id", field: "order_id" },
                     { label: "Researcher Name", field: "researcher_name" },
                     { label: "Organization Name", field: "organization_name" },
-                    { label: "Sample Name", field: "samplename" },
+                    { label: "Sample Name", field: "diseasename" },
                     { label: "Order Status", field: "order_status" },
                     {
                       label: "Technical Admin Status",
@@ -209,7 +209,7 @@ const OrderRejectedPage = () => {
                           setSampleShowModal(true);
                         }}
                       >
-                        {order.samplename}
+                        {order.diseasename}
                       </td>
                       <td>{order.order_status}</td>
                       <td>{order.technical_admin_status}</td>
@@ -288,7 +288,7 @@ const OrderRejectedPage = () => {
                   style={{ backgroundColor: "#cfe2ff", color: "#000" }}
                 >
                   <h5 className="fw-bold">
-                    {selectedSample.samplename} Details:
+                    {selectedSample.diseasename} Details:
                   </h5>
                   <button
                     type="button"

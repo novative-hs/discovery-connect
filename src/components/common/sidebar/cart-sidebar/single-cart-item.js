@@ -6,7 +6,7 @@ import { remove_product } from "src/redux/features/cartSlice";
 import Quantity from "@components/products/quantity";
 
 const SingleCartItem = ({ item }) => {
-  const { _id, samplename, price, title, quantity, discount } =
+  const { _id, diseasename, price, title, quantity, discount } =
     item || {};
   const dispatch = useDispatch();
 
@@ -18,7 +18,7 @@ const SingleCartItem = ({ item }) => {
     <div className="cartmini__widget-item">
       <div className="cartmini__thumb">
         <Link href={`/product-details/${_id}`}>
-   <span>{samplename}</span>
+   <span>{diseasename}</span>
         </Link>
       </div>
       <div className="cartmini__content">

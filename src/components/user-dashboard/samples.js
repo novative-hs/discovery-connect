@@ -24,7 +24,7 @@ const SampleArea = () => {
   };
   const [selectedSample, setSelectedSample] = useState(null);
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Pack size", key: "packsize" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -45,7 +45,7 @@ const SampleArea = () => {
     setShowModal(false);
   };
   const [formData, setFormData] = useState({
-    samplename: "",
+    diseasename: "",
     age: "",
     gender: "",
     ethnicity: "",
@@ -77,7 +77,7 @@ const SampleArea = () => {
     user_account_id: id,
   });
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     // { label: "Price", key: "price" },
     // { label: "Quantity", key: "orderquantity" },
     // { label: "Total Payment", key: "totalpayment" },
@@ -124,7 +124,7 @@ const SampleArea = () => {
     setFormData((prevData) => {
       const newFormData = {
         ...prevData, // Preserve any existing data in formData
-        samplename: sample.samplename,
+        diseasename: sample.diseasename,
         age: sample.age,
         gender: sample.gender,
         ethnicity: sample.ethnicity,
@@ -305,7 +305,7 @@ const SampleArea = () => {
     content = sample.price
       ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
       : "----";
-  } else if (key === "samplename") {
+  } else if (key === "diseasename") {
     content = (
       <span
         className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
@@ -319,7 +319,7 @@ const SampleArea = () => {
         onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
         onMouseOut={(e) => (e.target.style.color = "")}
       >
-        {sample.samplename || "----"}
+        {sample.diseasename || "----"}
       </span>
     );
   } else if (key === "packsize") {
@@ -334,7 +334,7 @@ const SampleArea = () => {
       className={
         key === "price"
           ? "text-end"
-          : key === "samplename"
+          : key === "diseasename"
           ? ""
           : "text-center text-truncate"
       }

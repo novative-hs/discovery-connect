@@ -53,7 +53,7 @@ const getSampleReceiveInTransit = (req, res) => {
       // Step 3: Fetch the samples
       const mainQuery = `
         SELECT DISTINCT
-          s.id, s.masterID, s.donorID, s.samplename, s.age, s.gender,s.packsize,
+          s.id, s.masterID, s.donorID, s.diseasename, s.age, s.gender,s.packsize,
           s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType,
           s.CountryOfCollection, s.price, s.SamplePriceCurrency,
           s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus,

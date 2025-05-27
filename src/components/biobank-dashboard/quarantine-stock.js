@@ -22,7 +22,7 @@ const BioBankSampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -55,7 +55,7 @@ const BioBankSampleArea = () => {
 
   ];
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Packe size", key: "packsize" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Price", key: "price" },
@@ -256,13 +256,13 @@ const BioBankSampleArea = () => {
             className={
               key === "price"
                 ? "text-end"
-                : key === "samplename"
+                : key === "diseasename"
                 ? ""
                 : "text-center text-truncate"
             }
             style={{ maxWidth: "150px" }}
           >
-            {key === "samplename" ? (
+            {key === "diseasename" ? (
               <span
                 className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                 role="button"
@@ -275,7 +275,7 @@ const BioBankSampleArea = () => {
                 onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                 onMouseOut={(e) => (e.target.style.color = "")}
               >
-                {sample.samplename || "----"}
+                {sample.diseasename || "----"}
               </span>
             ) : key === "packsize" ? (
               `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`

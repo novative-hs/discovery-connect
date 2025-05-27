@@ -23,7 +23,7 @@ const BioBankSampleDispatchArea = () => {
 
 
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Pack size", key: "packsize" },
     
     { label: "Price", key: "price" },
@@ -36,7 +36,7 @@ const BioBankSampleDispatchArea = () => {
 
   ];
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -69,7 +69,7 @@ const BioBankSampleDispatchArea = () => {
 
   ];
   const [formData, setFormData] = useState({
-    samplename: "",
+    diseasename: "",
     age: "",
     gender: "",
     ethnicity: "",
@@ -325,13 +325,13 @@ const BioBankSampleDispatchArea = () => {
     className={
       key === "price"
         ? "text-end"
-        : key === "samplename"
+        : key === "diseasename"
         ? ""
         : "text-center text-truncate"
     }
     style={{ maxWidth: "150px" }}
   >
-    {key === "samplename" ? (
+    {key === "diseasename" ? (
       <span
         className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
         role="button"
@@ -344,7 +344,7 @@ const BioBankSampleDispatchArea = () => {
         onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
         onMouseOut={(e) => (e.target.style.color = "")}
       >
-        {sample.samplename || "----"}
+        {sample.diseasename || "----"}
       </span>
     ) : (
       (() => {

@@ -16,7 +16,7 @@ const SampleLost = () => {
   }
 
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Phone Number", key: "phoneNumber" },
@@ -26,7 +26,7 @@ const SampleLost = () => {
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
     const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -184,7 +184,7 @@ const [showModal, setShowModal] = useState(false);
                         }
                         style={{ maxWidth: "150px" }}
                       >
-                        {key === "samplename" ? (
+                        {key === "diseasename" ? (
                           <span
                             className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -199,7 +199,7 @@ const [showModal, setShowModal] = useState(false);
                             }
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.samplename || "----"}
+                            {sample.diseasename || "----"}
                           </span>
                         ) : (
                           sample[key] || "---"

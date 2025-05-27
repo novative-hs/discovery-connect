@@ -142,10 +142,10 @@ const CartArea = () => {
                               <div className="d-flex align-items-center gap-3">
                                 <img
                                   src={item.imageUrl}
-                                  alt={item.samplename}
+                                  alt={item.diseasename}
                                   style={{ width: "60px", borderRadius: "8px" }}
                                 />
-                                <span>{item.samplename}</span>
+                                <span>{item.diseasename}</span>
                               </div>
                             </td>
 

@@ -18,20 +18,22 @@ const tablesAndColumns = [
       {
         column: "Reason",
         type: "TEXT",
-        nullable: true, 
+        nullable: true,
       },
     ]
   },
-  {table:"sample",
-    columnsToAdd:[
-      {column:"packsize",
-        type:"DOUBLE",
-         nullable: true, 
+  {
+    table: "sample",
+    columnsToAdd: [
+      {
+        column: "packsize",
+        type: "DOUBLE",
+        nullable: true,
       }
     ]
   },
 
-   {
+  {
     table: "registrationadmin_history",
     columnsToAdd: [
       {
@@ -303,28 +305,32 @@ const updateEnumColumn = (table, column, enumValues, isNullable = true, defaultV
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = async () => {
- tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
-  // Ensure columns exist for each table
-  if (Array.isArray(columnsToAdd)) {
-    ensureColumnsExist(table, columnsToAdd);
-  }
+  tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
+    // Ensure columns exist for each table
+    if (Array.isArray(columnsToAdd)) {
+      ensureColumnsExist(table, columnsToAdd);
+    }
 
-  // Delete columns for each table (only if columnsToDelete is defined)
-  if (Array.isArray(columnsToDelete)) {
-    deleteColumns(table, columnsToDelete);
-  }
-// 🔁 RENAME sample_status TO sample_visibility
-  renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
+    // Delete columns for each table (only if columnsToDelete is defined)
+    if (Array.isArray(columnsToDelete)) {
+      deleteColumns(table, columnsToDelete);
+    }
 
-  updateEnumColumn("collectionsitestaff", "permission", [
-  "add_full", 
-  "add_basic", 
-  "edit", 
-  "dispatch", 
-  "receive", 
-  "all"
-], true, "all");
-});
+    // ✅ Rename 'samplename' to 'diseasename'
+    renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
+
+    // 🔁 RENAME sample_status TO sample_visibility
+    renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
+
+    updateEnumColumn("collectionsitestaff", "permission", [
+      "add_full",
+      "add_basic",
+      "edit",
+      "dispatch",
+      "receive",
+      "all"
+    ], true, "all");
+  });
 
 
   // await executeSequentially([
