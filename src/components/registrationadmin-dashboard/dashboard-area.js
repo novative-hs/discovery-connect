@@ -26,6 +26,7 @@ import TestKitManufacturerArea from "./test-kit-manufacturer";
 import TestSystemArea from "./test-system";
 import TestSystemManufacturerArea from "./test-system-manufacturer";
 import DiagnosisTestParameterArea from "./diagnosistestparameter";
+import InfectiousdiseaseArea from "./infectiousdiseasetesting";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
@@ -77,6 +78,8 @@ const DashboardArea = () => {
         return <CollectionsiteArea />;
      case "diagnosistestparameter":
       return <DiagnosisTestParameterArea/>
+      case "infectiousdiseasetesting":
+        return <InfectiousdiseaseArea/>
       case "ethnicity":
         return <EthnicityArea />;
       case "sample-condition":
@@ -105,6 +108,11 @@ const DashboardArea = () => {
         return <TestSystemManufacturerArea />;
       case "change-password":
         return <ChangePassword />;
+      case "staffManagementPage":
+case "staffManagementPage:committee":
+case "staffManagementPage:csr":
+  const role = activeTab.split(":")[1] || "collectionsite";
+  return <StaffManagementPage defaultSection={role} />;
       default:
         return <OrderInfo setActiveTab={setActiveTab} />;
     }
@@ -114,28 +122,34 @@ const DashboardArea = () => {
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
       
-        <p className="fs-6 text-end" style={{ margin: "10px" }}>
-          {`Admin Dashboard / ${activeTab === "order-info"
-            ? "Profile"
-            : [
-              "ethnicity",
-              "sample-condition",
-              "sample-price-currency",
-              "storage-temperature",
-              "container-type",
-              "quantity-unit",
-              "sample-type-matrix",
-              "test-method",
-              "test-result-unit",
-              "concurrent-medical-conditions",
-              "test-kit-manufacturer",
-              "test-system",
-              "test-system-manufacturer",
-            ].includes(activeTab)
-              ? `Sample / ${activeTab.replace(/-/g, " ")}`
-              : activeTab.replace(/-/g, " ")
-            }`}
-        </p>
+       <p className="fs-6 text-end" style={{ margin: "10px" }}>
+  {`Admin Dashboard / ${
+    activeTab.startsWith("staffManagementPage")
+      ? "Staff Management"
+      : activeTab === "order-info"
+      ? "Profile"
+      : [
+          "ethnicity",
+          "sample-condition",
+          "diagnosis-test-parameter",
+          "infectious-disease-testing",
+          "sample-price-currency",
+          "storage-temperature",
+          "container-type",
+          "quantity-unit",
+          "sample-type-matrix",
+          "test-method",
+          "test-result-unit",
+          "concurrent-medical-conditions",
+          "test-kit-manufacturer",
+          "test-system",
+          "test-system-manufacturer",
+        ].includes(activeTab)
+      ? `Sample / ${activeTab.replace(/-/g, " ")}`
+      : activeTab.replace(/-/g, " ")
+  }`}
+</p>
+
       
 
       <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">

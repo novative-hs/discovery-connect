@@ -179,6 +179,7 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Ethnicity", tab: "ethnicity" },
               { label: "Sample Condition", tab: "sample-condition" },
               { label: "Diagnosis Test Parameter", tab: "diagnosistestparameter" },
+              { label: "Infectious Disease Testing", tab: "infectiousdiseasetesting" },
               { label: "Sample Price Currency", tab: "sample-price-currency" },
               { label: "Storage Temperature", tab: "storage-temperature" },
               { label: "Container Type", tab: "container-type" },
@@ -269,14 +270,19 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
                 >
                   <button
-                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ? "text-primary" : "text-dark"
-                      } fs-7`}
-                    onClick={() => {
-                      if (!dropdown) {
-                        setActiveTab(tab);
-                      }
-                    }}
-                  >
+      className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
+ activeTab === tab ||
+(tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
+
+    ? "text-primary"
+    : "text-dark"
+} fs-7`}
+      onClick={() => {
+        if (!dropdown) {
+          setActiveTab(tab);
+        }
+      }}
+    >
                     <small>{label}</small> {/* Makes text smaller */}
                     {label === "Sample" && (
                       <i

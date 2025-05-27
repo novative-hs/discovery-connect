@@ -32,6 +32,29 @@ const tablesAndColumns = [
       }
     ]
   },
+  {
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "infectiousdisease_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "infectiousdiseasetesting", column: "id" },
+      },
+    ]
+  },
+
+  {
+    table:"csr",
+    columnsToAdd:[
+      {
+        column:"permission",
+        type:"VARCHAR(15)",
+        nullable:true,
+      }
+    ]
+
+  },
 
   {
     table: "registrationadmin_history",

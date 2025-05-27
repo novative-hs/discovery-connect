@@ -172,18 +172,20 @@ const getAllDocuments = (req, res) => {
 
 const getAllOrderByOrderPacking = (req, res) => {
   const csrUserId = req.query.csrUserId;
+  const staffAction = req.query.staffAction; // get staffAction from query
 
   if (!csrUserId) {
     return res.status(400).json({ error: "CSR user ID is required" });
   }
 
-  cartModel.getAllOrderByOrderPacking(csrUserId, (err, results) => {
+  cartModel.getAllOrderByOrderPacking(csrUserId, staffAction, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching order packing list" });
     }
     res.status(200).json(results);
   });
 };
+
 
 
 const updateTechnicalAdminStatus = async (req, res) => {

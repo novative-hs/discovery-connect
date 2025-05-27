@@ -138,6 +138,7 @@ const BioBankSampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
+  const [infectiousdiseasetestingName,setInfectiousdiseasetestingNames]=useState([]);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
@@ -1676,27 +1677,34 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   </div>
                                 </div>
                               </div>
-                              <div className="form-group">
+                               <div className="form-group">
                                 <label>
                                   Infectious Disease Testing (HIV, HBV, HCV)
                                 </label>
-                                <input
-                                  type="text"
+                                <select
                                   className="form-control"
-                                  name="InfectiousDiseaseTesting"
+                                  name="TestResultUnit"
                                   value={formData.InfectiousDiseaseTesting}
                                   onChange={handleInputChange}
                                   required
                                   style={{
-                                    height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor:
-                                      formData.InfectiousDiseaseTesting
-                                        ? "#f0f0f0"
-                                        : "#f0f0f0",
+                                    height: "45px",
+                                    backgroundColor: formData.InfectiousDiseaseTesting
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
                                     color: "black",
                                   }}
-                                />
+                                >
+                                  <option value="" hidden>
+                                    Select Infectious Disease Testing
+                                  </option>
+                                  {infectiousdiseasetestingName.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               <div className="form-group">
                                 <label className="form-label">

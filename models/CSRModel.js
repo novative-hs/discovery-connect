@@ -15,6 +15,7 @@ const create_CSRTable = () => {
     district INT,
     country INT,
     collection_id INT,
+    permission VARCHAR(15),
     status ENUM('active', 'inactive') DEFAULT 'inactive',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -46,7 +47,8 @@ const createCSR = (data, callback) => {
     district,
     country,
     status,
-    collectionsitename
+    collectionsitename,
+    permission
   } = data;
 
   mysqlPool.getConnection((err, connection) => {
@@ -73,8 +75,8 @@ const createCSR = (data, callback) => {
           const user_account_id = accountResult.insertId;
 
           const csrInsertQuery = `
-          INSERT INTO csr (user_account_id, collection_id, CSRName, phoneNumber, fullAddress, city, district, country, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO csr (user_account_id, collection_id, CSRName, phoneNumber, fullAddress, city, district, country, permission,status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)
           `;
 
           const csrValues = [
@@ -86,6 +88,7 @@ const createCSR = (data, callback) => {
             city,
             district,
             country,
+            permission,
             status,
           ];
 
@@ -97,8 +100,8 @@ const createCSR = (data, callback) => {
             const historyQuery = `
               INSERT INTO history (
                 email, password, CSRName, phoneNumber, fullAddress, city,
-                district, country, status, csr_id
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                district, country, status, csr_id,permission
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
             `;
             const historyValues = [
               email,
@@ -111,6 +114,7 @@ const createCSR = (data, callback) => {
               country,
               'added',
               csrId,
+              permission
             ];
 
             connection.query(historyQuery, historyValues, (err) => {
@@ -189,21 +193,23 @@ const deleteCSR = (id, status, callback) => {
 
 const updateCSRStatus = async (id, status) => {
   const updateQuery = "UPDATE csr SET status = ? WHERE id = ?";
+  
+  // Updated: insert CSRName into history
   const insertHistoryQuery = `
-      INSERT INTO registrationadmin_history (csr_id, status)
-      VALUES (?, ?)
-    `;
-  const getEmailQuery = `
-      SELECT ua.email 
-      FROM csr c
-      JOIN user_account ua ON c.user_account_id = ua.id
-      WHERE c.id = ?
-    `;
+    INSERT INTO history (csr_id, status, CSRName)
+    VALUES (?, ?, ?)
+  `;
+  
+  const getCSRDetailsQuery = `
+    SELECT ua.email, c.CSRName
+    FROM csr c
+    JOIN user_account ua ON c.user_account_id = ua.id
+    WHERE c.id = ?
+  `;
 
   const conn = await mysqlConnection.promise().getConnection();
 
   try {
-    // Start transaction
     await conn.beginTransaction();
 
     const [updateResult] = await conn.query(updateQuery, [status, id]);
@@ -211,35 +217,37 @@ const updateCSRStatus = async (id, status) => {
       throw new Error("No CSR found with the given ID.");
     }
 
-    const [insertResult] = await conn.query(insertHistoryQuery, [id, status]);
-    const [emailResults] = await conn.query(getEmailQuery, [id]);
-
-    if (emailResults.length === 0) {
-      throw new Error("CSR email not found.");
+    const [csrResults] = await conn.query(getCSRDetailsQuery, [id]);
+    if (csrResults.length === 0) {
+      throw new Error("CSR email or name not found.");
     }
 
+    const { email, CSRName } = csrResults[0];
+
+    await conn.query(insertHistoryQuery, [id, status, CSRName]);
+
     await conn.commit();
-    conn.release(); // Release the connection
+    conn.release();
 
-    const email = emailResults[0].email;
-
+    // Prepare email
     let emailText = `Dear CSR,\n\nYour account status is currently <b>pending</b>. 
         Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
 
     if (status === "active") {
-      emailText = `Dear CSR,\n\nYour account has been <b>active</b>! 
+      emailText = `Dear CSR,\n\nYour account has been <b>activated</b>! 
           You can now log in and access your account.\n\nBest regards,\nDiscovery Connect`;
     }
     if (status === "inactive") {
-      emailText = `Dear CSR,\n\nYour account has been <b>inactive</b>! 
-           Please wait for approval.\n\nBest regards,\nDiscovery Connect`;
+      emailText = `Dear CSR,\n\nYour account has been <b>deactivated</b>! 
+           Please wait for further instructions.\n\nBest regards,\nDiscovery Connect`;
     }
 
+    // Send email
     sendEmail(email, "Welcome to Discovery Connect", emailText)
       .then(() => console.log("Email sent successfully"))
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
-    return { message: "Status updated and email sent" };
+    return { message: "Status updated, history logged, and email sent" };
   } catch (error) {
     await conn.rollback();
     conn.release();
@@ -247,6 +255,7 @@ const updateCSRStatus = async (id, status) => {
     throw error;
   }
 };
+
 
 module.exports = {
   create_CSRTable,

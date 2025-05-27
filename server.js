@@ -44,9 +44,11 @@ const committeesampleapproval = require("./routes/committeesampleapprovalRoutes"
 const collectionsiteStaffRoutes=require("./routes/collectionsitestaffRoutes")
 const samplereturnRoutes=require("./routes/samplereturnRoutes")
 const diagnosistestparameterRoutes=require("./routes/diagnosistestparameterRoutes")
+const infectiousdiseaseRoutes=require('./routes/infectiousdiseasetestingRoutes')
 // Routes
 
 app.use('/api/diagnosis-test-parameter',diagnosistestparameterRoutes)
+app.use('/api/infectiousdisease',infectiousdiseaseRoutes)
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);

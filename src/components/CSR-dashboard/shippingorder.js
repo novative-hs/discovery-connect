@@ -6,8 +6,11 @@ import { notifySuccess, notifyError } from "@utils/toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 const ShippingSampleArea = () => {
-  const id = sessionStorage.getItem("userID");
-  if (id === null) return <div>Loading...</div>;
+ const id = sessionStorage.getItem("userID");
+if (id === null) return <div>Loading...</div>;
+
+const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
+
 
   const [samples, setSamples] = useState([]);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
@@ -41,19 +44,27 @@ const ShippingSampleArea = () => {
     { label: "Status", key: "order_status" },
   ];
 
-  useEffect(() => {
-    fetchSamples();
-    
-  }, []);
+// Later in useEffect:
+useEffect(() => {
+  fetchSamples(staffAction);
+}, [staffAction]);
 
-  const fetchSamples = async () => {
+
+
+
+
+ const fetchSamples = async (action) => {
   try {
-    console.log("Sending csrUserId:", id); // Confirm value exists
+    console.log("Sending csrUserId:", id);
+    console.log("Sending staffAction:", action);
 
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
       {
-        params: { csrUserId: id }
+        params: { 
+          csrUserId: id,
+          staffAction: action  // pass action here
+        }
       }
     );
 
@@ -67,6 +78,7 @@ const ShippingSampleArea = () => {
     console.error("Error fetching samples:", error);
   }
 };
+
 
 
   useEffect(() => {
