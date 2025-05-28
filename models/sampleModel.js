@@ -26,8 +26,8 @@ const createSampleTable = () => {
         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
-         quantity_allocated INT,
-         volume DOUBLE,
+        quantity_allocated INT,
+        volume DOUBLE,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50) DEFAULT NULL,
@@ -70,7 +70,7 @@ const getPrice = (name, callback) => {
       console.error("MySQL Query Error:", err);
       callback(err, null);
     } else {
-      
+
       callback(null, results);
     }
   });
@@ -383,7 +383,7 @@ SELECT
           sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
           return sample;
         });
-console.log(updatedResults)
+        console.log(updatedResults)
         callback(null, { data: updatedResults, totalCount });
       });
     });
@@ -416,8 +416,8 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, volume,diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, volume,diseasename, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [

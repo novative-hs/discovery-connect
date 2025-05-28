@@ -407,8 +407,45 @@ const SampleArea = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData)
     e.preventDefault();
+
+    if (!showAdditionalFields) {
+      const {
+        donorID,
+        diseasename,
+        locationids,
+        volume,
+        phoneNumber,
+        TestResult,
+        gender,
+        SampleTypeMatrix,
+        age,
+        ContainerType,
+        logo,
+        QuantityUnit,
+      } = formData;
+
+      if (
+        !donorID ||
+        !diseasename ||
+        !locationids ||
+        !volume ||
+        !phoneNumber ||
+        !TestResult ||
+        !gender ||
+        !SampleTypeMatrix ||
+        !age ||
+        !ContainerType ||
+        !logo ||
+        !QuantityUnit
+      ) {
+        alert("Please fill all the mandatory fields before saving.");
+        return;
+      }
+    }
+
+    console.log(formData); // Optional: for debugging
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
@@ -419,6 +456,7 @@ const SampleArea = () => {
           },
         }
       );
+
       fetchSamples(); // Refresh only current page
       setCurrentPage(1);
 
@@ -426,14 +464,15 @@ const SampleArea = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
 
       // Reset form
-      resetFormData()
+      resetFormData();
       setLogoPreview(false);
-      setShowAdditionalFields(false)
+      setShowAdditionalFields(false);
       setShowAddModal(false);
     } catch (error) {
       console.error("Error adding sample:", error);
     }
   };
+
 
   function bufferToBase64(bufferObj, mimeType = "jpeg") {
     if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
@@ -1758,7 +1797,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   }}
                                 />
                               </div>
-
                             </div>
                             {/* {Column 5} */}
                             <div className="col-md-3">
