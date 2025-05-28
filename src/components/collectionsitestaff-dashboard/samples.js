@@ -1242,7 +1242,37 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   }}
                                 />
                               </div>
-
+ <div className="form-group col-md-6">
+                                <label>Container Type<span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="ContainerType"
+                                  value={formData.ContainerType}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    fontSize: "14px",
+                                    height: "45px",
+                                    backgroundColor: formData.ContainerType
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
+                                       borderColor: !formData.ContainerType
+                                        ? "#dc3545"
+                                        : "#ced4da",
+                                        borderWidth:2,
+                                    color: "black",
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                    Select Container Type
+                                  </option>
+                                  {containertypeNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">

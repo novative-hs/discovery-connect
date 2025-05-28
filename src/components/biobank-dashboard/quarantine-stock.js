@@ -56,7 +56,7 @@ const BioBankSampleArea = () => {
   ];
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
-    { label: "Packe size", key: "packsize" },
+    { label: "Volumn", key: "packsize" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },

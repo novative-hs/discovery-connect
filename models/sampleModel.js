@@ -61,6 +61,23 @@ const createSampleTable = () => {
     }
   });
 };
+const getPrice = (name, callback) => {
+  console.log("Fetching price for:", name); // Add this
+  const query = 'SELECT price FROM sample WHERE diseasename = ?';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } else {
+      
+      callback(null, results);
+    }
+  });
+};
+
+
+
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
@@ -366,7 +383,7 @@ SELECT
           sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
           return sample;
         });
-
+console.log(updatedResults)
         callback(null, { data: updatedResults, totalCount });
       });
     });
@@ -645,5 +662,6 @@ module.exports = {
   updateSample,
   updateSampleStatus,
   deleteSample,
-  updateQuarantineSamples
+  updateQuarantineSamples,
+  getPrice
 };
