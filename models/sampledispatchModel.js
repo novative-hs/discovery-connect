@@ -184,10 +184,6 @@ const getSampleLost = (userId, page, pageSize, searchField, searchValue, callbac
 };
 
 
-
-
-
-
 // Function to transfer sample 
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
   const {

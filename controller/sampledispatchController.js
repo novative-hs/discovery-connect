@@ -52,8 +52,6 @@ const getSampleLost = (req, res) => {
   );
 };
 
-
-
 // Controller to create a new sample dispatch
 const createSampleDispatch = (req, res) => {
   const { id } = req.params; // sampleID
@@ -70,19 +68,18 @@ const createSampleDispatch = (req, res) => {
   } = req.body;
   const parsedQuantity = parseInt(Quantity, 10);
 
-   const dispatchData = {
-                TransferFrom,
-                TransferTo,
-                dispatchVia,
-                dispatcherName,
-                dispatchReceiptNumber,
-                Quantity: parsedQuantity,
-                status: "In Transit",
-              };
-    
+  const dispatchData = {
+    TransferFrom,
+    TransferTo,
+    dispatchVia,
+    dispatcherName,
+    dispatchReceiptNumber,
+    Quantity: parsedQuantity,
+    status: "In Transit",
+  };
 
   if (reason && Dispatch_id) {
-    const status="Lost";
+    const status = "Lost";
 
     const dispatchQuery = `
    UPDATE sampledispatch
@@ -91,7 +88,6 @@ WHERE sampleID = ? AND
 id = ? AND
 TransferTo = ?;
 `;
-
 
     mysqlConnection.query(
       dispatchQuery,
@@ -103,7 +99,7 @@ TransferTo = ?;
         TransferTo,
       ],
       (err, result) => {
-        
+
         if (err) {
           console.error("Error dispatching sample:", err);
           return res.status(500).json({ error: "Error dispatching sample" });
@@ -114,19 +110,18 @@ TransferTo = ?;
       }
     );
   }
-  if(isReturn){
-     sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
-        
-        if (insertErr) {
-          console.error("Error dispatching sample:", err);
-          return res.status(500).json({ error: "Error dispatching sample" });
-        }
-        return res
-          .status(200)
-          .json({ message: "Sample status update successfully" });
-      }
-    );
+  if (isReturn) {
+    sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
 
+      if (insertErr) {
+        console.error("Error dispatching sample:", err);
+        return res.status(500).json({ error: "Error dispatching sample" });
+      }
+      return res
+        .status(200)
+        .json({ message: "Sample status update successfully" });
+    }
+    );
 
   }
   else {
@@ -143,7 +138,6 @@ TransferTo = ?;
         .json({ error: "All required fields must be provided" });
     }
 
-    
     if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
       return res
         .status(400)
@@ -159,66 +153,58 @@ TransferTo = ?;
           .status(500)
           .json({ error: "Database error fetching sample" });
       }
-
       if (results.length === 0) {
         return res.status(404).json({ error: "Sample not found" });
       }
-
       const currentQuantity = parseInt(results[0].currentQuantity, 10);
 
-            
+      // ✅ This is a new dispatch (with quantity deduction)
+      if (currentQuantity < parsedQuantity) {
+        return res
+          .status(400)
+          .json({ error: "Insufficient quantity for dispatch" });
+      }
+      sampleDispatchModel.createSampleDispatch(
+        dispatchData,
+        id,
+        (insertErr, result) => {
+          if (insertErr) {
+            console.error(
+              "❌ Failed to insert dispatch record:",
+              insertErr
+            );
+            return res
+              .status(500)
+              .json({ error: "Failed to insert dispatch record" });
+          }
 
-              
-                // ✅ This is a new dispatch (with quantity deduction)
-                if (currentQuantity < parsedQuantity) {
-                  return res
-                    .status(400)
-                    .json({ error: "Insufficient quantity for dispatch" });
-                }
-
-                sampleDispatchModel.createSampleDispatch(
-                  dispatchData,
-                  id,
-                  (insertErr, result) => {
-                    if (insertErr) {
-                      console.error(
-                        "❌ Failed to insert dispatch record:",
-                        insertErr
-                      );
-                      return res
-                        .status(500)
-                        .json({ error: "Failed to insert dispatch record" });
-                    }
-
-                    const updateSample = `UPDATE sample SET Quantity = Quantity - ? WHERE id = ?`;
-                    mysqlConnection.query(
-                      updateSample,
-                      [parsedQuantity, id],
-                      (updateErr) => {
-                        if (updateErr) {
-                          console.error(
-                            "❌ Sample quantity update failed:",
-                            updateErr
-                          );
-                          return res
-                            .status(500)
-                            .json({ error: "Sample quantity update failed" });
-                        }
-
-                        console.log(
-                          "✅ New Dispatch created & Quantity updated in `sample` table."
-                        );
-                        return res.status(201).json({
-                          message: "New dispatch created and quantity updated",
-                          dispatchId: result.insertId,
-                        });
-                      }
-                    );
-                  }
+          const updateSample = `UPDATE sample SET Quantity = Quantity - ? WHERE id = ?`;
+          mysqlConnection.query(
+            updateSample,
+            [parsedQuantity, id],
+            (updateErr) => {
+              if (updateErr) {
+                console.error(
+                  "❌ Sample quantity update failed:",
+                  updateErr
                 );
-              
+                return res
+                  .status(500)
+                  .json({ error: "Sample quantity update failed" });
+              }
+              console.log(
+                "✅ New Dispatch created & Quantity updated in `sample` table."
+              );
+              return res.status(201).json({
+                message: "New dispatch created and quantity updated",
+                dispatchId: result.insertId,
+              });
             }
           );
+        }
+      );
+    }
+    );
   }
 };
 

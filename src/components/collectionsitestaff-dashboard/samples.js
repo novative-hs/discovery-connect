@@ -205,6 +205,7 @@ const SampleArea = () => {
     { name: "diagnosistestparameter", setter: setDiagnosisTestParameterNames },
     { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
   ];
+
   const handleTransferClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -222,7 +223,6 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-
   useEffect(() => {
     const storedUser = getsessionStorage("user");
     fetchSamples(currentPage, itemsPerPage, {
@@ -1328,7 +1328,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   )}
                                 </div>
                               </div>
-
                             </div>
                           </div>
                         )}
@@ -1343,7 +1342,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="ethnicity"
                                   value={formData.ethnicity}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1369,7 +1367,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="samplecondition"
                                   value={formData.samplecondition}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1395,7 +1392,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="storagetemp"
                                   value={formData.storagetemp}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1430,7 +1426,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     setSelectedCountry(null);
                                   }}
                                   onFocus={() => setShowCountryDropdown(true)}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1495,7 +1490,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   </ul>
                                 )}
                               </div>
-
                             </div>
                             {/* {Column 3} */}
                             <div className="col-md-3">
@@ -1517,7 +1511,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         formData.SmokingStatus === "Smoker"
                                       }
                                       onChange={handleInputChange}
-                                      required
                                       style={{ transform: "scale(0.9)" }} // Reduce radio button size
                                     />
                                     <label
@@ -1537,8 +1530,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         formData.SmokingStatus === "Non-Smoker"
                                       }
                                       onChange={handleInputChange}
-                                      required
-                                      style={{ transform: "scale(0.9)" }} // Reduce radio button size
+                                      style={{ transform: "scale(0.9)" }}
                                     />
                                     <label
                                       className="form-check-label"
@@ -1564,7 +1556,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         formData.AlcoholOrDrugAbuse === "Yes"
                                       }
                                       onChange={handleInputChange}
-                                      required
                                       style={{ transform: "scale(0.9)" }}
                                     />
                                     <label
@@ -1584,7 +1575,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         formData.AlcoholOrDrugAbuse === "No"
                                       }
                                       onChange={handleInputChange}
-                                      required
                                       style={{ transform: "scale(0.9)" }}
                                     />
                                     <label
@@ -1605,7 +1595,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="TestResultUnit"
                                   value={formData.InfectiousDiseaseTesting}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1643,7 +1632,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         "Positive"
                                       }
                                       onChange={handleInputChange}
-                                      required
                                       style={{ transform: "scale(0.9)" }}
                                     />
                                     <label
@@ -1664,7 +1652,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         "Negative"
                                       }
                                       onChange={handleInputChange}
-                                      required
                                       style={{ transform: "scale(0.9)" }}
                                     />
                                     <label
@@ -1676,6 +1663,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   </div>
                                 </div>
                               </div>
+                            </div>
+                            {/* Column 4 */}
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Freeze Thaw Cycles</label>
                                 <select
@@ -1684,7 +1674,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="FreezeThawCycles"
                                   value={formData.FreezeThawCycles}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
@@ -1711,7 +1700,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   value={formData.DateOfSampling}
                                   onChange={handleInputChange}
                                   max={new Date().toISOString().split("T")[0]} // Set max to today’s date
-                                  required
                                   title="This is the sample taken date from the donor"
                                   style={{
                                     fontSize: "14px",
@@ -1723,9 +1711,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   }}
                                 />
                               </div>
-                            </div>
-                            {/* Column 4 */}
-                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Concurrent Medical Conditions</label>
                                 <select
@@ -1733,7 +1718,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="ConcurrentMedicalConditions"
                                   value={formData.ConcurrentMedicalConditions}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1763,7 +1747,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="ConcurrentMedications"
                                   value={formData.ConcurrentMedications}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
@@ -1775,6 +1758,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   }}
                                 />
                               </div>
+
+                            </div>
+                            {/* {Column 5} */}
+                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Test Method</label>
                                 <select
@@ -1782,7 +1769,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="TestMethod"
                                   value={formData.TestMethod}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1808,7 +1794,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="TestKitManufacturer"
                                   value={formData.TestKitManufacturer}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1830,9 +1815,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   )}
                                 </select>
                               </div>
-                            </div>
-                            {/* {Column 5} */}
-                            <div className="col-md-3">
                               <div className="form-group">
                                 <label>Test System</label>
                                 <select
@@ -1840,7 +1822,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="TestSystem"
                                   value={formData.TestSystem}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
@@ -1866,7 +1847,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   name="TestSystemManufacturer"
                                   value={formData.TestSystemManufacturer}
                                   onChange={handleInputChange}
-                                  required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
