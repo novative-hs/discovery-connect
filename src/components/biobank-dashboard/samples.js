@@ -149,6 +149,7 @@ const [selectedSampleUnit,setSelectedSampleUnit]=useState('')
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null); // <-- For image preview
 
+  const[samplePrice,setSamplePrice]=useState([])
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -615,7 +616,7 @@ const getSamplePrice = async (selectedSampleName) => {
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
     setSelectedSampleName(sample.diseasename)
-    setSelectedSampleVolumn(sample.packsize)
+    setSelectedSampleVolumn(sample.volume)
 
     setEditSample(sample);
     setShowEditModal(true);
@@ -680,9 +681,9 @@ const getSamplePrice = async (selectedSampleName) => {
   getSamplePrice(sample.diseasename);
   setSelectedSampleForPricing(sample);
   setSelectedSampleName(sample.diseasename);
-  setSelectedSampleVolumn(sample.packsize);
+  setSelectedSampleVolumn(sample.volume);
 setSelectedSampleUnit(sample.QuantityUnit)
-  setPrice(''); // <-- Clear price, so user selects or types manually
+  setPrice(sample.price || ''); // <-- Clear price, so user selects or types manually
   setCurrency(sample.currency || '');
 
   setShowPriceModal(true);

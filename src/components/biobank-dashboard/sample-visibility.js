@@ -190,7 +190,7 @@ const BioBankSampleArea = () => {
   const openEditModal = (sample) => {
     setSelectedSampleName(sample.diseasename)
     setSelectedSampleUnit(sample.QuantityUnit)
-    setSelectedSampleVolumn(sample.packsize)
+    setSelectedSampleVolumn(sample.volume)
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setFormData({

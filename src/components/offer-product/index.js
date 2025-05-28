@@ -223,25 +223,25 @@ const OfferPopularProduct = () => {
                       {[
                         { label: "Sample Name", value: selectedProduct.diseasename },
                         {
-  label: "Location ID",
-  value: [
-    selectedProduct.room_number ? `Room Number: ${selectedProduct.room_number}` : null,
-    selectedProduct.freezer_id ? `Freezer Id: ${selectedProduct.freezer_id}` : null,
-    selectedProduct.box_id ? `Box: ${selectedProduct.box_id}` : null,
-  ]
-    .filter(Boolean)
-    .join(" | ") || "----",
-},
+                          label: "Location ID",
+                          value: [
+                            selectedProduct.room_number ? `Room Number: ${selectedProduct.room_number}` : null,
+                            selectedProduct.freezer_id ? `Freezer Id: ${selectedProduct.freezer_id}` : null,
+                            selectedProduct.box_id ? `Box: ${selectedProduct.box_id}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" | ") || "----",
+                        },
                         { label: "Age", value: selectedProduct.age },
                         { label: "Gender", value: selectedProduct.gender },
                         { label: "Phone Number", value: selectedProduct.phoneNumber },
                         {
-  label: "Volume",
-  value:
-    selectedProduct.packsize && selectedProduct.QuantityUnit
-      ? `${selectedProduct.packsize} ${selectedProduct.QuantityUnit}`
-      : selectedProduct.packsize || selectedProduct.QuantityUnit || "----",
-},
+                          label: "Volume",
+                          value:
+                            selectedProduct.volume && selectedProduct.QuantityUnit
+                              ? `${selectedProduct.volume} ${selectedProduct.QuantityUnit}`
+                              : selectedProduct.volume || selectedProduct.QuantityUnit || "----",
+                        },
                         { label: "Container Type", value: selectedProduct.ContainerType },
                         { label: "Test Result", value: selectedProduct.TestResult },
                         { label: "Test Result Unit", value: selectedProduct.TestResultUnit },
@@ -257,7 +257,7 @@ const OfferPopularProduct = () => {
                       {/* Optional Fields */}
                       {[
                         { label: "Sample Type Matrix", value: selectedProduct.SampleTypeMatrix },
-                        
+
                         { label: "Sample Condition", value: selectedProduct.samplecondition },
                         { label: "Storage Temp", value: selectedProduct.storagetemp },
                         { label: "Freeze Thaw Cycles", value: selectedProduct.FreezeThawCycles },
