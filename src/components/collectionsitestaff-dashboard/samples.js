@@ -53,17 +53,17 @@ const SampleArea = () => {
     { label: "Volume", key: "volume" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
-    { label: "Phone Number", key: "phoneNumber" },
+    { label: "Test Result & Unit", key: "TestResult" },
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
@@ -721,33 +721,32 @@ const SampleArea = () => {
     }
   };
 
-  const handleTestResultChange = (field, value) => {
-    setFormData((prev) => {
-      const updated = {
-        ...prev,
-        [field]: value,
-        ...(field === "TestResult" && value !== "Value" ? { TestValue: "" } : {}),
-      };
+  // const handleTestResultChange = (field, value) => {
+  //   setFormData((prev) => {
+  //     const updated = {
+  //       ...prev,
+  //       [field]: value,
+  //       ...(field === "TestResult" && value !== "Value" ? { TestValue: "" } : {}),
+  //     };
 
-      // Determine sign and value
-      let sign = "";
-      let val = "";
+  //     // Determine sign and value
+  //     let sign = "";
+  //     let val = "";
 
-      if (updated.TestResult === "Positive") {
-        sign = "Positive";
-      } else if (updated.TestResult === "Negative") {
-        sign = "Negative";
-      } else if (updated.TestResult === "Value") {
-        val = updated.TestValue || "";
-      }
+  //     if (updated.TestResult === "Positive") {
+  //       sign = "Positive";
+  //     } else if (updated.TestResult === "Negative") {
+  //       sign = "Negative";
+  //     } else if (updated.TestResult === "Value") {
+  //       val = updated.TestValue || "";
+  //     }
 
-      return {
-        ...updated,
-        TestResult: sign || val,
-      };
-    });
-  };
-
+  //     return {
+  //       ...updated,
+  //       TestResult: sign || val,
+  //     };
+  //   });
+  // };
 
 
   return (
@@ -869,6 +868,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                               return `${sample.volume} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
+                            } else if (key === "TestResult") {
+                              return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                             } else {
                               return sample[key] || "----";
                             }
