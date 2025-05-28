@@ -91,7 +91,7 @@ const ProductModal = ({ product }) => {
                     <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
                     <p><strong>Container Type:</strong> {product.ContainerType}</p>
                     <p><strong>Diagnosis Test Parameter:</strong> {product.DiagnosisTestParameter}</p>
-                    <p><strong>Volumn:</strong> {product.volume} {product.QuantityUnit}</p>
+                    <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
                     <p><strong>Test Result/(unit):</strong> {product.TestResult} {product.TestResultUnit}</p>
                     <p><strong>Status:</strong> {product.status}</p>
                   </div>
@@ -146,7 +146,7 @@ const ProductModal = ({ product }) => {
                   <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
                   <p><strong>Container Type:</strong> {product.ContainerType}</p>
                   <p><strong>Diagnosis Test Parameter:</strong> {product.DiagnosisTestParameter}</p>
-                  <p><strong>Volumn:</strong> {product.volume} {product.QuantityUnit}</p>
+                  <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
                   <p><strong>Test Result/(unit):</strong> {product.TestResult} {product.TestResultUnit}</p>
                   <p><strong>Status:</strong> {product.status}</p>
                 </div>

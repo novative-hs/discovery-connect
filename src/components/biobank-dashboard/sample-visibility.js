@@ -19,9 +19,9 @@ const BioBankSampleArea = () => {
     sample_visibility: "",
     added_by: id,
   });
-    const [selectedSampleName,setSelectedSampleName]=useState('')
-  const [selectedSampleVolumn,setSelectedSampleVolumn]=useState('')
-  const [selectedSampleUnit,setSelectedSampleUnit]=useState('')
+  const [selectedSampleName, setSelectedSampleName] = useState('')
+  const [selectedSampleVolume, setSelectedSampleVolume] = useState('')
+  const [selectedSampleUnit, setSelectedSampleUnit] = useState('')
   const [showModal, setShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
@@ -190,7 +190,7 @@ const BioBankSampleArea = () => {
   const openEditModal = (sample) => {
     setSelectedSampleName(sample.diseasename)
     setSelectedSampleUnit(sample.QuantityUnit)
-    setSelectedSampleVolumn(sample.volume)
+    setSelectedSampleVolume(sample.volume)
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setFormData({
@@ -358,7 +358,7 @@ const BioBankSampleArea = () => {
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">
-                       <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolumn}{selectedSampleUnit}</h5>
+                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolume}{selectedSampleUnit}</h5>
                     </h5>
                     <button
                       type="button"
