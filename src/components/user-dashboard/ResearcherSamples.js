@@ -10,7 +10,7 @@ const SampleArea = () => {
    const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
     { label: "Quantity", key: "quantity" },
-    { label: "Pack size", key: "packsize" },
+    { label: "Volume", key: "volume" },
     { label: "Price", key: "price" },
     { label: "Date Of Collection", key: "DateOfCollection" },
         { label: "Test Result", key: "TestResult" },
@@ -267,12 +267,12 @@ const SampleArea = () => {
     );
   }
 
-  // ✅ Custom logic for packsize + QuantityUnit
-  if (key === "packsize") {
+  // ✅ Custom logic for volume + QuantityUnit
+  if (key === "volume") {
     return (
       <td key={index}>
-        {sample.packsize
-          ? `${sample.packsize} ${sample.QuantityUnit || ""}`
+        {sample.volume
+          ? `${sample.volume} ${sample.QuantityUnit || ""}`
           : "----"}
       </td>
     );

@@ -102,12 +102,12 @@ const createBiobankSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, packsize,diseasename, phoneNumber,age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, volume, diseasename, phoneNumber,age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.packsize, data.diseasename,data.phoneNumber, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.volume, data.diseasename,data.phoneNumber, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -191,20 +191,20 @@ const updateBiobankSample = (id, data, callback) => {
 
   const query = `
     UPDATE sample
-    SET room_number = ?, freezer_id = ?, box_id = ?, packsize=?,diseasename = ?, age = ?, phoneNumber= ?, gender = ?, ethnicity = ?, samplecondition = ?,
+    SET room_number = ?, freezer_id = ?, box_id = ?, volume=?,diseasename = ?, age = ?, phoneNumber= ?, gender = ?, ethnicity = ?, samplecondition = ?,
         storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, price = ?, SamplePriceCurrency = ?,
         quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, 
-        InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, 
+        InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfSampling = ?, 
         ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?,
         TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
     WHERE id = ?
   `;
 
   const values = [
-    room_number, freezer_id, box_id,data.packsize, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
+    room_number, freezer_id, box_id,data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
     data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse,
-    data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling,
     data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult,
     data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer,
     data.status, data.logo, id

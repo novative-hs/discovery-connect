@@ -77,7 +77,7 @@ mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
     s.InfectiousDiseaseTesting,
     s.InfectiousDiseaseResult,
     s.FreezeThawCycles,
-    s.DateOfCollection,
+    s.DateOfSampling,
     s.SampleTypeMatrix,
     s.SmokingStatus
     FROM discoveryconnect.samplereturn sr

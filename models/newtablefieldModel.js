@@ -26,11 +26,11 @@ const tablesAndColumns = [
     table: "sample",
     columnsToAdd: [
       {
-        column: "packsize",
+        column: "volume",
         type: "DOUBLE",
         nullable: true,
       }
-    ]
+    ],
   },
   {
     table: "registrationadmin_history",
@@ -45,12 +45,12 @@ const tablesAndColumns = [
   },
 
   {
-    table:"csr",
-    columnsToAdd:[
+    table: "csr",
+    columnsToAdd: [
       {
-        column:"permission",
-        type:"VARCHAR(15)",
-        nullable:true,
+        column: "permission",
+        type: "VARCHAR(15)",
+        nullable: true,
       }
     ]
 
@@ -339,10 +339,16 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
 
-    // ✅ Rename 'samplename' to 'diseasename'
+    // Rename 'packsize' to 'volume'
+    renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
+
+    // Rename 'DateOfCollection' to 'DateOfSampling'
+    renameColumn("sample", "DateOfCollection", "DateOfSampling", "VARCHAR(255)");
+
+    // Rename 'samplename' to 'diseasename'
     renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
 
-    // 🔁 RENAME sample_status TO sample_visibility
+    // RENAME sample_status TO sample_visibility
     renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
 
     updateEnumColumn("collectionsitestaff", "permission", [

@@ -25,7 +25,7 @@ const SampleArea = () => {
   const [selectedSample, setSelectedSample] = useState(null);
   const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
-    { label: "Pack size", key: "packsize" },
+    { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
@@ -63,7 +63,7 @@ const SampleArea = () => {
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
     FreezeThawCycles: "",
-    DateOfCollection: "",
+    DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
@@ -94,7 +94,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
@@ -143,7 +143,7 @@ const SampleArea = () => {
         InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
         status: sample.status,
         FreezeThawCycles: sample.FreezeThawCycles,
-        DateOfCollection: sample.DateOfCollection,
+        DateOfSampling: sample.DateOfSampling,
         ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
         ConcurrentMedications: sample.ConcurrentMedications,
         DiagnosisTestParameter: sample.DiagnosisTestParameter,
@@ -322,8 +322,8 @@ const SampleArea = () => {
         {sample.diseasename || "----"}
       </span>
     );
-  } else if (key === "packsize") {
-    content = `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`;
+  } else if (key === "volume") {
+    content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
   } else {
     content = sample[key] || "----";
   }

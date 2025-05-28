@@ -18,33 +18,33 @@ const createSampleTable = () => {
         age INT,
         gender VARCHAR(10),
         phoneNumber VARCHAR(15),
-        ethnicity VARCHAR(50),
-        samplecondition VARCHAR(100),
-        storagetemp VARCHAR(255),
+        ethnicity VARCHAR(50) DEFAULT NULL,
+        samplecondition VARCHAR(100) DEFAULT NULL,
+        storagetemp VARCHAR(255) DEFAULT NULL,
         ContainerType VARCHAR(50),
-        CountryOfCollection VARCHAR(50),
+        CountryOfCollection VARCHAR(50) DEFAULT NULL,
         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
          quantity_allocated INT,
-         packsize DOUBLE,
+         volume DOUBLE,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
-        SmokingStatus VARCHAR(50),
-        AlcoholOrDrugAbuse VARCHAR(50),
-        InfectiousDiseaseTesting VARCHAR(100),
-        InfectiousDiseaseResult VARCHAR(100),
-        FreezeThawCycles VARCHAR(50), 
-        DateOfCollection VARCHAR(50),
-        ConcurrentMedicalConditions VARCHAR(50), 
-        ConcurrentMedications VARCHAR(50),
+        SmokingStatus VARCHAR(50) DEFAULT NULL,
+        AlcoholOrDrugAbuse VARCHAR(50) DEFAULT NULL,
+        InfectiousDiseaseTesting VARCHAR(100) DEFAULT NULL,
+        InfectiousDiseaseResult VARCHAR(100) DEFAULT NULL,
+        FreezeThawCycles VARCHAR(50) DEFAULT NULL, 
+        DateOfSampling VARCHAR(50) DEFAULT NULL,
+        ConcurrentMedicalConditions VARCHAR(50) DEFAULT NULL, 
+        ConcurrentMedications VARCHAR(50) DEFAULT NULL,
         DiagnosisTestParameter VARCHAR(50),
         TestResult VARCHAR(100),
         TestResultUnit VARCHAR(20),
-        TestMethod VARCHAR(100),
-        TestKitManufacturer VARCHAR(50),
-        TestSystem VARCHAR(50),
-        TestSystemManufacturer VARCHAR(50),
+        TestMethod VARCHAR(100) DEFAULT NULL,
+        TestKitManufacturer VARCHAR(50) DEFAULT NULL,
+        TestSystem VARCHAR(50) DEFAULT NULL,
+        TestSystemManufacturer VARCHAR(50) DEFAULT NULL,
         sample_visibility ENUM('Public', 'Private') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
@@ -230,7 +230,7 @@ const getResearcherSamples = (userId, callback) => {
   sm.InfectiousDiseaseTesting,
   sm.InfectiousDiseaseResult,
   sm.FreezeThawCycles,
-  sm.DateOfCollection,
+  sm.DateOfSampling,
   sm.ConcurrentMedicalConditions,
   sm.ConcurrentMedications,
   sm.DiagnosisTestParameter,
@@ -399,12 +399,12 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, packsize,diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, volume,diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.packsize, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -453,24 +453,24 @@ const updateSample = (id, data, callback) => {
   }
 
 
-  // Handle packsize: convert empty string to null
-  const packsize = data.packsize === '' ? null : data.packsize;
+  // Handle volume: convert empty string to null
+  const volume = data.volume === '' ? null : data.volume;
 
   // Log for debugging
   console.log("Updating sample ID:", id);
-  console.log("Packsize value:", packsize);
+  console.log("Volume value:", volume);
 
   const query = `
     UPDATE sample
-    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, packsize = ?, diseasename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
+    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, volume = ?, diseasename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfSampling = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
     WHERE id = ?
   `;
 
   const values = [
-    data.donorID, room_number, freezer_id, box_id, packsize, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
+    data.donorID, room_number, freezer_id, box_id, volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
-    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling,
     data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];

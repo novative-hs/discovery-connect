@@ -55,10 +55,10 @@ const createBiobankSample = (req, res) => {
   sampleData.logo = file?.buffer;
 
   const today = new Date();
-  const dateOfCollection = new Date(sampleData.DateOfCollection);
+  const dateOfCollection = new Date(sampleData.DateOfSampling);
 
   if (dateOfCollection >= today) {
-    return res.status(400).json({ error: "DateOfCollection must be before today" });
+    return res.status(400).json({ error: "DateOfSampling must be before today" });
   }
 
 
@@ -101,8 +101,8 @@ const updateBiobankSample = (req, res) => {
   sampleData.logo = Buffer.from(sampleData.logo.data);
 }
   // Handle Date format
-  if (sampleData.DateOfCollection) {
-    sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
+  if (sampleData.DateOfSampling) {
+    sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
 
   // Handle logo (priority: uploaded file > body)

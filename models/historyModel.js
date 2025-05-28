@@ -211,7 +211,7 @@ const getSampleHistory = (sampleId, callback) => {
       s.InfectiousDiseaseTesting,
       s.InfectiousDiseaseResult,
       s.FreezeThawCycles,
-      s.DateOfCollection,
+      s.DateOfSampling,
       s.ConcurrentMedicalConditions,
       s.ConcurrentMedications,
       s.DiagnosisTestParameter,

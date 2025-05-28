@@ -40,27 +40,21 @@ const BioBankSampleArea = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-
     { label: "Country of Collection", key: "CountryOfCollection" },
-
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
 
   ];
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
-    { label: "Packe size", key: "packsize" },
+    { label: "Packe size", key: "volume" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
@@ -277,8 +271,8 @@ const BioBankSampleArea = () => {
               >
                 {sample.diseasename || "----"}
               </span>
-            ) : key === "packsize" ? (
-              `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
+            ) : key === "volume" ? (
+              `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
             ) : (
               sample[key] || "----"
             )}

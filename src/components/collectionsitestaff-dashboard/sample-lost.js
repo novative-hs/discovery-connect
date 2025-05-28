@@ -20,12 +20,11 @@ const SampleLost = () => {
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Phone Number", key: "phoneNumber" },
-    { label: "Pack size", key: "packsize" },
-
+    { label: "Volume", key: "volume" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
-    const fieldsToShowInOrder = [
+  const fieldsToShowInOrder = [
     { label: "Sample Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -44,18 +43,12 @@ const SampleLost = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-
     { label: "Country of Collection", key: "CountryOfCollection" },
-
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Date Of Collection", key: "DateOfSampling" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
 
@@ -68,8 +61,8 @@ const SampleLost = () => {
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-const [selectedSample, setSelectedSample] = useState(null);
-const [showModal, setShowModal] = useState(false);
+  const [selectedSample, setSelectedSample] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   // Fetch samples from backend when component loads
   useEffect(() => {
     const storedUser = getsessionStorage("user");
@@ -138,7 +131,7 @@ const [showModal, setShowModal] = useState(false);
     setSelectedSample(sample);
     setShowModal(true);
   };
- const closeModal = () => {
+  const closeModal = () => {
     setSelectedSample(null);
     setShowModal(false);
   };
@@ -227,54 +220,54 @@ const [showModal, setShowModal] = useState(false);
             focusPage={currentPage}
           />
         )}
-         <Modal
-        show={showModal}
-        onHide={closeModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}
-      >
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger">
-            {" "}
-            Sample Details
-          </Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body
-          style={{ maxHeight: "500px", overflowY: "auto" }}
-          className="bg-light rounded"
+        <Modal
+          show={showModal}
+          onHide={closeModal}
+          size="lg"
+          centered
+          backdrop="static"
+          keyboard={false}
         >
-          {selectedSample ? (
-            <div className="p-3">
-              <div className="row g-3">
-                {fieldsToShowInOrder.map(({ key, label }) => {
-                  const value = selectedSample[key];
-                  if (value === undefined) return null;
+          <Modal.Header closeButton className="border-0">
+            <Modal.Title className="fw-bold text-danger">
+              {" "}
+              Sample Details
+            </Modal.Title>
+          </Modal.Header>
 
-                  return (
-                    <div className="col-md-6" key={key}>
-                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">
-                          {label}
-                        </span>
-                        <span className="fs-6 text-dark">
-                          {value?.toString() || "----"}
-                        </span>
+          <Modal.Body
+            style={{ maxHeight: "500px", overflowY: "auto" }}
+            className="bg-light rounded"
+          >
+            {selectedSample ? (
+              <div className="p-3">
+                <div className="row g-3">
+                  {fieldsToShowInOrder.map(({ key, label }) => {
+                    const value = selectedSample[key];
+                    if (value === undefined) return null;
+
+                    return (
+                      <div className="col-md-6" key={key}>
+                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                          <span className="text-muted small fw-bold mb-1">
+                            {label}
+                          </span>
+                          <span className="fs-6 text-dark">
+                            {value?.toString() || "----"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center text-muted p-3">No details to show</div>
-          )}
-        </Modal.Body>
+            ) : (
+              <div className="text-center text-muted p-3">No details to show</div>
+            )}
+          </Modal.Body>
 
-        <Modal.Footer className="border-0"></Modal.Footer>
-      </Modal>
+          <Modal.Footer className="border-0"></Modal.Footer>
+        </Modal>
       </div>
     </section>
   );

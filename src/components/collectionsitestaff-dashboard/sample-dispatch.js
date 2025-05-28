@@ -24,7 +24,7 @@ const SampleDispatchArea = () => {
   const [showModal, setShowModal] = useState(false);
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
-    { label: "Packsize", key: "packsize" },
+    { label: "Volume", key: "volume" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
     { label: "Status", key: "status" },
@@ -53,7 +53,7 @@ const SampleDispatchArea = () => {
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
@@ -74,7 +74,7 @@ const SampleDispatchArea = () => {
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
     FreezeThawCycles: "",
-    DateOfCollection: "",
+    DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
@@ -332,70 +332,70 @@ const SampleDispatchArea = () => {
                   </th>
                 </tr>
               </thead>
-             <tbody>
-  {currentData.length > 0 ? (
-    currentData.map((sample) => (
-      <tr key={sample.id}>
-        {tableHeaders.map(({ key }, index) => (
-          <td
-            key={index}
-            className={
-              key === "price"
-                ? "text-end"
-                : key === "diseasename"
-                ? ""
-                : "text-center text-truncate"
-            }
-            style={{ maxWidth: "150px" }}
-          >
-            {key === "diseasename" ? (
-              <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                role="button"
-                title="Sample Details"
-                onClick={() => openModal(sample)}
-                style={{
-                  cursor: "pointer",
-                  transition: "color 0.2s",
-                }}
-                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                onMouseOut={(e) => (e.target.style.color = "")}
-              >
-                {sample.diseasename || "----"}
-              </span>
-            ) : key === "packsize" ? (
-              `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
-            ) : (
-              sample[key] || "----"
-            )}
-          </td>
-        ))}
-        <td>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              gap: "3px",
-            }}
-          >
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => handleTransferClick(sample)}
-            >
-              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-            </button>
-          </div>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={tableHeaders.length + 1} className="text-center">
-        No samples available
-      </td>
-    </tr>
-  )}
-</tbody>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((sample) => (
+                    <tr key={sample.id}>
+                      {tableHeaders.map(({ key }, index) => (
+                        <td
+                          key={index}
+                          className={
+                            key === "price"
+                              ? "text-end"
+                              : key === "diseasename"
+                                ? ""
+                                : "text-center text-truncate"
+                          }
+                          style={{ maxWidth: "150px" }}
+                        >
+                          {key === "diseasename" ? (
+                            <span
+                              className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                              role="button"
+                              title="Sample Details"
+                              onClick={() => openModal(sample)}
+                              style={{
+                                cursor: "pointer",
+                                transition: "color 0.2s",
+                              }}
+                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                              onMouseOut={(e) => (e.target.style.color = "")}
+                            >
+                              {sample.diseasename || "----"}
+                            </span>
+                          ) : key === "volume" ? (
+                            `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                          ) : (
+                            sample[key] || "----"
+                          )}
+                        </td>
+                      ))}
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-around",
+                            gap: "3px",
+                          }}
+                        >
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleTransferClick(sample)}
+                          >
+                            <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={tableHeaders.length + 1} className="text-center">
+                      No samples available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
 
             </table>
           </div>
