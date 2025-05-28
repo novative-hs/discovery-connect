@@ -27,7 +27,9 @@ const BioBankSampleArea = () => {
   const [selectedSampleForPricing, setSelectedSampleForPricing] = useState(null);
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('');
-
+  const [selectedSampleName,setSelectedSampleName]=useState('')
+const [selectedSampleVolumn,setSelectedSampleVolumn]=useState('')
+const [selectedSampleUnit,setSelectedSampleUnit]=useState('')
   const [filtertotal, setfiltertotal] = useState(null);
   const [quarantineComment, setQuarantineComment] = useState("");
   const [commentError, setCommentError] = useState("");
@@ -254,6 +256,28 @@ const BioBankSampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
+const getSamplePrice = async (selectedSampleName) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getprice/${selectedSampleName}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch price");
+    }
+
+    const result = await response.json();
+    // Filter out null prices
+    const validPrices = result.data.filter(
+      (item) => item.price !== null && item.price !== 0
+    );
+
+    setSamplePrice(validPrices); // Only non-null prices will be set
+  } catch (error) {
+    console.error("Error fetching site names:", error);
+  }
+};
+
+
 
 
   useEffect(() => {
@@ -275,6 +299,13 @@ const BioBankSampleArea = () => {
 
     fetchCollectionSiteNames();
   }, [selectedSampleId]);
+
+  useEffect(() => {
+  if (selectedSampleName) {
+    console.log("Fetching price for:", selectedSampleName);
+    getSamplePrice(selectedSampleName);
+  }
+}, [selectedSampleName]);
 
   // Sample Price Filter
   useEffect(() => {
@@ -583,6 +614,9 @@ const BioBankSampleArea = () => {
 
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
+    setSelectedSampleName(sample.diseasename)
+    setSelectedSampleVolumn(sample.packsize)
+
     setEditSample(sample);
     setShowEditModal(true);
 
@@ -642,12 +676,17 @@ const BioBankSampleArea = () => {
     setSearchCountry(matchedCountry ? matchedCountry.name : "");
   };
 
-  const handlePriceCurrencyClick = (sample) => {
-    setSelectedSampleForPricing(sample);
-    setPrice(sample.price || '');
-    setCurrency(sample.currency || '');
-    setShowPriceModal(true);
-  };
+ const handlePriceCurrencyClick = (sample) => {
+  getSamplePrice(sample.diseasename);
+  setSelectedSampleForPricing(sample);
+  setSelectedSampleName(sample.diseasename);
+  setSelectedSampleVolumn(sample.packsize);
+setSelectedSampleUnit(sample.QuantityUnit)
+  setPrice(''); // <-- Clear price, so user selects or types manually
+  setCurrency(sample.currency || '');
+
+  setShowPriceModal(true);
+};
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -2023,7 +2062,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                 <div className="modal-content">
                   <form onSubmit={handlePriceSubmit}>
                     <div className="modal-header">
-                      <h5 className="modal-title">Set Price & Currency</h5>
+                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolumn}{selectedSampleUnit}</h5>
                       <button
                         type="button"
                         className="close"
@@ -2039,22 +2078,51 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </button>
                     </div>
                     <div className="modal-body">
-                      <div className="form-group">
-                        <label>Price</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                          required
-                          style={{
-                            height: "45px",
-                            fontSize: "14px",
-                            backgroundColor: "#f0f0f0",
-                            color: "black",
-                          }}
-                        />
-                      </div>
+                    <div className="form-group">
+  <label>Price</label>
+  <select
+    className="form-control"
+    value={price}
+    onChange={(e) => setPrice(e.target.value)}
+    style={{
+      height: "45px",
+      fontSize: "14px",
+      backgroundColor: "#f0f0f0",
+      color: "black",
+      marginBottom: '10px',
+    }}
+  >
+    <option value="" hidden>
+      Select Price (or type below)
+    </option>
+    {samplePrice && samplePrice.length > 0 ? (
+      samplePrice.map((p, idx) => (
+        <option key={idx} value={p.price}>
+          {p.price}
+        </option>
+      ))
+    ) : (
+      <option disabled>No prices found</option>
+
+    )}
+  </select>
+
+  <input
+    type="number"
+    className="form-control"
+    placeholder="Or enter new price"
+    value={price}
+    onChange={(e) => setPrice(e.target.value)}
+    required
+    style={{
+      height: "45px",
+      fontSize: "14px",
+      backgroundColor: "#f0f0f0",
+      color: "black",
+    }}
+  />
+</div>
+
                       <div className="form-group">
                         <label>Sample Price Currency</label>
                         <select
