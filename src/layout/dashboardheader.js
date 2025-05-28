@@ -112,8 +112,8 @@ const Header = ({ setActiveTab, activeTab }) => {
       setUserLogo(
         user?.logo?.data
           ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-              "base64"
-            )}`
+            "base64"
+          )}`
           : null
       );
     }
@@ -133,7 +133,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       setActiveTab("update-biobank");
     } else if (userType === "committeemember") {
       setActiveTab("update-committeemember");
-    } 
+    }
     // else if (userType === "collectionsitesstaff") {
     //   setActiveTab("update-collectionsitestaff");
     // } 
@@ -158,27 +158,28 @@ const Header = ({ setActiveTab, activeTab }) => {
   const menuItems =
     userType == "researcher"
       ? [
-          { label: "Book Samples", tab: "Booksamples" },
-          { label: "Sample List", tab: "samples" },
-          { label: "My Order Samples", tab: "my-samples" },
-        ]
+        { label: "Book Samples", tab: "Booksamples" },
+        { label: "Sample List", tab: "samples" },
+        { label: "My Order Samples", tab: "my-samples" },
+      ]
       : userType == "registrationadmin"
-      ? [
+        ? [
           { label: "Profile", tab: "order-info" },
-          { label: "City", tab: "city" },
-          { label: "Country", tab: "country" },
-          { label: "District", tab: "district" },
-          { label: "Researcher List", tab: "researcher" },
-          { label: "Organization List", tab: "organization" },
-          { label: "Collection Site List", tab: "collectionsite" },
-          {label:"Staff Management List ",tab:"staffManagementPage"},
+          { label: "Cities", tab: "city" },
+          { label: "Countries", tab: "country" },
+          { label: "Districts", tab: "district" },
+          { label: "Researcher's List", tab: "researcher" },
+          { label: "Organization's List", tab: "organization" },
+          { label: "Collection Site's List", tab: "collectionsite" },
+          { label: "Staff Management List ", tab: "staffManagementPage" },
           {
-            label: "Sample",
+            label: "Sample's Field",
             tab: "sample",
             dropdown: [
               { label: "Ethnicity", tab: "ethnicity" },
               { label: "Sample Condition", tab: "sample-condition" },
               { label: "Diagnosis Test Parameter", tab: "diagnosistestparameter" },
+              { label: "Infectious Disease Testing", tab: "infectiousdiseasetesting" },
               { label: "Sample Price Currency", tab: "sample-price-currency" },
               { label: "Storage Temperature", tab: "storage-temperature" },
               { label: "Container Type", tab: "container-type" },
@@ -199,44 +200,44 @@ const Header = ({ setActiveTab, activeTab }) => {
             ],
           },
         ]
-      : userType === "collectionsitesstaff"
-      ? [
-          ...(["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(staffAction)
-            ? [{ label: "Sample List", tab: "samples" }]
-            : []),
-          ...(["receive", "all"].includes(staffAction)
-            ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
-            : []),
+        : userType === "collectionsitesstaff"
+          ? [
+            ...(["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(staffAction)
+              ? [{ label: "Sample List", tab: "samples" }]
+              : []),
+            ...(["receive", "all"].includes(staffAction)
+              ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
+              : []),
             //    ...(["return", "all"].includes(staffAction)
             // ? [{ label: "Sample Returned", tab: "sample-return" }]:[]),
-             ...(["return", "all"].includes(staffAction)
-            ? [{ label: "Sample Lost", tab: "sample-lost" }]
-            : []),
-        ]
-      : userType == "biobank"
-      ? [
-          { label: "Sample List", tab: "samples" },
-          { label: "Sample Dispatch", tab: "sample-dispatch" },
-          { label: "Quarantine Stock", tab: "Quarantine-Stock" },
-          { label: "Sample Visibility", tab: "Sample-Visibility" },
-        ]
-      : userType == "committeemember"
-      ? [{ label: "Pending Review List", tab: "samples" }]
-      : userType == "technicaladmin"
-      ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "Order List", tab: "order" },
-          { label: "Order Rejected List", tab: "orderrejected" },
-          { label: "Contact us List", tab: "contactus" },
-        ]
-      : userType == "csr"
-      ? [
-          { label: "Profile", tab: "order-info" },
-          { label: "Order Dispatch List", tab: "dispatchorder" },
-          { label: "Order Packaging List", tab: "shippingorder" },
-          { label: "Order Completed List", tab: "completedorder" },
-        ]
-      : [];
+            ...(["return", "all"].includes(staffAction)
+              ? [{ label: "Sample Lost", tab: "sample-lost" }]
+              : []),
+          ]
+          : userType == "biobank"
+            ? [
+              { label: "Sample List", tab: "samples" },
+              { label: "Sample Dispatch", tab: "sample-dispatch" },
+              { label: "Quarantine Stock", tab: "Quarantine-Stock" },
+              { label: "Sample Visibility", tab: "Sample-Visibility" },
+            ]
+            : userType == "committeemember"
+              ? [{ label: "Pending Review List", tab: "samples" }]
+              : userType == "technicaladmin"
+                ? [
+                  { label: "Profile", tab: "order-info" },
+                  { label: "Order List", tab: "order" },
+                  { label: "Order Rejected List", tab: "orderrejected" },
+                  { label: "Contact us List", tab: "contactus" },
+                ]
+                : userType == "csr"
+                  ? [
+                    { label: "Profile", tab: "order-info" },
+                    { label: "Order Dispatch List", tab: "dispatchorder" },
+                    { label: "Order Packaging List", tab: "shippingorder" },
+                    { label: "Order Completed List", tab: "completedorder" },
+                  ]
+                  : [];
 
   return (
     <>
@@ -269,23 +270,26 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
                 >
                   <button
-                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
-                      activeTab === tab ? "text-primary" : "text-dark"
-                    } fs-7`}
-                    onClick={() => {
-                      if (!dropdown) {
-                        setActiveTab(tab);
-                      }
-                    }}
-                  >
+      className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
+ activeTab === tab ||
+(tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
+
+    ? "text-primary"
+    : "text-dark"
+} fs-7`}
+      onClick={() => {
+        if (!dropdown) {
+          setActiveTab(tab);
+        }
+      }}
+    >
                     <small>{label}</small> {/* Makes text smaller */}
                     {label === "Sample" && (
                       <i
-                        className={`ms-2 fas ${
-                          showSampleDropdown === index
-                            ? "fa-caret-up"
-                            : "fa-caret-down"
-                        } text-black`}
+                        className={`ms-2 fas ${showSampleDropdown === index
+                          ? "fa-caret-up"
+                          : "fa-caret-down"
+                          } text-black`}
                       ></i>
                     )}
                   </button>
@@ -383,9 +387,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                     )}
                   </button>
                   <ul
-                    className={`dropdown-menu dropdown-menu-end ${
-                      showDropdown ? "show" : ""
-                    }`}
+                    className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""
+                      }`}
                     style={{
                       right: 0,
                       left: "auto",
@@ -428,17 +431,18 @@ const Header = ({ setActiveTab, activeTab }) => {
                 {userType === "researcher" && (
                   <Link
                     href={{
-                      pathname: router.pathname, // stays on the same dashboard route
+                      pathname: router.pathname,
                       query: { ...router.query, tab: "Cart" },
                     }}
                     className="btn btn-sm position-relative"
                   >
                     <Cart className="fs-7 text-white" />
-                    {cartCount > 0 && (
+                    {sampleCount > 0 && (
                       <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
                         {sampleCount}
                       </span>
                     )}
+
                   </Link>
                 )}
               </div>

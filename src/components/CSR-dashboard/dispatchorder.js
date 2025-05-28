@@ -11,18 +11,26 @@ import {
 import Pagination from "@ui/Pagination";
 
 const DispatchSampleArea = () => {
+ const [staffAction, setStaffAction] = useState("");
   const id = sessionStorage.getItem("userID");
+
+  useEffect(() => {
+    if (id !== null) {
+      const action = sessionStorage.getItem("staffAction") || "";
+      setStaffAction(action);
+      console.log("Order packaging Id on sample page is:", id);
+    }
+  }, [id]);  // run once when id is known
+
   if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Order packaging Id on sample page is:", id);
+    return <div>Loading...</div>;
   }
   const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
 
   const tableHeaders = [
     { label: "Order ID", key: "id" },
     { label: "User Name", key: "researcher_name" },
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Order Date", key: "created_at" },
     { label: "Status", key: "order_status" },
   ];
@@ -38,19 +46,19 @@ const DispatchSampleArea = () => {
 
     // Set an interval to refresh data every 5 seconds (5000ms)
     const interval = setInterval(() => {
-      fetchSamples();
+      fetchSamples(staffAction);
     }, 5000);
 
     // Clear the interval when the component unmounts to avoid memory leaks
     return () => clearInterval(interval);
   }, []);
 
-  const fetchSamples = async () => {
+  const fetchSamples = async (staffAction) => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
         {
-          params: { csrUserId: id }
+          params: { csrUserId: id,staffAction:staffAction }
         }
       );
 
@@ -146,7 +154,7 @@ const DispatchSampleArea = () => {
                   <tr key={sample.id}>
                     <td>{sample.id || "----"}</td>
                     <td>{sample.researcher_name}</td>
-                    <td>{sample.samplename}</td>
+                    <td>{sample.diseasename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>
                     <td>{sample.order_status}</td>
                   </tr>

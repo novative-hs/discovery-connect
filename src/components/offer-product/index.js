@@ -34,12 +34,10 @@ const OfferPopularProduct = () => {
   const [showModal, setShowModal] = useState(false);
   const dispatch = useDispatch();
 
-  // ✅ Get actual sample list
   const sampleList = categories?.data || [];
   const filteredCategories = sampleList.filter((category) => category.price !== null);
-  const displayedCategories = filteredCategories.slice(0, 6); // showing only 6 on homepage
+  const displayedCategories = filteredCategories.slice(0, 6);
 
-  // ✅ Setup Intersection Observer and AOS
   useEffect(() => {
     AOS.init({ duration: 500 });
 
@@ -192,7 +190,7 @@ const OfferPopularProduct = () => {
                 overflow: "hidden",
               }}
             >
-              <div className="modal-header bg-info text-white" data-aos="fade-down">
+              <div className="modal-header bg-info text-white">
                 <h5 className="modal-title fw-bold">{selectedProduct.samplename}</h5>
                 <button
                   type="button"
@@ -207,7 +205,7 @@ const OfferPopularProduct = () => {
 
               <div className="modal-body">
                 <div className="row">
-                  <div className="col-md-4 text-center" data-aos="fade-right">
+                  <div className="col-md-4 text-center">
                     <img
                       src={selectedProduct.imageUrl || "/placeholder.jpg"}
                       alt="Sample"
@@ -217,40 +215,74 @@ const OfferPopularProduct = () => {
                         objectFit: "cover",
                       }}
                     />
-                    <ul className="list-group text-start small">
-                      <li className="list-group-item"><strong>Age:</strong> {selectedProduct.age}</li>
-                      <li className="list-group-item"><strong>Gender:</strong> {selectedProduct.gender}</li>
-                      <li className="list-group-item"><strong>Ethnicity:</strong> {selectedProduct.ethnicity}</li>
-                      <li className="list-group-item"><strong>Alcohol/Drug Abuse:</strong> {selectedProduct.AlcoholOrDrugAbuse}</li>
-                      <li className="list-group-item"><strong>Smoking Status:</strong> {selectedProduct.SmokingStatus}</li>
-                      <li className="list-group-item"><strong>Country:</strong> {selectedProduct.CountryOfCollection}</li>
-                      <li className="list-group-item"><strong>Status:</strong> {selectedProduct.status}</li>
-                    </ul>
                   </div>
 
-                  <div className="col-md-8" data-aos="fade-left">
+                  <div className="col-md-8">
                     <div className="row g-2">
+                      {/* Mandatory Fields */}
                       {[
-                        { label: "Sample Type Matrix", value: selectedProduct.SampleTypeMatrix },
-                        { label: "Quantity Unit", value: selectedProduct.QuantityUnit },
-                        { label: "Sample Condition", value: selectedProduct.samplecondition },
-                        { label: "Storage Temp", value: selectedProduct.storagetemp },
+                        { label: "Sample Name", value: selectedProduct.diseasename },
+                        {
+                          label: "Location ID",
+                          value: [
+                            selectedProduct.room_number ? `Room Number: ${selectedProduct.room_number}` : null,
+                            selectedProduct.freezer_id ? `Freezer Id: ${selectedProduct.freezer_id}` : null,
+                            selectedProduct.box_id ? `Box: ${selectedProduct.box_id}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" | ") || "----",
+                        },
+                        { label: "Age", value: selectedProduct.age },
+                        { label: "Gender", value: selectedProduct.gender },
+                        { label: "Phone Number", value: selectedProduct.phoneNumber },
+                        {
+                          label: "Volume",
+                          value:
+                            selectedProduct.volume && selectedProduct.QuantityUnit
+                              ? `${selectedProduct.volume} ${selectedProduct.QuantityUnit}`
+                              : selectedProduct.volume || selectedProduct.QuantityUnit || "----",
+                        },
                         { label: "Container Type", value: selectedProduct.ContainerType },
-                        { label: "Freeze Thaw Cycles", value: selectedProduct.FreezeThawCycles },
-                        { label: "Infectious Disease Testing", value: `${selectedProduct.InfectiousDiseaseTesting} ${selectedProduct.InfectiousDiseaseResult}` },
-                        { label: "Diagnosis Test Parameter", value: selectedProduct.DiagnosisTestParameter },
+                        { label: "Test Result", value: selectedProduct.TestResult },
                         { label: "Test Result Unit", value: selectedProduct.TestResultUnit },
-                        { label: "Test Method", value: selectedProduct.TestMethod },
                       ].map((item, index) => (
-                        <div className="col-6" key={index} data-aos="zoom-in" data-aos-delay={index * 100}>
+                        <div className="col-6" key={`mandatory-${index}`}>
                           <div className="border rounded p-2 h-100 bg-light">
                             <small className="text-muted d-block">{item.label}</small>
                             <strong>{item.value || "----"}</strong>
                           </div>
                         </div>
                       ))}
+
+                      {/* Optional Fields */}
+                      {[
+                        { label: "Sample Type Matrix", value: selectedProduct.SampleTypeMatrix },
+
+                        { label: "Sample Condition", value: selectedProduct.samplecondition },
+                        { label: "Storage Temp", value: selectedProduct.storagetemp },
+                        { label: "Freeze Thaw Cycles", value: selectedProduct.FreezeThawCycles },
+                        {
+                          label: "Infectious Disease Testing",
+                          value:
+                            selectedProduct.InfectiousDiseaseTesting || selectedProduct.InfectiousDiseaseResult
+                              ? `${selectedProduct.InfectiousDiseaseTesting || ""} ${selectedProduct.InfectiousDiseaseResult || ""}`
+                              : null,
+                        },
+                        { label: "Diagnosis Test Parameter", value: selectedProduct.DiagnosisTestParameter },
+                        { label: "Test Method", value: selectedProduct.TestMethod },
+                      ]
+                        .filter((item) => item.value)
+                        .map((item, index) => (
+                          <div className="col-6" key={`optional-${index}`}>
+                            <div className="border rounded p-2 h-100 bg-light">
+                              <small className="text-muted d-block">{item.label}</small>
+                              <strong>{item.value}</strong>
+                            </div>
+                          </div>
+                        ))}
                     </div>
-                    <div className="text-end mt-5">
+
+                    <div className="text-end mt-4">
                       <button
                         type="button"
                         onClick={() => handleAddToCart(selectedProduct)}
@@ -271,5 +303,3 @@ const OfferPopularProduct = () => {
 };
 
 export default OfferPopularProduct;
-
-

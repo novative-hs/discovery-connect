@@ -55,10 +55,10 @@ const createBiobankSample = (req, res) => {
   sampleData.logo = file?.buffer;
 
   const today = new Date();
-  const dateOfCollection = new Date(sampleData.DateOfCollection);
+  const dateOfCollection = new Date(sampleData.DateOfSampling);
 
   if (dateOfCollection >= today) {
-    return res.status(400).json({ error: "DateOfCollection must be before today" });
+    return res.status(400).json({ error: "DateOfSampling must be before today" });
   }
 
 
@@ -101,8 +101,8 @@ const updateBiobankSample = (req, res) => {
   sampleData.logo = Buffer.from(sampleData.logo.data);
 }
   // Handle Date format
-  if (sampleData.DateOfCollection) {
-    sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
+  if (sampleData.DateOfSampling) {
+    sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
 
   // Handle logo (priority: uploaded file > body)
@@ -121,9 +121,9 @@ const updateBiobankSample = (req, res) => {
 
 const UpdateSampleStatus = (req, res) => {
   const sampleId = req.params.id;
-  const { sample_status } = req.body;
+  const { sample_visibility } = req.body;
 
-  BioBankModel.UpdateSampleStatus(sampleId, sample_status, (err, result) => {
+  BioBankModel.UpdateSampleStatus(sampleId, sample_visibility, (err, result) => {
     if (err) return res.status(500).json({ error: 'Failed to update sample status.' });
 
     res.status(200).json(result);

@@ -23,7 +23,7 @@ const SampleReturn = () => {
 
   
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Ethnicity", key: "ethnicity" },
@@ -40,11 +40,8 @@ const SampleReturn = () => {
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Date Of Collection", key: "DateOfSampling" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Result", key: "TestResult" },

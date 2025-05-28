@@ -23,20 +23,20 @@ const BioBankSampleDispatchArea = () => {
 
 
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
-    { label: "Pack size", key: "packsize" },
-    
+    { label: "Disease Name", key: "diseasename" },
+    { label: "Volume", key: "volume" },
+
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
 
 
   ];
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -61,7 +61,7 @@ const BioBankSampleDispatchArea = () => {
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
 
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Collection", key: "DateOfSampling" },
     {
       label: "Concurrent Medical Conditions",
       key: "ConcurrentMedicalConditions",
@@ -69,11 +69,11 @@ const BioBankSampleDispatchArea = () => {
 
   ];
   const [formData, setFormData] = useState({
-    samplename: "",
+    diseasename: "",
     age: "",
     gender: "",
     ethnicity: "",
-    packsize:0,
+    volume: 0,
     samplecondition: "",
     storagetemp: "",
     ContainerType: "",
@@ -86,7 +86,7 @@ const BioBankSampleDispatchArea = () => {
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
     FreezeThawCycles: "",
-    DateOfCollection: "",
+    DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
@@ -320,43 +320,43 @@ const BioBankSampleDispatchArea = () => {
                   currentData.map((sample) => (
                     <tr key={sample.id}>
                       {tableHeaders.map(({ key }, index) => (
-  <td
-    key={index}
-    className={
-      key === "price"
-        ? "text-end"
-        : key === "samplename"
-        ? ""
-        : "text-center text-truncate"
-    }
-    style={{ maxWidth: "150px" }}
-  >
-    {key === "samplename" ? (
-      <span
-        className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-        role="button"
-        title="Sample Details"
-        onClick={() => openModal(sample)}
-        style={{
-          cursor: "pointer",
-          transition: "color 0.2s",
-        }}
-        onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-        onMouseOut={(e) => (e.target.style.color = "")}
-      >
-        {sample.samplename || "----"}
-      </span>
-    ) : (
-      (() => {
-        if (key === "packsize") {
-          return `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`;
-        } else {
-          return sample[key] || "----";
-        }
-      })()
-    )}
-  </td>
-))}
+                        <td
+                          key={index}
+                          className={
+                            key === "price"
+                              ? "text-end"
+                              : key === "diseasename"
+                                ? ""
+                                : "text-center text-truncate"
+                          }
+                          style={{ maxWidth: "150px" }}
+                        >
+                          {key === "diseasename" ? (
+                            <span
+                              className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                              role="button"
+                              title="Sample Details"
+                              onClick={() => openModal(sample)}
+                              style={{
+                                cursor: "pointer",
+                                transition: "color 0.2s",
+                              }}
+                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                              onMouseOut={(e) => (e.target.style.color = "")}
+                            >
+                              {sample.diseasename || "----"}
+                            </span>
+                          ) : (
+                            (() => {
+                              if (key === "volume") {
+                                return `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                              } else {
+                                return sample[key] || "----";
+                              }
+                            })()
+                          )}
+                        </td>
+                      ))}
 
                       <td>
                         <div

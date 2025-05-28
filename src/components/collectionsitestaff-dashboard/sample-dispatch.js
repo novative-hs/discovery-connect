@@ -23,16 +23,16 @@ const SampleDispatchArea = () => {
   const [selectedSampleTransfer, setSelectedSampleTransfer] = useState(null); // Store ID of sample to delete
   const [showModal, setShowModal] = useState(false);
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
-    { label: "Packsize", key: "packsize" },
+    { label: "Disease Name", key: "diseasename" },
+    { label: "Volume", key: "volume" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -53,12 +53,12 @@ const SampleDispatchArea = () => {
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
   const [formData, setFormData] = useState({
-    samplename: "",
+    diseasename: "",
     age: "",
     gender: "",
     ethnicity: "",
@@ -74,7 +74,7 @@ const SampleDispatchArea = () => {
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
     FreezeThawCycles: "",
-    DateOfCollection: "",
+    DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
@@ -342,13 +342,13 @@ const SampleDispatchArea = () => {
                           className={
                             key === "price"
                               ? "text-end"
-                              : key === "samplename"
+                              : key === "diseasename"
                                 ? ""
                                 : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px" }}
                         >
-                          {key === "samplename" ? (
+                          {key === "diseasename" ? (
                             <span
                               className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                               role="button"
@@ -358,13 +358,13 @@ const SampleDispatchArea = () => {
                                 cursor: "pointer",
                                 transition: "color 0.2s",
                               }}
-                              onMouseOver={(e) =>
-                                (e.target.style.color = "#0a58ca")
-                              }
+                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                               onMouseOut={(e) => (e.target.style.color = "")}
                             >
-                              {sample.samplename || "----"}
+                              {sample.diseasename || "----"}
                             </span>
+                          ) : key === "volume" ? (
+                            `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
                           ) : (
                             sample[key] || "----"
                           )}
@@ -378,13 +378,6 @@ const SampleDispatchArea = () => {
                             gap: "3px",
                           }}
                         >
-                          {/* <button
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleEditClick(sample)}
-                              >
-                                <FontAwesomeIcon icon={faEdit} size="sm" />
-                              </button>{" "} */}
-
                           <button
                             className="btn btn-primary btn-sm"
                             onClick={() => handleTransferClick(sample)}
@@ -397,15 +390,13 @@ const SampleDispatchArea = () => {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={tableHeaders.length + 1}
-                      className="text-center"
-                    >
+                    <td colSpan={tableHeaders.length + 1} className="text-center">
                       No samples available
                     </td>
                   </tr>
                 )}
               </tbody>
+
             </table>
           </div>
 

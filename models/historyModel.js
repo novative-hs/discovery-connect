@@ -15,6 +15,7 @@ const registrationadmin_history = () => {
       district_id INT,
       sample_id VARCHAR(36),
       csr_id  INT,
+      infectiousdisease_id  INT,
       diagnosistestparameter_id INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive', 'unapproved', 'approved','pending') DEFAULT 'active',
@@ -33,6 +34,7 @@ const registrationadmin_history = () => {
       testsystem_id INT,
       testsystemmanufacturer_id INT,
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
+      FOREIGN KEY (infectiousdisease_id) REFERENCES infectiousdiseasetesting(id) ON DELETE CASCADE,
       FOREIGN KEY (organization_id) REFERENCES organization(id) ON DELETE CASCADE,
       FOREIGN KEY (collectionsite_id) REFERENCES collectionsite(id) ON DELETE CASCADE,
       FOREIGN KEY (csr_id) REFERENCES csr(id) ON DELETE CASCADE,
@@ -191,7 +193,7 @@ const getSampleHistory = (sampleId, callback) => {
       sh.sample_id,
       sh.comments AS comments,
       CAST(sh.updated_at AS CHAR) AS updated_at,
-      s.samplename,
+      s.diseasename,
       s.age,
       s.gender,
       s.ethnicity,
@@ -209,7 +211,7 @@ const getSampleHistory = (sampleId, callback) => {
       s.InfectiousDiseaseTesting,
       s.InfectiousDiseaseResult,
       s.FreezeThawCycles,
-      s.DateOfCollection,
+      s.DateOfSampling,
       s.ConcurrentMedicalConditions,
       s.ConcurrentMedications,
       s.DiagnosisTestParameter,
@@ -219,7 +221,7 @@ const getSampleHistory = (sampleId, callback) => {
       s.TestKitManufacturer,
       s.TestSystem,
       s.TestSystemManufacturer,
-      s.status AS sample_status,
+      s.status AS sample_visibility,
       CAST(s.created_at AS CHAR) AS created_at 
     FROM sample_history sh
     JOIN sample s ON sh.sample_id = s.id

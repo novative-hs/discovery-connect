@@ -543,7 +543,8 @@ const CommitteeMemberArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
-        <div className="row justify-content-center">
+        <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100 ">
+          <h5 className="m-0 fw-bold">Commitee Member List</h5>
           {/* {Button} */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}

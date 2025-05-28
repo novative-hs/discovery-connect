@@ -27,7 +27,9 @@ const BioBankSampleArea = () => {
   const [selectedSampleForPricing, setSelectedSampleForPricing] = useState(null);
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('');
-
+  const [selectedSampleName, setSelectedSampleName] = useState('')
+  const [selectedSampleVolume, setSelectedSampleVolume] = useState('')
+  const [selectedSampleUnit, setSelectedSampleUnit] = useState('')
   const [filtertotal, setfiltertotal] = useState(null);
   const [quarantineComment, setQuarantineComment] = useState("");
   const [commentError, setCommentError] = useState("");
@@ -42,19 +44,21 @@ const BioBankSampleArea = () => {
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
-    { label: "Pack size", key: "packsize" },
+    { label: "Disease Name", key: "diseasename" },
+    { label: "Location", key: "locationids" },
+    { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Gender", key: "gender" },
+    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -70,19 +74,18 @@ const BioBankSampleArea = () => {
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
   const [formData, setFormData] = useState({
     locationids: "",
-    samplename: "",
+    diseasename: "",
     age: "",
-    packsize:0,
+    volume: "",
     phoneNumber: "",
     gender: "",
     ethnicity: "",
@@ -100,7 +103,7 @@ const BioBankSampleArea = () => {
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
     FreezeThawCycles: "",
-    DateOfCollection: "",
+    DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
@@ -137,6 +140,8 @@ const BioBankSampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
+  const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
+  const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
@@ -144,6 +149,7 @@ const BioBankSampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null); // <-- For image preview
 
+  const [samplePrice, setSamplePrice] = useState([])
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -237,25 +243,43 @@ const BioBankSampleArea = () => {
 
       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-      if (priceFilter) {
-        url += `&priceFilter=${priceFilter}`;
-      }
-
-      if (searchField && searchValue) {
-        url += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
+      if (priceFilter) url += `&priceFilter=${priceFilter}`;
+      if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
       const response = await axios.get(url);
-
       const { samples, totalCount } = response.data;
+      console.log(samples)
       setSamples(samples);
-      setFilteredSamples(samples); // Ensure filteredSamples are updated
-      setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
+      setFilteredSamples(samples);
+      setTotalPages(Math.ceil(totalCount / pageSize));
       setfiltertotal(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
+  const getSamplePrice = async (selectedSampleName) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getprice/${selectedSampleName}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch price");
+      }
+
+      const result = await response.json();
+      // Filter out null prices
+      const validPrices = result.data.filter(
+        (item) => item.price !== null && item.price !== 0
+      );
+
+      setSamplePrice(validPrices); // Only non-null prices will be set
+    } catch (error) {
+      console.error("Error fetching site names:", error);
+    }
+  };
+
+
+
 
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -276,6 +300,13 @@ const BioBankSampleArea = () => {
 
     fetchCollectionSiteNames();
   }, [selectedSampleId]);
+
+  useEffect(() => {
+    if (selectedSampleName) {
+      console.log("Fetching price for:", selectedSampleName);
+      getSamplePrice(selectedSampleName);
+    }
+  }, [selectedSampleName]);
 
   // Sample Price Filter
   useEffect(() => {
@@ -389,7 +420,7 @@ const BioBankSampleArea = () => {
 
       // Clear form after submission
       setFormData({
-        samplename: "",
+        diseasename: "",
         age: "",
         gender: "",
         phoneNumber: "",
@@ -408,7 +439,7 @@ const BioBankSampleArea = () => {
         InfectiousDiseaseTesting: "",
         InfectiousDiseaseResult: "",
         FreezeThawCycles: "",
-        DateOfCollection: "",
+        DateOfSampling: "",
         ConcurrentMedicalConditions: "",
         ConcurrentMedications: "",
         DiagnosisTestParameter: "",
@@ -421,7 +452,7 @@ const BioBankSampleArea = () => {
         status: "",
         user_account_id: id,
         logo: "",
-        packsize:0,
+        volume: "",
       });
       setLogoPreview(false);
       setShowAdditionalFields(false)
@@ -584,6 +615,9 @@ const BioBankSampleArea = () => {
 
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
+    setSelectedSampleName(sample.diseasename)
+    setSelectedSampleVolume(sample.volume)
+
     setEditSample(sample);
     setShowEditModal(true);
 
@@ -592,11 +626,11 @@ const BioBankSampleArea = () => {
 
     setFormData({
       locationids: formattedLocationId,
-      samplename: sample.samplename,
+      diseasename: sample.diseasename,
       age: sample.age,
       phoneNumber: sample.phoneNumber,
       gender: sample.gender,
-      packsize:sample.packsize,
+      volume: sample.volume,
       ethnicity: sample.ethnicity,
       samplecondition: sample.samplecondition,
       storagetemp: sample.storagetemp,
@@ -612,7 +646,7 @@ const BioBankSampleArea = () => {
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
       InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
       FreezeThawCycles: sample.FreezeThawCycles,
-      DateOfCollection: sample.DateOfCollection,
+      DateOfSampling: sample.DateOfSampling,
       ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
       ConcurrentMedications: sample.ConcurrentMedications,
       DiagnosisTestParameter: sample.DiagnosisTestParameter,
@@ -644,9 +678,14 @@ const BioBankSampleArea = () => {
   };
 
   const handlePriceCurrencyClick = (sample) => {
+    getSamplePrice(sample.diseasename);
     setSelectedSampleForPricing(sample);
-    setPrice(sample.price || '');
+    setSelectedSampleName(sample.diseasename);
+    setSelectedSampleVolume(sample.volume);
+    setSelectedSampleUnit(sample.QuantityUnit)
+    setPrice(sample.price || ''); // <-- Clear price, so user selects or types manually
     setCurrency(sample.currency || '');
+
     setShowPriceModal(true);
   };
 
@@ -672,7 +711,7 @@ const BioBankSampleArea = () => {
       // Reset formData after update
       setFormData({
         locationids: "",
-        samplename: "",
+        diseasename: "",
         phoneNumber: "",
         age: "",
         gender: "",
@@ -681,8 +720,8 @@ const BioBankSampleArea = () => {
         storagetemp: "",
         ContainerType: "",
         CountryOfCollection: "",
-        price: 0,
-        packsize:0,
+        price: "",
+        volume: "",
         SamplePriceCurrency: "",
         quantity: 1,
         QuantityUnit: "",
@@ -692,7 +731,7 @@ const BioBankSampleArea = () => {
         InfectiousDiseaseTesting: "",
         InfectiousDiseaseResult: "",
         FreezeThawCycles: "",
-        DateOfCollection: "",
+        DateOfSampling: "",
         ConcurrentMedicalConditions: "",
         ConcurrentMedications: "",
         DiagnosisTestParameter: "",
@@ -747,8 +786,8 @@ const BioBankSampleArea = () => {
   const resetFormData = () => {
     setFormData({
       locationids: "",
-      packsize:0,
-      samplename: "",
+      volume: "",
+      diseasename: "",
       age: "",
       phoneNumber: "",
       gender: "",
@@ -766,7 +805,7 @@ const BioBankSampleArea = () => {
       InfectiousDiseaseTesting: "",
       InfectiousDiseaseResult: "",
       FreezeThawCycles: "",
-      DateOfCollection: "",
+      DateOfSampling: "",
       ConcurrentMedicalConditions: "",
       ConcurrentMedications: "",
       DiagnosisTestParameter: "",
@@ -899,13 +938,13 @@ const BioBankSampleArea = () => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "samplename"
+                            : key === "diseasename"
                               ? ""
                               : "text-center text-truncate"
                         }
                         style={{ maxWidth: "150px" }}
                       >
-                        {key === "samplename" ? (
+                        {key === "diseasename" ? (
                           <span
                             className="sample-name  fs-6 "
                             role="button"
@@ -918,16 +957,27 @@ const BioBankSampleArea = () => {
                             onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.samplename || "----"}
+                            {sample.diseasename || "----"}
                           </span>
                         ) : (
                           (() => {
-                            if (key === "packsize") {
-                              return `${sample.packsize} ${sample.QuantityUnit || ""}`;
+                            if (key === "locationids") {
+                              const tooltip = `${sample.room_number || "N/A"} = Room Number
+${sample.freezer_id || "N/A"} = Freezer ID
+${sample.box_id || "N/A"} = Box ID`;
+                              return (
+                                <span title={tooltip} style={{ cursor: "help" }}>
+                                  {sample.locationids || "----"}
+                                </span>
+                              );
+                            } else if (key === "volume") {
+                              return `${sample.volume} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "price") {
-                              return `${sample.price || "----"} ${sample.SamplePriceCurrency || ""}`;
+                              return sample.price && sample.SamplePriceCurrency
+                                ? `${sample.price} ${sample.SamplePriceCurrency}`
+                                : "----";
                             } else {
                               return sample[key] || "----";
                             }
@@ -1067,28 +1117,55 @@ const BioBankSampleArea = () => {
                         {!showAdditionalFields && (
                           <div className="col-md-12">
                             <div className="row">
+                              {showAddModal && (
+                                <div className="form-group col-md-6">
+                                  <label>
+                                    Donor ID <span className="text-danger">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="donorID"
+                                    value={formData.donorID}
+                                    onChange={handleInputChange}
+                                    required
+                                    title="This is the ID of patient generated by hospital"
+                                    placeholder="Enter Donor ID"
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.donorID ? "#fdecea" : "#fff",
+                                    }}
+                                  />
+                                </div>
+                              )}
                               <div className="form-group col-md-6">
-                                <label>Donor ID</label>
-                                <input
-                                  type="text"
+                                <label>
+                                  Disease Name <span className="text-danger">*</span>
+                                </label>
+                                <select
                                   className="form-control"
-                                  name="donorID"
-                                  value={formData.donorID}
+                                  name="diseasename"
+                                  value={formData.diseasename}
                                   onChange={handleInputChange}
                                   required
-                                  title="This is the ID of patient generated by hospital"
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.donorID
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
+                                    backgroundColor: !formData.diseasename ? "#fdecea" : "#fff",
                                   }}
-                                />
+                                >
+                                  <option value="" hidden>
+                                  </option>
+                                  {diagnosistestparameterNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Location (IDs)</label>
+                                <label>Location (IDs) <span className="text-danger">*</span></label>
                                 <InputMask
                                   mask="999-999-999"
                                   maskChar={null}
@@ -1105,8 +1182,7 @@ const BioBankSampleArea = () => {
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: "#f0f0f0",
-                                        color: "black",
+                                        backgroundColor: !formData.locationids ? "#fdecea" : "#fff",
                                       }}
                                       required
                                       title="Location ID's = Room Number, Freezer ID and Box ID"
@@ -1114,27 +1190,192 @@ const BioBankSampleArea = () => {
                                   )}
                                 </InputMask>
                               </div>
-                            </div>
-                            <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Disease Name</label>
+                                <label>Volume <span className="text-danger">*</span></label>
+                                <div className="d-flex">
+                                  <input
+                                    type="number"
+                                    className="form-control me-2"
+                                    name="volume"
+                                    value={formData.volume}
+                                    onChange={(e) => {
+                                      const value = parseFloat(e.target.value);
+                                      if (e.target.value === "" || (value * 10) % 5 === 0) {
+                                        handleInputChange(e);
+                                      }
+                                    }}
+                                    step="0.5"
+                                    min="0.5"
+                                    required
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.volume ? "#fdecea" : "#fff",
+                                    }}
+                                  />
+                                  <select
+                                    className="form-control"
+                                    name="QuantityUnit"
+                                    value={formData.QuantityUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.QuantityUnit ? "#fdecea" : "#fff",
+                                    }}
+                                  >
+                                    <option value="" hidden>Select Unit</option>
+                                    {quantityunitNames.map((name, index) => (
+                                      <option key={index} value={name}>
+                                        {name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Phone Number <span className="text-danger">*</span></label>
                                 <input
                                   type="text"
                                   className="form-control"
-                                  name="samplename"
-                                  value={formData.samplename}
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
+                                  }}
+                                  required
+                                />
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Test Result & Unit</label>
+                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                  {/* Test Result Dropdown or Numeric Input */}
+                                  {!showTestResultNumericInput ? (
+                                    <select
+                                      className="form-control"
+                                      value={formData.TestResult}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === "Value") {
+                                          setShowTestResultNumericInput(true);
+                                          setFormData((prev) => ({ ...prev, TestResult: "" }));
+                                        } else {
+                                          setFormData((prev) => ({ ...prev, TestResult: val }));
+                                        }
+                                      }}
+                                      style={{
+                                        height: "40px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.TestResult ? "#fdecea" : "#fff",
+                                        minWidth: "140px",
+                                      }}
+                                    >
+                                      <option value="" disabled hidden>Select result</option>
+                                      <option value="Positive">Positive</option>
+                                      <option value="Negative">Negative</option>
+                                      <option value="Value">Value</option>
+                                    </select>
+                                  ) : (
+                                    <input
+                                      type="number"
+                                      className="form-control"
+                                      placeholder="Enter numeric value"
+                                      value={formData.TestResult}
+                                      onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, TestResult: e.target.value }))
+                                      }
+                                      style={{
+                                        width: "110px",
+                                        height: "40px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.TestResult ? "#fdecea" : "#fff",
+                                        paddingRight: "10px",
+                                      }}
+                                      autoFocus
+                                      onBlur={() => {
+                                        if (!formData.TestResult) {
+                                          setShowTestResultNumericInput(false);
+                                        }
+                                      }}
+                                    />
+                                  )}
+
+                                  {/* Test Result Unit Dropdown */}
+                                  <select
+                                    className="form-control"
+                                    name="TestResultUnit"
+                                    value={formData.TestResultUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
+                                      minWidth: "100px",
+                                    }}
+                                  >
+                                    <option value="" hidden>
+                                      Unit
+                                    </option>
+                                    {testresultunitNames.map((name, index) => (
+                                      <option key={index} value={name}>
+                                        {name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>Gender <span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="gender"
+                                  value={formData.gender}
                                   onChange={handleInputChange}
                                   required
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.samplename ? "#f0f0f0" : "#f0f0f0",
-                                    color: "black",
+                                    backgroundColor: !formData.gender ? "#fdecea" : "#fff",
                                   }}
-                                />
+                                >
+                                  <option value="" hidden>
+                                  </option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                </select>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Age</label>
+                                <label>Sample Type Matrix <span className="text-danger">*</span></label>
+                                <select
+                                  className="form-control"
+                                  name="SampleTypeMatrix"
+                                  value={formData.SampleTypeMatrix}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
+                                  }}
+                                >
+                                  <option value="" hidden>
+                                  </option>
+                                  {sampletypematrixNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>Age (Years) <span className="text-danger">*</span></label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1145,88 +1386,27 @@ const BioBankSampleArea = () => {
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: formData.age ? "#f0f0f0" : "#f0f0f0",
-                                    color: "black",
+                                    backgroundColor: !formData.age ? "#fdecea" : "#fff",
                                   }}
                                 />
                               </div>
-                            </div>
-                            <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Phone Number</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="form-group col-md-6">
-                                <label>Gender</label>
+                                <label>Container Type <span className="text-danger">*</span></label>
                                 <select
                                   className="form-control"
-                                  name="gender"
-                                  value={formData.gender}
+                                  name="ContainerType"
+                                  value={formData.ContainerType}
                                   onChange={handleInputChange}
                                   required
                                   style={{
-                                    fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: formData.gender ? "#f0f0f0" : "#f0f0f0",
-                                    color: "black",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.ContainerType ? "#fdecea" : "#fff",
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Gender
                                   </option>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                </select>
-                              </div>
-                            </div>
-                            <div className="row">
-                              <div className="form-group col-md-6">
-                                <label>Pack size</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="packsize"
-                                  value={formData.packsize}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: formData.packsize
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                />
-                              </div>
-                              <div className="form-group col-md-6">
-                                <label>Quantity Unit</label>
-                                <select
-                                  className="form-control"
-                                  name="QuantityUnit"
-                                  value={formData.QuantityUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.QuantityUnit
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Quantity Unit
-                                  </option>
-                                  {quantityunitNames.map((name, index) => (
+                                  {containertypeNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
                                     </option>
@@ -1236,34 +1416,7 @@ const BioBankSampleArea = () => {
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Diagnosis Test Parameter</label>
-                                <select
-                                  className="form-control"
-                                  name="DiagnosisTestParameter"
-                                  value={formData.DiagnosisTestParameter}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.DiagnosisTestParameter
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Diagnosis Test Parameter
-                                  </option>
-                                  {diagnosistestparameterNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="form-group col-md-6">
-                                <label>Sample Picture</label>
+                                <label>Sample Picture <span className="text-danger">*</span></label>
                                 <div className="d-flex align-items-center">
                                   <input
                                     name="logo"
@@ -1273,10 +1426,9 @@ const BioBankSampleArea = () => {
                                     onChange={(e) => logoHandler(e.target.files[0])}
                                     className="form-control"
                                     style={{
-                                      fontSize: "14px",
                                       height: "45px",
-                                      backgroundColor: "#f0f0f0",
-                                      color: "black",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.logo ? "#fdecea" : "#fff",
                                     }}
                                   />
                                   {logoPreview && (
@@ -1292,6 +1444,7 @@ const BioBankSampleArea = () => {
                                   )}
                                 </div>
                               </div>
+
                             </div>
                           </div>
                         )}
@@ -1317,7 +1470,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Ethnicity
                                   </option>
                                   {ethnicityNames.map((name, index) => (
                                     <option key={index} value={name}>
@@ -1344,7 +1496,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Sample Condition
                                   </option>
                                   {sampleconditionNames.map((name, index) => (
                                     <option key={index} value={name}>
@@ -1371,7 +1522,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Storage Temperature
                                   </option>
                                   {storagetemperatureNames.map(
                                     (name, index) => (
@@ -1382,33 +1532,7 @@ const BioBankSampleArea = () => {
                                   )}
                                 </select>
                               </div>
-                              <div className="form-group">
-                                <label>Container Type</label>
-                                <select
-                                  className="form-control"
-                                  name="ContainerType"
-                                  value={formData.ContainerType}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.ContainerType
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Container type
-                                  </option>
-                                  {containertypeNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+
                               <div className="form-group position-relative">
                                 <label>Country Of Collection</label>
                                 <input
@@ -1488,33 +1612,6 @@ const BioBankSampleArea = () => {
                                       ))}
                                   </ul>
                                 )}
-                              </div>
-                              <div className="form-group">
-                                <label>Sample Type Matrix</label>
-                                <select
-                                  className="form-control"
-                                  name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.SampleTypeMatrix
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Sample Type Matrix
-                                  </option>
-                                  {sampletypematrixNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
                               </div>
                             </div>
                             {/* {Column 3} */}
@@ -1620,23 +1717,29 @@ const BioBankSampleArea = () => {
                                 <label>
                                   Infectious Disease Testing (HIV, HBV, HCV)
                                 </label>
-                                <input
-                                  type="text"
+                                <select
                                   className="form-control"
-                                  name="InfectiousDiseaseTesting"
+                                  name="TestResultUnit"
                                   value={formData.InfectiousDiseaseTesting}
                                   onChange={handleInputChange}
                                   required
                                   style={{
-                                    height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor:
-                                      formData.InfectiousDiseaseTesting
-                                        ? "#f0f0f0"
-                                        : "#f0f0f0",
+                                    height: "45px",
+                                    backgroundColor: formData.InfectiousDiseaseTesting
+                                      ? "#f0f0f0"
+                                      : "#f0f0f0",
                                     color: "black",
                                   }}
-                                />
+                                >
+                                  <option value="" hidden>
+                                  </option>
+                                  {infectiousdiseasetestingName.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               <div className="form-group">
                                 <label className="form-label">
@@ -1717,19 +1820,19 @@ const BioBankSampleArea = () => {
                                 </select>
                               </div>
                               <div className="form-group">
-                                <label>Date Of Collection</label>
+                                <label>Date Of Sampling</label>
                                 <input
                                   type="date"
                                   className="form-control"
-                                  name="DateOfCollection"
-                                  value={formData.DateOfCollection}
+                                  name="DateOfSampling"
+                                  value={formData.DateOfSampling}
                                   onChange={handleInputChange}
                                   max={new Date().toISOString().split("T")[0]} // Set max to today’s date
                                   required
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: formData.DateOfCollection
+                                    backgroundColor: formData.DateOfSampling
                                       ? "#f0f0f0"
                                       : "#f0f0f0",
                                     color: "black",
@@ -1758,7 +1861,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Concurrent Medical Conditions
                                   </option>
                                   {concurrentmedicalconditionsNames.map(
                                     (name, index) => (
@@ -1790,85 +1892,6 @@ const BioBankSampleArea = () => {
                                 />
                               </div>
                               <div className="form-group">
-                                <label className="form-label">
-                                  Test Result
-                                </label>
-                                <div>
-                                  <div
-                                    className="form-check form-check-inline"
-                                    style={{ marginRight: "10px" }}
-                                  >
-                                    <input
-                                      className="form-check-input"
-                                      type="radio"
-                                      name="TestResult"
-                                      value="Positive"
-                                      checked={
-                                        formData.TestResult ===
-                                        "Positive"
-                                      }
-                                      onChange={handleInputChange}
-                                      required
-                                      style={{ transform: "scale(0.9)" }}
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      style={{ fontSize: "14px" }}
-                                    >
-                                      Positive
-                                    </label>
-                                  </div>
-                                  <div className="form-check form-check-inline ms-3">
-                                    <input
-                                      className="form-check-input"
-                                      type="radio"
-                                      name="TestResult"
-                                      value="Negative"
-                                      checked={
-                                        formData.TestResult ===
-                                        "Negative"
-                                      }
-                                      onChange={handleInputChange}
-                                      required
-                                      style={{ transform: "scale(0.9)" }}
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      style={{ fontSize: "14px" }}
-                                    >
-                                      Negative
-                                    </label>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <label>Test Result Unit</label>
-                                <select
-                                  className="form-control"
-                                  name="TestResultUnit"
-                                  value={formData.TestResultUnit}
-                                  onChange={handleInputChange}
-                                  required
-                                  style={{
-                                    fontSize: "14px",
-                                    height: "45px",
-                                    backgroundColor: formData.TestResultUnit
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
-                                    color: "black",
-                                  }}
-                                >
-                                  <option value="" hidden>
-                                    Select Test Result Unit
-                                  </option>
-                                  {testresultunitNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="form-group">
                                 <label>Test Method</label>
                                 <select
                                   className="form-control"
@@ -1886,7 +1909,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Test Method
                                   </option>
                                   {testmethodNames.map((name, index) => (
                                     <option key={index} value={name}>
@@ -1914,7 +1936,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Test Kit Manufacturer
                                   </option>
                                   {testkitmanufacturerNames.map(
                                     (name, index) => (
@@ -1947,7 +1968,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Test System
                                   </option>
                                   {testsystemNames.map((name, index) => (
                                     <option key={index} value={name}>
@@ -1975,7 +1995,6 @@ const BioBankSampleArea = () => {
                                   }}
                                 >
                                   <option value="" hidden>
-                                    Select Test System Manufacturer
                                   </option>
                                   {testsystemmanufacturerNames.map(
                                     (name, index) => (
@@ -2044,7 +2063,7 @@ const BioBankSampleArea = () => {
                 <div className="modal-content">
                   <form onSubmit={handlePriceSubmit}>
                     <div className="modal-header">
-                      <h5 className="modal-title">Set Price & Currency</h5>
+                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolume}{selectedSampleUnit}</h5>
                       <button
                         type="button"
                         className="close"
@@ -2062,9 +2081,37 @@ const BioBankSampleArea = () => {
                     <div className="modal-body">
                       <div className="form-group">
                         <label>Price</label>
+                        <select
+                          className="form-control"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          style={{
+                            height: "45px",
+                            fontSize: "14px",
+                            backgroundColor: "#f0f0f0",
+                            color: "black",
+                            marginBottom: '10px',
+                          }}
+                        >
+                          <option value="" hidden>
+                            Select Price (or type below)
+                          </option>
+                          {samplePrice && samplePrice.length > 0 ? (
+                            samplePrice.map((p, idx) => (
+                              <option key={idx} value={p.price}>
+                                {p.price}
+                              </option>
+                            ))
+                          ) : (
+                            <option disabled>No prices found</option>
+
+                          )}
+                        </select>
+
                         <input
                           type="number"
                           className="form-control"
+                          placeholder="Or enter new price"
                           value={price}
                           onChange={(e) => setPrice(e.target.value)}
                           required
@@ -2076,6 +2123,7 @@ const BioBankSampleArea = () => {
                           }}
                         />
                       </div>
+
                       <div className="form-group">
                         <label>Sample Price Currency</label>
                         <select

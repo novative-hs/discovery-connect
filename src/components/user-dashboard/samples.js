@@ -24,13 +24,13 @@ const SampleArea = () => {
   };
   const [selectedSample, setSelectedSample] = useState(null);
   const tableHeaders = [
-    { label: "Sample Name", key: "samplename" },
-    { label: "Pack size", key: "packsize" },
+    { label: "Sample Name", key: "diseasename" },
+    { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
 
 
   ];
@@ -45,7 +45,7 @@ const SampleArea = () => {
     setShowModal(false);
   };
   const [formData, setFormData] = useState({
-    samplename: "",
+    diseasename: "",
     age: "",
     gender: "",
     ethnicity: "",
@@ -63,7 +63,7 @@ const SampleArea = () => {
     InfectiousDiseaseTesting: "",
     InfectiousDiseaseResult: "",
     FreezeThawCycles: "",
-    DateOfCollection: "",
+    DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
     DiagnosisTestParameter: "",
@@ -77,7 +77,7 @@ const SampleArea = () => {
     user_account_id: id,
   });
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     // { label: "Price", key: "price" },
     // { label: "Quantity", key: "orderquantity" },
     // { label: "Total Payment", key: "totalpayment" },
@@ -94,7 +94,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
@@ -124,7 +124,7 @@ const SampleArea = () => {
     setFormData((prevData) => {
       const newFormData = {
         ...prevData, // Preserve any existing data in formData
-        samplename: sample.samplename,
+        diseasename: sample.diseasename,
         age: sample.age,
         gender: sample.gender,
         ethnicity: sample.ethnicity,
@@ -143,7 +143,7 @@ const SampleArea = () => {
         InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
         status: sample.status,
         FreezeThawCycles: sample.FreezeThawCycles,
-        DateOfCollection: sample.DateOfCollection,
+        DateOfSampling: sample.DateOfSampling,
         ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
         ConcurrentMedications: sample.ConcurrentMedications,
         DiagnosisTestParameter: sample.DiagnosisTestParameter,
@@ -298,19 +298,15 @@ const SampleArea = () => {
                 {currentData.length > 0 ? (
                   currentData.map((sample) => (
                     <tr key={sample.id}>
-                    {tableHeaders.map(({ key }, index) => (
-  <td
-    key={index}
-    className={
-      key === "price"
-        ? "text-end"
-        : key === "samplename"
-        ? ""
-        : "text-center text-truncate"
-    }
-    style={{ maxWidth: "150px" }}
-  >
-    {key === "samplename" ? (
+                   {tableHeaders.map(({ key }, index) => {
+  let content;
+
+  if (key === "price") {
+    content = sample.price
+      ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+      : "----";
+  } else if (key === "diseasename") {
+    content = (
       <span
         className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
         role="button"
@@ -323,15 +319,31 @@ const SampleArea = () => {
         onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
         onMouseOut={(e) => (e.target.style.color = "")}
       >
-        {sample.samplename || "----"}
+        {sample.diseasename || "----"}
       </span>
-    ) : key === "packsize" ? (
-      `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
-    ) : (
-      sample[key] || "----"
-    )}
-  </td>
-))}
+    );
+  } else if (key === "volume") {
+    content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+  } else {
+    content = sample[key] || "----";
+  }
+
+  return (
+    <td
+      key={index}
+      className={
+        key === "price"
+          ? "text-end"
+          : key === "diseasename"
+          ? ""
+          : "text-center text-truncate"
+      }
+      style={{ maxWidth: "150px" }}
+    >
+      {content}
+    </td>
+  );
+})}
 
                       <td className="w-auto" style={{ minWidth: "40px" }}>
 

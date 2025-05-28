@@ -3,8 +3,8 @@ import CollectionSiteStaffArea from "./collectionsitestaff";
 import CSRArea from "./CSR";
 import CommitteeMemberArea from "./committe-members";
 
-const StaffManagementPage = () => {
-  const [activeSection, setActiveSection] = useState("collectionsite");
+const StaffManagementPage = ({ defaultSection = "collectionsite" }) => {
+  const [activeSection, setActiveSection] = useState(defaultSection);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -13,7 +13,10 @@ const StaffManagementPage = () => {
     setShowDropdown(false);
   };
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    setActiveSection(defaultSection);
+  }, [defaultSection]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -28,8 +31,7 @@ const StaffManagementPage = () => {
 
   return (
     <div className="container mt-3">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold">Manage Staff</h2>
+      <div className="d-flex justify-content-end align-items-end mb-2">
         <div className="position-relative" ref={dropdownRef}>
           <button
             className="btn btn-outline-primary"

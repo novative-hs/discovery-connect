@@ -62,7 +62,7 @@ mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
   params.push(pageSizeInt, offset);
 
   const query = `
-    SELECT sr.*, sr.sampleID, s.samplename, s.donorID, s.age, s.gender,
+    SELECT sr.*, sr.sampleID, s.diseasename, s.donorID, s.age, s.gender,
  s.samplecondition,s.ethnicity,s.ContainerType,s.CountryOfCollection,s.SamplePriceCurrency,s.QuantityUnit,
  s.AlcoholOrDrugAbuse,
   s.ConcurrentMedicalConditions,
@@ -77,7 +77,7 @@ mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
     s.InfectiousDiseaseTesting,
     s.InfectiousDiseaseResult,
     s.FreezeThawCycles,
-    s.DateOfCollection,
+    s.DateOfSampling,
     s.SampleTypeMatrix,
     s.SmokingStatus
     FROM discoveryconnect.samplereturn sr

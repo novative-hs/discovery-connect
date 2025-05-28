@@ -211,7 +211,7 @@ const OrderPage = () => {
                 <tr className="text-center">
                   {[
                     { label: "Order Id", field: "order_id" },
-                    { label: "Sample Name", field: "samplename" },
+                    { label: "Sample Name", field: "diseasename" },
                     { label: "Order Status", field: "order_status" },
                     {
                       label: "Technical Admin Status",
@@ -316,7 +316,7 @@ const OrderPage = () => {
                           setSampleShowModal(true);
                         }}
                       >
-                        {order.samplename}
+                        {order.diseasename}
                       </td>
                       <td>{order.order_status}</td>
                       <td>{order.technical_admin_status}</td>
@@ -655,7 +655,7 @@ const OrderPage = () => {
                   style={{ backgroundColor: "#cfe2ff", color: "#000" }}
                 >
                   <h5 className="fw-bold">
-                    {selectedSample.samplename} Details:
+                    {selectedSample.diseasename} Details:
                   </h5>
                   <button
                     type="button"
@@ -682,8 +682,8 @@ const OrderPage = () => {
                           <strong>Order Quantity:</strong> {selectedSample.quantity}
                         </p>
                         <p>
-                          <strong>Pack size:</strong>{" "}
-                          {selectedSample.packsize} {selectedSample.Quantityunit}
+                          <strong>Volume:</strong>{" "}
+                          {selectedSample.volume} {selectedSample.Quantityunit}
                         </p>
                         <p>
                           <strong>Age:</strong> {selectedSample.age} years |{" "}

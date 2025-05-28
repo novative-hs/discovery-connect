@@ -22,7 +22,7 @@ const BioBankSampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -40,30 +40,24 @@ const BioBankSampleArea = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-
     { label: "Country of Collection", key: "CountryOfCollection" },
-
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
 
   ];
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
-    { label: "Packe size", key: "packsize" },
+    { label: "Disease Name", key: "diseasename" },
+    { label: "Packe size", key: "volume" },
     { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
 
 
   ];
@@ -256,13 +250,13 @@ const BioBankSampleArea = () => {
             className={
               key === "price"
                 ? "text-end"
-                : key === "samplename"
+                : key === "diseasename"
                 ? ""
                 : "text-center text-truncate"
             }
             style={{ maxWidth: "150px" }}
           >
-            {key === "samplename" ? (
+            {key === "diseasename" ? (
               <span
                 className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                 role="button"
@@ -275,10 +269,10 @@ const BioBankSampleArea = () => {
                 onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                 onMouseOut={(e) => (e.target.style.color = "")}
               >
-                {sample.samplename || "----"}
+                {sample.diseasename || "----"}
               </span>
-            ) : key === "packsize" ? (
-              `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
+            ) : key === "volume" ? (
+              `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
             ) : (
               sample[key] || "----"
             )}
@@ -441,7 +435,7 @@ const BioBankSampleArea = () => {
                       historyData.map((log, index) => {
                         // Only include the desired fields
                         const filteredLog = {
-                          sample_status: log.sample_status,
+                          sample_visibility: log.sample_visibility,
                           comment: log.comments,
                           created_at: log.created_at,
                           updated_at: log.updated_at,

@@ -29,8 +29,9 @@ const OrderInfo = ({ setActiveTab }) => {
     { label: "Researchers", count: userCount.totalResearchers, icon: "fa-user", color: "warning", tab: "researcher" },
     { label: "Organizations", count: userCount.totalOrganizations, icon: "fa-building", color: "danger", tab: "organization" },
     { label: "Collection Sites", count: userCount.totalCollectionSites, icon: "fa-map-marker-alt", color: "dark", tab: "collectionsite" },
-    { label: "Committee Members", count: userCount.totalCommitteeMembers, icon: "fa-users", color: "secondary", tab: "committee-members" },
-    { label: "CSR", count: userCount.totalCSR, icon: "fa-box", color: "success", tab: "CSR" },
+    { label: "Committee Members", count: userCount.totalCommitteeMembers, icon: "fa-users", color: "secondary",  tab: "staffManagementPage:committee" },
+    { label: "CSR", count: userCount.totalCSR, icon: "fa-box", color: "success", tab: "staffManagementPage:csr" }
+
   ];
 
   return (

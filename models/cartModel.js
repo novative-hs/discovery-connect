@@ -291,7 +291,7 @@ const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
       s.id AS sampleid, 
-      s.samplename AS samplename,
+      s.diseasename AS diseasename,
       s.discount AS discount,
       s. user_account_id AS user_account_id,
       cs.CollectionSiteName,
@@ -441,7 +441,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       r.ResearcherName AS researcher_name, 
       org.OrganizationName AS organization_name,
       c.sample_id, 
-      s.samplename, 
+      s.diseasename, 
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
       s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
@@ -554,7 +554,7 @@ const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, ca
       r.ResearcherName AS researcher_name, 
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
-      s.samplename, 
+      s.diseasename, 
       s.age, s.gender, s.ethnicity, s.samplecondition, 
       s.storagetemp, s.ContainerType, s.CountryofCollection, 
       s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
@@ -669,8 +669,8 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
   });
 };
 
-const getAllOrderByOrderPacking = (csrUserId, callback) => {
-  const sqlQuery = `
+const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
+  let sqlQuery = `
     SELECT 
       c.*, 
       c.user_id, 
@@ -680,7 +680,7 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
       r.fullAddress,
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
-      s.samplename, 
+      s.diseasename, 
       c.order_status,  
       c.created_at,
 
@@ -697,21 +697,24 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
     LEFT JOIN country ON r.country = country.id
     LEFT JOIN district ON r.district = district.id
 
-    -- Join collectionsite_staff to match sample ownership
-    JOIN collectionsitestaff cs_staff 
-      ON cs_staff.user_account_id = s.user_account_id
-
-    -- Join CSR to get the collection site they belong to
-    JOIN csr 
-      ON csr.collection_id = cs_staff.collectionsite_id
-
-    -- Only get samples where the CSR is from the same collection site
-    WHERE csr.user_account_id = ?
-
-    ORDER BY c.created_at ASC;
+    JOIN collectionsitestaff cs_staff ON cs_staff.user_account_id = s.user_account_id
+    JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
   `;
 
-  mysqlConnection.query(sqlQuery, [csrUserId], (err, results) => {
+  const params = [];
+
+  if (staffAction === "all_order") {
+    // Show all orders - no filtering by CSR user_account_id
+    // So no WHERE clause restricting csr.user_account_id
+  } else {
+    // Show only orders from CSR's collection site
+    sqlQuery += ` WHERE csr.user_account_id = ? `;
+    params.push(csrUserId);
+  }
+
+  sqlQuery += " ORDER BY c.created_at ASC;";
+
+  mysqlConnection.query(sqlQuery, params, (err, results) => {
     if (err) {
       console.error("Error fetching orders:", err);
       return callback(err, null);
@@ -719,6 +722,7 @@ const getAllOrderByOrderPacking = (csrUserId, callback) => {
     callback(null, results);
   });
 };
+
 
 
 const updateTechnicalAdminStatus = async (id, technical_admin_status) => {

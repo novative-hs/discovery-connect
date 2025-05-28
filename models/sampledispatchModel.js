@@ -36,13 +36,14 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       s.id,
       s.masterID,
       s.donorID,
-      s.samplename,
+      s.diseasename,
       s.age,
       s.gender,
       s.ethnicity,
       s.samplecondition,
       s.storagetemp,
       s.ContainerType,
+      s.volume,
       s.CountryOfCollection,
       s.price,
       s.SamplePriceCurrency,
@@ -53,7 +54,7 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       s.InfectiousDiseaseTesting,
       s.InfectiousDiseaseResult,
       s.FreezeThawCycles,
-      s.DateOfCollection,
+      s.DateOfSampling,
       s.ConcurrentMedicalConditions,
       s.ConcurrentMedications,
       s.DiagnosisTestParameter,
@@ -72,7 +73,7 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       sd.TransferDate,
       sd.Quantity,
       sd.status,
-      s.sample_status
+      s.sample_visibility
     FROM sampledispatch sd
     JOIN sample s ON sd.sampleID = s.id
     JOIN collectionsitestaff cs_staff ON cs_staff.user_account_id = ?

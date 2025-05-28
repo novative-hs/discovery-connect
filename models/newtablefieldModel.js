@@ -18,20 +18,45 @@ const tablesAndColumns = [
       {
         column: "Reason",
         type: "TEXT",
-        nullable: true, 
+        nullable: true,
       },
     ]
   },
-  {table:"sample",
-    columnsToAdd:[
-      {column:"packsize",
-        type:"DOUBLE",
-         nullable: true, 
+  {
+    table: "sample",
+    columnsToAdd: [
+      {
+        column: "volume",
+        type: "DOUBLE",
+        nullable: true,
       }
+    ],
+  },
+  {
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "infectiousdisease_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "infectiousdiseasetesting", column: "id" },
+      },
     ]
   },
 
-   {
+  {
+    table: "csr",
+    columnsToAdd: [
+      {
+        column: "permission",
+        type: "VARCHAR(15)",
+        nullable: true,
+      }
+    ]
+
+  },
+
+  {
     table: "registrationadmin_history",
     columnsToAdd: [
       {
@@ -303,25 +328,38 @@ const updateEnumColumn = (table, column, enumValues, isNullable = true, defaultV
 
 // Function to iterate through all tables and ensure columns exist or delete columns
 const createOrUpdateTables = async () => {
- tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
-  // Ensure columns exist for each table
-  if (Array.isArray(columnsToAdd)) {
-    ensureColumnsExist(table, columnsToAdd);
-  }
+  tablesAndColumns.forEach(({ table, columnsToAdd, columnsToDelete }) => {
+    // Ensure columns exist for each table
+    if (Array.isArray(columnsToAdd)) {
+      ensureColumnsExist(table, columnsToAdd);
+    }
 
-  // Delete columns for each table (only if columnsToDelete is defined)
-  if (Array.isArray(columnsToDelete)) {
-    deleteColumns(table, columnsToDelete);
-  }
-  updateEnumColumn("collectionsitestaff", "permission", [
-  "add_full", 
-  "add_basic", 
-  "edit", 
-  "dispatch", 
-  "receive", 
-  "all"
-], true, "all");
-});
+    // Delete columns for each table (only if columnsToDelete is defined)
+    if (Array.isArray(columnsToDelete)) {
+      deleteColumns(table, columnsToDelete);
+    }
+
+    // Rename 'packsize' to 'volume'
+    renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
+
+    // Rename 'DateOfCollection' to 'DateOfSampling'
+    renameColumn("sample", "DateOfCollection", "DateOfSampling", "VARCHAR(255)");
+
+    // Rename 'samplename' to 'diseasename'
+    renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
+
+    // RENAME sample_status TO sample_visibility
+    renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
+
+    updateEnumColumn("collectionsitestaff", "permission", [
+      "add_full",
+      "add_basic",
+      "edit",
+      "dispatch",
+      "receive",
+      "all"
+    ], true, "all");
+  });
 
 
   // await executeSequentially([

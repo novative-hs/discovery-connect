@@ -39,55 +39,54 @@ const SingleProduct = ({ product, discountPrd = false }) => {
 
   return (
     <React.Fragment>
-  <div className="product__item p-relative transition-3 mb-50 shadow rounded border bg-white overflow-hidden" style={{ transition: '0.3s ease', padding: '1rem' }}>
-  <div className="product__thumb w-img p-relative mb-3 rounded overflow-hidden">
-    <Image
-      src={product.imageUrl}
-      alt="product image"
-      width={960}
-      height={1125}
-      style={{ objectFit: 'cover', width: '100%', height: '250px', borderRadius: '12px' }}
-    />
-  </div>
+      <div className="product__item p-relative transition-3 mb-50 shadow rounded border bg-white overflow-hidden" style={{ transition: '0.3s ease', padding: '1rem' }}>
+        <div className="product__thumb w-img p-relative mb-3 rounded overflow-hidden">
+          <Image
+            src={product.imageUrl}
+            alt="product image"
+            width={960}
+            height={1125}
+            style={{ objectFit: 'cover', width: '100%', height: '250px', borderRadius: '12px' }}
+          />
+        </div>
 
-  <h5 className="mb-2 fw-bold text-dark">{product.samplename}</h5>
+        <h5 className="mb-2 fw-bold text-dark">{product.diseasename}</h5>
 
-  <div className="d-flex justify-content-between text-muted small mb-1">
-  <span>Price: <strong className="text-dark">₨ {product.price}</strong></span>
-  <span>Stock: <strong>{product.quantity}</strong></span>
-</div>
+        <div className="d-flex justify-content-between text-muted small mb-1">
+          <span>Stock: <strong>{product.quantity}</strong></span>
+        </div>
 
-<div className="text-muted small mb-3">
-  Allocated: <strong>{product.quantity_allocated ?? 0}</strong>
-</div>
+        <div className="text-muted small mb-3">
+          Allocated: <strong>{product.quantity_allocated ?? 0}</strong>
+        </div>
 
-  <div className="d-flex gap-2">
-  {product.quantity === 0 ? (
-  <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
-    Sample Allocated
-  </button>
-) : isInCart(product.id) ? (
-  <button className="btn btn-secondary w-75" disabled>
-    Added
-  </button>
-) : (
-  <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
-    Add to Cart
-  </button>
-)}
+        <div className="d-flex gap-2">
+          {product.quantity === 0 ? (
+            <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+              Sample Allocated
+            </button>
+          ) : isInCart(product.id) ? (
+            <button className="btn btn-secondary w-75" disabled>
+              Added
+            </button>
+          ) : (
+            <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+              Add to Cart
+            </button>
+          )}
 
 
-    <button
-      onClick={() => handleQuickView(product)}
-      className="btn btn-outline-danger w-25"
-      data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      title="Quick View"
-    >
-      <Eye product={product} />
-    </button>
-  </div>
-</div>
+          <button
+            onClick={() => handleQuickView(product)}
+            className="btn btn-outline-danger w-25"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Quick View"
+          >
+            <Eye product={product} />
+          </button>
+        </div>
+      </div>
 
 
     </React.Fragment>

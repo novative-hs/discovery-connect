@@ -54,7 +54,7 @@ const CartBreadcrumb = ({ title, subtitle }) => {
     }}
   >
     <i className="fas fa-arrow-left me-2" style={{ fontSize: "18px" }}></i>
-    <span>Back to Available Samples</span>
+    <span>Back  Home</span>
   </button>
 </div>
 

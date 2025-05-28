@@ -9,6 +9,18 @@ const createSampleTable = (req, res) => {
   res.status(200).json({ message: "Sample table creation process started" });
 };
 
+const getPrice = (req, res) => {
+  const { name } = req.params;
+console.log(name)
+  SampleModel.getPrice(name, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples price" });
+    }
+    res.status(200).json({ data: results });
+  });
+};
+
+
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
@@ -112,12 +124,12 @@ const createSample = (req, res) => {
   const file = req.file;
   // Attach file buffer to the sampleData
   sampleData.logo = file?.buffer;
-  // DateOfCollection will show data only before today
+  // DateOfSampling will show data only before today
   const today = new Date();
-  const dateOfCollection = new Date(sampleData.DateOfCollection);
+  const DateOfSampling = new Date(sampleData.DateOfSampling);
 
-  if (dateOfCollection >= today) {
-    return res.status(400).json({ error: "DateOfCollection must be before today" });
+  if (DateOfSampling >= today) {
+    return res.status(400).json({ error: "DateOfSampling must be before today" });
   }
   SampleModel.createSample(sampleData, (err, result) => {
     if (err) {
@@ -136,8 +148,8 @@ const updateSample = (req, res) => {
 
   // Attach file buffer to the sampleData
   sampleData.logo = file?.buffer;
-  if (sampleData.DateOfCollection) {
-    sampleData.DateOfCollection = moment(sampleData.DateOfCollection).format('YYYY-MM-DD');
+  if (sampleData.DateOfSampling) {
+    sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
 
   SampleModel.updateSample(id, sampleData, (err, result) => {
@@ -200,5 +212,6 @@ module.exports = {
   createSample,
   updateSample,
   updateQuarantineSamples,
-  deleteSample
+  deleteSample,
+  getPrice
 };

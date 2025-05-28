@@ -16,16 +16,19 @@ const BioBankSampleArea = () => {
     console.log("Collection site Id on sample page is:", id);
   }
   const [formData, setFormData] = useState({
-    sample_status: "",
+    sample_visibility: "",
     added_by: id,
   });
+  const [selectedSampleName, setSelectedSampleName] = useState('')
+  const [selectedSampleVolume, setSelectedSampleVolume] = useState('')
+  const [selectedSampleUnit, setSelectedSampleUnit] = useState('')
   const [showModal, setShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSample, setEditSample] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "samplename" },
+    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -41,31 +44,23 @@ const BioBankSampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-
     { label: "Country of Collection", key: "CountryOfCollection" },
-
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
 
   ];
   const tableHeaders = [
-    { label: "Disease Name", key: "samplename" },
-    { label: "Pack size", key: "packsize" },
-    { label: "Sample Price Currency", key: "SamplePriceCurrency" },
+    { label: "Disease Name", key: "diseasename" },
+    { label: "Volume", key: "volume" },
     { label: "Price", key: "price" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
-    { label: "Sample Status", key: "sample_status" },
+    { label: "Sample Visibility", key: "sample_visibility" },
   ];
   const [samples, setSamples] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState(samples);
@@ -193,10 +188,13 @@ const BioBankSampleArea = () => {
 
   ]);
   const openEditModal = (sample) => {
+    setSelectedSampleName(sample.diseasename)
+    setSelectedSampleUnit(sample.QuantityUnit)
+    setSelectedSampleVolume(sample.volume)
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setFormData({
-      sample_status: sample.sample_status || "",
+      sample_visibility: sample.sample_visibility || "",
       added_by: id,
     });
     setShowEditModal(true);
@@ -259,65 +257,71 @@ const BioBankSampleArea = () => {
                 </th>
               </tr>
             </thead>
-           <tbody className="table-light">
-  {currentData.length > 0 ? (
-    currentData.map((sample) => (
-      <tr key={sample.id}>
-        {tableHeaders.map(({ key }, index) => (
-          <td
-            key={index}
-            className={
-              key === "price"
-                ? "text-end"
-                : key === "samplename"
-                ? ""
-                : "text-center text-truncate"
-            }
-            style={{ maxWidth: "150px" }}
-          >
-            {key === "samplename" ? (
-              <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                role="button"
-                title="Sample Details"
-                onClick={() => openModal(sample)}
-                style={{
-                  cursor: "pointer",
-                  transition: "color 0.2s",
-                }}
-                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                onMouseOut={(e) => (e.target.style.color = "")}
-              >
-                {sample.samplename || "----"}
-              </span>
-            ) : key === "packsize" ? (
-              `${sample.packsize || "----"} ${sample.QuantityUnit || ""}`
-            ) : (
-              sample[key] || "----"
-            )}
-          </td>
-        ))}
-        <td>
-          <div className="d-flex justify-content-center gap-3">
-            <button
-              className="btn btn-success btn-sm"
-              onClick={() => openEditModal(sample)}
-              title="Edit Sample Status"
-            >
-              <FontAwesomeIcon icon={faEdit} size="xs" />
-            </button>
-          </div>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="8" className="text-center">
-        No samples available
-      </td>
-    </tr>
-  )}
-</tbody>
+            <tbody className="table-light">
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr key={sample.id}>
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : key === "diseasename"
+                              ? ""
+                              : "text-center text-truncate"
+                        }
+                        style={{ maxWidth: "150px" }}
+                      >
+                        {key === "diseasename" ? (
+                          <span
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openModal(sample)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.diseasename || "----"}
+                          </span>
+                        ) : key === "volume" ? (
+                          `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                        ) : key === "price" ? (
+                          sample.price && sample.SamplePriceCurrency ? (
+                            `${sample.price} ${sample.SamplePriceCurrency}`
+                          ) : (
+                            "----"
+                          )
+                        ) : (
+                          sample[key] || "----"
+                        )}
+                      </td>
+                    ))}
+                    <td>
+                      <div className="d-flex justify-content-center gap-3">
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => openEditModal(sample)}
+                          title="Edit Sample Status"
+                        >
+                          <FontAwesomeIcon icon={faEdit} size="xs" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center">
+                    No samples available
+                  </td>
+                </tr>
+              )}
+            </tbody>
 
           </table>
         </div>
@@ -354,7 +358,7 @@ const BioBankSampleArea = () => {
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">
-                      Edit Sample Status
+                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolume}{selectedSampleUnit}</h5>
                     </h5>
                     <button
                       type="button"
@@ -387,8 +391,8 @@ const BioBankSampleArea = () => {
                         <label>Sample Status</label>
                         <select
                           className="form-control"
-                          name="sample_status"
-                          value={formData.sample_status}
+                          name="sample_visibility"
+                          value={formData.sample_visibility}
                           onChange={handleInputChange}
                           required
                         >
@@ -411,7 +415,6 @@ const BioBankSampleArea = () => {
             </div>
           </>
         )}
-
 
       </div>
       <Modal show={showModal}

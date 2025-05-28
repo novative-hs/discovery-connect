@@ -29,7 +29,7 @@ const SampleArea = () => {
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
     { label: "Researcher Name", key: "researcher_name" },
-    { label: "Sample Name", key: "samplename" },
+    { label: "Sample Name", key: "diseasename" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
     { label: "Committee Comments", key: "comments" },
@@ -552,7 +552,7 @@ const SampleArea = () => {
                 className="modal-header d-flex justify-content-between align-items-center"
                 style={{ backgroundColor: "#cfe2ff", color: "#000" }}
               >
-                <h5 className="fw-bold">{selectedSample.samplename}</h5>
+                <h5 className="fw-bold">{selectedSample.diseasename}</h5>
                 <button
                   type="button"
                   className="close"
@@ -579,8 +579,8 @@ const SampleArea = () => {
                         {selectedSample.SamplePriceCurrency}
                       </p>
                       <p>
-                        <strong>Quantity unit:</strong>{" "}
-                        {selectedSample.QuantityUnit}
+                        <strong>Volume:</strong>{" "}
+                        {selectedSample.volume} {selectedSample.QuantityUnit}
                       </p>
                       <p>
                         <strong>Country of Collection:</strong>{" "}
