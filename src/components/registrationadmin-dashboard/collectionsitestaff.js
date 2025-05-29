@@ -162,22 +162,22 @@ const CollectionSiteStaffArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-  setSearchTerm(value);
+    setSearchTerm(value);
 
-  if (!value) {
-    setCollectionsitesstaff(allcollectionsitesstaff); // ✅ restore full list
-  } else {
-    const filtered = allcollectionsitesstaff.filter((collectionsite) => {
-      return collectionsite[field]
-        ?.toString()
-        .toLowerCase()
-        .includes(value.toLowerCase());
-    });
-    setCollectionsitesstaff(filtered);
-  }
+    if (!value) {
+      setCollectionsitesstaff(allcollectionsitesstaff); // ✅ restore full list
+    } else {
+      const filtered = allcollectionsitesstaff.filter((collectionsite) => {
+        return collectionsite[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+      setCollectionsitesstaff(filtered);
+    }
 
-  setCurrentPage(0); // Reset to first page when filtering
-};
+    setCurrentPage(0); // Reset to first page when filtering
+  };
 
   useEffect(() => {
     const updatedFilteredCollectionsitestaff = collectionsitesstaff.filter((collectionsite) => {
@@ -189,14 +189,14 @@ const CollectionSiteStaffArea = () => {
     setCurrentPage(0); // Reset to first page when filtering
   }, [collectionsitesstaff, statusFilter]);
 
- 
+
 
   const currentData = filteredCollectionsitesstaff.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
 
-   const handlePageChange = (event) => {
+  const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
   const handleInputChange = (e) => {
@@ -393,510 +393,510 @@ const CollectionSiteStaffArea = () => {
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
-          {/* Button Container */}
-          <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100">
-            {/* Success Message */}
-            {successMessage && (
-              <div
-                className="alert alert-success w-100 text-start"
-                role="alert"
-              >
-                {successMessage}
-              </div>
+      {/* Button Container */}
+      <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100">
+        {/* Success Message */}
+        {successMessage && (
+          <div
+            className="alert alert-success w-100 text-start"
+            role="alert"
+          >
+            {successMessage}
+          </div>
+        )}
+
+        <h5 className="m-0 fw-bold">Collection Site's Staff List</h5>
+
+        {/* Status Filter and Add Button in Same Row */}
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
+          <div className="d-flex align-items-center gap-2">
+            <label htmlFor="statusFilter" className="mb-0">
+              Status:
+            </label>
+            <select
+              id="statusFilter"
+              className="form-control"
+              style={{ width: "auto" }}
+              onChange={(e) => handleFilterChange("status", e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="inactive">InActive</option>
+              <option value="active">Active</option>
+            </select>
+          </div>
+          <div className="d-flex flex-wrap gap-3 align-items-center">
+            {/* Add collection site Button */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: "#4a90e2",
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                margin: 10,
+              }}
+            >
+              <i className="fas fa-plus"></i> Add Staff
+            </button>
+            <button
+              onClick={handleExportToExcel}
+              style={{
+                backgroundColor: "#28a745",
+                color: "#fff",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontWeight: "500",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <i className="fas fa-file-excel"></i> Export to Excel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <table className="table table-hover table-bordered text-center align-middle w-100">
+          <thead className="table-primary text-dark">
+            <tr className="text-center">
+              {columns.map(({ label, placeholder, field }) => (
+                <th key={field} className="col-md-1 px-2">
+
+                  <div className="d-flex flex-column align-items-center">
+                    <input
+                      type="text"
+                      className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                      placeholder={`Search ${label}`}
+                      onChange={(e) => handleFilterChange(field, e.target.value)}
+                      style={{ minWidth: "150px", maxWidth: "200px", width: "100px" }}
+                    />
+                    <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                      {label}
+                    </span>
+
+                  </div>
+                </th>
+              ))}
+              <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
+
+            </tr>
+          </thead>
+          <tbody>
+            {currentData.length > 0 ? (
+              currentData.map((collectionsitestaff) => (
+                <tr key={collectionsitestaff.id}>
+                  {columns.map(({ field }) => (
+
+                    <td
+                      key={field}
+                      className={
+                        field === "staffName"
+                          ? "text-start text-nowrap"
+                          : "text-center text-truncate"
+                      }
+                      style={{ maxWidth: "150px" }}
+                    >
+                      {field === "staffName" ? (
+                        <span
+                          className="staffName text-primary fw-semibold fs-6 text-decoration-underline"
+                          role="button"
+                          title="Collection Site Details"
+                          onClick={() => openModal(collectionsitestaff)}
+                          style={{
+                            cursor: "pointer",
+                            transition: "color 0.2s",
+                          }}
+                          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                          onMouseOut={(e) => (e.target.style.color = "")}
+                        >
+                          {collectionsitestaff[field] || "----"}
+                        </span>
+                      ) : field === "created_at" || field === "updated_at" ? (
+                        moment(collectionsitestaff[field]).format("YYYY-MM-DD")
+                      ) : (
+                        collectionsitestaff[field] || "----"
+                      )}
+                    </td>
+
+                  ))}
+                  <td className="position-relative">
+                    <div className="d-flex justify-content-center gap-2">
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => handleEditClick(collectionsitestaff)}
+                        title="Edit"
+                      >
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+
+                      <div className="btn-group">
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleToggleStatusOptions(collectionsitestaff.id)}
+                          title="Edit Status"
+                        >
+                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                        </button>
+
+                        {statusOptionsVisibility[collectionsitestaff.id] && (
+                          <div
+                            className="dropdown-menu show"
+                            data-id={collectionsitestaff.id}
+                            style={{
+                              position: "absolute",
+                              top: "100%",
+                              left: "0",
+                              zIndex: 1000,
+                              minWidth: "100px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            <button
+                              className="dropdown-item"
+                              onClick={() => handleStatusClick(collectionsitestaff.id, "active")}
+                            >
+                              Active
+                            </button>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => handleStatusClick(collectionsitestaff.id, "inactive")}
+                            >
+                              InActive
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        className="btn btn-info btn-sm"
+                        onClick={() => handleShowHistory("collectionsitestaff", collectionsitestaff.id)}
+                        title="History"
+                      >
+                        <FontAwesomeIcon icon={faHistory} />
+                      </button>
+                    </div>
+                  </td>
+
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length + 1} className="text-center">
+                  No collectionsites staff available
+                </td>
+              </tr>
             )}
+          </tbody>
+        </table>
+      </div>
+      {/* Pagination */}
+      {filteredCollectionsitesstaff.length >= 0 && (
+        <Pagination
+          handlePageClick={handlePageChange}
+          pageCount={Math.max(
+            1,
+            Math.ceil(filteredCollectionsitesstaff.length / itemsPerPage)
+          )}
+          focusPage={currentPage}
+        />
+      )}
+      {(showAddModal || showEditModal) && (
+        <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(5px)" }}
+          ></div>
 
-            <h5 className="m-0 fw-bold">Collection Site's Staff List</h5>
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {showAddModal
+                      ? "Add Staff "
+                      : "Edit Staff"}
+                  </h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setShowEditModal(false);
+                      resetFormData();
+                    }}
+                    style={{
+                      fontSize: "1.5rem",
+                      position: "absolute",
+                      right: "10px",
+                      top: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>&times;</span>
+                  </button>
+                </div>
 
-            {/* Status Filter and Add Button in Same Row */}
-            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
-              <div className="d-flex align-items-center gap-2">
-                <label htmlFor="statusFilter" className="mb-0">
-                  Status:
-                </label>
-                <select
-                  id="statusFilter"
-                  className="form-control"
-                  style={{ width: "auto" }}
-                  onChange={(e) => handleFilterChange("status", e.target.value)}
-                >
-                  <option value="">All</option>
-                  <option value="inactive">InActive</option>
-                  <option value="active">Active</option>
-                </select>
-              </div>
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add collection site Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{
-                    backgroundColor: "#4a90e2",
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    margin: 10,
-                  }}
-                >
-                  <i className="fas fa-plus"></i> Add Staff
-                </button>
-                <button
-                  onClick={handleExportToExcel}
-                  style={{
-                    backgroundColor: "#28a745",
-                    color: "#fff",
-                    border: "none",
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <i className="fas fa-file-excel"></i> Export to Excel
-                </button>
+                <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
+                  <div
+                    className="modal-body"
+                    style={{ maxHeight: "400px", overflowY: "auto" }}
+                  >
+                    <div className="form-group">
+                      <label>Unique Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Enter Email"
+                        autocomplete="email"
+                        required
+                      />
+                    </div>
+                    <div className="col-md-12">
+                      <label className="form-label">Password</label>
+                      <div className="input-group input-group-sm">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className="form-control"
+                          name="password"
+                          placeholder="Enter Password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+                          title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                          required
+                          autocomplete="new-password" // ✅ Add this line
+                        />
+
+                        <span
+                          className="input-group-text"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <i
+                            className={
+                              showPassword
+                                ? "fa-regular fa-eye"
+                                : "fa-regular fa-eye-slash"
+                            }
+                          ></i>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Staff Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter Name"
+                        name="staffName"
+                        value={formData.staffName}
+                        onChange={handleInputChange}
+                        pattern="^[A-Za-z\s]+$"
+                        title="Only letters and spaces are allowed."
+                        required
+                      />
+                      {!/^[A-Za-z\s]*$/.test(formData.staffName) && (
+                        <small className="text-danger">
+                          Only letters and spaces are allowed.
+                        </small>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label>Collectionsite</label>
+                      <select
+                        className="form-control p-2"
+                        name="collectionsitesid"
+                        value={formData.collectionsitesid} // Store the selected city ID in formData
+                        onChange={handleInputChange} // Handle change to update formData
+                        required
+                      >
+                        <option value="" disabled>
+                          Select Collectionsites
+                        </option>
+                        {collectionsites.map((collectionsites) => (
+                          <option key={collectionsites.id} value={collectionsites.id}>
+                            {collectionsites.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Permission</label>
+                      <select
+                        className="form-control p-2"
+                        name="permission"
+                        value={formData.permission}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">Select Permission</option>
+                        <option value="all">All Pages Access</option>
+                        <option value="add_full">Permission to Add Sample with Full Detail</option>
+                        <option value="add_basic">Permission to Add Sample with Basic Detail</option>
+                        <option value="edit">Permission to Edit Sample</option>
+                        <option value="dispatch">Permission to Dispatch Sample</option>
+                        <option value="receive">Permission to Receive Sample</option>
+                      </select>
+                    </div>
+
+                  </div>
+
+                  <div className="modal-footer">
+                    <button type="submit" className="btn btn-primary">
+                      {showAddModal ? "Save" : "Update"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
+        </>
+      )}
+      {showHistoryModal && (
+        <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(5px)" }}
+          ></div>
 
-          {/* Table */}
-          <div className="table-responsive" style={{ overflowX: "auto" }}>
-            <table className="table table-hover table-bordered text-center align-middle w-100">
-              <thead className="table-primary text-dark">
-                <tr className="text-center">
-                  {columns.map(({ label, placeholder, field }) => (
-                    <th key={field} className="col-md-1 px-2">
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              top: "100px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="modal-dialog modal-md" role="document">
+              <div className="modal-content">
+                {/* Modal Header */}
+                <div className="modal-header">
+                  <h5 className="modal-title">History</h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => setShowHistoryModal(false)}
+                    style={{
+                      fontSize: "1.5rem",
+                      position: "absolute",
+                      right: "10px",
+                      top: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>&times;</span>
+                  </button>
+                </div>
 
-                      <div className="d-flex flex-column align-items-center">
-                        <input
-                          type="text"
-                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ minWidth: "150px", maxWidth: "200px", width: "100px" }}
-                        />
-                        <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                          {label}
-                        </span>
+                {/* Chat-style Modal Body */}
+                <div
+                  className="modal-body"
+                  style={{
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                    backgroundColor: "#e5ddd5", // WhatsApp-style background
+                    padding: "15px",
+                    borderRadius: "10px",
+                  }}
+                >
+                  {historyData && historyData.length > 0 ? (
+                    historyData.map((log, index) => {
+                      const {
+                        staffName,
+                        permission,
+                        created_at,
+                        updated_at,
+                        status
+                      } = log;
 
-                      </div>
-                    </th>
-                  ))}
-                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
-
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.length > 0 ? (
-                  currentData.map((collectionsitestaff) => (
-                    <tr key={collectionsitestaff.id}>
-                      {columns.map(({ field }) => (
-
-                        <td
-                          key={field}
-                          className={
-                            field === "staffName"
-                              ? "text-end"
-                              : "text-center text-truncate"
-                          }
-                          style={{ maxWidth: "150px" }}
+                      return (
+                        <div
+                          key={index}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            marginBottom: "10px",
+                          }}
                         >
-                          {field === "staffName" ? (
-                            <span
-                              className="staffName text-primary fw-semibold fs-6 text-decoration-underline"
-                              role="button"
-                              title="Collection Site Details"
-                              onClick={() => openModal(collectionsitestaff)}
-                              style={{
-                                cursor: "pointer",
-                                transition: "color 0.2s",
-                              }}
-                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                              onMouseOut={(e) => (e.target.style.color = "")}
-                            >
-                              {collectionsitestaff[field] || "----"}
-                            </span>
-                          ) : field === "created_at" || field === "updated_at" ? (
-                            moment(collectionsitestaff[field]).format("YYYY-MM-DD")
-                          ) : (
-                            collectionsitestaff[field] || "----"
-                          )}
-                        </td>
-
-                      ))}
-                      <td className="position-relative">
-                        <div className="d-flex justify-content-center gap-2">
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(collectionsitestaff)}
-                            title="Edit"
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </button>
-
-                          <div className="btn-group">
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleToggleStatusOptions(collectionsitestaff.id)}
-                              title="Edit Status"
-                            >
-                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
-                            </button>
-
-                            {statusOptionsVisibility[collectionsitestaff.id] && (
-                              <div
-                                className="dropdown-menu show"
-                                data-id={collectionsitestaff.id}
-                                style={{
-                                  position: "absolute",
-                                  top: "100%",
-                                  left: "0",
-                                  zIndex: 1000,
-                                  minWidth: "100px",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                <button
-                                  className="dropdown-item"
-                                  onClick={() => handleStatusClick(collectionsitestaff.id, "active")}
-                                >
-                                  Active
-                                </button>
-                                <button
-                                  className="dropdown-item"
-                                  onClick={() => handleStatusClick(collectionsitestaff.id, "inactive")}
-                                >
-                                  InActive
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          <button
-                            className="btn btn-info btn-sm"
-                            onClick={() => handleShowHistory("collectionsitestaff", collectionsitestaff.id)}
-                            title="History"
-                          >
-                            <FontAwesomeIcon icon={faHistory} />
-                          </button>
-                        </div>
-                      </td>
-
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={columns.length + 1} className="text-center">
-                      No collectionsites staff available
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Pagination */}
-          {filteredCollectionsitesstaff.length >= 0 && (
-            <Pagination
-              handlePageClick={handlePageChange}
-              pageCount={Math.max(
-                1,
-                Math.ceil(filteredCollectionsitesstaff.length / itemsPerPage)
-              )}
-              focusPage={currentPage}
-            />
-          )}
-          {(showAddModal || showEditModal) && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h5 className="modal-title">
-                        {showAddModal
-                          ? "Add Staff "
-                          : "Edit Staff"}
-                      </h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => {
-                          setShowAddModal(false);
-                          setShowEditModal(false);
-                          resetFormData();
-                        }}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
-
-                    <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
-                      <div
-                        className="modal-body"
-                        style={{ maxHeight: "400px", overflowY: "auto" }}
-                      >
-                        <div className="form-group">
-                          <label>Unique Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            autocomplete="email"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Password</label>
-                          <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                              autocomplete="new-password" // ✅ Add this line
-                            />
-
-                            <span
-                              className="input-group-text"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i
-                                className={
-                                  showPassword
-                                    ? "fa-regular fa-eye"
-                                    : "fa-regular fa-eye-slash"
-                                }
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="form-group">
-                          <label>Staff Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter Name"
-                            name="staffName"
-                            value={formData.staffName}
-                            onChange={handleInputChange}
-                            pattern="^[A-Za-z\s]+$"
-                            title="Only letters and spaces are allowed."
-                            required
-                          />
-                          {!/^[A-Za-z\s]*$/.test(formData.staffName) && (
-                            <small className="text-danger">
-                              Only letters and spaces are allowed.
-                            </small>
-                          )}
-                        </div>
-
-                        <div className="form-group">
-                          <label>Collectionsite</label>
-                          <select
-                            className="form-control p-2"
-                            name="collectionsitesid"
-                            value={formData.collectionsitesid} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
-                            required
-                          >
-                            <option value="" disabled>
-                              Select Collectionsites
-                            </option>
-                            {collectionsites.map((collectionsites) => (
-                              <option key={collectionsites.id} value={collectionsites.id}>
-                                {collectionsites.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Permission</label>
-                          <select
-                            className="form-control p-2"
-                            name="permission"
-                            value={formData.permission}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select Permission</option>
-                            <option value="all">All Pages Access</option>
-                            <option value="add_full">Permission to Add Sample with Full Detail</option>
-                            <option value="add_basic">Permission to Add Sample with Basic Detail</option>
-                            <option value="edit">Permission to Edit Sample</option>
-                            <option value="dispatch">Permission to Dispatch Sample</option>
-                            <option value="receive">Permission to Receive Sample</option>
-                          </select>
-                        </div>
-
-                      </div>
-
-                      <div className="modal-footer">
-                        <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-          {showHistoryModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "100px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog modal-md" role="document">
-                  <div className="modal-content">
-                    {/* Modal Header */}
-                    <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => setShowHistoryModal(false)}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
-
-                    {/* Chat-style Modal Body */}
-                    <div
-                      className="modal-body"
-                      style={{
-                        maxHeight: "500px",
-                        overflowY: "auto",
-                        backgroundColor: "#e5ddd5", // WhatsApp-style background
-                        padding: "15px",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      {historyData && historyData.length > 0 ? (
-                        historyData.map((log, index) => {
-                          const {
-                            staffName,
-                            permission,
-                            created_at,
-                            updated_at,
-                            status
-                          } = log;
-
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              {/* Message for City Addition */}
-                              {status === 'added' && (
-                                <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
-                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
-
-                              {status === 'updated' && (
-                                <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
-                                  <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
-                                  {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
-
-                              {status === 'active' && (
-                                <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
-                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
-
-                              {status === 'inactive' && (
-                                <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
-                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
-
+                          {/* Message for City Addition */}
+                          {status === 'added' && (
+                            <div style={baseStyle}>
+                              <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
+                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
                             </div>
-                          );
-                        })
-                      ) : (
-                        <p className="text-left">No history available.</p>
-                      )}
-                    </div>
-                  </div>
+                          )}
+
+                          {status === 'updated' && (
+                            <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
+                              <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
+                              {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
+
+                          {status === 'active' && (
+                            <div style={baseStyle}>
+                              <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
+                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
+
+                          {status === 'inactive' && (
+                            <div style={baseStyle}>
+                              <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
+                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
+
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-left">No history available.</p>
+                  )}
                 </div>
               </div>
-            </>
-          )}
+            </div>
+          </div>
+        </>
+      )}
 
-        
-      
+
+
       <Modal show={showModal}
         onHide={closeModal}
         size="lg"

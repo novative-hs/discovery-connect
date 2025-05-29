@@ -343,7 +343,7 @@ const SampleDispatchArea = () => {
                             key === "price"
                               ? "text-end"
                               : key === "diseasename"
-                                ? ""
+                                ? "text-start text-nowrap"
                                 : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px" }}

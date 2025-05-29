@@ -447,57 +447,57 @@ const OrganizationArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
- const handleExportToExcel = () => {
-  const dataToExport = filteredOrganizations.map((item) => {
-    // Convert buffer to base64 string if available
-    let logoUrl = "";
-    if (item.logo && item.logo.data) {
-      const buffer = Buffer.from(item.logo.data);
-      logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  const handleExportToExcel = () => {
+    const dataToExport = filteredOrganizations.map((item) => {
+      // Convert buffer to base64 string if available
+      let logoUrl = "";
+      if (item.logo && item.logo.data) {
+        const buffer = Buffer.from(item.logo.data);
+        logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+      }
+
+      return {
+        OrganizationName: item.OrganizationName ?? "",
+        type: item.type ?? "",
+        phoneNumber: item.phoneNumber ?? "",
+        HECPMDCRegistrationNo: item.HECPMDCRegistrationNo ?? "",
+        city: item.city ?? "",
+        country: item.country ?? "",
+        district: item.district ?? "",
+        fullAddress: item.fullAddress ?? "",
+        website: item.website ?? "",
+        status: item.status ?? "",
+        //  logo: logoUrl, 
+        "Created At": item.created_at ? formatDate(item.created_at) : "",
+        "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+      };
+    });
+
+    const headers = [
+      "OrganizationName",
+      "type",
+      "phoneNumber",
+      "HECPMDCRegistrationNo",
+      "city",
+      "country",
+      "district",
+      "fullAddress",
+      "website",
+      "status",
+      "Created At",
+      "Updated At"
+    ];
+
+    if (dataToExport.length === 0) {
+      dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
     }
 
-    return {
-      OrganizationName: item.OrganizationName ?? "",
-      type: item.type ?? "",
-      phoneNumber: item.phoneNumber ?? "",
-      HECPMDCRegistrationNo: item.HECPMDCRegistrationNo ?? "",
-      city: item.city ?? "",
-      country: item.country ?? "",
-      district: item.district ?? "",
-      fullAddress: item.fullAddress ?? "",
-       website: item.website ?? "",
-      status: item.status ?? "",
-     //  logo: logoUrl, 
-      "Created At": item.created_at ? formatDate(item.created_at) : "",
-      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-    };
-  });
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Organization");
 
-  const headers = [
-    "OrganizationName",
-    "type",
-    "phoneNumber",
-    "HECPMDCRegistrationNo",
-    "city",
-    "country",
-    "district",
-    "fullAddress",
-    "website",
-    "status",
-    "Created At",
-    "Updated At"
-  ];
-
-  if (dataToExport.length === 0) {
-    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
-  }
-
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Organization");
-
-  XLSX.writeFile(workbook, "Organization_List.xlsx");
-};
+    XLSX.writeFile(workbook, "Organization_List.xlsx");
+  };
 
 
   const openModal = (sample) => {
@@ -625,14 +625,14 @@ const OrganizationArea = () => {
                           key={field}
                           className={
                             field === "OrganizationName"
-                              ? "text-end"
+                              ? "text-start text-nowrap"
                               : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px" }}
                         >
                           {field === "OrganizationName" ? (
                             <span
-                              className="OrganizationName fs-6"
+                              className="OrganizationName text-primary fw-semibold fs-6 text-decoration-underline"
                               role="button"
                               title="Organization Details"
                               onClick={() => openModal(organization)}

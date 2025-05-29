@@ -50,16 +50,14 @@ const CollectionSiteArea = () => {
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   const columns = [
-    //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "CollectionSiteName" },
-    { label: "Name", placeholder: "Search Name", field: "CollectionSiteType" },
+    { label: "Collection Site Type", placeholder: "Search Type", field: "CollectionSiteType" },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
 
   const fieldsToShowInOrder = [
-
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
@@ -443,53 +441,53 @@ const CollectionSiteArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
- const handleExportToExcel = () => {
-  const dataToExport = filteredCollectionsites.map((item) => {
-    let logoUrl = "";
-    if (item.logo && item.logo.data) {
-      const buffer = Buffer.from(item.logo.data);
-      logoUrl = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCollectionsites.map((item) => {
+      let logoUrl = "";
+      if (item.logo && item.logo.data) {
+        const buffer = Buffer.from(item.logo.data);
+        logoUrl = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+      }
+
+      return {
+        name: item.CollectionSiteName ?? "",
+        type: item.CollectionSiteType ?? "",
+        phoneNumber: item.phoneNumber ?? "",
+        city: item.city ?? "",
+        country: item.country ?? "",
+        district: item.district ?? "",
+        fullAddress: item.fullAddress ?? "",
+        status: item.status ?? "",
+        // logo: logoUrl, // Uncomment if you want to export the logo as a base64 string
+        "Created At": item.created_at ? formatDate(item.created_at) : "",
+        "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+      };
+    });
+
+    const headers = [
+      "name",
+      "type",
+      "phoneNumber",
+      "city",
+      "country",
+      "district",
+      "fullAddress",
+      "status",
+      // "logo", // Optional
+      "Created At",
+      "Updated At"
+    ];
+
+    if (dataToExport.length === 0) {
+      dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
     }
 
-    return {
-      name: item.CollectionSiteName ?? "",
-      type: item.CollectionSiteType ?? "",
-      phoneNumber: item.phoneNumber ?? "",
-      city: item.city ?? "",
-      country: item.country ?? "",
-      district: item.district ?? "",
-      fullAddress: item.fullAddress ?? "",
-      status: item.status ?? "",
-      // logo: logoUrl, // Uncomment if you want to export the logo as a base64 string
-      "Created At": item.created_at ? formatDate(item.created_at) : "",
-      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-    };
-  });
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
 
-  const headers = [
-    "name",
-    "type",
-    "phoneNumber",
-    "city",
-    "country",
-    "district",
-    "fullAddress",
-    "status",
-    // "logo", // Optional
-    "Created At",
-    "Updated At"
-  ];
-
-  if (dataToExport.length === 0) {
-    dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
-  }
-
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
-
-  XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
-};
+    XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
+  };
 
 
 
@@ -606,14 +604,14 @@ const CollectionSiteArea = () => {
                           key={field}
                           className={
                             field === "CollectionSiteName"
-                              ? "text-end"
+                              ? "text-start text-nowrap"
                               : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px" }}
                         >
                           {field === "CollectionSiteName" ? (
                             <span
-                              className="CollectionSiteName fs-6 "
+                              className="CollectionSiteName text-primary fw-semibold fs-6 text-decoration-underline"
                               role="button"
                               title="Collection Site Details"
                               onClick={() => openModal(collectionsite)}

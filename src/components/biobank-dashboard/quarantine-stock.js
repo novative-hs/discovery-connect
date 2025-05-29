@@ -240,75 +240,75 @@ const BioBankSampleArea = () => {
                 </th>
               </tr>
             </thead>
-           <tbody className="table-light">
-  {currentData.length > 0 ? (
-    currentData.map((sample) => (
-      <tr key={sample.id}>
-        {tableHeaders.map(({ key }, index) => (
-          <td
-            key={index}
-            className={
-              key === "price"
-                ? "text-end"
-                : key === "diseasename"
-                ? ""
-                : "text-center text-truncate"
-            }
-            style={{ maxWidth: "150px" }}
-          >
-            {key === "diseasename" ? (
-              <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                role="button"
-                title="Sample Details"
-                onClick={() => openModal(sample)}
-                style={{
-                  cursor: "pointer",
-                  transition: "color 0.2s",
-                }}
-                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                onMouseOut={(e) => (e.target.style.color = "")}
-              >
-                {sample.diseasename || "----"}
-              </span>
-            ) : key === "volume" ? (
-              `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
-            ) : (
-              sample[key] || "----"
-            )}
-          </td>
-        ))}
-        <td>
-          <div className="d-flex justify-content-center gap-3">
-            <button
-              className="btn btn-danger btn-sm"
-              onClick={() => {
-                setSelectedSampleId(sample.id);
-                setShowDeleteModal(true);
-              }}
-              title="Delete Sample"
-            >
-              <FontAwesomeIcon icon={faTrash} size="sm" />
-            </button>
-            <button
-              className="btn btn-outline-success btn-sm"
-              onClick={() => handleShowHistory("sample", sample.id)}
-              title="History"
-            >
-              <i className="fa fa-history"></i>
-            </button>
-          </div>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="8" className="text-center">
-        No samples available
-      </td>
-    </tr>
-  )}
-</tbody>
+            <tbody className="table-light">
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr key={sample.id}>
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : key === "diseasename"
+                              ? "text-start text-nowrap"
+                              : "text-center text-truncate"
+                        }
+                        style={{ maxWidth: "150px" }}
+                      >
+                        {key === "diseasename" ? (
+                          <span
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openModal(sample)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.diseasename || "----"}
+                          </span>
+                        ) : key === "volume" ? (
+                          `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                        ) : (
+                          sample[key] || "----"
+                        )}
+                      </td>
+                    ))}
+                    <td>
+                      <div className="d-flex justify-content-center gap-3">
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => {
+                            setSelectedSampleId(sample.id);
+                            setShowDeleteModal(true);
+                          }}
+                          title="Delete Sample"
+                        >
+                          <FontAwesomeIcon icon={faTrash} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleShowHistory("sample", sample.id)}
+                          title="History"
+                        >
+                          <i className="fa fa-history"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center">
+                    No samples available
+                  </td>
+                </tr>
+              )}
+            </tbody>
 
           </table>
         </div>
