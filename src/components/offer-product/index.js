@@ -113,7 +113,7 @@ const OfferPopularProduct = () => {
                 <div className="product-image mb-3">
                   <img
                     src={category.imageUrl || "/placeholder.jpg"}
-                    alt={category.samplename}
+                    alt={category.diseasename}
                     className="img-fluid rounded-2"
                     style={{
                       width: "100%",
@@ -122,7 +122,7 @@ const OfferPopularProduct = () => {
                     }}
                   />
                 </div>
-                <h5 className="fw-bold text-primary">{category.samplename}</h5>
+                <h5 className="fw-bold text-primary">{category.diseasename}</h5>
                 <p className="fs-5 text-dark fw-semibold">
                   {category.price
                     ? `${category.price} ${category.SamplePriceCurrency || ""}`
@@ -191,7 +191,7 @@ const OfferPopularProduct = () => {
               }}
             >
               <div className="modal-header bg-info text-white">
-                <h5 className="modal-title fw-bold">{selectedProduct.samplename}</h5>
+                <h5 className="modal-title fw-bold">{selectedProduct.diseasename}</h5>
                 <button
                   type="button"
                   className="btn-close btn-close-white"

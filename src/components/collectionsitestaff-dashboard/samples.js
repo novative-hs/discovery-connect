@@ -140,7 +140,8 @@ const SampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
-
+  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
+  const [logoPreview, setLogoPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   // Calculate total pages
@@ -155,8 +156,7 @@ const SampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: 1,
   });
-  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
-  const [logoPreview, setLogoPreview] = useState(null);
+
 
   const [showTooltip, setShowTooltip] = useState(false);
   const handleSelectCountry = (country) => {
@@ -390,7 +390,6 @@ const SampleArea = () => {
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -408,43 +407,6 @@ const SampleArea = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!showAdditionalFields) {
-      const {
-        donorID,
-        diseasename,
-        locationids,
-        volume,
-        phoneNumber,
-        TestResult,
-        gender,
-        SampleTypeMatrix,
-        age,
-        ContainerType,
-        logo,
-        QuantityUnit,
-      } = formData;
-
-      if (
-        !donorID ||
-        !diseasename ||
-        !locationids ||
-        !volume ||
-        !phoneNumber ||
-        !TestResult ||
-        !gender ||
-        !SampleTypeMatrix ||
-        !age ||
-        !ContainerType ||
-        !logo ||
-        !QuantityUnit
-      ) {
-        alert("Please fill all the mandatory fields before saving.");
-        return;
-      }
-    }
-
-    console.log(formData); // Optional: for debugging
 
     try {
       const response = await axios.post(
@@ -760,32 +722,21 @@ const SampleArea = () => {
     }
   };
 
-  // const handleTestResultChange = (field, value) => {
-  //   setFormData((prev) => {
-  //     const updated = {
-  //       ...prev,
-  //       [field]: value,
-  //       ...(field === "TestResult" && value !== "Value" ? { TestValue: "" } : {}),
-  //     };
-
-  //     // Determine sign and value
-  //     let sign = "";
-  //     let val = "";
-
-  //     if (updated.TestResult === "Positive") {
-  //       sign = "Positive";
-  //     } else if (updated.TestResult === "Negative") {
-  //       sign = "Negative";
-  //     } else if (updated.TestResult === "Value") {
-  //       val = updated.TestValue || "";
-  //     }
-
-  //     return {
-  //       ...updated,
-  //       TestResult: sign || val,
-  //     };
-  //   });
-  // };
+  const areMandatoryFieldsFilled = () => {
+  return (
+    formData.donorID?.trim() &&
+    formData.diseasename?.trim() &&
+    formData.locationids?.trim() &&
+    formData.volume?.trim() &&
+    formData.phoneNumber?.trim() &&
+    formData.TestResult?.trim() &&
+    formData.gender?.trim() &&
+    formData.SampleTypeMatrix?.trim() &&
+    formData.age?.trim() &&
+    formData.ContainerType?.trim() &&
+    formData.logo instanceof File
+  );
+};
 
 
   return (
@@ -1912,7 +1863,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
-                      {(staffAction === 'add_full' || staffAction === 'all') && (
+                        {(staffAction === 'add_full' || staffAction === 'all') && areMandatoryFieldsFilled() && (
                         <div className="form-check my-3">
                           <input
                             type="checkbox"

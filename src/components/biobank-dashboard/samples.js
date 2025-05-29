@@ -462,7 +462,7 @@ const BioBankSampleArea = () => {
     }
   };
 
-    const handleTransferSubmit = async (e) => {
+  const handleTransferSubmit = async (e) => {
     const sampleToSend = samples.find(s => s.id === selectedSampleId);
     const isReturnFlag = sampleToSend?.isReturn === true;
 
@@ -844,6 +844,22 @@ const BioBankSampleArea = () => {
       ...prev,
       logo: file,
     }));
+  };
+
+  const areMandatoryFieldsFilled = () => {
+    return (
+      formData.donorID?.trim() &&
+      formData.diseasename?.trim() &&
+      formData.locationids?.trim() &&
+      formData.volume?.trim() &&
+      formData.phoneNumber?.trim() &&
+      formData.TestResult?.trim() &&
+      formData.gender?.trim() &&
+      formData.SampleTypeMatrix?.trim() &&
+      formData.age?.trim() &&
+      formData.ContainerType?.trim() &&
+      formData.logo instanceof File
+    );
   };
 
   return (
@@ -2000,6 +2016,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                           id="toggleDetails"
                           checked={showAdditionalFields}
                           onChange={() => setShowAdditionalFields(!showAdditionalFields)}
+                          disabled={!areMandatoryFieldsFilled()}
                         />
                         <label className="form-check-label" htmlFor="toggleDetails">
                           Add Additional Details

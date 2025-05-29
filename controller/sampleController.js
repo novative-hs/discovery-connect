@@ -9,18 +9,6 @@ const createSampleTable = (req, res) => {
   res.status(200).json({ message: "Sample table creation process started" });
 };
 
-const getPrice = (req, res) => {
-  const { name } = req.params;
-console.log(name)
-  SampleModel.getPrice(name, (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching samples price" });
-    }
-    res.status(200).json({ data: results });
-  });
-};
-
-
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
@@ -213,5 +201,4 @@ module.exports = {
   updateSample,
   updateQuarantineSamples,
   deleteSample,
-  getPrice
 };

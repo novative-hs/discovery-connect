@@ -273,7 +273,7 @@ const createCart = (data, callback) => {
 
           sendEmail(researcherEmail, subject, emailMessage)
             .then(() => {
-             
+
               callback(null, { message: 'Cart created successfully', results });
             })
             .catch((emailSendErr) => {
@@ -337,7 +337,7 @@ WHERE user_id = ?;
   mysqlConnection.query(sqlQuery, [id], (err, results) => {
     if (err) {
       console.error("Error deleting cart:", err);
-    } 
+    }
   });
 };
 const deleteSingleCartItem = (id, callback, res) => {
@@ -348,7 +348,7 @@ const deleteSingleCartItem = (id, callback, res) => {
   mysqlConnection.query(sqlQuery, [id], (err, results) => {
     if (err) {
       console.error("Error deleting cart item :", err);
-    } 
+    }
   });
 };
 const updateCart = (id, data, callback, res) => {
@@ -445,7 +445,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
       s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-      s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.FreezeThawCycles, s.dateOfSampling, s.ConcurrentMedicalConditions, 
       s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
       s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
       s.TestSystemManufacturer, s.SamplePriceCurrency,
@@ -522,7 +522,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
 };
 
 
-const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, callback) => {
+const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, callback) => {
   const offset = (page - 1) * pageSize;
 
   const params = [id];
@@ -560,7 +560,7 @@ const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, ca
       s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, 
       s.InfectiousDiseaseResult, s.FreezeThawCycles, 
-      s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.dateOfSampling, s.ConcurrentMedicalConditions, 
       s.ConcurrentMedications, s.DiagnosisTestParameter, 
       s.TestResult, s.TestResultUnit, s.TestMethod, 
       s.TestKitManufacturer, s.TestSystem, 
@@ -737,7 +737,7 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     // Use promise-based query to avoid blocking
     await queryAsync(sqlQuery, [technical_admin_status, id]);
 
-    
+
 
     // Step 2: Determine new cart status based on Technical admin status
     let newCartStatus = null;
@@ -747,11 +747,11 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     } else if (technical_admin_status === 'Rejected') {
       newCartStatus = 'Rejected';
     }
-    
 
-if (newCartStatus) {
-  await updateCartStatus(id, newCartStatus);
-}
+
+    if (newCartStatus) {
+      await updateCartStatus(id, newCartStatus);
+    }
 
 
     // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
@@ -767,8 +767,8 @@ if (newCartStatus) {
       technical_admin_status === 'Accepted'
         ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
         : technical_admin_status === 'Rejected'
-        ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
-        : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
+          ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
+          : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
 
     // Step 5: Notify the researcher asynchronously (no blocking)
     const notifyPromise = notifyResearcher(id, message, "Sample Request Status Update");
@@ -858,7 +858,7 @@ const revertSampleQuantity = async (cartId) => {
       WHERE id = ?`;
 
     await queryAsync(updateSampleSql, [quantity, quantity, sample_id]);
-    
+
   } else {
     console.warn("Cart item not found for rejection.");
   }
@@ -884,10 +884,10 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
       cartStatus === 'Rejected'
         ? "Your sample request has been <b>rejected</b>.<br/>"
         : cartStatus === 'UnderReview'
-        ? "Your sample documents have been <b>reviewed by a committee member</b>.<br/>"
-        : cartStatus === 'Dispatched'
-        ? "Your sample request has been <b>dispatched</b> and is on its way.<br/>"
-        : "Your sample request status has been updated.<br/>";
+          ? "Your sample documents have been <b>reviewed by a committee member</b>.<br/>"
+          : cartStatus === 'Dispatched'
+            ? "Your sample request has been <b>dispatched</b> and is on its way.<br/>"
+            : "Your sample request status has been updated.<br/>";
 
     const subject = "Sample Request Status Update";
 
@@ -918,7 +918,7 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     // Step 4: Send the email
     await sendEmail(email, subject, emailMessage);
 
-    
+
 
     if (typeof callback === 'function') {
       callback(null, "Cart status updated and researcher notified.");

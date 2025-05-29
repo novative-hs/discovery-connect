@@ -14,7 +14,7 @@ const createSampleTable = () => {
         box_id INT,
         masterID VARCHAR(36),
         user_account_id INT,
-        samplename VARCHAR(100),
+        diseasename VARCHAR(100),
         age INT,
         gender VARCHAR(10),
         phoneNumber VARCHAR(15),
@@ -27,7 +27,7 @@ const createSampleTable = () => {
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
         quantity_allocated INT,
-        packsize DOUBLE,
+        volume DOUBLE,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50),
@@ -35,7 +35,7 @@ const createSampleTable = () => {
         InfectiousDiseaseTesting VARCHAR(100),
         InfectiousDiseaseResult VARCHAR(100),
         FreezeThawCycles VARCHAR(50), 
-        DateOfCollection VARCHAR(50),
+        DateOfSampling VARCHAR(50),
         ConcurrentMedicalConditions VARCHAR(50), 
         ConcurrentMedications VARCHAR(50),
         DiagnosisTestParameter VARCHAR(50),
@@ -45,7 +45,7 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        sample_status ENUM('Public', 'Private') DEFAULT 'Private',
+        sample_visibility ENUM('Public', 'Private') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
@@ -111,10 +111,10 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 
 
   mysqlConnection.query(query, params, (err, results) => {
-    
+
     if (err) return callback(err, null);
 
- // Add locationids to each sample
+    // Add locationids to each sample
     const enrichedResults = results.map(sample => ({
       ...sample,
       locationids: [sample.room_number, sample.freezer_id, sample.box_id]
@@ -212,7 +212,7 @@ const getResearcherSamples = (userId, callback) => {
   const query = `
  SELECT
   s.*,
-  sm.samplename,
+  sm.diseasename,
   sm.age,
   sm.gender,
   sm.ethnicity,S
@@ -230,7 +230,7 @@ const getResearcherSamples = (userId, callback) => {
   sm.InfectiousDiseaseTesting,
   sm.InfectiousDiseaseResult,
   sm.FreezeThawCycles,
-  sm.DateOfCollection,
+  sm.DateOfSampling,
   sm.ConcurrentMedicalConditions,
   sm.ConcurrentMedications,
   sm.DiagnosisTestParameter,
@@ -301,7 +301,7 @@ const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
  SELECT 
   s.diseasename,
-  GROUP_CONCAT(DISTINCT s.packsize) AS packsizes,
+  GROUP_CONCAT(DISTINCT s.volume) AS volumes,
   MAX(s.id) AS id,
   MAX(s.price) AS price,
   SUM(s.quantity) AS quantity,
@@ -383,11 +383,11 @@ LIMIT ? OFFSET ?
           const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
           sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
 
-          // Parse packsizes JSON string into array
+          // Parse volumes JSON string into array
           try {
-            sample.packsizes = JSON.parse(sample.packsizes);
+            sample.volumes = JSON.parse(sample.volumes);
           } catch (err) {
-            sample.packsizes = [];
+            sample.volumes = [];
           }
 
           return sample;
@@ -426,12 +426,12 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, packsize,samplename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfCollection, ConcurrentMedicalConditions, ConcurrentMedications, DiagnosisTestParameter, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, donorID, room_number, freezer_id, box_id, user_account_id, volume, diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.packsize, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -473,31 +473,31 @@ const updateSample = (id, data, callback) => {
 
   // Parse locationids if provided
   if (data.locationids) {
-  const parts = data.locationids.split("-");
-  room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
-  freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
-  box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
-}
+    const parts = data.locationids.split("-");
+    room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
+    freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
+    box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
+  }
 
 
-  // Handle packsize: convert empty string to null
-  const packsize = data.packsize === '' ? null : data.packsize;
+  // Handle volume convert empty string to null
+  const volume = data.volume === '' ? null : data.volume;
 
   // Log for debugging
   console.log("Updating sample ID:", id);
-  console.log("Packsize value:", packsize);
+  console.log("volume value:", volume);
 
   const query = `
     UPDATE sample
-    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, packsize = ?, samplename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfCollection = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
+    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, volume = ?, diseasename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
+        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfSampling = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
     WHERE id = ?
   `;
 
   const values = [
-    data.donorID, room_number, freezer_id, box_id, packsize, data.samplename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
+    data.donorID, room_number, freezer_id, box_id, volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
-    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfCollection,
+    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling,
     data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
     data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
   ];
@@ -672,5 +672,5 @@ module.exports = {
   updateSample,
   updateSampleStatus,
   deleteSample,
-  updateQuarantineSamples
+  updateQuarantineSamples,
 };

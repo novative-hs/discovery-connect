@@ -262,6 +262,22 @@ const getQuarantineStock = (callback) => {
   });
 };
 
+// Get price dropdown while adding price in Biobank
+const getPrice = (name, callback) => {
+  console.log("Fetching price for:", name); // Add this
+  const query = 'SELECT price FROM sample WHERE diseasename = ?';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } else {
+
+      callback(null, results);
+    }
+  });
+};
+
 
 module.exports = {
   create_biobankTable,
@@ -270,6 +286,6 @@ module.exports = {
   postSamplePrice,
   updateBiobankSample,
   getQuarantineStock,
-  UpdateSampleStatus
-
+  UpdateSampleStatus,
+  getPrice
 };
