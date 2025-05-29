@@ -153,7 +153,7 @@ const createCollectionSite = (req, callback) => {
         const historyValues = [
           CollectionSiteName, CollectionSiteType,
           phoneNumber, fullAddress, city, district, country, logo,
-          added_by, collectionSiteId, 'added'
+          added_by, collectionSiteId, 'inactive'
         ];
 
         connection.query(insertHistory, historyValues, (err) => {
@@ -214,7 +214,7 @@ const deleteCollectionSite = async (id) => {
 
   try {
     // Set the status here (e.g., 'inactive' for deletion)
-    const status = 'unactive';
+    const status = 'inactive';
 
     // Update CollectionSite status
     const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
@@ -465,18 +465,37 @@ function getCollectionSiteDetail(id, callback) {
 
 // Function to update collection site Status (Active/Inactive)
 const updateCollectionSiteStatus = async (id, status) => {
-  const updateQuery = 'UPDATE collectionsite SET status = ? WHERE id = ?';
+  const connection = mysqlConnection.promise();
 
   try {
-    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    // Step 1: Get the CollectionSiteName for the given id
+    const [rows] = await connection.query('SELECT CollectionSiteName FROM collectionsite WHERE id = ?', [id]);
 
-    if (updateResult.affectedRows === 0) {
+    if (rows.length === 0) {
       throw new Error("No collection site found with the given ID.");
     }
 
-    return { message: "Status updated successfully." };
+    const collectionSiteName = rows[0].CollectionSiteName;
+
+    // Step 2: Update the status
+    const [updateResult] = await connection.query('UPDATE collectionsite SET status = ? WHERE id = ?', [status, id]);
+
+    if (updateResult.affectedRows === 0) {
+      throw new Error("Failed to update status for the collection site.");
+    }
+
+    // Step 3: Insert into history table
+    // Assuming your history table has columns: collectionSiteName, status, created_at (auto timestamp), and optionally created_by
+    const insertHistoryQuery = `
+      INSERT INTO history (CollectionSiteName,collectionsite_id, status)
+      VALUES (?, ?,?)
+    `;
+
+    await connection.query(insertHistoryQuery, [collectionSiteName,id, status]);
+
+    return { message: "Status updated and history recorded successfully." };
   } catch (error) {
-    console.error("Error updating collection site status:", error);
+    console.error("Error updating collection site status and adding history:", error);
     throw error;
   }
 };

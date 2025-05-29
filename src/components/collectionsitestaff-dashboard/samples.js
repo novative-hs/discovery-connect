@@ -1120,18 +1120,21 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <div className="form-group col-md-6">
                                 <label>Phone Number <span className="text-danger">*</span></label>
                                 <input
-                                  type="text"
-                                  className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
-                                  }}
-                                  required
-                                />
+  type="text"
+  className="form-control"
+  name="phoneNumber"
+  value={formData.phoneNumber}
+  onChange={handleInputChange}
+  style={{
+    height: "45px",
+    fontSize: "14px",
+    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
+  }}
+  pattern="03[0-9]{2}-[0-9]{7}"
+  title="Format should be 0000-0000000"
+  required
+/>
+
                               </div>
                               <div className="form-group col-md-6">
                                 <label>Test Result & Unit <span className="text-danger">*</span></label>

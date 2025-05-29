@@ -60,6 +60,8 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
           sample_id: item.id,
           price: Number(item.price),
           samplequantity: Number(item.orderQuantity),
+          volume:item.volume,
+          QuantityUnit:item.QuantityUnit,
           total: Number(item.orderQuantity) * Number(item.price),
         }))
       )

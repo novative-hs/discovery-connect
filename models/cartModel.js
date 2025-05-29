@@ -117,6 +117,8 @@ const createCartTable = () => {
     sample_id VARCHAR(36) NOT NULL,
     price FLOAT NOT NULL,
     quantity INT NOT NULL,
+    QuantityUnit VARCHAR(20),
+    volume VARCHAR(255) NOT NULL,
     totalpayment DECIMAL(10, 2) NOT NULL,
     payment_id INT DEFAULT NULL,
     order_status ENUM('Pending', 'Accepted', 'UnderReview', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
@@ -178,14 +180,16 @@ const createCart = (data, callback) => {
     let insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
         const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity, payment_id, totalpayment)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO cart (user_id, sample_id, price, quantity,volume,QuantityUnit, payment_id, totalpayment)
+          VALUES (?, ?, ?, ?, ?,?, ?,?)
         `;
         const cartValues = [
           researcher_id,
           item.sample_id || null,
           item.price,
           item.samplequantity,
+          item.volume,
+          item.QuantityUnit,
           payment_id,
           item.total,
         ];

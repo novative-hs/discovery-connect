@@ -128,6 +128,7 @@ const CartArea = () => {
                         </tr>
                         <tr>
                           <th>Product</th>
+                          <th>Volumn</th>
                           <th>Price</th>
                           <th>Quantity</th>
                           <th>Total</th>
@@ -147,6 +148,13 @@ const CartArea = () => {
                                 />
                                 <span>{item.diseasename}</span>
                               </div>
+                            </td>
+                            <td>
+                              {(item.vol && item.unit) && (
+      <small className="text-muted">
+         {item.vol} {item.unit}
+      </small>
+    )}
                             </td>
 
                             <td>{item.price.toFixed(2)}</td>

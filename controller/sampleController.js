@@ -20,6 +20,16 @@ console.log(name)
   });
 };
 
+const getAllVolumnUnits=(req,res)=>{
+  const { name } = req.params;
+  console.log("Name",name)
+  SampleModel.getAllVolumnUnits(name, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples volumn" });
+    }
+    res.status(200).json({ data: results });
+  });
+}
 
 // Controller to get all samples
 const getSamples = (req, res) => {
@@ -213,5 +223,6 @@ module.exports = {
   updateSample,
   updateQuarantineSamples,
   deleteSample,
-  getPrice
+  getPrice,
+  getAllVolumnUnits
 };

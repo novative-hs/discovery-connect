@@ -147,9 +147,12 @@ const BioBankSampleArea = () => {
   const itemsPerPage = 10;
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  const [logoPreview, setLogoPreview] = useState(null); // <-- For image preview
+  const [logoPreview, setLogoPreview] = useState(null);
 
   const [samplePrice, setSamplePrice] = useState([])
+  
+const [pageSize, setPageSize] = useState(10);
+const [filters, setFilters] = useState({});
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -232,31 +235,32 @@ const BioBankSampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
-  // Fetch samples from the backend
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { priceFilter, searchField, searchValue } = filters;
+useEffect(() => {
+  fetchSamples(currentPage + 1, itemsPerPage, filters);
+}, [currentPage]);
 
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-      if (priceFilter) url += `&priceFilter=${priceFilter}`;
-      if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { priceFilter, searchField, searchValue } = filters;
 
-      const response = await axios.get(url);
-      const { samples, totalCount } = response.data;
-      console.log(samples)
-      setSamples(samples);
-      setFilteredSamples(samples);
-      setTotalPages(Math.ceil(totalCount / pageSize));
-      setfiltertotal(Math.ceil(totalCount / pageSize));
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  };
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+
+    if (priceFilter) url += `&priceFilter=${priceFilter}`;
+    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+
+    const response = await axios.get(url);
+    const { samples, totalCount } = response.data;
+
+    setSamples(samples);
+    setFilteredSamples(samples);
+    setTotalPages(Math.ceil(totalCount / pageSize));
+    setfiltertotal(Math.ceil(totalCount / pageSize));
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+  }
+};
+  
   const getSamplePrice = async (selectedSampleName) => {
     try {
       const response = await fetch(
@@ -346,24 +350,22 @@ const BioBankSampleArea = () => {
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
-  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredSamples.length / itemsPerPage));
-    setTotalPages(pages);
+ useEffect(() => {
+  if (currentPage >= totalPages && totalPages > 0) {
+    setCurrentPage(0);
+  }
+}, [currentPage, totalPages]);
 
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamples]);
 
   // Get the current data for the table
-  const currentData = filteredSamples.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+ const currentData = filteredSamples;
 
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
+
+const handlePageChange = (event) => {
+  const selectedPage = event.selected;
+  setCurrentPage(selectedPage);
+};
+
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
@@ -1237,18 +1239,21 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <div className="form-group col-md-6">
                                 <label>Phone Number <span className="text-danger">*</span></label>
                                 <input
-                                  type="text"
-                                  className="form-control"
-                                  name="phoneNumber"
-                                  value={formData.phoneNumber}
-                                  onChange={handleInputChange}
-                                  style={{
-                                    height: "45px",
-                                    fontSize: "14px",
-                                    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
-                                  }}
-                                  required
-                                />
+  type="text"
+  className="form-control"
+  name="phoneNumber"
+  value={formData.phoneNumber}
+  onChange={handleInputChange}
+  style={{
+    height: "45px",
+    fontSize: "14px",
+    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
+  }}
+  pattern="03[0-9]{2}-[0-9]{7}"
+  title="Format should be 0000-0000000"
+  required
+/>
+
                               </div>
                               <div className="form-group col-md-6">
                                 <label>Test Result & Unit</label>

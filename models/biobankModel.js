@@ -20,58 +20,54 @@ const create_biobankTable = () => {
   });
 };
 
-const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
+const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => { 
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
 
-  // Start building base query
-  let baseQuery = `
-    FROM sample
-    WHERE status = "In Stock"
-      AND is_deleted = FALSE
-  `;
+  // Base WHERE clause and parameters
+  let baseWhere = `WHERE status = "In Stock" AND is_deleted = FALSE`;
+  const paramsForWhere = [];
 
-  const queryParams = [];
-
-  // Add price filter if requested
+  // Price filter
   if (priceFilter === "priceAdded") {
-    baseQuery += ` AND price IS NOT NULL AND price > 0 `;
+    baseWhere += ` AND price IS NOT NULL AND price > 0`;
   } else if (priceFilter === "priceNotAdded") {
-    baseQuery += ` AND (price IS NULL OR price = 0) `;
+    baseWhere += ` AND (price IS NULL OR price = 0)`;
   }
 
-  // Add search filter if provided
+  // Search filter
   if (searchField && searchValue) {
-    baseQuery += ` AND ?? LIKE ? `;
-    queryParams.push(searchField, `%${searchValue}%`);
+    baseWhere += ` AND ?? LIKE ?`;
+    paramsForWhere.push(searchField, `%${searchValue}%`);
   }
 
-  // Main query with pagination
+  // Query to get paginated results
   const dataQuery = `
     SELECT *
-    ${baseQuery}
+    FROM sample
+    ${baseWhere}
     ORDER BY id DESC
     LIMIT ? OFFSET ?;
   `;
-  // Add pagination values to parameters
-  queryParams.push(pageSizeInt, offset);
+  const dataParams = [...paramsForWhere, pageSizeInt, offset];
 
-  mysqlConnection.query(dataQuery, queryParams, (err, results) => {
+  mysqlConnection.query(dataQuery, dataParams, (err, results) => {
     if (err) return callback(err);
 
-    // ➕ Add locationids to each sample
     const enrichedResults = results.map(sample => ({
       ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
-        .filter(Boolean)
-        .join("-"),
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join("-"),
     }));
 
-    // Count query (without pagination)
-    const countQuery = `SELECT COUNT(*) AS totalCount ${baseQuery}`;
+    // Query to get total count without limit/offset
+    const countQuery = `
+      SELECT COUNT(*) AS totalCount
+      FROM sample
+      ${baseWhere};
+    `;
 
-    mysqlConnection.query(countQuery, queryParams.slice(0, -2), (err, countResults) => {
+    mysqlConnection.query(countQuery, paramsForWhere, (err, countResults) => {
       if (err) return callback(err);
 
       const totalCount = countResults[0].totalCount;

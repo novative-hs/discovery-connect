@@ -62,7 +62,7 @@ const createSampleTable = () => {
   });
 };
 const getPrice = (name, callback) => {
-  console.log("Fetching price for:", name); // Add this
+  
   const query = 'SELECT price FROM sample WHERE diseasename = ?';
 
   mysqlConnection.query(query, [name], (err, results) => {
@@ -75,7 +75,20 @@ const getPrice = (name, callback) => {
     }
   });
 };
+const getAllVolumnUnits=(name,callback)=>{
+  console.log(name)
+const query = 'SELECT volume,QuantityUnit FROM sample WHERE diseasename = ?';
 
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } else {
+      console.log(results)
+      callback(null, results);
+    }
+  });
+}
 
 
 
@@ -663,5 +676,6 @@ module.exports = {
   updateSampleStatus,
   deleteSample,
   updateQuarantineSamples,
-  getPrice
+  getPrice,
+  getAllVolumnUnits,
 };
