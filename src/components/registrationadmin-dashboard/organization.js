@@ -55,13 +55,12 @@ const OrganizationArea = () => {
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "HECPMDCRegistrationNo", placeholder: "Search HECPMDCRegistrationNo", field: "HECPMDCRegistrationNo" },
-    { label: "Website", placeholder: "Search Website", field: "website" },
     { label: "Type", placeholder: "Search Type", field: "type" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
   ];
   const fieldsToShowInOrder = [
-
+    { label: "Website", placeholder: "Search Website", field: "website" },
     { label: "City", placeholder: "Search City", field: "city" },
     { label: "District", placeholder: "Search District", field: "district" },
     { label: "Country", placeholder: "Search Country", field: "country" },
@@ -605,7 +604,7 @@ const OrganizationArea = () => {
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
                           onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                          style={{ minWidth: "160px", maxWidth: "200px", width: "100px" }}
                         />
                         <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                           {label}
@@ -633,7 +632,7 @@ const OrganizationArea = () => {
                         >
                           {field === "OrganizationName" ? (
                             <span
-                              className="OrganizationName text-primary fw-semibold fs-6 text-decoration-underline"
+                              className="OrganizationName fs-6"
                               role="button"
                               title="Organization Details"
                               onClick={() => openModal(organization)}

@@ -48,19 +48,19 @@ const StaffManagementPage = ({ defaultSection = "collectionsite" }) => {
                 className="dropdown-item py-2"
                 onClick={() => handleFilterSelect("collectionsite")}
               >
-                🧪 Add Collectionsite Staff
+               Add Collectionsite Staff
               </button>
               <button
                 className="dropdown-item py-2"
                 onClick={() => handleFilterSelect("committee")}
               >
-                ➕ Add Committee Member
+               Add Committee Member
               </button>
               <button
                 className="dropdown-item py-2"
                 onClick={() => handleFilterSelect("csr")}
               >
-                🛠️ Add CSR
+               Add CSR
               </button>
             </div>
           )}

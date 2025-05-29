@@ -161,6 +161,7 @@ const SampleArea = () => {
     });
   };
   const handleAddToCart = (product) => {
+    console.log("Payload being dispatched:", product);
     dispatch(add_cart_product(product));
   };
   const fetchSamples = async () => {
@@ -252,17 +253,17 @@ const SampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
+          <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           {/* {Button} */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
-              <div
-                className="alert alert-success w-100 text-start mb-2"
+              <d                className="alert alert-success w-100 text-start mb-2"
                 role="alert"
               >
                 {successMessage}
-              </div>
+              </d>
             )}
           </div>
 
@@ -274,24 +275,24 @@ const SampleArea = () => {
                   {tableHeaders.map(({ label, key }, index) => (
                     <th key={index} className="col-md-1 px-2">
 
-                      <div className="d-flex flex-column align-items-center">
-                        <input
-                          type="text"
-                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(key, e.target.value)}
-                          style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-                        />
-                        <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                          {label}
-                        </span>
+                    <div className="d-flex flex-column align-items-center">
+                  <input
+  type="text"
+  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+  placeholder={`Search ${label}`}
+  onChange={(e) => handleFilterChange(key, e.target.value)}
+  style={{ minWidth: "130px", maxWidth: "200px", width: "100px" }}
+/>
+                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        {label}
+                      </span>
 
                       </div>
                     </th>
                   ))}
-                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                    Action
-                  </th>
+                    <th className="p-2 text-center" style={{ minWidth: "30px" }}>
+                  Action
+                </th>
                 </tr>
               </thead>
               <tbody>
