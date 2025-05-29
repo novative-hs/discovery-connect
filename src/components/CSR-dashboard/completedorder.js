@@ -110,7 +110,7 @@ const CompletedSampleArea = () => {
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "150px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap fs-6">
+                      <span className="fw-bold mt-1 d-block text-wrap fs-6">
                         {label}
                       </span>
                     </div>

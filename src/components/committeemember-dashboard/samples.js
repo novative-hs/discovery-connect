@@ -315,7 +315,7 @@ const SampleArea = () => {
                         }
                         style={{ minWidth: "100px" }} // Adjusted minWidth
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-10">
+                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-10">
                         {label}
                       </span>
                     </div>

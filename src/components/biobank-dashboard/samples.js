@@ -234,8 +234,8 @@ const BioBankSampleArea = () => {
   // Fetch samples from backend when component loads
   useEffect(() => {
     const storedUser = getsessionStorage("user");
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
+    fetchSamples(currentPage + 1, itemsPerPage, filter); // Call the function when the component mounts
+  }, [currentPage]);
   // Fetch samples from the backend
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
@@ -347,22 +347,18 @@ const BioBankSampleArea = () => {
   }, []);
 
   useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredSamples.length / itemsPerPage));
-    setTotalPages(pages);
 
-    if (currentPage >= pages) {
+    if (currentPage >= totalPages && totalPages > 0) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSamples]);
+  }, [currentPage, totalPages]);
 
   // Get the current data for the table
-  const currentData = filteredSamples.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentData = filteredSamples
 
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+    const selectedPage = event.selected;
+    setCurrentPage(selectedPage);
   };
 
   // Filter the researchers list
@@ -934,7 +930,7 @@ const BioBankSampleArea = () => {
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                      <span className="fw-bold mt-1 d-block text-fetvwrap align-items-center fs-6">
                         {label}
                       </span>
 
@@ -957,14 +953,14 @@ const BioBankSampleArea = () => {
                           key === "price"
                             ? "text-end"
                             : key === "diseasename"
-                              ? "text-start text-nowrap"
+                              ? "text-start text-wrap"
                               : "text-center text-truncate"
                         }
                         style={{ maxWidth: "150px" }}
                       >
                         {key === "diseasename" ? (
                           <span
-                            className="sample-name  fs-6 "
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
                             title="Sample Details"
                             onClick={() => openModal(sample)}

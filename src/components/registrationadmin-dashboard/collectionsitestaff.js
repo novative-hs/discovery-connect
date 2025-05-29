@@ -482,7 +482,7 @@ const CollectionSiteStaffArea = () => {
                       onChange={(e) => handleFilterChange(field, e.target.value)}
                       style={{ minWidth: "150px", maxWidth: "200px", width: "100px" }}
                     />
-                    <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                    <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                       {label}
                     </span>
 
@@ -503,7 +503,7 @@ const CollectionSiteStaffArea = () => {
                       key={field}
                       className={
                         field === "staffName"
-                          ? "text-start text-nowrap"
+                          ? "text-start text-wrap"
                           : "text-center text-truncate"
                       }
                       style={{ maxWidth: "150px" }}

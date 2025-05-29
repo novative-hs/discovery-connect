@@ -321,7 +321,7 @@ const SampleDispatchArea = () => {
                             width: "100px",
                           }}
                         />
-                        <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                        <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                           {label}
                         </span>
                       </div>
@@ -343,7 +343,7 @@ const SampleDispatchArea = () => {
                             key === "price"
                               ? "text-end"
                               : key === "diseasename"
-                                ? "text-start text-nowrap"
+                                ? "text-start text-wrap"
                                 : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px" }}

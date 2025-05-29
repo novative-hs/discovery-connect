@@ -253,13 +253,13 @@ const SampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-          <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
+        <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           {/* {Button} */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
-              <d                className="alert alert-success w-100 text-start mb-2"
+              <d className="alert alert-success w-100 text-start mb-2"
                 role="alert"
               >
                 {successMessage}
@@ -275,76 +275,75 @@ const SampleArea = () => {
                   {tableHeaders.map(({ label, key }, index) => (
                     <th key={index} className="col-md-1 px-2">
 
-                    <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "130px", maxWidth: "200px", width: "100px" }}
-/>
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                        {label}
-                      </span>
-
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{ minWidth: "130px", maxWidth: "200px", width: "100px" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
+                          {label}
+                        </span>
                       </div>
                     </th>
                   ))}
-                    <th className="p-2 text-center" style={{ minWidth: "30px" }}>
-                  Action
-                </th>
+                  <th className="p-2 text-center" style={{ minWidth: "30px" }}>
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
                   currentData.map((sample) => (
                     <tr key={sample.id}>
-                   {tableHeaders.map(({ key }, index) => {
-  let content;
+                      {tableHeaders.map(({ key }, index) => {
+                        let content;
 
-  if (key === "price") {
-    content = sample.price
-      ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
-      : "----";
-  } else if (key === "diseasename") {
-    content = (
-      <span
-        className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-        role="button"
-        title="Sample Details"
-        onClick={() => openModal(sample)}
-        style={{
-          cursor: "pointer",
-          transition: "color 0.2s",
-        }}
-        onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-        onMouseOut={(e) => (e.target.style.color = "")}
-      >
-        {sample.diseasename || "----"}
-      </span>
-    );
-  } else if (key === "volume") {
-    content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
-  } else {
-    content = sample[key] || "----";
-  }
+                        if (key === "price") {
+                          content = sample.price
+                            ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+                            : "----";
+                        } else if (key === "diseasename") {
+                          content = (
+                            <span
+                              className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                              role="button"
+                              title="Sample Details"
+                              onClick={() => openModal(sample)}
+                              style={{
+                                cursor: "pointer",
+                                transition: "color 0.2s",
+                              }}
+                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                              onMouseOut={(e) => (e.target.style.color = "")}
+                            >
+                              {sample.diseasename || "----"}
+                            </span>
+                          );
+                        } else if (key === "volume") {
+                          content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                        } else {
+                          content = sample[key] || "----";
+                        }
 
-  return (
-    <td
-      key={index}
-      className={
-        key === "price"
-          ? "text-end"
-          : key === "diseasename"
-          ? ""
-          : "text-center text-truncate"
-      }
-      style={{ maxWidth: "150px" }}
-    >
-      {content}
-    </td>
-  );
-})}
+                        return (
+                          <td
+                            key={index}
+                            className={
+                              key === "price"
+                                ? "text-end"
+                                : key === "diseasename"
+                                  ? ""
+                                  : "text-center text-truncate"
+                            }
+                            style={{ maxWidth: "150px" }}
+                          >
+                            {content}
+                          </td>
+                        );
+                      })}
 
                       <td className="w-auto" style={{ minWidth: "40px" }}>
 
