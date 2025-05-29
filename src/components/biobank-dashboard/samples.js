@@ -953,10 +953,10 @@ const BioBankSampleArea = () => {
                           key === "price"
                             ? "text-end"
                             : key === "diseasename"
-                              ? "text-start text-wrap"
+                              ? "text-start"
                               : "text-center text-truncate"
                         }
-                        style={{ maxWidth: "150px" }}
+                        style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
                       >
                         {key === "diseasename" ? (
                           <span
