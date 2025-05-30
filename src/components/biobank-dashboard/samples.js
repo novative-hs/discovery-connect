@@ -227,6 +227,7 @@ const [filters, setFilters] = useState({});
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
+    { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
 
   ];
 
