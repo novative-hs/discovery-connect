@@ -151,9 +151,9 @@ const BioBankSampleArea = () => {
   const [logoPreview, setLogoPreview] = useState(null);
 
   const [samplePrice, setSamplePrice] = useState([])
-  
-const [pageSize, setPageSize] = useState(10);
-const [filters, setFilters] = useState({});
+
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState({});
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -247,10 +247,10 @@ const [filters, setFilters] = useState({});
     try {
       const { priceFilter, searchField, searchValue } = filters;
 
-    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-    if (priceFilter) url += `&priceFilter=${priceFilter}`;
-    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      if (priceFilter) url += `&priceFilter=${priceFilter}`;
+      if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
       const response = await axios.get(url);
       const { samples, totalCount } = response.data;
@@ -863,6 +863,14 @@ const [filters, setFilters] = useState({});
     );
   };
 
+
+  const unitMaxValues = {
+    L: 100,
+    mL: 10000,
+    mg: 10000,
+    g: 5000,
+  };
+
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -1240,12 +1248,18 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     value={formData.volume}
                                     onChange={(e) => {
                                       const value = parseFloat(e.target.value);
-                                      if (e.target.value === "" || (value * 10) % 5 === 0) {
+                                      const max = unitMaxValues[formData.QuantityUnit] || Infinity;
+
+                                      if (
+                                        e.target.value === "" ||
+                                        ((value * 10) % 5 === 0 && value <= max)
+                                      ) {
                                         handleInputChange(e);
                                       }
                                     }}
                                     step="0.5"
                                     min="0.5"
+                                    max={unitMaxValues[formData.QuantityUnit] || undefined}
                                     required
                                     style={{
                                       height: "45px",
@@ -1273,6 +1287,16 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     ))}
                                   </select>
                                 </div>
+                                {/* Validation message*/}
+                                {formData.volume &&
+                                  formData.QuantityUnit &&
+                                  parseFloat(formData.volume) >
+                                  (unitMaxValues[formData.QuantityUnit] || Infinity) && (
+                                    <small className="text-danger mt-1">
+                                      Value must be less than or equal to{" "}
+                                      {unitMaxValues[formData.QuantityUnit].toLocaleString()}.
+                                    </small>
+                                  )}
                               </div>
                               <div className="form-group col-md-6">
                                 <label>Phone Number <span className="text-danger">*</span></label>
