@@ -24,12 +24,13 @@ const BioBankSampleArea = () => {
   const [selectedSample, setSelectedSample] = useState(null);
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
-  const [selectedSampleForPricing, setSelectedSampleForPricing] = useState(null);
-  const [price, setPrice] = useState('');
-  const [currency, setCurrency] = useState('');
-  const [selectedSampleName, setSelectedSampleName] = useState('')
-  const [selectedSampleVolume, setSelectedSampleVolume] = useState('')
-  const [selectedSampleUnit, setSelectedSampleUnit] = useState('')
+  const [selectedSampleForPricing, setSelectedSampleForPricing] =
+    useState(null);
+  const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState("");
+  const [selectedSampleName, setSelectedSampleName] = useState("");
+  const [selectedSampleVolume, setSelectedSampleVolume] = useState("");
+  const [selectedSampleUnit, setSelectedSampleUnit] = useState("");
   const [filtertotal, setfiltertotal] = useState(null);
   const [quarantineComment, setQuarantineComment] = useState("");
   const [commentError, setCommentError] = useState("");
@@ -78,7 +79,10 @@ const BioBankSampleArea = () => {
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Sampling", key: "DateOfSampling" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
   ];
 
   const [formData, setFormData] = useState({
@@ -135,13 +139,20 @@ const BioBankSampleArea = () => {
   const [testmethodNames, setTestMethodNames] = useState([]);
   const [testresultunitNames, setTestResultUnitNames] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [concurrentmedicalconditionsNames, setConcurrentMedicalConditionsNames] = useState([]);
+  const [
+    concurrentmedicalconditionsNames,
+    setConcurrentMedicalConditionsNames,
+  ] = useState([]);
   const [testkitmanufacturerNames, setTestKitManufacturerNames] = useState([]);
   const [testsystemNames, setTestSystemNames] = useState([]);
-  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
-  const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
-  const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
-  const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
+  const [testsystemmanufacturerNames, setTestSystemManufacturerNames] =
+    useState([]);
+  const [diagnosistestparameterNames, setDiagnosisTestParameterNames] =
+    useState([]);
+  const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] =
+    useState([]);
+  const [showTestResultNumericInput, setShowTestResultNumericInput] =
+    useState(false);
   const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
@@ -150,10 +161,10 @@ const BioBankSampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null);
 
-  const [samplePrice, setSamplePrice] = useState([])
-  
-const [pageSize, setPageSize] = useState(10);
-const [filters, setFilters] = useState({});
+  const [samplePrice, setSamplePrice] = useState([]);
+
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState({});
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -173,7 +184,6 @@ const [filters, setFilters] = useState({});
   };
 
   const openModal = (sample) => {
-
     setSelectedSample(sample);
     setShowModal(true);
   };
@@ -182,7 +192,6 @@ const [filters, setFilters] = useState({});
     setSelectedSample(null);
     setShowModal(false);
   };
-
 
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
@@ -223,12 +232,17 @@ const [filters, setFilters] = useState({});
     { name: "sampletypematrix", setter: setSampleTypeMatrixNames },
     { name: "testmethod", setter: setTestMethodNames },
     { name: "testresultunit", setter: setTestResultUnitNames },
-    { name: "concurrentmedicalconditions", setter: setConcurrentMedicalConditionsNames },
+    {
+      name: "concurrentmedicalconditions",
+      setter: setConcurrentMedicalConditionsNames,
+    },
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
-    { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
-
+    {
+      name: "infectiousdiseasetesting",
+      setter: setInfectiousdiseasetestingNames,
+    },
   ];
 
   const handleTransferClick = (sample) => {
@@ -247,14 +261,15 @@ const [filters, setFilters] = useState({});
     try {
       const { priceFilter, searchField, searchValue } = filters;
 
-    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-    if (priceFilter) url += `&priceFilter=${priceFilter}`;
-    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      if (priceFilter) url += `&priceFilter=${priceFilter}`;
+      if (searchField && searchValue)
+        url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
       const response = await axios.get(url);
       const { samples, totalCount } = response.data;
-      console.log(samples)
+      console.log(samples);
       setSamples(samples);
       setFilteredSamples(samples);
       setTotalPages(Math.ceil(totalCount / pageSize));
@@ -351,14 +366,13 @@ const [filters, setFilters] = useState({});
   }, []);
 
   useEffect(() => {
-
     if (currentPage >= totalPages && totalPages > 0) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
   }, [currentPage, totalPages]);
 
   // Get the current data for the table
-  const currentData = filteredSamples
+  const currentData = filteredSamples;
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected;
@@ -455,7 +469,7 @@ const [filters, setFilters] = useState({});
         volume: "",
       });
       setLogoPreview(false);
-      setShowAdditionalFields(false)
+      setShowAdditionalFields(false);
       setShowAddModal(false); // Close modal after submission
     } catch (error) {
       console.error("Error adding sample:", error);
@@ -463,7 +477,7 @@ const [filters, setFilters] = useState({});
   };
 
   const handleTransferSubmit = async (e) => {
-    const sampleToSend = samples.find(s => s.id === selectedSampleId);
+    const sampleToSend = samples.find((s) => s.id === selectedSampleId);
     const isReturnFlag = sampleToSend?.isReturn === true;
 
     e.preventDefault();
@@ -548,8 +562,8 @@ const [filters, setFilters] = useState({});
       alert("Price and currency added successfully!");
       setShowPriceModal(false);
       setSelectedSampleForPricing(null);
-      setPrice('');
-      setCurrency('');
+      setPrice("");
+      setCurrency("");
       fetchSamples(); // Refresh your data
     } catch (error) {
       if (error.response) {
@@ -617,14 +631,19 @@ const [filters, setFilters] = useState({});
 
   const handleEditClick = (sample) => {
     setSelectedSampleId(sample.id);
-    setSelectedSampleName(sample.diseasename)
-    setSelectedSampleVolume(sample.volume)
+    setSelectedSampleName(sample.diseasename);
+    setSelectedSampleVolume(sample.volume);
 
     setEditSample(sample);
     setShowEditModal(true);
 
     // Combine the location parts into "room-freezer-box" format
-    const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
+    const formattedLocationId = `${String(sample.room_number).padStart(
+      3,
+      "0"
+    )}-${String(sample.freezer_id).padStart(3, "0")}-${String(
+      sample.box_id
+    ).padStart(3, "0")}`;
 
     setFormData({
       locationids: formattedLocationId,
@@ -666,10 +685,10 @@ const [filters, setFilters] = useState({});
       typeof sample.logo === "string"
         ? sample.logo
         : sample.logo?.data
-          ? URL.createObjectURL(
+        ? URL.createObjectURL(
             new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
           )
-          : null;
+        : null;
     setLogoPreview(logoPreviewUrl);
     // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
@@ -684,9 +703,9 @@ const [filters, setFilters] = useState({});
     setSelectedSampleForPricing(sample);
     setSelectedSampleName(sample.diseasename);
     setSelectedSampleVolume(sample.volume);
-    setSelectedSampleUnit(sample.QuantityUnit)
-    setPrice(sample.price || ''); // <-- Clear price, so user selects or types manually
-    setCurrency(sample.currency || '');
+    setSelectedSampleUnit(sample.QuantityUnit);
+    setPrice(sample.price || ""); // <-- Clear price, so user selects or types manually
+    setCurrency(sample.currency || "");
 
     setShowPriceModal(true);
   };
@@ -782,7 +801,7 @@ const [filters, setFilters] = useState({});
     showEditModal,
     showTransferModal,
     showHistoryModal,
-    showPriceModal
+    showPriceModal,
   ]);
 
   const resetFormData = () => {
@@ -822,7 +841,7 @@ const [filters, setFilters] = useState({});
       logo: "",
     });
     setShowAdditionalFields(false);
-    setLogoPreview(null)
+    setLogoPreview(null);
   };
 
   function bufferToBase64(bufferObj, mimeType) {
@@ -874,11 +893,10 @@ const [filters, setFilters] = useState({});
         )}
         <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
           <h6>
-            Note 1: Click on Price Icon to Add Price and Price Currency for Sample.
+            Note 1: Click on Price Icon to Add Price and Price Currency for
+            Sample.
           </h6>
-          <h6>
-            Note 2: Click on Location Id's to see Sample Picture.
-          </h6>
+          <h6>Note 2: Click on Location Id's to see Sample Picture.</h6>
         </div>
 
         {/* Header Section with Filter and Button */}
@@ -935,13 +953,18 @@ const [filters, setFilters] = useState({});
                         type="text"
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
-                        onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                        onChange={(e) =>
+                          handleFilterChange(key, e.target.value)
+                        }
+                        style={{
+                          minWidth: "100px",
+                          maxWidth: "120px",
+                          width: "100px",
+                        }}
                       />
                       <span className="fw-bold mt-1 d-block text-fetvwrap align-items-center fs-6">
                         {label}
                       </span>
-
                     </div>
                   </th>
                 ))}
@@ -961,10 +984,14 @@ const [filters, setFilters] = useState({});
                           key === "price"
                             ? "text-end"
                             : key === "diseasename"
-                              ? "text-start"
-                              : "text-center text-truncate"
+                            ? "text-start"
+                            : "text-center text-truncate"
                         }
-                        style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
+                        style={{
+                          maxWidth: "150px",
+                          wordWrap: "break-word",
+                          whiteSpace: "normal",
+                        }}
                       >
                         {key === "diseasename" ? (
                           <span
@@ -976,7 +1003,9 @@ const [filters, setFilters] = useState({});
                               cursor: "pointer",
                               transition: "color 0.2s",
                             }}
-                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOver={(e) =>
+                              (e.target.style.color = "#0a58ca")
+                            }
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
                             {sample.diseasename || "----"}
@@ -984,7 +1013,9 @@ const [filters, setFilters] = useState({});
                         ) : (
                           (() => {
                             if (key === "locationids") {
-                              const tooltip = `${sample.room_number || "N/A"} = Room Number
+                              const tooltip = `${
+                                sample.room_number || "N/A"
+                              } = Room Number
 ${sample.freezer_id || "N/A"} = Freezer ID
 ${sample.box_id || "N/A"} = Box ID`;
 
@@ -994,26 +1025,41 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   typeof sample.logo === "string"
                                     ? sample.logo
                                     : sample.logo?.data
-                                      ? URL.createObjectURL(
-                                        new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
+                                    ? URL.createObjectURL(
+                                        new Blob(
+                                          [new Uint8Array(sample.logo.data)],
+                                          { type: "image/png" }
+                                        )
                                       )
-                                      : null;
+                                    : null;
                                 if (logo) {
                                   setSelectedLogoUrl(logo);
                                   setShowLogoModal(true);
                                 }
                               };
                               return (
-                                <span title={tooltip} style={{ cursor: "help", textDecoration: "underline", color: "#007bff" }} onClick={handleLogoClick}>
+                                <span
+                                  title={tooltip}
+                                  style={{
+                                    cursor: "help",
+                                    textDecoration: "underline",
+                                    color: "#007bff",
+                                  }}
+                                  onClick={handleLogoClick}
+                                >
                                   {sample.locationids || "----"}
                                 </span>
                               );
                             } else if (key === "volume") {
-                              return `${sample.volume} ${sample.QuantityUnit || ""}`;
+                              return `${sample.volume} ${
+                                sample.QuantityUnit || ""
+                              }`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "TestResult") {
-                              return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
+                              return `${sample.TestResult} ${
+                                sample.TestResultUnit || ""
+                              }`;
                             } else if (key === "price") {
                               return sample.price && sample.SamplePriceCurrency
                                 ? `${sample.price} ${sample.SamplePriceCurrency}`
@@ -1160,7 +1206,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                               {showAddModal && (
                                 <div className="form-group col-md-6">
                                   <label>
-                                    Donor ID <span className="text-danger">*</span>
+                                    Donor ID{" "}
+                                    <span className="text-danger">*</span>
                                   </label>
                                   <input
                                     type="text"
@@ -1174,14 +1221,17 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.donorID ? "#fdecea" : "#fff",
+                                      backgroundColor: !formData.donorID
+                                        ? "#fdecea"
+                                        : "#fff",
                                     }}
                                   />
                                 </div>
                               )}
                               <div className="form-group col-md-6">
                                 <label>
-                                  Disease Name <span className="text-danger">*</span>
+                                  Disease Name{" "}
+                                  <span className="text-danger">*</span>
                                 </label>
                                 <select
                                   className="form-control"
@@ -1192,20 +1242,26 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: !formData.diseasename ? "#fdecea" : "#fff",
+                                    backgroundColor: !formData.diseasename
+                                      ? "#fdecea"
+                                      : "#fff",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
-                                  {diagnosistestparameterNames.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
+                                  <option value="" hidden></option>
+                                  {diagnosistestparameterNames.map(
+                                    (name, index) => (
+                                      <option key={index} value={name}>
+                                        {name}
+                                      </option>
+                                    )
+                                  )}
                                 </select>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Location (IDs) <span className="text-danger">*</span></label>
+                                <label>
+                                  Location (IDs){" "}
+                                  <span className="text-danger">*</span>
+                                </label>
                                 <InputMask
                                   mask="999-999-999"
                                   maskChar={null}
@@ -1222,7 +1278,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.locationids ? "#fdecea" : "#fff",
+                                        backgroundColor: !formData.locationids
+                                          ? "#fdecea"
+                                          : "#fff",
                                       }}
                                       required
                                       title="Location ID's = Room Number, Freezer ID and Box ID"
@@ -1231,7 +1289,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </InputMask>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Volume <span className="text-danger">*</span></label>
+                                <label>
+                                  Volume <span className="text-danger">*</span>
+                                </label>
                                 <div className="d-flex">
                                   <input
                                     type="number"
@@ -1240,7 +1300,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     value={formData.volume}
                                     onChange={(e) => {
                                       const value = parseFloat(e.target.value);
-                                      if (e.target.value === "" || (value * 10) % 5 === 0) {
+                                      if (
+                                        e.target.value === "" ||
+                                        (value * 10) % 5 === 0
+                                      ) {
                                         handleInputChange(e);
                                       }
                                     }}
@@ -1250,7 +1313,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.volume ? "#fdecea" : "#fff",
+                                      backgroundColor: !formData.volume
+                                        ? "#fdecea"
+                                        : "#fff",
                                     }}
                                   />
                                   <select
@@ -1262,10 +1327,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.QuantityUnit ? "#fdecea" : "#fff",
+                                      backgroundColor: !formData.QuantityUnit
+                                        ? "#fdecea"
+                                        : "#fff",
                                     }}
                                   >
-                                    <option value="" hidden>Select Unit</option>
+                                    <option value="" hidden>
+                                      Select Unit
+                                    </option>
                                     {quantityunitNames.map((name, index) => (
                                       <option key={index} value={name}>
                                         {name}
@@ -1275,7 +1344,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </div>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Phone Number <span className="text-danger">*</span></label>
+                                <label>
+                                  Phone Number{" "}
+                                  <span className="text-danger">*</span>
+                                </label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -1285,7 +1357,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
+                                    backgroundColor: !formData.phoneNumber
+                                      ? "#fdecea"
+                                      : "#fff",
                                   }}
                                   pattern="03[0-9]{2}-[0-9]{7}"
                                   title="Format should be XXXX-XXXXXXX"
@@ -1293,8 +1367,17 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Test Result & Unit <span className="text-danger">*</span></label>
-                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                <label>
+                                  Test Result & Unit{" "}
+                                  <span className="text-danger">*</span>
+                                </label>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "10px",
+                                    alignItems: "center",
+                                  }}
+                                >
                                   {/* Test Result Dropdown or Numeric Input */}
                                   {!showTestResultNumericInput ? (
                                     <select
@@ -1304,20 +1387,31 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         const val = e.target.value;
                                         if (val === "Value") {
                                           setShowTestResultNumericInput(true);
-                                          setFormData((prev) => ({ ...prev, TestResult: "" }));
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            TestResult: "",
+                                          }));
                                         } else {
                                           setShowTestResultNumericInput(false); // Ensure this is reset
-                                          setFormData((prev) => ({ ...prev, TestResult: val, TestResultUnit: "" })); // Clear unit
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            TestResult: val,
+                                            TestResultUnit: "",
+                                          })); // Clear unit
                                         }
                                       }}
                                       style={{
                                         height: "40px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.TestResult ? "#fdecea" : "#fff",
+                                        backgroundColor: !formData.TestResult
+                                          ? "#fdecea"
+                                          : "#fff",
                                         minWidth: "140px",
                                       }}
                                     >
-                                      <option value="" disabled hidden>Select result</option>
+                                      <option value="" disabled hidden>
+                                        Select result
+                                      </option>
                                       <option value="Positive">Positive</option>
                                       <option value="Negative">Negative</option>
                                       <option value="Value">Value</option>
@@ -1329,20 +1423,28 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       placeholder="Enter numeric value"
                                       value={formData.TestResult}
                                       onChange={(e) =>
-                                        setFormData((prev) => ({ ...prev, TestResult: e.target.value }))
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResult: e.target.value,
+                                        }))
                                       }
                                       style={{
                                         width: "110px",
                                         height: "40px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.TestResult ? "#fdecea" : "#fff",
+                                        backgroundColor: !formData.TestResult
+                                          ? "#fdecea"
+                                          : "#fff",
                                         paddingRight: "10px",
                                       }}
                                       autoFocus
                                       onBlur={() => {
                                         if (!formData.TestResult) {
                                           setShowTestResultNumericInput(false);
-                                          setFormData((prev) => ({ ...prev, TestResultUnit: "" })); // Clear unit
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            TestResultUnit: "",
+                                          })); // Clear unit
                                         }
                                       }}
                                     />
@@ -1358,24 +1460,31 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       style={{
                                         height: "40px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
+                                        backgroundColor:
+                                          !formData.TestResultUnit
+                                            ? "#fdecea"
+                                            : "#fff",
                                         minWidth: "100px",
                                       }}
                                     >
                                       <option value="" hidden>
                                         Unit
                                       </option>
-                                      {testresultunitNames.map((name, index) => (
-                                        <option key={index} value={name}>
-                                          {name}
-                                        </option>
-                                      ))}
+                                      {testresultunitNames.map(
+                                        (name, index) => (
+                                          <option key={index} value={name}>
+                                            {name}
+                                          </option>
+                                        )
+                                      )}
                                     </select>
                                   )}
                                 </div>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Gender <span className="text-danger">*</span></label>
+                                <label>
+                                  Gender <span className="text-danger">*</span>
+                                </label>
                                 <select
                                   className="form-control"
                                   name="gender"
@@ -1385,17 +1494,21 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: !formData.gender ? "#fdecea" : "#fff",
+                                    backgroundColor: !formData.gender
+                                      ? "#fdecea"
+                                      : "#fff",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   <option value="Male">Male</option>
                                   <option value="Female">Female</option>
                                 </select>
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Sample Type Matrix <span className="text-danger">*</span></label>
+                                <label>
+                                  Sample Type Matrix{" "}
+                                  <span className="text-danger">*</span>
+                                </label>
                                 <select
                                   className="form-control"
                                   name="SampleTypeMatrix"
@@ -1405,11 +1518,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
+                                    backgroundColor: !formData.SampleTypeMatrix
+                                      ? "#fdecea"
+                                      : "#fff",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {sampletypematrixNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
@@ -1420,7 +1534,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Age (Years) <span className="text-danger">*</span></label>
+                                <label>
+                                  Age (Years){" "}
+                                  <span className="text-danger">*</span>
+                                </label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1433,12 +1550,17 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: !formData.age ? "#fdecea" : "#fff",
+                                    backgroundColor: !formData.age
+                                      ? "#fdecea"
+                                      : "#fff",
                                   }}
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Container Type <span className="text-danger">*</span></label>
+                                <label>
+                                  Container Type{" "}
+                                  <span className="text-danger">*</span>
+                                </label>
                                 <select
                                   className="form-control"
                                   name="ContainerType"
@@ -1448,11 +1570,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
-                                    backgroundColor: !formData.ContainerType ? "#fdecea" : "#fff",
+                                    backgroundColor: !formData.ContainerType
+                                      ? "#fdecea"
+                                      : "#fff",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {containertypeNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
@@ -1463,19 +1586,26 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </div>
                             <div className="row">
                               <div className="form-group col-md-6">
-                                <label>Sample Picture <span className="text-danger">*</span></label>
+                                <label>
+                                  Sample Picture{" "}
+                                  <span className="text-danger">*</span>
+                                </label>
                                 <div className="d-flex align-items-center">
                                   <input
                                     name="logo"
                                     type="file"
                                     id="logo"
                                     accept="image/*"
-                                    onChange={(e) => logoHandler(e.target.files[0])}
+                                    onChange={(e) =>
+                                      logoHandler(e.target.files[0])
+                                    }
                                     className="form-control"
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.logo ? "#fdecea" : "#fff",
+                                      backgroundColor: !formData.logo
+                                        ? "#fdecea"
+                                        : "#fff",
                                     }}
                                   />
                                   {logoPreview && (
@@ -1491,7 +1621,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   )}
                                 </div>
                               </div>
-
                             </div>
                           </div>
                         )}
@@ -1515,8 +1644,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {ethnicityNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
@@ -1540,8 +1668,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {sampleconditionNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
@@ -1565,8 +1692,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {storagetemperatureNames.map(
                                     (name, index) => (
                                       <option key={index} value={name}>
@@ -1622,10 +1748,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       .filter((country) =>
                                         searchCountry
                                           ? country.name
-                                            .toLowerCase()
-                                            .includes(
-                                              searchCountry.toLowerCase()
-                                            )
+                                              .toLowerCase()
+                                              .includes(
+                                                searchCountry.toLowerCase()
+                                              )
                                           : true
                                       )
                                       .map((country) => (
@@ -1641,12 +1767,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             handleSelectCountry(country)
                                           }
                                           onMouseEnter={(e) =>
-                                          (e.currentTarget.style.backgroundColor =
-                                            "#e2e2e2")
+                                            (e.currentTarget.style.backgroundColor =
+                                              "#e2e2e2")
                                           }
                                           onMouseLeave={(e) =>
-                                          (e.currentTarget.style.backgroundColor =
-                                            "#f0f0f0")
+                                            (e.currentTarget.style.backgroundColor =
+                                              "#f0f0f0")
                                           }
                                         >
                                           {country.name}
@@ -1763,19 +1889,21 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   style={{
                                     fontSize: "14px",
                                     height: "45px",
-                                    backgroundColor: formData.InfectiousDiseaseTesting
-                                      ? "#f0f0f0"
-                                      : "#f0f0f0",
+                                    backgroundColor:
+                                      formData.InfectiousDiseaseTesting
+                                        ? "#f0f0f0"
+                                        : "#f0f0f0",
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
-                                  {infectiousdiseasetestingName.map((name, index) => (
-                                    <option key={index} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
+                                  <option value="" hidden></option>
+                                  {infectiousdiseasetestingName.map(
+                                    (name, index) => (
+                                      <option key={index} value={name}>
+                                        {name}
+                                      </option>
+                                    )
+                                  )}
                                 </select>
                               </div>
                               <div className="form-group">
@@ -1892,8 +2020,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {concurrentmedicalconditionsNames.map(
                                     (name, index) => (
                                       <option key={index} value={name}>
@@ -1922,7 +2049,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   }}
                                 />
                               </div>
-
                             </div>
                             {/* {Column 5} */}
                             <div className="col-md-3">
@@ -1942,8 +2068,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {testmethodNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
@@ -1968,8 +2093,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {testkitmanufacturerNames.map(
                                     (name, index) => (
                                       <option key={index} value={name}>
@@ -1995,8 +2119,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {testsystemNames.map((name, index) => (
                                     <option key={index} value={name}>
                                       {name}
@@ -2021,8 +2144,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     color: "black",
                                   }}
                                 >
-                                  <option value="" hidden>
-                                  </option>
+                                  <option value="" hidden></option>
                                   {testsystemmanufacturerNames.map(
                                     (name, index) => (
                                       <option key={index} value={name}>
@@ -2044,10 +2166,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                           className="form-check-input"
                           id="toggleDetails"
                           checked={showAdditionalFields}
-                          onChange={() => setShowAdditionalFields(!showAdditionalFields)}
+                          onChange={() =>
+                            setShowAdditionalFields(!showAdditionalFields)
+                          }
                           disabled={!areMandatoryFieldsFilled()}
                         />
-                        <label className="form-check-label" htmlFor="toggleDetails">
+                        <label
+                          className="form-check-label"
+                          htmlFor="toggleDetails"
+                        >
                           Add Additional Details
                         </label>
                       </div>
@@ -2056,10 +2183,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </button>
                     </div>
                     <div className="text-start text-muted fs-6 mb-3 ms-3">
-                      <code>
-                        {" "}
-                        Please move cursor to field to get help
-                      </code>
+                      <code> Please move cursor to field to get help</code>
                     </div>
                   </form>
                 </div>
@@ -2091,7 +2215,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                 <div className="modal-content">
                   <form onSubmit={handlePriceSubmit}>
                     <div className="modal-header">
-                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolume}{selectedSampleUnit}</h5>
+                      <h5 className="modal-title">
+                        {selectedSampleName} -{selectedSampleVolume}
+                        {selectedSampleUnit}
+                      </h5>
                       <button
                         type="button"
                         className="close"
@@ -2103,7 +2230,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                           top: "10px",
                           cursor: "pointer",
                         }}
-                      ><span>&times;</span>
+                      >
+                        <span>&times;</span>
                       </button>
                     </div>
                     <div className="modal-body">
@@ -2118,7 +2246,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                             fontSize: "14px",
                             backgroundColor: "#f0f0f0",
                             color: "black",
-                            marginBottom: '10px',
+                            marginBottom: "10px",
                           }}
                         >
                           <option value="" hidden>
@@ -2132,7 +2260,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                             ))
                           ) : (
                             <option disabled>No prices found</option>
-
                           )}
                         </select>
 
@@ -2185,10 +2312,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       >
                         Cancel
                       </button>
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                      >
+                      <button type="submit" className="btn btn-primary">
                         Save
                       </button>
                     </div>
@@ -2644,7 +2768,11 @@ ${sample.box_id || "N/A"} = Box ID`;
             tabIndex="-1"
             role="dialog"
           >
-            <div className="modal-dialog" style={{ marginTop: "80px" }} role="document">
+            <div
+              className="modal-dialog"
+              style={{ marginTop: "80px" }}
+              role="document"
+            >
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Sample Picture</h5>
@@ -2670,19 +2798,26 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </div>
         )}
-
       </div>
-      <Modal show={showModal}
+      <Modal
+        show={showModal}
         onHide={closeModal}
         size="lg"
         centered
         backdrop="static"
-        keyboard={false}>
+        keyboard={false}
+      >
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+          <Modal.Title className="fw-bold text-danger">
+            {" "}
+            Sample Details
+          </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+        <Modal.Body
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+          className="bg-light rounded"
+        >
           {selectedSample ? (
             <div className="p-3">
               <div className="row g-3">
@@ -2693,8 +2828,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                   return (
                     <div className="col-md-6" key={key}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        <span className="text-muted small fw-bold mb-1">
+                          {label}
+                        </span>
+                        <span className="fs-6 text-dark">
+                          {value?.toString() || "----"}
+                        </span>
                       </div>
                     </div>
                   );
