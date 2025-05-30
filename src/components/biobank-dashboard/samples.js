@@ -52,6 +52,7 @@ const BioBankSampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Price", key: "price" },
     { label: "Gender", key: "gender" },
+    { label: "Test Result", key: "TestResult" },
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
@@ -60,7 +61,6 @@ const BioBankSampleArea = () => {
   const fieldsToShowInOrder = [
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -142,10 +142,11 @@ const BioBankSampleArea = () => {
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
   const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
   const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
+  const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
+  const [showLogoModal, setShowLogoModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null);
 
@@ -235,32 +236,33 @@ const [filters, setFilters] = useState({});
   };
 
   // Fetch samples from backend when component loads
-useEffect(() => {
-  fetchSamples(currentPage + 1, itemsPerPage, filters);
-}, [currentPage]);
+  useEffect(() => {
+    const storedUser = getsessionStorage("user");
+    fetchSamples(currentPage + 1, itemsPerPage, filter); // Call the function when the component mounts
+  }, [currentPage]);
 
-
-const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-  try {
-    const { priceFilter, searchField, searchValue } = filters;
+  // Fetch samples from the backend
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { priceFilter, searchField, searchValue } = filters;
 
     let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
     if (priceFilter) url += `&priceFilter=${priceFilter}`;
     if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
-    const response = await axios.get(url);
-    const { samples, totalCount } = response.data;
+      const response = await axios.get(url);
+      const { samples, totalCount } = response.data;
+      console.log(samples)
+      setSamples(samples);
+      setFilteredSamples(samples);
+      setTotalPages(Math.ceil(totalCount / pageSize));
+      setfiltertotal(Math.ceil(totalCount / pageSize));
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
 
-    setSamples(samples);
-    setFilteredSamples(samples);
-    setTotalPages(Math.ceil(totalCount / pageSize));
-    setfiltertotal(Math.ceil(totalCount / pageSize));
-  } catch (error) {
-    console.error("Error fetching samples:", error);
-  }
-};
-  
   const getSamplePrice = async (selectedSampleName) => {
     try {
       const response = await fetch(
@@ -281,9 +283,6 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
       console.error("Error fetching site names:", error);
     }
   };
-
-
-
 
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -350,22 +349,20 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
 
- useEffect(() => {
-  if (currentPage >= totalPages && totalPages > 0) {
-    setCurrentPage(0);
-  }
-}, [currentPage, totalPages]);
+  useEffect(() => {
 
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [currentPage, totalPages]);
 
   // Get the current data for the table
- const currentData = filteredSamples;
+  const currentData = filteredSamples
 
-
-const handlePageChange = (event) => {
-  const selectedPage = event.selected;
-  setCurrentPage(selectedPage);
-};
-
+  const handlePageChange = (event) => {
+    const selectedPage = event.selected;
+    setCurrentPage(selectedPage);
+  };
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
@@ -826,6 +823,7 @@ const handlePageChange = (event) => {
     setShowAdditionalFields(false);
     setLogoPreview(null)
   };
+
   function bufferToBase64(bufferObj, mimeType) {
     if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
 
@@ -873,9 +871,12 @@ const handlePageChange = (event) => {
             {successMessage}
           </div>
         )}
-        <div className="text-danger fw-bold" style={{ marginTop: "-40px" }}>
+        <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
           <h6>
-            Note: Click on Price Icon to Add Price and Price Currency for Sample.
+            Note 1: Click on Price Icon to Add Price and Price Currency for Sample.
+          </h6>
+          <h6>
+            Note 2: Click on Location Id's to see Sample Picture.
           </h6>
         </div>
 
@@ -936,7 +937,7 @@ const handlePageChange = (event) => {
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                      <span className="fw-bold mt-1 d-block text-fetvwrap align-items-center fs-6">
                         {label}
                       </span>
 
@@ -959,14 +960,14 @@ const handlePageChange = (event) => {
                           key === "price"
                             ? "text-end"
                             : key === "diseasename"
-                              ? ""
+                              ? "text-start"
                               : "text-center text-truncate"
                         }
-                        style={{ maxWidth: "150px" }}
+                        style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
                       >
                         {key === "diseasename" ? (
                           <span
-                            className="sample-name  fs-6 "
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
                             title="Sample Details"
                             onClick={() => openModal(sample)}
@@ -985,8 +986,24 @@ const handlePageChange = (event) => {
                               const tooltip = `${sample.room_number || "N/A"} = Room Number
 ${sample.freezer_id || "N/A"} = Freezer ID
 ${sample.box_id || "N/A"} = Box ID`;
+
+                              // To show logo while clicking on location IDs
+                              const handleLogoClick = () => {
+                                const logo =
+                                  typeof sample.logo === "string"
+                                    ? sample.logo
+                                    : sample.logo?.data
+                                      ? URL.createObjectURL(
+                                        new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
+                                      )
+                                      : null;
+                                if (logo) {
+                                  setSelectedLogoUrl(logo);
+                                  setShowLogoModal(true);
+                                }
+                              };
                               return (
-                                <span title={tooltip} style={{ cursor: "help" }}>
+                                <span title={tooltip} style={{ cursor: "help", textDecoration: "underline", color: "#007bff" }} onClick={handleLogoClick}>
                                   {sample.locationids || "----"}
                                 </span>
                               );
@@ -994,6 +1011,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                               return `${sample.volume} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
+                            } else if (key === "TestResult") {
+                              return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                             } else if (key === "price") {
                               return sample.price && sample.SamplePriceCurrency
                                 ? `${sample.price} ${sample.SamplePriceCurrency}`
@@ -1257,24 +1276,23 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <div className="form-group col-md-6">
                                 <label>Phone Number <span className="text-danger">*</span></label>
                                 <input
-  type="text"
-  className="form-control"
-  name="phoneNumber"
-  value={formData.phoneNumber}
-  onChange={handleInputChange}
-  style={{
-    height: "45px",
-    fontSize: "14px",
-    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
-  }}
-  pattern="03[0-9]{2}-[0-9]{7}"
-  title="Format should be 0000-0000000"
-  required
-/>
-
+                                  type="text"
+                                  className="form-control"
+                                  name="phoneNumber"
+                                  value={formData.phoneNumber}
+                                  onChange={handleInputChange}
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
+                                  }}
+                                  pattern="03[0-9]{2}-[0-9]{7}"
+                                  title="Format should be XXXX-XXXXXXX"
+                                  required
+                                />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Test Result & Unit</label>
+                                <label>Test Result & Unit <span className="text-danger">*</span></label>
                                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                                   {/* Test Result Dropdown or Numeric Input */}
                                   {!showTestResultNumericInput ? (
@@ -1287,7 +1305,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                           setShowTestResultNumericInput(true);
                                           setFormData((prev) => ({ ...prev, TestResult: "" }));
                                         } else {
-                                          setFormData((prev) => ({ ...prev, TestResult: val }));
+                                          setShowTestResultNumericInput(false); // Ensure this is reset
+                                          setFormData((prev) => ({ ...prev, TestResult: val, TestResultUnit: "" })); // Clear unit
                                         }
                                       }}
                                       style={{
@@ -1322,34 +1341,36 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       onBlur={() => {
                                         if (!formData.TestResult) {
                                           setShowTestResultNumericInput(false);
+                                          setFormData((prev) => ({ ...prev, TestResultUnit: "" })); // Clear unit
                                         }
                                       }}
                                     />
                                   )}
-
-                                  {/* Test Result Unit Dropdown */}
-                                  <select
-                                    className="form-control"
-                                    name="TestResultUnit"
-                                    value={formData.TestResultUnit}
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      height: "40px",
-                                      fontSize: "14px",
-                                      backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
-                                      minWidth: "100px",
-                                    }}
-                                  >
-                                    <option value="" hidden>
-                                      Unit
-                                    </option>
-                                    {testresultunitNames.map((name, index) => (
-                                      <option key={index} value={name}>
-                                        {name}
+                                  {/* Conditionally render Unit Dropdown */}
+                                  {showTestResultNumericInput && (
+                                    <select
+                                      className="form-control"
+                                      name="TestResultUnit"
+                                      value={formData.TestResultUnit}
+                                      onChange={handleInputChange}
+                                      required
+                                      style={{
+                                        height: "40px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
+                                        minWidth: "100px",
+                                      }}
+                                    >
+                                      <option value="" hidden>
+                                        Unit
                                       </option>
-                                    ))}
-                                  </select>
+                                      {testresultunitNames.map((name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  )}
                                 </div>
                               </div>
                               <div className="form-group col-md-6">
@@ -1406,6 +1427,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   value={formData.age}
                                   onChange={handleInputChange}
                                   required
+                                  min="1"
+                                  max="150"
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
@@ -2611,6 +2634,42 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+
+        {/* Modal to show Sample Picture */}
+        {showLogoModal && (
+          <div
+            className="modal fade show"
+            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+            tabIndex="-1"
+            role="dialog"
+          >
+            <div className="modal-dialog" style={{ marginTop: "80px" }} role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Sample Picture</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowLogoModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body text-center">
+                  {selectedLogoUrl ? (
+                    <img
+                      src={selectedLogoUrl}
+                      alt="Sample Logo"
+                      style={{ maxWidth: "100%", maxHeight: "300px" }}
+                    />
+                  ) : (
+                    <p>No logo available.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
       <Modal show={showModal}
         onHide={closeModal}

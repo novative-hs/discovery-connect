@@ -11,21 +11,21 @@ import axios from "axios";
 import { useRouter } from "next/router";
 
 const FilterProduct = () => {
-    
+
   const dispatch = useDispatch();
   const router = useRouter();
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
-const [userID, setUserID] = useState(null);
+  const [userID, setUserID] = useState(null);
   const [products, setProduct] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [loading, setLoading] = useState(false);
-const [activeTab, setActiveTab] = useState("Booksamples");
+  const [activeTab, setActiveTab] = useState("Booksamples");
 
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  const [image_url,setImageURL]=useState();
+  const [image_url, setImageURL] = useState();
 
   // For debounce timeout
   const filterTimeoutRef = useRef(null);
@@ -63,34 +63,34 @@ const [activeTab, setActiveTab] = useState("Booksamples");
   ];
 
   useEffect(() => {
-  const storedUserID = sessionStorage.getItem("userID");
-  setUserID(storedUserID);
-}, []);
+    const storedUserID = sessionStorage.getItem("userID");
+    setUserID(storedUserID);
+  }, []);
 
- useEffect(() => {
-    
-  const item = sessionStorage.getItem("filterProduct");
-  if (item) {
-    const parsed = JSON.parse(item);
-    const diseaseName = parsed?.diseasename;
-    const image_url = parsed?.imageUrl;
-    
+  useEffect(() => {
 
-    // Normalize image_url to imageUrl for your state usage
-    const normalizedItem = {
-      ...parsed,
-      imageUrl: image_url || "",
-    };
+    const item = sessionStorage.getItem("filterProduct");
+    if (item) {
+      const parsed = JSON.parse(item);
+      const diseaseName = parsed?.diseasename;
+      const image_url = parsed?.imageUrl;
 
-    setProduct([normalizedItem]);
-    setFilteredSamples([normalizedItem]);
 
-    if (diseaseName) {
-      getSample(diseaseName);
-      setImageURL(image_url);
+      // Normalize image_url to imageUrl for your state usage
+      const normalizedItem = {
+        ...parsed,
+        imageUrl: image_url || "",
+      };
+
+      setProduct([normalizedItem]);
+      setFilteredSamples([normalizedItem]);
+
+      if (diseaseName) {
+        getSample(diseaseName);
+        setImageURL(image_url);
+      }
     }
-  }
-}, []);
+  }, []);
 
 
   const getSample = async (name) => {
@@ -101,7 +101,7 @@ const [activeTab, setActiveTab] = useState("Booksamples");
       );
       console.log(response.data)
       setFilteredSamples(response.data.data);
-setProduct(response.data.data);
+      setProduct(response.data.data);
 
       setCurrentPage(0);
     } catch (error) {
@@ -152,25 +152,26 @@ setProduct(response.data.data);
   const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
 
   const handleAddToCart = (sample) => {
-  const productWithImage = {
-    ...sample,
-    imageUrl: image_url  // Adjust key here as needed
+    const productWithImage = {
+      ...sample,
+      imageUrl: image_url  // Adjust key here as needed
+    };
+    dispatch(add_cart_product(productWithImage));
   };
-  dispatch(add_cart_product(productWithImage));
-};
 
 
   return (
     <>
       {/* Conditional header rendering */}
-{userID ? <DashboardHeader setActiveTab={setActiveTab} activeTab={activeTab} />
- : <Header style_2={true} />}
+      {userID ? <DashboardHeader setActiveTab={setActiveTab} activeTab={activeTab} />
+        : <Header style_2={true} />}
 
       <section className="policy__area pb-40 overflow-hidden p-3">
         <div className="container">
-          <h7 className="text-danger fw-bold mb-3">
+          <p className="text-danger fw-bold mt-3 mb-3">
             Click on Sample Name to get detail about sample.
-          </h7>
+          </p>
+
           <div className="row justify-content-center">
             <div className="table-responsive w-100">
               {loading ? (
@@ -236,9 +237,8 @@ setProduct(response.data.data);
                                 </span>
                               );
                             } else if (key === "volume") {
-                              content = `${sample.volume || "----"} ${
-                                sample.QuantityUnit || ""
-                              }`;
+                              content = `${sample.volume || "----"} ${sample.QuantityUnit || ""
+                                }`;
                             } else {
                               content = sample[key] || "----";
                             }
@@ -250,8 +250,8 @@ setProduct(response.data.data);
                                   key === "price"
                                     ? "text-end"
                                     : key === "diseasename"
-                                    ? ""
-                                    : "text-center text-truncate"
+                                      ? ""
+                                      : "text-center text-truncate"
                                 }
                                 style={{ maxWidth: "150px" }}
                               >
@@ -290,11 +290,21 @@ setProduct(response.data.data);
             </div>
 
             {totalPages > 0 && (
-              <Pagination
-                pageCount={totalPages}
-                onPageChange={handlePageChange}
-                forcePage={currentPage}
-              />
+              <>
+                <Pagination
+                  pageCount={totalPages}
+                  onPageChange={handlePageChange}
+                  forcePage={currentPage}
+                />
+                <div className="text-center mt-4">
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => router.push("/dashboardheader?tab=Booksamples")}
+                  >
+                    ← Back to Samples
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -337,10 +347,6 @@ setProduct(response.data.data);
                     </li>
                     <li>
                       <b>Status:</b> {selectedSample.status || "----"}
-                    </li>
-                    <li>
-                      <b>Sample Visibility:</b>{" "}
-                      {selectedSample.sample_visibility || "----"}
                     </li>
                   </ul>
                 </div>
