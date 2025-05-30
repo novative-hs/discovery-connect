@@ -37,21 +37,27 @@ export const cartSlice = createSlice({
           orderQuantity: 1,
           volumes: payload.volumes || 1, // Ensure volumes is always saved
           addedAt: new Date().toISOString(),
+           imageUrl: payload.imageUrl
         };
         state.cart_products = [...state.cart_products, newItem];
         notifySuccess(`Sample added to cart`);
       } else {
-        state.cart_products = state.cart_products.map((item) => {
-          if (item.id === payload.id) {
-            if (item.quantity >= item.orderQuantity + 1) {
-              item.orderQuantity += 1;
-              notifySuccess(`${item.diseasename} quantity updated in cart`);
-            } else {
-              notifyError("No more quantity available for this product!");
-            }
-          }
-          return item;
-        });
+       state.cart_products = state.cart_products.map((item) => {
+  if (item.id === payload.id) {
+    if (item.quantity >= item.orderQuantity + 1) {
+      notifySuccess(`${item.diseasename} quantity updated in cart`);
+      return {
+        ...item,
+        orderQuantity: item.orderQuantity + 1,
+      };
+    } else {
+      notifyError("No more quantity available for this product!");
+      return item;
+    }
+  }
+  return item;
+});
+
       }
 
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);

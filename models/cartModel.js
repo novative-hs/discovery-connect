@@ -117,6 +117,8 @@ const createCartTable = () => {
     sample_id VARCHAR(36) NOT NULL,
     price FLOAT NOT NULL,
     quantity INT NOT NULL,
+    QuantityUnit VARCHAR(20),
+    volume VARCHAR(255) NOT NULL,
     totalpayment DECIMAL(10, 2) NOT NULL,
     payment_id INT DEFAULT NULL,
     order_status ENUM('Pending', 'Accepted', 'UnderReview', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
@@ -149,6 +151,9 @@ const createCart = (data, callback) => {
     nbc_file,
   } = data;
 
+  console.log(data);
+
+  // Validate required fields
   if (
     !researcher_id ||
     !cart_items ||
@@ -175,17 +180,23 @@ const createCart = (data, callback) => {
 
     const technicalAdminId = adminResults[0].id;
 
-    let insertPromises = cart_items.map((item) => {
+    // Insert each cart item
+    const insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
+        const sample_id = item.sample_id;
+
         const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity, payment_id, totalpayment)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO cart (user_id, sample_id, price, quantity, volume, QuantityUnit, payment_id, totalpayment)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
         const cartValues = [
           researcher_id,
-          item.sample_id || null,
+          sample_id,
           item.price,
           item.samplequantity,
+          item.volume,
+          item.QuantityUnit,
           payment_id,
           item.total,
         ];
@@ -194,12 +205,13 @@ const createCart = (data, callback) => {
           if (err) return reject(err);
 
           const cartId = cartResult.insertId;
-          const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
 
+          const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
           mysqlConnection.query(getCreatedAtQuery, [cartId], (err, createdAtResult) => {
             if (err) return reject(err);
 
             const created_at = createdAtResult?.[0]?.created_at;
+
             const insertApprovalQuery = `
               INSERT INTO technicaladminsampleapproval (cart_id, technical_admin_id, technical_admin_status)
               VALUES (?, ?, 'pending')
@@ -212,6 +224,7 @@ const createCart = (data, callback) => {
                 INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file)
                 VALUES (?, ?, ?, ?, ?)
               `;
+
               const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null];
 
               mysqlConnection.query(insertDocumentsQuery, documentValues, (err) => {
@@ -224,15 +237,17 @@ const createCart = (data, callback) => {
                     quantity_allocated = IFNULL(quantity_allocated, 0) + ?
                   WHERE id = ? AND quantity >= ?
                 `;
+
                 const updateValues = [
                   item.samplequantity,
                   item.samplequantity,
-                  item.sample_id,
+                  sample_id,
                   item.samplequantity,
                 ];
 
                 mysqlConnection.query(updateQuery, updateValues, (err) => {
                   if (err) return reject(err);
+
                   resolve({ cartId, created_at });
                 });
               });
@@ -245,11 +260,12 @@ const createCart = (data, callback) => {
     Promise.all(insertPromises)
       .then((results) => {
         const cartIds = results.map((result) => result.cartId);
-        const message = 'Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.';
+
+        const message =
+          "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
         const subject = "Sample Request Status Update";
 
-        // ✅ Inline notifyResearcher logic
-        const placeholders = cartIds.map(() => '?').join(',');
+        const placeholders = cartIds.map(() => "?").join(",");
         const getResearcherEmailQuery = `
           SELECT ua.email, c.created_at, c.id AS cartId
           FROM user_account ua
@@ -267,14 +283,13 @@ const createCart = (data, callback) => {
           const researcherEmail = emailResults[0].email;
           const cartIdsList = emailResults
             .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
-            .join("\n");
+            .join("<br/>");
 
-          const emailMessage = `Dear Researcher,<br/>${message}<br/>Details for the following carts:<br/>${cartIdsList}<br/>Best regards, <br/>Lab Hazir`;
+          const emailMessage = `Dear Researcher,<br/>${message}<br/>Details for the following carts:<br/>${cartIdsList}<br/>Best regards,<br/>Lab Hazir`;
 
           sendEmail(researcherEmail, subject, emailMessage)
             .then(() => {
-
-              callback(null, { message: 'Cart created successfully', results });
+              callback(null, { message: "Cart created successfully", results });
             })
             .catch((emailSendErr) => {
               console.error("Failed to send researcher email:", emailSendErr);
@@ -285,6 +300,9 @@ const createCart = (data, callback) => {
       .catch((error) => callback(error));
   });
 };
+
+
+
 
 
 const getAllCart = (id, callback, res) => {
@@ -885,9 +903,7 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
         ? "Your sample request has been <b>rejected</b>.<br/>"
         : cartStatus === 'UnderReview'
           ? "Your sample documents have been <b>reviewed by a committee member</b>.<br/>"
-          : cartStatus === 'Dispatched'
-            ? "Your sample request has been <b>dispatched</b> and is on its way.<br/>"
-            : "Your sample request status has been updated.<br/>";
+          : "Your sample request status has been updated.<br/>";
 
     const subject = "Sample Request Status Update";
 
@@ -896,9 +912,29 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
       await queryAsync(`UPDATE cart SET order_status = ? WHERE id = ?`, [cartStatus, id]);
     }
 
-    // Step 2: Get email info for the FIRST cart only
+    if (cartStatus === 'Rejected') {
+      // Step 2: If Rejected, add back cart quantities to sample quantities
+      const cartSamplesQuery = `
+        SELECT sample_id, quantity
+        FROM cart
+        WHERE id IN (${ids.map(() => '?').join(',')})
+      `;
+      const cartSamples = await queryAsync(cartSamplesQuery, ids);
+
+      for (const cs of cartSamples) {
+        await queryAsync(
+          `UPDATE sample 
+           SET quantity = quantity + ?, 
+               quantity_allocation = quantity_allocation - ? 
+           WHERE id = ?`,
+          [cs.quantity, cs.quantity, cs.sample_id]
+        );
+      }
+    }
+
+    // Step 3: Get email info for the FIRST cart only
     const getFirstCartEmailQuery = `
-      SELECT ua.email, c.created_at, c.id AS cartId
+      SELECT ua.email
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
       WHERE c.id = ?
@@ -909,21 +945,19 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
       throw new Error(`No researcher found for cart ID: ${ids[0]}`);
     }
 
-    const { email, created_at, cartId } = result[0];
+    const { email } = result[0];
 
-    // Step 3: Build email message (include all updated cart IDs for context)
-    const cartList = ids.map(id => `Cart ID: ${id}`).join("\n");
-    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):\n${cartList}<br/>Best regards,<br/>Lab Hazir`;
+    // Step 4: Build email message
+    const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
+    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Lab Hazir`;
 
-    // Step 4: Send the email
+    // Step 5: Send email
     await sendEmail(email, subject, emailMessage);
 
-
-
     if (typeof callback === 'function') {
-      callback(null, "Cart status updated and researcher notified.");
+      callback(null, "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.");
     } else {
-      return "Cart status updated and researcher notified.";
+      return "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.";
     }
   } catch (err) {
     console.error("Error in update and notify:", err);
@@ -934,6 +968,10 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     }
   }
 };
+
+
+
+
 
 
 module.exports = {

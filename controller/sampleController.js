@@ -8,7 +8,15 @@ const createSampleTable = (req, res) => {
 
   res.status(200).json({ message: "Sample table creation process started" });
 };
-
+const getAllSampleinIndex=(req,res)=>{
+  const { name } = req.params;
+  SampleModel.getAllSampleinIndex(name, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples detail" });
+    }
+    res.status(200).json({ data: results });
+  });
+}
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
@@ -36,6 +44,16 @@ const getSamples = (req, res) => {
   });
 };
 
+const getAllVolumnUnits=(req,res)=>{
+  const { name } = req.params;
+
+  SampleModel.getAllVolumnUnits(name, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples volumn" });
+    }
+    res.status(200).json({ data: results });
+  });
+}
 const deleteSample = (req, res) => {
   const sampleId = req.params.id;
 
@@ -201,4 +219,6 @@ module.exports = {
   updateSample,
   updateQuarantineSamples,
   deleteSample,
+  getAllVolumnUnits,
+  getAllSampleinIndex
 };

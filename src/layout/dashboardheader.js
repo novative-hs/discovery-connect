@@ -159,7 +159,6 @@ const Header = ({ setActiveTab, activeTab }) => {
     userType == "researcher"
       ? [
         { label: "Book Samples", tab: "Booksamples" },
-        { label: "Sample List", tab: "samples" },
         { label: "My Order Samples", tab: "my-samples" },
       ]
       : userType == "registrationadmin"

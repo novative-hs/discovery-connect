@@ -163,7 +163,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
                     setShowingListItems={setShowingListItems}
                   />
                 </div>
-                {/* pagination */}
+                
               </div>
             </div>
           </div>

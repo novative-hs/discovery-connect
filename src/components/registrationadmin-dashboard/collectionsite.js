@@ -1002,76 +1002,115 @@ const CollectionSiteArea = () => {
                         borderRadius: "10px",
                       }}
                     >
-                      {historyData && historyData.length > 0 ? (
-                        historyData.map((log, index) => {
-                          const {
-                            created_name,
-                            updated_name,
-                            CollectionSiteName,
-                            added_by,
-                            created_at,
-                            updated_at,
-                            status
-                          } = log;
+                   {historyData && historyData.length > 0 ? (
+  historyData.map((log, index) => {
+    const {
+      created_name,
+      updated_name,
+      CollectionSiteName,
+      added_by,
+      created_at,
+      updated_at,
+      status,
+    } = log;
 
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              {/* Message for City Addition */}
-                              {status === 'added' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <b>Collectionsite:</b> {CollectionSiteName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
+    // Determine timestamp and person depending on status type:
+    const time =
+      status === "added" || status === "active"
+        ? created_at
+        : updated_at;
 
-                              {/* Message for City Update (Only if it exists) */}
-                              {status === 'updated' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
-                                  }}
-                                >
-                                  <b>Collectionsite:</b> {CollectionSiteName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <p className="text-left">No history available.</p>
-                      )}
+    return (
+      <div
+        key={index}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          marginBottom: "10px",
+        }}
+      >
+        {/* Added */}
+        {status === "added" && (
+          <div
+            style={{
+              padding: "10px 15px",
+              borderRadius: "15px",
+              backgroundColor: "#ffffff",
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+              maxWidth: "75%",
+              fontSize: "14px",
+              textAlign: "left",
+            }}
+          >
+            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
+            {moment(created_at).format("DD MMM YYYY, h:mm A")}
+          </div>
+        )}
+
+        {/* Updated */}
+        {status === "updated" && (
+          <div
+            style={{
+              padding: "10px 15px",
+              borderRadius: "15px",
+              backgroundColor: "#dcf8c6",
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+              maxWidth: "75%",
+              fontSize: "14px",
+              textAlign: "left",
+              marginTop: "5px",
+            }}
+          >
+            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
+            {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+          </div>
+        )}
+
+        {/* Active */}
+        {status === "active" && (
+          <div
+            style={{
+              padding: "10px 15px",
+              borderRadius: "15px",
+              backgroundColor: "#cce5ff", // light blue
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+              maxWidth: "75%",
+              fontSize: "14px",
+              textAlign: "left",
+              marginTop: "5px",
+            }}
+          >
+            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
+            {moment(created_at).format("DD MMM YYYY, h:mm A")}
+          </div>
+        )}
+
+        {/* Inactive */}
+        {status === "inactive" && (
+          <div
+            style={{
+              padding: "10px 15px",
+              borderRadius: "15px",
+              backgroundColor: "#f8d7da", // light red/pink
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+              maxWidth: "75%",
+              fontSize: "14px",
+              textAlign: "left",
+              marginTop: "5px",
+            }}
+          >
+            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
+            {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+          </div>
+        )}
+      </div>
+    );
+  })
+) : (
+  <p className="text-left">No history available.</p>
+)}
+
                     </div>
                   </div>
                 </div>

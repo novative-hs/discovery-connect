@@ -148,9 +148,12 @@ const BioBankSampleArea = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
-  const [logoPreview, setLogoPreview] = useState(null); // <-- For image preview
+  const [logoPreview, setLogoPreview] = useState(null);
 
   const [samplePrice, setSamplePrice] = useState([])
+  
+const [pageSize, setPageSize] = useState(10);
+const [filters, setFilters] = useState({});
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -243,10 +246,10 @@ const BioBankSampleArea = () => {
     try {
       const { priceFilter, searchField, searchValue } = filters;
 
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-      if (priceFilter) url += `&priceFilter=${priceFilter}`;
-      if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+    if (priceFilter) url += `&priceFilter=${priceFilter}`;
+    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
       const response = await axios.get(url);
       const { samples, totalCount } = response.data;

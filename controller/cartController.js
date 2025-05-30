@@ -27,14 +27,20 @@ const getCartCount = (req, res) => {
   });
 };
 const createCart = (req, res) => {
-  const { researcher_id, payment_id, cart_items, reporting_mechanism } = req.body;
+  const {
+    researcher_id,
+    payment_id,
+    cart_items,
+    reporting_mechanism,
+    sample_id
+  } = req.body;
 
   // Read files from `req.files`
   const study_copy = req.files?.["study_copy"] ? req.files["study_copy"][0].buffer : null;
   const irb_file = req.files?.["irb_file"] ? req.files["irb_file"][0].buffer : null;
   const nbc_file = req.files?.["nbc_file"] ? req.files["nbc_file"][0].buffer : null;
 
-  // Convert JSON string fields if necessary
+  // Parse cart_items
   let cartItems;
   try {
     cartItems = typeof cart_items === "string" ? JSON.parse(cart_items) : cart_items;
@@ -45,15 +51,26 @@ const createCart = (req, res) => {
     return res.status(400).json({ error: "Invalid cart_items format" });
   }
 
+  // Parse sample_id (optional, only if needed)
+  let sampleIds = [];
+  try {
+    sampleIds = typeof sample_id === "string" ? JSON.parse(sample_id) : sample_id;
+  } catch (error) {
+    return res.status(400).json({ error: "Invalid sample_id format" });
+  }
+
   // Check required fields
-  if (!researcher_id || !payment_id || !cartItems || !reporting_mechanism) {
-    return res.status(400).json({ error: "Missing required fields (Researcher ID, Payment ID, and Reporting Mechanism are required)" });
+  if (!researcher_id || !payment_id || !reporting_mechanism) {
+    return res.status(400).json({
+      error: "Missing required fields (Researcher ID, Payment ID, and Reporting Mechanism are required)"
+    });
   }
 
   // Construct data object
   const newCartData = {
     researcher_id,
-    payment_id, // ✅ Added Payment ID
+    payment_id,
+    sample_ids: sampleIds, // use parsed sampleIds
     cart_items: cartItems,
     reporting_mechanism,
     study_copy,
@@ -61,18 +78,15 @@ const createCart = (req, res) => {
     nbc_file,
   };
 
-  // Pass data to the model
   cartModel.createCart(newCartData, (err, result) => {
     if (err) {
-      console.error("Error creating cart:", err);  // This is where you'd see the error logs.
+      console.error("Error creating cart:", err);
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
-  
     return res.status(201).json({ message: "Cart created successfully", result });
   });
-  
-  
 };
+
 
 
 const updateCard = (req, res) => {
