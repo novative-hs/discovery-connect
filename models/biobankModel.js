@@ -37,10 +37,23 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
   }
 
   // Search filter
-  if (searchField && searchValue) {
+if (searchField && searchValue) {
+  if (searchField === "location") {
+    baseWhere += ` AND (room_number LIKE ? OR freezer_id LIKE ? OR box_id LIKE ?)`;
+    const likeValue = `%${searchValue}%`;
+    paramsForWhere.push(likeValue, likeValue, likeValue);
+  } 
+  else if (searchField === "volume") {
+    baseWhere += ` AND (CAST(volume AS CHAR) LIKE ? OR QuantityUnit LIKE ?)`;
+    paramsForWhere.push(likeValue, likeValue);
+
+  } 
+    
+    else {
     baseWhere += ` AND ?? LIKE ?`;
     paramsForWhere.push(searchField, `%${searchValue}%`);
   }
+}
 
   // Query to get paginated results
   const dataQuery = `
