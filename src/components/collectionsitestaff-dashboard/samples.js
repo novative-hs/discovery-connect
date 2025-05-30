@@ -1310,6 +1310,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   value={formData.age}
                                   onChange={handleInputChange}
                                   required
+                                  min="1"
+                                  max="150"
                                   style={{
                                     height: "45px",
                                     fontSize: "14px",
