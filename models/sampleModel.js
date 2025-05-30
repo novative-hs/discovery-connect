@@ -18,33 +18,33 @@ const createSampleTable = () => {
         age INT,
         gender VARCHAR(10),
         phoneNumber VARCHAR(15),
-        ethnicity VARCHAR(50) DEFAULT NULL,
-        samplecondition VARCHAR(100) DEFAULT NULL,
-        storagetemp VARCHAR(255) DEFAULT NULL,
+        ethnicity VARCHAR(50),
+        samplecondition VARCHAR(100),
+        storagetemp VARCHAR(255),
         ContainerType VARCHAR(50),
-        CountryOfCollection VARCHAR(50) DEFAULT NULL,
+        CountryOfCollection VARCHAR(50),
         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
-         quantity_allocated INT,
-         volume DOUBLE,
+        quantity_allocated INT,
+        volume DOUBLE,
         QuantityUnit VARCHAR(20),
         SampleTypeMatrix VARCHAR(100),
-        SmokingStatus VARCHAR(50) DEFAULT NULL,
-        AlcoholOrDrugAbuse VARCHAR(50) DEFAULT NULL,
-        InfectiousDiseaseTesting VARCHAR(100) DEFAULT NULL,
-        InfectiousDiseaseResult VARCHAR(100) DEFAULT NULL,
-        FreezeThawCycles VARCHAR(50) DEFAULT NULL, 
-        DateOfSampling VARCHAR(50) DEFAULT NULL,
-        ConcurrentMedicalConditions VARCHAR(50) DEFAULT NULL, 
-        ConcurrentMedications VARCHAR(50) DEFAULT NULL,
+        SmokingStatus VARCHAR(50),
+        AlcoholOrDrugAbuse VARCHAR(50),
+        InfectiousDiseaseTesting VARCHAR(100),
+        InfectiousDiseaseResult VARCHAR(100),
+        FreezeThawCycles VARCHAR(50), 
+        DateOfSampling VARCHAR(50),
+        ConcurrentMedicalConditions VARCHAR(50), 
+        ConcurrentMedications VARCHAR(50),
         DiagnosisTestParameter VARCHAR(50),
         TestResult VARCHAR(100),
         TestResultUnit VARCHAR(20),
-        TestMethod VARCHAR(100) DEFAULT NULL,
-        TestKitManufacturer VARCHAR(50) DEFAULT NULL,
-        TestSystem VARCHAR(50) DEFAULT NULL,
-        TestSystemManufacturer VARCHAR(50) DEFAULT NULL,
+        TestMethod VARCHAR(100),
+        TestKitManufacturer VARCHAR(50),
+        TestSystem VARCHAR(50),
+        TestSystemManufacturer VARCHAR(50),
         sample_visibility ENUM('Public', 'Private') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
@@ -61,39 +61,10 @@ const createSampleTable = () => {
     }
   });
 };
-const getPrice = (name, callback) => {
-  
-  const query = 'SELECT price FROM sample WHERE diseasename = ?';
-
-  mysqlConnection.query(query, [name], (err, results) => {
-    if (err) {
-      console.error("MySQL Query Error:", err);
-      callback(err, null);
-    } else {
-      
-      callback(null, results);
-    }
-  });
-};
-const getAllVolumnUnits=(name,callback)=>{
-  console.log(name)
-const query = 'SELECT volume,QuantityUnit FROM sample WHERE diseasename = ?';
-
-  mysqlConnection.query(query, [name], (err, results) => {
-    if (err) {
-      console.error("MySQL Query Error:", err);
-      callback(err, null);
-    } else {
-      console.log(results)
-      callback(null, results);
-    }
-  });
-}
-
-
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
+  
   const user_account_id = parseInt(userId, 10);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
@@ -177,6 +148,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 };
 
 const getAllSamples = (callback) => {
+  
   const query = `
     SELECT 
       s.*,
@@ -198,6 +170,7 @@ const getAllSamples = (callback) => {
       district d ON cs.district = d.id
     WHERE 
       s.status = 'In Stock' 
+      AND s.Quantity>0
       AND s.price > 0;
   `;
 
@@ -253,7 +226,6 @@ const getResearcherSamples = (userId, callback) => {
   country.name AS CountryName,
   sm.price,
   sm.SamplePriceCurrency,
-  sm.QuantityUnit,
   sm.SampleTypeMatrix,
   sm.SmokingStatus,
   sm.AlcoholOrDrugAbuse,
@@ -326,53 +298,112 @@ ORDER BY s.id DESC;
   });
 
 };
+const getAllVolumnUnits = (name, callback) => {
+  const query = 'SELECT id, quantity, volume, QuantityUnit FROM sample WHERE diseasename = ? and quantity>0';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } else {
+      const grouped = {};
+
+      results.forEach(({ id, quantity, volume, QuantityUnit }) => {
+        const key = `${volume}_${QuantityUnit}`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            vol: volume,
+            unit: QuantityUnit,
+            quantity: 0,
+            sampleIds: [],
+          };
+        }
+        grouped[key].quantity += quantity;
+        grouped[key].sampleIds.push(id);
+      });
+
+      callback(null, Object.values(grouped));
+    }
+  });
+};
+const getAllSampleinIndex=(name,callback)=>{
+  const query = 'SELECT * FROM sample WHERE diseasename = ? and quantity>0';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } 
+     if (results.length === 0) {
+      return callback(null, { error: "No samples found" });
+    }
+
+    // If samples exist, return the results
+    callback(null, results);
+  });
+}
+
 
 const getAllCSSamples = (limit, offset, callback) => {
+  
   const dataQuery = `
 SELECT 
-    s.*, 
-    cs.CollectionSiteName AS CollectionSiteName,
-    st.staffName AS CollectionSiteStaffName,
-    bb.Name AS BiobankName,
-    c.name AS CityName,
-    d.name AS DistrictName
-  FROM 
-   sample s
-  LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
-  LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
-  LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
-  LEFT JOIN city c ON cs.city = c.id
-  LEFT JOIN district d ON cs.district = d.id
-  WHERE 
-    s.status = 'In Stock' 
-    AND s.price > 0 
-    AND s.sample_visibility = 'Public'
-    AND (s.quantity > 0 OR s.quantity_allocated > 0)
-  LIMIT ? OFFSET ?
-`;
+  s.diseasename,
+  MAX(s.price) AS price,
+  SUM(s.quantity) AS quantity,
+  SUM(s.quantity_allocated) AS quantity_allocated,
+  MAX(s.status) AS status,
+  MAX(cs.CollectionSiteName) AS CollectionSiteName,
+  MAX(st.staffName) AS CollectionSiteStaffName,
+  MAX(bb.Name) AS BiobankName,
+  MAX(c.name) AS CityName,
+  MAX(d.name) AS DistrictName
+FROM sample s
+LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
+LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
+LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
+LEFT JOIN city c ON cs.city = c.id
+LEFT JOIN district d ON cs.district = d.id
+WHERE 
+  s.status = 'In Stock' 
+  AND s.price > 0 
+  AND s.sample_visibility = 'Public'
+GROUP BY s.diseasename
+HAVING SUM(s.quantity) > 0 OR SUM(s.quantity_allocated) > 0
+ORDER BY s.diseasename
+LIMIT ? OFFSET ?
 
+  `;
 
   const countQuery = `
-  SELECT COUNT(*) AS total
-  FROM sample s
-  WHERE 
-    s.status = 'In Stock' 
-    AND s.price > 0  
-    AND s.sample_visibility = 'Public'
-    AND (s.quantity > 0 OR s.quantity_allocated > 0)
-`;
-
+    SELECT COUNT(DISTINCT s.diseasename) AS total
+    FROM sample s
+    WHERE 
+      s.status = 'In Stock' 
+      AND s.price > 0  
+      AND s.sample_visibility = 'Public'
+      AND s.quantity > 0
+  `;
   mysqlConnection.query(countQuery, (countErr, countResult) => {
-    if (countErr) return callback(countErr, null);
+    if (countErr) {
+      console.error("❌ Count Query Error:", countErr);
+      return callback(countErr, null);
+    }
 
     const totalCount = countResult[0].total;
-
+    
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
-      if (dataErr) return callback(dataErr, null);
-      console.log(results)
+      if (dataErr) {
+        console.error("❌ Data Query Error:", dataErr);
+        return callback(dataErr, null);
+      }
+
       const imageFolder = path.join(__dirname, '../uploads/Images');
       fs.readdir(imageFolder, (fsErr, files) => {
-        if (fsErr) return callback(fsErr, null);
+        if (fsErr) {
+          console.error("❌ Image folder read error:", fsErr);
+          return callback(fsErr, null);
+        }
 
         const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
         const totalSamples = results.length;
@@ -394,9 +425,18 @@ SELECT
           const imagePath = path.join(imageFolder, selectedImage);
           const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
           sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
+
+          // Parse volumes JSON string into array
+          try {
+            sample.volumes = JSON.parse(sample.volumes);
+          } catch (err) {
+            sample.volumes = [];
+          }
+
           return sample;
         });
-console.log(updatedResults)
+
+        
         callback(null, { data: updatedResults, totalCount });
       });
     });
@@ -429,7 +469,7 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, volume,diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+      id, donorID, room_number, freezer_id, box_id, user_account_id, volume, diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -483,12 +523,12 @@ const updateSample = (id, data, callback) => {
   }
 
 
-  // Handle volume: convert empty string to null
+  // Handle volume convert empty string to null
   const volume = data.volume === '' ? null : data.volume;
 
   // Log for debugging
   console.log("Updating sample ID:", id);
-  console.log("Volume value:", volume);
+  console.log("volume value:", volume);
 
   const query = `
     UPDATE sample
@@ -676,6 +716,7 @@ module.exports = {
   updateSampleStatus,
   deleteSample,
   updateQuarantineSamples,
-  getPrice,
   getAllVolumnUnits,
+  getAllSampleinIndex
+  
 };

@@ -85,9 +85,9 @@ const CompletedSampleArea = () => {
       <div className="container">
         <div className="d-flex justify-content-center align-items-center mb-3">
           <h4 className="text-dark fw-bold">
-           Orders Sample Completed
+            Orders Sample Completed
           </h4>
-          
+
         </div>
 
         <div className="table-responsive w-100">
@@ -97,7 +97,7 @@ const CompletedSampleArea = () => {
                 {[
                   { label: "Order ID", key: "id" },
                   { label: "User Name", key: "researcher_name" },
-                  { label: "Sample Name", key: "samplename" },
+                  { label: "Disease Name", key: "diseasename" },
                   { label: "Order Date", key: "created_at" },
                   { label: "Status", key: "order_status" },
                 ].map(({ label, key }, index) => (
@@ -124,7 +124,7 @@ const CompletedSampleArea = () => {
                   <tr key={sample.id}>
                     <td>{sample.id || "----"}</td>
                     <td>{sample.researcher_name}</td>
-                    <td>{sample.samplename}</td>
+                    <td>{sample.diseasename}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>
                     <td>{sample.order_status}</td>
                   </tr>

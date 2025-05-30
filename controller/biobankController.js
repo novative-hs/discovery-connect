@@ -55,9 +55,9 @@ const createBiobankSample = (req, res) => {
   sampleData.logo = file?.buffer;
 
   const today = new Date();
-  const dateOfCollection = new Date(sampleData.DateOfSampling);
+  const dateOfSampling = new Date(sampleData.DateOfSampling);
 
-  if (dateOfCollection >= today) {
+  if (dateOfSampling >= today) {
     return res.status(400).json({ error: "DateOfSampling must be before today" });
   }
 
@@ -96,17 +96,17 @@ const updateBiobankSample = (req, res) => {
   if (file) {
     sampleData.logo = req.file.buffer;
   }
- else if (sampleData.logo?.data) {
-  // Reconvert from serialized buffer object
-  sampleData.logo = Buffer.from(sampleData.logo.data);
-}
+  else if (sampleData.logo?.data) {
+    // Reconvert from serialized buffer object
+    sampleData.logo = Buffer.from(sampleData.logo.data);
+  }
   // Handle Date format
   if (sampleData.DateOfSampling) {
     sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
 
   // Handle logo (priority: uploaded file > body)
- 
+
   // Call model
   BioBankModel.updateBiobankSample(id, sampleData, (err, result) => {
     if (err) {
@@ -129,6 +129,19 @@ const UpdateSampleStatus = (req, res) => {
     res.status(200).json(result);
   });
 };
+
+// Controller to get prices dropdown in BB dashboard of that specific sample
+const getPrice = (req, res) => {
+  const { name } = req.params;
+
+  BioBankModel.getPrice(name, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples price" });
+    }
+    res.status(200).json({ data: results });
+  });
+};
+
 module.exports = {
   create_biobankTable,
   getBiobankSamples,
@@ -136,6 +149,7 @@ module.exports = {
   createBiobankSample,
   updateBiobankSample,
   getQuarantineStock,
-  UpdateSampleStatus
-  
+  UpdateSampleStatus,
+  getPrice
+
 };

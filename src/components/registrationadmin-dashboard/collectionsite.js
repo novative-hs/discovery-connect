@@ -584,7 +584,7 @@ const CollectionSiteArea = () => {
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
                           onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ minWidth: "145px", maxWidth: "200px", width: "100px" }}
+                          style={{ minWidth: "205px", maxWidth: "200px", width: "100px" }}
                         />
                         <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
                           {label}
@@ -613,7 +613,7 @@ const CollectionSiteArea = () => {
                         >
                           {field === "CollectionSiteName" ? (
                             <span
-                              className="CollectionSiteName text-primary fw-semibold fs-6 text-decoration-underline"
+                              className="CollectionSiteName fs-6 "
                               role="button"
                               title="Collection Site Details"
                               onClick={() => openModal(collectionsite)}

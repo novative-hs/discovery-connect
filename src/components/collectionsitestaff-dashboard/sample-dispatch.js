@@ -27,6 +27,8 @@ const SampleDispatchArea = () => {
     { label: "Volume", key: "volume" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
@@ -35,8 +37,6 @@ const SampleDispatchArea = () => {
     { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
@@ -305,7 +305,7 @@ const SampleDispatchArea = () => {
                     <th
                       key={index}
                       className="p-2"
-                      style={{ minWidth: "140px" }}
+                      style={{ minWidth: "130px" }}
                     >
                       <div className="d-flex flex-column align-items-center">
                         <input

@@ -7,13 +7,13 @@ import Button from "react-bootstrap/Button";
 const SampleArea = () => {
   const router = useRouter();
   const id = sessionStorage.getItem("userID");
-   const tableHeaders = [
+  const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
     { label: "Quantity", key: "quantity" },
     { label: "Volume", key: "volume" },
     { label: "Price", key: "price" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
-        { label: "Test Result", key: "TestResult" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
+    { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
 
@@ -39,7 +39,7 @@ const SampleArea = () => {
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
-    { label: "Date Of Collection", key: "DateOfCollection" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     {
       label: "Concurrent Medical Conditions",
       key: "ConcurrentMedicalConditions",
@@ -86,16 +86,16 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
- useEffect(() => {
-  if (id !== null) {
-    fetchSamples();
-    const intervalId = setInterval(() => {
+  useEffect(() => {
+    if (id !== null) {
       fetchSamples();
-    }, 30000); // every 30 seconds
+      const intervalId = setInterval(() => {
+        fetchSamples();
+      }, 30000); // every 30 seconds
 
-    return () => clearInterval(intervalId);
-  }
-}, [id]);
+      return () => clearInterval(intervalId);
+    }
+  }, [id]);
 
 
   useEffect(() => {
@@ -140,7 +140,7 @@ const SampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
+        <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           <div className="table-responsive w-100">
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
@@ -171,120 +171,120 @@ const SampleArea = () => {
 
                     // Render other columns normally
                     return (
-                       <th key={index} className="col-md-1 px-2">
+                      <th key={index} className="col-md-1 px-2">
 
-                    <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-/>
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                        {label}
-                      </span>
+                        <div className="d-flex flex-column align-items-center">
+                          <input
+                            type="text"
+                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                            placeholder={`Search ${label}`}
+                            onChange={(e) => handleFilterChange(key, e.target.value)}
+                            style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                          />
+                          <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                            {label}
+                          </span>
 
-                    </div>
-                  </th>
+                        </div>
+                      </th>
                     );
                   })}
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                  Action
-                </th>
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
                   currentData.map((sample) => (
                     <tr key={sample.id}>
-                     {tableHeaders.map(({ key, render }, index) => {
-  // 🔁 Handle Price column with currency
-  if (key === "price") {
-    return (
-      <td key={index}>
-        {sample.price
-          ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
-          : "----"}
-      </td>
-    );
-  }
+                      {tableHeaders.map(({ key, render }, index) => {
+                        // 🔁 Handle Price column with currency
+                        if (key === "price") {
+                          return (
+                            <td key={index}>
+                              {sample.price
+                                ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+                                : "----"}
+                            </td>
+                          );
+                        }
 
-  // 🔁 Handle Total Payment column with currency
-  if (key === "totalpayment") {
-    return (
-      <td key={index}>
-        {sample.totalpayment
-          ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""}`
-          : "----"}
-      </td>
-    );
-  }
+                        // 🔁 Handle Total Payment column with currency
+                        if (key === "totalpayment") {
+                          return (
+                            <td key={index}>
+                              {sample.totalpayment
+                                ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""}`
+                                : "----"}
+                            </td>
+                          );
+                        }
 
-  // ✅ Custom logic for committee_status
-  if (key === "committee_status") {
-    let displayValue = sample[key];
+                        // ✅ Custom logic for committee_status
+                        if (key === "committee_status") {
+                          let displayValue = sample[key];
 
-    if (
-      sample.technical_admin_status === "Rejected" &&
-      sample.committee_status === "rejected" &&
-      sample.order_status === "Rejected"
-    ) {
-      displayValue = "Rejected";
-    } else if (sample.technical_admin_status === "Rejected") {
-      displayValue = "No further processing";
-    } else if (
-      sample.technical_admin_status === "Accepted" &&
-      (displayValue === null || displayValue === undefined)
-    ) {
-      displayValue = "Awaiting Admin to Forward to Committee";
-    } else if (displayValue === null || displayValue === undefined) {
-      displayValue = "Pending Admin Action";
-    }
+                          if (
+                            sample.technical_admin_status === "Rejected" &&
+                            sample.committee_status === "rejected" &&
+                            sample.order_status === "Rejected"
+                          ) {
+                            displayValue = "Rejected";
+                          } else if (sample.technical_admin_status === "Rejected") {
+                            displayValue = "No further processing";
+                          } else if (
+                            sample.technical_admin_status === "Accepted" &&
+                            (displayValue === null || displayValue === undefined)
+                          ) {
+                            displayValue = "Awaiting Admin to Forward to Committee";
+                          } else if (displayValue === null || displayValue === undefined) {
+                            displayValue = "Pending Admin Action";
+                          }
 
-    return <td key={index}>{displayValue}</td>;
-  }
+                          return <td key={index}>{displayValue}</td>;
+                        }
 
-  // ✅ Custom logic for diseasename with clickable modal
-  if (key === "diseasename") {
-    return (
-      <td key={index}>
-        <span
-          className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-          role="button"
-          title="Sample Details"
-          onClick={() => openModal(sample)}
-          style={{
-            cursor: "pointer",
-            transition: "color 0.2s",
-          }}
-          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-          onMouseOut={(e) => (e.target.style.color = "")}
-        >
-          {sample.diseasename || "----"}
-        </span>
-      </td>
-    );
-  }
+                        // ✅ Custom logic for diseasename with clickable modal
+                        if (key === "diseasename") {
+                          return (
+                            <td key={index}>
+                              <span
+                                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                                role="button"
+                                title="Sample Details"
+                                onClick={() => openModal(sample)}
+                                style={{
+                                  cursor: "pointer",
+                                  transition: "color 0.2s",
+                                }}
+                                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                                onMouseOut={(e) => (e.target.style.color = "")}
+                              >
+                                {sample.diseasename || "----"}
+                              </span>
+                            </td>
+                          );
+                        }
 
-  // ✅ Custom logic for volume + QuantityUnit
-  if (key === "volume") {
-    return (
-      <td key={index}>
-        {sample.volume
-          ? `${sample.volume} ${sample.QuantityUnit || ""}`
-          : "----"}
-      </td>
-    );
-  }
+                        // ✅ Custom logic for volume + QuantityUnit
+                        if (key === "volume") {
+                          return (
+                            <td key={index}>
+                              {sample.volume
+                                ? `${sample.volume} ${sample.QuantityUnit || ""}`
+                                : "----"}
+                            </td>
+                          );
+                        }
 
-  // 🔁 Default render for all other fields
-  return (
-    <td key={index}>
-      {render ? render(sample[key]) : sample[key] || "----"}
-    </td>
-  );
-})}
+                        // 🔁 Default render for all other fields
+                        return (
+                          <td key={index}>
+                            {render ? render(sample[key]) : sample[key] || "----"}
+                          </td>
+                        );
+                      })}
 
 
                       {/* Handle sample name click to open modal */}
@@ -334,42 +334,42 @@ const SampleArea = () => {
         </div>
       </div>
       {/* Modal for sample details */}
-           <Modal show={showModal}
-              onHide={closeModal}
-              size="lg"
-              centered
-              backdrop="static"
-              keyboard={false}>
-              <Modal.Header closeButton className="border-0">
-                <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
-              </Modal.Header>
-      
-              <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
-                {selectedSample ? (
-                  <div className="p-3">
-                    <div className="row g-3">
-                      {fieldsToShowInOrder.map(({ key, label }) => {
-                        const value = selectedSample[key];
-                        if (value === undefined) return null;
-      
-                        return (
-                          <div className="col-md-6" key={key}>
-                            <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                              <span className="text-muted small fw-bold mb-1">{label}</span>
-                              <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+      <Modal show={showModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (value === undefined) return null;
+
+                  return (
+                    <div className="col-md-6" key={key}>
+                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center text-muted p-3">No details to show</div>
-                )}
-              </Modal.Body>
-      
-              <Modal.Footer className="border-0"></Modal.Footer>
-            </Modal>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0"></Modal.Footer>
+      </Modal>
     </section>
   );
 };

@@ -151,6 +151,9 @@ const createCart = (data, callback) => {
     nbc_file,
   } = data;
 
+  console.log(data);
+
+  // Validate required fields
   if (
     !researcher_id ||
     !cart_items ||
@@ -177,15 +180,19 @@ const createCart = (data, callback) => {
 
     const technicalAdminId = adminResults[0].id;
 
-    let insertPromises = cart_items.map((item) => {
+    // Insert each cart item
+    const insertPromises = cart_items.map((item) => {
       return new Promise((resolve, reject) => {
+        const sample_id = item.sample_id;
+
         const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity,volume,QuantityUnit, payment_id, totalpayment)
-          VALUES (?, ?, ?, ?, ?,?, ?,?)
+          INSERT INTO cart (user_id, sample_id, price, quantity, volume, QuantityUnit, payment_id, totalpayment)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
         const cartValues = [
           researcher_id,
-          item.sample_id || null,
+          sample_id,
           item.price,
           item.samplequantity,
           item.volume,
@@ -198,12 +205,13 @@ const createCart = (data, callback) => {
           if (err) return reject(err);
 
           const cartId = cartResult.insertId;
-          const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
 
+          const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
           mysqlConnection.query(getCreatedAtQuery, [cartId], (err, createdAtResult) => {
             if (err) return reject(err);
 
             const created_at = createdAtResult?.[0]?.created_at;
+
             const insertApprovalQuery = `
               INSERT INTO technicaladminsampleapproval (cart_id, technical_admin_id, technical_admin_status)
               VALUES (?, ?, 'pending')
@@ -216,6 +224,7 @@ const createCart = (data, callback) => {
                 INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file)
                 VALUES (?, ?, ?, ?, ?)
               `;
+
               const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null];
 
               mysqlConnection.query(insertDocumentsQuery, documentValues, (err) => {
@@ -228,15 +237,17 @@ const createCart = (data, callback) => {
                     quantity_allocated = IFNULL(quantity_allocated, 0) + ?
                   WHERE id = ? AND quantity >= ?
                 `;
+
                 const updateValues = [
                   item.samplequantity,
                   item.samplequantity,
-                  item.sample_id,
+                  sample_id,
                   item.samplequantity,
                 ];
 
                 mysqlConnection.query(updateQuery, updateValues, (err) => {
                   if (err) return reject(err);
+
                   resolve({ cartId, created_at });
                 });
               });
@@ -249,11 +260,12 @@ const createCart = (data, callback) => {
     Promise.all(insertPromises)
       .then((results) => {
         const cartIds = results.map((result) => result.cartId);
-        const message = 'Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.';
+
+        const message =
+          "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
         const subject = "Sample Request Status Update";
 
-        // ✅ Inline notifyResearcher logic
-        const placeholders = cartIds.map(() => '?').join(',');
+        const placeholders = cartIds.map(() => "?").join(",");
         const getResearcherEmailQuery = `
           SELECT ua.email, c.created_at, c.id AS cartId
           FROM user_account ua
@@ -271,14 +283,13 @@ const createCart = (data, callback) => {
           const researcherEmail = emailResults[0].email;
           const cartIdsList = emailResults
             .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
-            .join("\n");
+            .join("<br/>");
 
-          const emailMessage = `Dear Researcher,<br/>${message}<br/>Details for the following carts:<br/>${cartIdsList}<br/>Best regards, <br/>Lab Hazir`;
+          const emailMessage = `Dear Researcher,<br/>${message}<br/>Details for the following carts:<br/>${cartIdsList}<br/>Best regards,<br/>Lab Hazir`;
 
           sendEmail(researcherEmail, subject, emailMessage)
             .then(() => {
-             
-              callback(null, { message: 'Cart created successfully', results });
+              callback(null, { message: "Cart created successfully", results });
             })
             .catch((emailSendErr) => {
               console.error("Failed to send researcher email:", emailSendErr);
@@ -289,6 +300,9 @@ const createCart = (data, callback) => {
       .catch((error) => callback(error));
   });
 };
+
+
+
 
 
 const getAllCart = (id, callback, res) => {
@@ -341,7 +355,7 @@ WHERE user_id = ?;
   mysqlConnection.query(sqlQuery, [id], (err, results) => {
     if (err) {
       console.error("Error deleting cart:", err);
-    } 
+    }
   });
 };
 const deleteSingleCartItem = (id, callback, res) => {
@@ -352,7 +366,7 @@ const deleteSingleCartItem = (id, callback, res) => {
   mysqlConnection.query(sqlQuery, [id], (err, results) => {
     if (err) {
       console.error("Error deleting cart item :", err);
-    } 
+    }
   });
 };
 const updateCart = (id, data, callback, res) => {
@@ -449,7 +463,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
       s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-      s.FreezeThawCycles, s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.FreezeThawCycles, s.dateOfSampling, s.ConcurrentMedicalConditions, 
       s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
       s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
       s.TestSystemManufacturer, s.SamplePriceCurrency,
@@ -526,7 +540,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
 };
 
 
-const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, callback) => {
+const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, callback) => {
   const offset = (page - 1) * pageSize;
 
   const params = [id];
@@ -564,7 +578,7 @@ const getAllOrderByCommittee = ( id,page, pageSize, searchField, searchValue, ca
       s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, 
       s.InfectiousDiseaseResult, s.FreezeThawCycles, 
-      s.DateofCollection, s.ConcurrentMedicalConditions, 
+      s.dateOfSampling, s.ConcurrentMedicalConditions, 
       s.ConcurrentMedications, s.DiagnosisTestParameter, 
       s.TestResult, s.TestResultUnit, s.TestMethod, 
       s.TestKitManufacturer, s.TestSystem, 
@@ -741,7 +755,7 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     // Use promise-based query to avoid blocking
     await queryAsync(sqlQuery, [technical_admin_status, id]);
 
-    
+
 
     // Step 2: Determine new cart status based on Technical admin status
     let newCartStatus = null;
@@ -751,11 +765,11 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     } else if (technical_admin_status === 'Rejected') {
       newCartStatus = 'Rejected';
     }
-    
 
-if (newCartStatus) {
-  await updateCartStatus(id, newCartStatus);
-}
+
+    if (newCartStatus) {
+      await updateCartStatus(id, newCartStatus);
+    }
 
 
     // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
@@ -771,8 +785,8 @@ if (newCartStatus) {
       technical_admin_status === 'Accepted'
         ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
         : technical_admin_status === 'Rejected'
-        ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
-        : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
+          ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
+          : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
 
     // Step 5: Notify the researcher asynchronously (no blocking)
     const notifyPromise = notifyResearcher(id, message, "Sample Request Status Update");
@@ -862,7 +876,7 @@ const revertSampleQuantity = async (cartId) => {
       WHERE id = ?`;
 
     await queryAsync(updateSampleSql, [quantity, quantity, sample_id]);
-    
+
   } else {
     console.warn("Cart item not found for rejection.");
   }
@@ -888,10 +902,8 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
       cartStatus === 'Rejected'
         ? "Your sample request has been <b>rejected</b>.<br/>"
         : cartStatus === 'UnderReview'
-        ? "Your sample documents have been <b>reviewed by a committee member</b>.<br/>"
-        : cartStatus === 'Dispatched'
-        ? "Your sample request has been <b>dispatched</b> and is on its way.<br/>"
-        : "Your sample request status has been updated.<br/>";
+          ? "Your sample documents have been <b>reviewed by a committee member</b>.<br/>"
+          : "Your sample request status has been updated.<br/>";
 
     const subject = "Sample Request Status Update";
 
@@ -900,9 +912,29 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
       await queryAsync(`UPDATE cart SET order_status = ? WHERE id = ?`, [cartStatus, id]);
     }
 
-    // Step 2: Get email info for the FIRST cart only
+    if (cartStatus === 'Rejected') {
+      // Step 2: If Rejected, add back cart quantities to sample quantities
+      const cartSamplesQuery = `
+        SELECT sample_id, quantity
+        FROM cart
+        WHERE id IN (${ids.map(() => '?').join(',')})
+      `;
+      const cartSamples = await queryAsync(cartSamplesQuery, ids);
+
+      for (const cs of cartSamples) {
+        await queryAsync(
+          `UPDATE sample 
+           SET quantity = quantity + ?, 
+               quantity_allocation = quantity_allocation - ? 
+           WHERE id = ?`,
+          [cs.quantity, cs.quantity, cs.sample_id]
+        );
+      }
+    }
+
+    // Step 3: Get email info for the FIRST cart only
     const getFirstCartEmailQuery = `
-      SELECT ua.email, c.created_at, c.id AS cartId
+      SELECT ua.email
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
       WHERE c.id = ?
@@ -913,21 +945,19 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
       throw new Error(`No researcher found for cart ID: ${ids[0]}`);
     }
 
-    const { email, created_at, cartId } = result[0];
+    const { email } = result[0];
 
-    // Step 3: Build email message (include all updated cart IDs for context)
-    const cartList = ids.map(id => `Cart ID: ${id}`).join("\n");
-    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):\n${cartList}<br/>Best regards,<br/>Lab Hazir`;
+    // Step 4: Build email message
+    const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
+    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Lab Hazir`;
 
-    // Step 4: Send the email
+    // Step 5: Send email
     await sendEmail(email, subject, emailMessage);
 
-    
-
     if (typeof callback === 'function') {
-      callback(null, "Cart status updated and researcher notified.");
+      callback(null, "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.");
     } else {
-      return "Cart status updated and researcher notified.";
+      return "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.";
     }
   } catch (err) {
     console.error("Error in update and notify:", err);
@@ -938,6 +968,10 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     }
   }
 };
+
+
+
+
 
 
 module.exports = {

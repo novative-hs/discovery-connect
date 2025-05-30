@@ -119,6 +119,7 @@ const [activeTab, setActiveTab] = useState("order-info");
           <main className="flex-grow">
             {content}
           </main>
+          
           <Footer />
         </div>
       )}

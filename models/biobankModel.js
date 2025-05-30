@@ -26,7 +26,7 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
   const offset = (pageInt - 1) * pageSizeInt;
 
   // Base WHERE clause and parameters
-  let baseWhere = `WHERE status = "In Stock" AND is_deleted = FALSE`;
+  let baseWhere = `WHERE status = "In Stock" AND quantity > 0 AND is_deleted = FALSE`;
   const paramsForWhere = [];
 
   // Price filter
@@ -258,6 +258,22 @@ const getQuarantineStock = (callback) => {
   });
 };
 
+// Get price dropdown while adding price in Biobank
+const getPrice = (name, callback) => {
+  
+  const query = 'SELECT price FROM sample WHERE diseasename = ?';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } else {
+
+      callback(null, results);
+    }
+  });
+};
+
 
 module.exports = {
   create_biobankTable,
@@ -266,6 +282,6 @@ module.exports = {
   postSamplePrice,
   updateBiobankSample,
   getQuarantineStock,
-  UpdateSampleStatus
-
+  UpdateSampleStatus,
+  getPrice
 };
