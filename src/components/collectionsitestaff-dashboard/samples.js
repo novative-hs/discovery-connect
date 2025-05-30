@@ -28,6 +28,9 @@ const SampleArea = () => {
   const [selectedSample, setSelectedSample] = useState(null);
   const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
   const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
+  const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
+  const [showLogoModal, setShowLogoModal] = useState(false);
+
 
   const id = sessionStorage.getItem("userID");
 
@@ -708,36 +711,42 @@ const SampleArea = () => {
     showHistoryModal,
   ]);
 
-  const handleLogoChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prevData) => ({
-          ...prevData,
-          logo: reader.result, // Store the image preview URL
-        }));
-      };
-      reader.readAsDataURL(file); // Convert the image file to a data URL
-    }
-  };
+  // const handleLogoChange = (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setFormData((prevData) => ({
+  //         ...prevData,
+  //         logo: reader.result, // Store the image preview URL
+  //       }));
+  //     };
+  //     reader.readAsDataURL(file); // Convert the image file to a data URL
+  //   }
+  // };
 
   const areMandatoryFieldsFilled = () => {
-  return (
-    formData.donorID?.trim() &&
-    formData.diseasename?.trim() &&
-    formData.locationids?.trim() &&
-    formData.volume?.trim() &&
-    formData.phoneNumber?.trim() &&
-    formData.TestResult?.trim() &&
-    formData.gender?.trim() &&
-    formData.SampleTypeMatrix?.trim() &&
-    formData.age?.trim() &&
-    formData.ContainerType?.trim() &&
-    formData.logo instanceof File
-  );
-};
+    return (
+      formData.donorID?.trim() &&
+      formData.diseasename?.trim() &&
+      formData.locationids?.trim() &&
+      formData.volume?.trim() &&
+      formData.phoneNumber?.trim() &&
+      formData.TestResult?.trim() &&
+      formData.gender?.trim() &&
+      formData.SampleTypeMatrix?.trim() &&
+      formData.age?.trim() &&
+      formData.ContainerType?.trim() &&
+      formData.logo instanceof File
+    );
+  };
 
+  const unitMaxValues = {
+    L: 100,
+    mL: 10000,
+    mg: 10000,
+    g: 5000,
+  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -748,6 +757,12 @@ const SampleArea = () => {
             {successMessage}
           </div>
         )}
+
+        <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
+          <h6>
+            Note: Click on Location Id's to see Sample Picture.
+          </h6>
+        </div>
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
@@ -849,8 +864,25 @@ const SampleArea = () => {
                               const tooltip = `${sample.room_number || "N/A"} = Room Number
 ${sample.freezer_id || "N/A"} = Freezer ID
 ${sample.box_id || "N/A"} = Box ID`;
+
+                              // To show logo while clicking on location IDs
+                              const handleLogoClick = () => {
+                                const logo =
+                                  typeof sample.logo === "string"
+                                    ? sample.logo
+                                    : sample.logo?.data
+                                      ? URL.createObjectURL(
+                                        new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
+                                      )
+                                      : null;
+                                if (logo) {
+                                  setSelectedLogoUrl(logo);
+                                  setShowLogoModal(true);
+                                }
+                              };
+
                               return (
-                                <span title={tooltip} style={{ cursor: "help" }}>
+                                <span title={tooltip} style={{ cursor: "help", textDecoration: "underline", color: "#007bff" }} onClick={handleLogoClick}>
                                   {sample.locationids || "----"}
                                 </span>
                               );
@@ -1074,12 +1106,18 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     value={formData.volume}
                                     onChange={(e) => {
                                       const value = parseFloat(e.target.value);
-                                      if (e.target.value === "" || (value * 10) % 5 === 0) {
+                                      const max = unitMaxValues[formData.QuantityUnit] || Infinity;
+
+                                      if (
+                                        e.target.value === "" ||
+                                        ((value * 10) % 5 === 0 && value <= max)
+                                      ) {
                                         handleInputChange(e);
                                       }
                                     }}
                                     step="0.5"
                                     min="0.5"
+                                    max={unitMaxValues[formData.QuantityUnit] || undefined}
                                     required
                                     style={{
                                       height: "45px",
@@ -1107,6 +1145,16 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     ))}
                                   </select>
                                 </div>
+                                {/* Validation message*/}
+                                {formData.volume &&
+                                  formData.QuantityUnit &&
+                                  parseFloat(formData.volume) >
+                                  (unitMaxValues[formData.QuantityUnit] || Infinity) && (
+                                    <small className="text-danger mt-1">
+                                      Value must be less than or equal to{" "}
+                                      {unitMaxValues[formData.QuantityUnit].toLocaleString()}.
+                                    </small>
+                                  )}
                               </div>
                               <div className="form-group col-md-6">
                                 <label>Phone Number <span className="text-danger">*</span></label>
@@ -1121,6 +1169,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     fontSize: "14px",
                                     backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
                                   }}
+                                  pattern="03[0-9]{2}-[0-9]{7}"
+                                  title="Format should be XXXX-XXXXXXX"
                                   required
                                 />
                               </div>
@@ -1138,7 +1188,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                           setShowTestResultNumericInput(true);
                                           setFormData((prev) => ({ ...prev, TestResult: "" }));
                                         } else {
-                                          setFormData((prev) => ({ ...prev, TestResult: val }));
+                                          setShowTestResultNumericInput(false); // Ensure this is reset
+                                          setFormData((prev) => ({ ...prev, TestResult: val, TestResultUnit: "" })); // Clear unit
                                         }
                                       }}
                                       style={{
@@ -1173,34 +1224,36 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       onBlur={() => {
                                         if (!formData.TestResult) {
                                           setShowTestResultNumericInput(false);
+                                          setFormData((prev) => ({ ...prev, TestResultUnit: "" })); // Clear unit
                                         }
                                       }}
                                     />
                                   )}
-
-                                  {/* Test Result Unit Dropdown */}
-                                  <select
-                                    className="form-control"
-                                    name="TestResultUnit"
-                                    value={formData.TestResultUnit}
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      height: "40px",
-                                      fontSize: "14px",
-                                      backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
-                                      minWidth: "100px",
-                                    }}
-                                  >
-                                    <option value="" hidden>
-                                      Unit
-                                    </option>
-                                    {testresultunitNames.map((name, index) => (
-                                      <option key={index} value={name}>
-                                        {name}
+                                  {/* Conditionally render Unit Dropdown */}
+                                  {showTestResultNumericInput && (
+                                    <select
+                                      className="form-control"
+                                      name="TestResultUnit"
+                                      value={formData.TestResultUnit}
+                                      onChange={handleInputChange}
+                                      required
+                                      style={{
+                                        height: "40px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
+                                        minWidth: "100px",
+                                      }}
+                                    >
+                                      <option value="" hidden>
+                                        Unit
                                       </option>
-                                    ))}
-                                  </select>
+                                      {testresultunitNames.map((name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  )}
                                 </div>
                               </div>
                               <div className="form-group col-md-6">
@@ -1863,7 +1916,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
-                        {(staffAction === 'add_full' || staffAction === 'all') && areMandatoryFieldsFilled() && (
+                      {(staffAction === 'add_full' || staffAction === 'all') && areMandatoryFieldsFilled() && (
                         <div className="form-check my-3">
                           <input
                             type="checkbox"
@@ -2161,6 +2214,42 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+
+        {/* Modal to show Sample Picture */}
+        {showLogoModal && (
+          <div
+            className="modal fade show"
+            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+            tabIndex="-1"
+            role="dialog"
+          >
+            <div className="modal-dialog" style={{ marginTop: "80px" }} role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Sample Picture</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowLogoModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body text-center">
+                  {selectedLogoUrl ? (
+                    <img
+                      src={selectedLogoUrl}
+                      alt="Sample Logo"
+                      style={{ maxWidth: "100%", maxHeight: "300px" }}
+                    />
+                  ) : (
+                    <p>No logo available.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
       <Modal show={showModal}
         onHide={closeModal}

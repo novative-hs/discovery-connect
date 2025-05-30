@@ -52,6 +52,7 @@ const BioBankSampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Price", key: "price" },
     { label: "Gender", key: "gender" },
+    { label: "Test Result", key: "TestResult" },
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
@@ -60,7 +61,6 @@ const BioBankSampleArea = () => {
   const fieldsToShowInOrder = [
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -142,10 +142,11 @@ const BioBankSampleArea = () => {
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
   const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
   const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
+  const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
+  const [showLogoModal, setShowLogoModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null); // <-- For image preview
 
@@ -236,6 +237,7 @@ const BioBankSampleArea = () => {
     const storedUser = getsessionStorage("user");
     fetchSamples(currentPage + 1, itemsPerPage, filter); // Call the function when the component mounts
   }, [currentPage]);
+
   // Fetch samples from the backend
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
@@ -257,6 +259,7 @@ const BioBankSampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
+
   const getSamplePrice = async (selectedSampleName) => {
     try {
       const response = await fetch(
@@ -277,9 +280,6 @@ const BioBankSampleArea = () => {
       console.error("Error fetching site names:", error);
     }
   };
-
-
-
 
   useEffect(() => {
     const fetchCollectionSiteNames = async () => {
@@ -820,6 +820,7 @@ const BioBankSampleArea = () => {
     setShowAdditionalFields(false);
     setLogoPreview(null)
   };
+
   function bufferToBase64(bufferObj, mimeType) {
     if (!bufferObj || !Array.isArray(bufferObj.data)) return "";
 
@@ -867,9 +868,12 @@ const BioBankSampleArea = () => {
             {successMessage}
           </div>
         )}
-        <div className="text-danger fw-bold" style={{ marginTop: "-40px" }}>
+        <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
           <h6>
-            Note: Click on Price Icon to Add Price and Price Currency for Sample.
+            Note 1: Click on Price Icon to Add Price and Price Currency for Sample.
+          </h6>
+          <h6>
+            Note 2: Click on Location Id's to see Sample Picture.
           </h6>
         </div>
 
@@ -979,8 +983,24 @@ const BioBankSampleArea = () => {
                               const tooltip = `${sample.room_number || "N/A"} = Room Number
 ${sample.freezer_id || "N/A"} = Freezer ID
 ${sample.box_id || "N/A"} = Box ID`;
+
+                              // To show logo while clicking on location IDs
+                              const handleLogoClick = () => {
+                                const logo =
+                                  typeof sample.logo === "string"
+                                    ? sample.logo
+                                    : sample.logo?.data
+                                      ? URL.createObjectURL(
+                                        new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
+                                      )
+                                      : null;
+                                if (logo) {
+                                  setSelectedLogoUrl(logo);
+                                  setShowLogoModal(true);
+                                }
+                              };
                               return (
-                                <span title={tooltip} style={{ cursor: "help" }}>
+                                <span title={tooltip} style={{ cursor: "help", textDecoration: "underline", color: "#007bff" }} onClick={handleLogoClick}>
                                   {sample.locationids || "----"}
                                 </span>
                               );
@@ -988,6 +1008,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                               return `${sample.volume} ${sample.QuantityUnit || ""}`;
                             } else if (key === "age") {
                               return `${sample.age} years`;
+                            } else if (key === "TestResult") {
+                              return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                             } else if (key === "price") {
                               return sample.price && sample.SamplePriceCurrency
                                 ? `${sample.price} ${sample.SamplePriceCurrency}`
@@ -1261,11 +1283,13 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     fontSize: "14px",
                                     backgroundColor: !formData.phoneNumber ? "#fdecea" : "#fff",
                                   }}
+                                  pattern="03[0-9]{2}-[0-9]{7}"
+                                  title="Format should be XXXX-XXXXXXX"
                                   required
                                 />
                               </div>
                               <div className="form-group col-md-6">
-                                <label>Test Result & Unit</label>
+                                <label>Test Result & Unit <span className="text-danger">*</span></label>
                                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                                   {/* Test Result Dropdown or Numeric Input */}
                                   {!showTestResultNumericInput ? (
@@ -1278,7 +1302,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                           setShowTestResultNumericInput(true);
                                           setFormData((prev) => ({ ...prev, TestResult: "" }));
                                         } else {
-                                          setFormData((prev) => ({ ...prev, TestResult: val }));
+                                          setShowTestResultNumericInput(false); // Ensure this is reset
+                                          setFormData((prev) => ({ ...prev, TestResult: val, TestResultUnit: "" })); // Clear unit
                                         }
                                       }}
                                       style={{
@@ -1313,34 +1338,36 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       onBlur={() => {
                                         if (!formData.TestResult) {
                                           setShowTestResultNumericInput(false);
+                                          setFormData((prev) => ({ ...prev, TestResultUnit: "" })); // Clear unit
                                         }
                                       }}
                                     />
                                   )}
-
-                                  {/* Test Result Unit Dropdown */}
-                                  <select
-                                    className="form-control"
-                                    name="TestResultUnit"
-                                    value={formData.TestResultUnit}
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      height: "40px",
-                                      fontSize: "14px",
-                                      backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
-                                      minWidth: "100px",
-                                    }}
-                                  >
-                                    <option value="" hidden>
-                                      Unit
-                                    </option>
-                                    {testresultunitNames.map((name, index) => (
-                                      <option key={index} value={name}>
-                                        {name}
+                                  {/* Conditionally render Unit Dropdown */}
+                                  {showTestResultNumericInput && (
+                                    <select
+                                      className="form-control"
+                                      name="TestResultUnit"
+                                      value={formData.TestResultUnit}
+                                      onChange={handleInputChange}
+                                      required
+                                      style={{
+                                        height: "40px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
+                                        minWidth: "100px",
+                                      }}
+                                    >
+                                      <option value="" hidden>
+                                        Unit
                                       </option>
-                                    ))}
-                                  </select>
+                                      {testresultunitNames.map((name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  )}
                                 </div>
                               </div>
                               <div className="form-group col-md-6">
@@ -2602,6 +2629,42 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+
+        {/* Modal to show Sample Picture */}
+        {showLogoModal && (
+          <div
+            className="modal fade show"
+            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+            tabIndex="-1"
+            role="dialog"
+          >
+            <div className="modal-dialog" style={{ marginTop: "80px" }} role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Sample Picture</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowLogoModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body text-center">
+                  {selectedLogoUrl ? (
+                    <img
+                      src={selectedLogoUrl}
+                      alt="Sample Logo"
+                      style={{ maxWidth: "100%", maxHeight: "300px" }}
+                    />
+                  ) : (
+                    <p>No logo available.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
       <Modal show={showModal}
         onHide={closeModal}

@@ -22,11 +22,9 @@ const BioBankSampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
@@ -38,8 +36,6 @@ const BioBankSampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
     { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
@@ -50,11 +46,12 @@ const BioBankSampleArea = () => {
   ];
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
-    { label: "Packe size", key: "volume" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Volume", key: "volume" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
-    { label: "Currency", key: "SamplePriceCurrency" },
-    { label: "Date Of Sampling", key: "DateOfSampling" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
@@ -209,7 +206,7 @@ const BioBankSampleArea = () => {
       <div className="container-fluid px-md-4">
         <div
           className="text-danger fw-bold"
-          style={{ marginTop: "-40px" }}>
+          style={{ marginTop: "-20px", marginBottom: "20px" }}>
           <h6>Note: Click the delete icon to permanently remove the sample from stock.</h6>
 
         </div>
@@ -254,7 +251,12 @@ const BioBankSampleArea = () => {
                               ? "text-start"
                               : "text-center text-truncate"
                         }
-                        style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
+                        style={{
+                          maxWidth: "150px",
+                          overflowWrap: "break-word",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                        }}
                       >
                         {key === "diseasename" ? (
                           <span
@@ -273,6 +275,14 @@ const BioBankSampleArea = () => {
                           </span>
                         ) : key === "volume" ? (
                           `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                        ) : key === "age" ? (
+                          `${sample.age || "----"} years`
+                        ) : key === "TestResult" ? (
+                          `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
+                        ) : key === "price" ? (
+                          sample.price && sample.SamplePriceCurrency
+                            ? `${sample.price} ${sample.SamplePriceCurrency}`
+                            : "----"
                         ) : (
                           sample[key] || "----"
                         )}
@@ -309,7 +319,6 @@ const BioBankSampleArea = () => {
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
 

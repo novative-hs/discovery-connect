@@ -27,19 +27,18 @@ const BioBankSampleArea = () => {
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSample, setEditSample] = useState(null);
+
   const fieldsToShowInOrder = [
     { label: "Disease Name", key: "diseasename" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -54,71 +53,64 @@ const BioBankSampleArea = () => {
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
     { label: "Volume", key: "volume" },
-    { label: "Price", key: "price" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "Date Of Sampling", key: "DateOfSampling" },
+    { label: "Price", key: "price" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
   const [samples, setSamples] = useState([]);
-  const [filteredSamples, setFilteredSamples] = useState(samples);
+  const [filteredSamples, setFilteredSamples] = useState([]);
+  const [filter, setFilter] = useState(""); // State for dropdown selection
+  const [filtertotal, setfiltertotal] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const storedUser = getsessionStorage("user");
+    fetchSamples(currentPage + 1, itemsPerPage, filter); // Call the function when the component mounts
+  }, [currentPage]);
 
-    const fetchAndStoreSamples = async () => {
-      const sampleData = await fetchSamples();
-      setSamples(sampleData);
-      setFilteredSamples(sampleData);
-    };
-
-    fetchAndStoreSamples();
-  }, []);
-
-  const fetchSamples = async () => {
+  // Fetch samples from the backend
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}`
-      );
+      const { priceFilter, searchField, searchValue } = filters;
 
-      const ownSamples = response.data.samples.map((sample) => ({
-        ...sample,
-        quantity: Number(sample.quantity) || 0,
-      }));
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-      return ownSamples;
+      if (priceFilter) url += `&priceFilter=${priceFilter}`;
+      if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+
+      const response = await axios.get(url);
+      const { samples, totalCount } = response.data;
+      console.log(samples)
+      setSamples(samples);
+      setFilteredSamples(samples);
+      setTotalPages(Math.ceil(totalCount / pageSize));
+      setfiltertotal(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching samples:", error);
-      return [];
     }
   };
 
 
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamples.length / itemsPerPage)
-    );
-    setTotalPages(pages);
 
-    if (currentPage >= pages) {
-      setCurrentPage(0);
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSamples]);
+  }, [currentPage, totalPages]);
 
-  const currentData = filteredSamples.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  // Get the current data for the table
+  const currentData = filteredSamples
 
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+    const selectedPage = event.selected;
+    setCurrentPage(selectedPage);
   };
 
   const handleFilterChange = (field, value) => {
@@ -131,11 +123,11 @@ const BioBankSampleArea = () => {
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
-
     setFilteredSamples(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
+
   const handleEditClick = async (e) => {
     e.preventDefault(); // Prevent form from reloading page
 
@@ -169,7 +161,6 @@ const BioBankSampleArea = () => {
     }
   };
 
-
   useEffect(() => {
     if (
       showEditModal
@@ -187,6 +178,7 @@ const BioBankSampleArea = () => {
     showEditModal,
 
   ]);
+
   const openEditModal = (sample) => {
     setSelectedSampleName(sample.diseasename)
     setSelectedSampleUnit(sample.QuantityUnit)
@@ -201,7 +193,6 @@ const BioBankSampleArea = () => {
   };
 
   const openModal = (sample) => {
-
     setSelectedSample(sample);
     setShowModal(true);
   };
@@ -225,13 +216,13 @@ const BioBankSampleArea = () => {
       <div className="container-fluid px-md-4">
         <div
           className="text-danger fw-bold"
-          style={{ marginTop: "-40px" }}>
-          <h6>Note: Click the Edit Icon to public and private the samples.</h6>
-
+          style={{ marginTop: "-20px", marginBottom: "20px" }}>
+          <h6>Note: Make the Samples Public or Private through the Edit Icon.</h6>
         </div>
+
         {/* Table */}
         <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto border">
+          <table className="table table-bordered table-hover text-center align-middle w-100 border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
@@ -243,7 +234,7 @@ const BioBankSampleArea = () => {
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                        style={{ minWidth: "100px", maxWidth: "130px", width: "100px" }}
                       />
                       <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                         {label}
@@ -258,7 +249,7 @@ const BioBankSampleArea = () => {
               </tr>
             </thead>
             <tbody className="table-light">
-              {currentData.length > 0 ? (
+              {Array.isArray(currentData) && currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
                     {tableHeaders.map(({ key }, index) => (
@@ -271,7 +262,12 @@ const BioBankSampleArea = () => {
                               ? "text-start"
                               : "text-center text-truncate"
                         }
-                        style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
+                        style={{
+                          maxWidth: "150px",
+                          overflowWrap: "break-word",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                        }}
                       >
                         {key === "diseasename" ? (
                           <span
@@ -322,7 +318,6 @@ const BioBankSampleArea = () => {
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
 

@@ -29,6 +29,7 @@ const SampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
+    { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
 
@@ -77,18 +78,17 @@ const SampleArea = () => {
     user_account_id: id,
   });
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "diseasename" },
     // { label: "Price", key: "price" },
     // { label: "Quantity", key: "orderquantity" },
     // { label: "Total Payment", key: "totalpayment" },
-
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
@@ -98,8 +98,6 @@ const SampleArea = () => {
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -324,6 +322,8 @@ const SampleArea = () => {
                           );
                         } else if (key === "volume") {
                           content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                        } else if (key === "TestResult") {
+                          return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                         } else {
                           content = sample[key] || "----";
                         }
