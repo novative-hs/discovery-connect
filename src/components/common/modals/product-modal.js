@@ -91,7 +91,6 @@ const ProductModal = ({ product }) => {
                   <div className="mt-3 p-2 bg-light rounded text-start">
                     <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
                     <p><strong>Container Type:</strong> {product.ContainerType}</p>
-                    <p><strong>Diagnosis Test Parameter:</strong> {product.DiagnosisTestParameter}</p>
                     <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
                     <p><strong>Test Result/(unit):</strong> {product.TestResult} {product.TestResultUnit}</p>
                     <p><strong>Status:</strong> {product.status}</p>
@@ -117,7 +116,7 @@ const ProductModal = ({ product }) => {
                   </div>
 
                   {/* Add to Cart Button */}
-                  <div className="mt-auto text-end">
+                  {/* <div className="mt-auto text-end">
                     {product.quantity === 0 ? (
                       <button className="btn w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
                         Sample Allocated
@@ -131,7 +130,7 @@ const ProductModal = ({ product }) => {
                         Add to Cart
                       </button>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </>
             ) : (
@@ -151,7 +150,7 @@ const ProductModal = ({ product }) => {
                   <p><strong>Test Result/(unit):</strong> {product.TestResult} {product.TestResultUnit}</p>
                   <p><strong>Status:</strong> {product.status}</p>
                 </div>
-                <div className="mt-3 text-end">
+                {/* <div className="mt-3 text-end">
                   {product.quantity === 0 ? (
                     <button className="btn w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
                       Sample Allocated
@@ -165,7 +164,7 @@ const ProductModal = ({ product }) => {
                       Add to Cart
                     </button>
                   )}
-                </div>
+                </div> */}
               </div>
             )}
           </div>
