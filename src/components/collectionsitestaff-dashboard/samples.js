@@ -150,11 +150,12 @@ const SampleArea = () => {
   const [searchValue, setSearchValue] = useState(null);
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
-    TransferTo: id,
+    TransferTo: "",
     dispatchVia: "",
     dispatcherName: "",
     dispatchReceiptNumber: "",
     Quantity: 1,
+    sampleID: id,
   });
 
 
@@ -163,7 +164,7 @@ const SampleArea = () => {
     setSelectedCountry(country);
     setFormData((prev) => ({
       ...prev,
-      CountryOfCollection: country.name, // or country.id if you store ID
+      CountryOfCollection: country.name,
     }));
     setSearchCountry(country.name);
     setShowCountryDropdown(false);
@@ -473,11 +474,11 @@ const SampleArea = () => {
     }
 
     try {
-      // Determine if it's a return (sample being sent back to original receiver)
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
         {
+          sampleID: selectedSampleId,
           TransferFrom: id,
           TransferTo,
           dispatchVia,
@@ -498,6 +499,7 @@ const SampleArea = () => {
         dispatcherName: "",
         dispatchReceiptNumber: "",
         Quantity: "",
+        sampleID: selectedSampleId,
       });
 
       setShowTransferModal(false);

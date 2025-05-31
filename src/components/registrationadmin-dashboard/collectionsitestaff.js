@@ -37,7 +37,7 @@ const CollectionSiteStaffArea = () => {
     staffName: "",
     email: "",
     password: "",
-    permission: "all",
+    permission: [],
     created_at: "",
     status: "inactive",
   });
@@ -749,25 +749,47 @@ const CollectionSiteStaffArea = () => {
                           </select>
                         </div>
                         <div className="form-group">
-                          <label>Permission</label>
-                          <select
-                            className="form-control p-2"
-                            name="permission"
-                            value={formData.permission}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select Permission</option>
-                            <option value="all">All Pages Access</option>
-                            <option value="add_full">Permission to Add Sample with Full Detail</option>
-                            <option value="add_basic">Permission to Add Sample with Basic Detail</option>
-                            <option value="edit">Permission to Edit Sample</option>
-                            <option value="dispatch">Permission to Dispatch Sample</option>
-                            <option value="receive">Permission to Receive Sample</option>
-                          </select>
-                        </div>
-
-                      </div>
+  <label>Permission</label>
+  <div className="dropdown">
+    <button
+      className="form-control text-start"
+      type="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      {formData.permission.length
+        ? formData.permission.join(", ")
+        : "Select Permission"}
+    </button>
+    <ul className="dropdown-menu p-2" style={{ minWidth: "100%" }}>
+      {[
+        { value: "all", label: "All Pages Access" },
+        { value: "add_full", label: "Add Sample with Full Detail" },
+        { value: "add_basic", label: "Add Sample with Basic Detail" },
+        { value: "edit", label: "Edit Sample" },
+        { value: "dispatch", label: "Dispatch Sample" },
+        { value: "receive", label: "Receive Sample" },
+      ].map((perm) => (
+        <li key={perm.value}>
+          <label className="dropdown-item d-flex align-items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.permission.includes(perm.value)}
+              onChange={(e) => {
+                const newPermissions = formData.permission.includes(perm.value)
+                  ? formData.permission.filter((p) => p !== perm.value)
+                  : [...formData.permission, perm.value];
+                setFormData({ ...formData, permission: newPermissions });
+              }}
+            />
+            {perm.label}
+          </label>
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>
+</div>
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
