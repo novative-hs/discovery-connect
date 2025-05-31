@@ -154,8 +154,6 @@ const BioBankSampleArea = () => {
 
       // ✅ Optional: Refresh the sample list
       const updatedSamples = await fetchSamples();
-      setSamples(updatedSamples);
-      setFilteredSamples(updatedSamples);
     } catch (error) {
       console.error("Update error:", error);
     }
