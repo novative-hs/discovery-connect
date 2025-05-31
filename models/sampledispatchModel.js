@@ -184,7 +184,6 @@ const getSampleLost = (userId, page, pageSize, searchField, searchValue, callbac
 };
 
 
-// Function to transfer sample 
 const createSampleDispatch = (dispatchData, sampleID, callback) => {
   const {
     TransferFrom,
@@ -193,7 +192,7 @@ const createSampleDispatch = (dispatchData, sampleID, callback) => {
     dispatcherName,
     dispatchReceiptNumber,
     Quantity,
-    status
+    status,
   } = dispatchData;
 
   const query = `
@@ -209,23 +208,156 @@ const createSampleDispatch = (dispatchData, sampleID, callback) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  mysqlConnection.query(query, [
-    TransferFrom,
-    TransferTo,
+  mysqlConnection.query(
+    query,
+    [
+      TransferFrom,
+      TransferTo,
+      dispatchVia,
+      dispatcherName,
+      dispatchReceiptNumber,
+      Quantity,
+      sampleID,
+      status,
+    ],
+    callback
+  );
+};
+
+const getExistingDispatch = (sampleID, TransferFrom, TransferTo, callback) => {
+  const query = `
+    SELECT id FROM sampledispatch
+    WHERE sampleID = ? AND TransferFrom = ? AND TransferTo = ? AND status = 'In Stock'
+    ORDER BY id DESC LIMIT 1
+  `;
+  mysqlConnection.query(query, [sampleID, TransferFrom, TransferTo], callback);
+};
+
+const updateExistingDispatch = (dispatchData, dispatchId, callback) => {
+  const {
+    Quantity,
     dispatchVia,
     dispatcherName,
     dispatchReceiptNumber,
-    Quantity,
-    sampleID,
-    status
-  ], callback);
+    TransferFrom,
+    TransferTo,
+    sampleID 
+  } = dispatchData;
+
+  const updateDispatchQuery = `
+    UPDATE sampledispatch
+    SET 
+      Quantity = ?, 
+      dispatchVia = ?, 
+      dispatcherName = ?, 
+      dispatchReceiptNumber = ?, 
+      TransferFrom = ?, 
+      TransferTo = ?, 
+      status = 'In Transit'
+    WHERE id = ?
+  `;
+
+mysqlConnection.query(
+  updateDispatchQuery,
+  [Quantity, dispatchVia, dispatcherName, dispatchReceiptNumber, TransferFrom, TransferTo, dispatchId],
+  (err, result) => {
+    if (err) {
+      console.error("MySQL updateExistingDispatch error:", err);
+      return callback(err);
+    }
+
+
+      // Correct: check by sampleID, not id
+      const checkSampleReceiveQuery = `SELECT id FROM samplereceive WHERE sampleID = ? LIMIT 1`;
+      mysqlConnection.query(checkSampleReceiveQuery, [sampleID], (checkErr, rows) => {
+        if (checkErr) return callback(checkErr);
+
+        if (rows.length > 0) {
+          // Update by sampleID, not id
+        const updateSampleReceiveQuery = `
+  UPDATE samplereceive
+  SET status = 'Returned'
+  WHERE sampleID = ?
+`;
+          mysqlConnection.query(updateSampleReceiveQuery, [sampleID], (updateErr2) => {
+            if (updateErr2) return callback(updateErr2);
+
+            return callback(null, result);
+          });
+        } else {
+          return callback(null, result);
+        }
+      });
+    }
+  );
 };
 
 
+// Update sample quantity
+const updateSampleQuantity = (sampleID, Quantity, callback) => {
+  const query = `UPDATE sample SET Quantity = Quantity - ? WHERE id = ?`;
+
+  mysqlConnection.query(query, [Quantity, sampleID], callback);
+};
+
+// Get sample by ID
+const getSampleById = (sampleID, callback) => {
+  const query = `SELECT Quantity FROM sample WHERE id = ?`;
+
+  mysqlConnection.query(query, [sampleID], callback);
+};
+
+// Handle lost sample
+const markSampleLost = (reason, sampleID, dispatchID, TransferTo, callback) => {
+  const query = `
+    UPDATE sampledispatch
+    SET Reason = ?, status = 'Lost'
+    WHERE sampleID = ? AND id = ? AND TransferTo = ?
+  `;
+
+  mysqlConnection.query(query, [reason, sampleID, dispatchID, TransferTo], callback);
+};
+
+// Check existing return
+const getReturnDispatch = (sampleID, from, to, callback) => {
+  const query = `
+    SELECT id FROM sampledispatch
+    WHERE sampleID = ? AND TransferFrom = ? AND TransferTo = ? AND status = 'In Stock'
+  `;
+  mysqlConnection.query(query, [sampleID, from, to], callback);
+};
+
+// Mark return dispatch
+const markReturned = (reason, dispatchID, callback) => {
+  const query = `
+    UPDATE sampledispatch
+    SET status = 'Returned', Reason = ?
+    WHERE id = ?
+  `;
+
+  mysqlConnection.query(query, [reason || "Returned", dispatchID], callback);
+};
+
+const getDispatchBySampleId = (sampleID, callback) => {
+  const query = `
+    SELECT id FROM sampledispatch
+    WHERE sampleID = ?
+    ORDER BY id DESC LIMIT 1
+  `;
+  mysqlConnection.query(query, [sampleID], callback);
+};
 
 module.exports = {
   createSampleDispatchTable,
   createSampleDispatch,
   getDispatchedwithInTransitStatus,
-  getSampleLost
+  getSampleLost,
+  updateExistingDispatch,
+  markReturned,
+  getReturnDispatch,
+  markSampleLost,
+  getSampleById,
+  updateSampleQuantity,
+  getExistingDispatch ,
+  getDispatchBySampleId
 };

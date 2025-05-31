@@ -9,7 +9,7 @@ const create_collectionsitestaffTable = () => {
       user_account_id INT,
       staffName VARCHAR(100),
       collectionsite_id INT,
-      permission ENUM('add_full', 'add_basic', 'edit','dispatch','receive','all') DEFAULT 'all',
+      permission SET('add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all') DEFAULT 'all',
       status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -75,6 +75,16 @@ const createCollectionsiteStaff = (req, callback) => {
     status
   } = req.body;
 
+ const VALID_PERMISSIONS = ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'];
+
+const permissionsString = (Array.isArray(permission) ? permission : [])
+  .filter(p => VALID_PERMISSIONS.includes(p))
+  .join(',');
+
+if (!permissionsString) {
+  return callback(new Error("Invalid permissions provided."), null);
+}
+console.log("permissin goging to database are:",permissionsString )
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 
@@ -115,7 +125,7 @@ const createCollectionsiteStaff = (req, callback) => {
             userId,
             collectionsitesid,
             staffName,
-            permission,
+            permissionsString,
             status
           ];
 
@@ -127,7 +137,7 @@ const createCollectionsiteStaff = (req, callback) => {
               });
             }
 
-            const collectionsitestaffId = csResults.insertId; // ✅ get inserted collectionsitestaff.id
+            const collectionsitestaffId = csResults.insertId;
 
             const historyQuery = `
               INSERT INTO history (
@@ -139,9 +149,9 @@ const createCollectionsiteStaff = (req, callback) => {
               email,
               password,
               staffName || null,
-              permission,
+              permissionsString,
               collectionsitesid,
-              collectionsitestaffId, // ✅ inserted ID from previous query
+              collectionsitestaffId,
               status
             ];
 
@@ -163,7 +173,7 @@ const createCollectionsiteStaff = (req, callback) => {
 
                 connection.release();
 
-                // Send confirmation email
+                // ✅ Send confirmation email
                 sendEmail(
                   email,
                   'Welcome to Discovery Connect',
@@ -182,6 +192,7 @@ const createCollectionsiteStaff = (req, callback) => {
     });
   });
 };
+
 
 const updateCollectonsiteStaffStatus = async (id, status) => {
 
