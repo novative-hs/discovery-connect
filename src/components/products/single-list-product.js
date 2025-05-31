@@ -6,6 +6,7 @@ import { add_cart_product, initialOrderQuantity } from "src/redux/features/cartS
 import { setProduct } from "src/redux/features/productSlice";
 import { useSelector } from 'react-redux';
 const SingleListProduct = ({ product }) => {
+  
   const dispatch = useDispatch();
 
   const handleQuickView = (prd) => {

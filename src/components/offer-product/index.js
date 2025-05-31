@@ -82,7 +82,8 @@ const OfferPopularProduct = () => {
     return <ErrorMessage message="No samples found!" />;
 
   const handleAddToCart = (product) => {
-    dispatch(add_cart_product(product));
+    sessionStorage.setItem('filterProduct', JSON.stringify(product));
+router.push('/filter-products');
   };
 
   return (

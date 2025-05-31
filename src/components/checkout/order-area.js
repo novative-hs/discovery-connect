@@ -45,78 +45,80 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
     return true;
   };
 
-  const handleSubmit = async (paymentId) => {
-    if (!validateDocuments()) return false;
+const handleSubmit = async (paymentId) => {
+  if (!validateDocuments()) return false;
 
-    const userID = sessionStorage.getItem("userID");
+  const userID = sessionStorage.getItem("userID");
 
-    const formData = new FormData();
-    formData.append("researcher_id", userID);
-    formData.append("payment_id", paymentId);
-    formData.append(
-      "cart_items",
-      JSON.stringify(
-        cart_products.map((item) => ({
-          sample_id: item.id,
-          price: Number(item.price),
-          samplequantity: Number(item.orderQuantity),
-          total: Number(item.orderQuantity) * Number(item.price),
-        }))
-      )
+  const formData = new FormData();
+  formData.append("researcher_id", userID);
+  formData.append("payment_id", paymentId);
+
+ console.log("product",cart_products)
+
+  // 2. Append cart items (excluding sampleIds)
+  formData.append(
+    "cart_items",
+    JSON.stringify(
+      cart_products.map((item) => ({
+        sample_id:item.id,
+        price: Number(item.price),
+        samplequantity: Number(item.orderQuantity),
+        volume: item.volume,
+        QuantityUnit: item.QuantityUnit,
+        total: Number(item.orderQuantity) * Number(item.price),
+      }))
+    )
+  );
+
+  // 3. Add files and metadata
+  formData.append("study_copy", sampleCopyData.studyCopy);
+  formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
+  formData.append("irb_file", sampleCopyData.irbFile);
+  if (sampleCopyData.nbcFile) {
+    formData.append("nbc_file", sampleCopyData.nbcFile);
+  }
+
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
     );
 
-    formData.append("study_copy", sampleCopyData.studyCopy);
-    formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
-    formData.append("irb_file", sampleCopyData.irbFile);
+    const result = response.data;
+    const cartIds = result.result.results.map((item) => item.cartId);
+    const created_at = result.result.results[0].created_at;
 
-    if (sampleCopyData.nbcFile) {
-      formData.append("nbc_file", sampleCopyData.nbcFile);
-    }
+    sessionStorage.setItem("cartIDs", JSON.stringify(cartIds));
+    sessionStorage.setItem("created_at", JSON.stringify(created_at));
 
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+    dispatch(clear_cart());
+    notifySuccess("Order placed successfully! Now your cart is empty");
 
-      const result = response.data;
+    setTimeout(() => {
+      router.push({
+        pathname: "/order-confirmation",
+        query: {
+          id: JSON.stringify(cartIds),
+          created_at: created_at,
+        },
+      });
+    }, 1000);
+
+    return true;
+  } catch (error) {
+    console.error("Error placing order:", error);
+    notifyError(
+      error.response?.data?.error || "Failed to place order. Please try again."
+    );
+    return false;
+  }
+};
 
 
-      const cartIds = result.result.results.map((item) => item.cartId);
-      const created_at = result.result.results[0].created_at;
-
-      sessionStorage.setItem("cartIDs", JSON.stringify(cartIds));
-      sessionStorage.setItem("created_at", JSON.stringify(created_at));
-
-      dispatch(clear_cart());
-
-      // ✅ Show success message before redirecting
-      notifySuccess("Order placed successfully!Now your cart is empty");
-
-      setTimeout(() => {
-        router.push({
-          pathname: "/order-confirmation",
-          query: {
-            id: JSON.stringify(cartIds),
-            created_at: created_at,
-          },
-        });
-      }, 1000); // Optional delay to let user see message
-
-      return true;
-    } catch (error) {
-      // If request failed completely
-      console.error("Error placing order:", error);
-      notifyError(
-        error.response?.data?.error ||
-        "Failed to place order. Please try again."
-      );
-      return false;
-    }
-  };
 
   return (
     <div className="container py-4" style={{ maxWidth: "750px" }}>

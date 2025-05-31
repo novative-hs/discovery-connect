@@ -70,7 +70,7 @@ const OrderRejectedPage = () => {
 
       const { data, totalCount } = response.data;
 
-    
+
       console.log(data)
       setOrders(data);
       setAllOrders(data); // Only necessary if you need full copy
@@ -161,22 +161,22 @@ const OrderRejectedPage = () => {
                     //   field: "ethical_committee_status",
                     // },
                   ].map(({ label, field }, index) => (
-                                <th key={index} className="col-md-1 px-2">
-            
-                    <div className="d-flex flex-column align-items-center">
-                  <input
-  type="text"
-  className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-  placeholder={`Search ${label}`}
-  onChange={(e) => handleFilterChange(key, e.target.value)}
-  style={{ minWidth: "170px", maxWidth: "200px", width: "100px" }}
-/>
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                        {label}
-                      </span>
+                    <th key={index} className="col-md-1 px-2">
 
-                    </div>
-                  </th>
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{ minWidth: "170px", maxWidth: "200px", width: "100px" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
+                          {label}
+                        </span>
+
+                      </div>
+                    </th>
                   ))}
                 </tr>
               </thead>

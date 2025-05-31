@@ -67,6 +67,21 @@ const tablesAndColumns = [
       },
     ]
   },
+  {
+    table:"cart",
+    columnsToAdd:[
+      {
+        column:"volume",
+        type:"VARCHAR(255)",
+        nullable:false
+      },
+      {
+        column:"QuantityUnit",
+        type:"VARCHAR(20)",
+        nullable:false
+      }
+    ]
+  }
   // {
   //   table: "user_account",
   //   columnsToAdd: [

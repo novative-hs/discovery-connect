@@ -157,7 +157,7 @@ const SampleReturn = () => {
                         }
                         style={{ minWidth: "150px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                         {label}
                       </span>
                     </div>

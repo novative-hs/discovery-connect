@@ -64,6 +64,7 @@ const createSampleTable = () => {
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
+  
   const user_account_id = parseInt(userId, 10);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
@@ -147,6 +148,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 };
 
 const getAllSamples = (callback) => {
+  
   const query = `
     SELECT 
       s.*,
@@ -168,6 +170,7 @@ const getAllSamples = (callback) => {
       district d ON cs.district = d.id
     WHERE 
       s.status = 'In Stock' 
+      AND s.Quantity>0
       AND s.price > 0;
   `;
 
@@ -215,7 +218,7 @@ const getResearcherSamples = (userId, callback) => {
   sm.diseasename,
   sm.age,
   sm.gender,
-  sm.ethnicity,S
+  sm.ethnicity,
   sm.samplecondition,
   sm.storagetemp,
   sm.ContainerType,
@@ -223,7 +226,6 @@ const getResearcherSamples = (userId, callback) => {
   country.name AS CountryName,
   sm.price,
   sm.SamplePriceCurrency,
-  sm.QuantityUnit,
   sm.SampleTypeMatrix,
   sm.SmokingStatus,
   sm.AlcoholOrDrugAbuse,
@@ -241,7 +243,7 @@ const getResearcherSamples = (userId, callback) => {
   sm.TestSystem,
   sm.TestSystemManufacturer,
   sm.status,
-  sm.sample_status,
+  sm.sample_visibility,
   sm.logo,
   cs.CollectionSiteName,
   bb.Name AS BiobankName,
@@ -296,16 +298,60 @@ ORDER BY s.id DESC;
   });
 
 };
+const getAllVolumnUnits = (name, callback) => {
+  const query = 'SELECT id, quantity, volume, QuantityUnit FROM sample WHERE diseasename = ? and quantity>0';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } else {
+      const grouped = {};
+
+      results.forEach(({ id, quantity, volume, QuantityUnit }) => {
+        const key = `${volume}_${QuantityUnit}`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            vol: volume,
+            unit: QuantityUnit,
+            quantity: 0,
+            sampleIds: [],
+          };
+        }
+        grouped[key].quantity += quantity;
+        grouped[key].sampleIds.push(id);
+      });
+
+      callback(null, Object.values(grouped));
+    }
+  });
+};
+const getAllSampleinIndex=(name,callback)=>{
+  const query = 'SELECT * FROM sample WHERE diseasename = ? and quantity>0';
+
+  mysqlConnection.query(query, [name], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      callback(err, null);
+    } 
+     if (results.length === 0) {
+      return callback(null, { error: "No samples found" });
+    }
+
+    // If samples exist, return the results
+    callback(null, results);
+  });
+}
+
 
 const getAllCSSamples = (limit, offset, callback) => {
+  
   const dataQuery = `
- SELECT 
+SELECT 
   s.diseasename,
-  GROUP_CONCAT(DISTINCT s.volume) AS volumes,
-  MAX(s.id) AS id,
   MAX(s.price) AS price,
   SUM(s.quantity) AS quantity,
-  MAX(s.quantity_allocated) AS quantity_allocated,
+  SUM(s.quantity_allocated) AS quantity_allocated,
   MAX(s.status) AS status,
   MAX(cs.CollectionSiteName) AS CollectionSiteName,
   MAX(st.staffName) AS CollectionSiteStaffName,
@@ -322,8 +368,9 @@ WHERE
   s.status = 'In Stock' 
   AND s.price > 0 
   AND s.sample_visibility = 'Public'
-  AND s.quantity > 0
 GROUP BY s.diseasename
+HAVING SUM(s.quantity) > 0 OR SUM(s.quantity_allocated) > 0
+ORDER BY s.diseasename
 LIMIT ? OFFSET ?
 
   `;
@@ -337,8 +384,6 @@ LIMIT ? OFFSET ?
       AND s.sample_visibility = 'Public'
       AND s.quantity > 0
   `;
-
-  console.log("🔍 Executing count query...");
   mysqlConnection.query(countQuery, (countErr, countResult) => {
     if (countErr) {
       console.error("❌ Count Query Error:", countErr);
@@ -346,9 +391,7 @@ LIMIT ? OFFSET ?
     }
 
     const totalCount = countResult[0].total;
-    console.log("✅ Count query successful. Total samples:", totalCount);
-
-    console.log("🔍 Executing data query...");
+    
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) {
         console.error("❌ Data Query Error:", dataErr);
@@ -393,7 +436,7 @@ LIMIT ? OFFSET ?
           return sample;
         });
 
-        console.log("✅ Data query and image processing completed.");
+        
         callback(null, { data: updatedResults, totalCount });
       });
     });
@@ -673,4 +716,7 @@ module.exports = {
   updateSampleStatus,
   deleteSample,
   updateQuarantineSamples,
+  getAllVolumnUnits,
+  getAllSampleinIndex
+  
 };

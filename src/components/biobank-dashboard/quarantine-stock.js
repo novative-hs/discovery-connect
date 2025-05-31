@@ -22,11 +22,9 @@ const BioBankSampleArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
+    { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
@@ -38,8 +36,6 @@ const BioBankSampleArea = () => {
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
     { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
@@ -50,11 +46,12 @@ const BioBankSampleArea = () => {
   ];
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
-    { label: "Packe size", key: "volume" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Volume", key: "volume" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
     { label: "Price", key: "price" },
-    { label: "Currency", key: "SamplePriceCurrency" },
-    { label: "Date Of Sampling", key: "DateOfSampling" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
@@ -209,7 +206,7 @@ const BioBankSampleArea = () => {
       <div className="container-fluid px-md-4">
         <div
           className="text-danger fw-bold"
-          style={{ marginTop: "-40px" }}>
+          style={{ marginTop: "-20px", marginBottom: "20px" }}>
           <h6>Note: Click the delete icon to permanently remove the sample from stock.</h6>
 
         </div>
@@ -228,7 +225,7 @@ const BioBankSampleArea = () => {
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
+                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                         {label}
                       </span>
 
@@ -240,76 +237,88 @@ const BioBankSampleArea = () => {
                 </th>
               </tr>
             </thead>
-           <tbody className="table-light">
-  {currentData.length > 0 ? (
-    currentData.map((sample) => (
-      <tr key={sample.id}>
-        {tableHeaders.map(({ key }, index) => (
-          <td
-            key={index}
-            className={
-              key === "price"
-                ? "text-end"
-                : key === "diseasename"
-                ? ""
-                : "text-center text-truncate"
-            }
-            style={{ maxWidth: "150px" }}
-          >
-            {key === "diseasename" ? (
-              <span
-                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                role="button"
-                title="Sample Details"
-                onClick={() => openModal(sample)}
-                style={{
-                  cursor: "pointer",
-                  transition: "color 0.2s",
-                }}
-                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                onMouseOut={(e) => (e.target.style.color = "")}
-              >
-                {sample.diseasename || "----"}
-              </span>
-            ) : key === "volume" ? (
-              `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
-            ) : (
-              sample[key] || "----"
-            )}
-          </td>
-        ))}
-        <td>
-          <div className="d-flex justify-content-center gap-3">
-            <button
-              className="btn btn-danger btn-sm"
-              onClick={() => {
-                setSelectedSampleId(sample.id);
-                setShowDeleteModal(true);
-              }}
-              title="Delete Sample"
-            >
-              <FontAwesomeIcon icon={faTrash} size="sm" />
-            </button>
-            <button
-              className="btn btn-outline-success btn-sm"
-              onClick={() => handleShowHistory("sample", sample.id)}
-              title="History"
-            >
-              <i className="fa fa-history"></i>
-            </button>
-          </div>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="8" className="text-center">
-        No samples available
-      </td>
-    </tr>
-  )}
-</tbody>
-
+            <tbody className="table-light">
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr key={sample.id}>
+                    {tableHeaders.map(({ key }, index) => (
+                      <td
+                        key={index}
+                        className={
+                          key === "price"
+                            ? "text-end"
+                            : key === "diseasename"
+                              ? "text-start"
+                              : "text-center text-truncate"
+                        }
+                        style={{
+                          maxWidth: "150px",
+                          overflowWrap: "break-word",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                        }}
+                      >
+                        {key === "diseasename" ? (
+                          <span
+                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openModal(sample)}
+                            style={{
+                              cursor: "pointer",
+                              transition: "color 0.2s",
+                            }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.diseasename || "----"}
+                          </span>
+                        ) : key === "volume" ? (
+                          `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                        ) : key === "age" ? (
+                          `${sample.age || "----"} years`
+                        ) : key === "TestResult" ? (
+                          `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
+                        ) : key === "price" ? (
+                          sample.price && sample.SamplePriceCurrency
+                            ? `${sample.price} ${sample.SamplePriceCurrency}`
+                            : "----"
+                        ) : (
+                          sample[key] || "----"
+                        )}
+                      </td>
+                    ))}
+                    <td>
+                      <div className="d-flex justify-content-center gap-3">
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => {
+                            setSelectedSampleId(sample.id);
+                            setShowDeleteModal(true);
+                          }}
+                          title="Delete Sample"
+                        >
+                          <FontAwesomeIcon icon={faTrash} size="sm" />
+                        </button>
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleShowHistory("sample", sample.id)}
+                          title="History"
+                        >
+                          <i className="fa fa-history"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center">
+                    No samples available
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </div>
 

@@ -133,7 +133,7 @@ const UpdateSampleStatus = (req, res) => {
 // Controller to get prices dropdown in BB dashboard of that specific sample
 const getPrice = (req, res) => {
   const { name } = req.params;
-console.log(name)
+
   BioBankModel.getPrice(name, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching samples price" });
