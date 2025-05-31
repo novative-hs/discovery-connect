@@ -621,7 +621,7 @@ const deleteSample = (id, callback) => {
 
             // Step 2: Delete from registrationadminsampleapproval
             const deleteApprovalQuery = `
-              DELETE FROM registrationadminsampleapproval 
+              DELETE FROM technicaladminsampleapproval 
               WHERE cart_id IN (SELECT id FROM cart WHERE sample_id = ?)`;
             connection.query(deleteApprovalQuery, [id], (err) => {
               if (err) return connection.rollback(() => { connection.release(); callback(err); });
