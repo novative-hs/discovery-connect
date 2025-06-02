@@ -81,7 +81,7 @@ const getSampleReceiveInTransit = (req, res) => {
         WHERE sr.ReceivedByCollectionSite IN (${placeholders})
           AND s.status = 'In Stock'
           AND sr.sampleID IS NOT NULL
-          AND s.id NOT IN (SELECT sampleID FROM samplereturn)
+          AND sr.status = 'Received'
           ${searchClause}
         ORDER BY s.id
         LIMIT ? OFFSET ?

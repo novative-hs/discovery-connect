@@ -8,6 +8,7 @@ const createSampleReceiveTable = () => {
       ReceivedByCollectionSite INT NOT NULL,
       ReceiveDate DATE DEFAULT (CURRENT_DATE),
       sampleID VARCHAR(36) NOT NULL,
+      status ENUM('Returned', 'Received') NOT NULL DEFAULT 'Received',
       FOREIGN KEY (sampleID) REFERENCES sample(id),
       FOREIGN KEY (ReceivedByCollectionSite) REFERENCES user_account(id) ON DELETE CASCADE
     )
