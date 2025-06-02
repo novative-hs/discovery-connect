@@ -62,7 +62,7 @@ const getSampleReceiveInTransit = (req, res) => {
           s.DateOfSampling, s.ConcurrentMedicalConditions,
           s.ConcurrentMedications, s.DiagnosisTestParameter,
           s.TestResult, s.TestResultUnit, s.TestMethod,
-          s.TestKitManufacturer, s.TestSystem, s.TestSystemManufacturer,
+          s.TestKitManufacturer, s.TestSystem, s.TestSystemManufacturer, s.logo,
           sr.ReceivedByCollectionSite, s.status, s.sample_visibility,
            CONCAT_WS('-', s.room_number, s.freezer_id, s.box_id) AS locationids,
           s.phoneNumber,
@@ -100,7 +100,7 @@ const getSampleReceiveInTransit = (req, res) => {
         }
 
         // Count query for total results
-     const countQuery = `
+        const countQuery = `
   SELECT COUNT(DISTINCT s.id) AS totalCount
   FROM sample s
   LEFT JOIN samplereceive sr ON sr.sampleID = s.id
@@ -122,9 +122,9 @@ const getSampleReceiveInTransit = (req, res) => {
 
 
         const countParams = [collectionSiteId, ...userIds];
-       if (searchField && searchValue) {
-  countParams.push(`%${searchValue}%`);
-}
+        if (searchField && searchValue) {
+          countParams.push(`%${searchValue}%`);
+        }
         mysqlConnection.query(countQuery, countParams, (countErr, countResults) => {
           if (countErr) {
             return res.status(500).json({ error: "Error counting results" });

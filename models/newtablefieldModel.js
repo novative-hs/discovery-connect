@@ -81,6 +81,17 @@ const tablesAndColumns = [
         nullable:false
       }
     ]
+  },
+  {
+    table:"samplereceive",
+    columnsToAdd:[
+      {
+        column:"status",
+         type: "ENUM('Returned', 'Received') DEFAULT 'Received'",
+         nullable:false,
+         
+      }
+    ]
   }
   // {
   //   table: "user_account",

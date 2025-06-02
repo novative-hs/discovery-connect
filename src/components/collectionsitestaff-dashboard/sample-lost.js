@@ -17,32 +17,28 @@ const SampleLost = () => {
 
   const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
+    { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "Phone Number", key: "phoneNumber" },
-    { label: "Volume", key: "volume" },
+    { label: "Test Result & Unit", key: "TestResult" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
   const fieldsToShowInOrder = [
-    { label: "Sample Name", key: "diseasename" },
+    { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
     { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
@@ -153,7 +149,7 @@ const SampleLost = () => {
                         onChange={(e) =>
                           handleFilterChange(key, e.target.value)
                         }
-                        style={{ minWidth: "150px" }}
+                        style={{ minWidth: "110px" }}
                       />
                       <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                         {label}
@@ -194,6 +190,12 @@ const SampleLost = () => {
                           >
                             {sample.diseasename || "----"}
                           </span>
+                        ) : key === "volume" ? (
+                          `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                        ) : key === "age" ? (
+                          `${sample.age || "----"} years`
+                        ) : key === "TestResult" ? (
+                          `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                         ) : (
                           sample[key] || "---"
                         )}
