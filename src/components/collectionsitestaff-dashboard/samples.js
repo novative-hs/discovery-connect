@@ -14,6 +14,7 @@ import { getsessionStorage } from "@utils/sessionStorage";
 const SampleArea = () => {
 
   const [staffAction, setStaffAction] = useState("");
+  const [actions, setActions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -143,7 +144,7 @@ const SampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
-  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
+  const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -172,11 +173,19 @@ const SampleArea = () => {
     setSearchCountry(country.name);
     setShowCountryDropdown(false);
   };
+useEffect(() => {
+  const action = sessionStorage.getItem("staffAction") || "";
+  console.log("staffAction from sessionStorage:", action);
+  setStaffAction(action);
+
+  const splitActions = action.split(",").map(a => a.trim());
+  console.log("Parsed actions array:", splitActions);
+  setActions(splitActions);
+}, []);
 
   // Fetch countries from backend
   useEffect(() => {
-    const action = sessionStorage.getItem("staffAction");
-    setStaffAction(action);
+
     const fetchData = async (url, setState, label) => {
       try {
         const response = await axios.get(url);
@@ -728,6 +737,7 @@ const SampleArea = () => {
   // };
 
   const areMandatoryFieldsFilled = () => {
+    
     return (
       formData.donorID?.trim() &&
       formData.diseasename?.trim() &&
@@ -742,7 +752,9 @@ const SampleArea = () => {
       formData.logo instanceof File
     );
   };
-
+console.log("actions:", actions);
+console.log("areMandatoryFieldsFilled:", areMandatoryFieldsFilled());
+console.log("formData:", formData);
   const unitMaxValues = {
     L: 100,
     mL: 10000,
@@ -768,29 +780,31 @@ const SampleArea = () => {
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
-
-          {["add_full", "add_basic", "all"].includes(staffAction) && (
-            <div className="d-flex flex-wrap gap-3">
-              <button
-                onClick={() => setShowAddModal(true)}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
-              >
-                <i className="fas fa-vial"></i> Add Sample
-              </button>
-            </div>
-          )}
-        </div>
+{/* Button */}
+{actions.some(a => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)) && (
+  <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+    {(actions.includes('add_full') || actions.includes('add_basic') || actions.includes('all')) && (
+      <button
+        onClick={() => setShowAddModal(true)}
+        style={{
+          backgroundColor: "#4a90e2",
+          color: "#fff",
+          border: "none",
+          padding: "10px 20px",
+          borderRadius: "6px",
+          fontWeight: "500",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        }}
+      >
+        <i className="fas fa-vial"></i> Add Sample
+      </button>
+    )}
+  </div>
+)}
+</div>
 
         {/* Table */}
         <div
@@ -822,7 +836,7 @@ const SampleArea = () => {
                     </div>
                   </th>
                 ))}
-                {["edit", "dispatch", "history", "all"].some(action => staffAction === action) && (
+                {actions.some(action => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
                   </th>
@@ -901,38 +915,40 @@ ${sample.box_id || "N/A"} = Box ID`;
                         )}
                       </td>
                     ))}
-                    {["edit", "dispatch", "history", "all"].some(action => staffAction === action) && (
-                      <td className="text-center">
-                        <div className="d-flex justify-content-around gap-1">
-                          {["edit", "all"].includes(staffAction) && (
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}
-                              title="Edit"
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>
-                          )}
+                {actions.some(action => ["edit", "dispatch", "history", "all"].includes(action)) && (
+<td className="text-center align-middle">
+  <div className="d-flex justify-content-center gap-2 px-1">
 
-                          {["dispatch", "all"].includes(staffAction) && (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleTransferClick(sample)}
-                              title="Transfer"
-                            >
-                              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                            </button>
-                          )}
+      {(actions.includes("edit") || actions.includes("all")) && (
+        <button
+          className="btn btn-success btn-sm"
+          onClick={() => handleEditClick(sample)}
+          title="Edit"
+        >
+          <FontAwesomeIcon icon={faEdit} size="sm" />
+        </button>
+      )}
 
-                          {["history", "all"].includes(staffAction) && (
-                            <button
-                              className="btn btn-outline-success btn-sm"
-                              onClick={() => handleShowHistory("sample", sample.id)}
-                              title="History"
-                            >
-                              <i className="fa fa-history"></i>
-                            </button>
-                          )}
+      {(actions.includes("dispatch") || actions.includes("all")) && (
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={() => handleTransferClick(sample)}
+          title="Transfer"
+        >
+          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
+        </button>
+      )}
+
+      {(actions.includes("history") || actions.includes("all")) && (
+        <button
+          className="btn btn-outline-success btn-sm"
+          onClick={() => handleShowHistory("sample", sample.id)}
+          title="History"
+        >
+          <i className="fa fa-history"></i>
+        </button>
+      )}
+
 
                         </div>
                       </td>
@@ -1022,7 +1038,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
                         {/* Column 1 */}
-                        {!showAdditionalFields && (
+                        {/* {!showAdditionalFields && ( */}
                           <div className="col-md-12">
                             <div className="row">
                               {showAddModal && (
@@ -1377,7 +1393,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               </div>
                             </div>
                           </div>
-                        )}
+                        {/* )} */}
                         {/* Column 2 */}
                         {showAdditionalFields && (
                           <>
@@ -1920,20 +1936,20 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
-                      {(staffAction === 'add_full' || staffAction === 'all') && areMandatoryFieldsFilled() && (
-                        <div className="form-check my-3">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="toggleDetails"
-                            checked={showAdditionalFields}
-                            onChange={() => setShowAdditionalFields(!showAdditionalFields)}
-                          />
-                          <label className="form-check-label" htmlFor="toggleDetails">
-                            Add Additional Details
-                          </label>
-                        </div>
-                      )}
+{(actions.includes('add_full') || actions.includes('all')) && (
+  <div className="form-check my-3">
+    <input
+      type="checkbox"
+      className="form-check-input"
+      id="toggleDetails"
+      checked={showAdditionalFields}
+      onChange={() => setShowAdditionalFields(!showAdditionalFields)}
+    />
+    <label className="form-check-label" htmlFor="toggleDetails">
+      Add Additional Details
+    </label>
+  </div>
+)}
 
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}

@@ -9,7 +9,7 @@ const create_collectionsitestaffTable = () => {
       user_account_id INT,
       staffName VARCHAR(100),
       collectionsite_id INT,
-      permission SET('add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all') DEFAULT 'all',
+      permission VARCHAR(500),
       status ENUM('active', 'inactive') DEFAULT 'inactive',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -77,14 +77,21 @@ const createCollectionsiteStaff = (req, callback) => {
 
  const VALID_PERMISSIONS = ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'];
 
-const permissionsString = (Array.isArray(permission) ? permission : [])
-  .filter(p => VALID_PERMISSIONS.includes(p))
-  .join(',');
+let permissionsString = "";
+
+if (permission === "all") {
+  permissionsString = "all";
+} else if (Array.isArray(permission)) {
+  const filtered = permission.filter((p) => VALID_PERMISSIONS.includes(p));
+  permissionsString = filtered.join(",");
+}
 
 if (!permissionsString) {
   return callback(new Error("Invalid permissions provided."), null);
 }
 console.log("permissin goging to database are:",permissionsString )
+console.log("Final permission string:", permissionsString);
+console.log("Length:", permissionsString.length);
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 

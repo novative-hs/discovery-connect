@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef  } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
@@ -11,6 +11,13 @@ import moment from "moment";
 import Modal from "react-bootstrap/Modal";
 import * as XLSX from "xlsx"
 import { notifyError, notifySuccess } from "@utils/toast";
+  const allPermissions = [
+  { value: "add_full", label: "Add Sample with Full Detail" },
+  { value: "add_basic", label: "Add Sample with Basic Detail" },
+  { value: "edit", label: "Edit Sample" },
+  { value: "dispatch", label: "Dispatch Sample" },
+  { value: "receive", label: "Receive Sample" },
+];
 const CollectionSiteStaffArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,15 +39,55 @@ const CollectionSiteStaffArea = () => {
   const [allcollectionsitesstaff, setAllCollectionsitesstaff] = useState([]); // State to hold fetched collectionsites
   const [collectionsitesstaff, setCollectionsitesstaff] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    collectionsitesid: "",
-    staffName: "",
-    email: "",
-    password: "",
-    permission: [],
-    created_at: "",
-    status: "inactive",
-  });
+
+
+const [formData, setFormData] = useState({
+  collectionsitesid: "",
+  staffName: "",
+  email: "",
+  password: "",
+  permission: allPermissions.map((p) => p.value),
+  created_at: "",
+  status: "inactive",
+});
+
+const [permissionType, setPermissionType] = useState(
+  formData.permission.length === allPermissions.length ? "all" : "specific"
+);
+
+const isAllPermissionsSelected = formData.permission.length === allPermissions.length;
+
+const handlePermissionTypeChange = (type) => {
+  setPermissionType(type);
+  if (type === "all") {
+    setFormData({
+      ...formData,
+      permission: allPermissions.map((p) => p.value),
+    });
+  } else {
+    setFormData({ ...formData, permission: [] });
+  }
+};
+
+const handleCheckboxChange = (value) => {
+  const newPermissions = formData.permission.includes(value)
+    ? formData.permission.filter((p) => p !== value)
+    : [...formData.permission, value];
+  setFormData({ ...formData, permission: newPermissions });
+};
+
+const getPermissionDisplayText = () => {
+  if (isAllPermissionsSelected) {
+    return "All Pages Access";
+  } else if (formData.permission.length) {
+    return allPermissions
+      .filter((perm) => formData.permission.includes(perm.value))
+      .map((perm) => perm.label)
+      .join(", ");
+  } else {
+    return "Select Permission";
+  }
+};
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
@@ -116,29 +163,38 @@ const CollectionSiteStaffArea = () => {
     }
   };
 
-  const onSubmit = async (event) => {
-    event.preventDefault();
+const onSubmit = async (event) => {
+  event.preventDefault();
 
-    // Log form data to ensure it's structured correctly
-    console.log("Form Data to Submit:", formData);
-
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
-        formData,
-      );
-
-      notifySuccess("Collection Site Staff Registered Successfully");
-      fetchCollectionsiteStaff(); // Refresh list
-      setShowAddModal(false);
-      resetFormData();
-    } catch (error) {
-      console.error("Registration Error:", error);
-      const errMsg =
-        error.response?.data?.error || error.message || "An error occurred";
-      notifyError(errMsg);
-    }
+  // Prepare data to send to backend
+  const dataToSend = {
+    ...formData,
+    permission:
+      formData.permission.length === allPermissions.length
+        ? "all"  // send string "all" if all permissions selected
+        : formData.permission, // else send array of selected permissions
   };
+
+  console.log("Data to send:", dataToSend);
+
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
+      dataToSend,
+    );
+
+    notifySuccess("Collection Site Staff Registered Successfully");
+    fetchCollectionsiteStaff();
+    setShowAddModal(false);
+    resetFormData();
+  } catch (error) {
+    console.error("Registration Error:", error);
+    const errMsg =
+      error.response?.data?.error || error.message || "An error occurred";
+    notifyError(errMsg);
+  }
+};
+
 
 
   const fetchHistory = async (filterType, id) => {
@@ -388,7 +444,6 @@ const CollectionSiteStaffArea = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "CollectionsiteStaff");
     XLSX.writeFile(workbook, "Collectionsite_Staff_List.xlsx");
   };
-
 
 
   return (
@@ -748,47 +803,66 @@ const CollectionSiteStaffArea = () => {
                             ))}
                           </select>
                         </div>
-                        <div className="form-group">
-  <label>Permission</label>
-  <div className="dropdown">
-    <button
-      className="form-control text-start"
-      type="button"
-      data-bs-toggle="dropdown"
-      aria-expanded="false"
-    >
-      {formData.permission.length
-        ? formData.permission.join(", ")
-        : "Select Permission"}
-    </button>
-    <ul className="dropdown-menu p-2" style={{ minWidth: "100%" }}>
-      {[
-        { value: "all", label: "All Pages Access" },
-        { value: "add_full", label: "Add Sample with Full Detail" },
-        { value: "add_basic", label: "Add Sample with Basic Detail" },
-        { value: "edit", label: "Edit Sample" },
-        { value: "dispatch", label: "Dispatch Sample" },
-        { value: "receive", label: "Receive Sample" },
-      ].map((perm) => (
-        <li key={perm.value}>
-          <label className="dropdown-item d-flex align-items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.permission.includes(perm.value)}
-              onChange={(e) => {
-                const newPermissions = formData.permission.includes(perm.value)
-                  ? formData.permission.filter((p) => p !== perm.value)
-                  : [...formData.permission, perm.value];
-                setFormData({ ...formData, permission: newPermissions });
-              }}
-            />
-            {perm.label}
-          </label>
-        </li>
-      ))}
-    </ul>
-  </div>
-</div>
+
+ <div className="form-group">
+      <label>Permission</label>
+      <div className="dropdown">
+        <button
+          className="form-control text-start"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          {getPermissionDisplayText()}
+        </button>
+
+        <ul className="dropdown-menu p-2" style={{ minWidth: "100%" }}>
+          <li>
+            <label className="dropdown-item d-flex align-items-center gap-2">
+              <input
+                type="radio"
+                name="permissionType"
+                value="all"
+                checked={permissionType === "all"}
+                onChange={() => handlePermissionTypeChange("all")}
+              />
+              All Pages Access
+            </label>
+          </li>
+
+          <li>
+            <label className="dropdown-item d-flex align-items-center gap-2">
+              <input
+                type="radio"
+                name="permissionType"
+                value="specific"
+                checked={permissionType === "specific"}
+                onChange={() => handlePermissionTypeChange("specific")}
+              />
+              Specific Permissions
+            </label>
+          </li>
+
+          {permissionType === "specific" && (
+            <>
+              <hr className="dropdown-divider" />
+              {allPermissions.map((perm) => (
+                <li key={perm.value}>
+                  <label className="dropdown-item d-flex align-items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.permission.includes(perm.value)}
+                      onChange={() => handleCheckboxChange(perm.value)}
+                    />
+                    {perm.label}
+                  </label>
+                </li>
+              ))}
+            </>
+          )}
+        </ul>
+      </div>
+    </div>
 </div>
 
                       <div className="modal-footer">
