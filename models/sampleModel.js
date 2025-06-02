@@ -64,7 +64,6 @@ const createSampleTable = () => {
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
-  
   const user_account_id = parseInt(userId, 10);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
@@ -74,32 +73,28 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
   const pageSizeInt = parseInt(pageSize, 10) || 50;
   const offset = (pageInt - 1) * pageSizeInt;
 
-  // Search filtering
   let searchClause = "";
   const params = [user_account_id];
-  if (searchField && searchValue) {
 
+  if (searchField && searchValue) {
     if (searchField === "status") {
       searchClause = ` AND s.status LIKE ?`;
+      params.push(`%${searchValue}%`);
+    } else if (searchField === "locationids") {
+      searchClause = ` AND (room_number LIKE ? OR freezer_id LIKE ? OR box_id LIKE ?)`;
+      params.push(`%${searchValue}%`, `%${searchValue}%`, `%${searchValue}%`);
     } else {
-      // For all other fields, dynamically add field without alias
       searchClause = ` AND ${searchField} LIKE ?`;
-    }
-    params.push(`%${searchValue}%`);
+      params.push(`%${searchValue}%`);
+    } 
   }
-
-  // Pagination
-  params.push(pageSizeInt, offset);
 
   const query = `
     SELECT s.*
     FROM sample s
     JOIN user_account ua_sample ON s.user_account_id = ua_sample.id
     JOIN collectionsitestaff cs_sample ON ua_sample.id = cs_sample.user_account_id
-
-    -- Join to get the collection_id of the logged-in user
     JOIN collectionsitestaff cs_user ON cs_user.user_account_id = ?
-    
     WHERE cs_sample.collectionsite_id = cs_user.collectionsite_id
       AND s.quantity > 0
       AND s.status = "In Stock"
@@ -107,23 +102,18 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
       AND ua_sample.accountType = "CollectionSitesStaff"
       ${searchClause}
     ORDER BY s.created_at DESC
-    LIMIT ? OFFSET ?;
+    LIMIT ${pageSizeInt} OFFSET ${offset};
   `;
 
-
   mysqlConnection.query(query, params, (err, results) => {
-
     if (err) return callback(err, null);
 
-    // Add locationids to each sample
     const enrichedResults = results.map(sample => ({
       ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
-        .filter(Boolean)
-        .join("-"),
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join("-"),
     }));
-    // Count query
-    const countParams = params.slice(0, -2); // remove limit/offset
+
+    const countParams = params.slice(0); // no limit/offset
     const countQuery = `
       SELECT COUNT(*) AS totalCount
       FROM sample s
@@ -146,6 +136,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
     });
   });
 };
+
 
 const getAllSamples = (callback) => {
   

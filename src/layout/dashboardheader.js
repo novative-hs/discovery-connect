@@ -232,8 +232,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                 : userType == "csr"
                   ? [
                     { label: "Profile", tab: "order-info" },
-                    { label: "Order Dispatch List", tab: "dispatchorder" },
-                    { label: "Order Packaging List", tab: "shippingorder" },
+                    { label: "Dispatch Order List", tab: "dispatchorder" },
+                    { label: "Shipped List", tab: "shippingorder" },
                     { label: "Order Completed List", tab: "completedorder" },
                   ]
                   : [];

@@ -348,12 +348,44 @@ const SampleArea = () => {
     }
   }, [totalPages]);
 
-  const handleFilterChange = (field, value) => {
-    const trimmedValue = value.trim().toLowerCase();
-    setSearchField(field);
-    setSearchValue(trimmedValue);
-    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
-  };
+ const handleFilterChange = (field, value) => {
+  let filtered = [];
+
+  if (value.trim() === "") {
+    filtered = samples;
+  } else {
+    const lowerValue = value.toLowerCase();
+
+    filtered = samples.filter((sample) => {
+      if (field === "volume") {
+        const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+        return combinedVolume.includes(lowerValue);
+      }
+
+      if (field === "price") {
+        const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""}`.toLowerCase();
+        return combinedPrice.includes(lowerValue);
+      }
+        if (field === "TestResult") {
+        const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
+        return combinedPrice.includes(lowerValue);
+      }
+
+      if (field === "gender") {
+        return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+      }
+      if (field === "sample_visibility") {
+        return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
+      }
+
+      return sample[field]?.toString().toLowerCase().includes(lowerValue);
+    });
+  }
+
+  setFilteredSamplename(filtered);
+  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+  setCurrentPage(0);
+};
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
