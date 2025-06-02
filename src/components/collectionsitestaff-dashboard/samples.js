@@ -252,6 +252,7 @@ const SampleArea = () => {
       if (searchField && searchValue) {
         ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
+      
 
       let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
       if (searchField && searchValue) {
