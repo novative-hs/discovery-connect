@@ -124,21 +124,34 @@ const FilterProduct = () => {
     setCurrentPage(event.selected);
   };
 
-  const handleFilterChange = (field, value) => {
-    clearTimeout(filterTimeoutRef.current);
-    filterTimeoutRef.current = setTimeout(() => {
-      if (!value.trim()) {
-        setFilteredSamples(products);
-        setCurrentPage(0);
-        return;
-      }
-      const filtered = products.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSamples(filtered);
+ const handleFilterChange = (field, value) => {
+  clearTimeout(filterTimeoutRef.current);
+
+  filterTimeoutRef.current = setTimeout(() => {
+    if (!value.trim()) {
+      setFilteredSamples(products);
       setCurrentPage(0);
-    }, 300);
-  };
+      return;
+    }
+
+    const search = value.toLowerCase();
+
+    const filtered = products.filter((sample) => {
+      // Custom logic for composite fields
+      if (field === "volume") {
+        const volumeWithUnit = `${sample.volume || ""} ${sample.QuantityUnit || ""}`.toLowerCase();
+        return volumeWithUnit.includes(search);
+      }
+
+      // Default single field logic
+      return sample[field]?.toString().toLowerCase().includes(search);
+    });
+
+    setFilteredSamples(filtered);
+    setCurrentPage(0);
+  }, 300);
+};
+
 
   const openModal = (sample) => {
     setSelectedSample(sample);
