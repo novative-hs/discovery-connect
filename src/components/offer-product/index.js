@@ -283,7 +283,7 @@ router.push('/filter-products');
                         ))}
                     </div>
 
-                    {/* <div className="text-end mt-4">
+                    <div className="text-end mt-4">
                       <button
                         type="button"
                         onClick={() => handleAddToCart(selectedProduct)}
@@ -291,7 +291,7 @@ router.push('/filter-products');
                       >
                         Add to Cart
                       </button>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               </div>

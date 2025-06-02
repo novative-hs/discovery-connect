@@ -23,14 +23,6 @@ const tablesAndColumns = [
     ]
   },
   {
-    table:"samplereceive",
-    columnsToAdd:[
-     { column:"status",
-      type:"ENUM('Returned', 'Received') NOT NULL DEFAULT 'Received'"
-     }
-    ]
-  },
-  {
     table: "sample",
     columnsToAdd: [
       {
@@ -87,6 +79,17 @@ const tablesAndColumns = [
         column:"QuantityUnit",
         type:"VARCHAR(20)",
         nullable:false
+      }
+    ]
+  },
+  {
+    table:"samplereceive",
+    columnsToAdd:[
+      {
+        column:"status",
+         type: "ENUM('Returned', 'Received') DEFAULT 'Received'",
+         nullable:false,
+         
       }
     ]
   }

@@ -41,10 +41,17 @@ const DispatchSampleArea = () => {
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
 
- useEffect(() => {
-   fetchSamples(staffAction);
- }, [staffAction]);
- 
+  useEffect(() => {
+    //fetchSamples(); // Call the function initially when the component mounts
+
+    // Set an interval to refresh data every 5 seconds (5000ms)
+    const interval = setInterval(() => {
+      fetchSamples(staffAction);
+    }, 5000);
+
+    // Clear the interval when the component unmounts to avoid memory leaks
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchSamples = async (staffAction) => {
     try {
@@ -112,7 +119,7 @@ const DispatchSampleArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <h4 className="text-center text-dark fw-bold mb-4">
-          🚚 Orders Sample Shipped
+          🚚 Orders Sample Dispatched
         </h4>
 
         {/* Table */}
