@@ -37,6 +37,7 @@ const FilterProduct = () => {
     { label: "Gender", key: "gender" },
     { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Quantity", key: "quantity" },
   ];
 
   const fieldsToShowInOrder = [
@@ -141,6 +142,7 @@ const FilterProduct = () => {
         const volumeWithUnit = `${sample.volume || ""} ${sample.QuantityUnit || ""}`.toLowerCase();
         return volumeWithUnit.includes(search);
       }
+
 
       // Default single field logic
       return sample[field]?.toString().toLowerCase().includes(search);

@@ -208,20 +208,42 @@ const SampleArea = () => {
 
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
+  let filtered = [];
 
-    if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
-    } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-    }
+  if (value.trim() === "") {
+    filtered = samples;
+  } else {
+    const lowerValue = value.toLowerCase();
 
-    setFilteredSamples(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
+    filtered = samples.filter((sample) => {
+      if (field === "volume") {
+        const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+        return combinedVolume.includes(lowerValue);
+      }
+      if (field === "price") {
+        const combinedVolume = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""}`.toLowerCase();
+        return combinedVolume.includes(lowerValue);
+      }
+
+     if (field === "TestResult") {
+        const combinedVolume = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
+        return combinedVolume.includes(lowerValue);
+      }
+      if (field === "gender") {
+        return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+      }
+      if (field === "sample_visibility") {
+        return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
+      }
+
+      return sample[field]?.toString().toLowerCase().includes(lowerValue);
+    });
+  }
+
+  setFilteredSamplename(filtered);
+  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+  setCurrentPage(0);
+};
   const handleAddClick = async (e) => {
 
     try {

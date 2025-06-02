@@ -42,15 +42,11 @@ const DispatchSampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    //fetchSamples(); // Call the function initially when the component mounts
-
-    // Set an interval to refresh data every 5 seconds (5000ms)
-    const interval = setInterval(() => {
+    
       fetchSamples(staffAction);
-    }, 5000);
+    
 
-    // Clear the interval when the component unmounts to avoid memory leaks
-    return () => clearInterval(interval);
+    
   }, []);
 
   const fetchSamples = async (staffAction) => {

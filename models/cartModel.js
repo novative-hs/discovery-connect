@@ -427,13 +427,17 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   let searchCondition = '';
 
   // Map searchField to actual DB fields
-  const searchFieldMap = {
-    order_id: 'c.id',
-    researcher_name: 'r.ResearcherName',
-    organization_name: 'org.OrganizationName',
-    scientific_committee_status: baseCommitteeStatus('Scientific'),
-    ethical_committee_status: baseCommitteeStatus('Ethical')
-  };
+ const searchFieldMap = {
+  order_id: 'c.id',
+   diseasename: 's.diseasename',
+  researcher_name: 'r.ResearcherName',
+  organization_name: 'org.OrganizationName',
+  scientific_committee_status: baseCommitteeStatus('Scientific'),
+  ethical_committee_status: baseCommitteeStatus('Ethical'),
+  order_status: 'c.order_status', // ✅ ADD THIS
+   technical_admin_status: 'ra.technical_admin_status',
+};
+
 
   const dbField = searchFieldMap[searchField];
 
@@ -442,11 +446,14 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     queryParams.push(`%${searchValue}%`);
     whereClauses.push(searchCondition);
   }
-
-  if (status === 'Rejected') {
+if (status === 'Rejected') {
     whereClauses.push("c.order_status = 'Rejected'");
   } else if (status === 'Accepted') {
     whereClauses.push("c.order_status != 'Rejected'");
+  } else {
+    // Handles specific statuses like Pending, Dispatched, Shipped etc.
+    whereClauses.push("c.order_status = ?");
+    queryParams.push(status);
   }
 
   const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
@@ -495,7 +502,6 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     ORDER BY c.created_at DESC
     LIMIT ? OFFSET ?
   `;
-
   queryParams.push(parseInt(pageSize), parseInt(offset));
 
   const countQuery = `

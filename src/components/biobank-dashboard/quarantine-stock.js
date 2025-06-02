@@ -116,20 +116,46 @@ const BioBankSampleArea = () => {
     setCurrentPage(event.selected);
   };
 
-  const handleFilterChange = (field, value) => {
+ const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
+      filtered = samples;
     } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
+      const lowerValue = value.toLowerCase();
+
+      filtered = samples.filter((sample) => {
+        if (field === "volume") {
+          const combinedVolume = `${sample.volume ?? ""} ${
+            sample.QuantityUnit ?? ""
+          }`.toLowerCase();
+          return combinedVolume.includes(lowerValue);
+        }
+         if (field === "TestResult") {
+          const combinedVolume = `${sample.TestResult ?? ""} ${
+            sample.TestResultUnit ?? ""
+          }`.toLowerCase();
+          return combinedVolume.includes(lowerValue);
+        }
+
+        if (field === "price") {
+          const combinedPrice = `${sample.price ?? ""} ${
+            sample.SamplePriceCurrency ?? ""
+          }`.toLowerCase();
+          return combinedPrice.includes(lowerValue);
+        }
+
+        if (field === "gender") {
+          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+        }
+
+        return sample[field]?.toString().toLowerCase().includes(lowerValue);
+      });
     }
 
     setFilteredSamples(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const handleDelete = async () => {
