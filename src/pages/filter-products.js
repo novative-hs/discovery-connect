@@ -37,7 +37,6 @@ const FilterProduct = () => {
     { label: "Gender", key: "gender" },
     { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
-    { label: "Quantity", key: "quantity" },
   ];
 
   const fieldsToShowInOrder = [

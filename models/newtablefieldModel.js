@@ -23,14 +23,6 @@ const tablesAndColumns = [
     ]
   },
   {
-    table:"samplereceive",
-    columnsToAdd:[
-     { column:"status",
-      type:"ENUM('Returned', 'Received') NOT NULL DEFAULT 'Received'"
-     }
-    ]
-  },
-  {
     table: "sample",
     columnsToAdd: [
       {

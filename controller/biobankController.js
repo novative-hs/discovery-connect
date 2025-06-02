@@ -17,7 +17,6 @@ const getBiobankSamples = (req, res) => {
   const searchField = req.query.searchField || null;
   const searchValue = req.query.searchValue || null;
 
-  
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid user_account_id" });
   }
