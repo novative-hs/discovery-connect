@@ -21,6 +21,8 @@ const create_biobankTable = () => {
 };
 
 const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => { 
+  
+  
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
@@ -38,22 +40,26 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
 
   // Search filter
 if (searchField && searchValue) {
+  const likeValue = `%${searchValue}%`;
+
   if (searchField === "location") {
     baseWhere += ` AND (room_number LIKE ? OR freezer_id LIKE ? OR box_id LIKE ?)`;
-    const likeValue = `%${searchValue}%`;
     paramsForWhere.push(likeValue, likeValue, likeValue);
   } 
   else if (searchField === "volume") {
     baseWhere += ` AND (CAST(volume AS CHAR) LIKE ? OR QuantityUnit LIKE ?)`;
     paramsForWhere.push(likeValue, likeValue);
-
   } 
-    
-    else {
+  else if (searchField === "price") {
+    baseWhere += ` AND (CAST(price AS CHAR) LIKE ? OR SamplePriceCurrency LIKE ?)`;
+    paramsForWhere.push(likeValue, likeValue);
+  } 
+  else {
     baseWhere += ` AND ?? LIKE ?`;
-    paramsForWhere.push(searchField, `%${searchValue}%`);
+    paramsForWhere.push(searchField, likeValue);
   }
 }
+
 
   // Query to get paginated results
   const dataQuery = `
@@ -64,7 +70,6 @@ if (searchField && searchValue) {
     LIMIT ? OFFSET ?;
   `;
   const dataParams = [...paramsForWhere, pageSizeInt, offset];
-
   mysqlConnection.query(dataQuery, dataParams, (err, results) => {
     if (err) return callback(err);
 

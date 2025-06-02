@@ -161,7 +161,7 @@ const BioBankSampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null);
 
-  const [samplePrice, setSamplePrice] = useState([])
+  const [samplePrice, setSamplePrice] = useState([]);
 
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState({});
@@ -263,8 +263,9 @@ const BioBankSampleArea = () => {
 
       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
-    if (priceFilter) url += `&priceFilter=${priceFilter}`;
-    if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      if (priceFilter) url += `&priceFilter=${priceFilter}`;
+      if (searchField && searchValue)
+        url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
       const response = await axios.get(url);
       const { samples, totalCount } = response.data;
@@ -383,16 +384,36 @@ const BioBankSampleArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
+      filtered = samples;
     } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
+      const lowerValue = value.toLowerCase();
+
+      filtered = samples.filter((sample) => {
+        if (field === "volume") {
+          const combinedVolume = `${sample.volume ?? ""} ${
+            sample.QuantityUnit ?? ""
+          }`.toLowerCase();
+          return combinedVolume.includes(lowerValue);
+        }
+
+        if (field === "price") {
+          const combinedPrice = `${sample.price ?? ""} ${
+            sample.SamplePriceCurrency ?? ""
+          }`.toLowerCase();
+          return combinedPrice.includes(lowerValue);
+        }
+
+        if (field === "gender") {
+          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+        }
+
+        return sample[field]?.toString().toLowerCase().includes(lowerValue);
+      });
     }
 
     setFilteredSamples(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const handleInputChange = (e) => {
@@ -881,7 +902,6 @@ const BioBankSampleArea = () => {
     );
   };
 
-
   const unitMaxValues = {
     L: 100,
     mL: 10000,
@@ -1020,11 +1040,11 @@ const BioBankSampleArea = () => {
                         ) : (
                           (() => {
                             if (key === "locationids") {
-                              const tooltip = `${
+                              const tooltip = `Room Number=${
                                 sample.room_number || "N/A"
-                              } = Room Number
-${sample.freezer_id || "N/A"} = Freezer ID
-${sample.box_id || "N/A"} = Box ID`;
+                              } 
+Freezer ID=${sample.freezer_id || "N/A"} 
+Box ID=${sample.box_id || "N/A"} `;
 
                               // To show logo while clicking on location IDs
                               const handleLogoClick = () => {
@@ -1307,13 +1327,19 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     value={formData.volume}
                                     onChange={(e) => {
                                       const value = parseFloat(e.target.value);
-                                      if (e.target.value === "" || (value * 10) % 5 === 0) {
+                                      if (
+                                        e.target.value === "" ||
+                                        (value * 10) % 5 === 0
+                                      ) {
                                         handleInputChange(e);
                                       }
                                     }}
                                     step="0.5"
                                     min="0.5"
-                                    max={unitMaxValues[formData.QuantityUnit] || undefined}
+                                    max={
+                                      unitMaxValues[formData.QuantityUnit] ||
+                                      undefined
+                                    }
                                     required
                                     style={{
                                       height: "45px",
@@ -1351,10 +1377,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 {formData.volume &&
                                   formData.QuantityUnit &&
                                   parseFloat(formData.volume) >
-                                  (unitMaxValues[formData.QuantityUnit] || Infinity) && (
+                                    (unitMaxValues[formData.QuantityUnit] ||
+                                      Infinity) && (
                                     <small className="text-danger mt-1">
                                       Value must be less than or equal to{" "}
-                                      {unitMaxValues[formData.QuantityUnit].toLocaleString()}.
+                                      {unitMaxValues[
+                                        formData.QuantityUnit
+                                      ].toLocaleString()}
+                                      .
                                     </small>
                                   )}
                               </div>
