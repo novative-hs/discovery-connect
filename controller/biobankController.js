@@ -1,12 +1,11 @@
 const BioBankModel = require('../models/biobankModel');
 const moment = require('moment');
 
-
-
 const create_biobankTable = (req, res) => {
   BioBankModel.create_biobankTable();
   res.status(200).json({ message: "bio bank table creation process started" });
 };
+
 // Controller to create a sample
 const getBiobankSamples = (req, res) => {
   const id = parseInt(req.params.id);
@@ -43,6 +42,35 @@ const getQuarantineStock = (req, res) => {
       return res.status(500).json({ error: "Error fetching Quarantine Stock" });
     }
     res.status(200).json(results);
+  });
+};
+
+// Controller to get samples with price > 0 in sample visibility page
+const getBiobankVisibilitySamples = (req, res) => {
+  const id = parseInt(req.params.id);
+  const page = req.query.page || 1;
+  const pageSize = req.query.pageSize || 10;
+
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid user_account_id" });
+  }
+
+  BioBankModel.getBiobankVisibilitySamples(id, page, pageSize, searchField, searchValue, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples" });
+    }
+
+    const { results: samples, totalCount } = results;
+    res.status(200).json({
+      samples,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: parseInt(page),
+      pageSize: parseInt(pageSize),
+      totalCount,
+    });
   });
 };
 
@@ -84,7 +112,6 @@ const postSamplePrice = (req, res) => {
     res.status(201).json({ message: "Sample price added successfully", id: result.insertId });
   });
 };
-
 
 // Controller to update a sample
 const updateBiobankSample = (req, res) => {
@@ -149,6 +176,7 @@ module.exports = {
   createBiobankSample,
   updateBiobankSample,
   getQuarantineStock,
+  getBiobankVisibilitySamples,
   UpdateSampleStatus,
   getPrice
 

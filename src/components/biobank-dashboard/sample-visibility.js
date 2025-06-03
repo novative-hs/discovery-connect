@@ -7,6 +7,7 @@ import {
 import Modal from "react-bootstrap/Modal";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Pagination from "@ui/Pagination";
+import NiceSelect from "@ui/NiceSelect";
 
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
@@ -80,7 +81,7 @@ const BioBankSampleArea = () => {
     try {
       const { priceFilter, searchField, searchValue } = filters;
 
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getvisibilitysamples/${id}?page=${page}&pageSize=${pageSize}`;
 
       if (priceFilter) url += `&priceFilter=${priceFilter}`;
       if (searchField && searchValue) url += `&searchField=${searchField}&searchValue=${searchValue}`;
@@ -96,6 +97,20 @@ const BioBankSampleArea = () => {
       console.error("Error fetching samples:", error);
     }
   };
+
+  // Sample Visibility Filter
+  useEffect(() => {
+    if (samples.length > 0) {
+      if (filter === "Public") {
+        setFilteredSamples(samples.filter(sample => sample.sample_visibility === "Public"));
+      } else if (filter === "Private") {
+        setFilteredSamples(samples.filter(sample => sample.sample_visibility === "Private"));
+      } else {
+        // No filter, show all samples
+        setFilteredSamples(samples);
+      }
+    }
+  }, [filter, samples]);
 
 
   useEffect(() => {
@@ -212,10 +227,26 @@ const BioBankSampleArea = () => {
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
-        <div
-          className="text-danger fw-bold"
-          style={{ marginTop: "-20px", marginBottom: "20px" }}>
-          <h6>Note: Make the Samples Public or Private through the Edit Icon.</h6>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div
+            className="text-danger fw-bold"
+            style={{ marginTop: "-20px", marginBottom: "20px" }}>
+            <h6>Note: Make the Samples Public or Private through the Edit Icon.</h6>
+          </div>
+          {/* Filter Dropdown */}
+          <div className="d-flex justify-content-end align-items-center mb-3">
+            <label className="fw-bold me-3">Filter by Visibility: </label>
+            <NiceSelect
+              options={[
+                { value: "", text: "All" },
+                { value: "Public", text: "Public" },
+                { value: "Private", text: "Private" },
+              ]}
+              defaultCurrent={0}
+              onChange={(item) => setFilter(item.value)}
+              name="filter-by-visibility"
+            />
+          </div>
         </div>
 
         {/* Table */}

@@ -64,7 +64,7 @@ const createSampleTable = () => {
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
-  
+
   const user_account_id = parseInt(userId, 10);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
@@ -148,7 +148,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 };
 
 const getAllSamples = (callback) => {
-  
+
   const query = `
     SELECT 
       s.*,
@@ -326,15 +326,15 @@ const getAllVolumnUnits = (name, callback) => {
     }
   });
 };
-const getAllSampleinIndex=(name,callback)=>{
+const getAllSampleinIndex = (name, callback) => {
   const query = 'SELECT * FROM sample WHERE diseasename = ? and quantity>0';
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
       callback(err, null);
-    } 
-     if (results.length === 0) {
+    }
+    if (results.length === 0) {
       return callback(null, { error: "No samples found" });
     }
 
@@ -345,10 +345,14 @@ const getAllSampleinIndex=(name,callback)=>{
 
 
 const getAllCSSamples = (limit, offset, callback) => {
-  
+
   const dataQuery = `
 SELECT 
   s.diseasename,
+  MAX(s.gender) AS gender,
+  MAX(s.SampleTypeMatrix) AS SampleTypeMatrix,
+  MAX(s.SmokingStatus) AS SmokingStatus,
+  MAX(s.age) AS age,
   MAX(s.price) AS price,
   SUM(s.quantity) AS quantity,
   SUM(s.quantity_allocated) AS quantity_allocated,
@@ -357,7 +361,8 @@ SELECT
   MAX(st.staffName) AS CollectionSiteStaffName,
   MAX(bb.Name) AS BiobankName,
   MAX(c.name) AS CityName,
-  MAX(d.name) AS DistrictName
+  MAX(d.name) AS DistrictName,
+  MAX(s.volume) AS volume
 FROM sample s
 LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
 LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
@@ -372,6 +377,7 @@ GROUP BY s.diseasename
 HAVING SUM(s.quantity) > 0 OR SUM(s.quantity_allocated) > 0
 ORDER BY s.diseasename
 LIMIT ? OFFSET ?
+
 
   `;
 
@@ -391,7 +397,7 @@ LIMIT ? OFFSET ?
     }
 
     const totalCount = countResult[0].total;
-    
+
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) {
         console.error("❌ Data Query Error:", dataErr);
@@ -436,7 +442,7 @@ LIMIT ? OFFSET ?
           return sample;
         });
 
-        
+
         callback(null, { data: updatedResults, totalCount });
       });
     });
@@ -718,5 +724,5 @@ module.exports = {
   updateQuarantineSamples,
   getAllVolumnUnits,
   getAllSampleinIndex
-  
+
 };
