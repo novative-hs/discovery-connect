@@ -82,13 +82,18 @@ const SamplePriceCurrencyArea = () => {
     if (value.trim() === "") {
       filtered = samplepricecurrencyname; // Show all if filter is empty
     } else {
-      filtered = samplepricecurrencyname.filter((samplepricecurrency) =>
-        samplepricecurrency[field]
+      filtered = samplepricecurrencyname.filter((samplepricecurrency) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return samplepricecurrency[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
-      );
+    });
+    
     }
+  
 
     setFilteredSamplepricecurrencyname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages

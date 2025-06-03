@@ -80,8 +80,12 @@ const TestKitManufacturerArea = () => {
     if (value.trim() === "") {
       filtered = testKitManufacturername; // Show all if filter is empty
     } else {
-      filtered = testKitManufacturername.filter((testkitmanufacturer) =>
-        testkitmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = testKitManufacturername.filter((testkitmanufacturer) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return testkitmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase());}
+        
       );
     }
 

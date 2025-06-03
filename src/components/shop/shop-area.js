@@ -13,7 +13,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
 
   // New filter states
 
-  const [selectedSampleType, setSelectedSampleType] = useState([]); // Initialize as an empty array
+  const [selectedSampleType, setSelectedSampleType] = useState(null);
   const [selectedGender, setSelectedGender] = useState(null); // Ensure this is initialized to null
   const [selectedSmokingStatus, setSelectedSmokingStatus] = useState(null); // Ensure this is initialized to null
   // const [selectedPrice, setSelectedPrice] = useState(null);
@@ -28,7 +28,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   };
 
   const handleReset = () => {
-    setSelectedSampleType([]);
+    setSelectedSampleType(null);
     setSelectedGender(null);
     setSelectedSmokingStatus(null);
     // setSelectedPrice(null);
@@ -40,10 +40,8 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const filteredProducts = products.filter((product) => {
 
     let matchesSampleType =
-      selectedSampleType.length === 0 ||
-      selectedSampleType.some((type) =>
-        product.SampleTypeMatrix.includes(type)
-      );
+  !selectedSampleType || product.SampleTypeMatrix.includes(selectedSampleType);
+
     let matchesGender = !selectedGender || product.gender === selectedGender;
     let matchesSmoking =
       !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;

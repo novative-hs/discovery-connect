@@ -84,11 +84,15 @@ const SampleTypeMatrixArea = () => {
       filtered = sampletypematrixname; // Show all if filter is empty
     } else {
       filtered = sampletypematrixname.filter((sampletypematrix) =>
-        sampletypematrix[field]
+      {
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return sampletypematrix[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
-      );
+    });
     }
 
     setFilteredSampletypematrixname(filtered);

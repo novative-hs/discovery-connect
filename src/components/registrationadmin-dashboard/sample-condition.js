@@ -78,24 +78,29 @@ const SampleConditionArea = () => {
     setCurrentPage(event.selected);
   };
 
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
+ const handleFilterChange = (field, value) => {
+  let filtered = [];
 
-    if (value.trim() === "") {
-      filtered = sampleconditionname; // Show all if filter is empty
-    } else {
-      filtered = sampleconditionname.filter((samplecondition) =>
-        samplecondition[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-    }
+  if (value.trim() === "") {
+    filtered = sampleconditionname;
+  } else {
+    filtered = sampleconditionname.filter((sample) => {
+      if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
 
-    setFilteredSampleconditionname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
+      return sample[field]
+        ?.toString()
+        .toLowerCase()
+        .includes(value.toLowerCase());
+    });
+  }
+
+  setFilteredSampleconditionname(filtered);
+  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+  setCurrentPage(0);
+};
+
 
   const fetchHistory = async (filterType, id) => {
     try {

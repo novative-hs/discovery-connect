@@ -36,14 +36,15 @@ const ShopSidebar = ({
     { label: "61+", min: 61, max: Infinity },
   ];
 
-  const handleSampleTypeChange = (type) => {
-    setSelectedSampleType((prev) => {
-      if (!Array.isArray(prev)) prev = [];
-      return prev.includes(type)
-        ? prev.filter((t) => t !== type)
-        : [...prev, type];
-    });
-  };
+const handleSampleTypeChange = (type) => {
+  if (selectedSampleType === type) {
+    setSelectedSampleType(null); // unselect if same value clicked again
+  } else {
+    setSelectedSampleType(type); // otherwise select new value
+  }
+};
+
+
   return (
     <div className={`shop__sidebar on-left`}>
       {/* Sample Type */}
@@ -72,16 +73,18 @@ const ShopSidebar = ({
               <div className="accordion-body">
                 <div className="shop__widget-list">
                   {SampleTypeMatrix.map((type, index) => (
-                    <div key={index} className="shop__widget-list-item">
-                      <input
-                        type="checkbox"
-                        id={`sample-${type}`}
-                        checked={Array.isArray(selectedSampleType) && selectedSampleType.includes(type)} // ✅ Ensure it's an array
-                        onChange={() => handleSampleTypeChange(type)}
-                      />
-                      <label htmlFor={`sample-${type}`}>{type}</label>
-                    </div>
-                  ))}
+  <div key={index} className="shop__widget-list-item">
+    <input
+      type="checkbox"
+      name="sampleType"
+      id={`sample-${type}`}
+      checked={selectedSampleType === type}
+      onChange={() => handleSampleTypeChange(type)}
+    />
+    <label htmlFor={`sample-${type}`}>{type}</label>
+  </div>
+))}
+
                 </div>
               </div>
             </div>
@@ -115,11 +118,14 @@ const ShopSidebar = ({
                   {genderOptions.map((gender, index) => (
                     <div key={index} className="shop__widget-list-item">
                       <input
-                        type="radio"
+                        type="checkbox"
                         name="gender"
                         id={`gender-${gender}`}
                         checked={selectedGender === gender}
-                        onChange={() => setSelectedGender(gender)}
+                        onChange={() =>
+  setSelectedGender(selectedGender === gender ? null : gender)
+}
+
                       />
                       <label htmlFor={`gender-${gender}`}>{gender}</label>
                     </div>
@@ -157,11 +163,12 @@ const ShopSidebar = ({
                   {smokingOptions.map((status, index) => (
                     <div key={index} className="shop__widget-list-item">
                       <input
-                        type="radio"
+                        type="checkbox"
                         name="smoking"
                         id={`smoking-${status}`}
                         checked={selectedSmokingStatus === status}
-                        onChange={() => setSelectedSmokingStatus(status)}
+                        onChange={() => setSelectedSmokingStatus(selectedSmokingStatus === status ? null : status)}
+
                       />
                       <label htmlFor={`smoking-${status}`}>{status}</label>
                     </div>
@@ -217,11 +224,22 @@ const ShopSidebar = ({
                 {ageRanges.map((range, index) => (
                   <div key={index} className="shop__widget-list-item">
                     <input
-                      type="radio"
+                      type="checkbox"
                       name="age"
                       id={`age-${index}`}
                       checked={selectedAge && selectedAge.min === range.min && selectedAge.max === range.max}
-                      onChange={() => setSelectedAge({ min: range.min, max: range.max })}
+                      onChange={() => {
+  if (
+    selectedAge &&
+    selectedAge.min === range.min &&
+    selectedAge.max === range.max
+  ) {
+    setSelectedAge(null); // unselect if same checkbox clicked again
+  } else {
+    setSelectedAge({ min: range.min, max: range.max }); // select new range
+  }
+}}
+
                     />
                     <label htmlFor={`age-${index}`}>{range.label}</label>
                   </div>

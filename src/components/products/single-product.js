@@ -34,7 +34,7 @@ const router=useRouter();
   const handleAddToCart = async (product) => {
  
    sessionStorage.setItem('filterProduct', JSON.stringify(product));
-router.push('/filter-products');
+router.push('/filter-samples');
   };
 
   const handleQuickView = (prd) => {

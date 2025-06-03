@@ -84,11 +84,15 @@ const ContainerTypeArea = () => {
     if (value.trim() === "") {
       filtered = containertypename; // Show all if filter is empty
     } else {
-      filtered = containertypename.filter((containertype) =>
-        containertype[field]
+      filtered = containertypename.filter((containertype) =>{
+        if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return containertype[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
+      }
       );
     }
 

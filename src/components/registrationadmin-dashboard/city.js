@@ -67,20 +67,28 @@ const CityArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
+  let filtered = [];
 
-    if (value.trim() === "") {
-      filtered = cityname; // Show all if filter is empty
-    } else {
-      filtered = cityname.filter((city) =>
-        city[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
-    }
+  if (value.trim() === "") {
+    filtered = cityname;
+  } else {
+    filtered = cityname.filter((city) => {
+      if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
 
-    setFilteredCityname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
-  };
+      return city[field]
+        ?.toString()
+        .toLowerCase()
+        .includes(value.toLowerCase());
+    });
+  }
+
+  setFilteredCityname(filtered);
+  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+  setCurrentPage(0);
+};
+
 
   const fetchHistory = async (filterType, id) => {
     try {

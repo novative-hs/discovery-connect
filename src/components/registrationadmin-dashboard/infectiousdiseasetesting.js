@@ -72,8 +72,12 @@ const InfectiousdiseaseArea = () => {
     if (value.trim() === "") {
       filtered = infectiousdiseasename; // Show all if filter is empty
     } else {
-      filtered = infectiousdiseasename.filter((infectiousdisease) =>
-        infectiousdisease[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = infectiousdiseasename.filter((infectiousdisease) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return infectiousdisease[field]?.toString().toLowerCase().includes(value.toLowerCase())
+    }
       );
     }
 

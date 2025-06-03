@@ -82,11 +82,15 @@ const TestResultUnitArea = () => {
     if (value.trim() === "") {
       filtered = testResultUnitname; // Show all if filter is empty
     } else {
-      filtered = testResultUnitname.filter((testresultUnit) =>
-        testresultUnit[field]
+      filtered = testResultUnitname.filter((testresultUnit) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return testresultUnit[field]
           ?.toString()
           .toLowerCase()
-          .includes(value.toLowerCase())
+          .includes(value.toLowerCase());
+    }
       );
     }
 

@@ -82,11 +82,15 @@ const TestMethodArea = () => {
     if (value.trim() === "") {
       filtered = testmethodname; // Show all if filter is empty
     } else {
-      filtered = testmethodname.filter((testmethod) =>
-        testmethod[field]
+      filtered = testmethodname.filter((testmethod) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return testmethod[field]
           ?.toString()
           .toLowerCase()
-          .includes(value.toLowerCase())
+          .includes(value.toLowerCase());
+    }
       );
     }
 

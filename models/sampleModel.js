@@ -343,47 +343,48 @@ const getAllSampleinIndex=(name,callback)=>{
   });
 }
 
-
 const getAllCSSamples = (limit, offset, callback) => {
-  
+
+  // Query to fetch a single representative full row per diseasename (latest by ID)
   const dataQuery = `
-SELECT 
-  s.diseasename,
-  MAX(s.price) AS price,
-  SUM(s.quantity) AS quantity,
-  SUM(s.quantity_allocated) AS quantity_allocated,
-  MAX(s.status) AS status,
-  MAX(cs.CollectionSiteName) AS CollectionSiteName,
-  MAX(st.staffName) AS CollectionSiteStaffName,
-  MAX(bb.Name) AS BiobankName,
-  MAX(c.name) AS CityName,
-  MAX(d.name) AS DistrictName
-FROM sample s
-LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
-LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
-LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
-LEFT JOIN city c ON cs.city = c.id
-LEFT JOIN district d ON cs.district = d.id
-WHERE 
-  s.status = 'In Stock' 
-  AND s.price > 0 
-  AND s.sample_visibility = 'Public'
-GROUP BY s.diseasename
-HAVING SUM(s.quantity) > 0 OR SUM(s.quantity_allocated) > 0
-ORDER BY s.diseasename
-LIMIT ? OFFSET ?
-
-  `;
-
-  const countQuery = `
-    SELECT COUNT(DISTINCT s.diseasename) AS total
+    SELECT 
+      s.*,
+      cs.CollectionSiteName,
+      st.staffName AS CollectionSiteStaffName,
+      bb.Name AS BiobankName,
+      c.name AS CityName,
+      d.name AS DistrictName
     FROM sample s
-    WHERE 
-      s.status = 'In Stock' 
-      AND s.price > 0  
-      AND s.sample_visibility = 'Public'
-      AND s.quantity > 0
+    LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
+    LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
+    LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
+    LEFT JOIN city c ON cs.city = c.id
+    LEFT JOIN district d ON cs.district = d.id
+    INNER JOIN (
+      SELECT diseasename, MAX(id) AS max_id
+      FROM sample
+      WHERE 
+        status = 'In Stock'
+        AND price > 0
+        AND sample_visibility = 'Public'
+      GROUP BY diseasename
+    ) AS grouped ON s.diseasename = grouped.diseasename AND s.id = grouped.max_id
+    WHERE s.quantity > 0 OR s.quantity_allocated > 0
+    ORDER BY s.diseasename
+    LIMIT ? OFFSET ?;
   `;
+
+  // Query to count total distinct diseasenames
+  const countQuery = `
+    SELECT COUNT(DISTINCT diseasename) AS total
+    FROM sample
+    WHERE 
+      status = 'In Stock' 
+      AND price > 0  
+      AND sample_visibility = 'Public'
+      AND quantity > 0
+  `;
+
   mysqlConnection.query(countQuery, (countErr, countResult) => {
     if (countErr) {
       console.error("❌ Count Query Error:", countErr);
@@ -391,7 +392,7 @@ LIMIT ? OFFSET ?
     }
 
     const totalCount = countResult[0].total;
-    
+
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) {
         console.error("❌ Data Query Error:", dataErr);
@@ -425,23 +426,15 @@ LIMIT ? OFFSET ?
           const imagePath = path.join(imageFolder, selectedImage);
           const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
           sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
-
-          // Parse volumes JSON string into array
-          try {
-            sample.volumes = JSON.parse(sample.volumes);
-          } catch (err) {
-            sample.volumes = [];
-          }
-
           return sample;
         });
 
-        
         callback(null, { data: updatedResults, totalCount });
       });
     });
   });
 };
+
 
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {

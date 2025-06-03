@@ -82,10 +82,15 @@ const TestSystemManufacturerArea = () => {
       filtered = testsystemmanufacturername; // Show all if filter is empty
     } else {
       filtered = testsystemmanufacturername.filter((testsystemmanufacturer) =>
-        testsystemmanufacturer[field]
+      {
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return testsystemmanufacturer[field]
           ?.toString()
           .toLowerCase()
-          .includes(value.toLowerCase())
+          .includes(value.toLowerCase());
+    }
       );
     }
 

@@ -24,8 +24,7 @@ const ProductListItems = ({ itemsPerPage, items, setShowingListItems }) => {
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % items.length;
     setItemOffset(newOffset);
-  };
-  console.log(currentItems,"current")
+  };  
   return (
     <>
       <div

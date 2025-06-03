@@ -76,8 +76,13 @@ const DistrictArea = () => {
     if (value.trim() === "") {
       filtered = districtname; // Show all if filter is empty
     } else {
-      filtered = districtname.filter((district) =>
-        district[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = districtname.filter((district) =>{
+          if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return district[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      }
+        
       );
     }
 

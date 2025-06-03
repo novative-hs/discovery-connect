@@ -76,8 +76,15 @@ const CountryArea = () => {
     if (value.trim() === "") {
       filtered = countryname; // Show all if filter is empty
     } else {
-      filtered = countryname.filter((country) =>
-        country[field]?.toString().toLowerCase().includes(value.toLowerCase())
+
+
+      filtered = countryname.filter((country) =>{
+
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return country[field]?.toString().toLowerCase().includes(value.toLowerCase())
+    }
       );
     }
 

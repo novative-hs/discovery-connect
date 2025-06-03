@@ -83,7 +83,7 @@ const OfferPopularProduct = () => {
 
   const handleAddToCart = (product) => {
     sessionStorage.setItem('filterProduct', JSON.stringify(product));
-router.push('/filter-products');
+router.push('/filter-samples');
   };
 
   return (

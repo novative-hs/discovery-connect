@@ -86,10 +86,15 @@ const ConcurrentMedicalConditionsArea = () => {
       filtered = concurrentmedicalname; // Show all if filter is empty
     } else {
       filtered = concurrentmedicalname.filter((concurrentmedicalconditions) =>
-        concurrentmedicalconditions[field]
+      {
+        if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return concurrentmedicalconditions[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
+      }
       );
     }
 

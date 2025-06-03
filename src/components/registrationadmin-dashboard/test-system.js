@@ -82,11 +82,15 @@ const TestSystemArea = () => {
     if (value.trim() === "") {
       filtered = testsystemname; // Show all if filter is empty
     } else {
-      filtered = testsystemname.filter((testsystem) =>
-        testsystem[field]
+      filtered = testsystemname.filter((testsystem) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return testsystem[field]
           ?.toString()
           .toLowerCase()
-          .includes(value.toLowerCase())
+          .includes(value.toLowerCase());
+        }
       );
     }
 

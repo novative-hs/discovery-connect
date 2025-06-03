@@ -82,8 +82,13 @@ const EthnicityArea = () => {
     if (value.trim() === "") {
       filtered = ethnicityname; // Show all if filter is empty
     } else {
-      filtered = ethnicityname.filter((ethnicity) =>
-        ethnicity[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = ethnicityname.filter((ethnicity) =>{
+        if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return ethnicity[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      }
+
       );
     }
 

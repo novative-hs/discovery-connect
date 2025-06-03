@@ -80,8 +80,12 @@ const StorageTemperatureArea = () => {
     if (value.trim() === "") {
       filtered = samplecondition; // Show all if filter is empty
     } else {
-      filtered = samplecondition.filter((samplecondition) =>
-        samplecondition[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      filtered = samplecondition.filter((samplecondition) =>{
+         if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return samplecondition[field]?.toString().toLowerCase().includes(value.toLowerCase());
+    }
       );
     }
 

@@ -1,7 +1,12 @@
 import Image from "next/image";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { add_cart_product, decrement, increment, initialOrderQuantity } from "src/redux/features/cartSlice";
+import {
+  add_cart_product,
+  decrement,
+  increment,
+  initialOrderQuantity,
+} from "src/redux/features/cartSlice";
 import { Modal } from "react-bootstrap";
 import { handleModalShow } from "src/redux/features/productSlice";
 
@@ -12,7 +17,6 @@ const ProductModal = ({ product }) => {
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
 
   const handleAddToCart = (product) => {
-    console.log("Payload being dispatched:", product);
     dispatch(add_cart_product(product));
   };
 
@@ -25,15 +29,20 @@ const ProductModal = ({ product }) => {
     dispatch(initialOrderQuantity());
   };
 
-  const hasOptionalFields =
-    product.ethnicity ||
-    product.AlcoholOrDrugAbuse ||
-    product.SmokingStatus ||
-    product.samplecondition ||
-    product.storagetemp ||
-    product.SampleTypeMatrix ||
-    product.InfectiousDiseaseTesting ||
-    product.FreezeThawCycles;
+  // Evaluate optional fields
+  const optionalFields = [
+    product.ethnicity,
+    product.AlcoholOrDrugAbuse,
+    product.SmokingStatus,
+    product.samplecondition,
+    product.storagetemp,
+    product.SampleTypeMatrix,
+    product.InfectiousDiseaseTesting,
+    product.FreezeThawCycles,
+  ];
+
+  const nonNullOptionalFields = optionalFields.filter(Boolean);
+  const showTwoColumnLayout = nonNullOptionalFields.length >= 3;
 
   return (
     <Modal show={isShow} onHide={handleModalClose} centered>
@@ -55,7 +64,7 @@ const ProductModal = ({ product }) => {
           overflowY: "hidden",
         }}
       >
-        {/* Modal Header */}
+        {/* Header */}
         <div
           className="d-flex justify-content-between align-items-center p-2"
           style={{ backgroundColor: "#cfe2ff", color: "#000" }}
@@ -75,12 +84,15 @@ const ProductModal = ({ product }) => {
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="modal-body" style={{ maxHeight: "calc(80vh - 100px)", overflowY: "auto" }}>
+        {/* Body */}
+        <div
+          className="modal-body"
+          style={{ maxHeight: "calc(80vh - 100px)", overflowY: "auto" }}
+        >
           <div className="row">
-            {hasOptionalFields ? (
+            {showTwoColumnLayout ? (
               <>
-                {/* Left Side */}
+                {/* Left side */}
                 <div className="col-md-5 text-center">
                   <img
                     src={product.imageUrl || "/placeholder.jpg"}
@@ -89,37 +101,93 @@ const ProductModal = ({ product }) => {
                     style={{ maxHeight: "200px", objectFit: "cover" }}
                   />
                   <div className="mt-3 p-2 bg-light rounded text-start">
-                    <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
-                    <p><strong>Container Type:</strong> {product.ContainerType}</p>
-                    <p><strong>Diagnosis Test Parameter:</strong> {product.DiagnosisTestParameter}</p>
-                    <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
-                    <p><strong>Test Result/(unit):</strong> {product.TestResult} {product.TestResultUnit}</p>
-                    <p><strong>Status:</strong> {product.status}</p>
+                    <p>
+                      <strong>Age:</strong> {product.age} years |{" "}
+                      <strong>Gender:</strong> {product.gender}
+                    </p>
+                    <p>
+                      <strong>Container Type:</strong> {product.ContainerType}
+                    </p>
+                    <p>
+                      <strong>Diagnosis Test Parameter:</strong>{" "}
+                      {product.DiagnosisTestParameter}
+                    </p>
+                    <p>
+                      <strong>Volume:</strong> {product.volume}{" "}
+                      {product.QuantityUnit}
+                    </p>
+                    <p>
+                      <strong>Test Result/(unit):</strong> {product.TestResult}{" "}
+                      {product.TestResultUnit}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {product.status}
+                    </p>
                   </div>
                 </div>
 
-                {/* Right Side */}
-                <div className="col-md-7 d-flex flex-column" style={{ minHeight: "100%" }}>
+                {/* Right side */}
+                <div className="col-md-7 d-flex flex-column">
                   <div>
-                    {product.ethnicity && <p><strong>Ethnicity:</strong> {product.ethnicity}</p>}
-                    {product.AlcoholOrDrugAbuse && <p><strong>Alcohol or Drug Abuse:</strong> {product.AlcoholOrDrugAbuse}</p>}
-                    {product.SmokingStatus && <p><strong>Smoking Status:</strong> {product.SmokingStatus}</p>}
-                    {product.samplecondition && <p><strong>Sample Condition:</strong> {product.samplecondition}</p>}
-                    {product.storagetemp && <p><strong>Storage Temperature:</strong> {product.storagetemp}</p>}
-                    {product.SampleTypeMatrix && <p><strong>Sample Type Matrix:</strong> {product.SampleTypeMatrix}</p>}
-                    {product.InfectiousDiseaseTesting && (
+                    {product.ethnicity && (
                       <p>
-                        <strong>Infectious Disease Testing:</strong> {product.InfectiousDiseaseTesting}
-                        {product.InfectiousDiseaseResult && ` (${product.InfectiousDiseaseResult})`}
+                        <strong>Ethnicity:</strong> {product.ethnicity}
                       </p>
                     )}
-                    {product.FreezeThawCycles && <p><strong>Freeze Thaw Cycles:</strong> {product.FreezeThawCycles}</p>}
+                    {product.AlcoholOrDrugAbuse && (
+                      <p>
+                        <strong>Alcohol or Drug Abuse:</strong>{" "}
+                        {product.AlcoholOrDrugAbuse}
+                      </p>
+                    )}
+                    {product.SmokingStatus && (
+                      <p>
+                        <strong>Smoking Status:</strong>{" "}
+                        {product.SmokingStatus}
+                      </p>
+                    )}
+                    {product.samplecondition && (
+                      <p>
+                        <strong>Sample Condition:</strong>{" "}
+                        {product.samplecondition}
+                      </p>
+                    )}
+                    {product.storagetemp && (
+                      <p>
+                        <strong>Storage Temperature:</strong>{" "}
+                        {product.storagetemp}
+                      </p>
+                    )}
+                    {product.SampleTypeMatrix && (
+                      <p>
+                        <strong>Sample Type Matrix:</strong>{" "}
+                        {product.SampleTypeMatrix}
+                      </p>
+                    )}
+                    {product.InfectiousDiseaseTesting && (
+                      <p>
+                        <strong>Infectious Disease Testing:</strong>{" "}
+                        {product.InfectiousDiseaseTesting}
+                        {product.InfectiousDiseaseResult &&
+                          ` (${product.InfectiousDiseaseResult})`}
+                      </p>
+                    )}
+                    {product.FreezeThawCycles && (
+                      <p>
+                        <strong>Freeze Thaw Cycles:</strong>{" "}
+                        {product.FreezeThawCycles}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Add to Cart Button */}
+                  {/* Add to Cart */}
                   <div className="mt-auto text-end">
                     {product.quantity === 0 ? (
-                      <button className="btn w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+                      <button
+                        className="btn w-75"
+                        disabled
+                        style={{ backgroundColor: "black", color: "white" }}
+                      >
                         Sample Allocated
                       </button>
                     ) : isInCart(product.id) ? (
@@ -127,7 +195,10 @@ const ProductModal = ({ product }) => {
                         Added
                       </button>
                     ) : (
-                      <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+                      <button
+                        className="btn btn-danger w-75"
+                        onClick={() => handleAddToCart(product)}
+                      >
                         Add to Cart
                       </button>
                     )}
@@ -135,7 +206,7 @@ const ProductModal = ({ product }) => {
                 </div>
               </>
             ) : (
-              // No optional fields: full width layout
+              // Single-column layout
               <div className="col-12 text-center">
                 <img
                   src={product.imageUrl || "/placeholder.jpg"}
@@ -144,16 +215,92 @@ const ProductModal = ({ product }) => {
                   style={{ maxHeight: "200px", objectFit: "cover" }}
                 />
                 <div className="mt-3 p-2 bg-light rounded text-start">
-                  <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
-                  <p><strong>Container Type:</strong> {product.ContainerType}</p>
-                  <p><strong>Diagnosis Test Parameter:</strong> {product.DiagnosisTestParameter}</p>
-                  <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
-                  <p><strong>Test Result/(unit):</strong> {product.TestResult} {product.TestResultUnit}</p>
-                  <p><strong>Status:</strong> {product.status}</p>
+                  <p>
+                    <strong>Age:</strong> {product.age} years |{" "}
+                    <strong>Gender:</strong> {product.gender}
+                  </p>
+                  <p>
+                    <strong>Container Type:</strong> {product.ContainerType}
+                  </p>
+                  <p>
+                    <strong>Diagnosis Test Parameter:</strong>{" "}
+                    {product.DiagnosisTestParameter}
+                  </p>
+                  <p>
+                    <strong>Volume:</strong> {product.volume}{" "}
+                    {product.QuantityUnit}
+                  </p>
+                  <p>
+                    <strong>Test Result/(unit):</strong> {product.TestResult}{" "}
+                    {product.TestResultUnit}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {product.status}
+                  </p>
                 </div>
+
+                {nonNullOptionalFields.length > 0 && (
+                  <div className="mt-3 p-2 bg-light rounded text-start">
+                    {product.ethnicity && (
+                      <p>
+                        <strong>Ethnicity:</strong> {product.ethnicity}
+                      </p>
+                    )}
+                    {product.AlcoholOrDrugAbuse && (
+                      <p>
+                        <strong>Alcohol or Drug Abuse:</strong>{" "}
+                        {product.AlcoholOrDrugAbuse}
+                      </p>
+                    )}
+                    {product.SmokingStatus && (
+                      <p>
+                        <strong>Smoking Status:</strong>{" "}
+                        {product.SmokingStatus}
+                      </p>
+                    )}
+                    {product.samplecondition && (
+                      <p>
+                        <strong>Sample Condition:</strong>{" "}
+                        {product.samplecondition}
+                      </p>
+                    )}
+                    {product.storagetemp && (
+                      <p>
+                        <strong>Storage Temperature:</strong>{" "}
+                        {product.storagetemp}
+                      </p>
+                    )}
+                    {product.SampleTypeMatrix && (
+                      <p>
+                        <strong>Sample Type Matrix:</strong>{" "}
+                        {product.SampleTypeMatrix}
+                      </p>
+                    )}
+                    {product.InfectiousDiseaseTesting && (
+                      <p>
+                        <strong>Infectious Disease Testing:</strong>{" "}
+                        {product.InfectiousDiseaseTesting}
+                        {product.InfectiousDiseaseResult &&
+                          ` (${product.InfectiousDiseaseResult})`}
+                      </p>
+                    )}
+                    {product.FreezeThawCycles && (
+                      <p>
+                        <strong>Freeze Thaw Cycles:</strong>{" "}
+                        {product.FreezeThawCycles}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Add to Cart */}
                 <div className="mt-3 text-end">
                   {product.quantity === 0 ? (
-                    <button className="btn w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+                    <button
+                      className="btn w-75"
+                      disabled
+                      style={{ backgroundColor: "black", color: "white" }}
+                    >
                       Sample Allocated
                     </button>
                   ) : isInCart(product.id) ? (
@@ -161,7 +308,10 @@ const ProductModal = ({ product }) => {
                       Added
                     </button>
                   ) : (
-                    <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
+                    <button
+                      className="btn btn-danger w-75"
+                      onClick={() => handleAddToCart(product)}
+                    >
                       Add to Cart
                     </button>
                   )}
