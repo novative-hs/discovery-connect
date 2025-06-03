@@ -27,6 +27,7 @@ const SampleDispatchArea = () => {
     { label: "Volume", key: "volume" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
+    { label: "Test Result & Unit", key: "TestResult" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
@@ -34,7 +35,6 @@ const SampleDispatchArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
@@ -42,14 +42,11 @@ const SampleDispatchArea = () => {
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
@@ -275,6 +272,7 @@ const SampleDispatchArea = () => {
             dispatchVia: dispatchVia,
             Dispatch_id: Dispatch_id,
             reason: lostReason,
+            Quantity: 1,
           }
         );
         alert("Sample marked as lost.");
@@ -324,7 +322,7 @@ const SampleDispatchArea = () => {
                     <th
                       key={index}
                       className="p-2"
-                      style={{ minWidth: "130px" }}
+                      style={{ minWidth: "110px" }}
                     >
                       <div className="d-flex flex-column align-items-center">
                         <input
@@ -384,6 +382,10 @@ const SampleDispatchArea = () => {
                             </span>
                           ) : key === "volume" ? (
                             `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                          ) : key === "age" ? (
+                            `${sample.age || "----"} years`
+                          ) : key === "TestResult" ? (
+                            `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                           ) : (
                             sample[key] || "----"
                           )}

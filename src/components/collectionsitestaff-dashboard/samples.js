@@ -10,10 +10,11 @@ import {
 import Pagination from "@ui/Pagination";
 import InputMask from "react-input-mask";
 import { getsessionStorage } from "@utils/sessionStorage";
-
+import Barcode from "react-barcode";
 const SampleArea = () => {
 
   const [staffAction, setStaffAction] = useState("");
+  const [actions, setActions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -30,7 +31,8 @@ const SampleArea = () => {
   const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
   const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
   const [showLogoModal, setShowLogoModal] = useState(false);
-
+  const [selectedBarcodeId, setSelectedBarcodeId] = useState(null);
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
 
   const id = sessionStorage.getItem("userID");
 
@@ -60,6 +62,7 @@ const SampleArea = () => {
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
+    { label: "Barcode", key: "barcode" },
   ];
 
   const fieldsToShowInOrder = [
@@ -143,7 +146,7 @@ const SampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
-  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
+  const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -171,11 +174,19 @@ const SampleArea = () => {
     setSearchCountry(country.name);
     setShowCountryDropdown(false);
   };
+  useEffect(() => {
+    const action = sessionStorage.getItem("staffAction") || "";
+    console.log("staffAction from sessionStorage:", action);
+    setStaffAction(action);
+
+    const splitActions = action.split(",").map(a => a.trim());
+    console.log("Parsed actions array:", splitActions);
+    setActions(splitActions);
+  }, []);
 
   // Fetch countries from backend
   useEffect(() => {
-    const action = sessionStorage.getItem("staffAction");
-    setStaffAction(action);
+
     const fetchData = async (url, setState, label) => {
       try {
         const response = await axios.get(url);
@@ -251,6 +262,7 @@ const SampleArea = () => {
       if (searchField && searchValue) {
         ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
+
 
       let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
       if (searchField && searchValue) {
@@ -754,6 +766,7 @@ const SampleArea = () => {
   // };
 
   const areMandatoryFieldsFilled = () => {
+
     return (
       formData.donorID?.trim() &&
       formData.diseasename?.trim() &&
@@ -768,12 +781,71 @@ const SampleArea = () => {
       formData.logo instanceof File
     );
   };
-
+  console.log("actions:", actions);
+  console.log("areMandatoryFieldsFilled:", areMandatoryFieldsFilled());
+  console.log("formData:", formData);
   const unitMaxValues = {
     L: 100,
     mL: 10000,
     mg: 10000,
     g: 5000,
+  };
+
+  const handlePrint = () => {
+    const barcodeId = selectedBarcodeId?.toString() || "";
+
+    const printWindow = window.open("", "", "width=400,height=600");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <style>
+          @page {
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+          }
+          #barcode {
+            margin-top: 50px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            transform: rotate(90deg);
+            transform-origin: center;
+          }
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact;
+            }
+          }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+      </head>
+      <body>
+        <svg id="barcode"></svg>
+        <script>
+          window.onload = function() {
+            JsBarcode("#barcode", "${barcodeId}", {
+              format: "CODE128",
+              height: 80,
+              width: 1,  // Adjust line width here
+              displayValue: false
+            });
+            setTimeout(() => {
+              window.print();
+              window.close();
+            }, 300);
+          };
+        </script>
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
   };
 
   return (
@@ -794,26 +866,28 @@ const SampleArea = () => {
 
         {/* Button */}
         <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
-
-          {["add_full", "add_basic", "all"].includes(staffAction) && (
-            <div className="d-flex flex-wrap gap-3">
-              <button
-                onClick={() => setShowAddModal(true)}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
-              >
-                <i className="fas fa-vial"></i> Add Sample
-              </button>
+          {/* Button */}
+          {actions.some(a => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)) && (
+            <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+              {(actions.includes('add_full') || actions.includes('add_basic') || actions.includes('all')) && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-vial"></i> Add Sample
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -848,7 +922,7 @@ const SampleArea = () => {
                     </div>
                   </th>
                 ))}
-                {["edit", "dispatch", "history", "all"].some(action => staffAction === action) && (
+                {actions.some(action => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
                   </th>
@@ -916,7 +990,19 @@ ${sample.box_id || "N/A"} = Box ID`;
                               );
                             } else if (key === "volume") {
                               return `${sample.volume} ${sample.QuantityUnit || ""}`;
-                            } else if (key === "age") {
+                            }
+                            else if (key === "barcode") {
+                              return <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedBarcodeId(sample.id);
+                                  setShowBarcodeModal(true);
+                                }}
+                              >
+                                Show Barcode
+                              </button>
+                            }
+                            else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "TestResult") {
                               return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
@@ -927,10 +1013,11 @@ ${sample.box_id || "N/A"} = Box ID`;
                         )}
                       </td>
                     ))}
-                    {["edit", "dispatch", "history", "all"].some(action => staffAction === action) && (
-                      <td className="text-center">
-                        <div className="d-flex justify-content-around gap-1">
-                          {["edit", "all"].includes(staffAction) && (
+                    {actions.some(action => ["edit", "dispatch", "history", "all"].includes(action)) && (
+                      <td className="text-center align-middle">
+                        <div className="d-flex justify-content-center gap-2 px-1">
+
+                          {(actions.includes("edit") || actions.includes("all")) && (
                             <button
                               className="btn btn-success btn-sm"
                               onClick={() => handleEditClick(sample)}
@@ -940,7 +1027,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </button>
                           )}
 
-                          {["dispatch", "all"].includes(staffAction) && (
+                          {(actions.includes("dispatch") || actions.includes("all")) && (
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => handleTransferClick(sample)}
@@ -950,7 +1037,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </button>
                           )}
 
-                          {["history", "all"].includes(staffAction) && (
+                          {(actions.includes("history") || actions.includes("all")) && (
                             <button
                               className="btn btn-outline-success btn-sm"
                               onClick={() => handleShowHistory("sample", sample.id)}
@@ -959,6 +1046,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i className="fa fa-history"></i>
                             </button>
                           )}
+
 
                         </div>
                       </td>
@@ -983,6 +1071,69 @@ ${sample.box_id || "N/A"} = Box ID`;
             pageCount={totalPages}
             focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
+        )}
+
+        {/* Modal for Generating Barcode for Samples */}
+        {showBarcodeModal && (
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            onClick={() => setShowBarcodeModal(false)}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <div
+              className="modal-dialog modal-dialog-centered"
+              style={{ maxWidth: "700px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="modal-content p-4 text-center"
+                id="barcode-modal"
+                style={{
+                  margin: 0,
+                  padding: "1rem",
+                  boxShadow: "none",
+                  border: "none",
+                  maxHeight: "100vh",
+                  overflow: "hidden",
+                  pageBreakInside: "avoid",
+                  breakInside: "avoid",
+                  height: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Barcode
+                  value={selectedBarcodeId?.toString() || ""}
+                  height={80}
+                  width={1} // Reduce width per bar to fit better
+                  displayValue={false}
+                />
+
+
+                {/* Buttons - hide on print */}
+                <div
+                  className="d-flex justify-content-center gap-2 mt-4 d-print-none"
+                  style={{ width: "100%" }}
+                >
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={handlePrint}
+                  >
+                    Print Barcode
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowBarcodeModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Modal for Adding and Editing Samples */}
@@ -1946,7 +2097,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
-                      {(staffAction === 'add_full' || staffAction === 'all') && areMandatoryFieldsFilled() && (
+                      {(actions.includes('add_full') || actions.includes('all')) && (
                         <div className="form-check my-3">
                           <input
                             type="checkbox"

@@ -42,6 +42,9 @@ const Header = ({ setActiveTab, activeTab }) => {
   useEffect(() => {
     const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
     const action = sessionStorage.getItem("staffAction");
+    
+    console.log("userType:", type);
+    console.log("staffAction:", action);
     setStaffAction(action);
     if (type) {
       setUserType(type);
@@ -50,6 +53,7 @@ const Header = ({ setActiveTab, activeTab }) => {
       router.push("/login");
     }
   }, [router]);
+  const actions = staffAction?.split(",").map(a => a.trim());
   const dropdownRef = useRef(null);
   useEffect(() => {
     if (id === null) {
@@ -199,20 +203,18 @@ const Header = ({ setActiveTab, activeTab }) => {
             ],
           },
         ]
-        : userType === "collectionsitesstaff"
-          ? [
-            ...(["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(staffAction)
-              ? [{ label: "Sample List", tab: "samples" }]
-              : []),
-            ...(["receive", "all"].includes(staffAction)
-              ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
-              : []),
-            //    ...(["return", "all"].includes(staffAction)
-            // ? [{ label: "Sample Returned", tab: "sample-return" }]:[]),
-            ...(["return", "all"].includes(staffAction)
-              ? [{ label: "Sample Lost", tab: "sample-lost" }]
-              : []),
-          ]
+       : userType === "collectionsitesstaff"
+  ? [
+      ...(actions?.some(action => ["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(action))
+        ? [{ label: "Sample List", tab: "samples" }]
+        : []),
+      ...(actions?.some(action => ["receive", "all"].includes(action))
+        ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
+        : []),
+      ...(actions?.some(action => ["return", "all"].includes(action))
+        ? [{ label: "Sample Lost", tab: "sample-lost" }]
+        : []),
+    ]
           : userType == "biobank"
             ? [
               { label: "Sample List", tab: "samples" },

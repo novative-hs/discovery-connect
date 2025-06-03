@@ -11,10 +11,11 @@ const BioSpecimenSection = () => {
   }, []);
 
   const images = [
-    "/assets/img/slider/13/slider-9.png",
+    "/assets/img/slider/13/slider-3.png",
+    "/assets/img/slider/13/slider-8.png",
     "/assets/img/slider/13/slider-6.png",
     "/assets/img/slider/13/slider-11.jpg",
-    "/assets/img/slider/13/slider-10.png",
+    
   ];
 
   return (

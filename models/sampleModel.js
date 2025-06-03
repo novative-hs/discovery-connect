@@ -64,7 +64,7 @@ const createSampleTable = () => {
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
-  
+
   const user_account_id = parseInt(userId, 10);
   if (isNaN(user_account_id)) {
     return callback(new Error("Invalid user_account_id"), null);
@@ -148,7 +148,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 };
 
 const getAllSamples = (callback) => {
-  
+
   const query = `
     SELECT 
       s.*,
@@ -326,15 +326,15 @@ const getAllVolumnUnits = (name, callback) => {
     }
   });
 };
-const getAllSampleinIndex=(name,callback)=>{
+const getAllSampleinIndex = (name, callback) => {
   const query = 'SELECT * FROM sample WHERE diseasename = ? and quantity>0';
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
       callback(err, null);
-    } 
-     if (results.length === 0) {
+    }
+    if (results.length === 0) {
       return callback(null, { error: "No samples found" });
     }
 
@@ -392,6 +392,7 @@ const getAllCSSamples = (limit, offset, callback) => {
     }
 
     const totalCount = countResult[0].total;
+
 
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) {
@@ -711,5 +712,5 @@ module.exports = {
   updateQuarantineSamples,
   getAllVolumnUnits,
   getAllSampleinIndex
-  
+
 };

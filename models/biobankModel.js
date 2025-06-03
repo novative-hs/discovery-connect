@@ -20,13 +20,13 @@ const create_biobankTable = () => {
   });
 };
 
-const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => { 
+const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
 
   // Base WHERE clause and parameters
-  let baseWhere = `WHERE status = "In Stock" AND quantity > 0 AND is_deleted = FALSE`;
+  let baseWhere = `WHERE status = "In Stock"  AND is_deleted = FALSE`;
   const paramsForWhere = [];
 
   // Price filter
@@ -103,7 +103,7 @@ const createBiobankSample = (data, callback) => {
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id,data.volume, data.diseasename,data.phoneNumber, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.diseasename, data.phoneNumber, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -166,7 +166,6 @@ const postSamplePrice = (data, callback) => {
   });
 };
 
-
 // Function to update a sample by its ID
 const updateBiobankSample = (id, data, callback) => {
 
@@ -197,7 +196,7 @@ const updateBiobankSample = (id, data, callback) => {
   `;
 
   const values = [
-    room_number, freezer_id, box_id,data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
+    room_number, freezer_id, box_id, data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
     data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
     data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse,
     data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling,
@@ -254,13 +253,63 @@ const getQuarantineStock = (callback) => {
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
-    return callback(null, results); 
+    return callback(null, results);
+  });
+};
+
+// Function to get samples with price > 0 in sample visibility page
+const getBiobankVisibilitySamples = (user_account_id, page, pageSize, searchField, searchValue, callback) => {
+  const pageInt = parseInt(page, 10) || 1;
+  const pageSizeInt = parseInt(pageSize, 10) || 10;
+  const offset = (pageInt - 1) * pageSizeInt;
+
+  let baseWhere = `WHERE status = "In Stock" AND is_deleted = FALSE AND price IS NOT NULL AND price > 0`;
+  const paramsForWhere = [];
+
+  if (searchField && searchValue) {
+    baseWhere += ` AND ?? LIKE ?`;
+    paramsForWhere.push(searchField, `%${searchValue}%`);
+  }
+
+  const dataQuery = `
+    SELECT *
+    FROM sample
+    ${baseWhere}
+    ORDER BY id DESC
+    LIMIT ? OFFSET ?;
+  `;
+  const dataParams = [...paramsForWhere, pageSizeInt, offset];
+
+  mysqlConnection.query(dataQuery, dataParams, (err, results) => {
+    if (err) return callback(err);
+
+    const enrichedResults = results.map(sample => ({
+      ...sample,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join("-"),
+    }));
+
+    const countQuery = `
+      SELECT COUNT(*) AS totalCount
+      FROM sample
+      ${baseWhere};
+    `;
+
+    mysqlConnection.query(countQuery, paramsForWhere, (err, countResults) => {
+      if (err) return callback(err);
+
+      const totalCount = countResults[0].totalCount;
+
+      callback(null, {
+        results: enrichedResults,
+        totalCount,
+      });
+    });
   });
 };
 
 // Get price dropdown while adding price in Biobank
 const getPrice = (name, callback) => {
-  
+
   const query = 'SELECT price FROM sample WHERE diseasename = ?';
 
   mysqlConnection.query(query, [name], (err, results) => {
@@ -282,6 +331,7 @@ module.exports = {
   postSamplePrice,
   updateBiobankSample,
   getQuarantineStock,
+  getBiobankVisibilitySamples,
   UpdateSampleStatus,
   getPrice
 };

@@ -9,12 +9,13 @@ const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
   const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
-    { label: "Quantity", key: "quantity" },
     { label: "Volume", key: "volume" },
     { label: "Price", key: "price" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
+    { label: "Quantity", key: "quantity" },
     { label: "Test Result", key: "TestResult" },
+    { label: "Container Type", key: "ContainerType" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
 
@@ -25,10 +26,8 @@ const SampleArea = () => {
     // { label: "Price", key: "price" },
     // { label: "Quantity", key: "orderquantity" },
     // { label: "Total Payment", key: "totalpayment" },
-    { label: "Container Type", key: "ContainerType" },
+
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -152,7 +151,7 @@ const SampleArea = () => {
                               onChange={(e) =>
                                 handleFilterChange("price", e.target.value)
                               }
-                              style={{ minWidth: "150px" }}
+                              style={{ minWidth: "110px" }}
                             />
                             <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-10">
                               Price (Currency)
@@ -202,7 +201,6 @@ const SampleArea = () => {
                             </td>
                           );
                         }
-
                         // 🔁 Handle Total Payment column with currency
                         if (key === "totalpayment") {
                           return (
@@ -213,7 +211,6 @@ const SampleArea = () => {
                             </td>
                           );
                         }
-
                         // ✅ Custom logic for committee_status
                         if (key === "committee_status") {
                           let displayValue = sample[key];
@@ -259,7 +256,6 @@ const SampleArea = () => {
                             </td>
                           );
                         }
-
                         // ✅ Custom logic for volume + QuantityUnit
                         if (key === "volume") {
                           return (
@@ -270,7 +266,24 @@ const SampleArea = () => {
                             </td>
                           );
                         }
-
+                        // ✅ Custom logic for age
+                        if (key === "age") {
+                          return (
+                            <td key={index}>
+                              {sample.age ? `${sample.age} years` : "----"}
+                            </td>
+                          );
+                        }
+                        // ✅ Custom logic for TestResult
+                        if (key === "TestResult") {
+                          return (
+                            <td key={index}>
+                              {sample.TestResult
+                                ? `${sample.TestResult} ${sample.TestResultUnit || ""}`
+                                : "----"}
+                            </td>
+                          );
+                        }
                         // 🔁 Default render for all other fields
                         return (
                           <td key={index}>
@@ -279,9 +292,7 @@ const SampleArea = () => {
                         );
                       })}
 
-
                       {/* Handle sample name click to open modal */}
-
                       <td>
                         <button
                           className="btn btn-outline-success btn-l d-flex align-items-center gap-1"

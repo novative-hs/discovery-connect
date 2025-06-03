@@ -179,6 +179,7 @@ const ProductModal = ({ product }) => {
                       </p>
                     )}
                   </div>
+
                 </div>
               </>
             ) : (
