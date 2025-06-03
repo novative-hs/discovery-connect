@@ -10,6 +10,7 @@ import {
   faDollarSign,
 } from "@fortawesome/free-solid-svg-icons";
 import { getsessionStorage } from "@utils/sessionStorage";
+import Barcode from "react-barcode";
 import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
@@ -56,6 +57,7 @@ const BioBankSampleArea = () => {
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
+    { label: "Barcode", key: "barcode" },
   ];
 
   const fieldsToShowInOrder = [
@@ -144,6 +146,8 @@ const BioBankSampleArea = () => {
   const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
   const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
   const [showLogoModal, setShowLogoModal] = useState(false);
+  const [selectedBarcodeId, setSelectedBarcodeId] = useState(null);
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
@@ -871,6 +875,63 @@ const BioBankSampleArea = () => {
     g: 5000,
   };
 
+  const handlePrint = () => {
+    const barcodeId = selectedBarcodeId?.toString() || "";
+
+    const printWindow = window.open("", "", "width=400,height=600");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <style>
+          @page {
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+          }
+          #barcode {
+            margin-top: 50px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            transform: rotate(90deg);
+            transform-origin: center;
+          }
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact;
+            }
+          }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+      </head>
+      <body>
+        <svg id="barcode"></svg>
+        <script>
+          window.onload = function() {
+            JsBarcode("#barcode", "${barcodeId}", {
+              format: "CODE128",
+              height: 80,
+              width: 1,  // Adjust line width here
+              displayValue: false
+            });
+            setTimeout(() => {
+              window.print();
+              window.close();
+            }, 300);
+          };
+        </script>
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+  };
+
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -937,19 +998,18 @@ const BioBankSampleArea = () => {
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="col-md-1 px-2">
+                  <th key={index} className="p-1">
                     <div className="d-flex flex-column align-items-center">
                       <input
                         type="text"
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                        style={{ width: "100%" }} // full width inside th cell
                       />
-                      <span className="fw-bold mt-1 d-block text-fetvwrap align-items-center fs-6">
+                      <span className="fw-bold mt-1 fs-6">
                         {label}
                       </span>
-
                     </div>
                   </th>
                 ))}
@@ -1018,7 +1078,29 @@ ${sample.box_id || "N/A"} = Box ID`;
                               );
                             } else if (key === "volume") {
                               return `${sample.volume} ${sample.QuantityUnit || ""}`;
-                            } else if (key === "age") {
+                            }
+                            else if (key === "barcode") {
+                              return <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedBarcodeId(sample.id);
+                                  setShowBarcodeModal(true);
+                                }}
+                              >
+                                Show Barcode
+                              </button>
+                            } else if (key === "barcode") {
+                              return <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedBarcodeId(sample.id);
+                                  setShowBarcodeModal(true);
+                                }}
+                              >
+                                Show Barcode
+                              </button>
+                            }
+                            else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "TestResult") {
                               return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
@@ -1095,6 +1177,69 @@ ${sample.box_id || "N/A"} = Box ID`;
             pageCount={totalPages}
             focusPage={currentPage}
           />
+        )}
+
+        {/* Modal for Generating Barcode for Samples */}
+        {showBarcodeModal && (
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            onClick={() => setShowBarcodeModal(false)}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <div
+              className="modal-dialog modal-dialog-centered"
+              style={{ maxWidth: "700px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="modal-content p-4 text-center"
+                id="barcode-modal"
+                style={{
+                  margin: 0,
+                  padding: "1rem",
+                  boxShadow: "none",
+                  border: "none",
+                  maxHeight: "100vh",
+                  overflow: "hidden",
+                  pageBreakInside: "avoid",
+                  breakInside: "avoid",
+                  height: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Barcode
+                  value={selectedBarcodeId?.toString() || ""}
+                  height={80}
+                  width={1} // Reduce width per bar to fit better
+                  displayValue={false}
+                />
+
+
+                {/* Buttons - hide on print */}
+                <div
+                  className="d-flex justify-content-center gap-2 mt-4 d-print-none"
+                  style={{ width: "100%" }}
+                >
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={handlePrint}
+                  >
+                    Print Barcode
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowBarcodeModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Modal for Adding Samples */}

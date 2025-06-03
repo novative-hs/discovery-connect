@@ -764,6 +764,7 @@ const SampleArea = () => {
     mg: 10000,
     g: 5000,
   };
+
   const handlePrint = () => {
     const barcodeId = selectedBarcodeId?.toString() || "";
 
@@ -787,6 +788,8 @@ const SampleArea = () => {
             margin-top: 50px;
             page-break-inside: avoid;
             break-inside: avoid;
+            transform: rotate(90deg);
+            transform-origin: center;
           }
           @media print {
             body {
@@ -803,8 +806,8 @@ const SampleArea = () => {
             JsBarcode("#barcode", "${barcodeId}", {
               format: "CODE128",
               height: 80,
-              width: 2,
-              displayValue: false   // Hide the ID text here
+              width: 1,  // Adjust line width here
+              displayValue: false
             });
             setTimeout(() => {
               window.print();
@@ -1043,6 +1046,8 @@ ${sample.box_id || "N/A"} = Box ID`;
             focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
         )}
+
+        {/* Modal for Generating Barcode for Samples */}
         {showBarcodeModal && (
           <div
             className="modal show d-block"
