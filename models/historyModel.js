@@ -118,7 +118,7 @@ const create_historyTable = () => {
     OrganizationName VARCHAR(100) NULL,
     CSRName VARCHAR(100) NULL,
     staffName VARCHAR(100) NULL,
-    permission VARCHAR(20) NULL,
+    permission VARCHAR(500) NULL,
     HECPMDCRegistrationNo VARCHAR(50),
     cnic VARCHAR(50),
     CommitteeType VARCHAR(50),

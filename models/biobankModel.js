@@ -26,7 +26,7 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
   const offset = (pageInt - 1) * pageSizeInt;
 
   // Base WHERE clause and parameters
-  let baseWhere = `WHERE status = "In Stock" AND quantity > 0 AND is_deleted = FALSE`;
+  let baseWhere = `WHERE status = "In Stock"  AND is_deleted = FALSE`;
   const paramsForWhere = [];
 
   // Price filter

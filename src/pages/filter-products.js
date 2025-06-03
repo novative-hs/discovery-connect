@@ -35,19 +35,17 @@ const FilterProduct = () => {
     { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Quantity", key: "quantity" },
+    { label: "Test Result", key: "TestResult" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
   ];
 
   const fieldsToShowInOrder = [
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
-    { label: "Container Type", key: "ContainerType" },
     { label: "Country of Collection", key: "CountryOfCollection" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
@@ -124,34 +122,33 @@ const FilterProduct = () => {
     setCurrentPage(event.selected);
   };
 
- const handleFilterChange = (field, value) => {
-  clearTimeout(filterTimeoutRef.current);
+  const handleFilterChange = (field, value) => {
+    clearTimeout(filterTimeoutRef.current);
 
-  filterTimeoutRef.current = setTimeout(() => {
-    if (!value.trim()) {
-      setFilteredSamples(products);
-      setCurrentPage(0);
-      return;
-    }
-
-    const search = value.toLowerCase();
-
-    const filtered = products.filter((sample) => {
-      // Custom logic for composite fields
-      if (field === "volume") {
-        const volumeWithUnit = `${sample.volume || ""} ${sample.QuantityUnit || ""}`.toLowerCase();
-        return volumeWithUnit.includes(search);
+    filterTimeoutRef.current = setTimeout(() => {
+      if (!value.trim()) {
+        setFilteredSamples(products);
+        setCurrentPage(0);
+        return;
       }
 
+      const search = value.toLowerCase();
 
-      // Default single field logic
-      return sample[field]?.toString().toLowerCase().includes(search);
-    });
+      const filtered = products.filter((sample) => {
+        // Custom logic for composite fields
+        if (field === "volume") {
+          const volumeWithUnit = `${sample.volume || ""} ${sample.QuantityUnit || ""}`.toLowerCase();
+          return volumeWithUnit.includes(search);
+        }
 
-    setFilteredSamples(filtered);
-    setCurrentPage(0);
-  }, 300);
-};
+        // Default single field logic
+        return sample[field]?.toString().toLowerCase().includes(search);
+      });
+
+      setFilteredSamples(filtered);
+      setCurrentPage(0);
+    }, 300);
+  };
 
 
   const openModal = (sample) => {
@@ -252,8 +249,11 @@ const FilterProduct = () => {
                                 </span>
                               );
                             } else if (key === "volume") {
-                              content = `${sample.volume || "----"} ${sample.QuantityUnit || ""
-                                }`;
+                              content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                            } else if (key === "age") {
+                              content = `${sample.age ? sample.age + " years" : "----"}`;
+                            } else if (key === "TestResult") {
+                              content = `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`;
                             } else {
                               content = sample[key] || "----";
                             }
@@ -314,7 +314,7 @@ const FilterProduct = () => {
                 <div className="text-center mt-4">
                   <button
                     className="btn btn-outline-secondary"
-                    onClick={() => router.push("/dashboardheader?tab=Booksamples")}
+                    onClick={() => router.push("/shop")}
                   >
                     ← Back to Samples
                   </button>
@@ -324,64 +324,40 @@ const FilterProduct = () => {
           </div>
         </div>
 
-        <Modal
-          show={showModal}
+        <Modal show={showModal}
           onHide={closeModal}
           size="lg"
           centered
           backdrop="static"
-          scrollable
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Sample Details</Modal.Title>
+          keyboard={false}>
+          <Modal.Header closeButton className="border-0">
+            <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            {selectedSample && (
-              <div className="row">
-                <div className="col-md-4 border-end">
-                  <h5 className="fw-semibold">Mandatory Fields</h5>
-                  <ul className="list-unstyled">
-                    <li>
-                      <b>Disease Name:</b> {selectedSample.diseasename || "----"}
-                    </li>
-                    <li>
-                      <b>Volume:</b> {selectedSample.volume || "----"}{" "}
-                      {selectedSample.QuantityUnit || ""}
-                    </li>
-                    <li>
-                      <b>Age:</b> {selectedSample.age || "----"}
-                    </li>
-                    <li>
-                      <b>Gender:</b> {selectedSample.gender || "----"}
-                    </li>
-                    <li>
-                      <b>Price:</b>{" "}
-                      {selectedSample.price
-                        ? `${selectedSample.price} ${selectedSample.SamplePriceCurrency || ""}`
-                        : "----"}
-                    </li>
-                    <li>
-                      <b>Status:</b> {selectedSample.status || "----"}
-                    </li>
-                  </ul>
-                </div>
-                <div className="col-md-8 ps-3">
-                  <h5 className="fw-semibold">Optional Fields</h5>
-                  <ul className="list-unstyled">
-                    {fieldsToShowInOrder.map(({ label, key }) => {
-                      const value = selectedSample[key];
-                      if (!value) return null;
-                      return (
-                        <li key={key}>
-                          <b>{label}:</b> {value}
-                        </li>
-                      );
-                    })}
-                  </ul>
+
+          <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+            {selectedSample ? (
+              <div className="p-3">
+                <div className="row g-3">
+                  {fieldsToShowInOrder.map(({ key, label }) => {
+                    const value = selectedSample[key];
+                    if (value === undefined) return null;
+
+                    return (
+                      <div className="col-md-6" key={key}>
+                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                          <span className="text-muted small fw-bold mb-1">{label}</span>
+                          <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+            ) : (
+              <div className="text-center text-muted p-3">No details to show</div>
             )}
           </Modal.Body>
+          <Modal.Footer className="border-0"></Modal.Footer>
         </Modal>
       </section>
     </>
