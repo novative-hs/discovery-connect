@@ -12,6 +12,7 @@ router.post('/biobank/postBBsample', upload.single("logo"), BioBankController.cr
 router.post('/biobank/postprice/:id', BioBankController.postSamplePrice);
 router.put('/biobank/editBBsample/:id', upload.single("logo"), BioBankController.updateBiobankSample);
 router.get('/biobank/getQuarantineStock', BioBankController.getQuarantineStock);
+router.get('/biobank/getvisibilitysamples/:id', BioBankController.getBiobankVisibilitySamples);
 router.put('/biobank/UpdateSampleStatus/:id', BioBankController.UpdateSampleStatus);
 router.get("/sample/getprice/:name", BioBankController.getPrice);
 

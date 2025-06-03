@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef  } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
@@ -11,7 +11,7 @@ import moment from "moment";
 import Modal from "react-bootstrap/Modal";
 import * as XLSX from "xlsx"
 import { notifyError, notifySuccess } from "@utils/toast";
-  const allPermissions = [
+const allPermissions = [
   { value: "add_full", label: "Add Sample with Full Detail" },
   { value: "add_basic", label: "Add Sample with Basic Detail" },
   { value: "edit", label: "Edit Sample" },
@@ -41,53 +41,53 @@ const CollectionSiteStaffArea = () => {
   const [showPassword, setShowPassword] = useState(false);
 
 
-const [formData, setFormData] = useState({
-  collectionsitesid: "",
-  staffName: "",
-  email: "",
-  password: "",
-  permission: allPermissions.map((p) => p.value),
-  created_at: "",
-  status: "inactive",
-});
+  const [formData, setFormData] = useState({
+    collectionsitesid: "",
+    staffName: "",
+    email: "",
+    password: "",
+    permission: allPermissions.map((p) => p.value),
+    created_at: "",
+    status: "inactive",
+  });
 
-const [permissionType, setPermissionType] = useState(
-  formData.permission.length === allPermissions.length ? "all" : "specific"
-);
+  const [permissionType, setPermissionType] = useState(
+    formData.permission.length === allPermissions.length ? "all" : "specific"
+  );
 
-const isAllPermissionsSelected = formData.permission.length === allPermissions.length;
+  const isAllPermissionsSelected = formData.permission.length === allPermissions.length;
 
-const handlePermissionTypeChange = (type) => {
-  setPermissionType(type);
-  if (type === "all") {
-    setFormData({
-      ...formData,
-      permission: allPermissions.map((p) => p.value),
-    });
-  } else {
-    setFormData({ ...formData, permission: [] });
-  }
-};
+  const handlePermissionTypeChange = (type) => {
+    setPermissionType(type);
+    if (type === "all") {
+      setFormData({
+        ...formData,
+        permission: allPermissions.map((p) => p.value),
+      });
+    } else {
+      setFormData({ ...formData, permission: [] });
+    }
+  };
 
-const handleCheckboxChange = (value) => {
-  const newPermissions = formData.permission.includes(value)
-    ? formData.permission.filter((p) => p !== value)
-    : [...formData.permission, value];
-  setFormData({ ...formData, permission: newPermissions });
-};
+  const handleCheckboxChange = (value) => {
+    const newPermissions = formData.permission.includes(value)
+      ? formData.permission.filter((p) => p !== value)
+      : [...formData.permission, value];
+    setFormData({ ...formData, permission: newPermissions });
+  };
 
-const getPermissionDisplayText = () => {
-  if (isAllPermissionsSelected) {
-    return "All Pages Access";
-  } else if (formData.permission.length) {
-    return allPermissions
-      .filter((perm) => formData.permission.includes(perm.value))
-      .map((perm) => perm.label)
-      .join(", ");
-  } else {
-    return "Select Permission";
-  }
-};
+  const getPermissionDisplayText = () => {
+    if (isAllPermissionsSelected) {
+      return "All Pages Access";
+    } else if (formData.permission.length) {
+      return allPermissions
+        .filter((perm) => formData.permission.includes(perm.value))
+        .map((perm) => perm.label)
+        .join(", ");
+    } else {
+      return "Select Permission";
+    }
+  };
 
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // const [registerUser, { }] = useRegisterUserMutation();
@@ -163,37 +163,37 @@ const getPermissionDisplayText = () => {
     }
   };
 
-const onSubmit = async (event) => {
-  event.preventDefault();
+  const onSubmit = async (event) => {
+    event.preventDefault();
 
-  // Prepare data to send to backend
-  const dataToSend = {
-    ...formData,
-    permission:
-      formData.permission.length === allPermissions.length
-        ? "all"  // send string "all" if all permissions selected
-        : formData.permission, // else send array of selected permissions
+    // Prepare data to send to backend
+    const dataToSend = {
+      ...formData,
+      permission:
+        formData.permission.length === allPermissions.length
+          ? "all"  // send string "all" if all permissions selected
+          : formData.permission, // else send array of selected permissions
+    };
+
+    console.log("Data to send:", dataToSend);
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
+        dataToSend,
+      );
+
+      notifySuccess("Collection Site Staff Registered Successfully");
+      fetchCollectionsiteStaff();
+      setShowAddModal(false);
+      resetFormData();
+    } catch (error) {
+      console.error("Registration Error:", error);
+      const errMsg =
+        error.response?.data?.error || error.message || "An error occurred";
+      notifyError(errMsg);
+    }
   };
-
-  console.log("Data to send:", dataToSend);
-
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/createcollectionsitestaff`,
-      dataToSend,
-    );
-
-    notifySuccess("Collection Site Staff Registered Successfully");
-    fetchCollectionsiteStaff();
-    setShowAddModal(false);
-    resetFormData();
-  } catch (error) {
-    console.error("Registration Error:", error);
-    const errMsg =
-      error.response?.data?.error || error.message || "An error occurred";
-    notifyError(errMsg);
-  }
-};
 
 
 
@@ -521,7 +521,7 @@ const onSubmit = async (event) => {
         </div>
       </div>
 
-       {/* Table */}
+      {/* Table */}
       <div className="table-responsive" style={{ overflowX: "auto" }}>
         <table className="table table-hover table-bordered text-center align-middle w-100">
           <thead className="table-primary text-dark">
@@ -535,7 +535,8 @@ const onSubmit = async (event) => {
                       className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                       placeholder={`Search ${label}`}
                       onChange={(e) => handleFilterChange(field, e.target.value)}
-                      style={{ minWidth: "150px", maxWidth: "200px", width: "100px" }}
+                      style={{ minWidth: "160px", maxWidth: "150px", width: "100%" }}
+
                     />
                     <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                       {label}
@@ -561,7 +562,12 @@ const onSubmit = async (event) => {
                           ? "text-start text-wrap"
                           : "text-center text-truncate"
                       }
-                      style={{ maxWidth: "150px" }}
+                      style={{
+                        maxWidth: "150px",
+                        overflowWrap: "break-word",
+                        wordBreak: "break-word",
+                        whiteSpace: "normal",
+                      }}
                     >
                       {field === "staffName" ? (
                         <span
@@ -656,6 +662,7 @@ const onSubmit = async (event) => {
           </tbody>
         </table>
       </div>
+
       {/* Pagination */}
       {filteredCollectionsitesstaff.length >= 0 && (
         <Pagination
@@ -667,316 +674,318 @@ const onSubmit = async (event) => {
           focusPage={currentPage}
         />
       )}
-          {(showAddModal || showEditModal) && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h5 className="modal-title">
-                        {showAddModal
-                          ? "Add Staff "
-                          : "Edit Staff"}
-                      </h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => {
-                          setShowAddModal(false);
-                          setShowEditModal(false);
-                          resetFormData();
-                        }}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
+      {(showAddModal || showEditModal) && (
+        <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(5px)" }}
+          ></div>
 
-                    <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
-                      <div
-                        className="modal-body"
-                        style={{ maxHeight: "400px", overflowY: "auto" }}
-                      >
-                        <div className="form-group">
-                          <label>Unique Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            autocomplete="email"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Password</label>
-                          <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                              autocomplete="new-password" // ✅ Add this line
-                            />
-
-                            <span
-                              className="input-group-text"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i
-                                className={
-                                  showPassword
-                                    ? "fa-regular fa-eye"
-                                    : "fa-regular fa-eye-slash"
-                                }
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="form-group">
-                          <label>Staff Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter Name"
-                            name="staffName"
-                            value={formData.staffName}
-                            onChange={handleInputChange}
-                            pattern="^[A-Za-z\s]+$"
-                            title="Only letters and spaces are allowed."
-                            required
-                          />
-                          {!/^[A-Za-z\s]*$/.test(formData.staffName) && (
-                            <small className="text-danger">
-                              Only letters and spaces are allowed.
-                            </small>
-                          )}
-                        </div>
-
-                        <div className="form-group">
-                          <label>Collectionsite</label>
-                          <select
-                            className="form-control p-2"
-                            name="collectionsitesid"
-                            value={formData.collectionsitesid} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
-                            required
-                          >
-                            <option value="" disabled>
-                              Select Collectionsites
-                            </option>
-                            {collectionsites.map((collectionsites) => (
-                              <option key={collectionsites.id} value={collectionsites.id}>
-                                {collectionsites.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
- <div className="form-group">
-      <label>Permission</label>
-      <div className="dropdown">
-        <button
-          className="form-control text-start"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
-          {getPermissionDisplayText()}
-        </button>
-
-        <ul className="dropdown-menu p-2" style={{ minWidth: "100%" }}>
-          <li>
-            <label className="dropdown-item d-flex align-items-center gap-2">
-              <input
-                type="radio"
-                name="permissionType"
-                value="all"
-                checked={permissionType === "all"}
-                onChange={() => handlePermissionTypeChange("all")}
-              />
-              All Pages Access
-            </label>
-          </li>
-
-          <li>
-            <label className="dropdown-item d-flex align-items-center gap-2">
-              <input
-                type="radio"
-                name="permissionType"
-                value="specific"
-                checked={permissionType === "specific"}
-                onChange={() => handlePermissionTypeChange("specific")}
-              />
-              Specific Permissions
-            </label>
-          </li>
-
-          {permissionType === "specific" && (
-            <>
-              <hr className="dropdown-divider" />
-              {allPermissions.map((perm) => (
-                <li key={perm.value}>
-                  <label className="dropdown-item d-flex align-items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.permission.includes(perm.value)}
-                      onChange={() => handleCheckboxChange(perm.value)}
-                    />
-                    {perm.label}
-                  </label>
-                </li>
-              ))}
-            </>
-          )}
-        </ul>
-      </div>
-    </div>
-</div>
-
-                      <div className="modal-footer">
-                        <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {showAddModal
+                      ? "Add Staff "
+                      : "Edit Staff"}
+                  </h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setShowEditModal(false);
+                      resetFormData();
+                    }}
+                    style={{
+                      fontSize: "1.5rem",
+                      position: "absolute",
+                      right: "10px",
+                      top: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>&times;</span>
+                  </button>
                 </div>
-              </div>
-            </>
-          )}
-          {showHistoryModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "100px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog modal-md" role="document">
-                  <div className="modal-content">
-                    {/* Modal Header */}
-                    <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => setShowHistoryModal(false)}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
+                <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
+                  <div
+                    className="modal-body"
+                    style={{ maxHeight: "400px", overflowY: "auto" }}
+                  >
+                    <div className="form-group">
+                      <label>Unique Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Enter Email"
+                        autocomplete="email"
+                        required
+                      />
+                    </div>
+                    <div className="col-md-12">
+                      <label className="form-label">Password</label>
+                      <div className="input-group input-group-sm">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className="form-control"
+                          name="password"
+                          placeholder="Enter Password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+                          title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                          required
+                          autocomplete="new-password" // ✅ Add this line
+                        />
+
+                        <span
+                          className="input-group-text"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <i
+                            className={
+                              showPassword
+                                ? "fa-regular fa-eye"
+                                : "fa-regular fa-eye-slash"
+                            }
+                          ></i>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Staff Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter Name"
+                        name="staffName"
+                        value={formData.staffName}
+                        onChange={handleInputChange}
+                        pattern="^[A-Za-z\s]+$"
+                        title="Only letters and spaces are allowed."
+                        required
+                      />
+                      {!/^[A-Za-z\s]*$/.test(formData.staffName) && (
+                        <small className="text-danger">
+                          Only letters and spaces are allowed.
+                        </small>
+                      )}
                     </div>
 
-                    {/* Chat-style Modal Body */}
-                    <div
-                      className="modal-body"
-                      style={{
-                        maxHeight: "500px",
-                        overflowY: "auto",
-                        backgroundColor: "#e5ddd5", // WhatsApp-style background
-                        padding: "15px",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      {historyData && historyData.length > 0 ? (
-                        historyData.map((log, index) => {
-                          const {
-                            staffName,
-                            permission,
-                            created_at,
-                            updated_at,
-                            status
-                          } = log;
+                    <div className="form-group">
+                      <label>Collectionsite</label>
+                      <select
+                        className="form-control p-2"
+                        name="collectionsitesid"
+                        value={formData.collectionsitesid} // Store the selected city ID in formData
+                        onChange={handleInputChange} // Handle change to update formData
+                        required
+                      >
+                        <option value="" disabled>
+                          Select Collectionsites
+                        </option>
+                        {collectionsites.map((collectionsites) => (
+                          <option key={collectionsites.id} value={collectionsites.id}>
+                            {collectionsites.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              {/* Message for City Addition */}
-                              {status === 'added' && (
-                                <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
-                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
+                    <div className="form-group">
+                      <label>Permission</label>
+                      <div className="dropdown">
+                        <button
+                          className="form-control text-start"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          {getPermissionDisplayText()}
+                        </button>
 
-                              {status === 'updated' && (
-                                <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
-                                  <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
-                                  {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
+                        <ul className="dropdown-menu p-2" style={{ minWidth: "100%" }}>
+                          <li>
+                            <label className="dropdown-item d-flex align-items-center gap-2">
+                              <input
+                                type="radio"
+                                name="permissionType"
+                                value="all"
+                                checked={permissionType === "all"}
+                                onChange={() => handlePermissionTypeChange("all")}
+                              />
+                              All Pages Access
+                            </label>
+                          </li>
 
-                              {status === 'active' && (
-                                <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
-                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
+                          <li>
+                            <label className="dropdown-item d-flex align-items-center gap-2">
+                              <input
+                                type="radio"
+                                name="permissionType"
+                                value="specific"
+                                checked={permissionType === "specific"}
+                                onChange={() => handlePermissionTypeChange("specific")}
+                              />
+                              Specific Permissions
+                            </label>
+                          </li>
 
-                              {status === 'inactive' && (
-                                <div style={baseStyle}>
-                                  <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
-                                  {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                                </div>
-                              )}
+                          {permissionType === "specific" && (
+                            <>
+                              <hr className="dropdown-divider" />
+                              {allPermissions.map((perm) => (
+                                <li key={perm.value}>
+                                  <label className="dropdown-item d-flex align-items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={formData.permission.includes(perm.value)}
+                                      onChange={() => handleCheckboxChange(perm.value)}
+                                    />
+                                    {perm.label}
+                                  </label>
+                                </li>
+                              ))}
+                            </>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button type="submit" className="btn btn-primary">
+                      {showAddModal ? "Save" : "Update"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showHistoryModal && (
+        <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(5px)" }}
+          ></div>
+
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              top: "100px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="modal-dialog modal-md" role="document">
+              <div className="modal-content">
+                {/* Modal Header */}
+                <div className="modal-header">
+                  <h5 className="modal-title">History</h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => setShowHistoryModal(false)}
+                    style={{
+                      fontSize: "1.5rem",
+                      position: "absolute",
+                      right: "10px",
+                      top: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>&times;</span>
+                  </button>
+                </div>
+
+                {/* Chat-style Modal Body */}
+                <div
+                  className="modal-body"
+                  style={{
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                    backgroundColor: "#e5ddd5", // WhatsApp-style background
+                    padding: "15px",
+                    borderRadius: "10px",
+                  }}
+                >
+                  {historyData && historyData.length > 0 ? (
+                    historyData.map((log, index) => {
+                      const {
+                        staffName,
+                        permission,
+                        created_at,
+                        updated_at,
+                        status
+                      } = log;
+
+                      return (
+                        <div
+                          key={index}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          {/* Message for City Addition */}
+                          {status === 'added' && (
+                            <div style={baseStyle}>
+                              <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
+                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
+
+                          {status === 'updated' && (
+                            <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
+                              <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
+                              {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
+
+                          {status === 'active' && (
+                            <div style={baseStyle}>
+                              <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
+                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
+
+                          {status === 'inactive' && (
+                            <div style={baseStyle}>
+                              <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
+                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                            </div>
+                          )}
 
                           {/* Message for City Addition */}
                           {status === 'added' && (
@@ -1019,8 +1028,6 @@ const onSubmit = async (event) => {
           </div>
         </>
       )}
-
-
 
       <Modal show={showModal}
         onHide={closeModal}
