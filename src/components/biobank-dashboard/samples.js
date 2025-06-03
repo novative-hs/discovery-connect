@@ -1048,7 +1048,7 @@ const BioBankSampleArea = () => {
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                        style={{ width: "100%" }} // full width inside th cell
                       />
                       <span className="fw-bold mt-1 fs-6">
                         {label}
@@ -1140,7 +1140,29 @@ Box ID=${sample.box_id || "----"} `;
                               );
                             } else if (key === "volume") {
                               return `${sample.volume} ${sample.QuantityUnit || ""}`;
-                            } else if (key === "age") {
+                            }
+                            else if (key === "barcode") {
+                              return <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedBarcodeId(sample.id);
+                                  setShowBarcodeModal(true);
+                                }}
+                              >
+                                Show Barcode
+                              </button>
+                            } else if (key === "barcode") {
+                              return <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedBarcodeId(sample.id);
+                                  setShowBarcodeModal(true);
+                                }}
+                              >
+                                Show Barcode
+                              </button>
+                            }
+                            else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "TestResult") {
                               return `${sample.TestResult} ${
