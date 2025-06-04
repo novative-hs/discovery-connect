@@ -358,40 +358,40 @@ const SampleArea = () => {
     }
   }, [totalPages]);
 
- const handleFilterChange = (field, value) => {
-  let filtered = [];
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
 
-  if (value.trim() === "") {
-    filtered = samples;
-  } else {
-    const lowerValue = value.toLowerCase();
+    if (value.trim() === "") {
+      filtered = samples;
+    } else {
+      const lowerValue = value.toLowerCase();
 
-    filtered = samples.filter((sample) => {
-      if (field === "volume") {
-        const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
-        return combinedVolume.includes(lowerValue);
-      }
+      filtered = samples.filter((sample) => {
+        if (field === "volume") {
+          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+          return combinedVolume.includes(lowerValue);
+        }
 
         if (field === "TestResult") {
-        const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
-        return combinedPrice.includes(lowerValue);
-      }
+          const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
+          return combinedPrice.includes(lowerValue);
+        }
 
-      if (field === "gender") {
-        return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
-      }
-      if (field === "sample_visibility") {
-        return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
-      }
+        if (field === "gender") {
+          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+        }
+        if (field === "sample_visibility") {
+          return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
+        }
 
-      return sample[field]?.toString().toLowerCase().includes(lowerValue);
-    });
-  }
+        return sample[field]?.toString().toLowerCase().includes(lowerValue);
+      });
+    }
 
-  setFilteredSamplename(filtered);
-  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-  setCurrentPage(0);
-};
+    setFilteredSamplename(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
+  };
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
@@ -802,25 +802,23 @@ const SampleArea = () => {
       <head>
         <style>
           @page {
-            margin: 10mm;
+            margin: 5mm;
           }
           body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             text-align: center;
             font-family: Arial, sans-serif;
           }
           #barcode {
-            margin-top: 50px;
+            width: 130px;
+            height: 80px;
+            margin: 0 auto;
             page-break-inside: avoid;
             break-inside: avoid;
-            transform: rotate(90deg);
+            /* Remove or keep transform as needed */
+            transform: scale(1);
             transform-origin: center;
-          }
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact;
-            }
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -831,9 +829,10 @@ const SampleArea = () => {
           window.onload = function() {
             JsBarcode("#barcode", "${barcodeId}", {
               format: "CODE128",
-              height: 80,
-              width: 1,  // Adjust line width here
-              displayValue: false
+               height: 80,  
+              width: 0.8,
+              displayValue: false,
+              margin: 0
             });
             setTimeout(() => {
               window.print();
@@ -847,6 +846,7 @@ const SampleArea = () => {
 
     printWindow.document.close();
   };
+
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -1107,12 +1107,11 @@ ${sample.box_id || "N/A"} = Box ID`;
               >
                 <Barcode
                   value={selectedBarcodeId?.toString() || ""}
-                  height={80}
-                  width={1} // Reduce width per bar to fit better
+                  height={50}         // Shrink height
+                  width={0.8}         // Thinner bars
                   displayValue={false}
+                  margin={0}          // Remove extra space
                 />
-
-
                 {/* Buttons - hide on print */}
                 <div
                   className="d-flex justify-content-center gap-2 mt-4 d-print-none"
