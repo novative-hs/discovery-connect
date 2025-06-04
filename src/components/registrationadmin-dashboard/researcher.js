@@ -156,7 +156,7 @@ const ResearcherArea = () => {
       console.error("Error fetching history:", error);
     }
   };
-    const fetchOrderHistory = async (id) => {
+  const fetchOrderHistory = async (id) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/orderhistory/${id}`
@@ -171,7 +171,7 @@ const ResearcherArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-   const handleShowOrderHistory = (id) => {
+  const handleShowOrderHistory = (id) => {
     fetchOrderHistory(id);
     setShowOrderHistoryModal(true);
   };
@@ -213,50 +213,50 @@ const ResearcherArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-const handleExportToExcel = () => {
-  console.log(filteredResearchers);
+  const handleExportToExcel = () => {
+    console.log(filteredResearchers);
 
-  const dataToExport = filteredResearchers.map((item) => ({
-    email: item.email ?? "",
-    password: item.password ?? "",
-    ResearcherName: item.ResearcherName ?? "",
-    OrganizationName: item.OrganizationName ?? "",
-    phoneNumber: item.phoneNumber ?? "",
-    city: item.cityname ?? "",
-    country: item.countryname ?? "",
-    district: item.districtname ?? "",
-    fullAddress: item.fullAddress ?? "",
-    status: item.status ?? "",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+    const dataToExport = filteredResearchers.map((item) => ({
+      email: item.email ?? "",
+      password: item.password ?? "",
+      ResearcherName: item.ResearcherName ?? "",
+      OrganizationName: item.OrganizationName ?? "",
+      phoneNumber: item.phoneNumber ?? "",
+      city: item.cityname ?? "",
+      country: item.countryname ?? "",
+      district: item.districtname ?? "",
+      fullAddress: item.fullAddress ?? "",
+      status: item.status ?? "",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  // Ensure headers are preserved even if data is empty or some columns are all null
-  const headers = [
-    "email",
-    "password",
-    "ResearcherName",
-    "OrganizationName",
-    "phoneNumber",
-    "city",
-    "country",
-    "district",
-    "fullAddress",
-    "status",
-    "Created At",
-    "Updated At"
-  ];
+    // Ensure headers are preserved even if data is empty or some columns are all null
+    const headers = [
+      "email",
+      "password",
+      "ResearcherName",
+      "OrganizationName",
+      "phoneNumber",
+      "city",
+      "country",
+      "district",
+      "fullAddress",
+      "status",
+      "Created At",
+      "Updated At"
+    ];
 
-  if (dataToExport.length === 0) {
-    dataToExport.push(Object.fromEntries(headers.map(key => [key, ""])));
-  }
+    if (dataToExport.length === 0) {
+      dataToExport.push(Object.fromEntries(headers.map(key => [key, ""])));
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Researcher");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Researcher");
 
-  XLSX.writeFile(workbook, "Researcher_List.xlsx");
-};
+    XLSX.writeFile(workbook, "Researcher_List.xlsx");
+  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
@@ -276,50 +276,50 @@ const handleExportToExcel = () => {
               )}
               <h5 className="m-0 fw-bold ">Researcher List</h5>
               {/* Status Filter */}
-             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-3 mb-3">
-  
-  {/* Filter Section (left-aligned) */}
-  <div className="d-flex flex-column flex-sm-row align-items-center gap-2">
-    <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
-      Status:
-    </label>
+              <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-3 mb-3">
 
-    <select
-      id="statusFilter"
-      className="form-control"
-      style={{ width: "auto" }}
-      onChange={(e) => handleFilterChange("status", e.target.value)}
-    >
-      <option value="">All</option>
-      <option value="pending">Pending</option>
-      <option value="approved">Approved</option>
-    </select>
-  </div>
+                {/* Filter Section (left-aligned) */}
+                <div className="d-flex flex-column flex-sm-row align-items-center gap-2">
+                  <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
+                    Status:
+                  </label>
 
-  {/* Export Button (right-aligned) */}
-  <div>
-    <button
-      onClick={handleExportToExcel}
-      style={{
-        backgroundColor: "#28a745",
-        color: "#fff",
-        border: "none",
-        padding: "8px 16px",
-        borderRadius: "6px",
-        fontWeight: "500",
-        fontSize: "14px",
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-      }}
-    >
-      <i className="fas fa-file-excel"></i> Export to Excel
-    </button>
-  </div>
-</div>
+                  <select
+                    id="statusFilter"
+                    className="form-control"
+                    style={{ width: "auto" }}
+                    onChange={(e) => handleFilterChange("status", e.target.value)}
+                  >
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                  </select>
+                </div>
 
-              
+                {/* Export Button (right-aligned) */}
+                <div>
+                  <button
+                    onClick={handleExportToExcel}
+                    style={{
+                      backgroundColor: "#28a745",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontWeight: "500",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <i className="fas fa-file-excel"></i> Export to Excel
+                  </button>
+                </div>
+              </div>
+
+
             </div>
 
             {/* Table */}
@@ -412,7 +412,7 @@ const handleExportToExcel = () => {
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
-                             <button
+                            <button
                               className="btn btn-success btn-sm"
                               onClick={() =>
                                 handleShowOrderHistory(researcher.id)
@@ -751,70 +751,70 @@ const handleExportToExcel = () => {
             </>
           )}
 
-       {showOrderHistoryModal && (
-  <div className="modal show d-block" tabIndex="-1" role="dialog">
-    <div className="modal-dialog modal-xl" role="document">
-      <div className="modal-content shadow-lg border-0">
-        <div className="modal-header bg-primary text-white">
-          <h5 className="modal-title">Order History</h5>
-          <button
-            type="button"
-            className="btn-close btn-close-white"
-            onClick={() => setShowOrderHistoryModal(false)}
-          ></button>
-        </div>
+          {showOrderHistoryModal && (
+            <div className="modal show d-block" tabIndex="-1" role="dialog">
+              <div className="modal-dialog modal-xl" role="document">
+                <div className="modal-content shadow-lg border-0">
+                  <div className="modal-header bg-primary text-white">
+                    <h5 className="modal-title">Order History</h5>
+                    <button
+                      type="button"
+                      className="btn-close btn-close-white"
+                      onClick={() => setShowOrderHistoryModal(false)}
+                    ></button>
+                  </div>
 
-        <div className="modal-body">
-          {orderhistoryData.length === 0 ? (
-            <div className="alert alert-info text-center py-4">
-              No order history found.
+                  <div className="modal-body">
+                    {orderhistoryData.length === 0 ? (
+                      <div className="alert alert-info text-center py-4">
+                        No order history found.
+                      </div>
+                    ) : (
+                      <>
+                        {/* Researcher Name Styling */}
+                        <div className="mb-4 text-center">
+                          <span className="h5 fw-bold text-primary">Researcher: </span>
+                          <span className="h5 text-dark">{orderhistoryData[0]?.researcher_name}</span>
+                        </div>
+
+                        {/* Table with modern styling */}
+                        <div className="table-responsive">
+                          <table className="table table-hover table-striped align-middle">
+                            <thead className="table-dark">
+                              <tr>
+                                <th>Disease Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Order Status</th>
+                                <th>Technical Admin Status</th>
+                                <th>Scientific CommitteeMember Status</th>
+                                <th>Ethical CommitteeMember Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {orderhistoryData.map((order, index) => (
+                                <tr key={index}>
+                                  <td>{order.diseasename}</td>
+                                  <td>{order.price}</td>
+                                  <td>{order.quantity}</td>
+                                  <td>{order.totalpayment}</td>
+                                  <td>{order.order_status}</td>
+                                  <td>{order.technicaladmin_status}</td>
+                                  <td>{order.scientific_committee_status}</td>
+                                  <td>{order.ethical_committee_status}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          ) : (
-            <>
-              {/* Researcher Name Styling */}
-              <div className="mb-4 text-center">
-                <span className="h5 fw-bold text-primary">Researcher: </span>
-                <span className="h5 text-dark">{orderhistoryData[0]?.researcher_name}</span>
-              </div>
-
-              {/* Table with modern styling */}
-              <div className="table-responsive">
-                <table className="table table-hover table-striped align-middle">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>Sample Name</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>Total</th>
-                      <th>Order Status</th>
-                      <th>Technical Admin Status</th>
-                      <th>Scientific CommitteeMember Status</th>
-                      <th>Ethical CommitteeMember Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderhistoryData.map((order, index) => (
-                      <tr key={index}>
-                        <td>{order.sampleName}</td>
-                        <td>{order.price}</td>
-                        <td>{order.quantity}</td>
-                        <td>{order.totalpayment}</td>
-                        <td>{order.order_status}</td>
-                        <td>{order.technicaladmin_status}</td>
-                        <td>{order.scientific_committee_status}</td>
-                        <td>{order.ethical_committee_status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
           )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
 
 
         </div>

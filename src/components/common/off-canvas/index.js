@@ -69,18 +69,9 @@ const OffCanvas = ({
           </div>
           <div className="offcanvas__content">
             <div className="offcanvas__top mb-40 d-flex justify-content-between align-items-center">
-              <div className="offcanvas__logo logo" style={{ position: 'relative', top: '-30px' }}>
-                <Link href="/">
-                  <Image src={logo} alt="logo" width={150} height={70} />
-                </Link>
-                {/* LINKS BELOW LOGO */}
-                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <Link href="/" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>Home</Link>
-                  <Link href="/about" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>About Us</Link>
-                  <Link href="/shop" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>Discover</Link>
-                  <Link href="/login" style={{ fontSize: "14px", color: "#000", fontWeight: "500" }}>Login</Link>
-                </div>
-              </div>
+              <Link href="/">
+                <Image src={logo} alt="logo" width={150} height={70} />
+              </Link>
             </div>
             <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
               <div className="mean-bar">

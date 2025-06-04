@@ -394,22 +394,19 @@ const BioBankSampleArea = () => {
 
       filtered = samples.filter((sample) => {
         if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${
-            sample.QuantityUnit ?? ""
-          }`.toLowerCase();
+          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""
+            }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
-         if (field === "TestResult") {
-          const combinedVolume = `${sample.TestResult ?? ""} ${
-            sample.TestResultUnit ?? ""
-          }`.toLowerCase();
+        if (field === "TestResult") {
+          const combinedVolume = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""
+            }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
 
         if (field === "price") {
-          const combinedPrice = `${sample.price ?? ""} ${
-            sample.SamplePriceCurrency ?? ""
-          }`.toLowerCase();
+          const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""
+            }`.toLowerCase();
           return combinedPrice.includes(lowerValue);
         }
 
@@ -715,10 +712,10 @@ const BioBankSampleArea = () => {
       typeof sample.logo === "string"
         ? sample.logo
         : sample.logo?.data
-        ? URL.createObjectURL(
+          ? URL.createObjectURL(
             new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
           )
-        : null;
+          : null;
     setLogoPreview(logoPreviewUrl);
     // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
@@ -930,25 +927,23 @@ const BioBankSampleArea = () => {
       <head>
         <style>
           @page {
-            margin: 10mm;
+            margin: 5mm;
           }
           body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             text-align: center;
             font-family: Arial, sans-serif;
           }
           #barcode {
-            margin-top: 50px;
+            width: 130px;
+            height: 80px;
+            margin: 0 auto;
             page-break-inside: avoid;
             break-inside: avoid;
-            transform: rotate(90deg);
+            /* Remove or keep transform as needed */
+            transform: scale(1);
             transform-origin: center;
-          }
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact;
-            }
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -959,9 +954,10 @@ const BioBankSampleArea = () => {
           window.onload = function() {
             JsBarcode("#barcode", "${barcodeId}", {
               format: "CODE128",
-              height: 80,
-              width: 1,  // Adjust line width here
-              displayValue: false
+               height: 80,  
+              width: 0.8,
+              displayValue: false,
+              margin: 0
             });
             setTimeout(() => {
               window.print();
@@ -1072,8 +1068,8 @@ const BioBankSampleArea = () => {
                           key === "price"
                             ? "text-end"
                             : key === "diseasename"
-                            ? "text-start"
-                            : "text-center text-truncate"
+                              ? "text-start"
+                              : "text-center text-truncate"
                         }
                         style={{
                           maxWidth: "150px",
@@ -1101,9 +1097,8 @@ const BioBankSampleArea = () => {
                         ) : (
                           (() => {
                             if (key === "locationids") {
-                              const tooltip = `Room Number=${
-                                sample.room_number || "----"
-                              } 
+                              const tooltip = `Room Number=${sample.room_number || "----"
+                                } 
 Freezer ID=${sample.freezer_id || "----"} 
 Box ID=${sample.box_id || "----"} `;
 
@@ -1113,13 +1108,13 @@ Box ID=${sample.box_id || "----"} `;
                                   typeof sample.logo === "string"
                                     ? sample.logo
                                     : sample.logo?.data
-                                    ? URL.createObjectURL(
+                                      ? URL.createObjectURL(
                                         new Blob(
                                           [new Uint8Array(sample.logo.data)],
                                           { type: "image/png" }
                                         )
                                       )
-                                    : null;
+                                      : null;
                                 if (logo) {
                                   setSelectedLogoUrl(logo);
                                   setShowLogoModal(true);
@@ -1165,9 +1160,8 @@ Box ID=${sample.box_id || "----"} `;
                             else if (key === "age") {
                               return `${sample.age} years`;
                             } else if (key === "TestResult") {
-                              return `${sample.TestResult} ${
-                                sample.TestResultUnit || ""
-                              }`;
+                              return `${sample.TestResult} ${sample.TestResultUnit || ""
+                                }`;
                             } else if (key === "price") {
                               return sample.price && sample.SamplePriceCurrency
                                 ? `${sample.price} ${sample.SamplePriceCurrency}`
@@ -1277,12 +1271,11 @@ Box ID=${sample.box_id || "----"} `;
               >
                 <Barcode
                   value={selectedBarcodeId?.toString() || ""}
-                  height={80}
-                  width={1} // Reduce width per bar to fit better
+                  height={50}         // Shrink height
+                  width={0.8}         // Thinner bars
                   displayValue={false}
+                  margin={0}          // Remove extra space
                 />
-
-
                 {/* Buttons - hide on print */}
                 <div
                   className="d-flex justify-content-center gap-2 mt-4 d-print-none"
@@ -1521,8 +1514,8 @@ Box ID=${sample.box_id || "----"} `;
                                 {formData.volume &&
                                   formData.QuantityUnit &&
                                   parseFloat(formData.volume) >
-                                    (unitMaxValues[formData.QuantityUnit] ||
-                                      Infinity) && (
+                                  (unitMaxValues[formData.QuantityUnit] ||
+                                    Infinity) && (
                                     <small className="text-danger mt-1">
                                       Value must be less than or equal to{" "}
                                       {unitMaxValues[
@@ -1937,10 +1930,10 @@ Box ID=${sample.box_id || "----"} `;
                                       .filter((country) =>
                                         searchCountry
                                           ? country.name
-                                              .toLowerCase()
-                                              .includes(
-                                                searchCountry.toLowerCase()
-                                              )
+                                            .toLowerCase()
+                                            .includes(
+                                              searchCountry.toLowerCase()
+                                            )
                                           : true
                                       )
                                       .map((country) => (
@@ -1956,12 +1949,12 @@ Box ID=${sample.box_id || "----"} `;
                                             handleSelectCountry(country)
                                           }
                                           onMouseEnter={(e) =>
-                                            (e.currentTarget.style.backgroundColor =
-                                              "#e2e2e2")
+                                          (e.currentTarget.style.backgroundColor =
+                                            "#e2e2e2")
                                           }
                                           onMouseLeave={(e) =>
-                                            (e.currentTarget.style.backgroundColor =
-                                              "#f0f0f0")
+                                          (e.currentTarget.style.backgroundColor =
+                                            "#f0f0f0")
                                           }
                                         >
                                           {country.name}

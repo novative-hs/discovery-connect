@@ -35,20 +35,19 @@ const {
   getProductById,
 } = require("./controller/productController");
 const biobankRoutes = require("./routes/biobankRoutes");
-const biobanksampledispacthRoutes = require("./routes/biobanksampledispatchRoutes");
 
 const samplefieldsRoutes = require("./routes/samplefieldsRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const contactusRoutes = require("./routes/contactusRoutes");
 const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
-const collectionsiteStaffRoutes=require("./routes/collectionsitestaffRoutes")
-const samplereturnRoutes=require("./routes/samplereturnRoutes")
-const diagnosistestparameterRoutes=require("./routes/diagnosistestparameterRoutes")
-const infectiousdiseaseRoutes=require('./routes/infectiousdiseasetestingRoutes')
+const collectionsiteStaffRoutes = require("./routes/collectionsitestaffRoutes")
+const samplereturnRoutes = require("./routes/samplereturnRoutes")
+const diagnosistestparameterRoutes = require("./routes/diagnosistestparameterRoutes")
+const infectiousdiseaseRoutes = require('./routes/infectiousdiseasetestingRoutes')
 // Routes
 
-app.use('/api/diagnosis-test-parameter',diagnosistestparameterRoutes)
-app.use('/api/infectiousdisease',infectiousdiseaseRoutes)
+app.use('/api/diagnosis-test-parameter', diagnosistestparameterRoutes)
+app.use('/api/infectiousdisease', infectiousdiseaseRoutes)
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);
@@ -62,17 +61,16 @@ app.use("/api", researcherRoutes);
 app.use("/api/committeemember", committeememberRoutes);
 app.use("/api", sampleRoutes);
 app.use("/api/committeesampleapproval", committeesampleapproval);
-app.use("/api/payment", paymentRoutes); 
+app.use("/api/payment", paymentRoutes);
 app.use("/api/sampledispatch", sampleDispatchRoutes);
 app.use("/api/samplereceive", sampleReceiveRoutes);
-app.use("/api/admin/collectionsitestaff",collectionsiteStaffRoutes)
+app.use("/api/admin/collectionsitestaff", collectionsiteStaffRoutes)
 app.use("/api/admin/collectionsite", collectionSiteRoutes);
 app.use("/api/admin/organization", organizationRoutes);
 app.use('/api', cartRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", biobankRoutes);
-app.use("/api/samplereturn",samplereturnRoutes)
-app.use("/api/biobanksampledispatch", biobanksampledispacthRoutes);
+app.use("/api/samplereturn", samplereturnRoutes)
 app.use("/api/samplefields", samplefieldsRoutes);
 app.use("/api", contactusRoutes);
 app.use("/api/admin/csr", CSRRoutes);
