@@ -1069,7 +1069,7 @@ ${sample.box_id || "N/A"} = Box ID`;
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage - 1} // If using react-paginate, which is 0-based
+            focusPage={currentPage} // If using react-paginate, which is 0-based
           />
         )}
 

@@ -2,9 +2,7 @@ import Image from "next/image";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  add_cart_product,
-  decrement,
-  increment,
+  // add_cart_product,
   initialOrderQuantity,
 } from "src/redux/features/cartSlice";
 import { Modal } from "react-bootstrap";
@@ -13,16 +11,16 @@ import { handleModalShow } from "src/redux/features/productSlice";
 const ProductModal = ({ product }) => {
   const dispatch = useDispatch();
   const { isShow } = useSelector((state) => state.product);
-  const { cart_products } = useSelector((state) => state.cart);
-  const cartItems = useSelector((state) => state.cart?.cart_products || []);
+  // const { cart_products } = useSelector((state) => state.cart);
+  // const cartItems = useSelector((state) => state.cart?.cart_products || []);
 
-  const handleAddToCart = (product) => {
-    dispatch(add_cart_product(product));
-  };
+  // const handleAddToCart = (product) => {
+  //   dispatch(add_cart_product(product));
+  // };
 
-  const isInCart = (sampleId) => {
-    return cartItems.some((item) => item.id === sampleId);
-  };
+  // const isInCart = (sampleId) => {
+  //   return cartItems.some((item) => item.id === sampleId);
+  // };
 
   const handleModalClose = () => {
     dispatch(handleModalShow());
@@ -87,7 +85,7 @@ const ProductModal = ({ product }) => {
         {/* Body */}
         <div
           className="modal-body"
-          style={{ maxHeight: "calc(80vh - 100px)", overflowY: "auto" }}
+          style={{ maxHeight: "calc(80vh - 100px)", overflowY: "hidden" }}
         >
           <div className="row">
             {showTwoColumnLayout ? (
@@ -189,7 +187,7 @@ const ProductModal = ({ product }) => {
                   src={product.imageUrl || "/placeholder.jpg"}
                   alt={product.diseasename}
                   className="img-fluid rounded"
-                  style={{ maxHeight: "200px", objectFit: "cover" }}
+                  style={{ maxHeight: "130px", objectFit: "cover" }}
                 />
                 <div className="mt-3 p-2 bg-light rounded text-start">
                   <p>
@@ -197,15 +195,14 @@ const ProductModal = ({ product }) => {
                     <strong>Gender:</strong> {product.gender}
                   </p>
                   <p>
+                    <strong>Volume:</strong> {product.volume}{" "}
+                    {product.QuantityUnit}
+                  </p>
+                  <p>
                     <strong>Container Type:</strong> {product.ContainerType}
                   </p>
                   <p>
-                    <strong>Diagnosis Test Parameter:</strong>{" "}
-                    {product.DiagnosisTestParameter}
-                  </p>
-                  <p>
-                    <strong>Volume:</strong> {product.volume}{" "}
-                    {product.QuantityUnit}
+                    <strong>Sample Type Matrix:</strong> {product.SampleTypeMatrix}
                   </p>
                   <p>
                     <strong>Test Result/(unit):</strong> {product.TestResult}{" "}
@@ -245,12 +242,6 @@ const ProductModal = ({ product }) => {
                       <p>
                         <strong>Storage Temperature:</strong>{" "}
                         {product.storagetemp}
-                      </p>
-                    )}
-                    {product.SampleTypeMatrix && (
-                      <p>
-                        <strong>Sample Type Matrix:</strong>{" "}
-                        {product.SampleTypeMatrix}
                       </p>
                     )}
                     {product.InfectiousDiseaseTesting && (
