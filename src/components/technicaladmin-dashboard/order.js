@@ -199,7 +199,7 @@ const OrderPage = () => {
             {successMessage}
           </div>
         )}
-        <h7 className="text-danger mb-1">Click on Sample Name to get detail about sample.</h7>
+        <h7 className="text-danger mb-1">Click on Disease Name to get detail about sample.</h7>
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
             Order Detail
@@ -212,7 +212,7 @@ const OrderPage = () => {
                 <tr className="text-center">
                   {[
                     { label: "Order Id", field: "order_id" },
-                    { label: "Sample Name", field: "diseasename" },
+                    { label: "Disease Name", field: "diseasename" },
                     { label: "Order Status", field: "order_status" },
                     {
                       label: "Technical Admin Status",
@@ -271,7 +271,6 @@ const OrderPage = () => {
                   </th>
                 </tr>
               </thead>
-
               <tbody className="table-light">
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
