@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -37,6 +37,7 @@ const ChangePassword = () => {
   const { user } = useSelector((state) => state.auth);
   const [userDetail, setUserDetail] = useState();
   const [changePassword] = useChangePasswordMutation();
+
   // react hook form
   const {
     register,
@@ -47,18 +48,8 @@ const ChangePassword = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  
 
-  useEffect(() => {
-    if (id === null) {
-      return <div>Loading...</div>; // Or redirect to login
-    } else {
-      fetchUser(); // Call the function when the component mounts
-      console.log("account_id on city page is:", id);
-    }
-  }, []);
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${id}`
@@ -69,11 +60,21 @@ const ChangePassword = () => {
     } catch (error) {
       console.error("Error fetching user detail:", error);
     }
-  };
+  }, [id, setValue]);
+
+  useEffect(() => {
+    if (id !== null) {
+      fetchUser(); // Call the function when the component mounts or id changes
+      console.log("account_id on city page is:", id);
+    }
+  }, [id, fetchUser]);
+
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  }
 
   // on submit
   const onSubmit = async (data) => {
-    
     if (data.password === data.newPassword) {
       notifyError("New password cannot be the same as the old password.");
       return;
@@ -96,7 +97,6 @@ const ChangePassword = () => {
           reset();
         },
         (error) => {
-          // Error handling inside .then()
           if (error.response) {
             notifyError(error.response.data.message || "An error occurred.");
           } else {
@@ -110,13 +110,12 @@ const ChangePassword = () => {
     <div className="profile__password">
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="row g-3">
-          {" "}
           {/* Use g-3 for consistent spacing between rows */}
           <div className="col-12">
             <div className="profile__input-box">
               <h4>Email Address</h4>
               <div className="profile__input">
-              <input
+                <input
                   {...register("email")}
                   type="email"
                   placeholder="Enter Email Address"

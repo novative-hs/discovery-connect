@@ -86,7 +86,8 @@ const OrderPage = () => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
     }
-  }, [totalPages]);
+  }, [totalPages, currentPage]);
+
   const currentOrders = orders || [];
 
   const handleFilterChange = (field, value) => {
@@ -424,6 +425,7 @@ const OrderPage = () => {
               </tbody>
             </table>
           </div>
+
           {showModal && (
             <Modal show={showModal} onHide={handleCloseModal}>
               <Modal.Header closeButton>
