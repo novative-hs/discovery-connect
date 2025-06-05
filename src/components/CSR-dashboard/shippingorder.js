@@ -4,14 +4,13 @@ import { Modal, Button, Form } from "react-bootstrap";
 import Pagination from "@ui/Pagination";
 import { notifySuccess, notifyError } from "@utils/toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFile, faFileInvoice } from "@fortawesome/free-solid-svg-icons";
+import { faFileInvoice } from "@fortawesome/free-solid-svg-icons";
+
 const ShippingSampleArea = () => {
- const id = sessionStorage.getItem("userID");
-if (id === null) return <div>Loading...</div>;
+  const id = sessionStorage.getItem("userID");
+  if (id === null) return <div>Loading...</div>;
 
-const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
-
-
+  const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
   const [samples, setSamples] = useState([]);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
@@ -19,7 +18,6 @@ const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("sta
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
-
   const [selectedUserSamples, setSelectedUserSamples] = useState([]);
   const [selectedUserName, setSelectedUserName] = useState("");
   const [showOrderStatusError, setShowOrderStatusError] = useState(false);
@@ -29,13 +27,10 @@ const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("sta
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "DeliveryDate") {
-      setDeliveryDate(value);
-    }
-    if (name === "DeliveryTime") {
-      setDeliveryTime(value);
-    }
+    if (name === "DeliveryDate") setDeliveryDate(value);
+    if (name === "DeliveryTime") setDeliveryTime(value);
   };
+
   const tableHeaders = [
     { label: "Order ID", key: "id" },
     { label: "Researcher Name", key: "researcher_name" },
@@ -44,51 +39,26 @@ const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("sta
     { label: "Status", key: "order_status" },
   ];
 
-// Later in useEffect:
-useEffect(() => {
-  fetchSamples(staffAction);
-}, [staffAction]);
-
-
-
-
-
- const fetchSamples = async (action) => {
-  try {
-    console.log("Sending csrUserId:", id);
-    console.log("Sending staffAction:", action);
-
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
-      {
-        params: { 
-          csrUserId: id,
-          staffAction: action  // pass action here
+  const fetchSamples = async (action) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
+        {
+          params: {
+            csrUserId: id,
+            staffAction: action,
+          },
         }
-      }
-    );
-
-    const shippingSamples = response.data.filter(
-      (sample) => sample.order_status === "Dispatched"
-    );
-
-    setSamples(shippingSamples);
-    setFilteredSamplename(shippingSamples);
-  } catch (error) {
-    console.error("Error fetching samples:", error);
-  }
-};
-
-
-
-  useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(Object.keys(groupedSamples).length / itemsPerPage)
-    );
-    setTotalPages(pages);
-    if (currentPage >= pages) setCurrentPage(0);
-  }, [filteredSamplename]);
+      );
+      const shippingSamples = response.data.filter(
+        (sample) => sample.order_status === "Dispatched"
+      );
+      setSamples(shippingSamples);
+      setFilteredSamplename(shippingSamples);
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
 
   const groupedSamples = filteredSamplename.reduce((acc, sample) => {
     const key = sample.researcher_name;
@@ -101,6 +71,16 @@ useEffect(() => {
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
+
+  useEffect(() => {
+    fetchSamples(staffAction);
+  }, [staffAction]);
+
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(Object.keys(groupedSamples).length / itemsPerPage));
+    setTotalPages(pages);
+    if (currentPage >= pages) setCurrentPage(0);
+  }, [filteredSamplename]);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -121,36 +101,35 @@ useEffect(() => {
 
   const handleOrderStatusSubmit = async () => {
     setIsSubmitting(true);
-    const id = selectedUserSamples.map((s) => s.id);
-  
-    if (!id.length) {
+    const ids = selectedUserSamples.map((s) => s.id);
+
+    if (!ids.length) {
       notifyError("No items selected.");
       return;
     }
-  
+
     if (orderStatus !== "Shipped") {
       setShowOrderStatusError(true);
       return;
     }
-  
+
     if (!deliveryDate || !deliveryTime) {
       notifyError("Please select both delivery date and time.");
       return;
     }
-  
+
     try {
       const res = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/cartstatusbyCSR`,
         {
-          ids: id, // send the array properly
+          ids: ids,
           cartStatus: orderStatus,
           deliveryDate,
           deliveryTime,
         }
       );
-  
-     
-      notifySuccess(res.data.message)
+
+      notifySuccess(res.data.message);
       setShowOrderStatusModal(false);
       setIsSubmitting(false);
       setShowOrderStatusError(false);
@@ -163,9 +142,6 @@ useEffect(() => {
       notifyError("Failed to update order status.");
     }
   };
-  
-  
-  
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -184,18 +160,14 @@ useEffect(() => {
                         type="text"
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
-                        onChange={(e) =>
-                          handleFilterChange(key, e.target.value)
-                        }
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "150px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-wrap fs-6">
-                        {label}
-                      </span>
+                      <span className="fw-bold mt-1 d-block text-wrap fs-6">{label}</span>
                     </div>
                   </th>
                 ))}
-                 <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                   Action
                 </th>
               </tr>
@@ -235,179 +207,120 @@ useEffect(() => {
           </table>
         </div>
 
-        { showOrderStatusModal && (
-      <Modal
-        show
-        onHide={() => setShowOrderStatusModal(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
-          {/* Header: Name & Address */}
-          <div className="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h5 className="fw-bold text-dark mb-2">
-                <span className="text-primary">👤 Name:</span>{" "}
-                {selectedUserSamples[0]?.researcher_name}
-              </h5>
-            </div>
-            <div className="text-end small text-secondary">
-              <div>
-                <span className="fw-bold text-primary">📍 Address:</span>
-                <br />
-                {selectedUserSamples[0]?.fullAddress},<br />
-                {selectedUserSamples[0]?.district_name},{" "}
-                {selectedUserSamples[0]?.city_name},{" "}
-                {selectedUserSamples[0]?.country_name}
+        <Pagination pageCount={totalPages} onPageChange={handlePageChange} />
+
+        {showOrderStatusModal && (
+          <Modal show onHide={() => setShowOrderStatusModal(false)} size="lg" centered>
+            <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
+              <div className="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h5 className="fw-bold text-dark mb-2">
+                    <span className="text-primary">👤 Name:</span>{" "}
+                    {selectedUserSamples[0]?.researcher_name}
+                  </h5>
+                </div>
+                <div className="text-end small text-secondary">
+                  <div>
+                    <span className="fw-bold text-primary">📍 Address:</span>
+                    <br />
+                    {selectedUserSamples[0]?.fullAddress},<br />
+                    {selectedUserSamples[0]?.district_name},{" "}
+                    {selectedUserSamples[0]?.city_name},{" "}
+                    {selectedUserSamples[0]?.country_name}
+                  </div>
+                  <div className="mt-2">
+                    <span className="fw-bold">🗓️ Created:</span>{" "}
+                    {new Date(selectedUserSamples[0]?.created_at).toLocaleDateString()}
+                  </div>
+                </div>
               </div>
-              <div className="mt-2">
-                <span className="fw-bold">🗓️ Created:</span>{" "}
-                {new Date(
-                  selectedUserSamples[0]?.created_at
-                ).toLocaleDateString()}
+
+              <hr className="mb-4" />
+
+              <div className="table-responsive">
+                <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
+                  <thead className="table-success text-dark">
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedUserSamples.map((sample, i) => (
+                      <tr key={i}>
+                        <td>{sample.diseasename}</td>
+                        <td>{sample.quantity || "-"}</td>
+                        <td>{sample.price || "-"}</td>
+                        <td>{sample.totalpayment || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-light">
+                    <tr>
+                      <td colSpan="3" className="text-end fw-bold">
+                        Total
+                      </td>
+                      <td className="fw-bold text-success">
+                        {selectedUserSamples
+                          .reduce((sum, s) => sum + Number(s.totalpayment || 0), 0)
+                          .toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-            </div>
-          </div>
 
-          <hr className="mb-4" />
+              <Form.Group className="mt-4">
+                <Form.Label>Delivery Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="DeliveryDate"
+                  value={deliveryDate}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
 
-          {/* Table of Items */}
-          <div className="table-responsive">
-            <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
-              <thead className="table-success text-dark">
-                <tr>
-                  <th>Item</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedUserSamples.map((sample, i) => (
-                  <tr key={i}>
-                    <td>{sample.diseasename}</td>
-                    <td>{sample.quantity || "-"}</td>
-                    <td>{sample.price || "-"}</td>
-                    <td>{sample.totalpayment || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-light">
-                <tr>
-                  <td colSpan="3" className="text-end fw-bold">
-                    Total
-                  </td>
-                  <td className="fw-bold text-success">
-                    {selectedUserSamples
-                      .reduce(
-                        (sum, s) => sum + Number(s.totalpayment || 0),
-                        0
-                      )
-                      .toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+              <Form.Group className="mt-2">
+                <Form.Label>Delivery Time</Form.Label>
+                <Form.Control
+                  type="time"
+                  name="DeliveryTime"
+                  value={deliveryTime}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
 
+              {showOrderStatusError && (
+                <div className="text-danger mt-2">Please select "Shipped" status.</div>
+              )}
 
-          {/* Delivery Date Input */}
-          <Form.Group className="mt-4">
-  <Form.Label>Delivery Date</Form.Label>
-  <input
-    type="date"
-    className="form-control"
-    name="DeliveryDate"
-    value={deliveryDate}
-    onChange={handleInputChange}
-    min={new Date().toISOString().split("T")[0]} // ✅ Disable past dates
-    required
-    style={{
-      fontSize: "14px",
-      height: "45px",
-      backgroundColor: "#f0f0f0",
-      color: "black",
-    }}
-  />
-</Form.Group>
+              <Form.Group className="mt-3">
+                <Form.Label>Order Status</Form.Label>
+                <Form.Select
+                  value={orderStatus}
+                  onChange={(e) => setOrderStatus(e.target.value)}
+                >
+                  <option value="">Select Status</option>
+                  <option value="Shipped">Shipped</option>
+                </Form.Select>
+              </Form.Group>
 
-
-          {/* Delivery Time Input */}
-          <Form.Group className="mt-4">
-            <Form.Label>Delivery Time</Form.Label>
-            <input
-              type="time"
-              className="form-control"
-              name="DeliveryTime"
-              value={deliveryTime}
-              onChange={handleInputChange}
-              required
-              style={{
-                fontSize: "14px",
-                height: "45px",
-                backgroundColor: "#f0f0f0",
-                color: "black",
-              }}
-            />
-          </Form.Group>
-
-                    {/* Status Selection */}
-                    <Form.Group className="mt-4">
-            <Form.Check
-              type="checkbox"
-              label=" Mark all items as Shipped"
-              onChange={(e) => {
-                setOrderStatus(e.target.checked ? "Shipped" : "");
-                if (e.target.checked) setShowOrderStatusError(false); // hide error if checked
-              }}
-              checked={orderStatus === "Shipped"}
-              className="fw-semibold"
-            />
-            {showOrderStatusError && (
-              <div className="text-danger mt-2 small">
-                Please check the box to mark items as Shipped.
+              <div className="mt-4 d-flex justify-content-end gap-3">
+                <Button variant="secondary" onClick={() => setShowOrderStatusModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={handleOrderStatusSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Confirm Shipment"}
+                </Button>
               </div>
-            )}
-          </Form.Group>
-
-        </Modal.Body>
-
-        {/* Footer Buttons */}
-        <Modal.Footer className="bg-white border-0">
-          <Button
-            variant="outline-secondary"
-            onClick={() => setShowOrderStatusModal(false)}
-            className="rounded-pill px-4"
-          >
-            ❌ Cancel
-          </Button>
-          <Button
-            variant="success"
-            onClick={() => {
-              handleOrderStatusSubmit(deliveryDate, deliveryTime); // Pass the date and time to the submit function
-            }}
-            disabled={isSubmitting} 
-            className="rounded-pill px-4"
-          >
-            {isSubmitting ? (
-    <>
-      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-      Processing...
-    </>
-  ) : (
-    "🚚 Save & Dispatch"
-  )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    )}
-
-        {totalPages > 1 && (
-          <Pagination
-            handlePageClick={handlePageChange}
-            pageCount={totalPages}
-            focusPage={currentPage}
-          />
+            </Modal.Body>
+          </Modal>
         )}
       </div>
     </section>

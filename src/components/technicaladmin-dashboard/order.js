@@ -275,21 +275,16 @@ const OrderPage = () => {
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
                     <tr key={order.order_id}>
-
-                      <td
-                        className="text-end"
-                        style={{ minWidth: "10px" }}
-                      >
+                      <td className="text-center" style={{ minWidth: "10px" }}>
                         <span
                           role="button"
                           title="Collection Site Details"
                           onClick={() => openModal(order)}
                           style={{
                             cursor: "pointer",
+                            color: "#0a58ca",
                             transition: "color 0.2s",
                           }}
-                          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                          onMouseOut={(e) => (e.target.style.color = "")}
                         >
                           {order.order_id || "----"}
                         </span>
@@ -298,17 +293,9 @@ const OrderPage = () => {
                       <td
                         style={{
                           cursor: "pointer",
-                          color: "inherit",
-                          transition:
-                            "color 0.2s ease-in-out, text-decoration 0.2s ease-in-out",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.color = "blue";
-                          e.target.style.textDecoration = "underline";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.color = "inherit";
-                          e.target.style.textDecoration = "none";
+                          color: "blue",
+                          textDecoration: "underline",
+                          transition: "color 0.2s ease-in-out, text-decoration 0.2s ease-in-out",
                         }}
                         onClick={(e) => {
                           e.stopPropagation(); // prevent triggering row click
@@ -341,10 +328,6 @@ const OrderPage = () => {
                           order.scientific_committee_status
                         )}
                       </td>
-
-
-
-
                       <td>
                         {order.ethical_committee_status === "Refused"
                           ? "Refused"
@@ -470,6 +453,7 @@ const OrderPage = () => {
               </Modal.Footer>
             </Modal>
           )}
+
           {showCommentsModal && (
             <>
               {/* Backdrop */}
@@ -560,7 +544,6 @@ const OrderPage = () => {
           )}
 
           {/* Approval  */}
-
           {showTransferModal && (
             <div className="modal show d-block mt-5" tabIndex="-1">
               <div className="modal-dialog">
@@ -691,13 +674,13 @@ const OrderPage = () => {
                         </p>
                         <p>
                           <strong>Ethnicity:</strong> {selectedSample.ethnicity}
-                          
+
                         </p>
                         <p>
                           <strong>Country of Collection:</strong>{" "}
                           {selectedSample.CountryofCollection}
                         </p>
-                        
+
                       </div>
                     </div>
 
