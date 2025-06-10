@@ -60,7 +60,8 @@ const [activeTab, setActiveTab] = useState("order-info");
     }
 
     return sortedSamples;
-  }, [samples, shortValue, query]);
+  }, [samples, shortValue, router.query]);
+
 
   // Render Logic
   let content = null;

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "react-bootstrap";
 import { handleModalShow } from "src/redux/features/productSlice";
 import { initialOrderQuantity } from "src/redux/features/cartSlice";
-
+import Image from 'next/image';
 const ProductModal = ({ product }) => {
   const dispatch = useDispatch();
   const { isShow } = useSelector((state) => state.product);
@@ -88,12 +88,13 @@ const ProductModal = ({ product }) => {
             {showTwoColumnLayout ? (
               <>
               <div className="col-md-5 text-center">
-                  <img
-                    src={product.imageUrl || "/placeholder.jpg"}
+                <Image
+   src={product.imageUrl || "/placeholder.jpg"}
                     alt={product.diseasename}
                     className="img-fluid rounded"
                     style={{ maxHeight: "200px", objectFit: "cover" }}
-                  />
+/>
+               
 
                   <div className="mt-3 text-start bg-light p-2 rounded">
                     <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
@@ -111,12 +112,14 @@ const ProductModal = ({ product }) => {
               </>
             ) : (
              <div className="col-12 text-center">
-                <img
-                  src={product.imageUrl || "/placeholder.jpg"}
+              <Image
+  src={product.imageUrl || "/placeholder.jpg"}
                   alt={product.diseasename}
                   className="img-fluid rounded"
                   style={{ maxHeight: "130px", objectFit: "cover" }}
-                />
+               
+/>
+
                 <div className="mt-3 text-start bg-light p-2 rounded">
                   <p><strong>Age:</strong> {product.age} | <strong>Gender:</strong> {product.gender}</p>
                   <p><strong>Container:</strong> {product.ContainerType}</p>

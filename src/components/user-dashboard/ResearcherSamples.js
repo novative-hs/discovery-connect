@@ -97,7 +97,7 @@ const SampleArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [samples]);
+  }, [samples,currentPage]);
   const currentData = samples.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage

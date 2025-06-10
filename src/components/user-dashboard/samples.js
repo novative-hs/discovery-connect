@@ -181,7 +181,7 @@ const SampleArea = () => {
     } else {
       fetchSamples();
     }
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     const pages = Math.max(
@@ -193,7 +193,7 @@ const SampleArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSamples]);
+  }, [filteredSamples,currentPage]);
 
   // Get the current data for the table
   const currentData = filteredSamples.slice(
