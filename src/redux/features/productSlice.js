@@ -21,5 +21,5 @@ export const productSlice = createSlice({
   },
 });
 
-export const { setProduct, handleModalShow } = productSlice.actions;
+export const { setProduct, handleModalShow, } = productSlice.actions;
 export default productSlice.reducer;

@@ -35,17 +35,15 @@ const updateinfectiousdisease=(req,res)=>{
   })
 }
 
-const deleteinfectiousdisease=(req,res)=>{
-    const {id} =req.params;
-    infectiousdiseaseModel.deleteinfectiousdisease(id,(err,res)=>{
+const deleteinfectiousdisease = (req, res) => {
+  const { id } = req.params;
+  infectiousdiseaseModel.deleteinfectiousdisease(id, (err, result) => { // ✅ fixed
     if (err) {
       return res.status(500).json({ error: "Error deleting infectious disease" });
     }
     res.status(200).json({ message: "infectious disease deleted successfully" });
   });
-
-
-}
+};
 
 module.exports = {
 create_infectiousdiseaseTable,

@@ -8,7 +8,6 @@ import {
 } from "src/redux/features/productApi";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { add_cart_product } from "src/redux/features/cartSlice";
 import { useDispatch } from "react-redux";
 import { setProduct } from "src/redux/features/productSlice";
 import { useRouter } from "next/router";
@@ -31,8 +30,6 @@ const OfferPopularProduct = () => {
   const router = useRouter();
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const dispatch = useDispatch();
 
   const sampleList = categories?.data || [];
@@ -41,14 +38,6 @@ const OfferPopularProduct = () => {
 
   useEffect(() => {
     AOS.init({ duration: 500 });
-
-    if (showModal) {
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,7 +60,7 @@ const OfferPopularProduct = () => {
         if (el) observer.unobserve(el);
       });
     };
-  }, [showModal, displayedCategories]);
+  }, [displayedCategories]);
 
   if (isLoading || sampleFieldsLoading)
     return <ProductLoader loading={isLoading || sampleFieldsLoading} />;
@@ -82,14 +71,8 @@ const OfferPopularProduct = () => {
   if (displayedCategories.length === 0)
     return <ErrorMessage message="No samples found!" />;
 
-  const handleAddToCart = (product) => {
-    sessionStorage.setItem('filterProduct', JSON.stringify(product));
-    router.push('/filter-samples');
-  };
-
-  const handleQuickView = (prd) => {
-    dispatch(setProduct(prd));
-    setShowModal(true);
+  const handleQuickView = (product) => {
+    dispatch(setProduct(product));
   };
 
   return (
@@ -137,9 +120,7 @@ const OfferPopularProduct = () => {
                 </p>
                 <button
                   className="btn btn-outline-danger mt-2 w-100 fw-bold"
-                  onClick={() => {
-                    handleQuickView(category);// this will store the selected product and open the modal
-                  }}
+                  onClick={() => handleQuickView(category)}
                 >
                   View
                 </button>
@@ -159,7 +140,6 @@ const OfferPopularProduct = () => {
             </Link>
           </div>
         </div>
-
       </div>
     </section>
   );

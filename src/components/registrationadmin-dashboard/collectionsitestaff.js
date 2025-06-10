@@ -339,17 +339,17 @@ const CollectionSiteStaffArea = () => {
     }
   };
 
-  useEffect(() => {
-    if (showAddModal || showDeleteModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showAddModal || showDeleteModal, showEditModal, showHistoryModal]);
+useEffect(() => {
+  const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
+
+  if (anyModalOpen) {
+    document.body.style.overflow = "hidden";
+    document.body.classList.add("modal-open");
+  } else {
+    document.body.style.overflow = "auto";
+    document.body.classList.remove("modal-open");
+  }
+}, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
 
   const resetFormData = () => {
     setFormData({
@@ -460,7 +460,7 @@ const CollectionSiteStaffArea = () => {
           </div>
         )}
 
-        <h5 className="m-0 fw-bold">Collection Site's Staff List</h5>
+        <h5 className="m-0 fw-bold">Collection Site&apos;s Staff List</h5>
 
         {/* Status Filter and Add Button in Same Row */}
         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">

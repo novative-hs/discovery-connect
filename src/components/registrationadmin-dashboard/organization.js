@@ -7,6 +7,7 @@ import Pagination from "@ui/Pagination";
 import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
 import * as XLSX from "xlsx";
+import Image from 'next/image'; // at the top
 const OrganizationArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -132,12 +133,29 @@ const OrganizationArea = () => {
   };
 
   // Fetch organizations from backend when component loads
-  useEffect(() => {
-    fetchOrganizations(); // Call the function when the component mounts
-    fetchcityname();
-    fetchdistrictname();
-    fetchcountryname();
-  }, []);
+useEffect(() => {
+  const fetchAll = async () => {
+    try {
+      const [orgRes, cityRes, districtRes, countryRes] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`),
+        axios.get(`${url}/city/get-city`),
+        axios.get(`${url}/district/get-district`),
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`),
+      ]);
+
+      setAllOrganizations(orgRes.data);
+      setOrganizations(orgRes.data);
+      setcityname(cityRes.data);
+      setdistrictname(districtRes.data);
+      setCountryname(countryRes.data);
+    } catch (error) {
+      console.error("Error loading initial data:", error);
+    }
+  };
+
+  fetchAll();
+}, [url]);
+
 
   const fetchOrganizations = async () => {
     try {
@@ -152,34 +170,7 @@ const OrganizationArea = () => {
     }
   };
 
-  const fetchcityname = async () => {
-    try {
-      const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data); // Store fetched City in state
-    } catch (error) {
-      console.error("Error fetching City:", error);
-    }
-  };
 
-  const fetchdistrictname = async () => {
-    try {
-      const response = await axios.get(`${url}/district/get-district`);
-      setdistrictname(response.data); // Store fetched District in state
-    } catch (error) {
-      console.error("Error fetching District:", error);
-    }
-  };
-
-  const fetchcountryname = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
-      );
-      setCountryname(response.data); // Store fetched Country in state
-    } catch (error) {
-      console.error("Error fetching Country:", error);
-    }
-  };
 
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
@@ -368,18 +359,18 @@ const OrganizationArea = () => {
       console.error("Error updating status:", error);
     }
   };
+useEffect(() => {
+  const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
 
-  useEffect(() => {
-    if (showAddModal || showDeleteModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showAddModal || showDeleteModal, showEditModal, showHistoryModal]);
+  if (anyModalOpen) {
+    document.body.style.overflow = "hidden";
+    document.body.classList.add("modal-open");
+  } else {
+    document.body.style.overflow = "auto";
+    document.body.classList.remove("modal-open");
+  }
+}, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
+
 
   const resetFormData = () => {
     setFormData({
@@ -801,17 +792,13 @@ const OrganizationArea = () => {
                             }}
                           >
                             {formData.logoPreview ? (
-                              <img
-                                src={formData.logoPreview}
-                                alt="Logo Preview"
-                                style={{
-                                  maxHeight: "120px",
-                                  objectFit: "contain",
-                                  border: "2px solid black",
-                                  borderRadius: "50%",
-                                  padding: "5px",
-                                }}
-                              />
+                              <Image
+  src={formData.logoPreview}
+  alt="Logo Preview"
+  width={120}
+  height={120}
+  style={{ objectFit: "contain", borderRadius: "50%", border: "2px solid black", padding: "5px" }}
+/>
                             ) : (
                               <i
                                 className="fa fa-user"

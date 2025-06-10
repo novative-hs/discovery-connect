@@ -92,13 +92,35 @@ const CommitteeMemberArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch Committee Members from backend when component loads
-  useEffect(() => {
-    fetchCommitteemembers(); // Call the function when the component mounts
-    fetchcityname();
-    fetchdistrictname();
-    fetchcountryname();
-    fetchOrganization();
-  }, []);
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const response1 = await axios.get(`${url}/committeemember/get`);
+      setCommitteemembers(response1.data);
+      setFilteredCommitteemembers(response1.data);
+
+      const response2 = await axios.get(`${url}/city/get-city`);
+      setcityname(response2.data);
+
+      const response3 = await axios.get(`${url}/district/get-district`);
+      setdistrictname(response3.data);
+
+      const response4 = await axios.get(`${url}/country/get-country`);
+      setCountryname(response4.data);
+
+      const response5 = await axios.get(`${url}/admin/organization/get`);
+      const approvedOrganizations = response5.data.filter(
+        (org) => org.status === "active"
+      );
+      setOrganization(approvedOrganizations);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchData();
+}, [url]);
+
 
   const fetchCommitteemembers = async () => {
     try {
@@ -109,6 +131,7 @@ const CommitteeMemberArea = () => {
       console.error("Error fetching Committee Members:", error);
     }
   };
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -119,51 +142,7 @@ const CommitteeMemberArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCommitteemembers]);
-
-  const fetchOrganization = async () => {
-    try {
-      const response = await axios.get(`${url}/admin/organization/get`);
-
-      // ✅ Filter only active organizations
-      const approvedOrganizations = response.data.filter(
-        (org) => org.status === "active"
-      );
-
-      setOrganization(approvedOrganizations); // Store only active organizations in state
-    } catch (error) {
-      console.error("Error fetching organizations:", error);
-    }
-  };
-
-  const fetchcityname = async () => {
-    try {
-      const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data); // Store fetched City in state
-    } catch (error) {
-      console.error("Error fetching City:", error);
-    }
-  };
-  const fetchdistrictname = async () => {
-    try {
-      const response = await axios.get(`${url}/district/get-district`);
-      setdistrictname(response.data); // Store fetched District in state
-    } catch (error) {
-      console.error("Error fetching District:", error);
-    }
-  };
-  const fetchcountryname = async () => {
-    fetchOrganization();
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
-      );
-      setCountryname(response.data); // Store fetched Country in state
-    } catch (error) {
-      console.error("Error fetching Country:", error);
-    }
-  };
-
+  }, [filteredCommitteemembers,currentPage]);
   const handleInputChange = (e) => {
 
     setFormData({
@@ -805,7 +784,7 @@ const CommitteeMemberArea = () => {
             />
           )}
 
-          <h6 class="text-danger small">Note: Handle 'Status' and 'Committee Type' through Action Icons</h6>
+         <h6 className="text-danger small">Note: Handle &rsquo;Status&rsquo; and &rsquo;Committee Type&rsquo; through Action Icons</h6>
 
           {/* Modal for Adding/Editing Committee members */}
           {(showAddModal || showEditModal) && (

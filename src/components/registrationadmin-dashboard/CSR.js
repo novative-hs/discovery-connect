@@ -73,13 +73,31 @@ const CSRArea = () => {
     setSelectedCSR(null);
     setShowModal(false);
   };
-  useEffect(() => {
-    fetchCSR();
-    fetchCollectionsitename();
-    fetchcityname();
-    fetchdistrictname();
-    fetchcountryname();
-  }, []);
+ useEffect(() => {
+  const fetchAll = async () => {
+    try {
+      const [csrRes, collectionsiteRes, cityRes, districtRes, countryRes] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/get`),
+        axios.get(`${url}/admin/csr/getCollectionsiteName`),
+        axios.get(`${url}/city/get-city`),
+        axios.get(`${url}/district/get-district`),
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`)
+      ]);
+
+      setCSR(csrRes.data);
+      setAllCSR(csrRes.data);
+      setcollectionsitename(collectionsiteRes.data);
+      setcityname(cityRes.data);
+      setdistrictname(districtRes.data);
+      setCountryname(countryRes.data);
+    } catch (error) {
+      console.error("Error fetching initial CSR data:", error);
+    }
+  };
+
+  fetchAll();
+}, [url]);
+
 
   const fetchCSR = async () => {
     try {
@@ -92,44 +110,7 @@ const CSRArea = () => {
       console.error("Error fetching CSR:", error);
     }
   };
-  const fetchcityname = async () => {
-    try {
-      const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data); // Store fetched City in state
-    } catch (error) {
-      console.error("Error fetching City:", error);
-    }
-  };
-  const fetchCollectionsitename = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/admin/csr/getCollectionsiteName`
-      );
-
-      setcollectionsitename(response.data);
-    } catch (error) {
-      console.error("Error fetching Collectionsite:", error);
-    }
-  };
-
-  const fetchdistrictname = async () => {
-    try {
-      const response = await axios.get(`${url}/district/get-district`);
-      setdistrictname(response.data); // Store fetched District in state
-    } catch (error) {
-      console.error("Error fetching District:", error);
-    }
-  };
-  const fetchcountryname = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
-      );
-      setCountryname(response.data); // Store fetched Country in state
-    } catch (error) {
-      console.error("Error fetching Country:", error);
-    }
-  };
+ 
 
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);

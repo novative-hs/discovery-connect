@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
-import Pagination from "@ui/Pagination";
+import {
+  faEdit,
+  faTrash,
+  faPlus,
+  faHistory,
+} from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
-const InfectiousdiseaseArea = () => {
+import Pagination from "@ui/Pagination";
+import moment from "moment";
+
+const QuantityUnitArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on city page is:", id);
-  }
-  const [showAddModal, setShowAddModal] = useState(false);
+const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
@@ -32,11 +33,9 @@ const InfectiousdiseaseArea = () => {
 
   const [successMessage, setSuccessMessage] = useState("");
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  // Fetch City from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    fetchinfectiousdiseasename(); // Call the function when the component mounts
-  }, []);
-  const fetchinfectiousdiseasename = async () => {
+    const fetchinfectiousdiseasename = async () => {
     try {
       const response = await axios.get(`${url}/infectiousdisease/get-infectiousdisease`);
       setinfectiousdiseasename(response.data);
@@ -44,8 +43,14 @@ const InfectiousdiseaseArea = () => {
     } catch (error) {
       console.error("Error fetching infectious disease:", error);
     }
-  };
-  useEffect(() => {
+  }
+
+    fetchinfectiousdiseasename();
+  }, [url]);
+
+  // ✅ UPDATE PAGINATION TOTAL PAGES
+
+ useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredinfectiousdiseasename.length / itemsPerPage)
@@ -55,7 +60,16 @@ const InfectiousdiseaseArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredinfectiousdiseasename]);
+  }, [filteredinfectiousdiseasename,currentPage]);
+
+
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen =
+      showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const currentData = filteredinfectiousdiseasename.slice(
     currentPage * itemsPerPage,
@@ -66,7 +80,7 @@ const InfectiousdiseaseArea = () => {
     setCurrentPage(event.selected);
   };
 
-  const handleFilterChange = (field, value) => {
+ const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
@@ -86,93 +100,7 @@ const InfectiousdiseaseArea = () => {
     setCurrentPage(0); // Reset to first page after filtering
   };
 
-  const fetchHistory = async (filterType, id) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
-      const data = await response.json();
-      setHistoryData(data);
-    } catch (error) {
-      console.error("Error fetching history:", error);
-    }
-  };
-
-  // Call this function when opening the modal
-  const handleShowHistory = (filterType, id) => {
-    fetchHistory(filterType, id);
-    setShowHistoryModal(true);
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // POST request to your backend API
-      const response = await axios.post(`${url}/infectiousdisease/post-infectiousdisease`, formData);
-    
-
-      setSuccessMessage("infectious disease added successfully.");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      fetchinfectiousdiseasename();
-
-      // Clear form after submission
-      setFormData({
-        infectiousdiseasename: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding infectiousdisease:", error);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`${url}/infectiousdisease/delete-infectiousdisease/${selectedinfectiousdiseasenameId}`);
-    
-      // Set success message
-      setSuccessMessage("infectiousdisease name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the cityname list after deletion
-      fetchinfectiousdiseasename();
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedinfectiousdiseasenameId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting infectious disease with ID ${selectedinfectiousdiseasenameId}:`,
-        error
-      );
-    }
-  };
-
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+ 
 
   const handleEditClick = (infectiousdiseasename) => {
    
@@ -187,51 +115,98 @@ const InfectiousdiseaseArea = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
 
+  const fetchHistory = async (filterType, id) => {
     try {
-      const response = await axios.put(
-        `${url}/infectiousdisease/put-infectiousdisease/${selectedinfectiousdiseasenameId}`,
-        formData
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
-    
-
-      fetchinfectiousdiseasename();
-
-      setShowEditModal(false);
-      setSuccessMessage("infectious disease updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      setFormData({
-        infectiousdiseasename: "",
-        added_by: id,
-      });
+      const data = await response.json();
+      setHistoryData(data);
     } catch (error) {
-      console.error(
-        `Error updating infectious disease with ID ${selectedinfectiousdiseasenameId}:`,
-        error
-      );
-    } finally {
-      setFormData({
-        infectiousdiseasename: "",
-        added_by: id,
-      });
+      console.error("Error fetching history:", error);
     }
   };
 
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
+  const handleShowHistory = (filterType, id) => {
+    fetchHistory(filterType, id);
+    setShowHistoryModal(true);
+  };
 
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    return `${day}-${formattedMonth}-${year}`;
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(
+        `${url}/infectiousdisease/post-infectiousdisease`,
+        formData
+      );
+      const response = await axios.get(
+        `${url}/infectiousdisease/get-infectiousdisease`
+      );
+      setFilteredinfectiousdiseasename(response.data);
+      setinfectiousdiseasename(response.data);
+      setSuccessMessage("Infectious Disease Name added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding Infectious Disease Name", error);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `${url}/infectiousdisease/put-infectiousdisease/${selectedinfectiousdiseasenameId}`,
+        formData
+      );
+      const response = await axios.get(
+        `${url}/infectiousdisease/get-infectiousdisease`
+      );
+      setFilteredinfectiousdiseasename(response.data);
+      setinfectiousdiseasename(response.data);
+      setSuccessMessage("Infectious Disease Name updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(
+        `Error updating Infectious Disease Name: ${selectedinfectiousdiseasenameId}`,
+        error
+      );
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(
+          `${url}/infectiousdisease/delete-infectiousdisease/${selectedinfectiousdiseasenameId}`,
+      );
+      const response = await axios.get(
+        `${url}/infectiousdisease/get-infectiousdisease`
+      );
+      setFilteredinfectiousdiseasename(response.data);
+      setinfectiousdiseasename(response.data);
+      setSuccessMessage("Infectious Disease Name deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setShowDeleteModal(false);
+      setSelectedinfectiousdiseasenameId(null);
+    } catch (error) {
+      console.error(
+        `Error deleting Infectious Disease Name: ${selectedinfectiousdiseasenameId}`,
+        error
+      );
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -240,53 +215,39 @@ const InfectiousdiseaseArea = () => {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
-      }));
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST data to API
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/infectiousdisease/post-infectiousdisease`,
-          { bulkData: dataWithAddedBy }
+        await axios.post(`${url}/infectiousdisease/post-infectiousdisease`, {
+          bulkData: payload,
+        });
+        const response = await axios.get(
+          `${url}/infectiousdisease/get-infectiousdisease`
         );
-       
-        setSuccessMessage("infectious disease uploaded successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/infectiousdisease/get-infectiousdisease`
-        );
-        setFilteredinfectiousdiseasename(newResponse.data);
-        setinfectiousdiseasename(newResponse.data);
+        setFilteredinfectiousdiseasename(response.data);
+        setinfectiousdiseasename(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error uploading infectious disease", error);
       }
     };
-
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
   };
-const handleExportToExcel = () => {
+
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
+    });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
+  };
+
+ const handleExportToExcel = () => {
   const dataToExport = filteredinfectiousdiseasename.map((item) => ({
     Name: item.name ?? "", // Fallback to empty string
     "Added By": "Registration Admin",
@@ -311,7 +272,9 @@ const handleExportToExcel = () => {
   XLSX.writeFile(workbook, "Infectious_disease_testing_List.xlsx");
 };
 
-  return (
+  if (!id) return <div>Loading...</div>;
+
+ return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
@@ -762,4 +725,4 @@ const handleExportToExcel = () => {
   );
 };
 
-export default InfectiousdiseaseArea;
+export default QuantityUnitArea;

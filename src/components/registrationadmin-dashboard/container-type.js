@@ -13,11 +13,7 @@ import Pagination from "@ui/Pagination";
 import moment from "moment";
 const ContainerTypeArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on Container Type page is:", id);
-  }
+ 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -44,9 +40,7 @@ const ContainerTypeArea = () => {
 
   // Fetch ContainerType from backend when component loads
   useEffect(() => {
-    fetchContainerTypename(); // Call the function when the component mounts
-  }, []);
-  const fetchContainerTypename = async () => {
+     const fetchContainerTypename = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/containertype`
@@ -57,6 +51,9 @@ const ContainerTypeArea = () => {
       console.error("Error fetching Container Type :", error);
     }
   };
+    fetchContainerTypename(); // Call the function when the component mounts
+  }, [url]);
+ 
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -67,7 +64,7 @@ const ContainerTypeArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredContainertypename]);
+  }, [filteredContainertypename,currentPage]);
 
   const currentData = filteredContainertypename.slice(
     currentPage * itemsPerPage,
@@ -128,113 +125,68 @@ const ContainerTypeArea = () => {
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/containertype`,
-        formData
-      );
-
-      setSuccessMessage("Container Type  Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchContainerTypename();
-      // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
+      await axios.post(`${url}/samplefields/post-samplefields/containertype`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
+      setFilteredContainertypename(response.data);
+      setContainerTypename(response.data);
+      setSuccessMessage("Container Type added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding ContainerType ", error);
+      console.error("Error adding Container Type", error);
+    }
+  };
+ const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
+      setFilteredContainertypename(response.data);
+      setContainerTypename(response.data);
+      setSuccessMessage("Container Type updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(`Error updating container type: ${selectedContainerTypenameId}`, error);
     }
   };
 
   const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
-      );
+     try {
+       await axios.delete(`${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`);
+       const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
+       setFilteredContainertypename(response.data);
+       setContainerTypename(response.data);
+       setSuccessMessage("Container Type deleted successfully.");
+       setTimeout(() => setSuccessMessage(""), 3000);
+       setShowDeleteModal(false);
+       setSelectedContainerTypenameId(null);
+     } catch (error) {
+       console.error(`Error deleting Container Type: ${selectedContainerTypenameId}`, error);
+     }
+   };
 
-      // Set success message
-      setSuccessMessage("Container Type Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchContainerTypename();
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedContainerTypenameId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting Container Type with ID ${selectedContainerTypenameId}:`,
-        error
-      );
-    }
-  };
-
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+   useEffect(() => {
+      const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+      document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+      document.body.classList.toggle("modal-open", isModalOpen);
+    }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const handleEditClick = (containertypename) => {
-
-
     setSelectedContainerTypenameId(containertypename.id);
     setEditContainerTypename(containertypename);
-
     setFormData({
       name: containertypename.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
-        formData
-      );
-
-
-      fetchContainerTypename();
-
-      setShowEditModal(false);
-      setSuccessMessage("Container Type updated successfully.");
-      resetFormData();
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(
-        `Error updating Container Type name with ID ${selectedContainerTypenameId}:`,
-        error
-      );
-    }
-  };
+ 
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -249,41 +201,26 @@ const ContainerTypeArea = () => {
   };
 
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/containertype`,
-          { bulkData: dataWithAddedBy }
-        );
-
-
-        fetchContainerTypename();
+        await axios.post(`${url}/samplefields/post-samplefields/containertype`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
+        setFilteredContainertypename(response.data);
+        setContainerTypename(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error adding Container Type:", error);
+        console.error("Error uploading container type", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
@@ -318,7 +255,9 @@ const ContainerTypeArea = () => {
   
     XLSX.writeFile(workbook, "Container-Type-List.xlsx");
   };
-
+ if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  }
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">

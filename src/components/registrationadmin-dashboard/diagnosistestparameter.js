@@ -7,11 +7,7 @@ import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
 const DiagnosisTestParameterArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on city page is:", id);
-  }
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -34,17 +30,20 @@ const DiagnosisTestParameterArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // Fetch City from backend when component loads
   useEffect(() => {
+    const fetchdiagnosisname = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/diagnosis-test-parameter/get-diagnosis`
+        );
+        setdiagnosisname(response.data);
+        setFiltereddiagnosisname(response.data); // Initialize filtered list
+      } catch (error) {
+        console.error("Error fetching diagnosis test parameter:", error);
+      }
+    };
     fetchdiagnosisname(); // Call the function when the component mounts
-  }, []);
-  const fetchdiagnosisname = async () => {
-    try {
-      const response = await axios.get(`${url}/diagnosis-test-parameter/get-diagnosis`);
-      setdiagnosisname(response.data);
-      setFiltereddiagnosisname(response.data); // Initialize filtered list
-    } catch (error) {
-      console.error("Error fetching diagnosis test parameter:", error);
-    }
-  };
+  }, [url]);
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -55,7 +54,7 @@ const DiagnosisTestParameterArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filtereddiagnosisname]);
+  }, [filtereddiagnosisname, currentPage]);
 
   const currentData = filtereddiagnosisname.slice(
     currentPage * itemsPerPage,
@@ -66,31 +65,33 @@ const DiagnosisTestParameterArea = () => {
     setCurrentPage(event.selected);
   };
 
- const handleFilterChange = (field, value) => {
-  let filtered = [];
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
 
-  if (value.trim() === "") {
-    filtered = diagnosisname; // Show all if filter is empty
-  } else {
-    filtered = diagnosisname.filter((diagnosis) => {
-      let fieldValue = diagnosis[field];
+    if (value.trim() === "") {
+      filtered = diagnosisname; // Show all if filter is empty
+    } else {
+      filtered = diagnosisname.filter((diagnosis) => {
+        let fieldValue = diagnosis[field];
 
-      if (field === "added_by") {
-        // Convert numeric ID to a readable string for comparison
-        const addedByLabel = fieldValue === 1 ? "registration admin" : fieldValue.toString();
-        return addedByLabel.toLowerCase().includes(value.toLowerCase());
-      }
+        if (field === "added_by") {
+          // Convert numeric ID to a readable string for comparison
+          const addedByLabel =
+            fieldValue === 1 ? "registration admin" : fieldValue.toString();
+          return addedByLabel.toLowerCase().includes(value.toLowerCase());
+        }
 
-      return fieldValue?.toString().toLowerCase().includes(value.toLowerCase());
-    });
-  }
+        return fieldValue
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+    }
 
-  setFiltereddiagnosisname(filtered);
-  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-  setCurrentPage(0);
-};
-
-
+    setFiltereddiagnosisname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
+  };
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -98,7 +99,7 @@ const DiagnosisTestParameterArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log("history",data)
+      console.log("history", data);
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -117,70 +118,30 @@ const DiagnosisTestParameterArea = () => {
       [e.target.name]: e.target.value,
     });
   };
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(`${url}/diagnosis-test-parameter/post-diagnosis`, formData);
-    
-
-      setSuccessMessage("diagnosis test parameter added successfully.");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      fetchdiagnosisname();
-
-      // Clear form after submission
-      setFormData({
-        diagnosistestparametername: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding city:", error);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`${url}/diagnosis-test-parameter/delete-diagnosis/${selecteddiagnosisnameId}`);
-    
-      // Set success message
-      setSuccessMessage("diagnosis name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the cityname list after deletion
-      fetchdiagnosisname();
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedDiagnosisnameId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting diagnosis test parameter with ID ${selecteddiagnosisnameId}:`,
-        error
+      await axios.post(
+        `${url}/diagnosis-test-parameter/post-diagnosis`,
+        formData
       );
+      const response = await axios.get(
+        `${url}/diagnosis-test-parameter/get-diagnosis`
+      );
+      setFiltereddiagnosisname(response.data);
+      setdiagnosisname(response.data);
+      setSuccessMessage("Diagnosis Test Parameter added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding Diagnosis Test Parameter", error);
     }
   };
-
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
   const handleEditClick = (diagnosisname) => {
     setSelectedDiagnosisnameId(diagnosisname.id);
     setEditdiagnosisname(diagnosisname);
@@ -195,16 +156,16 @@ const DiagnosisTestParameterArea = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-console.log(formData)
     try {
-      const response = await axios.put(
+      await axios.put(
         `${url}/diagnosis-test-parameter/update-diagnosis/${selecteddiagnosisnameId}`,
         formData
       );
-    
-
-      fetchdiagnosisname();
-
+      const response = await axios.get(
+        `${url}/diagnosis-test-parameter/get-diagnosis`
+      );
+      setFiltereddiagnosisname(response.data);
+      setdiagnosisname(response.data);
       setShowEditModal(false);
       setSuccessMessage("diagnosis name updated successfully.");
 
@@ -228,6 +189,39 @@ console.log(formData)
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await axios.delete(
+        `${url}/diagnosis-test-parameter/delete-diagnosis/${selecteddiagnosisnameId}`
+      );
+      const response = await axios.get(
+        `${url}/diagnosis-test-parameter/get-diagnosis`
+      );
+       setFiltereddiagnosisname(response.data);
+      setdiagnosisname(response.data);
+      setSuccessMessage("diagnosis name deleted successfully.");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+      setShowDeleteModal(false);
+      setSelectedDiagnosisnameId(null);
+    } catch (error) {
+      console.error(
+        `Error deleting diagnosis test parameter with ID ${selecteddiagnosisnameId}:`,
+        error
+      );
+    }
+  };
+
+  useEffect(() => {
+    const isModalOpen =
+      showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
     const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
@@ -240,83 +234,58 @@ console.log(formData)
     return `${day}-${formattedMonth}-${year}`;
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+   const handleFileUpload = async (e) => {
+     const file = e.target.files[0];
+     if (!file) return;
+ 
+     const reader = new FileReader();
+     reader.onload = async (event) => {
+       const workbook = XLSX.read(event.target.result, { type: "binary" });
+       const sheet = workbook.Sheets[workbook.SheetNames[0]];
+       const data = XLSX.utils.sheet_to_json(sheet);
+       const payload = data.map((row) => ({ name: row.name, added_by: id }));
+ 
+       try {
+         await axios.post(`${url}/diagnosis-test-parameter/post-diagnosis`, { bulkData: payload });
+         const response = await axios.get(`${url}/diagnosis-test-parameter/get-diagnosis`);
+         setFiltereddiagnosisname(response.data);
+         setdiagnosisname(response.data);
+         setSuccessMessage("Successfully added")
+       } catch (error) {
+         console.error("Error uploading file", error);
+       }
+     };
+     reader.readAsBinaryString(file);
+   };
+  const handleExportToExcel = () => {
+    const dataToExport = filtereddiagnosisname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
       });
+    }
 
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
-      }));
-
-      try {
-        // POST data to API
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diagnosis-test-parameter/post-diagnosis`,
-          { bulkData: dataWithAddedBy }
-        );
-       
-        setSuccessMessage("diagnosis uploaded successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diagnosis-test-parameter/get-diagnosis`
-        );
-        setFiltereddiagnosisname(newResponse.data);
-        setdiagnosisname(newResponse.data);
-      } catch (error) {
-        console.error("Error uploading file:", error);
-      }
-    };
-
-    reader.readAsArrayBuffer(file);
-  };
-const handleExportToExcel = () => {
-  const dataToExport = filtereddiagnosisname.map((item) => ({
-    Name: item.name ?? "", // Fallback to empty string
-    "Added By": "Registration Admin",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
-
-  // Add an empty row with all headers if filteredCityname is empty (optional)
-  if (dataToExport.length === 0) {
-    dataToExport.push({
-      Name: "",
-      "Added By": "",
-      "Created At": "",
-      "Updated At": "",
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, {
+      header: ["Name", "Added By", "Created At", "Updated At"],
     });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "diagnosistestparameter");
+
+    XLSX.writeFile(workbook, "Diagnosis_Test_Parameter_List.xlsx");
+  };
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
   }
-
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "diagnosistestparameter");
-
-  XLSX.writeFile(workbook, "Diagnosis_Test_Parameter_List.xlsx");
-};
-
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -370,7 +339,8 @@ const handleExportToExcel = () => {
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload Diagnosis Test Parameter List
+                  <i className="fas fa-upload"></i> Upload Diagnosis Test
+                  Parameter List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -417,7 +387,7 @@ const handleExportToExcel = () => {
                       placeholder: "Search Added by",
                       field: "added_by",
                     },
-                     {
+                    {
                       label: "Status",
                       placeholder: "Search Status",
                       field: "status",
@@ -479,7 +449,10 @@ const handleExportToExcel = () => {
                           <button
                             className="btn btn-info btn-sm"
                             onClick={() =>
-                              handleShowHistory("diagnosistestparameter", diagnosisname.id)
+                              handleShowHistory(
+                                "diagnosistestparameter",
+                                diagnosisname.id
+                              )
                             }
                             title="History Sample"
                           >
@@ -531,7 +504,9 @@ const handleExportToExcel = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add Diagnosis Test Parameter" : "Edit Diagnosis Test Parameter"}
+                        {showAddModal
+                          ? "Add Diagnosis Test Parameter"
+                          : "Edit Diagnosis Test Parameter"}
                       </h5>
                       <button
                         type="button"
@@ -576,7 +551,9 @@ const handleExportToExcel = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Diagnosis Test Parameter Name"}
+                          {showAddModal
+                            ? "Save"
+                            : "Update Diagnosis Test Parameter Name"}
                         </button>
                       </div>
                     </form>
@@ -671,8 +648,8 @@ const handleExportToExcel = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Diagnosis Test Parameter:</b> {created_name} was <b>added</b> by
-                                Registration Admin at{" "}
+                                <b>Diagnosis Test Parameter:</b> {created_name}{" "}
+                                was <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -692,8 +669,9 @@ const handleExportToExcel = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Diagnosis Test Parameter:</b> {updated_name} was <b>updated</b>{" "}
-                                  by Registration Admin at{" "}
+                                  <b>Diagnosis Test Parameter:</b>{" "}
+                                  {updated_name} was <b>updated</b> by
+                                  Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -740,7 +718,9 @@ const handleExportToExcel = () => {
                       className="modal-header"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <h5 className="modal-title">Delete Diagnosis Test Parameter</h5>
+                      <h5 className="modal-title">
+                        Delete Diagnosis Test Parameter
+                      </h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -748,7 +728,10 @@ const handleExportToExcel = () => {
                       ></button>
                     </div>
                     <div className="modal-body">
-                      <p>Are you sure you want to delete this Diagnosis Test Parameter?</p>
+                      <p>
+                        Are you sure you want to delete this Diagnosis Test
+                        Parameter?
+                      </p>
                     </div>
                     <div className="modal-footer">
                       <button className="btn btn-danger" onClick={handleDelete}>

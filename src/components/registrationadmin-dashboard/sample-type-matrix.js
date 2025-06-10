@@ -4,21 +4,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+
 const SampleTypeMatrixArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on SampleTypeMatrix page is:", id);
-  }
-  const [showAddModal, setShowAddModal] = useState(false);
+
+ const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -41,11 +37,9 @@ const SampleTypeMatrixArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch ContainerType from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    fetchSampleTypeMatrixname(); // Call the function when the component mounts
-  }, []);
-  const fetchSampleTypeMatrixname = async () => {
+   const fetchSampleTypeMatrixname = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/sampletypematrix`
@@ -56,7 +50,11 @@ const SampleTypeMatrixArea = () => {
       console.error("Error fetching Sample Type Matrix :", error);
     }
   };
-  useEffect(() => {
+    fetchSampleTypeMatrixname();
+  }, [url]);
+
+  // ✅ UPDATE PAGINATION TOTAL PAGES
+ useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredSampletypematrixname.length / itemsPerPage)
@@ -66,45 +64,37 @@ const SampleTypeMatrixArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSampletypematrixname]);
+  }, [filteredSampletypematrixname,currentPage]);
 
-  const currentData = filteredSampletypematrixname.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
+  const currentData = filteredSampletypematrixname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = sampletypematrixname; // Show all if filter is empty
-    } else {
-      filtered = sampletypematrixname.filter((sampletypematrix) =>
-      {
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return sampletypematrix[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-    });
-    }
-
+    const filtered = value.trim()
+      ? sampletypematrixname.filter((sampletypematrix) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : sampletypematrix[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : sampletypematrixname;
     setFilteredSampletypematrixname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -112,7 +102,6 @@ const SampleTypeMatrixArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -120,180 +109,107 @@ const SampleTypeMatrixArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/sampletypematrix`,
-        formData
-      );
-
-      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchSampleTypeMatrixname();
-      // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
+      await axios.post(`${url}/samplefields/post-samplefields/sampletypematrix`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
+      setFilteredSampletypematrixname(response.data);
+      setSampleTypeMatrixname(response.data);
+      setSuccessMessage("Sample type matrix added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding SampleTypeMatrix ", error);
+      console.error("Error adding sample type matrix", error);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
+      setFilteredSampletypematrixname(response.data);
+      setSampleTypeMatrixname(response.data);
+      setSuccessMessage("Sample type matrix updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(`Error updating Sample type matrix: ${selectedSampleTypeMatrixnameId}`, error);
     }
   };
 
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
-      );
-
-
-      // Set success message
-      setSuccessMessage("Sample Type Matrix Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the cityname list after deletion
-      fetchSampleTypeMatrixname();
-
-      // Close modal after deletion
+      await axios.delete(`${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
+      setFilteredSampletypematrixname(response.data);
+      setSampleTypeMatrixname(response.data);
+      setSuccessMessage("Sample Type Matrix deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedSampleTypeMatrixnameId(null);
+      setSelectedTestSystemnameId(null);
     } catch (error) {
-      console.error(
-        `Error deleting SampleTypeMatrix  with ID ${selectedSampleTypeMatrixnameId}:`,
-        error
-      );
+      console.error(`Error deleting sample type matrix: ${selectedSampleTypeMatrixnameId}`, error);
     }
   };
 
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (sampletypematrix) => {
+  
 
 
+
+
+const handleEditClick = (sampletypematrix) => {
     setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
     setEditSampleTypeMatrixname(sampletypematrix);
-
     setFormData({
       name: sampletypematrix.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
-        formData
-      );
-
-
-      fetchSampleTypeMatrixname();
-
-      setShowEditModal(false);
-      setSuccessMessage("Sample Type Matrix updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      resetFormData();
-    } catch (error) {
-      console.error(
-        `Error updating Sample Type Matrix name with ID ${selectedSampleTypeMatrixnameId}:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
-
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/sampletypematrix`,
-          { bulkData: dataWithAddedBy }
-        );
-
-
-        fetchSampleTypeMatrixname();
+        await axios.post(`${url}/samplefields/post-samplefields/sampletypematrix`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
+        setFilteredSampletypematrixname(response.data);
+        setSampleTypeMatrixname(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error adding Sample Type Matrix :", error);
+        console.error("Error uploading sample type matrix", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
     });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
   const handleExportToExcel = () => {
@@ -321,7 +237,10 @@ const SampleTypeMatrixArea = () => {
       XLSX.writeFile(workbook, "Sample_Type_Matrix_List.xlsx");
     };
 
-  return (
+  
+  if (!id) return <div>Loading...</div>;
+
+   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

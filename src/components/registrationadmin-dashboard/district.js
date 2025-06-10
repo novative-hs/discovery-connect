@@ -13,11 +13,7 @@ import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 const DistrictArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on district page is:", id);
-  }
+  
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -36,13 +32,11 @@ const DistrictArea = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   const [successMessage, setSuccessMessage] = useState("");
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
   // Fetch District from backend when component loads
   useEffect(() => {
-    fetchdistrictname(); // Call the function when the component mounts
-  }, []);
-  const fetchdistrictname = async () => {
+    const fetchdistrictname = async () => {
     try {
       const response = await axios.get(`${url}/district/get-district`);
       setFilteredDistrictname(response.data);
@@ -51,6 +45,9 @@ const DistrictArea = () => {
       console.error("Error fetching District:", error);
     }
   };
+    fetchdistrictname(); // Call the function when the component mounts
+  }, [url]);
+  
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -61,7 +58,7 @@ const DistrictArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredDistrictname]);
+  }, [filteredDistrictname,currentPage]);
 
   const currentData = filteredDistrictname.slice(
     currentPage * itemsPerPage,
@@ -114,73 +111,25 @@ const DistrictArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/district/post-district`,
-        formData
-      );
-      
-      setSuccessMessage("District added successfully.");
-
+      await axios.post(`${url}/district/post-district`, formData);
+      const response = await axios.get(`${url}/district/get-district`);
+      setFilteredDistrictname(response.data);
+      setDistrictname(response.data);
+    setSuccessMessage("District added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      fetchdistrictname();
-
-      // Clear form after submission
-      setFormData({
-        districtname: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
+     resetFormData()
+      setShowAddModal(false); 
     } catch (error) {
       console.error("Error adding district:", error);
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/delete-district/${selecteddistrictnameId}`
-      );
-     
-      // Set success message
-      setSuccessMessage("districtname deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the districtname list after deletion
-      fetchdistrictname();
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setselecteddistrictnameId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting district with ID ${selecteddistrictnameId}:`,
-        error
-      );
-    }
-  };
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
+ 
   const handleEditClick = (districtname) => {
     
     setselecteddistrictnameId(districtname.id);
@@ -192,31 +141,51 @@ const DistrictArea = () => {
     });
   };
 
-  const handleUpdate = async (e) => {
+   const handleUpdate = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await axios.put(
-        `${url}/district/put-district/${selecteddistrictnameId}`,
-        formData
-      );
-      
-
-      fetchdistrictname();
-
+      await axios.put(`${url}/district/put-district/${selecteddistrictnameId}`, formData);
+      const response = await axios.get(`${url}/district/get-district`);
+      setFilteredDistrictname(response.data);
+      setDistrictname(response.data);
+          setSuccessMessage("District updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
       setShowEditModal(false);
-      setSuccessMessage("District updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
     } catch (error) {
-      console.error(
+     console.error(
         `Error updating districtname with ID ${selecteddistrictnameId}:`,
         error
       );
     }
   };
+
+ const handleDelete = async () => {
+    try {
+      await axios.delete(`${url}/district/delete-district/${selecteddistrictnameId}`);
+      const response = await axios.get(`${url}/district/get-district`);
+      setFilteredDistrictname(response.data);
+      setDistrictname(response.data);
+      setSuccessMessage("districtname deleted successfully.");
+
+      setTimeout(() => { setSuccessMessage("");}, 3000);
+      setShowDeleteModal(false);
+      setselecteddistrictnameId(null);
+    } catch (error) {
+      console.error(
+        `Error deleting district with ID ${selecteddistrictnameId}:`,
+        error
+      );
+
+    }
+  };
+   useEffect(() => {
+      const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+      document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+      document.body.classList.toggle("modal-open", isModalOpen);
+    }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+  
+
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -238,52 +207,25 @@ const DistrictArea = () => {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
-      }));
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST data to API
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/post-district`,
-          { bulkData: dataWithAddedBy }
-        );
-        
-        setSuccessMessage("Districts Uploaded Successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the district list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/district/get-district`
-        );
-        setFilteredDistrictname(newResponse.data);
-        setDistrictname(newResponse.data);
+        await axios.post(`${url}/district/post-district`, { bulkData: payload });
+        const response = await axios.get(`${url}/district/get-district`);
+        setFilteredDistrictname(response.data);
+        setDistrictname(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error uploading district", error);
       }
     };
-
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
   };
+
+
 const handleExportToExcel = () => {
   const dataToExport = filteredDistrictname.map((item) => ({
     Name: item.name ?? "", // Fallback to empty string
@@ -308,7 +250,7 @@ const handleExportToExcel = () => {
 
   XLSX.writeFile(workbook, "District_List.xlsx");
 };
-
+if (!id) return <div>Loading...</div>;
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">

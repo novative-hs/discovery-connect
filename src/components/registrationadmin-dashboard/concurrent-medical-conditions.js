@@ -13,11 +13,7 @@ import Pagination from "@ui/Pagination";
 import moment from "moment";
 const ConcurrentMedicalConditionsArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on ConcurrentMedicalConditions Area page is:", id);
-  }
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -44,9 +40,7 @@ const ConcurrentMedicalConditionsArea = () => {
 
   // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    fetchConcurrentMedicalname(); // Call the function when the component mounts
-  }, []);
-  const fetchConcurrentMedicalname = async () => {
+      const fetchConcurrentMedicalname = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/concurrentmedicalconditions`
@@ -57,6 +51,9 @@ const ConcurrentMedicalConditionsArea = () => {
       console.error("Error fetching Concurrent Medical Conditions :", error);
     }
   };
+    fetchConcurrentMedicalname(); // Call the function when the component mounts
+  }, [url]);
+
 
   useEffect(() => {
     const pages = Math.max(
@@ -68,7 +65,7 @@ const ConcurrentMedicalConditionsArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredMedicalConditionname]);
+  }, [filteredMedicalConditionname,currentPage]);
 
   const currentData = filteredMedicalConditionname.slice(
     currentPage * itemsPerPage,
@@ -129,115 +126,71 @@ const ConcurrentMedicalConditionsArea = () => {
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
-        formData
+      await axios.post(`${url}/samplefields/post-samplefields/concurrentmedicalconditions`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data);
+       setSuccessMessage(
+        "Concurrent Medical Conditions Name added successfully."
       );
-
-      setSuccessMessage(
-        "Concurrent Medical ConditionsRoutes Name deleted successfully."
-      );
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchConcurrentMedicalname();
-      // Clear form after submission
-      setFormData({
-        name: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Concurrent Medical Conditions ", error);
+      console.error("Error adding Concurrent Medical Conditions", error);
+    }
+  };
+
+ const handleEditClick = (concurrentmedicalname) => {
+    setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
+    setEditConcurrentMedicalname(concurrentmedicalname);
+    setFormData({
+      name: concurrentmedicalname.name,
+      added_by: id,
+    });
+    setShowEditModal(true);
+  };
+
+ const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data);
+       setSuccessMessage("Concurrent Medical Conditions Name updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error("Error updating Concurrent Medical Conditions", error);
     }
   };
 
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`
-      );
-
-      setSuccessMessage(
-        "Concurrent Medical Conditions Name deleted successfully."
-      );
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchConcurrentMedicalname();
-      // Close modal after deletion
+      await axios.delete(`${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data);
+    setSuccessMessage("Concurrent Medical Conditions Name deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedConcurrentMedicalnameId(null);
+      setSelectedTestSystemnameId(null);
     } catch (error) {
-      console.error(
-        `Error deleting concurrent medical conditions  with ID ${selectedConcurrentMedicalnameId}:`,
-        error
-      );
+      console.error("Error deleting Concurrent Medical Conditions", error);
     }
   };
 
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+ useEffect(() => {
+     const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+     document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+     document.body.classList.toggle("modal-open", isModalOpen);
+   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+ 
 
-  const handleEditClick = (concurrentmedicalname) => {
-
-
-    setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
-    setEditConcurrentMedicalname(concurrentmedicalname);
-
-    setFormData({
-      name: concurrentmedicalname.name,
-      added_by: id,
-    });
-
-    setShowEditModal(true);
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`,
-        formData
-      );
-
-      fetchConcurrentMedicalname();
-
-      setShowEditModal(false);
-      setSuccessMessage("Concurrent Medical Conditions updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      resetFormData();
-    } catch (error) {
-      console.error(
-        `Error updating Concurrent Medical Conditions name with ID ${selectedConcurrentMedicalnameId}:`,
-        error
-      );
-    }
-  };
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -251,43 +204,29 @@ const ConcurrentMedicalConditionsArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
 
-  const handleFileUpload = async (e) => {
-
+   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/concurrentmedicalconditions`,
-          { bulkData: dataWithAddedBy }
-        );
-        fetchConcurrentMedicalname();
+        await axios.post(`${url}/samplefields/post-samplefields/concurrentmedicalconditions`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+        setFilteredMedicalConditionname(response.data);
+        setConcurrentMedicalname(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error adding Concurrent Medical Conditions :", error);
+        console.error("Error uploading file of concurrent medical conditions", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
-
   const resetFormData = () => {
     setFormData({
       name: "",
@@ -320,7 +259,9 @@ const ConcurrentMedicalConditionsArea = () => {
   
     XLSX.writeFile(workbook, "Concurrent-Medical-Conditions-List.xlsx");
   };
-
+ if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  }
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">

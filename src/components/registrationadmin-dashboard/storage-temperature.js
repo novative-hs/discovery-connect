@@ -4,19 +4,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
-  faPlus, faHistory
+  faPlus,
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+
 const StorageTemperatureArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on Storage temperature page is:", id);
-  }
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -38,12 +34,9 @@ const StorageTemperatureArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch City from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-
-    fetchStoragetemperaturename(); // Call the function when the component mounts
-  }, []);
-  const fetchStoragetemperaturename = async () => {
+    const fetchStoragetemperaturename = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/storagetemperature`
@@ -54,51 +47,52 @@ const StorageTemperatureArea = () => {
       console.error("Error fetching Storage Temperature:", error);
     }
   };
+    fetchStoragetemperaturename();
+  }, [url]);
 
-  useEffect(() => {
+  // ✅ UPDATE PAGINATION TOTAL PAGES
+ 
+
+ useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredStoragetemperaturename.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredStoragetemperaturename]);
+  }, [filteredStoragetemperaturename,currentPage]); 
 
 
-  const currentData = filteredStoragetemperaturename.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
+  const currentData = filteredStoragetemperaturename.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = samplecondition; // Show all if filter is empty
-    } else {
-      filtered = samplecondition.filter((samplecondition) =>{
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return samplecondition[field]?.toString().toLowerCase().includes(value.toLowerCase());
-    }
-      );
-    }
-
+    const filtered = value.trim()
+      ? storagetemperaturename.filter((storagetemperature) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : storagetemperature[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : storagetemperaturename;
     setFilteredStoragetemperaturename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -106,85 +100,67 @@ const StorageTemperatureArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/storagetemperature`,
-        formData
-      );
-
-      setSuccessMessage("Storage Temperature added successfully.");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      fetchStoragetemperaturename();
-      // Clear form after submission
-      resetFormData()
-      setShowAddModal(false); // Close modal after submission
+      await axios.post(`${url}/samplefields/post-samplefields/storagetemperature`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
+      setFilteredStoragetemperaturename(response.data);
+      setStoragetemperaturename(response.data);
+      setSuccessMessage("Storage Temperature name added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Storage temperature:", error);
+      console.error("Error adding storage temperature name", error);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
+      setFilteredStoragetemperaturename(response.data);
+      setStoragetemperaturename(response.data);
+      setSuccessMessage("storage temperature name updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(`Error updating storage temperature: ${selectedstoragetemperaturenameId}`, error);
     }
   };
 
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`
-      );
-
-      // Set success message
-      setSuccessMessage("Storage temperature Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchStoragetemperaturename();
-
-      // Close modal after deletion
+      await axios.delete(`${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
+      setFilteredStoragetemperaturename(response.data);
+      setStoragetemperaturename(response.data);
+      setSuccessMessage("Storage temperature name deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
       setSelectedStoragetemperaturenameId(null);
     } catch (error) {
-      console.error(
-        `Error deleting Storage temperature with ID ${selectedstoragetemperaturenameId}:`,
-        error
-      );
+      console.error(`Error deleting storage temperature: ${selectedstoragetemperaturenameId}`, error);
     }
   };
-
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (storagetemperaturename) => {
+const handleEditClick = (storagetemperaturename) => {
 
 
     setSelectedStoragetemperaturenameId(storagetemperaturename.id);
@@ -197,90 +173,40 @@ const StorageTemperatureArea = () => {
 
     setShowEditModal(true);
   };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`,
-        formData
-      );
-
-
-      fetchStoragetemperaturename();
-
-      setShowEditModal(false);
-      setSuccessMessage("Storage temperature updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(
-        `Error updating Storage temperature name with ID ${selectedstoragetemperaturenameId}:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
-
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/storagetemperature`,
-          { bulkData: dataWithAddedBy }
-        );
-
-
-        fetchStoragetemperaturename();
+        await axios.post(`${url}/samplefields/post-samplefields/storagetemperature`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
+        setFilteredStoragetemperaturename(response.data);
+        setStoragetemperaturename(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error adding Storage temperature:", error);
+        console.error("Error uploading storage temperature", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
     });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
+
 
    const handleExportToExcel = () => {
        const dataToExport = filteredStoragetemperaturename.map((item) => ({
@@ -306,6 +232,8 @@ const StorageTemperatureArea = () => {
      
        XLSX.writeFile(workbook, "Storage_Temperature_List.xlsx");
      };
+  
+  if (!id) return <div>Loading...</div>;
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">

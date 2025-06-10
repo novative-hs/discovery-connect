@@ -7,11 +7,7 @@ import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
 const CityArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on city page is:", id);
-  }
+  
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -34,9 +30,7 @@ const CityArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // Fetch City from backend when component loads
   useEffect(() => {
-    fetchcityname(); // Call the function when the component mounts
-  }, []);
-  const fetchcityname = async () => {
+     const fetchcityname = async () => {
     try {
       const response = await axios.get(`${url}/city/get-city`);
       setcityname(response.data);
@@ -45,6 +39,9 @@ const CityArea = () => {
       console.error("Error fetching City:", error);
     }
   };
+    fetchcityname(); // Call the function when the component mounts
+  }, [url]);
+ 
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -55,7 +52,7 @@ const CityArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCityname]);
+  }, [filteredCityname,currentPage]);
 
   const currentData = filteredCityname.slice(
     currentPage * itemsPerPage,
@@ -114,117 +111,73 @@ const CityArea = () => {
       [e.target.name]: e.target.value,
     });
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // POST request to your backend API
-      const response = await axios.post(`${url}/city/post-city`, formData);
-    
-
-      setSuccessMessage("City added successfully.");
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      fetchcityname();
-
-      // Clear form after submission
-      setFormData({
-        cityname: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding city:", error);
-    }
+  const resetFormData = () => {
+    setFormData({ cityname: "", added_by: id });
   };
 
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
-    
-      // Set success message
-      setSuccessMessage("cityname deleted successfully.");
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${url}/city/post-city`, formData);
+        const response = await axios.get(`${url}/city/get-city`);
+        setFilteredCityname(response.data);
+        setcityname(response.data);
+        setSuccessMessage("City added successfully.");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        resetFormData();
+        setShowAddModal(false);
+      } catch (error) {
+        console.error("Error adding City", error);
+      }
+    };
 
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the cityname list after deletion
-      fetchcityname();
-
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedcitynameId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting Committe Member with ID ${selectedcitynameId}:`,
-        error
-      );
-    }
-  };
-
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (cityname) => {
-   
+   const handleEditClick = (cityname) => {
     setSelectedcitynameId(cityname.id);
     setEditcityname(cityname);
-
     setFormData({
       cityname: cityname.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
+   const handleUpdate = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await axios.put(
-        `${url}/city/put-city/${selectedcitynameId}`,
-        formData
-      );
-    
-
-      fetchcityname();
-
-      setShowEditModal(false);
+      await axios.put(`${url}/city/put-city/${selectedcitynameId}`, formData);
+      const response = await axios.get(`${url}/city/get-city`);
+      setFilteredCityname(response.data);
+      setcityname(response.data);
       setSuccessMessage("City updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      setFormData({
-        cityname: "",
-        added_by: id,
-      });
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
     } catch (error) {
-      console.error(
-        `Error updating cityname with ID ${selectedcitynameId}:`,
-        error
-      );
-    } finally {
-      setFormData({
-        cityname: "",
-        added_by: id,
-      });
+      console.error(`Error updating City: ${selectedcitynameId}`, error);
     }
   };
+
+   const handleDelete = async () => {
+    try {
+      await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
+      const response = await axios.get(`${url}/city/get-city`);
+      setFilteredCityname(response.data);
+      setcityname(response.data);
+      setSuccessMessage("City deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setShowDeleteModal(false);
+      setSelectedcitynameId(null);
+    } catch (error) {
+      console.error(`Error deleting City: ${selectedcitynameId}`, error);
+    }
+  };
+
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+ 
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -238,58 +191,29 @@ const CityArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
-      }));
-
-      try {
-        // POST data to API
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/post-city`,
-          { bulkData: dataWithAddedBy }
-        );
-       
-        setSuccessMessage("Cities uploaded successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/get-city`
-        );
-        setFilteredCityname(newResponse.data);
-        setcityname(newResponse.data);
-      } catch (error) {
-        console.error("Error uploading file:", error);
-      }
+    const handleFileUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+  
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const workbook = XLSX.read(event.target.result, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        const payload = data.map((row) => ({ name: row.name, added_by: id }));
+  
+        try {
+          await axios.post(`${url}/city/post-city`, { bulkData: payload });
+          const response = await axios.get(`${url}/city/get-city`);
+          setFilteredCityname(response.data);
+          setcityname(response.data);
+          setSuccessMessage("Successfully added")
+        } catch (error) {
+          console.error("Error uploading City", error);
+        }
+      };
+      reader.readAsBinaryString(file);
     };
-
-    reader.readAsArrayBuffer(file);
-  };
 const handleExportToExcel = () => {
   const dataToExport = filteredCityname.map((item) => ({
     Name: item.name ?? "", // Fallback to empty string
@@ -314,7 +238,9 @@ const handleExportToExcel = () => {
 
   XLSX.writeFile(workbook, "City_List.xlsx");
 };
-
+if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  } 
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">

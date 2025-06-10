@@ -1,33 +1,36 @@
-import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  // add_cart_product,
-  initialOrderQuantity,
-} from "src/redux/features/cartSlice";
 import { Modal } from "react-bootstrap";
 import { handleModalShow } from "src/redux/features/productSlice";
+import { initialOrderQuantity } from "src/redux/features/cartSlice";
 
 const ProductModal = ({ product }) => {
   const dispatch = useDispatch();
   const { isShow } = useSelector((state) => state.product);
-  // const { cart_products } = useSelector((state) => state.cart);
-  // const cartItems = useSelector((state) => state.cart?.cart_products || []);
-
-  // const handleAddToCart = (product) => {
-  //   dispatch(add_cart_product(product));
-  // };
-
-  // const isInCart = (sampleId) => {
-  //   return cartItems.some((item) => item.id === sampleId);
-  // };
 
   const handleModalClose = () => {
     dispatch(handleModalShow());
     dispatch(initialOrderQuantity());
   };
 
-  // Evaluate optional fields
+  // ✅ Manage scroll based on modal visibility
+  useEffect(() => {
+    if (isShow) {
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    };
+  }, [isShow]);
+
+  if (!product) return null;
+
   const optionalFields = [
     product.ethnicity,
     product.AlcoholOrDrugAbuse,
@@ -38,7 +41,6 @@ const ProductModal = ({ product }) => {
     product.InfectiousDiseaseTesting,
     product.FreezeThawCycles,
   ];
-
   const nonNullOptionalFields = optionalFields.filter(Boolean);
   const showTwoColumnLayout = nonNullOptionalFields.length >= 3;
 
@@ -62,8 +64,7 @@ const ProductModal = ({ product }) => {
           overflowY: "hidden",
         }}
       >
-        {/* Header */}
-        <div
+          <div
           className="d-flex justify-content-between align-items-center p-2"
           style={{ backgroundColor: "#cfe2ff", color: "#000" }}
         >
@@ -82,208 +83,49 @@ const ProductModal = ({ product }) => {
           </button>
         </div>
 
-        {/* Body */}
-        <div
-          className="modal-body"
-          style={{ maxHeight: "calc(80vh - 100px)", overflowY: "hidden" }}
-        >
+        <div className="modal-body" style={{ maxHeight: "calc(80vh - 100px)", overflowY: "auto" }}>
           <div className="row">
             {showTwoColumnLayout ? (
               <>
-                {/* Left side */}
-                <div className="col-md-5 text-center">
+              <div className="col-md-5 text-center">
                   <img
                     src={product.imageUrl || "/placeholder.jpg"}
                     alt={product.diseasename}
                     className="img-fluid rounded"
                     style={{ maxHeight: "200px", objectFit: "cover" }}
                   />
-                  <div className="mt-3 p-2 bg-light rounded text-start">
-                    <p>
-                      <strong>Age:</strong> {product.age} years |{" "}
-                      <strong>Gender:</strong> {product.gender}
-                    </p>
-                    <p>
-                      <strong>Container Type:</strong> {product.ContainerType}
-                    </p>
-                    <p>
-                      <strong>Diagnosis Test Parameter:</strong>{" "}
-                      {product.DiagnosisTestParameter}
-                    </p>
-                    <p>
-                      <strong>Volume:</strong> {product.volume}{" "}
-                      {product.QuantityUnit}
-                    </p>
-                    <p>
-                      <strong>Test Result/(unit):</strong> {product.TestResult}{" "}
-                      {product.TestResultUnit}
-                    </p>
-                    <p>
-                      <strong>Status:</strong> {product.status}
-                    </p>
+
+                  <div className="mt-3 text-start bg-light p-2 rounded">
+                    <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
+                    <p><strong>Container:</strong> {product.ContainerType}</p>
+                    <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
+                    <p><strong>Test Result:</strong> {product.TestResult} {product.TestResultUnit}</p>
+                    <p><strong>Status:</strong> {product.status}</p>
                   </div>
                 </div>
-
-                {/* Right side */}
-                <div className="col-md-7 d-flex flex-column">
-                  <div>
-                    {product.ethnicity && (
-                      <p>
-                        <strong>Ethnicity:</strong> {product.ethnicity}
-                      </p>
-                    )}
-                    {product.AlcoholOrDrugAbuse && (
-                      <p>
-                        <strong>Alcohol or Drug Abuse:</strong>{" "}
-                        {product.AlcoholOrDrugAbuse}
-                      </p>
-                    )}
-                    {product.SmokingStatus && (
-                      <p>
-                        <strong>Smoking Status:</strong>{" "}
-                        {product.SmokingStatus}
-                      </p>
-                    )}
-                    {product.samplecondition && (
-                      <p>
-                        <strong>Sample Condition:</strong>{" "}
-                        {product.samplecondition}
-                      </p>
-                    )}
-                    {product.storagetemp && (
-                      <p>
-                        <strong>Storage Temperature:</strong>{" "}
-                        {product.storagetemp}
-                      </p>
-                    )}
-                    {product.SampleTypeMatrix && (
-                      <p>
-                        <strong>Sample Type Matrix:</strong>{" "}
-                        {product.SampleTypeMatrix}
-                      </p>
-                    )}
-                    {product.InfectiousDiseaseTesting && (
-                      <p>
-                        <strong>Infectious Disease Testing:</strong>{" "}
-                        {product.InfectiousDiseaseTesting}
-                        {product.InfectiousDiseaseResult &&
-                          ` (${product.InfectiousDiseaseResult})`}
-                      </p>
-                    )}
-                    {product.FreezeThawCycles && (
-                      <p>
-                        <strong>Freeze Thaw Cycles:</strong>{" "}
-                        {product.FreezeThawCycles}
-                      </p>
-                    )}
-                  </div>
-
+                <div className="col-md-7">
+                  {nonNullOptionalFields.map((value, i) => (
+                    value && <p key={i}><strong>{Object.keys(product)[Object.values(product).indexOf(value)]}:</strong> {value}</p>
+                  ))}
                 </div>
               </>
             ) : (
-              // Single-column layout
-              <div className="col-12 text-center">
+             <div className="col-12 text-center">
                 <img
                   src={product.imageUrl || "/placeholder.jpg"}
                   alt={product.diseasename}
                   className="img-fluid rounded"
                   style={{ maxHeight: "130px", objectFit: "cover" }}
                 />
-                <div className="mt-3 p-2 bg-light rounded text-start">
-                  <p>
-                    <strong>Age:</strong> {product.age} years |{" "}
-                    <strong>Gender:</strong> {product.gender}
-                  </p>
-                  <p>
-                    <strong>Volume:</strong> {product.volume}{" "}
-                    {product.QuantityUnit}
-                  </p>
-                  <p>
-                    <strong>Container Type:</strong> {product.ContainerType}
-                  </p>
-                  <p>
-                    <strong>Sample Type Matrix:</strong> {product.SampleTypeMatrix}
-                  </p>
-                  <p>
-                    <strong>Test Result/(unit):</strong> {product.TestResult}{" "}
-                    {product.TestResultUnit}
-                  </p>
-                  <p>
-                    <strong>Status:</strong> {product.status}
-                  </p>
+                <div className="mt-3 text-start bg-light p-2 rounded">
+                  <p><strong>Age:</strong> {product.age} | <strong>Gender:</strong> {product.gender}</p>
+                  <p><strong>Container:</strong> {product.ContainerType}</p>
+                  <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
+                  <p><strong>Status:</strong> {product.status}</p>
+                  {nonNullOptionalFields.map((value, i) => (
+                    value && <p key={i}><strong>{Object.keys(product)[Object.values(product).indexOf(value)]}:</strong> {value}</p>
+                  ))}
                 </div>
-
-                {nonNullOptionalFields.length > 0 && (
-                  <div className="mt-3 p-2 bg-light rounded text-start">
-                    {product.ethnicity && (
-                      <p>
-                        <strong>Ethnicity:</strong> {product.ethnicity}
-                      </p>
-                    )}
-                    {product.AlcoholOrDrugAbuse && (
-                      <p>
-                        <strong>Alcohol or Drug Abuse:</strong>{" "}
-                        {product.AlcoholOrDrugAbuse}
-                      </p>
-                    )}
-                    {product.SmokingStatus && (
-                      <p>
-                        <strong>Smoking Status:</strong>{" "}
-                        {product.SmokingStatus}
-                      </p>
-                    )}
-                    {product.samplecondition && (
-                      <p>
-                        <strong>Sample Condition:</strong>{" "}
-                        {product.samplecondition}
-                      </p>
-                    )}
-                    {product.storagetemp && (
-                      <p>
-                        <strong>Storage Temperature:</strong>{" "}
-                        {product.storagetemp}
-                      </p>
-                    )}
-                    {product.InfectiousDiseaseTesting && (
-                      <p>
-                        <strong>Infectious Disease Testing:</strong>{" "}
-                        {product.InfectiousDiseaseTesting}
-                        {product.InfectiousDiseaseResult &&
-                          ` (${product.InfectiousDiseaseResult})`}
-                      </p>
-                    )}
-                    {product.FreezeThawCycles && (
-                      <p>
-                        <strong>Freeze Thaw Cycles:</strong>{" "}
-                        {product.FreezeThawCycles}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Add to Cart */}
-                {/* <div className="mt-3 text-end">
-                  {product.quantity === 0 ? (
-                    <button
-                      className="btn w-75"
-                      disabled
-                      style={{ backgroundColor: "black", color: "white" }}
-                    >
-                      Sample Allocated
-                    </button>
-                  ) : isInCart(product.id) ? (
-                    <button className="btn btn-secondary w-75" disabled>
-                      Added
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-danger w-75"
-                      onClick={() => handleAddToCart(product)}
-                    >
-                      Add to Cart
-                    </button>
-                  )}
-                </div> */}
               </div>
             )}
           </div>

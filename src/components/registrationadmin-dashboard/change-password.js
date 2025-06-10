@@ -49,27 +49,27 @@ const ChangePassword = () => {
   });
   
 
-  useEffect(() => {
-    if (id === null) {
-      return <div>Loading...</div>; // Or redirect to login
-    } else {
-      fetchUser(); // Call the function when the component mounts
-      console.log("account_id on city page is:", id);
-    }
-  }, []);
+ useEffect(() => {
+  const userId = sessionStorage.getItem("userID");
+  if (!userId) return;
 
   const fetchUser = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${userId}`
       );
-      const userEmail = response.data?.data[0]; // Extract email from the response
-      setUserDetail(userEmail); // Set only the email in state
+      const userEmail = response.data?.data[0];
+      setUserDetail(userEmail);
       setValue("email", userEmail);
     } catch (error) {
       console.error("Error fetching user detail:", error);
     }
   };
+
+  fetchUser();
+  console.log("account_id on city page is:", userId);
+}, [setValue]);
+
 
   // on submit
   const onSubmit = async (data) => {

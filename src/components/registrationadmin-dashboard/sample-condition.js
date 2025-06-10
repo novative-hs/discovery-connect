@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
@@ -14,12 +13,10 @@ import moment from "moment";
 
 const SampleConditionArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on Sample Condition  page is:", id);
-  }
-  const [showAddModal, setShowAddModal] = useState(false);
+
+ 
+
+const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -42,11 +39,9 @@ const SampleConditionArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch City from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    fetchSampleConditionname(); // Call the function when the component mounts
-  }, []);
-  const fetchSampleConditionname = async () => {
+    const fetchSampleConditionname = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/samplecondition`
@@ -57,6 +52,11 @@ const SampleConditionArea = () => {
       console.error("Error fetching Sample Condition", error);
     }
   };
+
+    fetchSampleConditionname();
+  }, [url]);
+
+  // ✅ UPDATE PAGINATION TOTAL PAGES
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -67,18 +67,23 @@ const SampleConditionArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSampleconditionname]);
+  }, [filteredSampleconditionname,currentPage]);
 
-  const currentData = filteredSampleconditionname.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
+  const currentData = filteredSampleconditionname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
- const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field, value) => {
   let filtered = [];
 
   if (value.trim() === "") {
@@ -104,9 +109,7 @@ const SampleConditionArea = () => {
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -114,7 +117,6 @@ const SampleConditionArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -122,77 +124,61 @@ const SampleConditionArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/samplecondition`,
-        formData
-      );
-
-      setSuccessMessage("Sample Condition Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      fetchSampleConditionname();
-      // Clear form after submission
+      await axios.post(`${url}/samplefields/post-samplefields/samplecondition`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
+      setFilteredSampleconditionname(response.data);
+      setSampleConditionname(response.data);
+      setSuccessMessage("Sample Condition Name added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
-      setShowAddModal(false); // Close modal after submission
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Sample Condition:", error);
+      console.error("Error adding Sample Condition Name", error);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
+      setFilteredSampleconditionname(response.data);
+      setSampleConditionname(response.data);
+      setSuccessMessage("Sample Condition Name updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(`Error updating Sample Condition Name: ${selectedSampleConditionnameId}`, error);
     }
   };
 
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`
-      );
-
-      // Set success message
+      await axios.delete(`${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
+      setFilteredSampleconditionname(response.data);
+      setSampleConditionname(response.data);
       setSuccessMessage("Sample Condition Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchSampleConditionname();
-      // Close modal after deletion
+      setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
       setSelectedSampleConditionnameId(null);
     } catch (error) {
-      console.error(
-        `Error deleting Storage temperature with ID ${selectedSampleConditionnameId}:`,
-        error
-      );
+      console.error(`Error deleting Sample Condition Name: ${selectedSampleConditionnameId}`, error);
     }
   };
 
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (sampleconditionname) => {
+   const handleEditClick = (sampleconditionname) => {
 
 
     setSelectedSampleConditionnameId(sampleconditionname.id);
@@ -206,91 +192,43 @@ const SampleConditionArea = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`,
-        formData
-      );
-
-
-      fetchSampleConditionname();
-
-      setShowEditModal(false);
-      setSuccessMessage("Sample Condition updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(
-        `Error updating Sample Condition name with ID ${selectedSampleConditionnameId}:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
 
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
-    console.log("File selected:", file); // Debugging
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-      console.log("Data with added_by", dataWithAddedBy);
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/samplecondition`,
-          { bulkData: dataWithAddedBy }
-        );
-        console.log("Sample condition added successfully:", response.data);
+        await axios.post(`${url}/samplefields/post-samplefields/samplecondition`, { bulkData: payload });
+        setSuccessMessage("Successfully added")
+        const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
+        setFilteredSampleconditionname(response.data);
 
-        fetchSampleConditionname();
+        setSampleConditionname(response.data);
       } catch (error) {
-        console.error("Error adding Sample condition:", error);
+        console.error("Error uploading sample condition", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
     });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-   const handleExportToExcel = () => {
+     const handleExportToExcel = () => {
       const dataToExport = filteredSampleconditionname.map((item) => ({
         Name: item.name ?? "", // Fallback to empty string
         "Added By": "Registration Admin",
@@ -315,7 +253,10 @@ const SampleConditionArea = () => {
       XLSX.writeFile(workbook, "Sample_Condition_List.xlsx");
     };
 
-  return (
+  
+  if (!id) return <div>Loading...</div>;
+
+   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

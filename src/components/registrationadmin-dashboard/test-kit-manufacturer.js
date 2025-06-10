@@ -4,34 +4,36 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
+import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-import * as XLSX from "xlsx";
+
 const TestKitManufacturerArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on Test Kit Manufacturer Area page is:", id);
-  }
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedTestKitManufacturernameId, setSelectedTestKitManufacturernameId,] = useState(null); // Store ID of Plasma to delete
+  const [
+    selectedTestKitManufacturernameId,
+    setSelectedTestKitManufacturernameId,
+  ] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestKitManufacturername, setEditTestKitManufacturername] = useState(null); // State for selected City to edit
+  const [editTestKitManufacturername, setEditTestKitManufacturername] =
+    useState(null); // State for selected City to edit
   const [testKitManufacturername, setTestKitManufacturername] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestkitmanufacturername, setFilteredTestkitmanufacturername] = useState([]); // Store filtered cities
+  const [filteredTestkitmanufacturername, setFilteredTestkitmanufacturername] =
+    useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -39,11 +41,9 @@ const TestKitManufacturerArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    fetchTestKitManufacturername(); // Call the function when the component mounts
-  }, []);
-  const fetchTestKitManufacturername = async () => {
+    const fetchTestKitManufacturername = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testkitmanufacturer`
@@ -54,16 +54,28 @@ const TestKitManufacturerArea = () => {
       console.error("Error fetching Test KitManufacturer :", error);
     }
   };
+ 
+    fetchTestKitManufacturername();
+  }, [url]);
 
-  useEffect(() => {
+  // ✅ UPDATE PAGINATION TOTAL PAGES
+
+useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturername.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestkitmanufacturername]);
+  }, [filteredTestkitmanufacturername,currentPage]);
 
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen =
+      showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
   const currentData = filteredTestkitmanufacturername.slice(
     currentPage * itemsPerPage,
@@ -75,23 +87,19 @@ const TestKitManufacturerArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = testKitManufacturername; // Show all if filter is empty
-    } else {
-      filtered = testKitManufacturername.filter((testkitmanufacturer) =>{
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return testkitmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase());}
-        
-      );
-    }
-
+    const filtered = value.trim()
+      ? testKitManufacturername.filter((testKitManufacturer) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : testKitManufacturer[field]
+                ?.toString()
+                .toLowerCase()
+                .includes(value.toLowerCase())
+        )
+      : testKitManufacturername;
     setFilteredTestkitmanufacturername(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const fetchHistory = async (filterType, id) => {
@@ -106,7 +114,6 @@ const TestKitManufacturerArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -114,178 +121,132 @@ const TestKitManufacturerArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
+      await axios.post(
         `${url}/samplefields/post-samplefields/testkitmanufacturer`,
         formData
       );
-
-      setSuccessMessage("Test Kit Manufacturer Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchTestKitManufacturername();
-      // Clear form after submission
-      resetFormData()
-      setShowAddModal(false); // Close modal after submission
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testkitmanufacturer`
+      );
+      setFilteredTestkitmanufacturername(response.data);
+      setTestKitManufacturername(response.data);
+      setSuccessMessage("Test Kit Manufacturer name added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Test KitManufacturer ", error);
+      console.error("Error adding Test kit Manufacturer name", error);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
+        formData
+      );
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testkitmanufacturer`
+      );
+      setFilteredTestkitmanufacturername(response.data);
+      setFilteredTestkitmanufacturername(response.data);
+      setSuccessMessage("Test Kit Manufactuere name updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(
+        `Error updating Test kit Maufacturer: ${selectedTestKitManufacturernameId}`,
+        error
+      );
     }
   };
 
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`
       );
-
-      // Set success message
-      setSuccessMessage("Test Kit Manufacturer  Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchTestKitManufacturername();
-
-      // Close modal after deletion
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testkitmanufacturer`
+      );
+      setFilteredTestSystemname(response.data);
+      setTestSystemname(response.data);
+      setSuccessMessage("Test kit Manufacturer deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedTestKitManufacturernameId(null);
+      selectedTestKitManufacturernameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Test KitManufacturer  with ID ${selectedTestKitManufacturernameId}:`,
+        `Error deleting Test Kit Manufacturer: ${selectedTestKitManufacturernameId}`,
         error
       );
     }
   };
+  
 
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (testkitmanufacturername) => {
-
-
+const handleEditClick = (testkitmanufacturername) => {
     setSelectedTestKitManufacturernameId(testkitmanufacturername.id);
     setEditTestKitManufacturername(testkitmanufacturername);
-
     setFormData({
       name: testkitmanufacturername.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
 
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
-        formData
-      );
-
-
-      fetchTestKitManufacturername();
-
-      setShowEditModal(false);
-      setSuccessMessage("Test Kit Manufacturer updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      resetFormData();
-    } catch (error) {
-      console.error(
-        `Error updating Test Kit Manufacturer name with ID ${selectedTestKitManufacturernameId}:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
 
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testkitmanufacturer`,
-          { bulkData: dataWithAddedBy }
+        await axios.post(`${url}/samplefields/post-samplefields/testkitmanufacturer`, {
+          bulkData: payload,
+        });
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/testkitmanufacturer`
         );
-
-
-        fetchTestKitManufacturername();
+        setSuccessMessage("Successfully added")
+        setFilteredTestkitmanufacturername(response.data);
+        setTestKitManufacturername(response.data);
       } catch (error) {
-        console.error("Error adding Test System :", error);
+        console.error("Error uploading test Kit Manufacturer", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
     });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-   const handleExportToExcel = () => {
+     const handleExportToExcel = () => {
        const dataToExport = filteredTestkitmanufacturername.map((item) => ({
          Name: item.name ?? "", // Fallback to empty string
          "Added By": "Registration Admin",
@@ -310,11 +271,12 @@ const TestKitManufacturerArea = () => {
        XLSX.writeFile(workbook, "Test_kit_Manufacturer_List.xlsx");
      };
 
+  if (!id) return <div>Loading...</div>;
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
-
           {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
@@ -331,7 +293,6 @@ const TestKitManufacturerArea = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               <h5 className="m-0 fw-bold ">Test Kit Manufacturer List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
-
                 {/* Export to Excel button */}
                 <button
                   onClick={handleExportToExcel}
@@ -412,25 +373,25 @@ const TestKitManufacturerArea = () => {
                       label: "Test Kit Manufacturer",
                       placeholder: "Search Test KitManufacturer",
                       field: "name",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
                       field: "added_by",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Created At",
                       placeholder: "Search Created at",
                       field: "created_at",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                     {
                       label: "Updated At",
                       placeholder: "Search Updated at",
                       field: "updated_at",
-                      width: "col-md-1"
+                      width: "col-md-1",
                     },
                   ].map(({ label, placeholder, field, width }) => (
                     <th key={field} className={`${width} px-2`}>
@@ -647,10 +608,7 @@ const TestKitManufacturerArea = () => {
                       </p>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
+                      <button className="btn btn-danger" onClick={handleDelete}>
                         Delete
                       </button>
                       <button
@@ -744,15 +702,14 @@ const TestKitManufacturerArea = () => {
                                   padding: "10px 15px",
                                   borderRadius: "15px",
                                   backgroundColor: "#ffffff",
-                                  boxShadow:
-                                    "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                   maxWidth: "75%",
                                   fontSize: "14px",
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Test Kit Manufacturer:</b> {created_name}{" "}
-                                was <b>added</b> by Registration Admin at{" "}
+                                <b>Test Kit Manufacturer:</b> {created_name} was{" "}
+                                <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -765,17 +722,15 @@ const TestKitManufacturerArea = () => {
                                     padding: "10px 15px",
                                     borderRadius: "15px",
                                     backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow:
-                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Test Kit Manufacturer:</b>{" "}
-                                  {updated_name} was <b>updated</b> by
-                                  Registration Admin at{" "}
+                                  <b>Test Kit Manufacturer:</b> {updated_name}{" "}
+                                  was <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
                                   )}
@@ -793,10 +748,8 @@ const TestKitManufacturerArea = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
-
     </section>
   );
 };

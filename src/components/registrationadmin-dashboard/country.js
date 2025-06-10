@@ -13,11 +13,7 @@ import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 const CountryArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on country page is:", id);
-  }
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -40,9 +36,7 @@ const CountryArea = () => {
 
   // Fetch Country from backend when component loads
   useEffect(() => {
-    fetchcountryname(); // Call the function when the component mounts
-  }, []);
-  const fetchcountryname = async () => {
+     const fetchcountryname = async () => {
     try {
       const response = await axios.get(`${url}/country/get-country`);
       setFilteredCountryname(response.data);
@@ -51,6 +45,9 @@ const CountryArea = () => {
       console.error("Error fetching Country:", error);
     }
   };
+    fetchcountryname(); // Call the function when the component mounts
+  }, [url]);
+ 
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -61,7 +58,7 @@ const CountryArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCountryname]);
+  }, [filteredCountryname,currentPage]);
 
   const currentData = filteredCountryname.slice(
     currentPage * itemsPerPage,
@@ -76,16 +73,15 @@ const CountryArea = () => {
     if (value.trim() === "") {
       filtered = countryname; // Show all if filter is empty
     } else {
-
-
-      filtered = countryname.filter((country) =>{
-
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return country[field]?.toString().toLowerCase().includes(value.toLowerCase())
-    }
-      );
+      filtered = countryname.filter((country) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
+        return country[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
     }
 
     setFilteredCountryname(filtered);
@@ -116,76 +112,22 @@ const CountryArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/country/post-country`,
-        formData
-      );
-      
-      setSuccessMessage("Country added successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      fetchcountryname();
-
-      // Clear form after submission
-      setFormData({
-        countryname: "",
-        added_by: id,
-      });
-      setShowAddModal(false); // Close modal after submission
-    } catch (error) {
-      console.error("Error adding country:", error);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      // Send delete request to backend
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/delete-country/${selectedcountrynameId}`
-      );
-    
-
-      // Set success message
-      setSuccessMessage("countryname deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      // Refresh the countryname list after deletion
-      fetchcountryname();
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setselectedcountrynameId(null);
-    } catch (error) {
-      console.error(
-        `Error deleting country with ID ${selectedcountrynameId}:`,
-        error
-      );
-    }
-  };
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (countryname) => {
-    
+ const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${url}/country/post-country`, formData);
+        const response = await axios.get(`${url}/country/get-country`);
+        setFilteredCountryname(response.data);
+        setCountryname(response.data);
+        setSuccessMessage("Country added successfully.");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        resetFormData();
+        setShowAddModal(false);
+      } catch (error) {
+        console.error("Error adding Country", error);
+      }
+    };
+const handleEditClick = (countryname) => {
     setselectedcountrynameId(countryname.id);
     setEditCountryname(countryname); // Store the Country data to edit
     setShowEditModal(true); // Show the edit modal
@@ -196,30 +138,41 @@ const CountryArea = () => {
   };
 
   const handleUpdate = async (e) => {
-    e.preventDefault();
+      e.preventDefault();
+      try {
+        await axios.put(`${url}/country/put-country/${selectedcountrynameId}`, formData);
+        const response = await axios.get(`${url}/country/get-country`);
+        setFilteredCountryname(response.data);
+        setCountryname(response.data);
+        setSuccessMessage("Country updated successfully.");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        resetFormData();
+        setShowEditModal(false);
+      } catch (error) {
+        console.error(`Error updating Country: ${selectedcountrynameId}`, error);
+      }
+    };
 
+ const handleDelete = async () => {
     try {
-      const response = await axios.put(
-        `${url}/country/put-country/${selectedcountrynameId}`,
-        formData
-      );
-      
-
-      fetchcountryname();
-
-      setShowEditModal(false);
-      setSuccessMessage("Country updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
+      await axios.delete(`${url}/country/delete-country/${selectedcountrynameId}`);
+      const response = await axios.get(`${url}/country/get-country`);
+      setFilteredCountryname(response.data);
+      setCountryname(response.data);
+      setSuccessMessage("Country deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setShowDeleteModal(false);
+      setselectedcountrynameId(null);
     } catch (error) {
-      console.error(
-        `Error updating countryname with ID ${selectedcountrynameId}:`,
-        error
-      );
+      console.error(`Error deleting Country: ${selectedcountrynameId}`, error);
     }
   };
+    useEffect(() => {
+      const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+      document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+      document.body.classList.toggle("modal-open", isModalOpen);
+    }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+   
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -235,83 +188,59 @@ const CountryArea = () => {
   const resetFormData = () => {
     setFormData({ countryname: "", added_by: id }); // Reset to empty state
   };
-  const handleFileUpload = async (e) => {
+
+   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const arrayBuffer = event.target.result;
-      const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
-        type: "array",
-      });
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Ensure 'id' is available
-      if (!id) {
-        console.error("Error: 'id' is not defined.");
-        return;
-      }
-
-      // Add 'added_by' field
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure `id` is defined in the state
-      }));
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST data to API
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/post-country`,
-          { bulkData: dataWithAddedBy }
-        );
-        
-        setSuccessMessage("Countries Uploaded Successfully");
-
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-        // Refresh the country list
-        const newResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
-        );
-        setFilteredCountryname(newResponse.data);
-        setCountryname(newResponse.data);
+        await axios.post(`${url}/country/post-country`, { bulkData: payload });
+        const response = await axios.get(`${url}/country/get-country`);
+        setFilteredCountryname(response.data);
+        setCountryname(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("Error uploading Country", error);
       }
     };
-
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
   };
-const handleExportToExcel = () => {
-  const dataToExport = filteredCountryname.map((item) => ({
-    Name: item.name ?? "", // Fallback to empty string
-    "Added By": "Registration Admin",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCountryname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  // Add an empty row with all headers if filteredCityname is empty (optional)
-  if (dataToExport.length === 0) {
-    dataToExport.push({
-      Name: "",
-      "Added By": "",
-      "Created At": "",
-      "Updated At": "",
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, {
+      header: ["Name", "Added By", "Created At", "Updated At"],
     });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Country");
+
+    XLSX.writeFile(workbook, "Country_List.xlsx");
+  };
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
   }
-
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Country");
-
-  XLSX.writeFile(workbook, "Country_List.xlsx");
-};
-
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -374,7 +303,7 @@ const handleExportToExcel = () => {
                     onChange={(e) => handleFileUpload(e)}
                   />
                 </label>
-                 <button
+                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",
@@ -401,7 +330,7 @@ const handleExportToExcel = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                   // { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
+                    // { label: "ID", placeholder: "Search ID", field: "id", width: "col-md-2" },
                     {
                       label: "Country Name",
                       placeholder: "Search Country Name",
@@ -432,14 +361,15 @@ const handleExportToExcel = () => {
                         type="text"
                         className="form-control w-100 px-2 py-1 mx-auto"
                         placeholder={placeholder}
-                        onChange={(e) => handleFilterChange(field, e.target.value)}
+                        onChange={(e) =>
+                          handleFilterChange(field, e.target.value)
+                        }
                       />
                       {label}
                     </th>
                   ))}
                   <th className="col-1">Action</th>
                 </tr>
-
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
@@ -452,7 +382,7 @@ const handleExportToExcel = () => {
                       <td>{formatDate(countryname.created_at)}</td>
                       <td>{formatDate(countryname.updated_at)}</td>
                       <td>
-                      <div className="d-flex justify-content-center gap-3">
+                        <div className="d-flex justify-content-center gap-3">
                           <button
                             className="btn btn-success btn-sm"
                             onClick={() => handleEditClick(countryname)}
@@ -665,8 +595,8 @@ const handleExportToExcel = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Country:</b> {created_name} was{" "}
-                                <b>added</b> by Registration Admin at{" "}
+                                <b>Country:</b> {created_name} was <b>added</b>{" "}
+                                by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
                                 )}
@@ -679,8 +609,7 @@ const handleExportToExcel = () => {
                                     padding: "10px 15px",
                                     borderRadius: "15px",
                                     backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow:
-                                      "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
@@ -747,10 +676,7 @@ const handleExportToExcel = () => {
                       <p>Are you sure you want to delete this Country?</p>
                     </div>
                     <div className="modal-footer">
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleDelete}
-                      >
+                      <button className="btn btn-danger" onClick={handleDelete}>
                         Delete
                       </button>
                       <button
@@ -765,7 +691,6 @@ const handleExportToExcel = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
     </section>

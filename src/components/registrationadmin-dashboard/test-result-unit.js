@@ -4,21 +4,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
+import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-import * as XLSX from "xlsx";
+
 const TestResultUnitArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on Test ResultUnit page is:", id);
-  }
-  const [showAddModal, setShowAddModal] = useState(false);
+
+ const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -40,11 +36,9 @@ const TestResultUnitArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    fetchTestResultUnitname(); // Call the function when the component mounts
-  }, []);
-  const fetchTestResultUnitname = async () => {
+   const fetchTestResultUnitname = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testresultunit`
@@ -55,6 +49,10 @@ const TestResultUnitArea = () => {
       console.error("Error fetching Test ResultUnit :", error);
     }
   };
+    fetchTestResultUnitname();
+  }, [url]);
+
+  // ✅ UPDATE PAGINATION TOTAL PAGES
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -65,45 +63,37 @@ const TestResultUnitArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestResultunitname]);
+  }, [filteredTestResultunitname,currentPage]);
 
-  const currentData = filteredTestResultunitname.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
+  const currentData = filteredTestResultunitname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = testResultUnitname; // Show all if filter is empty
-    } else {
-      filtered = testResultUnitname.filter((testresultUnit) =>{
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return testresultUnit[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-    }
-      );
-    }
-
+    const filtered = value.trim()
+      ? testResultUnitname.filter((testresultunit) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : testresultunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : testResultUnitname;
     setFilteredTestResultunitname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -111,7 +101,6 @@ const TestResultUnitArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -119,202 +108,121 @@ const TestResultUnitArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testresultunit`,
-        formData
-      );
-
-      setSuccessMessage("Test ResultUnit Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchTestResultUnitname();
-      // Clear form after submission
+      await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
+      setFilteredTestResultunitname(response.data);
+      setTestResultUnitname(response.data);
+      setSuccessMessage("Test Result Unit added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
-      setShowAddModal(false); // Close modal after submission
+      setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Test ResultUnit ", error);
+      console.error("Error adding Test Result Unit", error);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/samplefields/put-samplefields/testresultunit/${selectedTestResultUnitnameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
+      setFilteredTestResultunitname(response.data);
+      setTestResultUnitname(response.data);
+      setSuccessMessage("Test Result Unit updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(`Error updating Test Result Unit: ${selectedTestResultUnitnameId}`, error);
     }
   };
 
   const handleDelete = async () => {
     try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`
-      );
-
-
-      // Set success message
-      setSuccessMessage("Test ResultUnit Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchTestResultUnitname();
-      // Close modal after deletion
+      await axios.delete(`${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
+      setFilteredTestResultunitname(response.data);
+      setTestResultUnitname(response.data);
+      setSuccessMessage("Test Result Unit deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedTestResultUnitnameId(null)
+      setSelectedTestResultUnitnameId(null);
     } catch (error) {
-      console.error(
-        `Error deleting Test ResultUnit  with ID ${selectedTestResultUnitnameId}:`,
-        error
-      );
+      console.error(`Error deleting Test System: ${selectedTestResultUnitnameId}`, error);
     }
   };
 
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
-  const handleEditClick = (testResultUnitname) => {
-
-
-    setSelectedTestResultUnitnameId(testResultUnitname.id);
-    setEditTestResultUnitname(testResultUnitname);
-
-    setFormData({
-      name: testResultUnitname.name,
-      added_by: id,
-    });
-
+  const handleEditClick = (item) => {
+    setSelectedTestResultUnitnameId(item.id);
+    setEditTestResultUnitname(item);
+    setFormData({ name: item.name, added_by: id });
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testresultUnit/${selectedTestResultUnitnameId}`,
-        formData
-      );
-
-
-      fetchTestResultUnitname();
-
-      setShowEditModal(false);
-      setSuccessMessage("Test ResultUnit updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      resetFormData()
-    } catch (error) {
-      console.error(
-        `Error updating Test ResultUnit name with ID ${selectedTestResultUnitnameId}:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
-
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testresultunit`,
-          { bulkData: dataWithAddedBy }
-        );
-
-        fetchTestResultUnitname();
+        await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
+        setFilteredTestResultunitname(response.data);
+        setTestResultUnitname(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error adding Test ResultUnit :", error);
+        console.error("Error uploading test result unit", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
     });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-   const handleExportToExcel = () => {
-       const dataToExport = filteredTestResultunitname.map((item) => ({
-         Name: item.name ?? "", // Fallback to empty string
-         "Added By": "Registration Admin",
-         "Created At": item.created_at ? formatDate(item.created_at) : "",
-         "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-       }));
-     
-       // Add an empty row with all headers if filteredCityname is empty (optional)
-       if (dataToExport.length === 0) {
-         dataToExport.push({
-           Name: "",
-           "Added By": "",
-           "Created At": "",
-           "Updated At": "",
-         });
-       }
-     
-       const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-       const workbook = XLSX.utils.book_new();
-       XLSX.utils.book_append_sheet(workbook, worksheet, "Test Result Unit");
-     
-       XLSX.writeFile(workbook, "Test_Result_Unit_List.xlsx");
-     };
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestResultunitname.map((item) => ({
+      Name: item.name ?? "",
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
+    if (dataToExport.length === 0) {
+      dataToExport.push({ Name: "", "Added By": "", "Created At": "", "Updated At": "" });
+    }
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test System");
+    XLSX.writeFile(workbook, "Test_System_List.xlsx");
+  };
 
-  return (
+  
+  if (!id) return <div>Loading...</div>;
+
+ return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

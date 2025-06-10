@@ -4,21 +4,20 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faTrash,
-  faQuestionCircle,
   faPlus,
   faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+
 const TestSystemManufacturerArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("account_id on Test System Manufacturer page is:", id);
-  }
-  const [showAddModal, setShowAddModal] = useState(false);
+
+  // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
+ 
+
+ const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -39,11 +38,9 @@ const TestSystemManufacturerArea = () => {
   // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
-  // Fetch TestMethod from backend when component loads
+  // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    fetchTestSystemManufacturername(); // Call the function when the component mounts
-  }, []);
-  const fetchTestSystemManufacturername = async () => {
+      const fetchTestSystemManufacturername = async () => {
     try {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/testsystemmanufacturer`
@@ -54,56 +51,47 @@ const TestSystemManufacturerArea = () => {
       console.error("Error fetching Test System :", error);
     }
   };
+    fetchTestSystemManufacturername();
+  }, [url]);
+
+  // ✅ UPDATE PAGINATION TOTAL PAGES
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredTestSystemmanufacturername.length / itemsPerPage)
-    );
+    const pages = Math.max(1, Math.ceil(filteredTestSystemmanufacturername.length / itemsPerPage));
     setTotalPages(pages);
-
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
-  }, [filteredTestSystemmanufacturername]);
+  }, [filteredTestSystemmanufacturername, currentPage]); // ✅ added currentPage to dependencies
 
-  const currentData = filteredTestSystemmanufacturername.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  // ✅ CONTROL SCROLL WHEN MODAL OPEN
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
+  const currentData = filteredTestSystemmanufacturername.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = testsystemmanufacturername; // Show all if filter is empty
-    } else {
-      filtered = testsystemmanufacturername.filter((testsystemmanufacturer) =>
-      {
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return testsystemmanufacturer[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-    }
-      );
-    }
-
+    const filtered = value.trim()
+      ? testsystemmanufacturername.filter((testsystemmanufacturer) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : testsystemmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : testsystemmanufacturername;
     setFilteredTestSystemmanufacturername(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const fetchHistory = async (filterType, id) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
       const data = await response.json();
       setHistoryData(data);
     } catch (error) {
@@ -111,7 +99,6 @@ const TestSystemManufacturerArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -119,201 +106,121 @@ const TestSystemManufacturerArea = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
-        formData
-      );
-
-      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchTestSystemManufacturername();
-      // Clear form after submission
+      await axios.post(`${url}/samplefields/post-samplefields/testsystemmanufacturer`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
+      setFilteredTestSystemmanufacturername(response.data);
+      setTestSystemManufacturername(response.data);
+      setSuccessMessage("Test System Manufacturer Name added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
-      setShowAddModal(false); // Close modal after submission
+      setShowAddModal(false);
     } catch (error) {
       console.error("Error adding Test System Manufacturer", error);
     }
   };
 
-  const handleDelete = async () => {
+  const handleUpdate = async (e) => {
+    e.preventDefault();
     try {
-      // Send delete request to backend
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`
-      );
-
-      // Set success message
-      setSuccessMessage("Test System Manufacturer Name deleted successfully.");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
-      fetchTestSystemManufacturername();
-      // Close modal after deletion
-      setShowDeleteModal(false);
-      setSelectedTestSystemManufacturernameId(null);
+      await axios.put(`${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
+      setFilteredTestSystemmanufacturername(response.data);
+      setTestSystemManufacturername(response.data);
+      setSuccessMessage("Test System Manufacturer updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
     } catch (error) {
-      console.error(
-        `Error deleting Test System Manufacturer with ID ${selectedTestSystemManufacturernameId}:`,
-        error
-      );
+      console.error(`Error updating Test System Maunfacturer: ${selectedTestSystemManufacturernameId}`, error);
     }
   };
 
-  useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showHistoryModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
+      setFilteredTestSystemmanufacturername(response.data);
+      setTestSystemManufacturername(response.data);
+      setSuccessMessage("Test System Manufacturer deleted successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setShowDeleteModal(false);
+      setSelectedTestSystemnameId(null);
+    } catch (error) {
+      console.error(`Error deleting Test System Manufacturer: ${selectedTestSystemManufacturernameId}`, error);
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+  };
 
-  const handleEditClick = (testsystemmanufacturername) => {
-
-
-    setSelectedTestSystemManufacturernameId(testsystemmanufacturername.id);
-    setEditTestSystemManufacturername(testsystemmanufacturername);
-
-    setFormData({
-      name: testsystemmanufacturername.name,
-      added_by: id,
-    });
-
+  const handleEditClick = (item) => {
+    setSelectedTestSystemManufacturernameId(item.id);
+    setEditTestSystemManufacturername(item);
+    setFormData({ name: item.name, added_by: id });
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.put(
-        `${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`,
-        formData
-      );
-
-
-      fetchTestSystemManufacturername();
-
-      setShowEditModal(false);
-      setSuccessMessage("Test System Manufacturer updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-      resetFormData();
-    } catch (error) {
-      console.error(
-        `Error updating Test System Manufacturer name with ID ${selectedTestSystemManufacturernameId}:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (date) => {
-    const options = { year: "2-digit", month: "short", day: "2-digit" };
-    const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
-    const [day, month, year] = formattedDate.split(" ");
-
-    // Capitalize the first letter of the month and keep the rest lowercase
-    const formattedMonth =
-      month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
-
-    return `${day}-${formattedMonth}-${year}`;
-  };
   const handleFileUpload = async (e) => {
-
     const file = e.target.files[0];
     if (!file) return;
 
-
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const binaryStr = event.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet); // Convert sheet to JSON
-
-      // Add 'added_by' field (ensure 'id' is defined in the state)
-      const dataWithAddedBy = data.map((row) => ({
-        name: row.name,
-        added_by: id, // Ensure 'id' is defined in the component
-      }));
-
-
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        // POST request inside the same function
-        const response = await axios.post(
-          `${url}/samplefields/post-samplefields/testsystemmanufacturer`,
-          { bulkData: dataWithAddedBy }
-        );
-
-
-        fetchTestSystemManufacturername();
+        await axios.post(`${url}/samplefields/post-samplefields/testsystemmanufacturer`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
+        setFilteredTestSystemmanufacturername(response.data);
+        setTestSystemManufacturername(response.data);
+        setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error adding Test System  Manufacturer:", error);
+        console.error("Error uploading test systems manufacturer", error);
       }
     };
-
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      testsystemmanufacturername: "",
-      added_by: id,
+  const formatDate = (date) => {
+    const formatted = new Date(date).toLocaleDateString("en-GB", {
+      year: "2-digit",
+      month: "short",
+      day: "2-digit",
     });
+    const [day, month, year] = formatted.split(" ");
+    return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-    const handleExportToExcel = () => {
-        const dataToExport = filteredTestSystemmanufacturername.map((item) => ({
-          Name: item.name ?? "", // Fallback to empty string
-          "Added By": "Registration Admin",
-          "Created At": item.created_at ? formatDate(item.created_at) : "",
-          "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-        }));
-      
-        // Add an empty row with all headers if filteredCityname is empty (optional)
-        if (dataToExport.length === 0) {
-          dataToExport.push({
-            Name: "",
-            "Added By": "",
-            "Created At": "",
-            "Updated At": "",
-          });
-        }
-      
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Test System Manufacturer");
-      
-        XLSX.writeFile(workbook, "Test_System_Manufacturer_List.xlsx");
-      };
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestSystemmanufacturername.map((item) => ({
+      Name: item.name ?? "",
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
+    if (dataToExport.length === 0) {
+      dataToExport.push({ Name: "", "Added By": "", "Created At": "", "Updated At": "" });
+    }
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test System Manufacturer");
+    XLSX.writeFile(workbook, "Test_System_Manufacturer_List.xlsx");
+  };
 
-  return (
+  
+  if (!id) return <div>Loading...</div>;
+
+    return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
