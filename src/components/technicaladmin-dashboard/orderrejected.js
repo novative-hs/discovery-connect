@@ -1,17 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
-import { Modal, Button, Form } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCheck,
-  faEllipsisV,
-  faExchangeAlt,
-  faEye,
-  faTimes,
-  faTruck,
-} from "@fortawesome/free-solid-svg-icons";
-import { notifyError, notifySuccess } from "@utils/toast";
 
 const OrderRejectedPage = () => {
   const [orders, setOrders] = useState([]); // Filtered orders
@@ -21,15 +10,15 @@ const OrderRejectedPage = () => {
   const [selectedSample, setSelectedSample] = useState(null);
 
   const [loading, setLoading] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
+  // const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [actionType, setActionType] = useState("");
+  // const [successMessage, setSuccessMessage] = useState("");
+  // const [actionType, setActionType] = useState("");
   const [user_id, setUserID] = useState(null);
-  const [selectedApprovalType, setSelectedApprovalType] = useState("");
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [selectedComments, setSelectedComments] = useState("");
+  // const [selectedApprovalType, setSelectedApprovalType] = useState("");
+  // const [showCommentsModal, setShowCommentsModal] = useState(false);
+  // const [selectedComments, setSelectedComments] = useState("");
   const ordersPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [filtertotal, setfiltertotal] = useState(null);
@@ -50,14 +39,8 @@ const OrderRejectedPage = () => {
       console.log("technical Admin site  ID:", storedUserID); // Verify storedUserID
     }
   }, []);
-  useEffect(() => {
-    fetchOrders(currentPage, ordersPerPage, {
-      searchField,
-      searchValue,
-    });
-  }, [currentPage, searchField, searchValue]);
 
-  const fetchOrders = async (page = 1, pageSize = 10, filters = {}) => {
+  const fetchOrders = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
     try {
       const { searchField, searchValue } = filters;
       setLoading(true);
@@ -66,26 +49,34 @@ const OrderRejectedPage = () => {
       if (searchField && searchValue) {
         responseUrl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
-      const response = await axios.get(responseUrl);
 
+      const response = await axios.get(responseUrl);
       const { data, totalCount } = response.data;
 
-
-      console.log(data)
       setOrders(data);
-      setAllOrders(data); // Only necessary if you need full copy
-      setTotalPages(Math.ceil(totalCount / pageSize)); // <-- Fixed here
-      setLoading(false);
+      setAllOrders(data);
+      setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchOrders(currentPage, ordersPerPage, {
+      searchField,
+      searchValue,
+    });
+  }, [fetchOrders, currentPage, searchField, searchValue]);
+
+
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages); // Adjust down if needed
+      setCurrentPage(totalPages);
     }
-  }, [totalPages]);
+  }, [totalPages, currentPage]);
+
   const currentOrders = orders || [];
 
   const handleFilterChange = (field, value) => {

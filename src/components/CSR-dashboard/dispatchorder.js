@@ -1,31 +1,58 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Modal, Button, Form } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDownload,
-  faCheck,
-  faTimes,
-  faFilePdf,
-} from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 
 const DispatchSampleArea = () => {
- const [staffAction, setStaffAction] = useState("");
-  const id = sessionStorage.getItem("userID");
+  const [staffAction, setStaffAction] = useState("");
+  const [samples, setSamples] = useState([]);
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const id = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
+
+  // Fetch staffAction only once when component mounts
+  useEffect(() => {
+    const action = sessionStorage.getItem("staffAction") || "";
+    setStaffAction(action);
+    console.log("Order packaging Id on sample page is:", id);
+  }, []);
+
+  // Fetch samples on first render
+  useEffect(() => {
+    if (id && staffAction) {
+      fetchSamples(staffAction);
+    }
+  }, [id, staffAction]);
+
+  const fetchSamples = async (staffAction) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
+        {
+          params: { csrUserId: id, staffAction },
+        }
+      );
+
+      const shippingSamples = response.data.filter(
+        (sample) => sample.order_status === "Shipped"
+      );
+
+      setSamples(shippingSamples);
+      setFilteredSamplename(shippingSamples);
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
 
   useEffect(() => {
-    if (id !== null) {
-      const action = sessionStorage.getItem("staffAction") || "";
-      setStaffAction(action);
-      console.log("Order packaging Id on sample page is:", id);
-    }
-  }, [id]);  // run once when id is known
+    const pages = Math.max(1, Math.ceil(filteredSamplename.length / 10));
+    setTotalPages(pages);
 
-  if (id === null) {
-    return <div>Loading...</div>;
-  }
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
+    if (currentPage >= pages) {
+      setCurrentPage(0);
+    }
+  }, [filteredSamplename, currentPage]);
 
   const tableHeaders = [
     { label: "Order ID", key: "id" },
@@ -35,56 +62,7 @@ const DispatchSampleArea = () => {
     { label: "Status", key: "order_status" },
   ];
 
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-
-  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  const [totalPages, setTotalPages] = useState(0);
-
-  useEffect(() => {
-    
-      fetchSamples(staffAction);
-    
-
-    
-  }, []);
-
-  const fetchSamples = async (staffAction) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
-        {
-          params: { csrUserId: id,staffAction:staffAction }
-        }
-      );
-
-      // Filter only the samples where order_status is 'Dispatched'
-      const shippingSamples = response.data.filter(
-        (sample) => sample.order_status === "Shipped"
-      );
-
-      // Update state
-      setSamples(shippingSamples);
-      setFilteredSamplename(shippingSamples); // Assuming you want to use the filtered samples
-
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  };
-
-  useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamplename.length / itemsPerPage)
-    );
-    setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamplename]);
-
-  // Get the current data for the table
   const currentData = filteredSamplename.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
@@ -94,12 +72,11 @@ const DispatchSampleArea = () => {
     setCurrentPage(event.selected);
   };
 
-  // Filter the researchers list
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
+      filtered = samples;
     } else {
       filtered = samples.filter((sample) =>
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
@@ -107,8 +84,8 @@ const DispatchSampleArea = () => {
     }
 
     setFilteredSamplename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   return (
@@ -121,7 +98,6 @@ const DispatchSampleArea = () => {
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
-
             <thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (

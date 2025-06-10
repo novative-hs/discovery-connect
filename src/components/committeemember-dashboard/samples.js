@@ -23,13 +23,13 @@ const SampleArea = () => {
   const [comment, setComment] = useState("");
   const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered sample name
+  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered disease name
 
   const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
     { label: "Researcher Name", key: "researcher_name" },
-    { label: "Sample Name", key: "diseasename" },
+    { label: "Disease Name", key: "diseasename" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
     { label: "Committee Comments", key: "comments" },
@@ -330,13 +330,7 @@ const SampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr
-                    key={sample.id}
-                    onClick={() => {
-                      setSelectedSample(sample);
-                      setSampleShowModal(true);
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
+                    key={sample.id}>
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -344,18 +338,27 @@ const SampleArea = () => {
                         style={{
                           maxWidth: "150px",
                           wordWrap: "break-word",
+                          cursor: key === "diseasename" ? "pointer" : "default",
+                          color: key === "diseasename" ? "blue" : "inherit",
+                          textDecoration: key === "diseasename" ? "underline" : "none",
                           whiteSpace: "normal",
+                        }}
+                        onClick={(e) => {
+                          if (key === "diseasename") {
+                            e.stopPropagation();
+                            setSelectedSample(sample);
+                            setSampleShowModal(true);
+                          }
                         }}
                       >
                         {["study_copy", "irb_file", "nbc_file"].includes(
                           key
                         ) ? (
                           <button
-                            className={`btn btn-sm ${
-                              viewedDocuments[sample.cart_id]?.[key]
-                                ? "btn-outline-primary"
-                                : "btn-outline-primary"
-                            }`}
+                            className={`btn btn-sm ${viewedDocuments[sample.cart_id]?.[key]
+                              ? "btn-outline-primary"
+                              : "btn-outline-primary"
+                              }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleViewDocument(
@@ -510,6 +513,7 @@ const SampleArea = () => {
             focusPage={currentPage - 1}
           />
         )}
+
         {showSampleModal && selectedSample && (
           <>
             {/* Backdrop */}

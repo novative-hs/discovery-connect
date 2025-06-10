@@ -42,7 +42,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   useEffect(() => {
     const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
     const action = sessionStorage.getItem("staffAction");
-    
+
     console.log("userType:", type);
     console.log("staffAction:", action);
     setStaffAction(action);
@@ -203,18 +203,18 @@ const Header = ({ setActiveTab, activeTab }) => {
             ],
           },
         ]
-       : userType === "collectionsitesstaff"
-  ? [
-      ...(actions?.some(action => ["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(action))
-        ? [{ label: "Sample List", tab: "samples" }]
-        : []),
-      ...(actions?.some(action => ["receive", "all"].includes(action))
-        ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
-        : []),
-      ...(actions?.some(action => ["return", "all"].includes(action))
-        ? [{ label: "Sample Lost", tab: "sample-lost" }]
-        : []),
-    ]
+        : userType === "collectionsitesstaff"
+          ? [
+            ...(actions?.some(action => ["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(action))
+              ? [{ label: "Sample List", tab: "samples" }]
+              : []),
+            ...(actions?.some(action => ["receive", "all"].includes(action))
+              ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
+              : []),
+            ...(actions?.some(action => ["return", "all"].includes(action))
+              ? [{ label: "Sample Lost", tab: "sample-lost" }]
+              : []),
+          ]
           : userType == "biobank"
             ? [
               { label: "Sample List", tab: "samples" },
@@ -271,19 +271,18 @@ const Header = ({ setActiveTab, activeTab }) => {
                   onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
                 >
                   <button
-      className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${
- activeTab === tab ||
-(tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
+                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ||
+                        (tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
 
-    ? "text-primary"
-    : "text-dark"
-} fs-7`}
-      onClick={() => {
-        if (!dropdown) {
-          setActiveTab(tab);
-        }
-      }}
-    >
+                        ? "text-primary"
+                        : "text-dark"
+                      } fs-7`}
+                    onClick={() => {
+                      if (!dropdown) {
+                        setActiveTab(tab);
+                      }
+                    }}
+                  >
                     <small>{label}</small> {/* Makes text smaller */}
                     {label === "Sample" && (
                       <i
@@ -354,6 +353,14 @@ const Header = ({ setActiveTab, activeTab }) => {
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
                   Welcome Registration Admin!
+                </span>
+              )}
+              {userType === "committeemember" && (
+                <span
+                  className="text-primary fw-bold fs-6"
+                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+                >
+                  Welcome Committee Member!
                 </span>
               )}
               {userType === "biobank" && (

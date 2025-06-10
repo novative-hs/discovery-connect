@@ -1,31 +1,22 @@
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   reactStrictMode: true,
-//   images: {
-//     domains: ['i.ibb.co','res.cloudinary.com'],
-//   },
-// }
-
-// module.exports = nextConfig
-
-
-
-
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   reactStrictMode: true,
-//   images: {
-//     domains: ['picsum.photos'], // Add picsum.photos here
-//   },
-// };
-
-// module.exports = nextConfig;
-
-
-
-
-module.exports = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
   images: {
-    domains: ['www.mygreenlab.org', 'www.shutterstock.com', 'picsum.photos' ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.mygreenlab.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.shutterstock.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+    ],
   },
 };
+
+module.exports = nextConfig;

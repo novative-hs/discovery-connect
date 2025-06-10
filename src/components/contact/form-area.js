@@ -2,7 +2,9 @@ import React from "react";
 // internal
 import ContactForm from "@components/forms/contact-form";
 import Image from "next/image";  // Import the Image component from Next.js
-import bg from "@assets/img/slider/13/slider-10.png";
+// import bg from "@assets/img/slider/13/slider-11.png";
+const bg = "/assets/img/slider/13/slider-11.png";
+
 
 const FormArea = () => {
   return (
@@ -12,9 +14,9 @@ const FormArea = () => {
           <div className="col-xl-12 position-relative">
             {/* Using the Image component from Next.js */}
             <div className="position-relative w-100" style={{ height: "75vh" }}>
-              <Image 
-                src={bg} 
-                alt="Contact Us" 
+              <Image
+                src={bg}
+                alt="Contact Us"
                 layout="fill"  // This will make the image cover the full width
                 objectFit="cover"  // Ensures the image covers the container without distortion
                 className="w-100 h-100"
