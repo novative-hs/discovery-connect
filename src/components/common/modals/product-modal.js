@@ -41,6 +41,7 @@ const ProductModal = ({ product }) => {
     product.InfectiousDiseaseTesting,
     product.FreezeThawCycles,
   ];
+
   const nonNullOptionalFields = optionalFields.filter(Boolean);
   const showTwoColumnLayout = nonNullOptionalFields.length >= 3;
 
@@ -64,7 +65,7 @@ const ProductModal = ({ product }) => {
           overflowY: "hidden",
         }}
       >
-          <div
+        <div
           className="d-flex justify-content-between align-items-center p-2"
           style={{ backgroundColor: "#cfe2ff", color: "#000" }}
         >
@@ -82,20 +83,17 @@ const ProductModal = ({ product }) => {
             &times;
           </button>
         </div>
-
-        <div className="modal-body" style={{ maxHeight: "calc(80vh - 100px)", overflowY: "auto" }}>
+        <div className="modal-body" style={{ maxHeight: "calc(80vh - 100px)", overflowY: "hidden" }}>
           <div className="row">
             {showTwoColumnLayout ? (
               <>
-              <div className="col-md-5 text-center">
-                <Image
-   src={product.imageUrl || "/placeholder.jpg"}
+                <div className="col-md-5 text-center">
+                  <img
+                    src={product.imageUrl || "/placeholder.jpg"}
                     alt={product.diseasename}
                     className="img-fluid rounded"
                     style={{ maxHeight: "200px", objectFit: "cover" }}
-/>
-               
-
+                  />
                   <div className="mt-3 text-start bg-light p-2 rounded">
                     <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
                     <p><strong>Container:</strong> {product.ContainerType}</p>
@@ -111,15 +109,14 @@ const ProductModal = ({ product }) => {
                 </div>
               </>
             ) : (
-             <div className="col-12 text-center">
-              <Image
-  src={product.imageUrl || "/placeholder.jpg"}
+              <div className="col-12 text-center">
+                <img
+                  src={product.imageUrl || "/placeholder.jpg"}
                   alt={product.diseasename}
                   className="img-fluid rounded"
                   style={{ maxHeight: "130px", objectFit: "cover" }}
-               
-/>
 
+                />
                 <div className="mt-3 text-start bg-light p-2 rounded">
                   <p><strong>Age:</strong> {product.age} | <strong>Gender:</strong> {product.gender}</p>
                   <p><strong>Container:</strong> {product.ContainerType}</p>
