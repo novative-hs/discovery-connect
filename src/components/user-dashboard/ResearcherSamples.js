@@ -55,7 +55,7 @@ const SampleArea = () => {
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState(null);
-  const fetchSamples = async () => {
+  const fetchSamples = useCallback(async () => {
     setLoading(true); // Set loading to true when fetching data
     try {
       const response = await axios.get(
@@ -75,7 +75,7 @@ const SampleArea = () => {
     } finally {
       setLoading(false); // Set loading to false when fetch is done
     }
-  };
+  });
 
   // Fetch samples from backend when component loads
   useEffect(() => {

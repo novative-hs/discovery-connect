@@ -59,12 +59,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (id === null) {
       return <div>Loading...</div>; // Or redirect to login
     } else {
-      fetchCart();
-      fetchUserDetail();
-    }
-  }, []);
-
-  const fetchUserDetail = async () => {
+      const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
@@ -96,6 +91,14 @@ const Header = ({ setActiveTab, activeTab }) => {
       console.error("Error fetching cart:", error);
     }
   };
+};
+  fetchUserDetail();
+  fetchCart()
+    
+    
+  }, [id]);
+
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -111,17 +114,16 @@ const Header = ({ setActiveTab, activeTab }) => {
     };
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      setUserLogo(
-        user?.logo?.data
-          ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-            "base64"
-          )}`
-          : null
-      );
-    }
-  });
+ useEffect(() => {
+  if (user) {
+    setUserLogo(
+      user?.logo?.data
+        ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString("base64")}`
+        : null
+    );
+  }
+}, [user]); // ✅ Now it runs only when user changes
+
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);

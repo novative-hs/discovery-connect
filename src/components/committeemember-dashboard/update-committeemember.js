@@ -57,13 +57,27 @@ const UpdateCommitteemember = () => {
     fetchdistrictname();
     fetchcountryname();
     fetchOrganization();
-    fetchCommitteemember();
   }, []);
+  useEffect(() => {
+    if (id) {
+      const fetchCommitteemember = async () => {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
+          );
+          setCommitteemember(response.data);
+        } catch (error) {
+          console.error("Error fetching Committee member:", error);
+        }
+      };
+      fetchCommitteemember()
+    }
+  }, [id]);
 
   useEffect(() => {
     if (committeemember && committeemember.length > 0) {
       reset({
-        ...committeemember[0], 
+        ...committeemember[0],
         city: committeemember[0]?.city || "",
         country: committeemember[0]?.country || "",
         district: committeemember[0]?.district || "",
@@ -71,7 +85,6 @@ const UpdateCommitteemember = () => {
       });
     }
   }, [committeemember, reset]);
-  
 
   const fetchOrganization = async () => {
     try {
@@ -89,16 +102,7 @@ const UpdateCommitteemember = () => {
       console.error("Error fetching Organization:", error);
     }
   };
-  const fetchCommitteemember = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
-      );
-      setCommitteemember(response.data);
-    } catch (error) {
-      console.error("Error fetching Committee member:", error);
-    }
-  };
+
   const fetchcityname = async () => {
     try {
       const response = await axios.get(
@@ -137,7 +141,6 @@ const UpdateCommitteemember = () => {
       formData.append(key, value);
     });
 
-   
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/updateProfile/${id}`,
@@ -150,7 +153,6 @@ const UpdateCommitteemember = () => {
       );
 
       notifySuccess("Committee member updated successfully");
-      
     } catch (error) {
       console.error("Error updating Committee member:", error);
       notifyError("Failed to update Committee member");
@@ -231,10 +233,9 @@ const UpdateCommitteemember = () => {
                 >
                   <option value="">Select Organization Name</option>
                   {organization.map((org) => (
-                   <option key={org.id} value={org.id}>
-                   {org.OrganizationName}
-                 </option>
-                 
+                    <option key={org.id} value={org.id}>
+                      {org.OrganizationName}
+                    </option>
                   ))}
                 </select>
                 <ErrorMessage message={errors.OrganizationName?.message} />

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-
+import Link from "next/link";
 const HeroBanner = () => {
   const videoRef = useRef(null);
   const [videoIndex, setVideoIndex] = useState(0);
@@ -10,24 +10,25 @@ const HeroBanner = () => {
 
   ];
 
-  useEffect(() => {
-    const videoElement = videoRef.current;
+useEffect(() => {
+  const videoElement = videoRef.current;
 
-    const handleEnded = () => {
-      setVideoIndex((prevIndex) => (prevIndex + 1) % videoSources.length);
-    };
+  const handleEnded = () => {
+    setVideoIndex((prevIndex) => (prevIndex + 1) % videoSources.length);
+  };
 
+  if (videoElement) {
+    videoElement.addEventListener("ended", handleEnded);
+    videoElement.playbackRate = 1.5;
+  }
+
+  return () => {
     if (videoElement) {
-      videoElement.addEventListener("ended", handleEnded);
-      videoElement.playbackRate = 1.5; // Set global speed once on mount
+      videoElement.removeEventListener("ended", handleEnded);
     }
+  };
+}, [videoSources.length]);
 
-    return () => {
-      if (videoElement) {
-        videoElement.removeEventListener("ended", handleEnded);
-      }
-    };
-  }, []);
 
 
   useEffect(() => {
@@ -76,14 +77,14 @@ const HeroBanner = () => {
           <p className="fs-5 mb-4 text-light" data-aos="fade-up" data-aos-delay="300">
             We simplify research by providing disease-specific and healthy biospecimens directly from donors, enabling faster and more accessible scientific studies.
           </p>
-          <a
+          <Link
             href="/register"
             className="btn btn-lg text-white p-3"
             data-aos="fade-up"
             style={{ backgroundColor: "#003366" }}
           >
             Register Yourself Now
-          </a>
+          </Link>
         </div>
       </div>
     </div>

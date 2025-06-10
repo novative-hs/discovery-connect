@@ -55,8 +55,22 @@ const UpdateUser = () => {
     fetchOrganization();
     fetchdistrictname();
     fetchcountryname();
-    fetchResearcher();
   }, []);
+  useEffect(()=>{
+if(id){
+   const fetchResearcher = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
+      );
+      setResearcher(response.data[0]); // Store fetched researcher data in state
+    } catch (error) {
+      console.error("Error fetching researcher:", error);
+    }
+  };
+  fetchResearcher();
+}
+  },[id])
 
   useEffect(() => {
     if (researcher) {
@@ -95,16 +109,7 @@ const UpdateUser = () => {
     }
   };
 
-  const fetchResearcher = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
-      );
-      setResearcher(response.data[0]); // Store fetched researcher data in state
-    } catch (error) {
-      console.error("Error fetching researcher:", error);
-    }
-  };
+ 
 
   const fetchdistrictname = async () => {
     try {
