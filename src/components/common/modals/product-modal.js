@@ -107,10 +107,6 @@ const ProductModal = ({ product }) => {
                       <strong>Container Type:</strong> {product.ContainerType}
                     </p>
                     <p>
-                      <strong>Diagnosis Test Parameter:</strong>{" "}
-                      {product.DiagnosisTestParameter}
-                    </p>
-                    <p>
                       <strong>Volume:</strong> {product.volume}{" "}
                       {product.QuantityUnit}
                     </p>
