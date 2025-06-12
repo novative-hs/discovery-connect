@@ -98,7 +98,7 @@ const FilterProduct = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAllSampleinindex/${name}`
       );
-      console.log(response.data)
+      
       setFilteredSamples(response.data.data);
       setProduct(response.data.data);
 

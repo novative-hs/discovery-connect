@@ -32,7 +32,7 @@ const createCollectionsiteStaff = (req, res) => {
 }
 const getCollectionSiteStaffDetail=(req,res)=>{
     const {id}=req.params;
-    console.log(id)
+    
     collectionsitestaffModel.getCollectionSiteStaffDetail(id,(err,results)=>{
         
          if (err) {

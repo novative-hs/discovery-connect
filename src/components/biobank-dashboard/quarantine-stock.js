@@ -12,9 +12,7 @@ const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>;
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  } 
   const [showModal, setShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -163,7 +161,7 @@ const BioBankSampleArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
       );
-      console.log(`Sample with ID ${selectedSampleId} deleted successfully.`);
+     
       const sampleData = await fetchSamples();
       setSamples(sampleData);
       setFilteredSamples(sampleData);

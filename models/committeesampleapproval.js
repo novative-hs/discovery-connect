@@ -185,7 +185,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
       const rejectQuery = `UPDATE cart SET order_status = 'Rejected' WHERE id = ?`;
       return mysqlConnection.query(rejectQuery, [cartId], (rejectErr, rejectResults) => {
         if (rejectErr) return callback(rejectErr, null);
-        console.log(`Cart ${cartId} rejected due to committee refusal.`);
+        
         return callback(null, rejectResults);
       });
     }
@@ -265,7 +265,7 @@ const updateCommitteeStatus = async (cartId, committee_member_id, committee_stat
     if (committee_status === 'Rejected') {
       try {
         await revertSampleQuantity(cartId);
-        console.log("✅ Sample quantity reverted due to rejection.");
+        
       } catch (revertErr) {
         console.error("❌ Error reverting sample quantity:", revertErr);
       }
@@ -371,7 +371,7 @@ const sendUserEmail = (id, committee_status, comments, callback) => {
 
       sendEmail(userEmail, subject, text)
         .then(() => {
-          console.log("Email notification sent successfully.");
+          
           callback(null, { message: "Committee status updated successfully!" });
         })
         .catch((emailError) => {
@@ -379,7 +379,7 @@ const sendUserEmail = (id, committee_status, comments, callback) => {
           callback(emailError, null);
         });
     } else {
-      console.log("No email found for user associated with this cart.");
+      
       callback(null, { message: "Committee status updated successfully!" });
     }
   });

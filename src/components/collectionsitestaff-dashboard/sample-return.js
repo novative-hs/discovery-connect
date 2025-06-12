@@ -17,9 +17,7 @@ const SampleReturn = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  } 
 
   
   const tableHeaders = [
@@ -85,7 +83,7 @@ const SampleReturn = () => {
 
       const { samples, totalCount } = response.data;
       setSamples(samples);
-      console.log(samples)
+    
       setFilteredSamples(samples); // Ensure filteredSamples are updated
       setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
       setfiltertotal(Math.ceil(totalCount / pageSize));

@@ -54,7 +54,7 @@ const handleSubmit = async (paymentId) => {
   formData.append("researcher_id", userID);
   formData.append("payment_id", paymentId);
 
- console.log("product",cart_products)
+ 
 
   // 2. Append cart items (excluding sampleIds)
   formData.append(

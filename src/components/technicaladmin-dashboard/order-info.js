@@ -16,7 +16,7 @@ const OrderInfo = ({ setActiveTab }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`
       );
-      console.log(response.data);
+      
       setUserCount(response.data); // Set the fetched counts in the state
     } catch (error) {
       console.error("Error fetching user count:", error);

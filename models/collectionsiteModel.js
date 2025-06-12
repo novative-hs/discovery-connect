@@ -85,7 +85,7 @@ const getAllinRegistrationAdmin = async (callback) => {
       callback(err, null);
       return;
     }
-    console.log(results)
+    
     callback(null, results);
   });
 }
@@ -255,7 +255,6 @@ const deleteCollectionSite = async (id) => {
 
     // Send email asynchronously (does not block response)
     sendEmail(email, "Account Status Update", emailText)
-      .then(() => console.log("Email sent successfully"))
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
     // Final response (status update and email sent)

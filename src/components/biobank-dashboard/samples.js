@@ -21,9 +21,7 @@ const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  } 
 
   
   const [selectedSample, setSelectedSample] = useState(null);
@@ -459,13 +457,13 @@ const handleFilterChange = (field, value) => {
 
   useEffect(() => {
     if (selectedSampleName) {
-      console.log("Fetching price for:", selectedSampleName);
+    
       getSamplePrice(selectedSampleName);
     }
   }, [selectedSampleName]);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+    
     try {
       // POST request to your backend API
       const response = await axios.post(
@@ -669,7 +667,7 @@ const handleFilterChange = (field, value) => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
-      console.log(data)
+      
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);

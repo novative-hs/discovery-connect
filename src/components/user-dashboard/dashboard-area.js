@@ -33,7 +33,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Researcher ID:", storedUserID);
+     
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");

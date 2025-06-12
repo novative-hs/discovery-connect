@@ -144,7 +144,7 @@ const CollectionSiteStaffArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/get`
       );
-      console.log(response.data)
+    
       setAllCollectionsitesstaff(response.data);
       setCollectionsitesstaff(response.data); // Store fetched collectionsites in state
     } catch (error) {
@@ -156,7 +156,7 @@ const CollectionSiteStaffArea = () => {
     try {
 
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/getCSinRA`);
-      console.log("collection", response.data)
+    
       setCollectionsites(response.data);
     } catch (error) {
       console.error("Error fetching collectionsites:", error);
@@ -174,8 +174,6 @@ const CollectionSiteStaffArea = () => {
           ? "all"  // send string "all" if all permissions selected
           : formData.permission, // else send array of selected permissions
     };
-
-    console.log("Data to send:", dataToSend);
 
     try {
       const response = await axios.post(
@@ -203,7 +201,7 @@ const CollectionSiteStaffArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log("data", data)
+     
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -319,7 +317,7 @@ const handleFilterChange = (field, value) => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    console.log(id, option)
+  
     try {
       // Send status update request to backend
       const response = await axios.put(

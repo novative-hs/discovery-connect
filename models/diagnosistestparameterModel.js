@@ -35,7 +35,7 @@ const query = 'SELECT * FROM diagnosistestparameter WHERE status = "active" ORDE
 }
 
 const creatediagnosistestparameter = (data, callback) => {
-  console.log("Received Data:", data);
+  
   const { bulkData, diagnosistestparametername, added_by } = data || {};
 
   mysqlPool.getConnection((err, connection) => {
@@ -114,7 +114,7 @@ const creatediagnosistestparameter = (data, callback) => {
         `;
 
         connection.query(diagnosisQuery, [diagnosistestparametername, added_by], (err, diagnosisResult) => {
-          console.log("Insert Diagnosis Result:", diagnosisResult);
+          
 
           if (err) {
             return connection.rollback(() => {

@@ -7,7 +7,6 @@ const create_CSRTable = (req, res) => {
 
 // Controller to create csr through registration admin dashboard
 const createCSR = (req, res) => {
-  console.log("Request body:", req.body);
 
   CSRModel.createCSR(req.body, (err, result) => {
     if (err) {

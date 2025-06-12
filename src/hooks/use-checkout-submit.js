@@ -104,7 +104,7 @@ const useCheckoutSubmit = () => {
           
         })
         .then((error) => {
-          console.log(error);
+          console.err(error);
         });
     }
   }, [createPaymentIntent, cartTotal]);
@@ -259,7 +259,7 @@ const useCheckoutSubmit = () => {
           }
         })
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 

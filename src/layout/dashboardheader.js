@@ -43,8 +43,6 @@ const Header = ({ setActiveTab, activeTab }) => {
     const type = sessionStorage.getItem("accountType")?.trim().toLowerCase();
     const action = sessionStorage.getItem("staffAction");
 
-    console.log("userType:", type);
-    console.log("staffAction:", action);
     setStaffAction(action);
     if (type) {
       setUserType(type);

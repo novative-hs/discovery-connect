@@ -315,8 +315,7 @@ const getCount = (callback) => {
     return new Promise((resolve, reject) => {
       mysqlConnection.query(query, (err, result) => {
         if (err) {
-          console.log(`Error executing query for ${key}:`, err);
-          reject(err); // If any query fails, reject the promise
+          reject(err); 
         } else {
           // ✅ Always use the 'count' field since all queries now return it
           if (result && result[0]) {

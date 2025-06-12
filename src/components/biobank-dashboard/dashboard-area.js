@@ -32,7 +32,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Collection site  ID:", storedUserID); // Verify storedUserID
+      
     } else {
       router.push("/login");
     }

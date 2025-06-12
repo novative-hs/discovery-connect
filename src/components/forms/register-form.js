@@ -189,26 +189,21 @@ const RegisterForm = () => {
 
     // Check if CNIC file is selected and append to FormData
     if (data.CNIC && data.CNIC.length > 0) {
-      formData.append("CNIC", data.CNIC[0]); // Append the first CNIC file
+      formData.append("CNIC", data.CNIC[0]); 
     } else {
-      // Handle the case where CNIC file is not selected
+      
       notifyError("CNIC file is required.");
       return;
     }
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
-    // Check if Org_card file is selected and append to FormData
+    
     if (data.Org_card && data.Org_card.length > 0) {
-      formData.append("Org_card", data.Org_card[0]); // Append the first Org_card file
+      formData.append("Org_card", data.Org_card[0]); 
     } else {
-      // Handle the case where Org_card file is not selected
+      
       notifyError("Organization card file is required.");
       return;
     }
 
-    // Send the formData to the backend
     registerUser(formData)
       .then((result) => {
         if (result?.error) {

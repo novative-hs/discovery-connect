@@ -192,7 +192,7 @@ const CommitteeMemberArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeemember/orderhistory/${id}`
       );
       const data = await response.json();
-      console.log(data)
+      
       setOrderHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);

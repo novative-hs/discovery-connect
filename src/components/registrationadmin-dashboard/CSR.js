@@ -250,10 +250,7 @@ const CSRArea = () => {
     newformData.append("country", formData.country);
     newformData.append("collectionsitename", formData.collectionsitename);
     newformData.append("permission", formData.permission);
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
+    
     const id = formData.user_account_id;
 
     updateUser({ id, formData: newformData })

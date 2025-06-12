@@ -8,8 +8,6 @@ const creatediagnosistestparameter = (req, res) => {
       console.error("Error in controller:", err);
       return res.status(500).json({ error: "Error creating diagnosis test parameter" });
     }
-
-    console.log("Model result:", result);
     res.status(201).json({
       message: "Diagnosis test parameter handled successfully",
       data: result,

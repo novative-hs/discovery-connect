@@ -65,7 +65,7 @@ const ChangePassword = () => {
   useEffect(() => {
     if (id !== null) {
       fetchUser(); // Call the function when the component mounts or id changes
-      console.log("account_id on city page is:", id);
+      
     }
   }, [id, fetchUser]);
 

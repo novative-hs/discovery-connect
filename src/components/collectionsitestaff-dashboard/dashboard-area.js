@@ -31,7 +31,7 @@ const DashboardArea = () => {
 
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("Collection site ID:", storedUserID);
+     
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");

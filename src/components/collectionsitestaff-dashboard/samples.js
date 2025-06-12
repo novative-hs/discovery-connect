@@ -39,9 +39,7 @@ const SampleArea = () => {
 
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  } 
   const openModal = (sample) => {
 
     setSelectedSample(sample);
@@ -149,12 +147,12 @@ const SampleArea = () => {
   const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
   const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage] = useState(10);
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  const [searchField, setSearchField] = useState(null);
-  const [searchValue, setSearchValue] = useState(null);
+  const [searchField, setSearchField] = useState("");
+  const [searchValue, setSearchValue] = useState("");
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -177,11 +175,9 @@ const SampleArea = () => {
   };
   useEffect(() => {
     const action = sessionStorage.getItem("staffAction") || "";
-    console.log("staffAction from sessionStorage:", action);
     setStaffAction(action);
 
     const splitActions = action.split(",").map(a => a.trim());
-    console.log("Parsed actions array:", splitActions);
     setActions(splitActions);
   }, []);
 
@@ -238,73 +234,54 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    fetchSamples(currentPage, itemsPerPage, {
+ 
 
-      searchField,
-      searchValue,
-    });
-    fetchCollectionSiteNames();
-  }, [currentPage, searchField, searchValue]);
-
-
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+const fetchSamples = async (isMounted,filters={}) => {
     try {
-      const { searchField, searchValue } = filters;
+      const pageSize = itemsPerPage;
+       const { searchField, searchValue } = filters;
 
-      if (!id) {
-        console.error("ID is missing.");
-        return;
-      }
+      // Fetch URLs
+      let baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+      let ownResponseurl = `${baseURL}/api/sample/get/${id}`;
+      let receivedResponseurl = `${baseURL}/api/samplereceive/get/${id}`;
 
-      // Construct URLs
-      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
       if (searchField && searchValue) {
-        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+        ownResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
+        receivedResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
       }
 
+      const [ownResponse, receivedResponse] = await Promise.all([
+        axios.get(ownResponseurl),
+        axios.get(receivedResponseurl),
+      ]);
 
-      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      // Fetch own samples
-      const ownResponse = await axios.get(ownResponseurl);
-      const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
+      const { samples: ownSampleData = [] } = ownResponse.data;
+      const { samples: receivedSampleData = [] } = receivedResponse.data;
 
       const ownSamples = ownSampleData.map((sample) => {
         let base64Logo = "";
-        if (sample.logo && sample.logo.data) {
-          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
+        if (sample.logo?.data) {
+          const binary = sample.logo.data.map((byte) =>
+            String.fromCharCode(byte)
+          ).join("");
           base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
         }
 
-        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-
         return {
           ...sample,
-          quantity,
+          quantity: Number(sample.quantity ?? sample.Quantity ?? 0),
           logo: base64Logo,
           isReturn: false,
         };
       });
 
-      // Fetch received samples
-      const receivedResponse = await axios.get(receivedResponseurl);
-      const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
+      const receivedSamples = receivedSampleData.map((sample) => ({
+        ...sample,
+        quantity: Number(sample.quantity ?? sample.Quantity ?? 0),
+        isReturn: true,
+      }));
 
-      const receivedSamples = receivedSampleData.map((sample) => {
-        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-        return {
-          ...sample,
-          quantity,
-          isReturn: true,
-        };
-      });
-
-      // Merge and sum duplicate quantities
       const sampleMap = new Map();
 
       [...ownSamples, ...receivedSamples].forEach((sample) => {
@@ -312,12 +289,7 @@ const SampleArea = () => {
         if (sampleMap.has(sampleId)) {
           const existingSample = sampleMap.get(sampleId);
           existingSample.quantity += sample.quantity;
-
-          // If any source is from received, mark isReturn false
-          if (sample.isReturn === false) {
-            existingSample.isReturn = false;
-          }
-
+          if (!sample.isReturn) existingSample.isReturn = false;
           sampleMap.set(sampleId, existingSample);
         } else {
           sampleMap.set(sampleId, { ...sample });
@@ -325,19 +297,33 @@ const SampleArea = () => {
       });
 
       const combinedSamples = Array.from(sampleMap.values());
-      console.log("Combined sample count:", combinedSamples.length); // Should show 16
-      const totalPages = Math.ceil(combinedSamples.length / pageSize);
-      console.log(combinedSamples)
-      setTotalPages(totalPages);
-      setfiltertotal(totalPages); // Only if you actually need this
-      setSamples(combinedSamples);
-      setFilteredSamplename(combinedSamples);
+      const total = combinedSamples.length;
+      const paginatedSamples = combinedSamples.slice(
+        currentPage * pageSize,
+        currentPage * pageSize + pageSize
+      );
 
+      if (isMounted) {
+        setTotalPages(Math.ceil(total / pageSize));
+        setSamples(paginatedSamples);
+        setFilteredSamplename(paginatedSamples);
+      }
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
-
+useEffect(() => {
+  fetchCollectionSiteNames();
+    let isMounted = true;
+    if (id) {
+      fetchSamples(isMounted);
+    }
+    return () => {
+      isMounted = false;
+    };
+    
+  }, [currentPage, searchField, searchValue]);
+  
   const fetchCollectionSiteNames = async () => {
     try {
       const response = await fetch(
@@ -354,16 +340,17 @@ const SampleArea = () => {
   };
 
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages); // Adjust down if needed
-    }
-  }, [totalPages]);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages); // Adjust down if needed
+      }
+    }, [totalPages]);
 
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = samples;
+      let isMounted = true;
+      fetchSamples(isMounted)
     } else {
       const lowerValue = value.toLowerCase();
 
@@ -395,8 +382,7 @@ const SampleArea = () => {
   };
 
   const handlePageChange = (event) => {
-    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
-    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+    setCurrentPage(event.selected);
   };
 
   const handleScroll = (e) => {
@@ -573,7 +559,6 @@ const SampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
-      console.log(data)
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -782,9 +767,6 @@ const SampleArea = () => {
       formData.logo instanceof File
     );
   };
-  console.log("actions:", actions);
-  console.log("areMandatoryFieldsFilled:", areMandatoryFieldsFilled());
-  console.log("formData:", formData);
   const unitMaxValues = {
     L: 100,
     mL: 10000,
@@ -2447,41 +2429,43 @@ ${sample.box_id || "N/A"} = Box ID`;
         )}
 
       </div>
-      <Modal show={showModal}
-        onHide={closeModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}>
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
-        </Modal.Header>
+    <Modal show={showModal}
+  onHide={closeModal}
+  size="lg"
+  centered
+  backdrop="static"
+  keyboard={false}
+>
+  <Modal.Header closeButton className="border-0">
+    <Modal.Title className="fw-bold text-danger">Sample Details</Modal.Title>
+  </Modal.Header>
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
-          {selectedSample ? (
-            <div className="p-3">
-              <div className="row g-3">
-                {fieldsToShowInOrder.map(({ key, label }) => {
-                  const value = selectedSample[key];
-                  if (value === undefined) return null;
+  <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+    {selectedSample ? (
+      <div className="p-3">
+        <div className="row g-3">
+          {fieldsToShowInOrder.map(({ key, label }) => {
+            const value = selectedSample[key];
+            if (value === undefined || value === null || value === "" || value === "null") return null;
 
-                  return (
-                    <div className="col-md-6" key={key}>
-                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+            return (
+              <div className="col-md-6" key={key}>
+                <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                  <span className="text-muted small fw-bold mb-1">{label}</span>
+                  <span className="fs-6 text-dark">{value.toString()}</span>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center text-muted p-3">No details to show</div>
-          )}
-        </Modal.Body>
-        <Modal.Footer className="border-0"></Modal.Footer>
-      </Modal>
+            );
+          })}
+        </div>
+      </div>
+    ) : (
+      <div className="text-center text-muted p-3">No details to show</div>
+    )}
+  </Modal.Body>
+  <Modal.Footer className="border-0"></Modal.Footer>
+</Modal>
+
     </section>
   );
 };

@@ -66,7 +66,7 @@ const ChangePassword = () => {
   };
 
   fetchUser();
-  console.log("account_id on city page is:", userId);
+ 
 }, [setValue]);
 
 

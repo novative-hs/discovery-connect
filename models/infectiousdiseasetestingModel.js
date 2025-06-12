@@ -30,7 +30,7 @@ const getAllinfectiousdisease=(callback)=>{
       });
   }
 const createinfectiousdisease=(data,callback)=>{
-    console.log(data)
+    
     const { bulkData, infectiousdiseasename, added_by } = data || {};
 
   mysqlPool.getConnection((err, connection) => {

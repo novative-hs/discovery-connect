@@ -50,7 +50,7 @@ const OrderPage = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("technical Admin site  ID:", storedUserID); // Verify storedUserID
+    
     }
   }, []);
   useEffect(() => {

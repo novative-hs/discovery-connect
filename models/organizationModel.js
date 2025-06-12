@@ -56,8 +56,6 @@ const createOrganization = (req, callback) => {
   const districtInt = parseInt(district);
   const countryInt = parseInt(country);
 
-  console.log("Received data:", req.body);
-  console.log("Logo buffer length:", logo ? logo.length : "No logo");
 
   mysqlPool.getConnection((err, connection) => {
     if (err) {
@@ -98,7 +96,7 @@ const createOrganization = (req, callback) => {
         }
 
         const organizationId = orgResult.insertId;
-        console.log("Organization inserted with ID:", organizationId);
+        
 
         const insertHistory = `
           INSERT INTO history (
@@ -134,7 +132,7 @@ const createOrganization = (req, callback) => {
             }
 
             connection.release();
-            console.log("Transaction committed successfully.");
+          
 
             callback(null, {
               message: "Organization registered successfully",

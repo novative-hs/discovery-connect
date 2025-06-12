@@ -219,7 +219,6 @@ const ResearcherArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
   const handleExportToExcel = () => {
-    console.log(filteredResearchers);
 
     const dataToExport = filteredResearchers.map((item) => ({
       email: item.email ?? "",

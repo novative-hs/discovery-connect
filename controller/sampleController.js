@@ -165,7 +165,7 @@ const updateSample = (req, res) => {
     }
 
     // Log the result to check what is being returned
-    console.log('Update Result:', result);
+    
 
     // Check if result is not undefined and contains affectedRows
     if (result && result.affectedRows === 0) {

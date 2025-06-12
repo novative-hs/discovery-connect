@@ -15,7 +15,7 @@ const DispatchSampleArea = () => {
   useEffect(() => {
     const action = sessionStorage.getItem("staffAction") || "";
     setStaffAction(action);
-    console.log("Order packaging Id on sample page is:", id);
+    
   }, []);
 
   // Fetch samples on first render

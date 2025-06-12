@@ -29,7 +29,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-      console.log("technical Admin site  ID:", storedUserID); // Verify storedUserID
+      
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");

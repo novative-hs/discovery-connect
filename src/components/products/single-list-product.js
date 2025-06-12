@@ -15,7 +15,7 @@ const SingleListProduct = ({ product }) => {
   };
 
   const handleAddToCart = (product) => {
-    console.log("Payload being dispatched:", product);
+    
     dispatch(add_cart_product(product));
   };
   const cartItems = useSelector((state) => state.cart?.cart_products || []);

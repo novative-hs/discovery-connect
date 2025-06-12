@@ -337,7 +337,7 @@ const updateCommitteeMemberStatus = async (id, status) => {
 
     // Send email asynchronously (Don't block status update)
     sendEmail(email, "Welcome to Discovery Connect", emailText)
-      .then(() => console.log("Email sent successfully"))
+      
       .catch((error) => console.error("Error sending email:", error));
 
     return { message: "Status updated and email sent (async)" };

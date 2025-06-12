@@ -89,9 +89,7 @@ if (permission === "all") {
 if (!permissionsString) {
   return callback(new Error("Invalid permissions provided."), null);
 }
-console.log("permissin goging to database are:",permissionsString )
-console.log("Final permission string:", permissionsString);
-console.log("Length:", permissionsString.length);
+
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 
@@ -258,7 +256,7 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
     }
     // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)
-      .then(() => console.log("Email sent successfully"))
+      
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
     return { message: "Status updated and email sent" };

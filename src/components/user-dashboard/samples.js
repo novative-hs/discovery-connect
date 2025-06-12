@@ -159,7 +159,7 @@ const SampleArea = () => {
     });
   };
   const handleAddToCart = (product) => {
-    console.log("Payload being dispatched:", product);
+   
     dispatch(add_cart_product(product));
   };
   const fetchSamples = async () => {

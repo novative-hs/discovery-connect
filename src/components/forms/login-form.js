@@ -51,7 +51,7 @@ const LoginForm = () => {
         notifyError(errorMsg);
       } else {
         const { id, accountType, action, authToken } = result?.data?.user || {};
-        console.log("Login result full object:", result);
+    
 
         if (!id) {
           return notifyError("Unexpected error: User ID is missing.");

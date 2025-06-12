@@ -519,9 +519,7 @@ const updateSample = (id, data, callback) => {
   // Handle volume convert empty string to null
   const volume = data.volume === '' ? null : data.volume;
 
-  // Log for debugging
-  console.log("Updating sample ID:", id);
-  console.log("volume value:", volume);
+  
 
   const query = `
     UPDATE sample
@@ -548,10 +546,7 @@ const updateSample = (id, data, callback) => {
     // Check if update actually affected any rows
     if (result.affectedRows === 0) {
       console.warn('⚠️ No rows updated. Check if the sample ID exists.');
-    } else {
-      console.log('✅ Sample updated successfully.');
-    }
-
+    } 
     // Insert into sample_history
     const historyQuery = `
   INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
@@ -564,7 +559,7 @@ const updateSample = (id, data, callback) => {
         return callback(err, null);
       }
 
-      console.log('🕘 History logged for sample ID:', id);
+    
       callback(null, result);
     });
   });

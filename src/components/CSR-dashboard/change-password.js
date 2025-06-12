@@ -54,7 +54,7 @@ const ChangePassword = () => {
       return <div>Loading...</div>; // Or redirect to login
     } else {
       fetchUser(); // Call the function when the component mounts
-      console.log("account_id on city page is:", id);
+     
     }
   }, []);
 

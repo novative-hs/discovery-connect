@@ -32,9 +32,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
 
   if (id === null) {
     return <div>Loading...</div>;
-  } else {
-    console.log("Researcher ID on checkout page is:", id);
-  }
+  } 
 
   return (
     <section className="checkout-area pb-85">

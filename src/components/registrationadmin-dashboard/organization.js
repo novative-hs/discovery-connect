@@ -126,7 +126,7 @@ const OrganizationArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log("histor", data);
+      
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -173,7 +173,7 @@ const OrganizationArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
-      console.log(response.data);
+      
       setAllOrganizations(response.data);
       setOrganizations(response.data); // Store fetched organizations in state
     } catch (error) {
@@ -317,11 +317,7 @@ const OrganizationArea = () => {
       newformData.append("logo", formData.logo);
     }
 
-    // Optional: log form data for debugging
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
+  
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
@@ -354,7 +350,7 @@ const OrganizationArea = () => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    console.log(id, option);
+    
     try {
       // Send status update request to backend
       const response = await axios.put(

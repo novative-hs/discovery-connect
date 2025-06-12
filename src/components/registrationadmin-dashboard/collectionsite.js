@@ -177,7 +177,7 @@ const CollectionSiteArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
       );
-      console.log(response.data);
+      
       setAllCollectionsites(response.data);
       setCollectionsites(response.data); // Store fetched collectionsites in state
     } catch (error) {
@@ -320,9 +320,7 @@ const CollectionSiteArea = () => {
     }
 
     // Debugging: log the FormData
-    for (let pair of newformData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
+    
 
     try {
       const response = await axios.put(
@@ -356,7 +354,7 @@ const CollectionSiteArea = () => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    console.log(id, option);
+    
     try {
       // Send status update request to backend
       const response = await axios.delete(

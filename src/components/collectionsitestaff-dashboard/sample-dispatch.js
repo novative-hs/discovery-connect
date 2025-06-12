@@ -14,9 +14,7 @@ const SampleDispatchArea = () => {
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  } 
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
@@ -221,7 +219,7 @@ const SampleDispatchArea = () => {
     setSelectedSampleTransfer("");
   };
   const handleTransferClick = (sample) => {
-    console.log(sample);
+  
     setSelectedSampleTransfer(sample);
     setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
     setShowReceiveModal(true); // Show the modal
