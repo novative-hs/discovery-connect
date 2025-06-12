@@ -131,8 +131,8 @@ case "staffManagementPage:csr":
       : [
           "ethnicity",
           "sample-condition",
-          "diagnosis-test-parameter",
-          "infectious-disease-testing",
+          "diagnosistestparameter",
+          "infectiousdiseasetesting",
           "sample-price-currency",
           "storage-temperature",
           "container-type",

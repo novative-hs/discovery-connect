@@ -83,6 +83,27 @@ const tablesAndColumns = [
     ]
   },
   {
+    table: "sample_history",
+    columnsToAdd: [
+      {
+        column: "user_account_id",
+        type: "BIGINT",
+        nullable: true,
+      },
+      {
+        column: "updated_name",
+        type: "VARCHAR(255)",
+        nullable: true,
+      },
+      {
+        column: "action_type",
+        type: "ENUM('add', 'update')",
+        defaultTo: "'add'",
+        nullable: true,
+      },
+    ]
+  },
+  {
     table:"samplereceive",
     columnsToAdd:[
       {
@@ -385,6 +406,10 @@ const createOrUpdateTables = async () => {
       "receive",
       "all"
     ], true, "all");
+    updateEnumColumn("sample", "sample_visibility", [
+      "Public",
+      "Non-Public",
+    ], true, "Non-Public");
   });
 
 

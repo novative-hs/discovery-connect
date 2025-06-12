@@ -5,7 +5,6 @@ import "aos/dist/aos.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Policy from "src/pages/policy";
 import bg from "@assets/img/contact/contact-bg.png";
-import {Image} from 'next/image'
 const BioSpecimenSection = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
@@ -60,7 +59,7 @@ const BioSpecimenSection = () => {
               {images.map((image, index) => (
                 <Col xs={6} key={index} data-aos="zoom-in">
                   <div className="rounded overflow-hidden shadow-sm">
-                    <Image
+                    <img
                       src={image}
                       alt={`Specimen ${index + 1}`}
                       className="img-fluid"

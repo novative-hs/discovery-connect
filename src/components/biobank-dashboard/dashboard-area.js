@@ -5,7 +5,7 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 import ProfileShapes from "./profile-shapes";
 import ChangePassword from './change-password';
 import BioBankSampleArea from './samples';
-import SampleVisibilityArea from './sample-visibility';
+
 import BioBankSampleDispatchArea from './sample-dispatch';
 import QuarantineStockchArea from './quarantine-stock';
 import Header from '../../layout/dashboardheader';
@@ -51,8 +51,6 @@ const DashboardArea = () => {
         return <QuarantineStockchArea />;
       case "change-password":
         return <ChangePassword />;
-      case "Sample-Visibility":
-        return <SampleVisibilityArea />;
       default:
         return <BioBankSampleArea />;
     }

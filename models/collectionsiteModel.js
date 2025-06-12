@@ -153,7 +153,7 @@ const createCollectionSite = (req, callback) => {
         const historyValues = [
           CollectionSiteName, CollectionSiteType,
           phoneNumber, fullAddress, city, district, country, logo,
-          added_by, collectionSiteId, 'inactive'
+          added_by, collectionSiteId, 'added'
         ];
 
         connection.query(insertHistory, historyValues, (err) => {
@@ -360,83 +360,109 @@ function updateCollectionSiteDetail(id, data, callback) {
     cityid,
     districtid,
     countryid,
-    logo
+    logo,
+   
   } = data;
 
   mysqlPool.getConnection((err, connection) => {
-    if (err) {
-      console.error("Error getting connection from pool:", err);
-      return callback(err);
-    }
+    if (err) return callback(err);
 
     connection.beginTransaction((err) => {
       if (err) {
         connection.release();
-        console.error("Error starting transaction:", err);
         return callback(err);
       }
 
-      // Get the current logo from the database
-      const getCurrentLogoQuery = `SELECT logo FROM collectionsite WHERE id = ?`;
+      // Step 1: Get existing collection site data
+      const getCurrentQuery = `SELECT * FROM collectionsite WHERE id = ?`;
 
-      connection.query(getCurrentLogoQuery, [id], (err, results) => {
-        if (err) {
+      connection.query(getCurrentQuery, [id], (err, results) => {
+        if (err || results.length === 0) {
           return connection.rollback(() => {
             connection.release();
-            console.error('Error fetching current logo:', err);
-            return callback(err);
+            return callback(err || new Error("Collection site not found."));
           });
         }
 
-        const currentLogo = results[0]?.logo;
+        const currentData = results[0];
+        const finalLogo = logo || currentData.logo;
 
-        // Use the provided logo or retain the existing one
-        const updatedLogo = logo || currentLogo;
-
-        const updateCollectionSiteQuery = `
-          UPDATE collectionsite
-          SET
-            CollectionSiteName = ?,
-            CollectionSiteType = ?,
-            phoneNumber = ?,
-            fullAddress = ?,
-            city = ?,
-            district = ?,
-            country = ?,
-            logo = ?  
-          WHERE id = ?
+        // Step 2: Insert previous data into history table
+        const insertHistoryQuery = `
+          INSERT INTO history
+          (collectionsite_id, CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress,
+           city, district, country, logo, status, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `;
 
-        connection.query(
-          updateCollectionSiteQuery,
-          [CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid, updatedLogo, id],
-          (err, result) => {
+        const historyValues = [
+          id,
+          currentData.CollectionSiteName,
+          currentData.CollectionSiteType,
+          currentData.phoneNumber,
+          currentData.fullAddress,
+          currentData.city,
+          currentData.district,
+          currentData.country,
+          currentData.logo,
+          'updated'
+        ];
+
+        connection.query(insertHistoryQuery, historyValues, (err) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              return callback(err);
+            });
+          }
+
+          // Step 3: Update current collectionsite
+          const updateQuery = `
+            UPDATE collectionsite
+            SET CollectionSiteName = ?, CollectionSiteType = ?, phoneNumber = ?, fullAddress = ?,
+                city = ?, district = ?, country = ?, logo = ?
+            WHERE id = ?
+          `;
+
+          const updateValues = [
+            CollectionSiteName,
+            CollectionSiteType,
+            phoneNumber,
+            fullAddress,
+            cityid,
+            districtid,
+            countryid,
+            finalLogo,
+            id
+          ];
+
+          connection.query(updateQuery, updateValues, (err, result) => {
             if (err) {
               return connection.rollback(() => {
                 connection.release();
-                console.error('Error updating collectionsite:', err);
                 return callback(err);
               });
             }
 
-            // Commit the transaction
+            // Step 4: Commit transaction
             connection.commit((err) => {
               if (err) {
                 return connection.rollback(() => {
                   connection.release();
-                  console.error('Error committing transaction:', err);
                   return callback(err);
                 });
               }
+
               connection.release();
-              return callback(null, 'Update was successful');
+              return callback(null, "Collection site updated successfully and previous data stored in history.");
             });
-          }
-        );
+          });
+        });
       });
     });
   });
 }
+
 
 function getCollectionSiteDetail(id, callback) {
   const query = `

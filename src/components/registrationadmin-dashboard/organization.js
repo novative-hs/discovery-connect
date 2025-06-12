@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faTrash,
+  faHistory,
+  faQuestionCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import Modal from "react-bootstrap/Modal";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
 import * as XLSX from "xlsx";
-import Image from 'next/image'; // at the top
+import Image from "next/image"; // at the top
 const OrganizationArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -55,7 +60,11 @@ const OrganizationArea = () => {
     //  { label: "ID", placeholder: "Search ID", field: "id" },
     { label: "Name", placeholder: "Search Name", field: "OrganizationName" },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
-    { label: "HECPMDCRegistrationNo", placeholder: "Search HECPMDCRegistrationNo", field: "HECPMDCRegistrationNo" },
+    {
+      label: "HECPMDCRegistrationNo",
+      placeholder: "Search HECPMDCRegistrationNo",
+      field: "HECPMDCRegistrationNo",
+    },
     { label: "Type", placeholder: "Search Type", field: "type" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
@@ -111,14 +120,13 @@ const OrganizationArea = () => {
     }
   };
 
-
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      console.log("histor", data)
+      console.log("histor", data);
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -133,36 +141,39 @@ const OrganizationArea = () => {
   };
 
   // Fetch organizations from backend when component loads
-useEffect(() => {
-  const fetchAll = async () => {
-    try {
-      const [orgRes, cityRes, districtRes, countryRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`),
-        axios.get(`${url}/city/get-city`),
-        axios.get(`${url}/district/get-district`),
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`),
-      ]);
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [orgRes, cityRes, districtRes, countryRes] = await Promise.all([
+          axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
+          ),
+          axios.get(`${url}/city/get-city`),
+          axios.get(`${url}/district/get-district`),
+          axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
+          ),
+        ]);
 
-      setAllOrganizations(orgRes.data);
-      setOrganizations(orgRes.data);
-      setcityname(cityRes.data);
-      setdistrictname(districtRes.data);
-      setCountryname(countryRes.data);
-    } catch (error) {
-      console.error("Error loading initial data:", error);
-    }
-  };
+        setAllOrganizations(orgRes.data);
+        setOrganizations(orgRes.data);
+        setcityname(cityRes.data);
+        setdistrictname(districtRes.data);
+        setCountryname(countryRes.data);
+      } catch (error) {
+        console.error("Error loading initial data:", error);
+      }
+    };
 
-  fetchAll();
-}, [url]);
-
+    fetchAll();
+  }, [url]);
 
   const fetchOrganizations = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
-      console.log(response.data)
+      console.log(response.data);
       setAllOrganizations(response.data);
       setOrganizations(response.data); // Store fetched organizations in state
     } catch (error) {
@@ -170,25 +181,32 @@ useEffect(() => {
     }
   };
 
-
-
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
 
     if (!value) {
+      // If no value, reset list
       setOrganizations(allorganizations);
     } else {
       const filtered = allorganizations.filter((organization) => {
-        return organization[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
+        const fieldValue = organization[field]?.toString().toLowerCase();
+        const searchValue = value.toLowerCase();
+
+        // Use exact match for status
+        if (field === "status") {
+          return fieldValue === searchValue;
+        }
+
+        // Use partial match for other fields
+        return fieldValue?.includes(searchValue);
       });
+
       setOrganizations(filtered);
     }
 
     setCurrentPage(0); // Reset to first page when filtering
   };
+
   useEffect(() => {
     const updatedFilteredOrganization = organizations.filter((organization) => {
       if (!statusFilter) return true;
@@ -276,7 +294,7 @@ useEffect(() => {
       website: organization.website,
       logo: logodata,
       logoPreview: logoPreview, // ✅ use the correctly computed value
-      status: organization.status
+      status: organization.status,
     });
   };
 
@@ -317,6 +335,7 @@ useEffect(() => {
 
       notifySuccess("Organization Updated Successfully");
       setShowEditModal(false);
+      fetchOrganizations();
       resetFormData();
     } catch (error) {
       const errorMessage =
@@ -333,10 +352,9 @@ useEffect(() => {
     }));
   };
 
-
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    console.log(id, option)
+    console.log(id, option);
     try {
       // Send status update request to backend
       const response = await axios.put(
@@ -359,18 +377,18 @@ useEffect(() => {
       console.error("Error updating status:", error);
     }
   };
-useEffect(() => {
-  const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
+  useEffect(() => {
+    const anyModalOpen =
+      showAddModal || showDeleteModal || showEditModal || showHistoryModal;
 
-  if (anyModalOpen) {
-    document.body.style.overflow = "hidden";
-    document.body.classList.add("modal-open");
-  } else {
-    document.body.style.overflow = "auto";
-    document.body.classList.remove("modal-open");
-  }
-}, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
-
+    if (anyModalOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
 
   const resetFormData = () => {
     setFormData({
@@ -398,7 +416,12 @@ useEffect(() => {
         const buttonGroup = dropdown.closest(".btn-group");
 
         // If dropdown exists and the clicked target is outside the dropdown and button group
-        if (dropdown && buttonGroup && !dropdown.contains(event.target) && !buttonGroup.contains(event.target)) {
+        if (
+          dropdown &&
+          buttonGroup &&
+          !dropdown.contains(event.target) &&
+          !buttonGroup.contains(event.target)
+        ) {
           const dropdownId = dropdown.dataset.id;
           // Close dropdown if clicked outside
           setStatusOptionsVisibility((prev) => ({
@@ -444,7 +467,7 @@ useEffect(() => {
       let logoUrl = "";
       if (item.logo && item.logo.data) {
         const buffer = Buffer.from(item.logo.data);
-        logoUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+        logoUrl = `data:image/jpeg;base64,${buffer.toString("base64")}`;
       }
 
       return {
@@ -458,7 +481,7 @@ useEffect(() => {
         fullAddress: item.fullAddress ?? "",
         website: item.website ?? "",
         status: item.status ?? "",
-        //  logo: logoUrl, 
+        //  logo: logoUrl,
         "Created At": item.created_at ? formatDate(item.created_at) : "",
         "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
       };
@@ -476,23 +499,23 @@ useEffect(() => {
       "website",
       "status",
       "Created At",
-      "Updated At"
+      "Updated At",
     ];
 
     if (dataToExport.length === 0) {
       dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, {
+      header: headers,
+    });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Organization");
 
     XLSX.writeFile(workbook, "Organization_List.xlsx");
   };
 
-
   const openModal = (sample) => {
-
     setSelectedOrganization(sample);
     setShowModal(true);
   };
@@ -533,7 +556,6 @@ useEffect(() => {
                   onChange={(e) => handleFilterChange("status", e.target.value)}
                 >
                   <option value="">All</option>
-                  <option value="pending">Pending</option>
                   <option value="inactive">InActive</option>
                   <option value="active">Active</option>
                 </select>
@@ -588,23 +610,29 @@ useEffect(() => {
                 <tr className="text-center">
                   {columns.map(({ label, placeholder, field }) => (
                     <th key={field} className="col-md-1 px-2">
-
                       <div className="d-flex flex-column align-items-center">
                         <input
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ minWidth: "160px", maxWidth: "200px", width: "100px" }}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                          style={{
+                            minWidth: "160px",
+                            maxWidth: "200px",
+                            width: "100px",
+                          }}
                         />
                         <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                           {label}
                         </span>
-
                       </div>
                     </th>
                   ))}
-                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
+                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -631,7 +659,9 @@ useEffect(() => {
                                 cursor: "pointer",
                                 transition: "color 0.2s",
                               }}
-                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                              onMouseOver={(e) =>
+                                (e.target.style.color = "#0a58ca")
+                              }
                               onMouseOut={(e) => (e.target.style.color = "")}
                             >
                               {organization.OrganizationName || "----"}
@@ -658,10 +688,15 @@ useEffect(() => {
                           <div className="btn-group">
                             <button
                               className="btn btn-primary btn-sm"
-                              onClick={() => handleToggleStatusOptions(organization.id)}
+                              onClick={() =>
+                                handleToggleStatusOptions(organization.id)
+                              }
                               title="Edit Status"
                             >
-                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                              <FontAwesomeIcon
+                                icon={faQuestionCircle}
+                                size="xs"
+                              />
                             </button>
 
                             {statusOptionsVisibility[organization.id] && (
@@ -679,13 +714,20 @@ useEffect(() => {
                               >
                                 <button
                                   className="dropdown-item"
-                                  onClick={() => handleStatusClick(organization.id, "active")}
+                                  onClick={() =>
+                                    handleStatusClick(organization.id, "active")
+                                  }
                                 >
                                   Active
                                 </button>
                                 <button
                                   className="dropdown-item"
-                                  onClick={() => handleStatusClick(organization.id, "inactive")}
+                                  onClick={() =>
+                                    handleStatusClick(
+                                      organization.id,
+                                      "inactive"
+                                    )
+                                  }
                                 >
                                   InActive
                                 </button>
@@ -695,7 +737,9 @@ useEffect(() => {
 
                           <button
                             className="btn btn-info btn-sm"
-                            onClick={() => handleShowHistory("organization", organization.id)}
+                            onClick={() =>
+                              handleShowHistory("organization", organization.id)
+                            }
                             title="History"
                           >
                             <FontAwesomeIcon icon={faHistory} />
@@ -712,7 +756,6 @@ useEffect(() => {
                   </tr>
                 )}
               </tbody>
-
             </table>
           </div>
 
@@ -793,12 +836,17 @@ useEffect(() => {
                           >
                             {formData.logoPreview ? (
                               <Image
-  src={formData.logoPreview}
-  alt="Logo Preview"
-  width={120}
-  height={120}
-  style={{ objectFit: "contain", borderRadius: "50%", border: "2px solid black", padding: "5px" }}
-/>
+                                src={formData.logoPreview}
+                                alt="Logo Preview"
+                                width={120}
+                                height={120}
+                                style={{
+                                  objectFit: "contain",
+                                  borderRadius: "50%",
+                                  border: "2px solid black",
+                                  padding: "5px",
+                                }}
+                              />
                             ) : (
                               <i
                                 className="fa fa-user"
@@ -1045,13 +1093,19 @@ useEffect(() => {
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
                           const {
-                            created_name,
-                            updated_name,
+                            
                             OrganizationName,
-                            added_by,
+                            type,
+                            HECPMDCRegistrationNo,
+                            phoneNumber,
+                            website,
+                            city_name,
+                            country_name,
+                            district_name,
+                            fullAddress,
                             created_at,
                             updated_at,
-                            status
+                            status,
                           } = log;
 
                           return (
@@ -1064,87 +1118,74 @@ useEffect(() => {
                                 marginBottom: "10px",
                               }}
                             >
-                              {/* Message for City Addition */}
-                              {status === 'added' && (
+                                 {(status === "active" || status === "inactive") && (
                                 <div
                                   style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
+                                    backgroundColor: status === "active" ? "#e6f4ea" : "#fdecea",
+                                    borderLeft: `6px solid ${
+                                      status === "active" ? "#28a745" : "#dc3545"
+                                    }`,
+                                    borderRadius: "12px",
+                                    padding: "12px 16px",
+                                    maxWidth: "70%",
                                     fontSize: "14px",
-                                    textAlign: "left",
+                                    color: "#333",
+                                    fontFamily: "Segoe UI, sans-serif",
                                   }}
                                 >
-                                  <b>Organization:</b> {OrganizationName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
-                              {status === 'inactive' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <b>Organization:</b> {OrganizationName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
-                              {status === 'active' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#ffffff",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <b>Organization:</b> {OrganizationName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(created_at).format(
-                                    "DD MMM YYYY, h:mm A"
+                                  Researcher was <b>{status}</b> at 
+                                  {updated_at && (
+                                    <div>
+                                      {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
                                   )}
                                 </div>
                               )}
 
+                            {(status === "added" || status === "updated") && (
+  <div
+    style={{
+      padding: "10px 15px",
+      borderRadius: "15px",
+      backgroundColor: status === "updated" ? "#dcf8c6" : "#ffffff",
+      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+      maxWidth: "75%",
+      fontSize: "14px",
+      textAlign: "left",
+      marginTop: status === "updated" ? "5px" : "0",
+    }}
+  >
+    <div>
+      <b>Organization:</b> {OrganizationName} was{" "}
+      <b>{status}</b> by Registration Admin at{" "}
+      {moment(status === "updated" ? updated_at : created_at).format("DD MMM YYYY, h:mm A")}
+    </div>
 
-                              {/* Message for City Update (Only if it exists) */}
-                              {status === 'updated' && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
-                                  }}
-                                >
-                                  <b>Organization:</b> {OrganizationName} was{" "}
-                                  <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
+        <div>
+          <b>Type:</b> {type}
+        </div>
+        <div>
+          <b>HECPMDCRegistrationNo:</b> {HECPMDCRegistrationNo}
+        </div>
+        <div>
+          <b>Phone:</b> {phoneNumber}
+        </div>
+        <div>
+          <b>Country:</b> {country_name}
+        </div>
+        <div>
+          <b>District:</b> {district_name}
+        </div>
+        <div>
+          <b>City:</b> {city_name}
+        </div>
+        <div>
+          <b>Address:</b> {fullAddress}
+        </div>
+      
+  </div>
+)}
+
                             </div>
                           );
                         })
@@ -1157,20 +1198,27 @@ useEffect(() => {
               </div>
             </>
           )}
-
         </div>
       </div>
-      <Modal show={showModal}
+      <Modal
+        show={showModal}
         onHide={closeModal}
         size="lg"
         centered
         backdrop="static"
-        keyboard={false}>
+        keyboard={false}
+      >
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> Organization Details</Modal.Title>
+          <Modal.Title className="fw-bold text-danger">
+            {" "}
+            Organization Details
+          </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+        <Modal.Body
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+          className="bg-light rounded"
+        >
           {selectedOrganization ? (
             <div className="p-3">
               <div className="row g-3">
@@ -1181,8 +1229,12 @@ useEffect(() => {
                   return (
                     <div className="col-md-6" key={field}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        <span className="text-muted small fw-bold mb-1">
+                          {label}
+                        </span>
+                        <span className="fs-6 text-dark">
+                          {value?.toString() || "----"}
+                        </span>
                       </div>
                     </div>
                   );

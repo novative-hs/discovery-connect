@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "react-bootstrap/Modal";
+import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -18,7 +19,7 @@ const SampleArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
+ const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [showModal, setShowModal] = useState(false);
@@ -2283,7 +2284,7 @@ ${sample.box_id || "N/A"} = Box ID`;
         )}
 
         {/* Modal for History of Samples */}
-        {showHistoryModal && (
+       {showHistoryModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div
@@ -2299,7 +2300,7 @@ ${sample.box_id || "N/A"} = Box ID`;
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "60px",
+                top: "100px",
                 left: "50%",
                 transform: "translateX(-50%)",
               }}
@@ -2338,20 +2339,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                   >
                     {historyData && historyData.length > 0 ? (
                       historyData.map((log, index) => {
-                        const hiddenFields = [
-                          "logo",
-                          "ntnNumber",
-                          "type",
-                          "city",
-                          "country",
-                          "district",
-                          "OrganizationName",
-                          "nameofOrganization",
-                          "CollectionSiteName",
-                          "HECPMDCRegistrationNo",
-                          "organization_id",
-                          "collectionsite_id",
-                        ]; // Add fields you want to hide
+                        const {
+                          diseasename,
+                          updated_name,
+                          added_by,
+                          action_type,
+                          created_at,
+                          updated_at,
+                          staffName,
+                        } = log;
 
                         return (
                           <div
@@ -2363,25 +2359,44 @@ ${sample.box_id || "N/A"} = Box ID`;
                               marginBottom: "10px",
                             }}
                           >
-                            <div
-                              style={{
-                                padding: "10px 15px",
-                                borderRadius: "15px",
-                                backgroundColor: "#ffffff",
-                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                maxWidth: "75%",
-                                fontSize: "14px",
-                                textAlign: "left",
-                              }}
-                            >
-                              {Object.entries(log).map(([key, value]) =>
-                                !hiddenFields.includes(key) ? ( // Only show fields that are NOT in hiddenFields array
-                                  <div key={key}>
-                                    <b>{key.replace(/_/g, " ")}:</b> {value}
-                                  </div>
-                                ) : null
-                              )}
-                            </div>
+                            {/* Addition */}
+                            {action_type === "add" && (
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                Disease: <b>{diseasename}</b> was <b>added</b> by{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                              </div>
+                            )}
+
+                            {/* Update */}
+                            {action_type === "update" && updated_name && (
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#dcf8c6", // Light green
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                  marginTop: "5px",
+                                }}
+                              >
+                                Disease: <b>{updated_name}</b> was <b>updated</b> by{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                              </div>
+                            )}
                           </div>
                         );
                       })
@@ -2394,6 +2409,7 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+
 
         {/* Modal to show Sample Picture */}
         {showLogoModal && (

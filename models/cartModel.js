@@ -151,8 +151,6 @@ const createCart = (data, callback) => {
     nbc_file,
   } = data;
 
-  console.log(data);
-
   // Validate required fields
   if (
     !researcher_id ||
@@ -777,16 +775,6 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
       await updateCartStatus(id, newCartStatus);
     }
 
-
-    // Step 3.5: If rejected, revert quantity back to the sample table asynchronously
-    const revertQuantityPromise = technical_admin_status === 'Rejected'
-      ? revertSampleQuantity(id)
-      : Promise.resolve(null);  // Skip if not rejected
-
-    // Wait for both the cart status update and quantity revert in parallel
-    await Promise.all([revertQuantityPromise]);
-
-    // Step 4: Prepare the notification message
     const message =
       technical_admin_status === 'Accepted'
         ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
@@ -863,30 +851,9 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
   }
 };
 
-// Helper function to revert sample quantity if the request is rejected
-const revertSampleQuantity = async (cartId) => {
-  const getQuantitySql = `
-    SELECT sample_id, quantity 
-    FROM cart 
-    WHERE id = ?`;
 
-  const [cartItem] = await queryAsync(getQuantitySql, [cartId]);
 
-  if (cartItem) {
-    const { sample_id, quantity } = cartItem;
 
-    const updateSampleSql = `
-      UPDATE sample 
-      SET quantity = quantity + ?, 
-          quantity_allocated = quantity_allocated - ? 
-      WHERE id = ?`;
-
-    await queryAsync(updateSampleSql, [quantity, quantity, sample_id]);
-
-  } else {
-    console.warn("Cart item not found for rejection.");
-  }
-};
 
 const queryAsync = (sql, params) => {
   return new Promise((resolve, reject) => {
@@ -931,7 +898,7 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
         await queryAsync(
           `UPDATE sample 
            SET quantity = quantity + ?, 
-               quantity_allocation = quantity_allocation - ? 
+               quantity_allocated = quantity_allocated - ? 
            WHERE id = ?`,
           [cs.quantity, cs.quantity, cs.sample_id]
         );

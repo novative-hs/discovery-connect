@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect ,useCallback} from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,11 +13,7 @@ import { notifyError, notifySuccess } from "@utils/toast";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Committee Member Id on sample page is:", id);
-  }
+ 
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState("");
   const [comment, setComment] = useState("");
@@ -54,90 +50,67 @@ const SampleArea = () => {
   const [searchField, setSearchField] = useState("");
   const [searchValue, setSearchValue] = useState("");
 
-  // Fetch samples from backend when component loads
-  useEffect(() => {
-    if (id) {
-      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
-    }
-  }, [currentPage, searchField, searchValue]);
+  
+const fetchSamples = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { searchField, searchValue } = filters;
+    const docFields = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"];
+    const filterForDoc = docFields.includes(searchField);
 
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
+    let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
+    let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
 
-      if (!id) {
-        console.error("Committee member ID is missing.");
-        return;
+    if (searchField && searchValue) {
+      const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
+      if (filterForDoc) {
+        docUrl += filter;
+      } else {
+        orderUrl += filter;
       }
-
-      // Fields that belong to document API
-      const docFields = [
-        "study_copy",
-        "reporting_mechanism",
-        "irb_file",
-        "nbc_file",
-      ];
-
-      // Decide which API needs the filter
-      const filterForDoc = docFields.includes(searchField);
-
-      // Build URLs
-      let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
-      let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
-
-      if (searchField && searchValue) {
-        const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
-        if (filterForDoc) {
-          docUrl += filter;
-        } else {
-          orderUrl += filter;
-        }
-      }
-
-      // Fetch both APIs
-      const [orderRes, docRes] = await Promise.all([
-        axios.get(orderUrl),
-        axios.get(docUrl),
-      ]);
-
-      const orders = orderRes.data.results || [];
-      const totalCount = orderRes.data.totalCount || 0;
-      const documents = docRes.data.results || [];
-
-      // ✅ Create docMap BEFORE using it
-      const docMap = {};
-      documents.forEach((doc) => {
-        if (doc.cart_id) {
-          docMap[doc.cart_id] = doc;
-        }
-      });
-      console.log("Documents", documents);
-      console.log("Sample", orders);
-      // ✅ Merge: flatten document fields directly into order object
-      const merged = orders.map((order) => {
-        const document = docMap[order.cart_id] || {};
-        return {
-          ...order,
-          ...document,
-        };
-      });
-
-      console.log("Merged Orders with Documents:", merged);
-
-      // Update state
-      setSamples(merged);
-      setFilteredSamplename(merged);
-      setTotalPages(Math.ceil(totalCount / pageSize));
-    } catch (error) {
-      console.error("Error fetching data:", error);
     }
-  };
+
+    const [orderRes, docRes] = await Promise.all([
+      axios.get(orderUrl),
+      axios.get(docUrl),
+    ]);
+
+    const orders = orderRes.data.results || [];
+    const totalCount = orderRes.data.totalCount || 0;
+    const documents = docRes.data.results || [];
+
+    const docMap = {};
+    documents.forEach((doc) => {
+      if (doc.cart_id) {
+        docMap[doc.cart_id] = doc;
+      }
+    });
+
+    const merged = orders.map((order) => ({
+      ...order,
+      ...(docMap[order.cart_id] || {}),
+    }));
+
+    setSamples(merged);
+    setFilteredSamplename(merged);
+    setTotalPages(Math.ceil(totalCount / pageSize));
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+}, [id]); // Only depend on `id`
+
+
+useEffect(() => {
+  if (id) {
+    fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+  }
+}, [id, currentPage, itemsPerPage, searchField, searchValue, fetchSamples]);
+
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
     }
-  }, [totalPages]);
+  }, [totalPages,currentPage]);
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
@@ -281,6 +254,9 @@ const SampleArea = () => {
     }
   }, [showModal, showCommentModal]);
 
+ if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  }
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">

@@ -21,12 +21,13 @@ const create_biobankTable = () => {
 };
 
 const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
+  
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
 
   // Base WHERE clause and parameters
-  let baseWhere = `WHERE status = "In Stock"  AND is_deleted = FALSE`;
+  let baseWhere = `WHERE sample.status = "In Stock"  AND sample.is_deleted = FALSE`;
   const paramsForWhere = [];
 
   // Price filter
@@ -37,22 +38,76 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
   }
 
   // Search filter
-  if (searchField && searchValue) {
-    baseWhere += ` AND ?? LIKE ?`;
-    paramsForWhere.push(searchField, `%${searchValue}%`);
+ if (searchField && searchValue) {
+  const likeValue = `%${searchValue}%`;
+
+  switch (searchField) {
+    case "locationids":
+      baseWhere += ` AND (
+        room_number LIKE ? OR 
+        freezer_id LIKE ? OR 
+        box_id LIKE ?
+      )`;
+      paramsForWhere.push(likeValue, likeValue, likeValue);
+      break;
+
+ case "volume":
+  baseWhere += ` AND (
+    LOWER(CONCAT_WS(' ', volume, QuantityUnit)) LIKE LOWER(?) OR
+    LOWER(QuantityUnit) = LOWER(?)
+  )`;
+  paramsForWhere.push(`%${searchValue.toLowerCase()}%`, searchValue.toLowerCase());
+  break;
+
+
+
+    case "price":
+      baseWhere += ` AND CONCAT_WS(' ', price, SamplePriceCurrency) LIKE ?`;
+      paramsForWhere.push(likeValue);
+      break;
+
+     case "status":
+  baseWhere += ` AND sample.status LIKE ?`; // partial match from beginning
+  paramsForWhere.push(`${searchValue}%`);
+  break;
+  
+  case "gender":
+  baseWhere += ` AND LOWER(gender) LIKE LOWER(?)`; // partial match from beginning
+  paramsForWhere.push(`${searchValue}%`);
+  break;
+
+
+    case "TestResult":
+      baseWhere += ` AND CONCAT_WS(' ', TestResult, TestResultUnit) LIKE ?`;
+      paramsForWhere.push(likeValue);
+      break;
+
+    default:
+      baseWhere += ` AND ?? LIKE ?`;
+      paramsForWhere.push(searchField, likeValue);
+      break;
   }
+}
+
 
   // Query to get paginated results
   const dataQuery = `
-    SELECT *
-    FROM sample
-    ${baseWhere}
-    ORDER BY id DESC
-    LIMIT ? OFFSET ?;
+   SELECT sample.*, collectionsite.CollectionSiteName
+FROM sample
+JOIN collectionsitestaff 
+  ON sample.user_account_id = collectionsitestaff.user_account_id
+JOIN collectionsite 
+  ON collectionsitestaff.collectionsite_id = collectionsite.id
+
+${baseWhere}
+ORDER BY sample.id DESC
+LIMIT ? OFFSET ?;
+
   `;
   const dataParams = [...paramsForWhere, pageSizeInt, offset];
 
   mysqlConnection.query(dataQuery, dataParams, (err, results) => {
+    
     if (err) return callback(err);
 
     const enrichedResults = results.map(sample => ({
@@ -62,10 +117,15 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
 
     // Query to get total count without limit/offset
     const countQuery = `
-      SELECT COUNT(*) AS totalCount
+   SELECT COUNT(*) AS totalCount
       FROM sample
+      JOIN collectionsitestaff 
+        ON sample.user_account_id = collectionsitestaff.user_account_id
+      JOIN collectionsite 
+        ON collectionsitestaff.collectionsite_id = collectionsite.id
       ${baseWhere};
-    `;
+`;
+
 
     mysqlConnection.query(countQuery, paramsForWhere, (err, countResults) => {
       if (err) return callback(err);

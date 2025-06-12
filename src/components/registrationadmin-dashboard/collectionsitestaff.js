@@ -217,23 +217,31 @@ const CollectionSiteStaffArea = () => {
     setShowHistoryModal(true);
   };
 
-  const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
+const handleFilterChange = (field, value) => {
+  setSearchTerm(value);
 
-    if (!value) {
-      setCollectionsitesstaff(allcollectionsitesstaff); // ✅ restore full list
-    } else {
-      const filtered = allcollectionsitesstaff.filter((collectionsite) => {
-        return collectionsite[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-      });
-      setCollectionsitesstaff(filtered);
-    }
+  if (!value) {
+    setCollectionsitesstaff(allcollectionsitesstaff); // Restore full list
+  } else {
+    const filtered = allcollectionsitesstaff.filter((staff) => {
+      const fieldValue = staff[field]?.toString().toLowerCase();
+      const searchValue = value.toLowerCase();
 
-    setCurrentPage(0); // Reset to first page when filtering
-  };
+      if (field === "status") {
+        // Use exact match for status
+        return fieldValue === searchValue;
+      }
+
+      // Use partial match for other fields
+      return fieldValue?.includes(searchValue);
+    });
+
+    setCollectionsitesstaff(filtered);
+  }
+
+  setCurrentPage(0); // Reset to first page when filtering
+};
+
 
   useEffect(() => {
     const updatedFilteredCollectionsitestaff = collectionsitesstaff.filter((collectionsite) => {

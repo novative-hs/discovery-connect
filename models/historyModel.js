@@ -170,10 +170,14 @@ const create_samplehistoryTable = () => {
   CREATE TABLE IF NOT EXISTS sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sample_id VARCHAR(36) NOT NULL,
+    user_account_id BIGINT,
     status VARCHAR(50),
     comments TEXT, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
+    updated_name VARCHAR(255),
+    action_type ENUM('add', 'update') DEFAULT 'add';
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE SET NULL
   )`;
 
   mysqlConnection.query(create_historyTable, (err, results) => {
@@ -185,27 +189,24 @@ const create_samplehistoryTable = () => {
   });
 };
 
-
+// Function for the Sample History in Collection Site
 const getSampleHistory = (sampleId, callback) => {
   const query = `
     SELECT 
       sh.id AS history_id,
-      sh.sample_id,
-      sh.comments AS comments,
-      CAST(sh.updated_at AS CHAR) AS updated_at,
+      sh.action_type,
+      sh.updated_name,
       s.diseasename,
       s.age,
       s.gender,
+      s.SampleTypeMatrix,
+      s.ContainerType,
+      s.QuantityUnit,
+      s.TestResult,
       s.ethnicity,
       s.samplecondition,
       s.storagetemp,
-      s.ContainerType,
       s.CountryOfCollection,
-      s.price,
-      s.SamplePriceCurrency,
-      s.quantity,
-      s.QuantityUnit,
-      s.SampleTypeMatrix,
       s.SmokingStatus,
       s.AlcoholOrDrugAbuse,
       s.InfectiousDiseaseTesting,
@@ -214,17 +215,17 @@ const getSampleHistory = (sampleId, callback) => {
       s.DateOfSampling,
       s.ConcurrentMedicalConditions,
       s.ConcurrentMedications,
-      s.DiagnosisTestParameter,
-      s.TestResult,
-      s.TestResultUnit,
       s.TestMethod,
       s.TestKitManufacturer,
       s.TestSystem,
       s.TestSystemManufacturer,
       s.status AS sample_visibility,
-      CAST(s.created_at AS CHAR) AS created_at 
+      CAST(s.created_at AS CHAR) AS created_at,
+      CAST(sh.updated_at AS CHAR) AS updated_at,
+      cs.staffName
     FROM sample_history sh
     JOIN sample s ON sh.sample_id = s.id
+    LEFT JOIN collectionsitestaff cs ON sh.user_account_id = cs.user_account_id
     WHERE sh.sample_id = ?`;
 
   mysqlConnection.query(query, [sampleId], (err, results) => {
@@ -245,4 +246,5 @@ module.exports = {
   create_samplehistoryTable,
   getSampleHistory
 };
+
 

@@ -4,7 +4,7 @@ import axios from "axios";
 import { notifyError, notifySuccess } from "@utils/toast";
 import visa from "@assets/img/slider/13/visacard.png";
 import master from "@assets/img/slider/13/mastercard.png";
-import Image from 'next/image';
+
 const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -202,13 +202,13 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                         className="form-check-input m-0"
                       />
                       <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
-                      <Image
+                      <img
   src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
   alt="Visa"
   width={30}
   height={20}
 />
-<Image
+<img
   src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
   alt="MasterCard"
   width={30}

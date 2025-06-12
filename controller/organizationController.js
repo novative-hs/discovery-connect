@@ -44,12 +44,14 @@ const getCurrentOrganizationById = (req, res) => {
 
 const updateOrganization = (req, res) => {
 
-  const { user_account_id, OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, website } = req.body;
+  const { OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, website } = req.body;
 
   const data = { OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, website };
+  const user_account_id = req.params.id;
+
   organizationModel.updateOrganization(data, user_account_id, (err, result) => {
     if (err) {
-      return res.status(500).json({ error: 'Error updating researcher' });
+      return res.status(500).json({ error: 'Error updating organization' });
     }
     res.status(200).json({ message: 'Organization updated successfully' });
   });

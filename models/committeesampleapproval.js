@@ -147,23 +147,32 @@ const updateCartStatusToShipping = (cartId, callback) => {
     SELECT 
       (SELECT COUNT(*) FROM committeesampleapproval ca
        JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = ? AND ca.committee_status = 'Rejected') AS any_rejected,
+
+      (SELECT COUNT(*) FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
        WHERE ca.cart_id = ? AND cm.committeetype = 'Ethical' AND ca.committee_status = 'Approved') AS ethical_approved,
+
       (SELECT COUNT(*) FROM committeesampleapproval ca
        JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
        WHERE ca.cart_id = ? AND cm.committeetype = 'Scientific' AND ca.committee_status = 'Approved') AS scientific_approved,
+
       (SELECT COUNT(*) FROM committeesampleapproval ca
        JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
        WHERE ca.cart_id = ? AND cm.committeetype = 'Ethical') AS ethical_total,
+
       (SELECT COUNT(*) FROM committeesampleapproval ca
        JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
        WHERE ca.cart_id = ? AND cm.committeetype = 'Scientific') AS scientific_total,
+
       c.order_status AS current_order_status
     FROM cart c WHERE c.id = ?`;
 
-  mysqlConnection.query(committeeStatusQuery, [cartId, cartId, cartId, cartId, cartId], (err, results) => {
+  mysqlConnection.query(committeeStatusQuery, [cartId, cartId, cartId, cartId, cartId, cartId], (err, results) => {
     if (err) return callback(err, null);
 
     const {
+      any_rejected,
       ethical_approved,
       scientific_approved,
       ethical_total,
@@ -171,7 +180,15 @@ const updateCartStatusToShipping = (cartId, callback) => {
       current_order_status
     } = results[0];
 
- 
+    // ❌ If any rejection exists, set to Rejected
+    if (any_rejected > 0 && current_order_status !== "Rejected") {
+      const rejectQuery = `UPDATE cart SET order_status = 'Rejected' WHERE id = ?`;
+      return mysqlConnection.query(rejectQuery, [cartId], (rejectErr, rejectResults) => {
+        if (rejectErr) return callback(rejectErr, null);
+        console.log(`Cart ${cartId} rejected due to committee refusal.`);
+        return callback(null, rejectResults);
+      });
+    }
 
     const ethicalApprovedComplete = ethical_total === 0 || ethical_approved === ethical_total;
     const scientificApprovedComplete = scientific_total === 0 || scientific_approved === scientific_total;
@@ -198,7 +215,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
 
             if (emailResults.length === 0) {
               console.warn("No researcher found for this cart ID");
-              return callback(null, updateResults); // Status updated, just no email sent
+              return callback(null, updateResults);
             }
 
             const { email: researcherEmail, created_at: cartCreatedAt } = emailResults[0];
@@ -209,7 +226,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
               sendEmail(researcherEmail, subject, message, (emailSendErr) => {
                 if (emailSendErr) {
                   console.error("❌ Failed to send email:", emailSendErr);
-                } 
+                }
               });
             });
 
@@ -225,13 +242,14 @@ const updateCartStatusToShipping = (cartId, callback) => {
   });
 };
 
-const updateCommitteeStatus = (cartId, committee_member_id, committee_status, comments, callback) => {
+
+const updateCommitteeStatus = async (cartId, committee_member_id, committee_status, comments, callback) => {
   const updateQuery = `
     UPDATE committeesampleapproval 
     SET committee_status = ?, comments = ? 
     WHERE committee_member_id = ? AND cart_id = ?`;
 
-  mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartId], (err, result) => {
+  mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartId], async (err, result) => {
     if (err) {
       console.error("Error updating committee status:", err);
       return callback(err, null);
@@ -243,6 +261,15 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       cartId,
       status: committee_status,
     };
+
+    if (committee_status === 'Rejected') {
+      try {
+        await revertSampleQuantity(cartId);
+        console.log("✅ Sample quantity reverted due to rejection.");
+      } catch (revertErr) {
+        console.error("❌ Error reverting sample quantity:", revertErr);
+      }
+    }
 
     const getEmailQuery = `
       SELECT ua.email 
@@ -279,6 +306,47 @@ const updateCommitteeStatus = (cartId, committee_member_id, committee_status, co
       callback(null, response);
     });
   });
+};
+
+
+const revertSampleQuantity = async (cartId) => {
+  const [cartItem] = await queryAsync(
+    `SELECT sample_id, quantity FROM cart WHERE id = ?`,
+    [cartId]
+  );
+
+  if (!cartItem) {
+    console.warn("Cart item not found for rejection.");
+    return;
+  }
+
+  const qty = Number(cartItem.quantity) || 0;
+  const sampleId = cartItem.sample_id;
+
+  const [sample] = await queryAsync(
+    `SELECT quantity, quantity_allocated FROM sample WHERE id = ?`,
+    [sampleId]
+  );
+
+  if (!sample) {
+    console.warn("Sample not found.");
+    return;
+  }
+
+  const shouldRevert = sample.quantity_allocated >= qty;
+
+  if (!shouldRevert) {
+    console.warn("Not enough allocated stock to revert. Skipping.");
+    return;
+  }
+
+  await queryAsync(
+    `UPDATE sample
+     SET quantity = quantity + ?,
+         quantity_allocated = quantity_allocated - ?
+     WHERE id = ?`,
+    [qty, qty, sampleId]
+  );
 };
 
 // Helper function to fetch email and send notification

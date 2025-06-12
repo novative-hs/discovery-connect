@@ -58,7 +58,7 @@ const CartArea = () => {
                           <tr key={i} className="text-center align-middle">
                             <td className="text-start">
                               <div className="d-flex align-items-center gap-3">
-                                <Image
+                                <img
    src={item.imageUrl}
   alt="Visa"
   style={{ width: "60px", borderRadius: "8px" }}

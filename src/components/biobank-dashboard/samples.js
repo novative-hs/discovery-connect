@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "react-bootstrap/Modal";
+import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -8,6 +9,7 @@ import {
   faQuestionCircle,
   faExchangeAlt,
   faDollarSign,
+  faEye,
 } from "@fortawesome/free-solid-svg-icons";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Barcode from "react-barcode";
@@ -22,6 +24,8 @@ const BioBankSampleArea = () => {
   } else {
     console.log("Collection site Id on sample page is:", id);
   }
+
+  
   const [selectedSample, setSelectedSample] = useState(null);
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
@@ -32,28 +36,34 @@ const BioBankSampleArea = () => {
   const [selectedSampleName, setSelectedSampleName] = useState("");
   const [selectedSampleVolume, setSelectedSampleVolume] = useState("");
   const [selectedSampleUnit, setSelectedSampleUnit] = useState("");
-  const [filtertotal, setfiltertotal] = useState(null);
+  
+
+  const [filter, setFilter] = useState(""); // dropdown selection: diseasename, gender, etc.
+const [filterValue, setFilterValue] = useState(""); // user input text
+
   const [quarantineComment, setQuarantineComment] = useState("");
   const [commentError, setCommentError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showQuarantineModal, setShowQuarantineModal] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
+   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [countryname, setCountryname] = useState([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-
+const[visibilitystatus,setVisibilityStatus]=useState("")
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
     { label: "Location", key: "locationids" },
     { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
-    { label: "Price", key: "price" },
     { label: "Gender", key: "gender" },
+    { label: "Price", key: "price" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result", key: "TestResult" },
     // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
@@ -62,9 +72,8 @@ const BioBankSampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
+    
+    
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -126,7 +135,7 @@ const BioBankSampleArea = () => {
   const [logo, setLogo] = useState();
   const [editSample, setEditSample] = useState(null); // State for selected sample to edit
   const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [filter, setFilter] = useState(""); // State for dropdown selection
+
   const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
   const [successMessage, setSuccessMessage] = useState("");
   const [collectionSiteNames, setCollectionSiteNames] = useState([]);
@@ -164,11 +173,31 @@ const BioBankSampleArea = () => {
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null);
-
   const [samplePrice, setSamplePrice] = useState([]);
-
+const [selectedSampleVisibilityId, setSelectedSampleVisibilityId] = useState(null);
+const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+const [searchField, setSearchField] = useState(null);
+  const [searchValue, setSearchValue] = useState(null);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({});
+  
+  const [priceFilter, setPriceFilter] = useState("");
+
+
+  const filterOptions = [
+  { value: "", text: "All" },
+  { value: "diseasename", text: "Disease Name" },
+  { value: "gender", text: "Gender" },
+  { value: "CollectionSiteName", text: "Collectionsite Name" },
+  { value: "sample_visibility", text: "Visibility Status" },
+  { value: "price", text: "Price" }, // special case
+];
+
+const priceOptions = [
+  { value: "", text: "All" },
+  { value: "priceAdded", text: "Price Added" },
+  { value: "priceNotAdded", text: "Price Not Added" },
+];
+
   // Stock Transfer modal fields names
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -255,10 +284,21 @@ const BioBankSampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    fetchSamples(currentPage + 1, itemsPerPage, filter); // Call the function when the component mounts
-  }, [currentPage]);
+useEffect(() => {
+  let isMounted = true;
+
+  const storedUser = getsessionStorage("user");
+  fetchSamples(currentPage + 1, itemsPerPage, {
+    searchField,
+    searchValue,
+  }, isMounted);
+
+  return () => {
+    isMounted = false;
+  };
+}, [currentPage, searchField, searchValue]);
+
+
 
   // Fetch samples from the backend
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
@@ -273,16 +313,109 @@ const BioBankSampleArea = () => {
 
       const response = await axios.get(url);
       const { samples, totalCount } = response.data;
-      console.log(samples);
       setSamples(samples);
       setFilteredSamples(samples);
       setTotalPages(Math.ceil(totalCount / pageSize));
-      setfiltertotal(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
 
+  const currentData = filteredSamples;
+
+
+
+  // Sample filter "gender,sample visibility,disease name"
+//  useEffect(() => {
+//   if (samples.length > 0) {
+//     if (filter && filterValue.trim() !== "") {
+//       const lowerFilterValue = filterValue.toLowerCase();
+
+//       setFilteredSamples(
+//         samples.filter((sample) => {
+//           const value = sample[filter]?.toLowerCase();
+
+//           if (!value) return false;
+
+//           // Use startsWith for better control
+//           return value.startsWith(lowerFilterValue);
+//         })
+//       );
+//     } else {
+//       setFilteredSamples(samples);
+      
+//     }
+//   }
+// }, [filter, filterValue, samples]);
+
+  // Sample fields Dropdown
+  useEffect(() => {
+    const fetchTableData = async (tableName, setter) => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/${tableName}`
+        );
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${tableName}`);
+        }
+        const data = await response.json();
+        setter(data);
+      } catch (error) {
+        console.error(`Error fetching ${tableName}:`, error);
+      }
+    };
+
+    tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
+  }, []);
+
+   useEffect(() => {
+     if (currentPage > totalPages && totalPages > 0) {
+       setCurrentPage(totalPages); // Adjust down if needed
+     }
+   }, [totalPages]);
+
+  
+
+
+   const handlePageChange = (event) => {
+    const selectedPage = event.selected; // React Paginate is 0-indexed, so we adjust
+    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+  };
+
+
+  // Filter the researchers list
+const handleFilterChange = (field, value) => {
+  setCurrentPage(0);
+
+  if (field === "price") {
+    setPriceFilter(value);
+    setSearchField("");  // optional, to clear old field
+    setSearchValue("");  // optional
+    fetchSamples(1, itemsPerPage, { priceFilter: value }); // 🟢 priceFilter passed
+  } else {
+    setSearchField(field);
+    setSearchValue(value);
+    setPriceFilter(""); // clear priceFilter
+    fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
+  }
+};
+
+
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    // Ensure both states update correctly
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+
+    setTransferDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
+  };
   const getSamplePrice = async (selectedSampleName) => {
     try {
       const response = await fetch(
@@ -330,114 +463,6 @@ const BioBankSampleArea = () => {
       getSamplePrice(selectedSampleName);
     }
   }, [selectedSampleName]);
-
-  // Sample Price Filter
-  useEffect(() => {
-    if (samples.length > 0) {
-      // Ensure samples are fetched
-      if (filter === "priceAdded") {
-        setFilteredSamples(
-          samples.filter((sample) => sample.price && sample.price > 0)
-        );
-      } else if (filter === "priceNotAdded") {
-        setFilteredSamples(
-          samples.filter((sample) => !sample.price || sample.price === null)
-        );
-      } else {
-        setFilteredSamples(samples);
-      }
-    }
-  }, [filter, samples]);
-
-  // Sample fields Dropdown
-  useEffect(() => {
-    const fetchTableData = async (tableName, setter) => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplefields/${tableName}`
-        );
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${tableName}`);
-        }
-        const data = await response.json();
-        setter(data);
-      } catch (error) {
-        console.error(`Error fetching ${tableName}:`, error);
-      }
-    };
-
-    tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
-  }, []);
-
-  useEffect(() => {
-    if (currentPage >= totalPages && totalPages > 0) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [currentPage, totalPages]);
-
-  // Get the current data for the table
-  const currentData = filteredSamples;
-
-  const handlePageChange = (event) => {
-    const selectedPage = event.selected;
-    setCurrentPage(selectedPage);
-  };
-
-  // Filter the researchers list
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = samples;
-    } else {
-      const lowerValue = value.toLowerCase();
-
-      filtered = samples.filter((sample) => {
-        if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""
-            }`.toLowerCase();
-          return combinedVolume.includes(lowerValue);
-        }
-        if (field === "TestResult") {
-          const combinedVolume = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""
-            }`.toLowerCase();
-          return combinedVolume.includes(lowerValue);
-        }
-
-        if (field === "price") {
-          const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""
-            }`.toLowerCase();
-          return combinedPrice.includes(lowerValue);
-        }
-
-        if (field === "gender") {
-          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
-        }
-
-        return sample[field]?.toString().toLowerCase().includes(lowerValue);
-      });
-    }
-
-    setFilteredSamples(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-
-    // Ensure both states update correctly
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-
-    setTransferDetails((prevDetails) => ({
-      ...prevDetails,
-      [name]: value,
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(formData);
@@ -638,12 +663,13 @@ const BioBankSampleArea = () => {
     }
   };
 
-  const fetchHistory = async (filterType, id) => {
+ const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
+      console.log(data)
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -657,6 +683,9 @@ const BioBankSampleArea = () => {
   };
 
   const handleEditClick = (sample) => {
+    setSelectedSampleName(sample.diseasename)
+    setSelectedSampleUnit(sample.QuantityUnit)
+    setSelectedSampleVolume(sample.volume)
     setSelectedSampleId(sample.id);
     setSelectedSampleName(sample.diseasename);
     setSelectedSampleVolume(sample.volume);
@@ -673,6 +702,7 @@ const BioBankSampleArea = () => {
     ).padStart(3, "0")}`;
 
     setFormData({
+      donorID:sample.donorID,
       locationids: formattedLocationId,
       diseasename: sample.diseasename,
       age: sample.age,
@@ -804,6 +834,59 @@ const BioBankSampleArea = () => {
       );
     }
   };
+const handleVisibilityStatusClick = async (e) => {
+    e.preventDefault(); // Prevent form from reloading page
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/UpdateSampleStatus/${selectedSampleVisibilityId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sample_visibility: visibilitystatus || "",
+            added_by: id,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Backend error response:", errorText);
+        throw new Error("Failed to update sample status.");
+      }
+
+      const data = await response.json();
+      setSuccessMessage("Successfully changed sample visibility status")
+        setTimeout(() => setSuccessMessage(""), 3000);
+      setShowVisibilityModal(false);
+
+      // ✅ Optional: Refresh the sample list
+      const updatedSamples = await fetchSamples();
+    } catch (error) {
+      console.error("Update error:", error);
+    }
+  };
+ const openVisibilitystatusModal = (sample) => {
+  setSelectedSampleName(sample.diseasename);
+    setSelectedSampleVolume(sample.volume);
+    setSelectedSampleUnit(sample.QuantityUnit);
+    setSelectedSampleVisibilityId(sample.id);
+    setShowVisibilityModal(true);
+  };
+
+  const openVisibilityModal = (sample) => {
+    setSelectedSampleVisibilityId(sample);
+    setShowVisibilityModal(true);
+  };
+
+  const closeVisibilityModal = () => {
+    setSelectedSampleVisibilityId(null);
+    setShowVisibilityModal(false);
+  };
+
+
+
 
   useEffect(() => {
     if (
@@ -812,7 +895,8 @@ const BioBankSampleArea = () => {
       showEditModal ||
       showTransferModal ||
       showHistoryModal ||
-      showPriceModal
+      showPriceModal||
+      showVisibilityModal
     ) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
@@ -829,6 +913,7 @@ const BioBankSampleArea = () => {
     showTransferModal,
     showHistoryModal,
     showPriceModal,
+    showVisibilityModal
   ]);
 
   const resetFormData = () => {
@@ -893,21 +978,21 @@ const BioBankSampleArea = () => {
     }));
   };
 
-  const areMandatoryFieldsFilled = () => {
-    return (
-      formData.donorID?.trim() &&
-      formData.diseasename?.trim() &&
-      formData.locationids?.trim() &&
-      formData.volume?.trim() &&
-      formData.phoneNumber?.trim() &&
-      formData.TestResult?.trim() &&
-      formData.gender?.trim() &&
-      formData.SampleTypeMatrix?.trim() &&
-      formData.age?.trim() &&
-      formData.ContainerType?.trim() &&
-      formData.logo instanceof File
-    );
-  };
+const areMandatoryFieldsFilled = () => {
+  return (
+    String(formData.donorID || "").trim() &&
+    String(formData.diseasename || "").trim() &&
+    String(formData.locationids || "").trim() &&
+    String(formData.volume || "").trim() &&
+    String(formData.phoneNumber || "").trim() &&
+    String(formData.TestResult || "").trim() &&
+    String(formData.gender || "").trim() &&
+    String(formData.SampleTypeMatrix || "").trim() &&
+    String(formData.age || "").trim() &&
+    String(formData.ContainerType || "").trim() &&
+     logoPreview 
+  );
+};
 
   const unitMaxValues = {
     L: 100,
@@ -987,49 +1072,106 @@ const BioBankSampleArea = () => {
             Sample.
           </h6>
           <h6>Note 2: Click on Location Id's to see Sample Picture.</h6>
+            <h6>Note 3: Make the Samples Public or Non-Public through the Edit Icon.</h6>
         </div>
 
         {/* Header Section with Filter and Button */}
-        <div className="d-flex justify-content-between align-items-center mt-n3 mb-2">
-          {/* Filter Dropdown */}
+      <div className="d-flex justify-content-between align-items-center flex-wrap mb-3 p-3 rounded shadow-sm bg-white border">
 
-          <div className="d-flex align-items-center gap-2">
-            <label className="fw-bold">Filter:</label>
+ <div className="d-flex align-items-center flex-wrap gap-3 mb-3">
+  <label className="fw-semibold text-secondary mb-0">Filter by:</label>
 
-            <NiceSelect
-              options={[
-                { value: "", text: "All" },
-                { value: "priceAdded", text: "Price Added" },
-                { value: "priceNotAdded", text: "Price Not Added" },
-              ]}
-              defaultCurrent={0}
-              onChange={(item) => setFilter(item.value)}
-              name="filter-by-price"
-            />
-          </div>
+  {/* Main Filter Dropdown */}
+  <NiceSelect
+    options={filterOptions}
+    defaultCurrent={0}
+    name="filter-by"
+   onChange={(item) => {
+  setFilter(item.value);
+  setFilterValue("");
+  setPriceFilter(""); // reset priceFilter
 
-          {/* Add Samples Button */}
-          <div className="d-flex justify-content-end align-items-center gap-2 w-100">
-            {/* Add Researcher Button */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              style={{
-                backgroundColor: "#4a90e2", // soft blue
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "6px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              }}
-            >
-              <i className="fas fa-vial"></i> Add Sample
-            </button>
-          </div>
-        </div>
+  if (item.value === "") {
+    handleFilterChange("", "");
+  } else if (item.value === "price") {
+    // Auto-select "priceAdded" when price filter is selected
+    const defaultPrice = "priceAdded";
+    setPriceFilter(defaultPrice);
+    handleFilterChange("price", defaultPrice);
+  } else {
+    fetchSamples(); // optional if you want to reload
+  }
+}}
+
+  />
+
+  {/* If "Price" is selected, show Price filter dropdown */}
+  {filter === "price" && (
+    <NiceSelect
+      options={priceOptions}
+      defaultCurrent={0}
+      name="price-options"
+      onChange={(item) => {
+        setPriceFilter(item.value);
+        handleFilterChange("price", item.value);
+      }}
+    />
+  )}
+
+  {/* Text input for other filters */}
+  {filter && filter !== "" && filter !== "price" && (
+    <input
+      type="text"
+      className="form-control rounded px-3 py-1"
+      placeholder={`Enter ${filter}`}
+      value={filterValue}
+      style={{ minWidth: "200px" }}
+      onChange={(e) => {
+        const newValue = e.target.value;
+        setFilterValue(newValue);
+        handleFilterChange(filter, newValue.trim() === "" ? "" : newValue);
+      }}
+    />
+  )}
+
+  {/* Clear button */}
+  {(filter && filterValue) || priceFilter ? (
+    <button
+      className="btn btn-sm btn-outline-danger"
+     onClick={() => {
+  setFilter("");
+  setFilterValue("");
+  setPriceFilter("");
+  fetchSamples(1, itemsPerPage, {}); // reset all
+}}
+
+    >
+      Clear
+    </button>
+  ) : null}
+</div>
+
+
+
+  {/* Add Sample Button */}
+  <div className="d-flex justify-content-end align-items-center">
+    <button
+      onClick={() => setShowAddModal(true)}
+      className="btn d-flex align-items-center gap-2 px-3 py-2"
+      style={{
+        backgroundColor: "#3b82f6", // Tailwind blue-500
+        color: "#fff",
+        borderRadius: "8px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        fontWeight: "500",
+      }}
+    >
+      <i className="fas fa-vial"></i> Add Sample
+    </button>
+  </div>
+
+</div>
+
 
         {/* Table */}
         <div className="table-responsive w-100">
@@ -1038,19 +1180,22 @@ const BioBankSampleArea = () => {
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="p-1">
-                    <div className="d-flex flex-column align-items-center">
-                      <input
-                        type="text"
-                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                        placeholder={`Search ${label}`}
-                        onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ width: "100%" }} // full width inside th cell
-                      />
-                      <span className="fw-bold mt-1 fs-6">
-                        {label}
-                      </span>
-                    </div>
-                  </th>
+  <div className="d-flex flex-column align-items-center">
+    {key !== "barcode" && filter === "" && (
+      <input
+        type="text"
+        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+        placeholder={`Search ${label}`}
+        onChange={(e) => handleFilterChange(key, e.target.value)}
+        style={{ width: "100%" }}
+      />
+    )}
+    <span className="fw-bold mt-1 fs-6">
+      {label}
+    </span>
+  </div>
+</th>
+
                 ))}
                 <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                   Action
@@ -1189,6 +1334,15 @@ Box ID=${sample.box_id || "----"} `;
                         >
                           <FontAwesomeIcon icon={faDollarSign} size="sm" />
                         </button>
+                        <div className="d-flex justify-content-center gap-3">
+                                                <button
+                                                  className="btn btn-dark btn-sm"
+                                                  onClick={() => openVisibilitystatusModal(sample)}
+                                                  title="Edit Sample Visibility Status"
+                                                >
+                                                  <FontAwesomeIcon icon={faEye} size="xs" />
+                                                </button>
+                                              </div>
                         <button
                           className="btn btn-danger btn-sm py-0 px-1"
                           onClick={() => {
@@ -1228,14 +1382,14 @@ Box ID=${sample.box_id || "----"} `;
           </table>
         </div>
 
-        {/* Pagination */}
-        {totalPages >= 0 && (
+       {totalPages >= 0 && (
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage}
+            focusPage={currentPage} // If using react-paginate, which is 0-based
           />
         )}
+
 
         {/* Modal for Generating Barcode for Samples */}
         {showBarcodeModal && (
@@ -2374,6 +2528,84 @@ Box ID=${sample.box_id || "----"} `;
           </>
         )}
 
+         {showVisibilityModal && (
+          <>
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "120px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolume}{selectedSampleUnit}</h5>
+                    </h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => {
+                        setShowVisibilityModal(false);
+                      }}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+
+                  <form
+                    onSubmit={handleVisibilityStatusClick}
+                  >
+                    <div className="modal-body">
+                      {/* Form Fields */}
+                      <div className="form-group">
+                        <label>Sample Status</label>
+                        <select
+                          className="form-control"
+                          name="sample_visibility"
+                          value={visibilitystatus}
+                          onChange={(e) => setVisibilityStatus(e.target.value)}
+                          required
+                        >
+                          <option value="">Select Sample Status</option>
+                          <option value="Public">Public</option>
+                          <option value="Non-Public">Non-Public</option>
+                        </select>
+                      </div>
+
+                    </div>
+
+                    <div className="modal-footer">
+                      <button type="submit" className="btn btn-primary">
+                        Update Sample
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Modal for Adding Samples Prices and Currency */}
         {showPriceModal && (
           <>
@@ -2742,7 +2974,7 @@ Box ID=${sample.box_id || "----"} `;
         )}
 
         {/* Modal for History of Samples */}
-        {showHistoryModal && (
+     {showHistoryModal && (
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div
@@ -2758,7 +2990,7 @@ Box ID=${sample.box_id || "----"} `;
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "60px",
+                top: "100px",
                 left: "50%",
                 transform: "translateX(-50%)",
               }}
@@ -2797,20 +3029,15 @@ Box ID=${sample.box_id || "----"} `;
                   >
                     {historyData && historyData.length > 0 ? (
                       historyData.map((log, index) => {
-                        const hiddenFields = [
-                          "logo",
-                          "ntnNumber",
-                          "type",
-                          "city",
-                          "country",
-                          "district",
-                          "OrganizationName",
-                          "nameofOrganization",
-                          "CollectionSiteName",
-                          "HECPMDCRegistrationNo",
-                          "organization_id",
-                          "collectionsite_id",
-                        ]; // Add fields you want to hide
+                        const {
+                          diseasename,
+                          updated_name,
+                          added_by,
+                          action_type,
+                          created_at,
+                          updated_at,
+                          staffName,
+                        } = log;
 
                         return (
                           <div
@@ -2822,25 +3049,44 @@ Box ID=${sample.box_id || "----"} `;
                               marginBottom: "10px",
                             }}
                           >
-                            <div
-                              style={{
-                                padding: "10px 15px",
-                                borderRadius: "15px",
-                                backgroundColor: "#ffffff",
-                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                maxWidth: "75%",
-                                fontSize: "14px",
-                                textAlign: "left",
-                              }}
-                            >
-                              {Object.entries(log).map(([key, value]) =>
-                                !hiddenFields.includes(key) ? ( // Only show fields that are NOT in hiddenFields array
-                                  <div key={key}>
-                                    <b>{key.replace(/_/g, " ")}:</b> {value}
-                                  </div>
-                                ) : null
-                              )}
-                            </div>
+                            {/* Addition */}
+                            {action_type === "add" && (
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#ffffff",
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                }}
+                              >
+                                Disease: <b>{diseasename}</b> was <b>added</b> by{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                              </div>
+                            )}
+
+                            {/* Update */}
+                            {action_type === "update" && updated_name && (
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor: "#dcf8c6", // Light green
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                  marginTop: "5px",
+                                }}
+                              >
+                                Disease: <b>{updated_name}</b> was <b>updated</b> by{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                              </div>
+                            )}
                           </div>
                         );
                       })
@@ -2853,6 +3099,7 @@ Box ID=${sample.box_id || "----"} `;
             </div>
           </>
         )}
+
 
         {showQuarantineModal && (
           <>

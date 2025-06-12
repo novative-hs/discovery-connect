@@ -45,7 +45,7 @@ const createSampleTable = () => {
         TestKitManufacturer VARCHAR(50),
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
-        sample_visibility ENUM('Public', 'Private') DEFAULT 'Private',
+        sample_visibility ENUM('Public', 'Non-Public') DEFAULT 'Private',
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
@@ -485,11 +485,11 @@ const createSample = (data, callback) => {
 
       // Now insert into sample_history
       const historyQuery = `
-        INSERT INTO sample_history (sample_id)
-        VALUES (?)
-      `;
+  INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
+  VALUES (?, ?, 'add', ?)
+`;
 
-      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+      mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.diseasename || null], (err, historyResults) => {
         if (err) {
           console.error('Error inserting into sample_history:', err);
           return callback(err, null);
@@ -516,7 +516,6 @@ const updateSample = (id, data, callback) => {
     box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
   }
 
-
   // Handle volume convert empty string to null
   const volume = data.volume === '' ? null : data.volume;
 
@@ -542,7 +541,7 @@ const updateSample = (id, data, callback) => {
   // Run update query
   mysqlConnection.query(query, values, (err, result) => {
     if (err) {
-      console.error('❌ Error updating sample:', err);
+      console.error('Error updating sample:', err);
       return callback(err, null);
     }
 
@@ -555,13 +554,13 @@ const updateSample = (id, data, callback) => {
 
     // Insert into sample_history
     const historyQuery = `
-      INSERT INTO sample_history (sample_id)
-      VALUES (?)
-    `;
+  INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
+  VALUES (?, ?, 'update', ?)
+`;
 
-    mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+    mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.diseasename || null], (err, historyResults) => {
       if (err) {
-        console.error('❌ Error inserting into sample_history:', err);
+        console.error('Error inserting into sample_history:', err);
         return callback(err, null);
       }
 

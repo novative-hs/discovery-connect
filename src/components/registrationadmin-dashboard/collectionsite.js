@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faTrash,
+  faHistory,
+  faQuestionCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import Modal from "react-bootstrap/Modal";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-import * as XLSX from "xlsx"
+import * as XLSX from "xlsx";
 import { notifyError, notifySuccess } from "@utils/toast";
-import Image from 'next/image';
+import Image from "next/image";
 
 const CollectionSiteArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -15,7 +20,8 @@ const CollectionSiteArea = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editCollectionsite, setEditCollectionsite] = useState(null); // State for selected Collectionsite to edit
-  const [selectedCollectionsiteId, setSelectedCollectionSiteId] = useState(null); // Store ID of Collectionsite to delete
+  const [selectedCollectionsiteId, setSelectedCollectionSiteId] =
+    useState(null); // Store ID of Collectionsite to delete
   const [allcollectionsites, setAllCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [collectionsites, setCollectionsites] = useState([]); // State to hold fetched collectionsites
   const [cityname, setcityname] = useState([]);
@@ -53,7 +59,11 @@ const CollectionSiteArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   const columns = [
     { label: "Name", placeholder: "Search Name", field: "CollectionSiteName" },
-    { label: "Collection Site Type", placeholder: "Search Type", field: "CollectionSiteType" },
+    {
+      label: "Collection Site Type",
+      placeholder: "Search Type",
+      field: "CollectionSiteType",
+    },
     { label: "Contact", placeholder: "Search Contact", field: "phoneNumber" },
     { label: "Created at", placeholder: "Search Date", field: "created_at" },
     { label: "Status", placeholder: "Search Status", field: "status" },
@@ -66,7 +76,6 @@ const CollectionSiteArea = () => {
     { label: "Address", placeholder: "Search Address", field: "fullAddress" },
   ];
   const openModal = (sample) => {
-
     setSelectedCollectionSite(sample);
     setShowModal(true);
   };
@@ -135,43 +144,46 @@ const CollectionSiteArea = () => {
   };
 
   // Fetch collectionsites from backend when component loads
- useEffect(() => {
-  const fetchAll = async () => {
-    try {
-      const [collectionRes, cityRes, districtRes, countryRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`),
-        axios.get(`${url}/city/get-city`),
-        axios.get(`${url}/district/get-district`),
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`)
-      ]);
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [collectionRes, cityRes, districtRes, countryRes] =
+          await Promise.all([
+            axios.get(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
+            ),
+            axios.get(`${url}/city/get-city`),
+            axios.get(`${url}/district/get-district`),
+            axios.get(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`
+            ),
+          ]);
 
-      setAllCollectionsites(collectionRes.data);
-      setCollectionsites(collectionRes.data);
-      setcityname(cityRes.data);
-      setdistrictname(districtRes.data);
-      setCountryname(countryRes.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+        setAllCollectionsites(collectionRes.data);
+        setCollectionsites(collectionRes.data);
+        setcityname(cityRes.data);
+        setdistrictname(districtRes.data);
+        setCountryname(countryRes.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-  fetchAll();
-}, [url]);
-
+    fetchAll();
+  }, [url]);
 
   const fetchCollectionsites = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
       );
-      console.log(response.data)
+      console.log(response.data);
       setAllCollectionsites(response.data);
       setCollectionsites(response.data); // Store fetched collectionsites in state
     } catch (error) {
       console.error("Error fetching collectionsites:", error);
     }
   };
-  
 
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
@@ -180,21 +192,32 @@ const CollectionSiteArea = () => {
       setCollectionsites(allcollectionsites);
     } else {
       const filtered = allcollectionsites.filter((collectionsite) => {
-        return collectionsite[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
+        const fieldValue = collectionsite[field]?.toString().toLowerCase();
+        const searchValue = value.toLowerCase();
+
+        // Use exact match for 'status', partial match for others
+        if (field === "status") {
+          return fieldValue === searchValue;
+        }
+
+        return fieldValue?.includes(searchValue);
       });
+
       setCollectionsites(filtered);
     }
 
     setCurrentPage(0); // Reset to first page when filtering
   };
+
   useEffect(() => {
-    const updatedFilteredCollectionsite = collectionsites.filter((collectionsite) => {
-      if (!statusFilter) return true;
-      return collectionsite.status.toLowerCase() === statusFilter.toLowerCase();
-    });
+    const updatedFilteredCollectionsite = collectionsites.filter(
+      (collectionsite) => {
+        if (!statusFilter) return true;
+        return (
+          collectionsite.status.toLowerCase() === statusFilter.toLowerCase()
+        );
+      }
+    );
 
     setFilteredCollectionsites(updatedFilteredCollectionsite);
     setCurrentPage(0); // Reset to first page when filtering
@@ -275,7 +298,7 @@ const CollectionSiteArea = () => {
       fullAddress: collectionsite.fullAddress,
       logo: logodata,
       logoPreview: logoPreview, // ✅ use the correctly computed value
-      status: collectionsite.status
+      status: collectionsite.status,
     });
   };
 
@@ -314,10 +337,13 @@ const CollectionSiteArea = () => {
 
       notifySuccess("Update collection site successfully");
       setShowEditModal(false);
+      fetchCollectionsites();
       resetFormData();
     } catch (error) {
       console.error("Update error:", error);
-      notifyError(error?.response?.data?.error || "An unexpected error occurred");
+      notifyError(
+        error?.response?.data?.error || "An unexpected error occurred"
+      );
     }
   };
 
@@ -328,10 +354,9 @@ const CollectionSiteArea = () => {
     }));
   };
 
-
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    console.log(id, option)
+    console.log(id, option);
     try {
       // Send status update request to backend
       const response = await axios.delete(
@@ -358,17 +383,18 @@ const CollectionSiteArea = () => {
       console.error("Error updating status:", error);
     }
   };
-useEffect(() => {
-  const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
+  useEffect(() => {
+    const anyModalOpen =
+      showAddModal || showDeleteModal || showEditModal || showHistoryModal;
 
-  if (anyModalOpen) {
-    document.body.style.overflow = "hidden";
-    document.body.classList.add("modal-open");
-  } else {
-    document.body.style.overflow = "auto";
-    document.body.classList.remove("modal-open");
-  }
-}, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
+    if (anyModalOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
 
   const resetFormData = () => {
     setFormData({
@@ -394,7 +420,12 @@ useEffect(() => {
         const buttonGroup = dropdown.closest(".btn-group");
 
         // If dropdown exists and the clicked target is outside the dropdown and button group
-        if (dropdown && buttonGroup && !dropdown.contains(event.target) && !buttonGroup.contains(event.target)) {
+        if (
+          dropdown &&
+          buttonGroup &&
+          !dropdown.contains(event.target) &&
+          !buttonGroup.contains(event.target)
+        ) {
           const dropdownId = dropdown.dataset.id;
           // Close dropdown if clicked outside
           setStatusOptionsVisibility((prev) => ({
@@ -468,21 +499,21 @@ useEffect(() => {
       "status",
       // "logo", // Optional
       "Created At",
-      "Updated At"
+      "Updated At",
     ];
 
     if (dataToExport.length === 0) {
       dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, {
+      header: headers,
+    });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collectionsite");
 
     XLSX.writeFile(workbook, "Collectionsite_List.xlsx");
   };
-
-
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -568,24 +599,29 @@ useEffect(() => {
                 <tr className="text-center">
                   {columns.map(({ label, placeholder, field }) => (
                     <th key={field} className="col-md-1 px-2">
-
                       <div className="d-flex flex-column align-items-center">
                         <input
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ minWidth: "205px", maxWidth: "200px", width: "100px" }}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                          style={{
+                            minWidth: "205px",
+                            maxWidth: "200px",
+                            width: "100px",
+                          }}
                         />
                         <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                           {label}
                         </span>
-
                       </div>
                     </th>
                   ))}
-                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
-
+                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -612,7 +648,9 @@ useEffect(() => {
                                 cursor: "pointer",
                                 transition: "color 0.2s",
                               }}
-                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                              onMouseOver={(e) =>
+                                (e.target.style.color = "#0a58ca")
+                              }
                               onMouseOut={(e) => (e.target.style.color = "")}
                             >
                               {collectionsite.CollectionSiteName || "----"}
@@ -623,7 +661,6 @@ useEffect(() => {
                             collectionsite[field] || "----"
                           )}
                         </td>
-
                       ))}
                       <td className="position-relative">
                         <div className="d-flex justify-content-center gap-2">
@@ -638,10 +675,15 @@ useEffect(() => {
                           <div className="btn-group">
                             <button
                               className="btn btn-primary btn-sm"
-                              onClick={() => handleToggleStatusOptions(collectionsite.id)}
+                              onClick={() =>
+                                handleToggleStatusOptions(collectionsite.id)
+                              }
                               title="Edit Status"
                             >
-                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                              <FontAwesomeIcon
+                                icon={faQuestionCircle}
+                                size="xs"
+                              />
                             </button>
 
                             {statusOptionsVisibility[collectionsite.id] && (
@@ -659,13 +701,23 @@ useEffect(() => {
                               >
                                 <button
                                   className="dropdown-item"
-                                  onClick={() => handleStatusClick(collectionsite.id, "active")}
+                                  onClick={() =>
+                                    handleStatusClick(
+                                      collectionsite.id,
+                                      "active"
+                                    )
+                                  }
                                 >
                                   Active
                                 </button>
                                 <button
                                   className="dropdown-item"
-                                  onClick={() => handleStatusClick(collectionsite.id, "inactive")}
+                                  onClick={() =>
+                                    handleStatusClick(
+                                      collectionsite.id,
+                                      "inactive"
+                                    )
+                                  }
                                 >
                                   InActive
                                 </button>
@@ -675,14 +727,18 @@ useEffect(() => {
 
                           <button
                             className="btn btn-info btn-sm"
-                            onClick={() => handleShowHistory("collectionsite", collectionsite.id)}
+                            onClick={() =>
+                              handleShowHistory(
+                                "collectionsite",
+                                collectionsite.id
+                              )
+                            }
                             title="History"
                           >
                             <FontAwesomeIcon icon={faHistory} />
                           </button>
                         </div>
                       </td>
-
                     </tr>
                   ))
                 ) : (
@@ -770,19 +826,18 @@ useEffect(() => {
                           >
                             {formData.logoPreview ? (
                               <Image
-  src={formData.logoPreview}
-  alt="Logo Preview"
-  width={120}
-  height={120}
-  unoptimized // important if you're using a blob or data URL
-  style={{
-    objectFit: "contain",
-    border: "2px solid black",
-    borderRadius: "50%",
-    padding: "5px",
-  }}
-/>
-
+                                src={formData.logoPreview}
+                                alt="Logo Preview"
+                                width={120}
+                                height={120}
+                                unoptimized // important if you're using a blob or data URL
+                                style={{
+                                  objectFit: "contain",
+                                  border: "2px solid black",
+                                  borderRadius: "50%",
+                                  padding: "5px",
+                                }}
+                              />
                             ) : (
                               <i
                                 className="fa fa-user"
@@ -822,7 +877,9 @@ useEffect(() => {
                             title="Only letters and spaces are allowed."
                             required
                           />
-                          {!/^[A-Za-z\s]*$/.test(formData.CollectionSiteName) && (
+                          {!/^[A-Za-z\s]*$/.test(
+                            formData.CollectionSiteName
+                          ) && (
                             <small className="text-danger">
                               Only letters and spaces are allowed.
                             </small>
@@ -845,7 +902,9 @@ useEffect(() => {
                           >
                             <option value="">Select Type</option>
                             <option value="Hospital">Hospital</option>
-                            <option value="Independent Lab">Independent Lab</option>
+                            <option value="Independent Lab">
+                              Independent Lab
+                            </option>
                             <option value="Blood Bank">Blood Bank</option>
                           </select>
                         </div>
@@ -998,135 +1057,128 @@ useEffect(() => {
                         borderRadius: "10px",
                       }}
                     >
-                   {historyData && historyData.length > 0 ? (
-  historyData.map((log, index) => {
-    const {
-      created_name,
-      updated_name,
-      CollectionSiteName,
-      added_by,
-      created_at,
-      updated_at,
-      status,
-    } = log;
+                      {historyData && historyData.length > 0 ? (
+                        historyData.map((log, index) => {
+                          const {
+                            CollectionSiteName,
+                            CollectionSiteType,
+                            phoneNumber,
+                            city_name,
+                            country_name,
+                            district_name,
+                            fullAddress,
+                            created_at,
+                            updated_at,
+                            status,
+                          } = log;
 
-    // Determine timestamp and person depending on status type:
-    const time =
-      status === "added" || status === "active"
-        ? created_at
-        : updated_at;
+                          // Determine timestamp and person depending on status type:
+                          const time =
+                            status === "added" || status === "active"
+                              ? created_at
+                              : updated_at;
 
-    return (
-      <div
-        key={index}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          marginBottom: "10px",
-        }}
-      >
-        {/* Added */}
-        {status === "added" && (
-          <div
-            style={{
-              padding: "10px 15px",
-              borderRadius: "15px",
-              backgroundColor: "#ffffff",
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-              maxWidth: "75%",
-              fontSize: "14px",
-              textAlign: "left",
-            }}
-          >
-            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
-            {moment(created_at).format("DD MMM YYYY, h:mm A")}
-          </div>
-        )}
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              {/* Added */}
+                             {(status === "added" || status === "updated") && (
+  <div
+    style={{
+      padding: "10px 15px",
+      borderRadius: "15px",
+      backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
+      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+      maxWidth: "75%",
+      fontSize: "14px",
+      textAlign: "left",
+      marginTop: status === "updated" ? "5px" : "0px",
+    }}
+  >
+    <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
+    {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
 
-        {/* Updated */}
-        {status === "updated" && (
-          <div
-            style={{
-              padding: "10px 15px",
-              borderRadius: "15px",
-              backgroundColor: "#dcf8c6",
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-              maxWidth: "75%",
-              fontSize: "14px",
-              textAlign: "left",
-              marginTop: "5px",
-            }}
-          >
-            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
-            {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-          </div>
-        )}
-
-        {/* Active */}
-        {status === "active" && (
-          <div
-            style={{
-              padding: "10px 15px",
-              borderRadius: "15px",
-              backgroundColor: "#cce5ff", // light blue
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-              maxWidth: "75%",
-              fontSize: "14px",
-              textAlign: "left",
-              marginTop: "5px",
-            }}
-          >
-            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
-            {moment(created_at).format("DD MMM YYYY, h:mm A")}
-          </div>
-        )}
-
-        {/* Inactive */}
-        {status === "inactive" && (
-          <div
-            style={{
-              padding: "10px 15px",
-              borderRadius: "15px",
-              backgroundColor: "#f8d7da", // light red/pink
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-              maxWidth: "75%",
-              fontSize: "14px",
-              textAlign: "left",
-              marginTop: "5px",
-            }}
-          >
-            <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
-            {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-          </div>
-        )}
-      </div>
-    );
-  })
-) : (
-  <p className="text-left">No history available.</p>
+    {/* Only show full details for "added" */}
+      <>
+        <div><b>Type:</b> {CollectionSiteType}</div>
+        <div><b>Phone:</b> {phoneNumber}</div>
+        <div><b>Country:</b> {country_name}</div>
+        <div><b>District:</b> {district_name}</div>
+        <div><b>City:</b> {city_name}</div>
+        <div><b>Address:</b> {fullAddress}</div>
+      </>
+    
+  </div>
 )}
 
+
+                              {/* Active */}
+                              {(status === "active" ||
+                                status === "inactive") && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor:
+                                      status === "active"
+                                        ? "#cce5ff"
+                                        : "#f8d7da", // blue or red
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                    marginTop: "5px",
+                                  }}
+                                >
+                                  <b>Collectionsite:</b> {CollectionSiteName}{" "}
+                                  was <b>{status}</b> by Registration Admin at{" "}
+                                  {moment(
+                                    status === "active"
+                                      ? created_at
+                                      : updated_at
+                                  ).format("DD MMM YYYY, h:mm A")}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-left">No history available.</p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
             </>
           )}
-
         </div>
       </div>
-      <Modal show={showModal}
+      <Modal
+        show={showModal}
         onHide={closeModal}
         size="lg"
         centered
         backdrop="static"
-        keyboard={false}>
+        keyboard={false}
+      >
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> Organization Details</Modal.Title>
+          <Modal.Title className="fw-bold text-danger">
+            {" "}
+            Organization Details
+          </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+        <Modal.Body
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+          className="bg-light rounded"
+        >
           {selectedCollectionSite ? (
             <div className="p-3">
               <div className="row g-3">
@@ -1137,8 +1189,12 @@ useEffect(() => {
                   return (
                     <div className="col-md-6" key={field}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        <span className="text-muted small fw-bold mb-1">
+                          {label}
+                        </span>
+                        <span className="fs-6 text-dark">
+                          {value?.toString() || "----"}
+                        </span>
                       </div>
                     </div>
                   );

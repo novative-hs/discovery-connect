@@ -776,16 +776,17 @@ const CommitteeMemberArea = () => {
           </div>
 
           {/* Pagination */}
-          {totalPages >= 0 && (
+          
+
+         <h6 className="text-danger small">Note: Handle &rsquo;Status&rsquo; and &rsquo;Committee Type&rsquo; through Action Icons</h6>
+</div>
+{totalPages >= 0 && (
             <Pagination
               handlePageClick={handlePageChange}
               pageCount={totalPages}
               focusPage={currentPage}
             />
           )}
-
-         <h6 className="text-danger small">Note: Handle &rsquo;Status&rsquo; and &rsquo;Committee Type&rsquo; through Action Icons</h6>
-
           {/* Modal for Adding/Editing Committee members */}
           {(showAddModal || showEditModal) && (
             <>
@@ -1291,7 +1292,7 @@ const CommitteeMemberArea = () => {
             </div>
           )}
         </div>
-      </div>
+      
       <Modal show={showModal}
         onHide={closeModal}
         size="lg"

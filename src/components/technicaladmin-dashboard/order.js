@@ -32,6 +32,8 @@ const OrderPage = () => {
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedComments, setSelectedComments] = useState("");
   const ordersPerPage = 10;
+  const [transferLoading, setTransferLoading] = useState(false);
+
   const [totalPages, setTotalPages] = useState(1);
   const [filtertotal, setfiltertotal] = useState(null);
   const [searchField, setSearchField] = useState(null);
@@ -153,32 +155,38 @@ const OrderPage = () => {
     }));
   };
 
-  const handleCommitteeApproval = (committeeType) => {
-    axios
-      .post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
-        {
-          cartId: selectedOrderId,
-          senderId: user_id,
-          committeeType: committeeType,
-        }
-      )
-      .then((response) => {
-        notifySuccess(
-          response.data.message || "Approval request sent successfully!"
-        );
-        setShowModal(false);
-        setSelectedOrderId(null);
-        setSelectedApprovalType("");
-        fetchOrders(); // Optimize fetchOrders if necessary
-        setCurrentPage(1)
-        setShowTransferModal(false);
-      })
-      .catch((error) => {
-        notifyError("An error occurred while sending the approval request.");
-        setShowModal(false);
-      });
-  };
+ const handleCommitteeApproval = (committeeType) => {
+  setTransferLoading(true);
+
+  axios
+    .post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
+      {
+        cartId: selectedOrderId,
+        senderId: user_id,
+        committeeType: committeeType,
+      }
+    )
+    .then((response) => {
+      notifySuccess(
+        response.data.message || "Approval request sent successfully!"
+      );
+      setShowModal(false);
+      setSelectedOrderId(null);
+      setSelectedApprovalType("");
+      fetchOrders();
+      setCurrentPage(1);
+      setShowTransferModal(false);
+    })
+    .catch((error) => {
+      notifyError("An error occurred while sending the approval request.");
+      setShowModal(false);
+    })
+    .finally(() => {
+      setTransferLoading(false);
+    });
+};
+
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -572,14 +580,24 @@ const OrderPage = () => {
                   </div>
                   <div className="modal-footer">
                     <button
-                      className="btn btn-primary"
-                      onClick={() =>
-                        handleCommitteeApproval(selectedApprovalType)
-                      }
-                      disabled={!selectedApprovalType} // Disables if no option is selected
-                    >
-                      Save
-                    </button>
+  className="btn btn-primary"
+  onClick={() => handleCommitteeApproval(selectedApprovalType)}
+  disabled={!selectedApprovalType || transferLoading}
+>
+  {transferLoading ? (
+    <>
+      <span
+        className="spinner-border spinner-border-sm me-2"
+        role="status"
+        aria-hidden="true"
+      ></span>
+      Processing...
+    </>
+  ) : (
+    "Save"
+  )}
+</button>
+
                   </div>
                 </div>
               </div>

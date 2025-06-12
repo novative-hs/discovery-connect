@@ -37,7 +37,7 @@ const StaffManagementPage = ({ defaultSection = "collectionsite" }) => {
             className="btn btn-outline-primary"
             onClick={() => setShowDropdown((prev) => !prev)}
           >
-            Filter by Role ▾
+            Select Role ▾
           </button>
           {showDropdown && (
             <div
@@ -48,19 +48,19 @@ const StaffManagementPage = ({ defaultSection = "collectionsite" }) => {
                 className="dropdown-item py-2"
                 onClick={() => handleFilterSelect("collectionsite")}
               >
-               Add Collectionsite Staff
+                Collection Site's Staff
               </button>
               <button
                 className="dropdown-item py-2"
                 onClick={() => handleFilterSelect("committee")}
               >
-               Add Committee Member
+                Committee Member
               </button>
               <button
                 className="dropdown-item py-2"
                 onClick={() => handleFilterSelect("csr")}
               >
-               Add CSR
+                CSR
               </button>
             </div>
           )}

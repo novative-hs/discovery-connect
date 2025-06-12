@@ -196,7 +196,7 @@ function getOrganizationById(id, callback) {
 // Function to update organization status
 const updateOrganizationStatus = async (id, status) => {
   const insertHistoryQuery = `
-    INSERT INTO registrationadmin_history (organization_id, status)
+    INSERT INTO history (organization_id, status)
     VALUES (?, ?)
   `;
 
@@ -229,41 +229,78 @@ const updateOrganization = (data, organizationId, callback) => {
     city,
     district,
     country,
-    website
+    website,
+    
   } = data;
 
-  const query = `
-    UPDATE organization
-    SET 
-      OrganizationName = ?, 
-      type = ?, 
-      HECPMDCRegistrationNo = ?, 
-      phoneNumber = ?, 
-      fullAddress = ?, 
-      city = ?, 
-      district = ?, 
-      country = ?, 
-      website = ?
-    WHERE id = ?;
-  `;
+  // Step 1: Get the existing record
+  const selectQuery = `SELECT * FROM organization WHERE id = ?`;
 
-  const values = [
-    OrganizationName,
-    type,
-    HECPMDCRegistrationNo,
-    phoneNumber,
-    fullAddress,
-    city,
-    district,
-    country,
-    website,
-    organizationId
-  ];
+  mysqlConnection.query(selectQuery, [organizationId], (selectErr, results) => {
+    if (selectErr) return callback(selectErr);
 
-  mysqlConnection.query(query, values, (err, result) => {
-    callback(err, result);
+    const existing = results[0];
+
+    // Step 2: Insert existing data into history table
+    const insertHistoryQuery = `
+      INSERT INTO history 
+      (organization_id, OrganizationName, type, HECPMDCRegistrationNo, phoneNumber, fullAddress, city, district, country, website, status, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,  NOW())
+    `;
+
+    const historyValues = [
+      organizationId,
+      existing.OrganizationName,
+      existing.type,
+      existing.HECPMDCRegistrationNo,
+      existing.phoneNumber,
+      existing.fullAddress,
+      existing.city,
+      existing.district,
+      existing.country,
+      existing.website,
+      'updated', // or 'previous' depending on your status tracking
+    ];
+
+    mysqlConnection.query(insertHistoryQuery, historyValues, (historyErr) => {
+      if (historyErr) return callback(historyErr);
+
+      // Step 3: Now update the main record
+      const updateQuery = `
+        UPDATE organization
+        SET 
+          OrganizationName = ?, 
+          type = ?, 
+          HECPMDCRegistrationNo = ?, 
+          phoneNumber = ?, 
+          fullAddress = ?, 
+          city = ?, 
+          district = ?, 
+          country = ?, 
+          website = ?
+        WHERE id = ?;
+      `;
+
+      const updateValues = [
+        OrganizationName,
+        type,
+        HECPMDCRegistrationNo,
+        phoneNumber,
+        fullAddress,
+        city,
+        district,
+        country,
+        website,
+        organizationId,
+      ];
+
+      mysqlConnection.query(updateQuery, updateValues, (updateErr, result) => {
+        callback(updateErr, result);
+      });
+    });
   });
 };
+
 
 // Function to delete a collection site
 // const deleteOrganization = async (id, status) => {

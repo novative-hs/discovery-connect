@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useCallback } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 import { useRouter } from "next/router";
@@ -56,38 +56,34 @@ const SampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState(null);
   const fetchSamples = useCallback(async () => {
-    setLoading(true); // Set loading to true when fetching data
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
-      );
+  setLoading(true);
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
+    );
 
-
-      if (response.data.error) {
-        setError(response.data.error); // Handle empty or error response
-        setSamples([]); // Clear previous sample data
-      } else {
-        setSamples(response.data); // Store fetched samples in state
-      }
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-      setError("An error occurred while fetching the samples.");
-    } finally {
-      setLoading(false); // Set loading to false when fetch is done
+    if (response.data.error) {
+      setError(response.data.error);
+      setSamples([]);
+    } else {
+      setSamples(response.data);
     }
-  });
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+    setError("An error occurred while fetching the samples.");
+  } finally {
+    setLoading(false);
+  }
+}, [id]);
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    if (id !== null) {
-      fetchSamples();
-      const intervalId = setInterval(() => {
-        fetchSamples();
-      }, 30000); // every 30 seconds
-
-      return () => clearInterval(intervalId);
-    }
-  }, [id]);
+ useEffect(() => {
+  if (id !== null) {
+    fetchSamples();
+    const intervalId = setInterval(fetchSamples, 30000);
+    return () => clearInterval(intervalId);
+  }
+}, [id, fetchSamples]); 
 
 
   useEffect(() => {

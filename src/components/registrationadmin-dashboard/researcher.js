@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faHistory, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faTrash,
+  faHistory,
+  faShoppingCart,
+} from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX from "xlsx";
@@ -244,14 +249,16 @@ const ResearcherArea = () => {
       "fullAddress",
       "status",
       "Created At",
-      "Updated At"
+      "Updated At",
     ];
 
     if (dataToExport.length === 0) {
-      dataToExport.push(Object.fromEntries(headers.map(key => [key, ""])));
+      dataToExport.push(Object.fromEntries(headers.map((key) => [key, ""])));
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, {
+      header: headers,
+    });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Researcher");
 
@@ -277,7 +284,6 @@ const ResearcherArea = () => {
               <h5 className="m-0 fw-bold ">Researcher List</h5>
               {/* Status Filter */}
               <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-3 mb-3">
-
                 {/* Filter Section (left-aligned) */}
                 <div className="d-flex flex-column flex-sm-row align-items-center gap-2">
                   <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
@@ -288,7 +294,9 @@ const ResearcherArea = () => {
                     id="statusFilter"
                     className="form-control"
                     style={{ width: "auto" }}
-                    onChange={(e) => handleFilterChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
                   >
                     <option value="">All</option>
                     <option value="pending">Pending</option>
@@ -318,8 +326,6 @@ const ResearcherArea = () => {
                   </button>
                 </div>
               </div>
-
-
             </div>
 
             {/* Table */}
@@ -419,7 +425,10 @@ const ResearcherArea = () => {
                               }
                               title="History"
                             >
-                              <FontAwesomeIcon icon={faShoppingCart} size="sm" />
+                              <FontAwesomeIcon
+                                icon={faShoppingCart}
+                                size="sm"
+                              />
                             </button>
                           </div>
                         </td>
@@ -619,64 +628,99 @@ const ResearcherArea = () => {
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
                           const {
-                            created_name,
-                            updated_name,
-                            added_by,
-                            created_at,
-                            updated_at,
+                            email,
+                            password,
+                            ResearcherName,
+                            nameofOrganization,
+                            phoneNumber,
+                            city_name,
+                            country_name,
+                            district_name,
+                            fullAddress,
+                            status,
+                           created_at,
+                           updated_at
                           } = log;
 
                           return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              {/* Message for City Addition */}
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor: "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "75%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                }}
-                              >
-                                <b>Researcher:</b> {created_name} was{" "}
-                                <b>added</b> by Registration Admin at{" "}
-                                {moment(created_at).format(
-                                  "DD MMM YYYY, h:mm A"
-                                )}
-                              </div>
+                           <div
+  key={index}
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginBottom: "16px",
+  }}
+>
+  {/* For 'added' or 'updated' statuses — show researcher detail */}
+  {(status === "added" || status === "updated") && (
+  <div
+    style={{
+      backgroundColor: status === "updated" ? "#dcf8c6" : "#ffffff",
+      border: "1px solid #ccc",
+      borderRadius: "18px",
+      padding: "16px",
+      maxWidth: "85%",
+      boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
+      fontSize: "14px",
+      lineHeight: "1.5",
+      fontFamily: "Segoe UI, sans-serif",
+    }}
+  >
+    <div style={{ marginBottom: "8px", fontWeight: "bold", color: "#555" }}>
+      Researcher status: {status === "added" ? "added" : "updated"}
+    </div>
+    <div><b>Name:</b> {ResearcherName}</div>
+    <div><b>Email:</b> {email}</div>
+    <div><b>Phone:</b> {phoneNumber}</div>
+    <div><b>Organization:</b> {nameofOrganization}</div>
+    <div><b>Country:</b> {country_name}</div>
+    <div><b>District:</b> {district_name}</div>
+    <div><b>City:</b> {city_name}</div>
+    <div><b>Address:</b> {fullAddress}</div>
 
-                              {/* Message for City Update (Only if it exists) */}
-                              {updated_name && updated_at && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: "#dcf8c6", // Light green for updates
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
-                                  }}
-                                >
-                                  <b>Researcher:</b> {updated_name} was{" "}
-                                  <b>updated</b> by Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
-                                </div>
-                              )}
-                            </div>
+    {/* Conditionally show created_at or updated_at */}
+    {status === "added" && created_at && (
+      <div>
+        <b>Created At:</b> {moment(created_at).format("DD MMM YYYY, h:mm A")}
+      </div>
+    )}
+
+    {status === "updated" && updated_at && (
+      <div>
+        <b>Updated At:</b> {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+      </div>
+    )}
+  </div>
+)}
+
+
+  {/* For 'approved' or 'unapproved' — status only */}
+  {(status === "approved" || status === "unapproved") && (
+    <div
+      style={{
+        backgroundColor: status === "approved" ? "#e6f4ea" : "#fdecea",
+        borderLeft: `6px solid ${
+          status === "approved" ? "#28a745" : "#dc3545"
+        }`,
+        borderRadius: "12px",
+        padding: "12px 16px",
+        maxWidth: "70%",
+        fontSize: "14px",
+        color: "#333",
+        fontFamily: "Segoe UI, sans-serif",
+      }}
+    >
+      Researcher was <b>{status}</b> at 
+      {updated_at && (
+        <div>
+          {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
                           );
                         })
                       ) : (
@@ -773,8 +817,12 @@ const ResearcherArea = () => {
                       <>
                         {/* Researcher Name Styling */}
                         <div className="mb-4 text-center">
-                          <span className="h5 fw-bold text-primary">Researcher: </span>
-                          <span className="h5 text-dark">{orderhistoryData[0]?.researcher_name}</span>
+                          <span className="h5 fw-bold text-primary">
+                            Researcher:{" "}
+                          </span>
+                          <span className="h5 text-dark">
+                            {orderhistoryData[0]?.researcher_name}
+                          </span>
                         </div>
 
                         {/* Table with modern styling */}
@@ -815,8 +863,6 @@ const ResearcherArea = () => {
               </div>
             </div>
           )}
-
-
         </div>
       </div>
     </section>

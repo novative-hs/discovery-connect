@@ -1,5 +1,5 @@
 import React from "react";
-
+import Image from "next/image";
 const OrderSummary = () => {
   return (
     <div className="container mt-5 d-flex justify-content-center">
@@ -10,7 +10,7 @@ const OrderSummary = () => {
           <span className="d-block name">Thank you, Alex</span>
           <span className="order">Order - 4554645</span>
         </div>
-        <img
+        <Image
           src="https://i.imgur.com/NiAVkEw.png"
           width="40"
           alt="Order Icon"

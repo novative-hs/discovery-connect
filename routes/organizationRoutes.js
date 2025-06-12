@@ -20,6 +20,8 @@ router.get("/get", organizationController.getAllOrganizations);
 router.get('/get/:id', organizationController.getCurrentOrganizationById);
 router.get('/:id', organizationController.getOrganizationById);
 router.put('/edit/:id', organizationController.updateOrganizationStatus);  // Route to update organization status (active/inactive)
-router.put("/update/:id", organizationController.updateOrganization);
+router.put("/update/:id",upload.fields([
+    { name: 'logo', maxCount: 1 }
+  ]), organizationController.updateOrganization);
 
 module.exports = router;

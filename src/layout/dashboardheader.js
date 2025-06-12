@@ -59,7 +59,12 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (id === null) {
       return <div>Loading...</div>; // Or redirect to login
     } else {
-      const fetchUserDetail = async () => {
+      fetchCart();
+      fetchUserDetail();
+    }
+  }, []);
+
+  const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
@@ -91,14 +96,6 @@ const Header = ({ setActiveTab, activeTab }) => {
       console.error("Error fetching cart:", error);
     }
   };
-};
-  fetchUserDetail();
-  fetchCart()
-    
-    
-  }, [id]);
-
-  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -114,16 +111,17 @@ const Header = ({ setActiveTab, activeTab }) => {
     };
   }, []);
 
- useEffect(() => {
-  if (user) {
-    setUserLogo(
-      user?.logo?.data
-        ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString("base64")}`
-        : null
-    );
-  }
-}, [user]); // ✅ Now it runs only when user changes
-
+  useEffect(() => {
+    if (user) {
+      setUserLogo(
+        user?.logo?.data
+          ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
+            "base64"
+          )}`
+          : null
+      );
+    }
+  });
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);
@@ -175,8 +173,8 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Districts", tab: "district" },
           { label: "Researcher's List", tab: "researcher" },
           { label: "Organization's List", tab: "organization" },
-          { label: "Collection Site's List", tab: "collectionsite" },
-          { label: "Staff Management List ", tab: "staffManagementPage" },
+          { label: "Collection Site's", tab: "collectionsite" },
+          { label: "Staff Management", tab: "staffManagementPage" },
           {
             label: "Sample's Field",
             tab: "sample",
@@ -222,7 +220,6 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Sample List", tab: "samples" },
               { label: "Sample Dispatch", tab: "sample-dispatch" },
               { label: "Quarantine Stock", tab: "Quarantine-Stock" },
-              { label: "Sample Visibility", tab: "Sample-Visibility" },
             ]
             : userType == "committeemember"
               ? [{ label: "Pending Review List", tab: "samples" }]
@@ -274,10 +271,10 @@ const Header = ({ setActiveTab, activeTab }) => {
                 >
                   <button
                     className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ||
-                        (tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
+                      (tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
 
-                        ? "text-primary"
-                        : "text-dark"
+                      ? "text-primary"
+                      : "text-dark"
                       } fs-7`}
                     onClick={() => {
                       if (!dropdown) {
