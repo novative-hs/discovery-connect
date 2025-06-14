@@ -25,7 +25,7 @@ const getBiobankSamples = (req, res) => {
       return res.status(500).json({ error: "Error fetching samples" });
     }
 
-    const { results: samples, totalCount } = results;
+    const { samples, totalCount } = results;
     res.status(200).json({
       samples,
       totalPages: Math.ceil(totalCount / pageSize),
@@ -74,31 +74,6 @@ const getBiobankVisibilitySamples = (req, res) => {
   });
 };
 
-// Controller to create a sample
-const createBiobankSample = (req, res) => {
-  const sampleData = req.body;
-  const file = req.file;
-
-  // Attach file buffer to the sampleData
-  sampleData.logo = file?.buffer;
-
-  const today = new Date();
-  const dateOfSampling = new Date(sampleData.DateOfSampling);
-
-  if (dateOfSampling >= today) {
-    return res.status(400).json({ error: "DateOfSampling must be before today" });
-  }
-
-
-  BioBankModel.createBiobankSample(sampleData, (err, result) => {
-    if (err) {
-      console.error('Error creating sample:', err);
-      return res.status(500).json({ error: "Error creating sample" });
-    }
-    res.status(201).json({ message: "Sample created successfully", id: result.insertId });
-  });
-};
-
 // Controller to add price and price currency of a sample
 const postSamplePrice = (req, res) => {
   const sampleData = req.body;
@@ -110,39 +85,6 @@ const postSamplePrice = (req, res) => {
     }
 
     res.status(201).json({ message: "Sample price added successfully", id: result.insertId });
-  });
-};
-
-// Controller to update a sample
-const updateBiobankSample = (req, res) => {
-  const { id } = req.params;
-  const sampleData = req.body;
-  const file = req.file;
-
-  // Check if a new logo is uploaded, otherwise retain the current logo
-  if (file) {
-    sampleData.logo = req.file.buffer;
-  }
-  else if (sampleData.logo?.data) {
-    // Reconvert from serialized buffer object
-    sampleData.logo = Buffer.from(sampleData.logo.data);
-  }
-  // Handle Date format
-  if (sampleData.DateOfSampling) {
-    sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
-  }
-
-  // Handle logo (priority: uploaded file > body)
-
-  // Call model
-  BioBankModel.updateBiobankSample(id, sampleData, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error updating sample" });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Sample not found" });
-    }
-    res.status(200).json({ message: "Sample updated successfully" });
   });
 };
 
@@ -173,8 +115,6 @@ module.exports = {
   create_biobankTable,
   getBiobankSamples,
   postSamplePrice,
-  createBiobankSample,
-  updateBiobankSample,
   getQuarantineStock,
   getBiobankVisibilitySamples,
   UpdateSampleStatus,

@@ -1,19 +1,107 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
 import Modal from "react-bootstrap/Modal";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Pagination from "@ui/Pagination";
 
-
 const SampleLost = () => {
-  const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  const [id, setId] = useState(null);
+  const [samples, setSamples] = useState([]);
+  const [filter, setFilter] = useState("");
+  const [filteredSamples, setFilteredSamples] = useState([]);
+  const [filtertotal, setfiltertotal] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(0);
+  const [selectedSample, setSelectedSample] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const storedId = sessionStorage.getItem("userID");
+    if (storedId) {
+      setId(storedId);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedUser = getsessionStorage("user");
+    if (!id) return;
+    fetchSamples(); // Call the function when the component mounts
+  }, [id]);
+
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { searchField, searchValue } = filters;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/getlostsample/${id}?page=${page}&pageSize=${pageSize}`;
+
+      if (searchField && searchValue) {
+        url += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
+
+      const response = await axios.get(url);
+      const { samples, totalCount } = response.data;
+
+      setSamples(samples);
+      setFilteredSamples(samples);
+      setTotalPages(Math.ceil(totalCount / pageSize));
+      setfiltertotal(Math.ceil(totalCount / pageSize));
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
+
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredSamples.length / itemsPerPage));
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0);
+    }
+  }, [filteredSamples]);
+
+  const currentData = filteredSamples.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
+
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = samples;
+    } else {
+      const lowerValue = value.toLowerCase();
+      filtered = samples.filter((sample) => {
+        if (field === "volume") {
+          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+          return combinedVolume.includes(lowerValue);
+        }
+        if (field === "gender" || field === "sample_visibility") {
+          return sample[field]?.toLowerCase().startsWith(lowerValue);
+        }
+        return sample[field]?.toString().toLowerCase().includes(lowerValue);
+      });
+    }
+
+    setFilteredSamples(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
+  };
+
+  const openModal = (sample) => {
+    setSelectedSample(sample);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedSample(null);
+    setShowModal(false);
+  };
 
   const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
@@ -26,6 +114,7 @@ const SampleLost = () => {
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
   ];
+
   const fieldsToShowInOrder = [
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -47,104 +136,10 @@ const SampleLost = () => {
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
-
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [filter, setFilter] = useState(""); // State for dropdown selection
-  const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
-  const [filtertotal, setfiltertotal] = useState(null);
-
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const [totalPages, setTotalPages] = useState(0);
-  const [selectedSample, setSelectedSample] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  // Fetch samples from backend when component loads
-  useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
-  // Fetch samples from the backend
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
-
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/getlostsample/${id}?page=${page}&pageSize=${pageSize}`;
-
-      if (searchField && searchValue) {
-        url += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      const response = await axios.get(url);
-
-      const { samples, totalCount } = response.data;
-      setSamples(samples);
-      console.log(samples);
-      setFilteredSamples(samples); // Ensure filteredSamples are updated
-      setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
-      setfiltertotal(Math.ceil(totalCount / pageSize));
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  };
-
-  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredSamples.length / itemsPerPage));
-    setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamples]);
-
-  // Get the current data for the table
-  const currentData = filteredSamples.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
-
-  // Filter the researchers list
-   const handleFilterChange = (field, value) => {
-  let filtered = [];
-
-  if (value.trim() === "") {
-    filtered = samples;
-  } else {
-    const lowerValue = value.toLowerCase();
-
-    filtered = samples.filter((sample) => {
-      if (field === "volume") {
-        const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
-        return combinedVolume.includes(lowerValue);
-      }
-
-      if (field === "gender") {
-        return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
-      }
-      if (field === "sample_visibility") {
-        return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
-      }
-
-      return sample[field]?.toString().toLowerCase().includes(lowerValue);
-    });
+  if (!id) {
+    return <div>Loading...</div>;
   }
 
-  setFilteredSamplename(filtered);
-  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-  setCurrentPage(0);
-};
-  const openModal = (sample) => {
-    setSelectedSample(sample);
-    setShowModal(true);
-  };
-  const closeModal = () => {
-    setSelectedSample(null);
-    setShowModal(false);
-  };
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">

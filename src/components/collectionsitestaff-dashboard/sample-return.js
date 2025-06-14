@@ -14,14 +14,16 @@ import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
 
 const SampleReturn = () => {
-  const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+  const [id, setId] = useState(null);
+  const [samples, setSamples] = useState([]);
+  const [filter, setFilter] = useState("");
+  const [filteredSamples, setFilteredSamples] = useState([]);
+  const [filtertotal, setFilterTotal] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  
+  const itemsPerPage = 10;
+
   const tableHeaders = [
     { label: "Sample Name", key: "diseasename" },
     { label: "Age", key: "age" },
@@ -53,24 +55,19 @@ const SampleReturn = () => {
     { label: "Status", key: "status" },
   ];
 
-  const [samples, setSamples] = useState([]); // State to hold fetched samples
-  const [filter, setFilter] = useState(""); // State for dropdown selection
-  const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
- const [filtertotal, setfiltertotal] = useState(null);
-
-  
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const [totalPages, setTotalPages] = useState(0);
-
-
-  // Fetch samples from backend when component loads
+  // Set user ID on mount
   useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    fetchSamples(); // Call the function when the component mounts
+    const storedId = sessionStorage.getItem("userID");
+    setId(storedId);
   }, []);
-  // Fetch samples from the backend
+
+  // Fetch samples when ID is available
+  useEffect(() => {
+    if (!id) return;
+    const storedUser = getsessionStorage("user");
+    fetchSamples();
+  }, [id]);
+
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
       const { searchField, searchValue } = filters;
@@ -82,29 +79,25 @@ const SampleReturn = () => {
       }
 
       const response = await axios.get(url);
-
       const { samples, totalCount } = response.data;
+
       setSamples(samples);
-      console.log(samples)
-      setFilteredSamples(samples); // Ensure filteredSamples are updated
-      setTotalPages(Math.ceil(totalCount / pageSize)); // Update total pages based on the total count
-      setfiltertotal(Math.ceil(totalCount / pageSize));
+      setFilteredSamples(samples);
+      setTotalPages(Math.ceil(totalCount / pageSize));
+      setFilterTotal(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
 
-
   useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredSamples.length / itemsPerPage));
     setTotalPages(pages);
-
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredSamples]);
 
-  // Get the current data for the table
   const currentData = filteredSamples.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
@@ -114,12 +107,11 @@ const SampleReturn = () => {
     setCurrentPage(event.selected);
   };
 
-  // Filter the researchers list
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = samples; // Show all if filter is empty
+      filtered = samples;
     } else {
       filtered = samples.filter((sample) =>
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
@@ -127,19 +119,19 @@ const SampleReturn = () => {
     }
 
     setFilteredSamples(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
-
-
- 
- 
+  // Show loader while ID is not loaded yet
+  if (!id) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
-       
+
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
@@ -182,7 +174,7 @@ const SampleReturn = () => {
                         {sample[key] || "---"}
                       </td>
                     ))}
-                   
+
                   </tr>
                 ))
               ) : (
@@ -205,7 +197,7 @@ const SampleReturn = () => {
           />
         )}
 
-        
+
       </div>
     </section>
   );

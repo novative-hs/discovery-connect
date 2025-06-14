@@ -3,25 +3,60 @@ import axios from "axios";
 import Modal from "react-bootstrap/Modal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faEdit,
-  faTrash,
   faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
-const SampleDispatchArea = () => {
-  const [staffAction, setStaffAction] = useState("");
 
+const SampleDispatchArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
+
+  const [staffAction, setStaffAction] = useState("");
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
   const [selectedSampleTransfer, setSelectedSampleTransfer] = useState(null); // Store ID of sample to delete
   const [showModal, setShowModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [selectedSample, setSelectedSample] = useState(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
+  const [transferDetails, setTransferDetails] = useState({
+    receiverName: "",
+  });
+  const [step, setStep] = useState(1);
+  const [lostReason, setLostReason] = useState("");
+  const [sampleReceive, setSampleReceive] = useState();
+  const [formData, setFormData] = useState({
+    diseasename: "",
+    age: "",
+    gender: "",
+    ethnicity: "",
+    samplecondition: "",
+    storagetemp: "",
+    ContainerType: "",
+    CountryOfCollection: "",
+    Quantity: "",
+    QuantityUnit: "",
+    SampleTypeMatrix: "",
+    SmokingStatus: "",
+    AlcoholOrDrugAbuse: "",
+    InfectiousDiseaseTesting: "",
+    InfectiousDiseaseResult: "",
+    FreezeThawCycles: "",
+    DateOfSampling: "",
+    ConcurrentMedicalConditions: "",
+    ConcurrentMedications: "",
+    DiagnosisTestParameter: "",
+    TestResult: "",
+    TestResultUnit: "",
+    TestMethod: "",
+    TestKitManufacturer: "",
+    TestSystem: "",
+    TestSystemManufacturer: "",
+    // logo: ""
+  });
+
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
     { label: "Volume", key: "volume" },
@@ -54,55 +89,14 @@ const SampleDispatchArea = () => {
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
-  const [formData, setFormData] = useState({
-    diseasename: "",
-    age: "",
-    gender: "",
-    ethnicity: "",
-    samplecondition: "",
-    storagetemp: "",
-    ContainerType: "",
-    CountryOfCollection: "",
-    Quantity: "",
-    QuantityUnit: "",
-    SampleTypeMatrix: "",
-    SmokingStatus: "",
-    AlcoholOrDrugAbuse: "",
-    InfectiousDiseaseTesting: "",
-    InfectiousDiseaseResult: "",
-    FreezeThawCycles: "",
-    DateOfSampling: "",
-    ConcurrentMedicalConditions: "",
-    ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
-    TestResult: "",
-    TestResultUnit: "",
-    TestMethod: "",
-    TestKitManufacturer: "",
-    TestSystem: "",
-    TestSystemManufacturer: "",
-    // logo: ""
-  });
+
   useEffect(() => {
     const action = sessionStorage.getItem("staffAction");
     setStaffAction(action);
   }, []);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const [selectedSample, setSelectedSample] = useState(null);
+
   const itemsPerPage = 10;
-  // Calculate total pages
-  const [totalPages, setTotalPages] = useState(0);
-  const [filteredSamplename, setFilteredSamplename] = useState([]);
-  // Stock Transfer modal fields names
-  const [transferDetails, setTransferDetails] = useState({
-    receiverName: "",
-  });
 
-  const [step, setStep] = useState(1);
-
-  const [lostReason, setLostReason] = useState("");
-  const [sampleReceive, setSampleReceive] = useState();
   const openModal = (sample) => {
     setSelectedSample(sample);
     setShowModal(true);
@@ -113,42 +107,46 @@ const SampleDispatchArea = () => {
     setShowModal(false);
   };
 
+  useEffect(() => {
+    if (showReceiveModal) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      // Allow scrolling again when modal is closed
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showReceiveModal]);
+
   const fetchSamples = async () => {
     try {
-      // will fetch sample to correct dedicated collectionsite with correct ID
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`
       );
       const apiData = response.data;
-
-      // Directly set the data array from the response
       if (apiData.data && Array.isArray(apiData.data)) {
         setFilteredSamplename(apiData.data);
         setSamples(apiData.data);
       } else {
         console.warn("Invalid response structure:", apiData);
-        setSamples([]); // Default to an empty array
+        setSamples([]);
       }
     } catch (error) {
       console.error("Error fetching samples:", error);
-      setSamples([]); // Default to an empty array on error
+      setSamples([]);
     }
   };
 
-  // Fetch samples from backend when component loads
   useEffect(() => {
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
+    fetchSamples();
+  }, [id]);
 
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamplename.length / itemsPerPage)
-    );
+    const pages = Math.max(1, Math.ceil(filteredSamplename.length / 10));
     setTotalPages(pages);
-
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredSamplename]);
 
@@ -163,40 +161,40 @@ const SampleDispatchArea = () => {
   };
 
   // Filter the researchers list
-   const handleFilterChange = (field, value) => {
-  let filtered = [];
+  const handleFilterChange = (field, value) => {
+    let filtered = [];
 
-  if (value.trim() === "") {
-    filtered = samples;
-  } else {
-    const lowerValue = value.toLowerCase();
+    if (value.trim() === "") {
+      filtered = samples;
+    } else {
+      const lowerValue = value.toLowerCase();
 
-    filtered = samples.filter((sample) => {
-      if (field === "volume") {
-        const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
-        return combinedVolume.includes(lowerValue);
-      }
+      filtered = samples.filter((sample) => {
+        if (field === "volume") {
+          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+          return combinedVolume.includes(lowerValue);
+        }
 
         if (field === "TestResult") {
-        const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
-        return combinedPrice.includes(lowerValue);
-      }
+          const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
+          return combinedPrice.includes(lowerValue);
+        }
 
-      if (field === "gender") {
-        return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
-      }
-      if (field === "sample_visibility") {
-        return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
-      }
+        if (field === "gender") {
+          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+        }
+        if (field === "sample_visibility") {
+          return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
+        }
 
-      return sample[field]?.toString().toLowerCase().includes(lowerValue);
-    });
-  }
+        return sample[field]?.toString().toLowerCase().includes(lowerValue);
+      });
+    }
 
-  setFilteredSamplename(filtered);
-  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-  setCurrentPage(0);
-};
+    setFilteredSamplename(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -290,17 +288,11 @@ const SampleDispatchArea = () => {
     setShowReceiveModal(false); // Close the modal
   };
 
-  useEffect(() => {
-    if (showReceiveModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
-  }, [showReceiveModal]);
+  if (id === null) {
+    return <div>Loading...</div>; // Or redirect to login
+  } else {
+    console.log("Collection site Id on sample page is:", id);
+  }
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">

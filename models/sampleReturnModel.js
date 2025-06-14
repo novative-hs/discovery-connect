@@ -67,7 +67,6 @@ mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
  s.AlcoholOrDrugAbuse,
   s.ConcurrentMedicalConditions,
     s.ConcurrentMedications,
-    s.DiagnosisTestParameter,
     s.TestResult,
     s.TestResultUnit,
     s.TestMethod,
