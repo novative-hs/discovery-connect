@@ -8,7 +8,7 @@ const createSampleTable = (req, res) => {
 
   res.status(200).json({ message: "Sample table creation process started" });
 };
-const getAllSampleinIndex=(req,res)=>{
+const getAllSampleinIndex = (req, res) => {
   const { name } = req.params;
   SampleModel.getAllSampleinIndex(name, (err, results) => {
     if (err) {
@@ -44,7 +44,7 @@ const getSamples = (req, res) => {
   });
 };
 
-const getAllVolumnUnits=(req,res)=>{
+const getAllVolumnUnits = (req, res) => {
   const { name } = req.params;
 
   SampleModel.getAllVolumnUnits(name, (err, results) => {
@@ -158,7 +158,7 @@ const updateSample = (req, res) => {
     sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
 
-  SampleModel.updateSample(id, sampleData, (err, result) => {
+  SampleModel.updateSample(id, sampleData, file, (err, result) => {
     if (err) {
       console.error('Error updating sample:', err);
       return res.status(500).json({ error: "Error updating sample" });

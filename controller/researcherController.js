@@ -116,7 +116,7 @@ function createResearcher(req, res) {
 // Controller to handle updating a researcher's details
 function updateResearcher(req, res) {
   const { id } = req.params;
-  
+
   const {
     userID,
     ResearcherName,
@@ -129,18 +129,18 @@ function updateResearcher(req, res) {
     logo,
   } = req.body;
 
-  // if ( !ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {
-  //   return res.status(400).json({ error: 'All required fields must be provided' });
-  // }
+  if (!ResearcherName || !phoneNumber || !nameofOrganization || !fullAddress || !city || !district || !country) {
+    return res.status(400).json({ error: 'All required fields must be provided' });
+  }
 
-  // const data = { userID,ResearcherName, phoneNumber, nameofOrganization, fullAddress, city,district,country,logo };
-  // console.log(data)
-  // researcherModel.updateResearcher(id, data, (err, result) => {
-  //   if (err) {
-  //     return res.status(500).json({ error: 'Error updating researcher' });
-  //   }
-  //   res.status(200).json({ message: 'Researcher updated successfully' });
-  // });
+  const data = { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo };
+  console.log(data)
+  researcherModel.updateResearcher(id, data, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error updating researcher' });
+    }
+    res.status(200).json({ message: 'Researcher updated successfully' });
+  });
 }
 
 // Controller to handle deleting a researcher
@@ -150,7 +150,7 @@ const deleteResearcher = async (req, res) => {
   try {
     // Call the model method and wait for the response
     const result = await researcherModel.deleteResearcher(id);
-    
+
     // Return the success message after the status update
     res.status(200).json({ message: result.message });
   } catch (error) {
@@ -179,7 +179,7 @@ const updateResearcherStatus = async (req, res) => {
   if (!status) {
     return res.status(400).json({ error: "Status is required" });
   }
-  
+
   try {
     const result = await researcherModel.updateResearcherStatus(id, status);
     res.status(200).json(result);

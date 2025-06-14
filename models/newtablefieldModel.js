@@ -24,13 +24,20 @@ const tablesAndColumns = [
   },
   {
     table: "sample",
+    columnsToDelete: ["DiagnosisTestParameter"],
     columnsToAdd: [
       {
         column: "volume",
         type: "DOUBLE",
         nullable: true,
-      }
-    ],
+      },
+      {
+        column: "updated_at",
+        type: "DATETIME",
+        default: "CURRENT_TIMESTAMP",
+        onUpdate: "CURRENT_TIMESTAMP",
+      },
+    ]
   },
   {
     table: "registrationadmin_history",
@@ -68,17 +75,17 @@ const tablesAndColumns = [
     ]
   },
   {
-    table:"cart",
-    columnsToAdd:[
+    table: "cart",
+    columnsToAdd: [
       {
-        column:"volume",
-        type:"VARCHAR(255)",
-        nullable:false
+        column: "volume",
+        type: "VARCHAR(255)",
+        nullable: false
       },
       {
-        column:"QuantityUnit",
-        type:"VARCHAR(20)",
-        nullable:false
+        column: "QuantityUnit",
+        type: "VARCHAR(20)",
+        nullable: false
       }
     ]
   },
@@ -104,13 +111,13 @@ const tablesAndColumns = [
     ]
   },
   {
-    table:"samplereceive",
-    columnsToAdd:[
+    table: "samplereceive",
+    columnsToAdd: [
       {
-        column:"status",
-         type: "ENUM('Returned', 'Received') DEFAULT 'Received'",
-         nullable:false,
-         
+        column: "status",
+        type: "ENUM('Returned', 'Received') DEFAULT 'Received'",
+        nullable: false,
+
       }
     ]
   }

@@ -8,9 +8,7 @@ const storage = multer.memoryStorage(); // for buffer
 const upload = multer({ storage: storage });
 router.post('/create-biobank-table', BioBankController.create_biobankTable);
 router.get('/biobank/getsamples/:id', BioBankController.getBiobankSamples);
-router.post('/biobank/postBBsample', upload.single("logo"), BioBankController.createBiobankSample);
 router.post('/biobank/postprice/:id', BioBankController.postSamplePrice);
-router.put('/biobank/editBBsample/:id', upload.single("logo"), BioBankController.updateBiobankSample);
 router.get('/biobank/getQuarantineStock', BioBankController.getQuarantineStock);
 router.get('/biobank/getvisibilitysamples/:id', BioBankController.getBiobankVisibilitySamples);
 router.put('/biobank/UpdateSampleStatus/:id', BioBankController.UpdateSampleStatus);

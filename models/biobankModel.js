@@ -485,10 +485,9 @@ const getPrice = (name, callback) => {
 
 module.exports = {
   create_biobankTable,
-  getBiobankSamples,
   createBiobankSample,
+  getBiobankSamples,
   postSamplePrice,
-  updateBiobankSample,
   getQuarantineStock,
   getBiobankVisibilitySamples,
   UpdateSampleStatus,

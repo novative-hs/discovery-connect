@@ -107,7 +107,7 @@ function createResearcher(data, callback) {
 
 // Function to fetch all researchers
 function getAllResearchers(callback) {
-const query = `
+  const query = `
     SELECT researcher.id, researcher.added_by,researcher.fullAddress,researcher.phoneNumber, researcher.created_at,researcher.updated_at, researcher.ResearcherName, researcher.phoneNumber, researcher.fullAddress, researcher.city, researcher.district, researcher.country, researcher.nameofOrganization, researcher.status,
            user_account.email,
            user_account.password,
@@ -189,7 +189,7 @@ WHERE
 // Function to update a researcher's details
 function updateResearcher(id, data, callback) {
   const { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo } = data;
-  
+
   const query = `
     UPDATE researcher
     SET ResearcherName = ?, phoneNumber = ?, nameofOrganization = ?, fullAddress = ?,city=?,district=?, country = ?, logo = ?
@@ -262,7 +262,7 @@ function updateResearcherDetail(id, data, callback) {
               });
             }
 
-            
+
             return callback(null, 'Both updates were successful');
           });
         }
@@ -339,7 +339,7 @@ const deleteResearcher = async (id) => {
 const updateResearcherStatus = async (id, status) => {
   const updateQuery = "UPDATE researcher SET status = ? WHERE id = ?";
   const insertHistoryQuery = `
-    INSERT INTO history (researcher_id, status, updated_at)
+    INSERT INTO registrationadmin_history (researcher_id, status, updated_at)
     VALUES (?, ?, NOW())
   `;
   const getEmailQuery = `

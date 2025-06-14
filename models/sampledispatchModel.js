@@ -57,7 +57,6 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       s.DateOfSampling,
       s.ConcurrentMedicalConditions,
       s.ConcurrentMedications,
-      s.DiagnosisTestParameter,
       s.TestResult,
       s.TestResultUnit,
       s.TestMethod,

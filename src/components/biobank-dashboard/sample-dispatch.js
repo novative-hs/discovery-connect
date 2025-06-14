@@ -165,7 +165,7 @@ const BioBankSampleDispatchArea = () => {
   };
 
   // Filter the researchers list
-   const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
@@ -175,22 +175,19 @@ const BioBankSampleDispatchArea = () => {
 
       filtered = samples.filter((sample) => {
         if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${
-            sample.QuantityUnit ?? ""
-          }`.toLowerCase();
+          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""
+            }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
-         if (field === "TestResult") {
-          const combinedVolume = `${sample.TestResult ?? ""} ${
-            sample.TestResultUnit ?? ""
-          }`.toLowerCase();
+        if (field === "TestResult") {
+          const combinedVolume = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""
+            }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
 
         if (field === "price") {
-          const combinedPrice = `${sample.price ?? ""} ${
-            sample.SamplePriceCurrency ?? ""
-          }`.toLowerCase();
+          const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""
+            }`.toLowerCase();
           return combinedPrice.includes(lowerValue);
         }
 

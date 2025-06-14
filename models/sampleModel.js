@@ -38,7 +38,6 @@ const createSampleTable = () => {
         DateOfSampling VARCHAR(50),
         ConcurrentMedicalConditions VARCHAR(50), 
         ConcurrentMedications VARCHAR(50),
-        DiagnosisTestParameter VARCHAR(50),
         TestResult VARCHAR(100),
         TestResultUnit VARCHAR(20),
         TestMethod VARCHAR(100),
@@ -50,7 +49,8 @@ const createSampleTable = () => {
         logo LONGBLOB,
         is_deleted BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
     )`;
 
   mysqlConnection.query(sampleTable, (err, results) => {
@@ -210,7 +210,6 @@ const getAllSamples = (callback) => {
   });
 };
 
-
 const getResearcherSamples = (userId, callback) => {
   const query = `
  SELECT
@@ -235,7 +234,6 @@ const getResearcherSamples = (userId, callback) => {
   sm.DateOfSampling,
   sm.ConcurrentMedicalConditions,
   sm.ConcurrentMedications,
-  sm.DiagnosisTestParameter,
   sm.TestResult,
   sm.TestResultUnit,
   sm.TestMethod,
@@ -298,6 +296,7 @@ ORDER BY s.id DESC;
   });
 
 };
+
 const getAllVolumnUnits = (name, callback) => {
   const query = 'SELECT id, quantity, volume, QuantityUnit FROM sample WHERE diseasename = ? and quantity>0';
 
@@ -326,6 +325,7 @@ const getAllVolumnUnits = (name, callback) => {
     }
   });
 };
+
 const getAllSampleinIndex = (name, callback) => {
   const query = 'SELECT * FROM sample WHERE diseasename = ? and quantity>0';
 
@@ -436,7 +436,6 @@ const getAllCSSamples = (limit, offset, callback) => {
   });
 };
 
-
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -503,7 +502,8 @@ const createSample = (data, callback) => {
 };
 
 // Function to update a sample by its ID (in Collectionsite)
-const updateSample = (id, data, callback) => {
+const updateSample = (id, data, file, callback) => {
+  const logoFile = file;
   let room_number = null;
   let freezer_id = null;
   let box_id = null;
@@ -516,42 +516,61 @@ const updateSample = (id, data, callback) => {
     box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
   }
 
-  // Handle volume convert empty string to null
   const volume = data.volume === '' ? null : data.volume;
 
-  
+  console.log("Updating sample ID:", id);
+  console.log("volume value:", volume);
+
+  // Start with fields and values
+  const fields = [
+    'donorID = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'diseasename = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
+    'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
+    'quantity = ?', 'QuantityUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
+    'AlcoholOrDrugAbuse = ?', 'InfectiousDiseaseTesting = ?', 'InfectiousDiseaseResult = ?',
+    'FreezeThawCycles = ?', 'DateOfSampling = ?', 'ConcurrentMedicalConditions = ?',
+    'ConcurrentMedications = ?', 'TestResult = ?',
+    'TestResultUnit = ?', 'TestMethod = ?', 'TestKitManufacturer = ?', 'TestSystem = ?',
+    'TestSystemManufacturer = ?', 'status = ?'
+  ];
+
+  const values = [
+    data.donorID, room_number, freezer_id, box_id, volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity,
+    data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult,
+    data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
+  ];
+
+  // Add logo file if available
+  if (logoFile) {
+    fields.push('logo = ?');
+    values.push(logoFile.buffer);
+  }
+
+  fields.push('updated_at = CURRENT_TIMESTAMP');
 
   const query = `
     UPDATE sample
-    SET donorID = ?, room_number = ?, freezer_id = ?, box_id = ?, volume = ?, diseasename = ?, age = ?, phoneNumber = ?, gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfSampling = ?, ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?, TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
+    SET ${fields.join(', ')}
     WHERE id = ?
   `;
+  values.push(id);
 
-  const values = [
-    data.donorID, room_number, freezer_id, box_id, volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
-    data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus,
-    data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling,
-    data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult, data.TestResultUnit, data.TestMethod,
-    data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.logo, id
-  ];
-
-  // Run update query
   mysqlConnection.query(query, values, (err, result) => {
     if (err) {
       console.error('Error updating sample:', err);
       return callback(err, null);
     }
 
-    // Check if update actually affected any rows
     if (result.affectedRows === 0) {
       console.warn('⚠️ No rows updated. Check if the sample ID exists.');
-    } 
-    // Insert into sample_history
+    } else {
+      console.log('✅ Sample updated successfully.');
+    }
+
     const historyQuery = `
-  INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
-  VALUES (?, ?, 'update', ?)
-`;
+      INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
+      VALUES (?, ?, 'update', ?)
+    `;
 
     mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.diseasename || null], (err, historyResults) => {
       if (err) {
@@ -576,7 +595,6 @@ const updateSampleStatus = (id, status, callback) => {
     callback(err, result);
   });
 };
-
 
 const deleteSample = (id, callback) => {
   mysqlConnection.getConnection((err, connection) => {
@@ -689,7 +707,6 @@ const updateQuarantineSamples = (id, status, comment, callback) => {
     });
   });
 };
-
 
 module.exports = {
   getFilteredSamples,
