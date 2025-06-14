@@ -1233,8 +1233,12 @@ Box ID=${sample.box_id || "----"} `;
                               </button>
                             }
                             else if (key === "age") {
-                              return `${sample.age} years`;
-                            } else if (key === "TestResult") {
+  if (!sample.age || sample.age === 0) {
+    return "-----";
+  }
+  return `${sample.age} years`;
+}
+ else if (key === "TestResult") {
                               return `${sample.TestResult} ${sample.TestResultUnit || ""
                                 }`;
                             } else if (key === "price") {

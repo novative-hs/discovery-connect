@@ -995,9 +995,13 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 Show Barcode
                               </button>
                             }
-                            else if (key === "age") {
-                              return `${sample.age} years`;
-                            } else if (key === "TestResult") {
+                           else if (key === "age") {
+  if (!sample.age || sample.age === 0) {
+    return "-----";
+  }
+  return `${sample.age} years`;
+}
+ else if (key === "TestResult") {
                               return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                             } else {
                               return sample[key] || "----";
