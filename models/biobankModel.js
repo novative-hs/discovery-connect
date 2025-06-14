@@ -1,6 +1,6 @@
 const mysqlConnection = require("../config/db");
-const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid");
 
 const create_biobankTable = () => {
   const create_biobankTable = `
@@ -21,124 +21,136 @@ const create_biobankTable = () => {
 };
 
 const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
-  
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
 
-  // Base WHERE clause and parameters
-  let baseWhere = `WHERE sample.status = "In Stock"  AND sample.is_deleted = FALSE`;
-  const paramsForWhere = [];
+  let baseWhereShared = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
+  let baseWhereOwn = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
+  const paramsShared = [];
+  const paramsOwn = [];
+
+  const likeValue = `%${searchValue?.toLowerCase()}%`;
 
   // Price filter
   if (priceFilter === "priceAdded") {
-    baseWhere += ` AND price IS NOT NULL AND price > 0`;
+    baseWhereShared += ` AND sample.price IS NOT NULL AND sample.price > 0`;
+    baseWhereOwn += ` AND sample.price IS NOT NULL AND sample.price > 0`;
   } else if (priceFilter === "priceNotAdded") {
-    baseWhere += ` AND (price IS NULL OR price = 0)`;
+    baseWhereShared += ` AND (sample.price IS NULL OR sample.price = 0)`;
+    baseWhereOwn += ` AND (sample.price IS NULL OR sample.price = 0)`;
   }
 
   // Search filter
- if (searchField && searchValue) {
-  const likeValue = `%${searchValue}%`;
+  if (searchField && searchValue) {
+    switch (searchField) {
+      case "locationids":
+        baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+        baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+        paramsShared.push(likeValue, likeValue, likeValue);
+        paramsOwn.push(likeValue, likeValue, likeValue);
+        break;
 
-  switch (searchField) {
-    case "locationids":
-      baseWhere += ` AND (
-        room_number LIKE ? OR 
-        freezer_id LIKE ? OR 
-        box_id LIKE ?
-      )`;
-      paramsForWhere.push(likeValue, likeValue, likeValue);
-      break;
+      case "price":
+        baseWhereShared += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
+        baseWhereOwn += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
 
- case "volume":
-  baseWhere += ` AND (
-    LOWER(CONCAT_WS(' ', volume, QuantityUnit)) LIKE LOWER(?) OR
-    LOWER(QuantityUnit) = LOWER(?)
-  )`;
-  paramsForWhere.push(`%${searchValue.toLowerCase()}%`, searchValue.toLowerCase());
-  break;
+      case "volume":
+        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.QuantityUnit)) LIKE ? OR LOWER(sample.QuantityUnit) = ?)`;
+        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.QuantityUnit)) LIKE ? OR LOWER(sample.QuantityUnit) = ?)`;
+        paramsShared.push(likeValue, searchValue.toLowerCase());
+        paramsOwn.push(likeValue, searchValue.toLowerCase());
+        break;
 
+      case "TestResult":
+        baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
 
+      case "gender":
+        baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
+        paramsShared.push(`${searchValue.toLowerCase()}%`);
+        paramsOwn.push(`${searchValue.toLowerCase()}%`);
+        break;
 
-    case "price":
-      baseWhere += ` AND CONCAT_WS(' ', price, SamplePriceCurrency) LIKE ?`;
-      paramsForWhere.push(likeValue);
-      break;
+      case "CollectionSiteName":
+        baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
+        paramsShared.push(likeValue);
+        // Do not include this filter in baseWhereOwn because collectionsite is not joined there
+        break;
 
-     case "status":
-  baseWhere += ` AND sample.status LIKE ?`; // partial match from beginning
-  paramsForWhere.push(`${searchValue}%`);
-  break;
-  
-  case "gender":
-  baseWhere += ` AND LOWER(gender) LIKE LOWER(?)`; // partial match from beginning
-  paramsForWhere.push(`${searchValue}%`);
-  break;
-
-
-    case "TestResult":
-      baseWhere += ` AND CONCAT_WS(' ', TestResult, TestResultUnit) LIKE ?`;
-      paramsForWhere.push(likeValue);
-      break;
-
-    default:
-      baseWhere += ` AND ?? LIKE ?`;
-      paramsForWhere.push(searchField, likeValue);
-      break;
+      default:
+        baseWhereShared += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+    }
   }
-}
 
-
-  // Query to get paginated results
-  const dataQuery = `
-   SELECT sample.*, collectionsite.CollectionSiteName
-FROM sample
-JOIN collectionsitestaff 
-  ON sample.user_account_id = collectionsitestaff.user_account_id
-JOIN collectionsite 
-  ON collectionsitestaff.collectionsite_id = collectionsite.id
-
-${baseWhere}
-ORDER BY sample.id DESC
-LIMIT ? OFFSET ?;
-
+  const sharedSamplesQuery = `
+    SELECT sample.*, collectionsite.CollectionSiteName
+    FROM sample
+    JOIN collectionsitestaff ON sample.user_account_id = collectionsitestaff.user_account_id
+    JOIN collectionsite ON collectionsitestaff.collectionsite_id = collectionsite.id
+    WHERE ${baseWhereShared}
   `;
-  const dataParams = [...paramsForWhere, pageSizeInt, offset];
 
-  mysqlConnection.query(dataQuery, dataParams, (err, results) => {
-    
-    if (err) return callback(err);
+  const ownSamplesQuery = `
+    SELECT sample.*, NULL AS CollectionSiteName
+    FROM sample
+    WHERE ${baseWhereOwn} AND sample.user_account_id = ?
+  `;
 
-    const enrichedResults = results.map(sample => ({
+  const dataQuery = `
+    SELECT * FROM (
+      ${sharedSamplesQuery}
+      UNION ALL
+      ${ownSamplesQuery}
+    ) AS merged_samples
+    LIMIT ? OFFSET ?
+  `;
+
+  const countQuery = `
+    SELECT COUNT(*) AS totalCount FROM (
+      ${sharedSamplesQuery}
+      UNION ALL
+      ${ownSamplesQuery}
+    ) AS countCombined
+  `;
+
+  const finalParams = [...paramsShared, ...paramsOwn, user_account_id, pageSizeInt, offset];
+  const countParams = [...paramsShared, ...paramsOwn, user_account_id];
+
+  mysqlConnection.query(dataQuery, finalParams, (err, results) => {
+    if (err) {
+      console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+      return callback(err);
+    }
+
+    const enrichedResults = results.map((sample) => ({
       ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join("-"),
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+        .filter(Boolean)
+        .join("-"),
     }));
 
-    // Query to get total count without limit/offset
-    const countQuery = `
-   SELECT COUNT(*) AS totalCount
-      FROM sample
-      JOIN collectionsitestaff 
-        ON sample.user_account_id = collectionsitestaff.user_account_id
-      JOIN collectionsite 
-        ON collectionsitestaff.collectionsite_id = collectionsite.id
-      ${baseWhere};
-`;
-
-
-    mysqlConnection.query(countQuery, paramsForWhere, (err, countResults) => {
+    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
       if (err) return callback(err);
-
       const totalCount = countResults[0].totalCount;
-
-      callback(null, {
-        results: enrichedResults,
-        totalCount,
-      });
+      callback(null, { samples: enrichedResults, totalCount });
     });
   });
 };
+
+
+
 
 // Function to create a new sample
 const createBiobankSample = (data, callback) => {
@@ -162,37 +174,81 @@ const createBiobankSample = (data, callback) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  mysqlConnection.query(insertQuery, [
-    id, data.donorID, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.diseasename, data.phoneNumber, data.age, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
-  ], (err, results) => {
-    if (err) {
-      console.error('Error inserting into sample:', err);
-      return callback(err, null);
-    }
-
-    const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
-    mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
+  mysqlConnection.query(
+    insertQuery,
+    [
+      id,
+      data.donorID,
+      room_number,
+      freezer_id,
+      box_id,
+      data.user_account_id,
+      data.volume,
+      data.diseasename,
+      data.phoneNumber,
+      data.age,
+      data.gender,
+      data.ethnicity,
+      data.samplecondition,
+      data.storagetemp,
+      data.ContainerType,
+      data.CountryOfCollection,
+      data.price,
+      data.SamplePriceCurrency,
+      data.quantity,
+      data.QuantityUnit,
+      data.SampleTypeMatrix,
+      data.SmokingStatus,
+      data.AlcoholOrDrugAbuse,
+      data.InfectiousDiseaseTesting,
+      data.InfectiousDiseaseResult,
+      data.FreezeThawCycles,
+      data.DateOfSampling,
+      data.ConcurrentMedicalConditions,
+      data.ConcurrentMedications,
+      data.TestResult,
+      data.TestResultUnit,
+      data.TestMethod,
+      data.TestKitManufacturer,
+      data.TestSystem,
+      data.TestSystemManufacturer,
+      "In Stock",
+      data.logo,
+    ],
+    (err, results) => {
       if (err) {
-        console.error('Error updating masterID:', err);
+        console.error("Error inserting into sample:", err);
         return callback(err, null);
       }
 
-      const historyQuery = `
+      const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
+      mysqlConnection.query(
+        updateQuery,
+        [masterID, id],
+        (err, updateResults) => {
+          if (err) {
+            console.error("Error updating masterID:", err);
+            return callback(err, null);
+          }
+
+          const historyQuery = `
         INSERT INTO sample_history (sample_id)
         VALUES (?)
       `;
 
-      mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
-        if (err) {
-          console.error('Error inserting into sample_history:', err);
-          return callback(err, null);
-        }
+          mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
+            if (err) {
+              console.error("Error inserting into sample_history:", err);
+              return callback(err, null);
+            }
 
-        // 🟰 Now everything is successful
-        callback(null, { insertId: id, masterID: masterID });
-      });
-    });
-  });
+            // 🟰 Now everything is successful
+            callback(null, { insertId: id, masterID: masterID });
+          });
+        }
+      );
+    }
+  );
 };
 
 // Function to add price and sample price currency from biobank
@@ -203,32 +259,39 @@ const postSamplePrice = (data, callback) => {
     WHERE id = ?
   `;
 
-  mysqlConnection.query(updateQuery, [data.price, data.SamplePriceCurrency, data.sampleId], (err, results) => {
-    if (err) {
-      console.error('Error adding price and currency into sample:', err);
-      return callback(err, null);
-    }
+  mysqlConnection.query(
+    updateQuery,
+    [data.price, data.SamplePriceCurrency, data.sampleId],
+    (err, results) => {
+      if (err) {
+        console.error("Error adding price and currency into sample:", err);
+        return callback(err, null);
+      }
 
-    // Insert into sample_history table
-    const historyQuery = `
+      // Insert into sample_history table
+      const historyQuery = `
       INSERT INTO sample_history (sample_id)
       VALUES (?)
     `;
 
-    mysqlConnection.query(historyQuery, [data.sampleId], (err, historyResults) => {
-      if (err) {
-        console.error('Error inserting into sample_history:', err);
-        return callback(err, null);
-      }
+      mysqlConnection.query(
+        historyQuery,
+        [data.sampleId],
+        (err, historyResults) => {
+          if (err) {
+            console.error("Error inserting into sample_history:", err);
+            return callback(err, null);
+          }
 
-      return callback(null, { insertId: data.sampleId });
-    });
-  });
+          return callback(null, { insertId: data.sampleId });
+        }
+      );
+    }
+  );
 };
 
 // Function to update a sample by its ID
 const updateBiobankSample = (id, data, callback) => {
-
   // Initialize to null instead of 'null' string
   let room_number = null;
   let freezer_id = null;
@@ -256,18 +319,47 @@ const updateBiobankSample = (id, data, callback) => {
   `;
 
   const values = [
-    room_number, freezer_id, box_id, data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition,
-    data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency,
-    data.quantity, data.QuantityUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse,
-    data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling,
-    data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.DiagnosisTestParameter, data.TestResult,
-    data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer,
-    data.status, data.logo, id
+    room_number,
+    freezer_id,
+    box_id,
+    data.volume,
+    data.diseasename,
+    data.age,
+    data.phoneNumber,
+    data.gender,
+    data.ethnicity,
+    data.samplecondition,
+    data.storagetemp,
+    data.ContainerType,
+    data.CountryOfCollection,
+    data.price,
+    data.SamplePriceCurrency,
+    data.quantity,
+    data.QuantityUnit,
+    data.SampleTypeMatrix,
+    data.SmokingStatus,
+    data.AlcoholOrDrugAbuse,
+    data.InfectiousDiseaseTesting,
+    data.InfectiousDiseaseResult,
+    data.FreezeThawCycles,
+    data.DateOfSampling,
+    data.ConcurrentMedicalConditions,
+    data.ConcurrentMedications,
+    data.DiagnosisTestParameter,
+    data.TestResult,
+    data.TestResultUnit,
+    data.TestMethod,
+    data.TestKitManufacturer,
+    data.TestSystem,
+    data.TestSystemManufacturer,
+    data.status,
+    data.logo,
+    id,
   ];
 
   mysqlConnection.query(query, values, (err, result) => {
     if (err) {
-      console.error('Error updating sample:', err);
+      console.error("Error updating sample:", err);
       return callback(err, null);
     }
 
@@ -278,18 +370,19 @@ const updateBiobankSample = (id, data, callback) => {
 
     mysqlConnection.query(historyQuery, [id], (err, historyResult) => {
       if (err) {
-        console.error('Error inserting into sample_history:', err);
+        console.error("Error inserting into sample_history:", err);
         return callback(err, null);
       }
 
       // 🟰 Now everything is successful
-      callback(null, { message: 'Sample updated and history recorded successfully.' });
+      callback(null, {
+        message: "Sample updated and history recorded successfully.",
+      });
     });
   });
 };
 
 const UpdateSampleStatus = (id, status, callback) => {
-
   const query = `
     UPDATE sample
     SET sample_visibility = ?
@@ -300,11 +393,11 @@ const UpdateSampleStatus = (id, status, callback) => {
 
   mysqlConnection.query(query, values, (err, result) => {
     if (err) {
-      console.error('Error updating sample:', err);
+      console.error("Error updating sample:", err);
       return callback(err, null);
     }
 
-    callback(null, { message: 'Sample status updated successfully.' });
+    callback(null, { message: "Sample status updated successfully." });
   });
 };
 
@@ -318,7 +411,14 @@ const getQuarantineStock = (callback) => {
 };
 
 // Function to get samples with price > 0 in sample visibility page
-const getBiobankVisibilitySamples = (user_account_id, page, pageSize, searchField, searchValue, callback) => {
+const getBiobankVisibilitySamples = (
+  user_account_id,
+  page,
+  pageSize,
+  searchField,
+  searchValue,
+  callback
+) => {
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
@@ -343,9 +443,11 @@ const getBiobankVisibilitySamples = (user_account_id, page, pageSize, searchFiel
   mysqlConnection.query(dataQuery, dataParams, (err, results) => {
     if (err) return callback(err);
 
-    const enrichedResults = results.map(sample => ({
+    const enrichedResults = results.map((sample) => ({
       ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join("-"),
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+        .filter(Boolean)
+        .join("-"),
     }));
 
     const countQuery = `
@@ -369,20 +471,17 @@ const getBiobankVisibilitySamples = (user_account_id, page, pageSize, searchFiel
 
 // Get price dropdown while adding price in Biobank
 const getPrice = (name, callback) => {
-
-  const query = 'SELECT price FROM sample WHERE diseasename = ?';
+  const query = "SELECT price FROM sample WHERE diseasename = ?";
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
       callback(err, null);
     } else {
-
       callback(null, results);
     }
   });
 };
-
 
 module.exports = {
   create_biobankTable,
@@ -393,5 +492,5 @@ module.exports = {
   getQuarantineStock,
   getBiobankVisibilitySamples,
   UpdateSampleStatus,
-  getPrice
+  getPrice,
 };

@@ -97,7 +97,7 @@ const[visibilitystatus,setVisibilityStatus]=useState("")
   const [formData, setFormData] = useState({
     locationids: "",
     diseasename: "",
-    age: "",
+    age: 0,
     volume: "",
     phoneNumber: "",
     gender: "",
@@ -310,6 +310,7 @@ useEffect(() => {
         url += `&searchField=${searchField}&searchValue=${searchValue}`;
 
       const response = await axios.get(url);
+      
       const { samples, totalCount } = response.data;
       setSamples(samples);
       setFilteredSamples(samples);
@@ -462,6 +463,7 @@ const handleFilterChange = (field, value) => {
     }
   }, [selectedSampleName]);
   const handleSubmit = async (e) => {
+    let isMounted = true;
     e.preventDefault();
     
     try {
@@ -475,7 +477,7 @@ const handleFilterChange = (field, value) => {
           },
         }
       );
-      fetchSamples(); // This will refresh the samples list
+      fetchSamples(isMounted); // This will refresh the samples list
       setSuccessMessage("Sample added successfully.");
       // Clear the success message after 3 seconds
       setTimeout(() => {
@@ -527,6 +529,7 @@ const handleFilterChange = (field, value) => {
   };
 
   const handleTransferSubmit = async (e) => {
+    let isMounted = true;
     const sampleToSend = samples.find((s) => s.id === selectedSampleId);
     const isReturnFlag = sampleToSend?.isReturn === true;
 
@@ -567,7 +570,7 @@ const handleFilterChange = (field, value) => {
         }
       );
 
-      fetchSamples(); // Refresh the current page
+      fetchSamples(isMounted); // Refresh the current page
       setCurrentPage(1);
       alert("Sample dispatched successfully!");
 
@@ -592,6 +595,7 @@ const handleFilterChange = (field, value) => {
   };
 
   const handlePriceSubmit = async (e) => {
+    let isMounted = true;
     e.preventDefault();
 
     if (!price || !currency) {
@@ -614,7 +618,7 @@ const handleFilterChange = (field, value) => {
       setSelectedSampleForPricing(null);
       setPrice("");
       setCurrency("");
-      fetchSamples(); // Refresh your data
+      fetchSamples(isMounted); // Refresh your data
     } catch (error) {
       if (error.response) {
         console.error("Error response:", error.response.data);
@@ -634,6 +638,7 @@ const handleFilterChange = (field, value) => {
   };
 
   const handleQuarantine = async (comment) => {
+    let isMounted = true;
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/QuarantineSamples/${selectedSampleId}`,
@@ -649,7 +654,7 @@ const handleFilterChange = (field, value) => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchSamples();
+      fetchSamples(isMounted);
       setShowQuarantineModal(false);
       setSelectedSampleId(null);
       setQuarantineComment("");
@@ -766,6 +771,7 @@ const handleFilterChange = (field, value) => {
   };
 
   const handleUpdate = async (e) => {
+    let isMounted = true;
     e.preventDefault();
 
     try {
@@ -779,7 +785,7 @@ const handleFilterChange = (field, value) => {
         }
       );
 
-      fetchSamples(); // This will refresh the samples list
+      fetchSamples(isMounted); // This will refresh the samples list
 
       setShowEditModal(false);
       setSuccessMessage("Sample updated successfully.");
@@ -833,6 +839,7 @@ const handleFilterChange = (field, value) => {
     }
   };
 const handleVisibilityStatusClick = async (e) => {
+  let isMounted = true;
     e.preventDefault(); // Prevent form from reloading page
 
     try {
@@ -859,6 +866,7 @@ const handleVisibilityStatusClick = async (e) => {
         setTimeout(() => setSuccessMessage(""), 3000);
       setShowVisibilityModal(false);
 
+      fetchSamples(isMounted)
       // ✅ Optional: Refresh the sample list
       const updatedSamples = await fetchSamples();
     } catch (error) {
@@ -919,7 +927,7 @@ const handleVisibilityStatusClick = async (e) => {
       locationids: "",
       volume: "",
       diseasename: "",
-      age: "",
+      age: 0,
       phoneNumber: "",
       gender: "",
       ethnicity: "",
@@ -1200,8 +1208,9 @@ const areMandatoryFieldsFilled = () => {
                 </th>
               </tr>
             </thead>
+          
             <tbody className="table-light">
-              {currentData.length > 0 ? (
+              {Array.isArray(currentData) && currentData.length ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
                     {tableHeaders.map(({ key }, index) => (
@@ -1301,8 +1310,12 @@ Box ID=${sample.box_id || "----"} `;
                               </button>
                             }
                             else if (key === "age") {
-                              return `${sample.age} years`;
-                            } else if (key === "TestResult") {
+  if (!sample.age || sample.age === 0) {
+    return "-----";
+  }
+  return `${sample.age} years`;
+}
+ else if (key === "TestResult") {
                               return `${sample.TestResult} ${sample.TestResultUnit || ""
                                 }`;
                             } else if (key === "price") {
@@ -1349,7 +1362,9 @@ Box ID=${sample.box_id || "----"} `;
                           }}
                           title="Quarantine Sample"
                         >
-                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                           <i className="fas fa-exclamation-triangle text-white"></i>
+                           
+                           {/* <FontAwesomeIcon icon={faQuestionCircle} size="xs" /> */}
                         </button>
                         <button
                           className="btn btn-primary btn-sm"
@@ -1513,8 +1528,55 @@ Box ID=${sample.box_id || "----"} `;
                   </div>
                   <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
                     <div className="modal-body">
+                        {showAddModal && (
+                        <div className="mb-4 px-3">
+                          <label className="form-label fw-bold fs-6 mb-3 text-dark">
+                            How do you want to add the sample?
+                          </label>
+
+                          <div className="d-flex gap-4">
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="mode"
+                                id="individualRadio"
+                                value="individual"
+                                checked={mode === "individual"}
+                                onChange={() => setMode("individual")}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="individualRadio"
+                              >
+                                Individual Sample
+                              </label>
+                            </div>
+
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="mode"
+                                id="poolRadio"
+                                value="pool"
+                                checked={mode === "pool"}
+                                onChange={() => setMode("pool")}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="poolRadio"
+                              >
+                                Pool Sample
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
+                         {mode === "individual" && (
+                  <>
                         {/* Column 1 */}
                         {!showAdditionalFields && (
                           <div className="col-md-12">
@@ -2491,9 +2553,421 @@ Box ID=${sample.box_id || "----"} `;
                             </div>
                           </>
                         )}
+                        </>
+                         )}
+                          {mode === "pool" && (
+                                           <>
+                                             {/* Only show selected fields in pool mode */}
+                                            <div className="col-md-12">
+                                                         <div className="row">
+                                                           {showAddModal && (
+                                                             <div className="form-group col-md-6">
+                                                               <label>
+                                                                 Donor ID{" "}
+                                                                 <span className="text-danger">*</span>
+                                                               </label>
+                                                               <input
+                                                                 type="text"
+                                                                 className="form-control"
+                                                                 name="donorID"
+                                                                 value={formData.donorID}
+                                                                 onChange={handleInputChange}
+                                                                 required
+                                                                 title="This is the ID of patient generated by hospital"
+                                                                 placeholder="Enter Donor ID"
+                                                                 style={{
+                                                                   height: "45px",
+                                                                   fontSize: "14px",
+                                                                   backgroundColor: !formData.donorID
+                                                                     ? "#fdecea"
+                                                                     : "#fff",
+                                                                 }}
+                                                               />
+                                                             </div>
+                                                           )}
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Disease Name{" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <select
+                                                               className="form-control"
+                                                               name="diseasename"
+                                                               value={formData.diseasename}
+                                                               onChange={handleInputChange}
+                                                               required
+                                                               style={{
+                                                                 height: "45px",
+                                                                 fontSize: "14px",
+                                                                 backgroundColor: !formData.diseasename
+                                                                   ? "#fdecea"
+                                                                   : "#fff",
+                                                               }}
+                                                             >
+                                                               <option value="" hidden></option>
+                                                               {diagnosistestparameterNames.map(
+                                                                 (name, index) => (
+                                                                   <option key={index} value={name}>
+                                                                     {name}
+                                                                   </option>
+                                                                 )
+                                                               )}
+                                                             </select>
+                                                           </div>
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Location (IDs){" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <InputMask
+                                                               mask="999-999-999"
+                                                               maskChar={null}
+                                                               value={formData.locationids}
+                                                               onChange={handleInputChange}
+                                                             >
+                                                               {(inputProps) => (
+                                                                 <input
+                                                                   {...inputProps}
+                                                                   type="text"
+                                                                   className="form-control"
+                                                                   name="locationids"
+                                                                   placeholder="000-000-000"
+                                                                   style={{
+                                                                     height: "45px",
+                                                                     fontSize: "14px",
+                                                                     backgroundColor:
+                                                                       !formData.locationids
+                                                                         ? "#fdecea"
+                                                                         : "#fff",
+                                                                   }}
+                                                                   required
+                                                                   title="Location ID's = Room Number, Freezer ID and Box ID"
+                                                                 />
+                                                               )}
+                                                             </InputMask>
+                                                           </div>
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Volume{" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <div className="d-flex">
+                                                               <input
+                                                                 type="number"
+                                                                 className="form-control me-2"
+                                                                 name="volume"
+                                                                 value={formData.volume}
+                                                                 onChange={(e) => {
+                                                                   const value = parseFloat(
+                                                                     e.target.value
+                                                                   );
+                                                                   const max =
+                                                                     unitMaxValues[
+                                                                       formData.QuantityUnit
+                                                                     ] || Infinity;
+                         
+                                                                   if (
+                                                                     e.target.value === "" ||
+                                                                     ((value * 10) % 5 === 0 &&
+                                                                       value <= max)
+                                                                   ) {
+                                                                     handleInputChange(e);
+                                                                   }
+                                                                 }}
+                                                                 step="0.5"
+                                                                 min="0.5"
+                                                                 max={
+                                                                   unitMaxValues[
+                                                                     formData.QuantityUnit
+                                                                   ] || undefined
+                                                                 }
+                                                                 required
+                                                                 style={{
+                                                                   height: "45px",
+                                                                   fontSize: "14px",
+                                                                   backgroundColor: !formData.volume
+                                                                     ? "#fdecea"
+                                                                     : "#fff",
+                                                                 }}
+                                                               />
+                                                               <select
+                                                                 className="form-control"
+                                                                 name="QuantityUnit"
+                                                                 value={formData.QuantityUnit}
+                                                                 onChange={handleInputChange}
+                                                                 required
+                                                                 style={{
+                                                                   height: "45px",
+                                                                   fontSize: "14px",
+                                                                   backgroundColor:
+                                                                     !formData.QuantityUnit
+                                                                       ? "#fdecea"
+                                                                       : "#fff",
+                                                                 }}
+                                                               >
+                                                                 <option value="" hidden>
+                                                                   Select Unit
+                                                                 </option>
+                                                                 {quantityunitNames.map(
+                                                                   (name, index) => (
+                                                                     <option key={index} value={name}>
+                                                                       {name}
+                                                                     </option>
+                                                                   )
+                                                                 )}
+                                                               </select>
+                                                             </div>
+                                                             {/* Validation message*/}
+                                                             {formData.volume &&
+                                                               formData.QuantityUnit &&
+                                                               parseFloat(formData.volume) >
+                                                                 (unitMaxValues[formData.QuantityUnit] ||
+                                                                   Infinity) && (
+                                                                 <small className="text-danger mt-1">
+                                                                   Value must be less than or equal to{" "}
+                                                                   {unitMaxValues[
+                                                                     formData.QuantityUnit
+                                                                   ].toLocaleString()}
+                                                                   .
+                                                                 </small>
+                                                               )}
+                                                           </div>
+                                                        
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Test Result & Unit{" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <div
+                                                               style={{
+                                                                 display: "flex",
+                                                                 gap: "10px",
+                                                                 alignItems: "center",
+                                                               }}
+                                                             >
+                                                               {/* Test Result Dropdown or Numeric Input */}
+                                                               {!showTestResultNumericInput ? (
+                                                                 <select
+                                                                   className="form-control"
+                                                                   value={formData.TestResult}
+                                                                   onChange={(e) => {
+                                                                     const val = e.target.value;
+                                                                     if (val === "Value") {
+                                                                       setShowTestResultNumericInput(
+                                                                         true
+                                                                       );
+                                                                       setFormData((prev) => ({
+                                                                         ...prev,
+                                                                         TestResult: "",
+                                                                       }));
+                                                                     } else {
+                                                                       setShowTestResultNumericInput(
+                                                                         false
+                                                                       ); // Ensure this is reset
+                                                                       setFormData((prev) => ({
+                                                                         ...prev,
+                                                                         TestResult: val,
+                                                                         TestResultUnit: "",
+                                                                       })); // Clear unit
+                                                                     }
+                                                                   }}
+                                                                   style={{
+                                                                     height: "40px",
+                                                                     fontSize: "14px",
+                                                                     backgroundColor:
+                                                                       !formData.TestResult
+                                                                         ? "#fdecea"
+                                                                         : "#fff",
+                                                                     minWidth: "140px",
+                                                                   }}
+                                                                 >
+                                                                   <option value="" disabled hidden>
+                                                                     Select result
+                                                                   </option>
+                                                                   <option value="Positive">
+                                                                     Positive
+                                                                   </option>
+                                                                   <option value="Negative">
+                                                                     Negative
+                                                                   </option>
+                                                                   <option value="Value">Value</option>
+                                                                 </select>
+                                                               ) : (
+                                                                 <input
+                                                                   type="number"
+                                                                   className="form-control"
+                                                                   placeholder="Enter numeric value"
+                                                                   value={formData.TestResult}
+                                                                   onChange={(e) =>
+                                                                     setFormData((prev) => ({
+                                                                       ...prev,
+                                                                       TestResult: e.target.value,
+                                                                     }))
+                                                                   }
+                                                                   style={{
+                                                                     width: "110px",
+                                                                     height: "40px",
+                                                                     fontSize: "14px",
+                                                                     backgroundColor:
+                                                                       !formData.TestResult
+                                                                         ? "#fdecea"
+                                                                         : "#fff",
+                                                                     paddingRight: "10px",
+                                                                   }}
+                                                                   autoFocus
+                                                                   onBlur={() => {
+                                                                     if (!formData.TestResult) {
+                                                                       setShowTestResultNumericInput(
+                                                                         false
+                                                                       );
+                                                                       setFormData((prev) => ({
+                                                                         ...prev,
+                                                                         TestResultUnit: "",
+                                                                       })); // Clear unit
+                                                                     }
+                                                                   }}
+                                                                 />
+                                                               )}
+                                                               {/* Conditionally render Unit Dropdown */}
+                                                               {showTestResultNumericInput && (
+                                                                 <select
+                                                                   className="form-control"
+                                                                   name="TestResultUnit"
+                                                                   value={formData.TestResultUnit}
+                                                                   onChange={handleInputChange}
+                                                                   required
+                                                                   style={{
+                                                                     height: "40px",
+                                                                     fontSize: "14px",
+                                                                     backgroundColor:
+                                                                       !formData.TestResultUnit
+                                                                         ? "#fdecea"
+                                                                         : "#fff",
+                                                                     minWidth: "100px",
+                                                                   }}
+                                                                 >
+                                                                   <option value="" hidden>
+                                                                     Unit
+                                                                   </option>
+                                                                   {testresultunitNames.map(
+                                                                     (name, index) => (
+                                                                       <option key={index} value={name}>
+                                                                         {name}
+                                                                       </option>
+                                                                     )
+                                                                   )}
+                                                                 </select>
+                                                               )}
+                                                             </div>
+                                                           </div>
+                                                           
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Sample Type Matrix{" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <select
+                                                               className="form-control"
+                                                               name="SampleTypeMatrix"
+                                                               value={formData.SampleTypeMatrix}
+                                                               onChange={handleInputChange}
+                                                               required
+                                                               style={{
+                                                                 height: "45px",
+                                                                 fontSize: "14px",
+                                                                 backgroundColor:
+                                                                   !formData.SampleTypeMatrix
+                                                                     ? "#fdecea"
+                                                                     : "#fff",
+                                                               }}
+                                                             >
+                                                               <option value="" hidden></option>
+                                                               {sampletypematrixNames.map(
+                                                                 (name, index) => (
+                                                                   <option key={index} value={name}>
+                                                                     {name}
+                                                                   </option>
+                                                                 )
+                                                               )}
+                                                             </select>
+                                                           </div>
+                                                         </div>
+                                                         <div className="row">
+                                                          
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Container Type{" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <select
+                                                               className="form-control"
+                                                               name="ContainerType"
+                                                               value={formData.ContainerType}
+                                                               onChange={handleInputChange}
+                                                               required
+                                                               style={{
+                                                                 height: "45px",
+                                                                 fontSize: "14px",
+                                                                 backgroundColor: !formData.ContainerType
+                                                                   ? "#fdecea"
+                                                                   : "#fff",
+                                                               }}
+                                                             >
+                                                               <option value="" hidden></option>
+                                                               {containertypeNames.map((name, index) => (
+                                                                 <option key={index} value={name}>
+                                                                   {name}
+                                                                 </option>
+                                                               ))}
+                                                             </select>
+                                                           </div>
+                                                           <div className="form-group col-md-6">
+                                                             <label>
+                                                               Sample Picture{" "}
+                                                               <span className="text-danger">*</span>
+                                                             </label>
+                                                             <div className="d-flex align-items-center">
+                                                               <input
+                                                                 name="logo"
+                                                                 type="file"
+                                                                 id="logo"
+                                                                 accept="image/*"
+                                                                 onChange={(e) =>
+                                                                   logoHandler(e.target.files[0])
+                                                                 }
+                                                                 className="form-control"
+                                                                 style={{
+                                                                   height: "45px",
+                                                                   fontSize: "14px",
+                                                                   backgroundColor: !formData.logo
+                                                                     ? "#fdecea"
+                                                                     : "#fff",
+                                                                 }}
+                                                               />
+                                                               {logoPreview && (
+                                                                 <img
+                                                                   src={logoPreview}
+                                                                   alt="Logo Preview"
+                                                                   width="80"
+                                                                   style={{
+                                                                     marginLeft: "20px",
+                                                                     borderRadius: "5px",
+                                                                   }}
+                                                                 />
+                                                               )}
+                                                             </div>
+                                                           
+                                                         </div>
+                                                         </div>
+                                                         </div>
+                                                       
+                                           </>
+                                         )}
+                                       
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
+                      {mode === "individual" && (
                       <div className="form-check my-3">
                         <input
                           type="checkbox"
@@ -2512,9 +2986,13 @@ Box ID=${sample.box_id || "----"} `;
                           Add Additional Details
                         </label>
                       </div>
+                      )}
+                      {(mode === "individual" || mode==="pool" )&& (
+                        <>
                       <button type="submit" className="btn btn-primary">
                         {showAddModal ? "Save" : "Update"}
                       </button>
+                      </>)}
                     </div>
                     <div className="text-start text-muted fs-6 mb-3 ms-3">
                       <code> Please move cursor to field to get help</code>
