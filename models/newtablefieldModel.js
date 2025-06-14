@@ -1,15 +1,6 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
 
-
-  {
-    table:"sample",
-    columnsToAdd:[
-   {   column:"samplemode",
-    type:"Enum ('individual','pool') DEFAULT 'individual'"
-   }
-    ]
-  }
   // {
   //   table: "csr",
   //   columnsToAdd: [
@@ -21,17 +12,17 @@ const tablesAndColumns = [
   //     },
   //   ]
   // },
-  // {
-  //   table: "sampledispatch",
-  //   columnsToAdd: [
-  //     {
-  //       column: "Reason",
-  //       type: "TEXT",
-  //       nullable: true,
-  //     },
-  //   ]
-  // },
-  ,{
+  {
+    table: "sampledispatch",
+    columnsToAdd: [
+      {
+        column: "Reason",
+        type: "TEXT",
+        nullable: true,
+      },
+    ]
+  },
+  {
     table: "sample",
     columnsToDelete: ["DiagnosisTestParameter"],
     columnsToAdd: [
@@ -48,88 +39,88 @@ const tablesAndColumns = [
       },
     ]
   },
-  // {
-  //   table: "registrationadmin_history",
-  //   columnsToAdd: [
-  //     {
-  //       column: "infectiousdisease_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "infectiousdiseasetesting", column: "id" },
-  //     },
-  //   ]
-  // },
+  {
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "infectiousdisease_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "infectiousdiseasetesting", column: "id" },
+      },
+    ]
+  },
 
-  // {
-  //   table: "csr",
-  //   columnsToAdd: [
-  //     {
-  //       column: "permission",
-  //       type: "VARCHAR(15)",
-  //       nullable: true,
-  //     }
-  //   ]
+  {
+    table: "csr",
+    columnsToAdd: [
+      {
+        column: "permission",
+        type: "VARCHAR(15)",
+        nullable: true,
+      }
+    ]
 
-  // },
+  },
 
-  // {
-  //   table: "registrationadmin_history",
-  //   columnsToAdd: [
-  //     {
-  //       column: "diagnosistestparameter_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "diagnosistestparameter", column: "id" },
-  //     },
-  //   ]
-  // },
-  // {
-  //   table: "cart",
-  //   columnsToAdd: [
-  //     {
-  //       column: "volume",
-  //       type: "VARCHAR(255)",
-  //       nullable: false
-  //     },
-  //     {
-  //       column: "QuantityUnit",
-  //       type: "VARCHAR(20)",
-  //       nullable: false
-  //     }
-  //   ]
-  // },
-  // {
-  //   table: "sample_history",
-  //   columnsToAdd: [
-  //     {
-  //       column: "user_account_id",
-  //       type: "BIGINT",
-  //       nullable: true,
-  //     },
-  //     {
-  //       column: "updated_name",
-  //       type: "VARCHAR(255)",
-  //       nullable: true,
-  //     },
-  //     {
-  //       column: "action_type",
-  //       type: "ENUM('add', 'update')",
-  //       defaultTo: "'add'",
-  //       nullable: true,
-  //     },
-  //   ]
-  // },
-  // {
-  //   table: "samplereceive",
-  //   columnsToAdd: [
-  //     {
-  //       column: "status",
-  //       type: "ENUM('Returned', 'Received') DEFAULT 'Received'",
-  //       nullable: false,
+  {
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "diagnosistestparameter_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "diagnosistestparameter", column: "id" },
+      },
+    ]
+  },
+  {
+    table: "cart",
+    columnsToAdd: [
+      {
+        column: "volume",
+        type: "VARCHAR(255)",
+        nullable: false
+      },
+      {
+        column: "QuantityUnit",
+        type: "VARCHAR(20)",
+        nullable: false
+      }
+    ]
+  },
+  {
+    table: "sample_history",
+    columnsToAdd: [
+      {
+        column: "user_account_id",
+        type: "BIGINT",
+        nullable: true,
+      },
+      {
+        column: "updated_name",
+        type: "VARCHAR(255)",
+        nullable: true,
+      },
+      {
+        column: "action_type",
+        type: "ENUM('add', 'update')",
+        defaultTo: "'add'",
+        nullable: true,
+      },
+    ]
+  },
+  {
+    table: "samplereceive",
+    columnsToAdd: [
+      {
+        column: "status",
+        type: "ENUM('Returned', 'Received') DEFAULT 'Received'",
+        nullable: false,
 
-  //     }
-  //   ]
-  // }
+      }
+    ]
+  }
   // {
   //   table: "user_account",
   //   columnsToAdd: [
@@ -403,29 +394,29 @@ const createOrUpdateTables = async () => {
     }
 
     // Rename 'packsize' to 'volume'
-  //   renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
+    renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
 
-  //   // Rename 'DateOfCollection' to 'DateOfSampling'
-  //   renameColumn("sample", "DateOfCollection", "DateOfSampling", "VARCHAR(255)");
+    // Rename 'DateOfCollection' to 'DateOfSampling'
+    renameColumn("sample", "DateOfCollection", "DateOfSampling", "VARCHAR(255)");
 
-  //   // Rename 'samplename' to 'diseasename'
-  //   renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
+    // Rename 'samplename' to 'diseasename'
+    renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
 
-  //   // RENAME sample_status TO sample_visibility
-  //   renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
+    // RENAME sample_status TO sample_visibility
+    renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
 
-  //   updateEnumColumn("collectionsitestaff", "permission", [
-  //     "add_full",
-  //     "add_basic",
-  //     "edit",
-  //     "dispatch",
-  //     "receive",
-  //     "all"
-  //   ], true, "all");
-  //   updateEnumColumn("sample", "sample_visibility", [
-  //     "Public",
-  //     "Non-Public",
-  //   ], true, "Non-Public");
+    updateEnumColumn("collectionsitestaff", "permission", [
+      "add_full",
+      "add_basic",
+      "edit",
+      "dispatch",
+      "receive",
+      "all"
+    ], true, "all");
+    updateEnumColumn("sample", "sample_visibility", [
+      "Public",
+      "Non-Public",
+    ], true, "Non-Public");
   });
 
 
