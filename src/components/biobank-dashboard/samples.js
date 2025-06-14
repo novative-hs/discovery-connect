@@ -400,21 +400,27 @@ const BioBankSampleArea = () => {
       getSamplePrice(selectedSampleName);
     }
   }, [selectedSampleName]);
+
   const handleSubmit = async (e) => {
         let isMounted = true;
     e.preventDefault();
-    console.log(formData);
+    const formDataToSend = new FormData();
+for (let key in formData) {
+  formDataToSend.append(key, formData[key]);
+}
+formDataToSend.append("mode", mode); // append mode
     try {
       // POST request to your backend API
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
+  formDataToSend,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
+
       fetchSamples(isMounted); // This will refresh the samples list
       setSuccessMessage("Sample added successfully.");
       // Clear the success message after 3 seconds
@@ -630,7 +636,7 @@ const BioBankSampleArea = () => {
     setSelectedSampleId(sample.id);
     setSelectedSampleName(sample.diseasename);
     setSelectedSampleVolume(sample.volume);
-
+setMode(sample.samplemode || "individual");
     setEditSample(sample);
     setShowEditModal(true);
 
@@ -896,35 +902,36 @@ const BioBankSampleArea = () => {
     }));
   };
 
-  const areMandatoryFieldsFilled = () => {
-    if (mode === "individual") {
-      return (
-        formData.donorID?.trim() &&
-        formData.diseasename?.trim() &&
-        formData.locationids?.trim() &&
-        formData.volume?.trim() &&
-        formData.phoneNumber?.trim() &&
-        formData.TestResult?.trim() &&
-        formData.gender?.trim() &&
-        formData.SampleTypeMatrix?.trim() &&
-        formData.age?.trim() &&
-        formData.ContainerType?.trim() &&
-        formData.logo instanceof File
-      );
-    } else if (mode === "pool") {
-      return (
-        formData.donorID?.trim() &&
-        formData.diseasename?.trim() &&
-        formData.locationids?.trim() &&
-        formData.volume?.trim() &&
-        formData.TestResult?.trim() &&
-        formData.TestResultUnit?.trim() &&
-        formData.SampleTypeMatrix?.trim() &&
-        formData.ContainerType?.trim() &&
-        formData.logo instanceof File
-      );
-    }
-  };
+ const areMandatoryFieldsFilled = () => {
+  if (mode === "individual") {
+    return (
+      formData.donorID?.toString().trim() &&
+      formData.diseasename?.toString().trim() &&
+      formData.locationids?.toString().trim() &&
+      formData.volume !== "" &&
+      formData.phoneNumber?.toString().trim() &&
+      formData.TestResult?.toString().trim() &&
+      formData.gender?.toString().trim() &&
+      formData.SampleTypeMatrix?.toString().trim() &&
+      formData.age !== "" &&
+      formData.ContainerType?.toString().trim() &&
+      formData.logo instanceof File
+    );
+  } else if (mode === "pool") {
+    return (
+      formData.donorID?.toString().trim() &&
+      formData.diseasename?.toString().trim() &&
+      formData.locationids?.toString().trim() &&
+      formData.volume !== "" &&
+      formData.TestResult?.toString().trim() &&
+      formData.TestResultUnit?.toString().trim() &&
+      formData.SampleTypeMatrix?.toString().trim() &&
+      formData.ContainerType?.toString().trim() &&
+      formData.logo instanceof File
+    );
+  }
+};
+
 
   const unitMaxValues = {
     L: 100,
