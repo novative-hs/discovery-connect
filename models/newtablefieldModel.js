@@ -6,13 +6,14 @@ const tablesAndColumns = [
    {   column:"samplemode",
     type:"Enum ('individual','pool') DEFAULT 'individual'"
    },
-   {   column:"patientname",
+   {   column:"PatientName",
     type:"VARCHAR(100)"
    }
     ]
   },
   {
     table:"registrationadmin_history",
+    columnsToDelete: ["diagnosistestparameter_id"],
   columnsToAdd:[
   {
         column: "Analyte_id",
@@ -424,8 +425,7 @@ const createOrUpdateTables = async () => {
     }
 
 
-// renameColumn("sample", "patientname", "PatientName", "VARCHAR(255)");
-
+renameColumn("sample", "patientname", "PatientName", "VARCHAR(255)");
 
      renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
     // renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
