@@ -473,8 +473,6 @@ const getBiobankVisibilitySamples = (
 const getPrice = (name, callback) => {
 
   const query = 'SELECT DISTINCT price FROM sample WHERE Analyte = ?';
-  const query = 'SELECT DISTINCT price FROM sample WHERE diseasename = ?';
-
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
