@@ -535,7 +535,6 @@ const BioBankSampleArea = () => {
   };
 
   const handlePriceSubmit = async (e) => {
-        let isMounted = true;
     e.preventDefault();
     let isMounted = true;
     if (!price || !currency) {
@@ -710,7 +709,6 @@ const BioBankSampleArea = () => {
   };
 
   const handleUpdate = async (e) => {
-        let isMounted = true;
     e.preventDefault();
     let isMounted = true;
     try {
@@ -803,7 +801,6 @@ const BioBankSampleArea = () => {
       setSuccessMessage("Successfully changed sample visibility status")
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowVisibilityModal(false);
-      
 
       // ✅ Optional: Refresh the sample list
       fetchSamples(isMounted);
@@ -1176,8 +1173,8 @@ const BioBankSampleArea = () => {
                           (() => {
                             if (key === "locationids") {
                               const tooltip = `Room Number=${sample.room_number || "----"
-                                }
-Freezer ID=${sample.freezer_id || "----"}
+                                } 
+Freezer ID=${sample.freezer_id || "----"} 
 Box ID=${sample.box_id || "----"} `;
 
                               // To show logo while clicking on location IDs
@@ -3646,6 +3643,5 @@ Box ID=${sample.box_id || "----"} `;
     </section>
   );
 };
-
 
 export default BioBankSampleArea;
