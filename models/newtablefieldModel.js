@@ -1,21 +1,23 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
-{
-    table:"sample",
-    columnsToAdd:[
-   {   column:"samplemode",
-    type:"Enum ('individual','pool') DEFAULT 'individual'"
-   },
-   {   column:"PatientName",
-    type:"VARCHAR(100)"
-   }
+  {
+    table: "sample",
+    columnsToAdd: [
+      {
+        column: "samplemode",
+        type: "Enum ('individual','pool') DEFAULT 'individual'"
+      },
+      {
+        column: "PatientName",
+        type: "VARCHAR(100)"
+      }
     ]
   },
   {
-    table:"registrationadmin_history",
+    table: "registrationadmin_history",
     columnsToDelete: ["diagnosistestparameter_id"],
-  columnsToAdd:[
-  {
+    columnsToAdd: [
+      {
         column: "Analyte_id",
         type: "INT",
         nullable: true, // Change to true
@@ -424,13 +426,10 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
 
-
-renameColumn("sample", "patientname", "PatientName", "VARCHAR(255)");
-
-     renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
-    // renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
-// renameColumn("sample", "TestResultUnit", "Unit", "VARCHAR(20)");
-// renameColumn("sample", "TestResult", "Valueanylte", "VARCHAR(100)");
+    renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
+    renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
+    // renameColumn("sample", "TestResultUnit", "Unit", "VARCHAR(20)");
+    // renameColumn("sample", "TestResult", "Valueanylte", "VARCHAR(100)");
 
     // Rename 'packsize' to 'volume'
     // renameColumn("sample", "packsize", "volume", "VARCHAR(255)");

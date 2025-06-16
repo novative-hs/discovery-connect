@@ -140,7 +140,10 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
     `;
 
     mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-      if (err) return callback(err, null);
+      if (err) {
+        conosle.log(err)
+        return callback(err, null)
+      };
       callback(null, {
         results: enrichedResults,
         totalCount: countResults[0].totalCount,
@@ -470,7 +473,7 @@ const createSample = (data, callback) => {
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.MRNumber, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume,data.patientname, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.MRNumber, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.patientname, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -581,7 +584,7 @@ const updateSample = (id, data, file, callback) => {
         return callback(err, null);
       }
 
-    
+
       callback(null, result);
     });
   });
