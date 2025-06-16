@@ -19,13 +19,13 @@ const SampleArea = () => {
   const [comment, setComment] = useState("");
   const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
-  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered disease name
+  const [filteredSamplename, setFilteredSamplename] = useState([]); // Store filtered Analytename
 
   const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
     { label: "Order ID", key: "cart_id" },
     { label: "Researcher Name", key: "researcher_name" },
-    { label: "Disease Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     // { label: "Age", key: "age" },
     // { label: "Gender", key: "gender" },
     { label: "Committee Comments", key: "comments" },
@@ -314,13 +314,13 @@ useEffect(() => {
                         style={{
                           maxWidth: "150px",
                           wordWrap: "break-word",
-                          cursor: key === "diseasename" ? "pointer" : "default",
-                          color: key === "diseasename" ? "blue" : "inherit",
-                          textDecoration: key === "diseasename" ? "underline" : "none",
+                          cursor: key === "Analyte" ? "pointer" : "default",
+                          color: key === "Analyte" ? "blue" : "inherit",
+                          textDecoration: key === "Analyte" ? "underline" : "none",
                           whiteSpace: "normal",
                         }}
                         onClick={(e) => {
-                          if (key === "diseasename") {
+                          if (key === "Analyte") {
                             e.stopPropagation();
                             setSelectedSample(sample);
                             setSampleShowModal(true);
@@ -532,7 +532,7 @@ useEffect(() => {
                 className="modal-header d-flex justify-content-between align-items-center"
                 style={{ backgroundColor: "#cfe2ff", color: "#000" }}
               >
-                <h5 className="fw-bold">{selectedSample.diseasename}</h5>
+                <h5 className="fw-bold">{selectedSample.Analyte}</h5>
                 <button
                   type="button"
                   className="close"
@@ -589,10 +589,10 @@ useEffect(() => {
                       <strong>Sample Type:</strong>{" "}
                       {selectedSample.SampleTypeMatrix}
                     </p>
-                    <p>
+                    {/* <p>
                       <strong>Diagnosis Test Parameter:</strong>{" "}
                       {selectedSample.DiagnosisTestParameter}
-                    </p>
+                    </p> */}
                     <p>
                       <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
                       {selectedSample.TestResultUnit}

@@ -6,14 +6,14 @@ import { faExchangeAlt } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 
 const BioBankSampleDispatchArea = () => {
-  const [id, setId] = useState(null);
+  const id = sessionStorage.getItem("userID");
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [samples, setSamples] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [formData, setFormData] = useState({
-    diseasename: "",
+    Analyte: "",
     age: "",
     gender: "",
     ethnicity: "",
@@ -33,7 +33,7 @@ const BioBankSampleDispatchArea = () => {
     DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
+    Analyte: "",
     TestResult: "",
     TestResultUnit: "",
     TestMethod: "",
@@ -51,7 +51,7 @@ const BioBankSampleDispatchArea = () => {
   });
 
   const tableHeaders = [
-    { label: "Disease Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
@@ -62,7 +62,7 @@ const BioBankSampleDispatchArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Disease Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Container Type", key: "ContainerType" },
@@ -71,7 +71,7 @@ const BioBankSampleDispatchArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
@@ -267,13 +267,13 @@ const BioBankSampleDispatchArea = () => {
                           className={
                             key === "price"
                               ? "text-end"
-                              : key === "diseasename"
+                              : key === "Analyte"
                                 ? "text-start"
                                 : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
                         >
-                          {key === "diseasename" ? (
+                          {key === "Analyte" ? (
                             <span
                               className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                               role="button"
@@ -286,7 +286,7 @@ const BioBankSampleDispatchArea = () => {
                               onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                               onMouseOut={(e) => (e.target.style.color = "")}
                             >
-                              {sample.diseasename || "----"}
+                              {sample.Analyte || "----"}
                             </span>
                           ) : (
                             (() => {

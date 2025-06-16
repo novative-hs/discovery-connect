@@ -56,11 +56,11 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
 
     let matchesSampleName =
       selectedSampleName.length === 0 ||
-      selectedSampleName.some((name) => product.diseasename.includes(name));
+      selectedSampleName.some((name) => product.Analyte.includes(name));
 
     let matchesSearch =
       searchQuery === "" ||
-      product.diseasename.toLowerCase().includes(searchQuery.toLowerCase());
+      product.Analyte.toLowerCase().includes(searchQuery.toLowerCase());
 
     return (
       matchesSampleType &&

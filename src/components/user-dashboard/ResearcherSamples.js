@@ -8,7 +8,7 @@ const SampleArea = () => {
   const router = useRouter();
   const id = sessionStorage.getItem("userID");
   const tableHeaders = [
-    { label: "Sample Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Price", key: "price" },
     { label: "Age", key: "age" },
@@ -231,8 +231,8 @@ const SampleArea = () => {
                           return <td key={index}>{displayValue}</td>;
                         }
 
-                        // ✅ Custom logic for diseasename with clickable modal
-                        if (key === "diseasename") {
+                        // ✅ Custom logic for Analyte with clickable modal
+                        if (key === "Analyte") {
                           return (
                             <td key={index}>
                               <span
@@ -247,7 +247,7 @@ const SampleArea = () => {
                                 onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                                 onMouseOut={(e) => (e.target.style.color = "")}
                               >
-                                {sample.diseasename || "----"}
+                                {sample.Analyte || "----"}
                               </span>
                             </td>
                           );

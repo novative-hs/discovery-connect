@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
-const DiagnosisTestParameterArea = () => {
+const AnalyteArea = () => {
   const id = sessionStorage.getItem("userID");
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -13,14 +13,14 @@ const DiagnosisTestParameterArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selecteddiagnosisnameId, setSelectedDiagnosisnameId] = useState(null); // Store ID of City to delete
+  const [selectedAnalyteId, setSelectedAnalytenameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
-    diagnosistestparametername: "",
+    Analytename: "",
     added_by: id,
   });
-  const [editdiagnosisname, setEditdiagnosisname] = useState(null); // State for selected City to edit
-  const [diagnosisname, setdiagnosisname] = useState([]); // Store all cities
-  const [filtereddiagnosisname, setFiltereddiagnosisname] = useState([]); // Store filtered cities
+  const [editAnalytename, setEditAnalytename] = useState(null); // State for selected City to edit
+  const [Analytename, setAnalytename] = useState([]); // Store all cities
+  const [filteredAnalytename, setFilteredAnalytename] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
@@ -30,33 +30,33 @@ const DiagnosisTestParameterArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // Fetch City from backend when component loads
   useEffect(() => {
-    const fetchdiagnosisname = async () => {
+    const fetchAnalytename = async () => {
       try {
         const response = await axios.get(
-          `${url}/diagnosis-test-parameter/get-diagnosis`
+          `${url}/Analyte/get-Analyte`
         );
-        setdiagnosisname(response.data);
-        setFiltereddiagnosisname(response.data); // Initialize filtered list
+        setAnalytename(response.data);
+        setFilteredAnalytename(response.data); // Initialize filtered list
       } catch (error) {
-        console.error("Error fetching diagnosis test parameter:", error);
+        console.error("Error fetching Analyte:", error);
       }
     };
-    fetchdiagnosisname(); // Call the function when the component mounts
+    fetchAnalytename(); // Call the function when the component mounts
   }, [url]);
 
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filtereddiagnosisname.length / itemsPerPage)
+      Math.ceil(filteredAnalytename.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filtereddiagnosisname, currentPage]);
+  }, [filteredAnalytename, currentPage]);
 
-  const currentData = filtereddiagnosisname.slice(
+  const currentData = filteredAnalytename.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -69,10 +69,10 @@ const DiagnosisTestParameterArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = diagnosisname; // Show all if filter is empty
+      filtered = Analytename; // Show all if filter is empty
     } else {
-      filtered = diagnosisname.filter((diagnosis) => {
-        let fieldValue = diagnosis[field];
+      filtered = Analytename.filter((Analyte) => {
+        let fieldValue = Analyte[field];
 
         if (field === "added_by") {
           // Convert numeric ID to a readable string for comparison
@@ -88,7 +88,7 @@ const DiagnosisTestParameterArea = () => {
       });
     }
 
-    setFiltereddiagnosisname(filtered);
+    setFilteredAnalytename(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
   };
@@ -119,35 +119,35 @@ const DiagnosisTestParameterArea = () => {
     });
   };
   const resetFormData = () => {
-    setFormData({ name: "", added_by: id });
+    setFormData({ Analytename: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(
-        `${url}/diagnosis-test-parameter/post-diagnosis`,
+        `${url}/Analyte/post-Analyte`,
         formData
       );
       const response = await axios.get(
-        `${url}/diagnosis-test-parameter/get-diagnosis`
+        `${url}/Analyte/get-Analyte`
       );
-      setFiltereddiagnosisname(response.data);
-      setdiagnosisname(response.data);
-      setSuccessMessage("Diagnosis Test Parameter added successfully.");
+      setFilteredAnalytename(response.data);
+      setAnalytename(response.data);
+      setSuccessMessage("Analyte added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Diagnosis Test Parameter", error);
+      console.error("Error adding Analyte", error);
     }
   };
-  const handleEditClick = (diagnosisname) => {
-    setSelectedDiagnosisnameId(diagnosisname.id);
-    setEditdiagnosisname(diagnosisname);
+  const handleEditClick = (Analytename) => {
+    setSelectedAnalytenameId(Analytename.id);
+    setEditAnalytename(Analytename);
 
     setFormData({
-      diagnosistestparametername: diagnosisname.name,
+      Analytename: Analytename.name,
       added_by: id,
     });
 
@@ -158,32 +158,32 @@ const DiagnosisTestParameterArea = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `${url}/diagnosis-test-parameter/update-diagnosis/${selecteddiagnosisnameId}`,
+        `${url}/Analyte/update-Analyte/${selectedAnalyteId}`,
         formData
       );
       const response = await axios.get(
-        `${url}/diagnosis-test-parameter/get-diagnosis`
+        `${url}/Analyte/get-Analyte`
       );
-      setFiltereddiagnosisname(response.data);
-      setdiagnosisname(response.data);
+      setFilteredAnalytename(response.data);
+      setAnalytename(response.data);
       setShowEditModal(false);
-      setSuccessMessage("diagnosis name updated successfully.");
+      setSuccessMessage("Analyte updated successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
       setFormData({
-        diagnosistestparametername: "",
+        Analytename: "",
         added_by: id,
       });
     } catch (error) {
       console.error(
-        `Error updating diagnosis with ID ${selecteddiagnosisnameId}:`,
+        `Error updating Analyte with ID ${selectedAnalyteId}:`,
         error
       );
     } finally {
       setFormData({
-        diagnosistestparametername: "",
+        Analytename: "",
         added_by: id,
       });
     }
@@ -192,24 +192,24 @@ const DiagnosisTestParameterArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `${url}/diagnosis-test-parameter/delete-diagnosis/${selecteddiagnosisnameId}`
+        `${url}/Analyte/delete-Analyte/${selectedAnalyteId}`
       );
       const response = await axios.get(
-        `${url}/diagnosis-test-parameter/get-diagnosis`
+        `${url}/Analyte/get-Analyte`
       );
-       setFiltereddiagnosisname(response.data);
-      setdiagnosisname(response.data);
-      setSuccessMessage("diagnosis name deleted successfully.");
+       setFilteredAnalytename(response.data);
+      setAnalytename(response.data);
+      setSuccessMessage("Analyte deleted successfully.");
 
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
       setShowDeleteModal(false);
-      setSelectedDiagnosisnameId(null);
+      setSelectedAnalytenameId(null);
     } catch (error) {
       console.error(
-        `Error deleting diagnosis test parameter with ID ${selecteddiagnosisnameId}:`,
+        `Error deleting Analyte with ID ${selectedAnalyteId}:`,
         error
       );
     }
@@ -246,10 +246,10 @@ const DiagnosisTestParameterArea = () => {
        const payload = data.map((row) => ({ name: row.name, added_by: id }));
  
        try {
-         await axios.post(`${url}/diagnosis-test-parameter/post-diagnosis`, { bulkData: payload });
-         const response = await axios.get(`${url}/diagnosis-test-parameter/get-diagnosis`);
-         setFiltereddiagnosisname(response.data);
-         setdiagnosisname(response.data);
+         await axios.post(`${url}/Analyte/post-Analyte`, { bulkData: payload });
+         const response = await axios.get(`${url}/Analyte/get-Analyte`);
+         setFilteredAnalytename(response.data);
+         setAnalytename(response.data);
          setSuccessMessage("Successfully added")
        } catch (error) {
          console.error("Error uploading file", error);
@@ -258,7 +258,7 @@ const DiagnosisTestParameterArea = () => {
      reader.readAsBinaryString(file);
    };
   const handleExportToExcel = () => {
-    const dataToExport = filtereddiagnosisname.map((item) => ({
+    const dataToExport = filteredAnalytename.map((item) => ({
       Name: item.name ?? "", // Fallback to empty string
       "Added By": "Registration Admin",
       "Created At": item.created_at ? formatDate(item.created_at) : "",
@@ -279,9 +279,9 @@ const DiagnosisTestParameterArea = () => {
       header: ["Name", "Added By", "Created At", "Updated At"],
     });
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "diagnosistestparameter");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Analyte");
 
-    XLSX.writeFile(workbook, "Diagnosis_Test_Parameter_List.xlsx");
+    XLSX.writeFile(workbook, "Analyte_List.xlsx");
   };
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
@@ -301,7 +301,7 @@ const DiagnosisTestParameterArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Diagnosis Test Parameter List</h5>
+              <h5 className="m-0 fw-bold ">Analytes List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Add City Button */}
                 <button
@@ -319,10 +319,10 @@ const DiagnosisTestParameterArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Diagnosis Test Parameter
+                  <i className="fas fa-plus"></i> Add Analyte
                 </button>
 
-                {/* Upload diagnosis List Button */}
+                {/* Upload Analytename List Button */}
                 <label
                   style={{
                     backgroundColor: "#f1f1f1", // soft gray
@@ -339,7 +339,7 @@ const DiagnosisTestParameterArea = () => {
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload Diagnosis Test
+                  <i className="fas fa-upload"></i> Upload Analyte Test
                   Parameter List
                   <input
                     type="file"
@@ -378,8 +378,8 @@ const DiagnosisTestParameterArea = () => {
                   {[
                     //{ label: "ID", placeholder: "Search ID", field: "id" },
                     {
-                      label: "Diagnosis Test Parameter Name",
-                      placeholder: "Search Diagnosis Test Parameter Name",
+                      label: "Analyte",
+                      placeholder: "Search Analyte",
                       field: "name",
                     },
                     {
@@ -420,29 +420,29 @@ const DiagnosisTestParameterArea = () => {
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((diagnosisname) => (
-                    <tr key={diagnosisname.id}>
-                      <td>{diagnosisname.name}</td>
+                  currentData.map((Analytename) => (
+                    <tr key={Analytename.id}>
+                      <td>{Analytename.name}</td>
                       <td>Registration Admin</td>
-                      <td>{diagnosisname.status}</td>
-                      <td>{formatDate(diagnosisname.created_at)}</td>
-                      <td>{formatDate(diagnosisname.updated_at)}</td>
+                      <td>{Analytename.status}</td>
+                      <td>{formatDate(Analytename.created_at)}</td>
+                      <td>{formatDate(Analytename.updated_at)}</td>
                       <td>
                         <div className="d-flex justify-content-center gap-3">
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(diagnosisname)}
-                            title="Edit Diagnosis Test Parameter Name"
+                            onClick={() => handleEditClick(Analytename)}
+                            title="Edit Analyte"
                           >
                             <FontAwesomeIcon icon={faEdit} size="xs" />
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => {
-                              setSelectedDiagnosisnameId(diagnosisname.id);
+                              setSelectedAnalytenameId(Analytename.id);
                               setShowDeleteModal(true);
                             }}
-                            title="Delete Diagnosis Test Parameter"
+                            title="Delete Analyte"
                           >
                             <FontAwesomeIcon icon={faTrash} size="xs" />
                           </button>
@@ -450,8 +450,8 @@ const DiagnosisTestParameterArea = () => {
                             className="btn btn-info btn-sm"
                             onClick={() =>
                               handleShowHistory(
-                                "diagnosistestparameter",
-                                diagnosisname.id
+                                "Analyte",
+                                Analytename.id
                               )
                             }
                             title="History Sample"
@@ -465,7 +465,7 @@ const DiagnosisTestParameterArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Diagnosis Test Parameter Available
+                      No Analyte Available
                     </td>
                   </tr>
                 )}
@@ -505,8 +505,8 @@ const DiagnosisTestParameterArea = () => {
                     <div className="modal-header">
                       <h5 className="modal-title">
                         {showAddModal
-                          ? "Add Diagnosis Test Parameter"
-                          : "Edit Diagnosis Test Parameter"}
+                          ? "Add Analyte"
+                          : "Edit Analyte"}
                       </h5>
                       <button
                         type="button"
@@ -515,7 +515,7 @@ const DiagnosisTestParameterArea = () => {
                           setShowAddModal(false);
                           setShowEditModal(false);
                           setFormData({
-                            diagnosistestparametername: "",
+                            Analytename: "",
                             added_by: id,
                           });
                         }}
@@ -537,12 +537,12 @@ const DiagnosisTestParameterArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Diagnosis Test Parameter Name</label>
+                          <label>Analyte</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="diagnosistestparametername"
-                            value={formData.diagnosistestparametername}
+                            name="Analytename"
+                            value={formData.Analytename}
                             onChange={handleInputChange}
                             required
                           />
@@ -553,7 +553,7 @@ const DiagnosisTestParameterArea = () => {
                         <button type="submit" className="btn btn-primary">
                           {showAddModal
                             ? "Save"
-                            : "Update Diagnosis Test Parameter Name"}
+                            : "Update Analyte"}
                         </button>
                       </div>
                     </form>
@@ -648,7 +648,7 @@ const DiagnosisTestParameterArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Diagnosis Test Parameter:</b> {created_name}{" "}
+                                <b>Analyte:</b> {created_name}{" "}
                                 was <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
@@ -669,7 +669,7 @@ const DiagnosisTestParameterArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Diagnosis Test Parameter:</b>{" "}
+                                  <b>Analyte:</b>{" "}
                                   {updated_name} was <b>updated</b> by
                                   Registration Admin at{" "}
                                   {moment(updated_at).format(
@@ -719,7 +719,7 @@ const DiagnosisTestParameterArea = () => {
                       style={{ backgroundColor: "transparent" }}
                     >
                       <h5 className="modal-title">
-                        Delete Diagnosis Test Parameter
+                        Delete Analyte
                       </h5>
                       <button
                         type="button"
@@ -729,8 +729,7 @@ const DiagnosisTestParameterArea = () => {
                     </div>
                     <div className="modal-body">
                       <p>
-                        Are you sure you want to delete this Diagnosis Test
-                        Parameter?
+                        Are you sure you want to delete this Analyte?
                       </p>
                     </div>
                     <div className="modal-footer">
@@ -755,4 +754,4 @@ const DiagnosisTestParameterArea = () => {
   );
 };
 
-export default DiagnosisTestParameterArea;
+export default AnalyteArea;

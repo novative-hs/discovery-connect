@@ -1185,7 +1185,7 @@ const CommitteeMemberArea = () => {
                               <React.Fragment key={index}>
                                 <tr>
                                   <td>{order.researcher_name}</td>
-                                  <td>{order.diseasename}</td>
+                                  <td>{order.Analyte}</td>
                                   <td>{order.quantity}</td>
 
                                   <td>

@@ -24,7 +24,7 @@ const contactusModel = require("../models/contactusModel");
 const committeesampleapprovalModel = require("../models/committeesampleapproval")
 const collectionsitestaffModel = require("../models/collectionsitestaffModel")
 const sampleReturnModel = require("../models/sampleReturnModel")
-const diagnosistestparameterTable=require("../models/diagnosistestparameterModel")
+const AnalyteTable=require("../models/AnalyteModel")
 const infectiousdiseaseModel=require("../models/infectiousdiseasetestingModel")
 // Function to initialize all tables
 function Database() {
@@ -65,10 +65,10 @@ function Database() {
   samplefieldsModel.createConcurrentMedicalConditionsTable();
   historyModel.registrationadmin_history();
   historyModel.create_historyTable();
-  historyModel.create_samplehistoryTable();
+ // historyModel.create_samplehistoryTable();
   sampleReturnModel.createSampleReturnTable();
   contactusModel.createContactUsTable();
-  diagnosistestparameterTable.create_diagnosistestparameterTable();
+  AnalyteTable.create_AnalyteTable();
   infectiousdiseaseModel.create_infectiousdiseaseTable()
    newtablefieldModel.createOrUpdateTables();
 }

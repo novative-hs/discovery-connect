@@ -207,7 +207,7 @@ const OrderPage = () => {
             {successMessage}
           </div>
         )}
-        <h7 className="text-danger mb-1">Click on Disease Name to get detail about sample.</h7>
+        <h7 className="text-danger mb-1">Click on Analyte to get detail about sample.</h7>
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
             Order Detail
@@ -220,7 +220,7 @@ const OrderPage = () => {
                 <tr className="text-center">
                   {[
                     { label: "Order Id", field: "order_id" },
-                    { label: "Disease Name", field: "diseasename" },
+                    { label: "Analyte", field: "Analyte" },
                     { label: "Order Status", field: "order_status" },
                     {
                       label: "Technical Admin Status",
@@ -311,7 +311,7 @@ const OrderPage = () => {
                           setSampleShowModal(true);
                         }}
                       >
-                        {order.diseasename}
+                        {order.Analyte}
                       </td>
                       <td>{order.order_status}</td>
                       <td>{order.technical_admin_status}</td>
@@ -657,7 +657,7 @@ const OrderPage = () => {
                   style={{ backgroundColor: "#cfe2ff", color: "#000" }}
                 >
                   <h5 className="fw-bold">
-                    {selectedSample.diseasename} Details:
+                    {selectedSample.Analyte} Details:
                   </h5>
                   <button
                     type="button"
@@ -713,10 +713,10 @@ const OrderPage = () => {
                         <strong>Sample Type:</strong>{" "}
                         {selectedSample.SampleTypeMatrix}
                       </p>
-                      <p>
+                      {/* <p>
                         <strong>Diagnosis Test Parameter:</strong>{" "}
                         {selectedSample.DiagnosisTestParameter}
-                      </p>
+                      </p> */}
                       <p>
                         <strong>Test Result:</strong>{" "}
                         {selectedSample.TestResult}{" "}

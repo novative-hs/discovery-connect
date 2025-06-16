@@ -42,11 +42,11 @@ const contactusRoutes = require("./routes/contactusRoutes");
 const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
 const collectionsiteStaffRoutes = require("./routes/collectionsitestaffRoutes")
 const samplereturnRoutes = require("./routes/samplereturnRoutes")
-const diagnosistestparameterRoutes = require("./routes/diagnosistestparameterRoutes")
+const AnalyteRoutes = require("./routes/AnalyteRoutes")
 const infectiousdiseaseRoutes = require('./routes/infectiousdiseasetestingRoutes')
 // Routes
 
-app.use('/api/diagnosis-test-parameter', diagnosistestparameterRoutes)
+app.use('/api/Analyte', AnalyteRoutes)
 app.use('/api/infectiousdisease', infectiousdiseaseRoutes)
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);

@@ -5,9 +5,24 @@ const tablesAndColumns = [
     columnsToAdd:[
    {   column:"samplemode",
     type:"Enum ('individual','pool') DEFAULT 'individual'"
+   },
+   {   column:"PatientName",
+    type:"VARCHAR(100)"
    }
     ]
+  },
+  {
+    table:"registrationadmin_history",
+    columnsToDelete: ["diagnosistestparameter_id"],
+  columnsToAdd:[
+  {
+        column: "Analyte_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "Analyte", column: "id" },
+      }]
   }
+
   // {
   //   table: "csr",
   //   columnsToAdd: [
@@ -83,10 +98,10 @@ const tablesAndColumns = [
   //   table: "registrationadmin_history",
   //   columnsToAdd: [
   //     {
-  //       column: "diagnosistestparameter_id",
+  //       column: "Analyte_id",
   //       type: "INT",
   //       nullable: true, // Change to true
-  //       references: { table: "diagnosistestparameter", column: "id" },
+  //       references: { table: "Analyte", column: "id" },
   //     },
   //   ]
   // },
@@ -409,6 +424,14 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
 
+
+renameColumn("sample", "patientname", "PatientName", "VARCHAR(255)");
+
+     renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
+    // renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
+// renameColumn("sample", "TestResultUnit", "Unit", "VARCHAR(20)");
+// renameColumn("sample", "TestResult", "Valueanylte", "VARCHAR(100)");
+
     // Rename 'packsize' to 'volume'
     // renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
 
@@ -429,10 +452,10 @@ const createOrUpdateTables = async () => {
     //   "receive",
     //   "all"
     // ], true, "all");
-    updateEnumColumn("sample", "sample_visibility", [
-      "Public",
-      "Non-Public",
-    ], true, "Non-Public");
+    // updateEnumColumn("sample", "sample_visibility", [
+    //   "Public",
+    //   "Non-Public",
+    // ], true, "Non-Public");
   });
 
 

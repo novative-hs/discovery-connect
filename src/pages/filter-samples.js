@@ -31,7 +31,7 @@ const FilterProduct = () => {
   const filterTimeoutRef = useRef(null);
 
   const tableHeaders = [
-    { label: "Sample Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -54,7 +54,6 @@ const FilterProduct = () => {
     { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -71,7 +70,7 @@ const FilterProduct = () => {
     const item = sessionStorage.getItem("filterProduct");
     if (item) {
       const parsed = JSON.parse(item);
-      const diseaseName = parsed?.diseasename;
+      const Analyte = parsed?.Analyte;
       const image_url = parsed?.imageUrl;
 
 
@@ -84,8 +83,8 @@ const FilterProduct = () => {
       setProduct([normalizedItem]);
       setFilteredSamples([normalizedItem]);
 
-      if (diseaseName) {
-        getSample(diseaseName);
+      if (Analyte) {
+        getSample(Analyte);
         setImageURL(image_url);
       }
     }
@@ -229,7 +228,7 @@ const FilterProduct = () => {
                               content = sample.price
                                 ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
                                 : "----";
-                            } else if (key === "diseasename") {
+                            } else if (key === "Analyte") {
                               content = (
                                 <span
                                   className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
@@ -245,7 +244,7 @@ const FilterProduct = () => {
                                   }
                                   onMouseOut={(e) => (e.target.style.color = "")}
                                 >
-                                  {sample.diseasename || "----"}
+                                  {sample.Analyte || "----"}
                                 </span>
                               );
                             } else if (key === "volume") {
@@ -264,7 +263,7 @@ const FilterProduct = () => {
                                 className={
                                   key === "price"
                                     ? "text-end"
-                                    : key === "diseasename"
+                                    : key === "Analyte"
                                       ? ""
                                       : "text-center text-truncate"
                                 }
@@ -338,19 +337,20 @@ const FilterProduct = () => {
             {selectedSample ? (
               <div className="p-3">
                 <div className="row g-3">
-                  {fieldsToShowInOrder.map(({ key, label }) => {
-                    const value = selectedSample[key];
-                    if (value === undefined) return null;
+                 {fieldsToShowInOrder.map(({ key, label }) => {
+  const value = selectedSample[key];
+  if (value === undefined || value === null || value === "") return null;
 
-                    return (
-                      <div className="col-md-6" key={key}>
-                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                          <span className="text-muted small fw-bold mb-1">{label}</span>
-                          <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+  return (
+    <div className="col-md-6" key={key}>
+      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+        <span className="text-muted small fw-bold mb-1">{label}</span>
+        <span className="fs-6 text-dark">{value.toString()}</span>
+      </div>
+    </div>
+  );
+})}
+
                 </div>
               </div>
             ) : (

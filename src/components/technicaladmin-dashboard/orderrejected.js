@@ -137,7 +137,7 @@ const OrderRejectedPage = () => {
                     { label: "Order Id", field: "order_id" },
                     { label: "Researcher Name", field: "researcher_name" },
                     { label: "Organization Name", field: "organization_name" },
-                    { label: "Sample Name", field: "diseasename" },
+                    { label: "Analyte", field: "Analyte" },
                     { label: "Order Status", field: "order_status" },
                     {
                       label: "Technical Admin Status",
@@ -200,7 +200,7 @@ const OrderRejectedPage = () => {
                           setSampleShowModal(true);
                         }}
                       >
-                        {order.diseasename}
+                        {order.Analyte}
                       </td>
                       <td>{order.order_status}</td>
                       <td>{order.technical_admin_status}</td>
@@ -279,7 +279,7 @@ const OrderRejectedPage = () => {
                   style={{ backgroundColor: "#cfe2ff", color: "#000" }}
                 >
                   <h5 className="fw-bold">
-                    {selectedSample.diseasename} Details:
+                    {selectedSample.Analyte} Details:
                   </h5>
                   <button
                     type="button"
@@ -331,10 +331,10 @@ const OrderRejectedPage = () => {
                         <strong>Sample Type:</strong>{" "}
                         {selectedSample.SampleTypeMatrix}
                       </p>
-                      <p>
+                      {/* <p>
                         <strong>Diagnosis Test Parameter:</strong>{" "}
                         {selectedSample.DiagnosisTestParameter}
-                      </p>
+                      </p> */}
                       <p>
                         <strong>Test Result:</strong>{" "}
                         {selectedSample.TestResult}{" "}

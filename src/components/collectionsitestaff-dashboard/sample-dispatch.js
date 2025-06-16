@@ -28,7 +28,7 @@ const SampleDispatchArea = () => {
   const [lostReason, setLostReason] = useState("");
   const [sampleReceive, setSampleReceive] = useState();
   const [formData, setFormData] = useState({
-    diseasename: "",
+    Analyte: "",
     age: "",
     gender: "",
     ethnicity: "",
@@ -47,7 +47,7 @@ const SampleDispatchArea = () => {
     DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
+    Analyte: "",
     TestResult: "",
     TestResultUnit: "",
     TestMethod: "",
@@ -58,7 +58,7 @@ const SampleDispatchArea = () => {
   });
 
   const tableHeaders = [
-    { label: "Disease Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Gender", key: "gender" },
     { label: "Age", key: "age" },
@@ -76,7 +76,7 @@ const SampleDispatchArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -351,13 +351,13 @@ const SampleDispatchArea = () => {
                           className={
                             key === "price"
                               ? "text-end"
-                              : key === "diseasename"
+                              : key === "Analyte"
                                 ? "text-start"
                                 : "text-center text-truncate"
                           }
                           style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
                         >
-                          {key === "diseasename" ? (
+                          {key === "Analyte" ? (
                             <span
                               className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                               role="button"
@@ -370,7 +370,7 @@ const SampleDispatchArea = () => {
                               onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                               onMouseOut={(e) => (e.target.style.color = "")}
                             >
-                              {sample.diseasename || "----"}
+                              {sample.Analyte || "----"}
                             </span>
                           ) : key === "volume" ? (
                             `${sample.volume || "----"} ${sample.VolumeUnit || ""}`

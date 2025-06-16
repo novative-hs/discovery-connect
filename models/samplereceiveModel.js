@@ -65,7 +65,7 @@ const getSampleReceiveInTransit = (
 
       const mainQuery = `
         SELECT DISTINCT
-          s.id, s.masterID, s.donorID, s.diseasename, s.age, s.gender,s.volume,
+          s.id, s.masterID, s.MRNumber, s.Analyte, s.age, s.gender,s.volume,
           s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType,
           s.CountryOfCollection, s.price, s.SamplePriceCurrency,
           s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus,

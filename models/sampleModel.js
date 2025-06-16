@@ -8,27 +8,28 @@ const createSampleTable = () => {
   const sampleTable = `
     CREATE TABLE IF NOT EXISTS sample (
         id VARCHAR(36) PRIMARY KEY,
-        donorID VARCHAR(50),
-        room_number INT,
-        freezer_id INT,
-        box_id INT,
+        MRNumber VARCHAR(50),
         masterID VARCHAR(36),
         user_account_id INT,
-        diseasename VARCHAR(100),
+        patientname VARCHAR(100),
+        Analyte VARCHAR(100),
         age INT,
         gender VARCHAR(10),
         phoneNumber VARCHAR(15),
-        ethnicity VARCHAR(50),
-        samplecondition VARCHAR(100),
-        storagetemp VARCHAR(255),
-        ContainerType VARCHAR(50),
-        CountryOfCollection VARCHAR(50),
-        price FLOAT,
+         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
         quantity_allocated INT,
         volume DOUBLE,
         VolumeUnit VARCHAR(20),
+        room_number INT,
+        freezer_id INT,
+        box_id INT,
+        ethnicity VARCHAR(50),
+        samplecondition VARCHAR(100),
+        storagetemp VARCHAR(255),
+        ContainerType VARCHAR(50),
+        CountryOfCollection VARCHAR(50),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50),
         AlcoholOrDrugAbuse VARCHAR(50),
@@ -215,7 +216,7 @@ const getResearcherSamples = (userId, callback) => {
   const query = `
  SELECT
   s.*,
-  sm.diseasename,
+  sm.Analyte,
   sm.age,
   sm.gender,
   sm.ethnicity,
@@ -299,7 +300,7 @@ ORDER BY s.id DESC;
 };
 
 const getAllVolumnUnits = (name, callback) => {
-  const query = 'SELECT id, quantity, volume, VolumeUnit FROM sample WHERE diseasename = ? and quantity>0';
+  const query = 'SELECT id, quantity, volume, VolumeUnit FROM sample WHERE Analyte = ? and quantity>0';
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
@@ -328,7 +329,8 @@ const getAllVolumnUnits = (name, callback) => {
 };
 
 const getAllSampleinIndex = (name, callback) => {
-  const query = 'SELECT * FROM sample WHERE diseasename = ? and quantity>0';
+  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND price IS NOT NULL';
+
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
@@ -346,7 +348,7 @@ const getAllSampleinIndex = (name, callback) => {
 
 const getAllCSSamples = (limit, offset, callback) => {
 
-  // Query to fetch a single representative full row per diseasename (latest by ID)
+  // Query to fetch a single representative full row per Analyte (latest by ID)
   const dataQuery = `
     SELECT 
       s.*,
@@ -362,22 +364,22 @@ const getAllCSSamples = (limit, offset, callback) => {
     LEFT JOIN city c ON cs.city = c.id
     LEFT JOIN district d ON cs.district = d.id
     INNER JOIN (
-      SELECT diseasename, MAX(id) AS max_id
+      SELECT Analyte, MAX(id) AS max_id
       FROM sample
       WHERE 
         status = 'In Stock'
         AND price > 0
         AND sample_visibility = 'Public'
-      GROUP BY diseasename
-    ) AS grouped ON s.diseasename = grouped.diseasename AND s.id = grouped.max_id
+      GROUP BY Analyte
+    ) AS grouped ON s.Analyte = grouped.Analyte AND s.id = grouped.max_id
     WHERE s.quantity > 0 OR s.quantity_allocated > 0
-    ORDER BY s.diseasename
+    ORDER BY s.Analyte
     LIMIT ? OFFSET ?;
   `;
 
-  // Query to count total distinct diseasenames
+  // Query to count total distinct Analyte
   const countQuery = `
-    SELECT COUNT(DISTINCT diseasename) AS total
+    SELECT COUNT(DISTINCT Analyte) AS total
     FROM sample
     WHERE 
       status = 'In Stock' 
@@ -463,12 +465,12 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, samplemode, room_number, freezer_id, box_id, user_account_id, volume, diseasename, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, MRNumber, samplemode, room_number, freezer_id, box_id, user_account_id, volume,PatientName, Analyte, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.donorID, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.MRNumber, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume,data.patientname, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -489,7 +491,7 @@ const createSample = (data, callback) => {
   VALUES (?, ?, 'add', ?)
 `;
 
-      mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.diseasename || null], (err, historyResults) => {
+      mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.Analyte || null], (err, historyResults) => {
         if (err) {
           console.error('Error inserting into sample_history:', err);
           return callback(err, null);
@@ -524,8 +526,8 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'donorID = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
-    'diseasename = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
+    'MRNumber = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
     'AlcoholOrDrugAbuse = ?', 'InfectiousDiseaseTesting = ?', 'InfectiousDiseaseResult = ?',
@@ -536,7 +538,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.donorID, room_number, freezer_id, box_id, volume, data.diseasename, data.age, data.phoneNumber, data.gender, data.ethnicity,
+    data.MRNumber, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity,
     data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult,
     data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
   ];
@@ -573,7 +575,7 @@ const updateSample = (id, data, file, callback) => {
       VALUES (?, ?, 'update', ?)
     `;
 
-    mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.diseasename || null], (err, historyResults) => {
+    mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.Analyte || null], (err, historyResults) => {
       if (err) {
         console.error('Error inserting into sample_history:', err);
         return callback(err, null);
