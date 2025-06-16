@@ -63,7 +63,7 @@ mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
 
   const query = `
     SELECT sr.*, sr.sampleID, s.diseasename, s.donorID, s.age, s.gender,
- s.samplecondition,s.ethnicity,s.ContainerType,s.CountryOfCollection,s.SamplePriceCurrency,s.QuantityUnit,
+ s.samplecondition,s.ethnicity,s.ContainerType,s.CountryOfCollection,s.SamplePriceCurrency,s.VolumeUnit,
  s.AlcoholOrDrugAbuse,
   s.ConcurrentMedicalConditions,
     s.ConcurrentMedications,

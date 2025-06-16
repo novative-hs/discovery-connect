@@ -54,7 +54,7 @@ const getSampleReceiveInTransit = (req, res) => {
           s.id, s.masterID, s.donorID, s.diseasename, s.age, s.gender,s.volume,
           s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType,
           s.CountryOfCollection, s.price, s.SamplePriceCurrency,
-          s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus,
+          s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus,
           s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting,
           s.InfectiousDiseaseResult, s.FreezeThawCycles,
           s.DateOfSampling, s.ConcurrentMedicalConditions,

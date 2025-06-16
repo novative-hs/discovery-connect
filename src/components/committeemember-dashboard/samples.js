@@ -560,7 +560,7 @@ useEffect(() => {
                       </p>
                       <p>
                         <strong>Volume:</strong>{" "}
-                        {selectedSample.volume} {selectedSample.QuantityUnit}
+                        {selectedSample.volume} {selectedSample.VolumeUnit}
                       </p>
                       <p>
                         <strong>Country of Collection:</strong>{" "}

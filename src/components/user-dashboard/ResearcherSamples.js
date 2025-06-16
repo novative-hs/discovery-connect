@@ -252,12 +252,12 @@ const SampleArea = () => {
                             </td>
                           );
                         }
-                        // ✅ Custom logic for volume + QuantityUnit
+                        // ✅ Custom logic for volume + VolumeUnit
                         if (key === "volume") {
                           return (
                             <td key={index}>
                               {sample.volume
-                                ? `${sample.volume} ${sample.QuantityUnit || ""}`
+                                ? `${sample.volume} ${sample.VolumeUnit || ""}`
                                 : "----"}
                             </td>
                           );

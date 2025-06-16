@@ -8,7 +8,6 @@ import { faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 
 const ShippingSampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) return <div>Loading...</div>;
 
   const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
   const [samples, setSamples] = useState([]);
@@ -25,6 +24,8 @@ const ShippingSampleArea = () => {
   const [deliveryTime, setDeliveryTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  if (id === null) return <div>Loading...</div>;
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "DeliveryDate") setDeliveryDate(value);
@@ -39,7 +40,7 @@ const ShippingSampleArea = () => {
     { label: "Status", key: "order_status" },
   ];
 
-  const fetchSamples = async (action) => {
+  const fetchSamples = async (action = staffAction) => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
@@ -73,8 +74,10 @@ const ShippingSampleArea = () => {
   );
 
   useEffect(() => {
-    fetchSamples(staffAction);
-  }, [staffAction]);
+    if (id) {
+      fetchSamples(staffAction);
+    }
+  }, [staffAction, id]);
 
   useEffect(() => {
     const pages = Math.max(1, Math.ceil(Object.keys(groupedSamples).length / itemsPerPage));
@@ -105,16 +108,19 @@ const ShippingSampleArea = () => {
 
     if (!ids.length) {
       notifyError("No items selected.");
+      setIsSubmitting(false);
       return;
     }
 
     if (orderStatus !== "Shipped") {
       setShowOrderStatusError(true);
+      setIsSubmitting(false);
       return;
     }
 
     if (!deliveryDate || !deliveryTime) {
       notifyError("Please select both delivery date and time.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -140,6 +146,7 @@ const ShippingSampleArea = () => {
     } catch (error) {
       console.error("Error updating order status:", error);
       notifyError("Failed to update order status.");
+      setIsSubmitting(false);
     }
   };
 

@@ -685,7 +685,7 @@ const OrderPage = () => {
                         </p>
                         <p>
                           <strong>Volume:</strong>{" "}
-                          {selectedSample.volume} {selectedSample.Quantityunit}
+                          {selectedSample.volume} {selectedSample.Volumeunit}
                         </p>
                         <p>
                           <strong>Age:</strong> {selectedSample.age} years |{" "}

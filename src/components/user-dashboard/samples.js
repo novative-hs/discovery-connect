@@ -57,7 +57,7 @@ const SampleArea = () => {
     price: "",
     SamplePriceCurrency: "",
     quantity: "",
-    QuantityUnit: "",
+    VolumeUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
     AlcoholOrDrugAbuse: "",
@@ -82,7 +82,7 @@ const SampleArea = () => {
     // { label: "Quantity", key: "orderquantity" },
     // { label: "Total Payment", key: "totalpayment" },
     { label: "Container Type", key: "ContainerType" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Volume Unit", key: "VolumeUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Ethnicity", key: "ethnicity" },
@@ -133,7 +133,7 @@ const SampleArea = () => {
         price: sample.price,
         SamplePriceCurrency: sample.SamplePriceCurrency,
         quantity: updatedQuantity, // Incremented quantity
-        QuantityUnit: sample.QuantityUnit,
+        VolumeUnit: sample.VolumeUnit,
         SampleTypeMatrix: sample.SampleTypeMatrix,
         SmokingStatus: sample.SmokingStatus,
         AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
@@ -217,7 +217,7 @@ const SampleArea = () => {
 
     filtered = samples.filter((sample) => {
       if (field === "volume") {
-        const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+        const combinedVolume = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""}`.toLowerCase();
         return combinedVolume.includes(lowerValue);
       }
       if (field === "price") {
@@ -343,7 +343,7 @@ const SampleArea = () => {
                             </span>
                           );
                         } else if (key === "volume") {
-                          content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                          content = `${sample.volume || "----"} ${sample.VolumeUnit || ""}`;
                         } else if (key === "TestResult") {
                           return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                         } else {

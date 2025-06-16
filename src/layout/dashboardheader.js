@@ -184,7 +184,7 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Sample Price Currency", tab: "sample-price-currency" },
               { label: "Storage Temperature", tab: "storage-temperature" },
               { label: "Container Type", tab: "container-type" },
-              { label: "Quantity Unit", tab: "quantity-unit" },
+              { label: "Volume Unit", tab: "volume-unit" },
               { label: "Sample Type Matrix", tab: "sample-type-matrix" },
               { label: "Test Method", tab: "test-method" },
               { label: "Test Result Unit", tab: "test-result-unit" },
