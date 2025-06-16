@@ -20,115 +20,94 @@ const create_biobankTable = () => {
   });
 };
 
-const getBiobankSamples = (
-  user_account_id,
-  page,
-  pageSize,
-  priceFilter,
-  searchField,
-  searchValue,
-  callback
-) => {
+const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
 
-  let baseWhere = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
-  const params = [];
+  let baseWhereShared = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
+  let baseWhereOwn = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
+  const paramsShared = [];
+  const paramsOwn = [];
+
+  const likeValue = `%${searchValue?.toLowerCase()}%`;
 
   // Price filter
   if (priceFilter === "priceAdded") {
-    baseWhere += ` AND price IS NOT NULL AND price > 0`;
+    baseWhereShared += ` AND sample.price IS NOT NULL AND sample.price > 0`;
+    baseWhereOwn += ` AND sample.price IS NOT NULL AND sample.price > 0`;
   } else if (priceFilter === "priceNotAdded") {
-    baseWhere += ` AND (price IS NULL OR price = 0)`;
+    baseWhereShared += ` AND (sample.price IS NULL OR sample.price = 0)`;
+    baseWhereOwn += ` AND (sample.price IS NULL OR sample.price = 0)`;
   }
 
   // Search filter
   if (searchField && searchValue) {
-    const likeValue = `%${searchValue.toLowerCase()}%`;
-
     switch (searchField) {
-      case "diseasename":
-        baseWhere += ` AND LOWER(diseasename) LIKE ?`;
-        params.push(likeValue);
-        break;
-      case "SampleTypeMatrix":
-        baseWhere += ` AND LOWER(SampleTypeMatrix) LIKE ?`;
-        params.push(likeValue);
-        break;
-      case "ContainerType":
-        baseWhere += ` AND LOWER(ContainerType) LIKE ?`;
-        params.push(likeValue);
-        break;
-      case "sample_visibility":
-        baseWhere += ` AND LOWER(sample_visibility) LIKE ?`;
-        params.push(likeValue);
-        break;
-
-
       case "locationids":
-        baseWhere += ` AND (LOWER(room_number) LIKE ? OR LOWER(freezer_id) LIKE ? OR LOWER(box_id) LIKE ?)`;
-        params.push(likeValue, likeValue, likeValue);
-        break;
-
-      case "volume":
-        baseWhere += ` AND (LOWER(CONCAT_WS(' ', volume, QuantityUnit)) LIKE ? OR LOWER(QuantityUnit) = ?)`;
-        params.push(likeValue, searchValue.toLowerCase());
+        baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+        baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+        paramsShared.push(likeValue, likeValue, likeValue);
+        paramsOwn.push(likeValue, likeValue, likeValue);
         break;
 
       case "price":
-        baseWhere += ` AND LOWER(CONCAT_WS(' ', price, SamplePriceCurrency)) LIKE ?`;
-        params.push(likeValue);
+        baseWhereShared += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
+        baseWhereOwn += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
         break;
 
-      case "status":
-        baseWhere += ` AND LOWER(sample.status) LIKE ?`;
-        params.push(`${searchValue.toLowerCase()}%`);
-        break;
-
-      case "age":
-        baseWhere += ` AND LOWER(age) LIKE ?`;
-        params.push(`${searchValue.toLowerCase()}%`);
-        break;
-
-      case "gender":
-        baseWhere += ` AND LOWER(gender) LIKE ?`;
-        params.push(`${searchValue.toLowerCase()}%`);
+      case "volume":
+        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        paramsShared.push(likeValue, searchValue.toLowerCase());
+        paramsOwn.push(likeValue, searchValue.toLowerCase());
         break;
 
       case "TestResult":
-        baseWhere += ` AND LOWER(CONCAT_WS(' ', TestResult, TestResultUnit)) LIKE ?`;
-        params.push(likeValue);
+        baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "gender":
+        baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
+        paramsShared.push(`${searchValue.toLowerCase()}%`);
+        paramsOwn.push(`${searchValue.toLowerCase()}%`);
+        break;
+
+      case "CollectionSiteName":
+        baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
+        paramsShared.push(likeValue);
+        // Do not include this filter in baseWhereOwn because collectionsite is not joined there
         break;
 
       default:
-        // Prevent SQL injection by whitelisting valid fields only
-        const allowedFields = ['sample_type', 'sample_name', 'donor_id']; // Add safe fields here
-        if (allowedFields.includes(searchField)) {
-          baseWhere += ` AND LOWER(${searchField}) LIKE ?`;
-          params.push(likeValue);
-        }
+        baseWhereShared += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
         break;
     }
   }
 
-  // Own samples query
-  const ownSamplesQuery = `
-    SELECT sample.*, NULL AS CollectionSiteName
-    FROM sample
-    WHERE ${baseWhere} AND sample.user_account_id = ?
-  `;
-
-  // Shared samples query
   const sharedSamplesQuery = `
     SELECT sample.*, collectionsite.CollectionSiteName
     FROM sample
     JOIN collectionsitestaff ON sample.user_account_id = collectionsitestaff.user_account_id
     JOIN collectionsite ON collectionsitestaff.collectionsite_id = collectionsite.id
-    WHERE ${baseWhere}
+    WHERE ${baseWhereShared}
   `;
 
-  // Final paginated query
+  const ownSamplesQuery = `
+    SELECT sample.*, NULL AS CollectionSiteName
+    FROM sample
+    WHERE ${baseWhereOwn} AND sample.user_account_id = ?
+  `;
+
   const dataQuery = `
     SELECT * FROM (
       ${sharedSamplesQuery}
@@ -138,7 +117,6 @@ const getBiobankSamples = (
     LIMIT ? OFFSET ?
   `;
 
-  // Count query (no pagination)
   const countQuery = `
     SELECT COUNT(*) AS totalCount FROM (
       ${sharedSamplesQuery}
@@ -147,16 +125,12 @@ const getBiobankSamples = (
     ) AS countCombined
   `;
 
-  // Final parameters
-  const finalParams = [...params, ...params, user_account_id, pageSizeInt, offset];
-  const countParams = [...params, ...params, user_account_id];
+  const finalParams = [...paramsShared, ...paramsOwn, user_account_id, pageSizeInt, offset];
+  const countParams = [...paramsShared, ...paramsOwn, user_account_id];
 
-  // Execute paginated data query
   mysqlConnection.query(dataQuery, finalParams, (err, results) => {
     if (err) {
       console.error("❌ Data Query Error:", err.sqlMessage || err.message);
-      console.error("Query:", dataQuery);
-      console.error("Params:", finalParams);
       return callback(err);
     }
 
@@ -167,13 +141,8 @@ const getBiobankSamples = (
         .join("-"),
     }));
 
-    // Execute count query
     mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-      if (err) {
-        console.error("❌ Count Query Error:", err.sqlMessage || err.message);
-        return callback(err);
-      }
-
+      if (err) return callback(err);
       const totalCount = countResults[0].totalCount;
       callback(null, { samples: enrichedResults, totalCount });
     });
@@ -293,7 +262,7 @@ const getBiobankVisibilitySamples = (user_account_id, page, pageSize, searchFiel
 // Get price dropdown while adding price in Biobank
 const getPrice = (name, callback) => {
 
-  const query = 'SELECT price FROM sample WHERE diseasename = ?';
+  const query = 'SELECT DISTINCT price FROM sample WHERE diseasename = ?';
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {

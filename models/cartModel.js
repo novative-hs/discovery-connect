@@ -117,7 +117,7 @@ const createCartTable = () => {
     sample_id VARCHAR(36) NOT NULL,
     price FLOAT NOT NULL,
     quantity INT NOT NULL,
-    QuantityUnit VARCHAR(20),
+    VolumeUnit VARCHAR(20),
     volume VARCHAR(255) NOT NULL,
     totalpayment DECIMAL(10, 2) NOT NULL,
     payment_id INT DEFAULT NULL,
@@ -184,7 +184,7 @@ const createCart = (data, callback) => {
         const sample_id = item.sample_id;
 
         const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity, volume, QuantityUnit, payment_id, totalpayment)
+          INSERT INTO cart (user_id, sample_id, price, quantity, volume, VolumeUnit, payment_id, totalpayment)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
@@ -194,7 +194,7 @@ const createCart = (data, callback) => {
           item.price,
           item.samplequantity,
           item.volume,
-          item.QuantityUnit,
+          item.VolumeUnit,
           payment_id,
           item.total,
         ];
@@ -466,7 +466,7 @@ if (status === 'Rejected') {
       c.sample_id, 
       s.diseasename, 
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-      s.CountryofCollection, s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+      s.CountryofCollection, s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
       s.FreezeThawCycles, s.dateOfSampling, s.ConcurrentMedicalConditions, 
       s.ConcurrentMedications, s.DiagnosisTestParameter, s.TestResult, 
@@ -579,7 +579,7 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
       s.diseasename, 
       s.age, s.gender, s.ethnicity, s.samplecondition, 
       s.storagetemp, s.ContainerType, s.CountryofCollection, 
-      s.QuantityUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+      s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, 
       s.InfectiousDiseaseResult, s.FreezeThawCycles, 
       s.dateOfSampling, s.ConcurrentMedicalConditions, 

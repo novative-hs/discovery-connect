@@ -10,17 +10,17 @@ import Pagination from "@ui/Pagination";
 
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>;
-  } else {
-    console.log("Collection site Id on sample page is:", id);
-  }
   const [showModal, setShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
+  const [samples, setSamples] = useState([]);
+  const [filteredSamples, setFilteredSamples] = useState(samples);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   const fieldsToShowInOrder = [
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Date Of Sampling", key: "DateOfSampling" },
@@ -42,8 +42,8 @@ const BioBankSampleArea = () => {
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
-
   ];
+
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
     { label: "Volume", key: "volume" },
@@ -55,15 +55,10 @@ const BioBankSampleArea = () => {
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
-
-
   ];
-  const [samples, setSamples] = useState([]);
-  const [filteredSamples, setFilteredSamples] = useState(samples);
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
 
-  const [totalPages, setTotalPages] = useState(0);
+
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const storedUser = getsessionStorage("user");
@@ -96,16 +91,13 @@ const BioBankSampleArea = () => {
   };
 
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamples.length / itemsPerPage)
-    );
+    const pages = Math.max(1, Math.ceil(filteredSamples.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0);
     }
-  }, [filteredSamples]);
+  }, [filteredSamples, currentPage]);
 
   const currentData = filteredSamples.slice(
     currentPage * itemsPerPage,
@@ -116,7 +108,7 @@ const BioBankSampleArea = () => {
     setCurrentPage(event.selected);
   };
 
- const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
@@ -126,22 +118,19 @@ const BioBankSampleArea = () => {
 
       filtered = samples.filter((sample) => {
         if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${
-            sample.QuantityUnit ?? ""
-          }`.toLowerCase();
+          const combinedVolume = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""
+            }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
-         if (field === "TestResult") {
-          const combinedVolume = `${sample.TestResult ?? ""} ${
-            sample.TestResultUnit ?? ""
-          }`.toLowerCase();
+        if (field === "TestResult") {
+          const combinedVolume = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""
+            }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
 
         if (field === "price") {
-          const combinedPrice = `${sample.price ?? ""} ${
-            sample.SamplePriceCurrency ?? ""
-          }`.toLowerCase();
+          const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""
+            }`.toLowerCase();
           return combinedPrice.includes(lowerValue);
         }
 
@@ -223,10 +212,13 @@ const BioBankSampleArea = () => {
   };
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
-
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
+
+  if (id === null) {
+    return <div>Loading...</div>;
+  }
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
@@ -300,7 +292,7 @@ const BioBankSampleArea = () => {
                             {sample.diseasename || "----"}
                           </span>
                         ) : key === "volume" ? (
-                          `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                          `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
                         ) : key === "age" ? (
                           `${sample.age || "----"} years`
                         ) : key === "TestResult" ? (

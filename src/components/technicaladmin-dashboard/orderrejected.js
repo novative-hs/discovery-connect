@@ -306,8 +306,8 @@ const OrderRejectedPage = () => {
                           <strong>Quantity:</strong> {selectedSample.quantity}
                         </p>
                         <p>
-                          <strong>Quantity unit:</strong>{" "}
-                          {selectedSample.QuantityUnit}
+                          <strong>Volume unit:</strong>{" "}
+                          {selectedSample.VolumeUnit}
                         </p>
                         <p>
                           <strong>Country of Collection:</strong>{" "}

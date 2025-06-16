@@ -55,7 +55,7 @@ function Database() {
   samplefieldsModel.createSamplePriceCurrencyTable();
   samplefieldsModel.createStorageTemperatureTable();
   samplefieldsModel.createContainerTypeTable()
-  samplefieldsModel.createQuantityUnitTable();
+  samplefieldsModel.createVolumeUnitTable();
   samplefieldsModel.createSampleTypeMatrixTable();
   samplefieldsModel.createTestMethodTable()
   samplefieldsModel.createTestResultUnitTable();

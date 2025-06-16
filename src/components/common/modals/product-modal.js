@@ -97,7 +97,7 @@ const ProductModal = ({ product }) => {
                   <div className="mt-3 text-start bg-light p-2 rounded">
                     <p><strong>Age:</strong> {product.age} years | <strong>Gender:</strong> {product.gender}</p>
                     <p><strong>Container:</strong> {product.ContainerType}</p>
-                    <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
+                    <p><strong>Volume:</strong> {product.volume} {product.VolumeUnit}</p>
                     <p><strong>Test Result:</strong> {product.TestResult} {product.TestResultUnit}</p>
                     <p><strong>Status:</strong> {product.status}</p>
                   </div>
@@ -120,7 +120,7 @@ const ProductModal = ({ product }) => {
                 <div className="mt-3 text-start bg-light p-2 rounded">
                   <p><strong>Age:</strong> {product.age} | <strong>Gender:</strong> {product.gender}</p>
                   <p><strong>Container:</strong> {product.ContainerType}</p>
-                  <p><strong>Volume:</strong> {product.volume} {product.QuantityUnit}</p>
+                  <p><strong>Volume:</strong> {product.volume} {product.VolumeUnit}</p>
                   <p><strong>Status:</strong> {product.status}</p>
                   {nonNullOptionalFields.map((value, i) => (
                     value && <p key={i}><strong>{Object.keys(product)[Object.values(product).indexOf(value)]}:</strong> {value}</p>

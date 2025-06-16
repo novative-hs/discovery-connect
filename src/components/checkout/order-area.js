@@ -65,7 +65,7 @@ const handleSubmit = async (paymentId) => {
         price: Number(item.price),
         samplequantity: Number(item.orderQuantity),
         volume: item.volume,
-        QuantityUnit: item.QuantityUnit,
+        VolumeUnit: item.VolumeUnit,
         total: Number(item.orderQuantity) * Number(item.price),
       }))
     )

@@ -78,7 +78,7 @@ const SampleLost = () => {
       const lowerValue = value.toLowerCase();
       filtered = samples.filter((sample) => {
         if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+          const combinedVolume = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""}`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
         if (field === "gender" || field === "sample_visibility") {
@@ -200,7 +200,7 @@ const SampleLost = () => {
                             {sample.diseasename || "----"}
                           </span>
                         ) : key === "volume" ? (
-                          `${sample.volume || "----"} ${sample.QuantityUnit || ""}`
+                          `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
                         ) : key === "age" ? (
                           `${sample.age || "----"} years`
                         ) : key === "TestResult" ? (

@@ -11,7 +11,7 @@ import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 
-const QuantityUnitArea = () => {
+const VolumeUnitArea = () => {
   const id = sessionStorage.getItem("userID");
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -19,16 +19,16 @@ const QuantityUnitArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedquantityunitnameId, setSelectedquantityunitnameId] =
+  const [selectedvolumeunitnameId, setSelectedvolumeunitnameId] =
     useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editquantityunitname, setEditquantityunitname] = useState(null); // State for selected City to edit
-  const [quantityunitname, setquantityunitname] = useState([]); // State to hold fetched City
+  const [editvolumeunitname, setEditvolumeunitname] = useState(null); // State for selected City to edit
+  const [volumeunitname, setvolumeunitname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredQuantityunitname, setFilteredQuantityunitname] = useState([]); // Store filtered cities
+  const [filteredVolumeunitname, setFilteredVolumeunitname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   // Calculate total pages
@@ -37,19 +37,19 @@ const QuantityUnitArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    const fetchQuantityunitname = async () => {
+    const fetchVolumeunitname = async () => {
       try {
         const response = await axios.get(
-          `${url}/samplefields/get-samplefields/quantityunit`
+          `${url}/samplefields/get-samplefields/volumeunit`
         );
-        setFilteredQuantityunitname(response.data); // Initialize filtered list
-        setquantityunitname(response.data); // Store fetched City in state
+        setFilteredVolumeunitname(response.data); // Initialize filtered list
+        setvolumeunitname(response.data); // Store fetched City in state
       } catch (error) {
-        console.error("Error fetching Quantity Unit:", error);
+        console.error("Error fetching Volume Unit:", error);
       }
     };
 
-    fetchQuantityunitname();
+    fetchVolumeunitname();
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
@@ -57,14 +57,14 @@ const QuantityUnitArea = () => {
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredQuantityunitname.length / itemsPerPage)
+      Math.ceil(filteredVolumeunitname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredQuantityunitname, currentPage]);
+  }, [filteredVolumeunitname, currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -74,7 +74,7 @@ const QuantityUnitArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredQuantityunitname.slice(
+  const currentData = filteredVolumeunitname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -87,27 +87,27 @@ const QuantityUnitArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = quantityunitname; // Show all if filter is empty
+      filtered = volumeunitname; // Show all if filter is empty
     } else {
-      filtered = quantityunitname.filter((quantityunit) =>
-        quantityunit[field]
+      filtered = volumeunitname.filter((volumeunit) =>
+        volumeunit[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
       );
     }
 
-    setFilteredQuantityunitname(filtered);
+    setFilteredVolumeunitname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
     setCurrentPage(0); // Reset to first page after filtering
   };
 
-  const handleEditClick = (quantityunitname) => {
-    setSelectedquantityunitnameId(quantityunitname.id);
-    setEditquantityunitname(quantityunitname);
+  const handleEditClick = (volumeunitname) => {
+    setSelectedvolumeunitnameId(volumeunitname.id);
+    setEditvolumeunitname(volumeunitname);
 
     setFormData({
-      name: quantityunitname.name,
+      name: volumeunitname.name,
       added_by: id,
     });
 
@@ -143,20 +143,20 @@ const QuantityUnitArea = () => {
     e.preventDefault();
     try {
       await axios.post(
-        `${url}/samplefields/post-samplefields/quantityunit`,
+        `${url}/samplefields/post-samplefields/volumeunit`,
         formData
       );
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/quantityunit`
+        `${url}/samplefields/get-samplefields/volumeunit`
       );
-      setFilteredQuantityunitname(response.data);
-      setquantityunitname(response.data);
-      setSuccessMessage("Quantity Unit Name added successfully.");
+      setFilteredVolumeunitname(response.data);
+      setvolumeunitname(response.data);
+      setSuccessMessage("Volume Unit Name added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Quantity Unit Name", error);
+      console.error("Error adding Volume Unit Name", error);
     }
   };
 
@@ -164,21 +164,21 @@ const QuantityUnitArea = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `${url}/samplefields/put-samplefields/quantityunit/${selectedquantityunitnameId}`,
+        `${url}/samplefields/put-samplefields/volumeunit/${selectedvolumeunitnameId}`,
         formData
       );
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/quantityunit`
+        `${url}/samplefields/get-samplefields/volumeunit`
       );
-      setFilteredQuantityunitname(response.data);
-      setquantityunitname(response.data);
-      setSuccessMessage("Quantity Unit Name updated successfully.");
+      setFilteredVolumeunitname(response.data);
+      setvolumeunitname(response.data);
+      setSuccessMessage("Volume Unit Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowEditModal(false);
     } catch (error) {
       console.error(
-        `Error updating Quantity Unit Name: ${selectedquantityunitnameId}`,
+        `Error updating Volume Unit Name: ${selectedvolumeunitnameId}`,
         error
       );
     }
@@ -187,20 +187,20 @@ const QuantityUnitArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `${url}/samplefields/delete-samplefields/quantityunit/${selectedquantityunitnameId}`
+        `${url}/samplefields/delete-samplefields/volumeunit/${selectedvolumeunitnameId}`
       );
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/quantityunit`
+        `${url}/samplefields/get-samplefields/volumeunit`
       );
-      setFilteredQuantityunitname(response.data);
-      setquantityunitname(response.data);
-      setSuccessMessage("Quantity Unit Name deleted successfully.");
+      setFilteredVolumeunitname(response.data);
+      setvolumeunitname(response.data);
+      setSuccessMessage("Volume Unit Name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedquantityunitnameId(null);
+      setSelectedvolumeunitnameId(null);
     } catch (error) {
       console.error(
-        `Error deleting Quantity Unit Name: ${selectedquantityunitnameId}`,
+        `Error deleting Volume Unit Name: ${selectedvolumeunitnameId}`,
         error
       );
     }
@@ -218,17 +218,17 @@ const QuantityUnitArea = () => {
       const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        await axios.post(`${url}/samplefields/post-samplefields/quantityunit`, {
+        await axios.post(`${url}/samplefields/post-samplefields/volumeunit`, {
           bulkData: payload,
         });
         setSuccessMessage("Successfully added")
         const response = await axios.get(
-          `${url}/samplefields/get-samplefields/quantityunit`
+          `${url}/samplefields/get-samplefields/volumeunit`
         );
-        setFilteredQuantityunitname(response.data);
-        setquantityunitname(response.data);
+        setFilteredVolumeunitname(response.data);
+        setvolumeunitname(response.data);
       } catch (error) {
-        console.error("Error uploading quantity unit", error);
+        console.error("Error uploading volume unit", error);
       }
     };
     reader.readAsBinaryString(file);
@@ -245,7 +245,7 @@ const QuantityUnitArea = () => {
   };
 
   const handleExportToExcel = () => {
-    const dataToExport = filteredQuantityunitname.map((item) => ({
+    const dataToExport = filteredVolumeunitname.map((item) => ({
       Name: item.name ?? "", // Fallback to empty string
       "Added By": "Registration Admin",
       "Created At": item.created_at ? formatDate(item.created_at) : "",
@@ -266,9 +266,9 @@ const QuantityUnitArea = () => {
       header: ["Name", "Added By", "Created At", "Updated At"],
     });
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Quantity Unit");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Volume Unit");
 
-    XLSX.writeFile(workbook, "Quantity_Unit_List.xlsx");
+    XLSX.writeFile(workbook, "Volume_Unit_List.xlsx");
   };
 
   if (!id) return <div>Loading...</div>;
@@ -291,7 +291,7 @@ const QuantityUnitArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">Quantity Unit List</h5>
+              <h5 className="m-0 fw-bold ">Volume Unit List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Export to Excel button */}
                 <button
@@ -313,7 +313,7 @@ const QuantityUnitArea = () => {
                   <i className="fas fa-file-excel"></i> Export to Excel
                 </button>
 
-                {/* Add Quantity Unit Button */}
+                {/* Add Volume Unit Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -330,7 +330,7 @@ const QuantityUnitArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Quantity Unit
+                  <i className="fas fa-plus"></i> Add Volume Unit
                 </button>
 
                 <label
@@ -370,8 +370,8 @@ const QuantityUnitArea = () => {
                   {[
                     //{ label: "ID", placeholder: "Search ID", field: "id" ,width: "col-md-2"},
                     {
-                      label: "Quantity Unit",
-                      placeholder: "Search Quantity Unit",
+                      label: "Volume Unit",
+                      placeholder: "Search Volume Unit",
                       field: "name",
                       width: "col-md-1",
                     },
@@ -434,26 +434,26 @@ const QuantityUnitArea = () => {
                                   updated_at,
                                 })
                               }
-                              title="Edit Quantity Unit"
+                              title="Edit Volume Unit"
                             >
                               <FontAwesomeIcon icon={faEdit} size="xs" />
                             </button>
                             <button
                               className="btn btn-danger btn-sm"
                               onClick={() => {
-                                setSelectedquantityunitnameId(id);
+                                setSelectedvolumeunitnameId(id);
                                 setShowDeleteModal(true);
                               }}
-                              title="Delete Quantity Unit"
+                              title="Delete Volume Unit"
                             >
                               <FontAwesomeIcon icon={faTrash} size="sm" />
                             </button>
                             <button
                               className="btn btn-info btn-sm"
                               onClick={() =>
-                                handleShowHistory("quantityunit", id)
+                                handleShowHistory("volumeunit", id)
                               }
-                              title="History Quantity unit"
+                              title="History Volume unit"
                             >
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
@@ -465,7 +465,7 @@ const QuantityUnitArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No Quantity Unit Available
+                      No Volume Unit Available
                     </td>
                   </tr>
                 )}
@@ -536,7 +536,7 @@ const QuantityUnitArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>Quantity Unit Name</label>
+                          <label>Volume Unit Name</label>
                           <input
                             type="text"
                             className="form-control"
@@ -550,7 +550,7 @@ const QuantityUnitArea = () => {
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update Quantity Unit"}
+                          {showAddModal ? "Save" : "Update Volume Unit"}
                         </button>
                       </div>
                     </form>
@@ -588,7 +588,7 @@ const QuantityUnitArea = () => {
                       className="modal-header"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <h5 className="modal-title">Delete Quantity Unit</h5>
+                      <h5 className="modal-title">Delete Volume Unit</h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -596,7 +596,7 @@ const QuantityUnitArea = () => {
                       ></button>
                     </div>
                     <div className="modal-body">
-                      <p>Are you sure you want to delete this Quantity Unit?</p>
+                      <p>Are you sure you want to delete this Volume Unit?</p>
                     </div>
                     <div className="modal-footer">
                       <button className="btn btn-danger" onClick={handleDelete}>
@@ -699,7 +699,7 @@ const QuantityUnitArea = () => {
                                   textAlign: "left",
                                 }}
                               >
-                                <b>Quantity unit:</b> {created_name} was{" "}
+                                <b>Volume unit:</b> {created_name} was{" "}
                                 <b>added</b> by Registration Admin at{" "}
                                 {moment(created_at).format(
                                   "DD MMM YYYY, h:mm A"
@@ -720,7 +720,7 @@ const QuantityUnitArea = () => {
                                     marginTop: "5px", // Spacing between messages
                                   }}
                                 >
-                                  <b>Quantity unit:</b> {updated_name} was{" "}
+                                  <b>Volume unit:</b> {updated_name} was{" "}
                                   <b>updated</b> by Registration Admin at{" "}
                                   {moment(updated_at).format(
                                     "DD MMM YYYY, h:mm A"
@@ -745,4 +745,4 @@ const QuantityUnitArea = () => {
   );
 };
 
-export default QuantityUnitArea;
+export default VolumeUnitArea;

@@ -137,7 +137,7 @@ const FilterProduct = () => {
       const filtered = products.filter((sample) => {
         // Custom logic for composite fields
         if (field === "volume") {
-          const volumeWithUnit = `${sample.volume || ""} ${sample.QuantityUnit || ""}`.toLowerCase();
+          const volumeWithUnit = `${sample.volume || ""} ${sample.VolumeUnit || ""}`.toLowerCase();
           return volumeWithUnit.includes(search);
         }
 
@@ -249,7 +249,7 @@ const FilterProduct = () => {
                                 </span>
                               );
                             } else if (key === "volume") {
-                              content = `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                              content = `${sample.volume || "----"} ${sample.VolumeUnit || ""}`;
                             } else if (key === "age") {
                               content = `${sample.age ? sample.age + " years" : "----"}`;
                             } else if (key === "TestResult") {
