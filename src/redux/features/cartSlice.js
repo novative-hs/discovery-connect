@@ -45,7 +45,7 @@ export const cartSlice = createSlice({
        state.cart_products = state.cart_products.map((item) => {
   if (item.id === payload.id) {
     if (item.quantity >= item.orderQuantity + 1) {
-      notifySuccess(`${item.diseasename} quantity updated in cart`);
+      notifySuccess(`${item.Analyte} quantity updated in cart`);
       return {
         ...item,
         orderQuantity: item.orderQuantity + 1,

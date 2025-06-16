@@ -149,7 +149,7 @@ const handleSubmit = async (paymentId) => {
               {cart_products?.length > 0 ? (
                 cart_products.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.diseasename || "----"}</td>
+                    <td>{item.Analyte || "----"}</td>
                     <td>{(item.price || 0).toFixed(2)}</td>
                     <td>{item.orderQuantity || 0}</td>
                     <td>

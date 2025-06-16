@@ -25,7 +25,7 @@ import ConcurrentMedicalConditionsArea from "./concurrent-medical-conditions";
 import TestKitManufacturerArea from "./test-kit-manufacturer";
 import TestSystemArea from "./test-system";
 import TestSystemManufacturerArea from "./test-system-manufacturer";
-import DiagnosisTestParameterArea from "./diagnosistestparameter";
+import Analyte from "./Analyte";
 import InfectiousdiseaseArea from "./infectiousdiseasetesting";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
@@ -76,8 +76,8 @@ const DashboardArea = () => {
         return <Organization />;
       case "collectionsite":
         return <CollectionsiteArea />;
-     case "diagnosistestparameter":
-      return <DiagnosisTestParameterArea/>
+     case "Analyte":
+      return <Analyte/>
       case "infectiousdiseasetesting":
         return <InfectiousdiseaseArea/>
       case "ethnicity":
@@ -131,7 +131,7 @@ case "staffManagementPage:csr":
       : [
           "ethnicity",
           "sample-condition",
-          "diagnosistestparameter",
+          "Analyte",
           "infectiousdiseasetesting",
           "sample-price-currency",
           "storage-temperature",

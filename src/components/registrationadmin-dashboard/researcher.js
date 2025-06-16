@@ -829,7 +829,7 @@ const ResearcherArea = () => {
                           <table className="table table-hover table-striped align-middle">
                             <thead className="table-dark">
                               <tr>
-                                <th>Disease Name</th>
+                                <th>Analyte</th>
                                 <th>Price</th>
                                 <th>Quantity</th>
                                 <th>Total</th>
@@ -842,7 +842,7 @@ const ResearcherArea = () => {
                             <tbody>
                               {orderhistoryData.map((order, index) => (
                                 <tr key={index}>
-                                  <td>{order.diseasename}</td>
+                                  <td>{order.Analyte}</td>
                                   <td>{order.price}</td>
                                   <td>{order.quantity}</td>
                                   <td>{order.totalpayment}</td>

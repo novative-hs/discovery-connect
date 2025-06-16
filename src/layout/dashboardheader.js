@@ -179,7 +179,7 @@ const Header = ({ setActiveTab, activeTab }) => {
             dropdown: [
               { label: "Ethnicity", tab: "ethnicity" },
               { label: "Sample Condition", tab: "sample-condition" },
-              { label: "Diagnosis Test Parameter", tab: "diagnosistestparameter" },
+              { label: "Analyte", tab: "Analyte" },
               { label: "Infectious Disease Testing", tab: "infectiousdiseasetesting" },
               { label: "Sample Price Currency", tab: "sample-price-currency" },
               { label: "Storage Temperature", tab: "storage-temperature" },

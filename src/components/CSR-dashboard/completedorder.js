@@ -97,7 +97,7 @@ const CompletedSampleArea = () => {
                 {[
                   { label: "Order ID", key: "id" },
                   { label: "User Name", key: "researcher_name" },
-                  { label: "Disease Name", key: "diseasename" },
+                  { label: "Analyte", key: "Analyte" },
                   { label: "Order Date", key: "created_at" },
                   { label: "Status", key: "order_status" },
                 ].map(({ label, key }, index) => (
@@ -124,7 +124,7 @@ const CompletedSampleArea = () => {
                   <tr key={sample.id}>
                     <td>{sample.id || "----"}</td>
                     <td>{sample.researcher_name}</td>
-                    <td>{sample.diseasename}</td>
+                    <td>{sample.Analyte}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>
                     <td>{sample.order_status}</td>
                   </tr>

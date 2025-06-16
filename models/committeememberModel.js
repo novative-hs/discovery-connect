@@ -60,7 +60,7 @@ const fetchCommitteeOrderHistory = (committeeMemberId, callback) => {
         cm.comments AS committee_comments,
         r.ResearcherName AS researcher_name,
         m.CommitteeMemberName AS committee_member_name,
-        s.diseasename,
+        s.Analyte,
         c.quantity,
         sd.study_copy,
         sd.irb_file,

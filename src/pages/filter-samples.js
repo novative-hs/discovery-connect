@@ -31,7 +31,7 @@ const FilterProduct = () => {
   const filterTimeoutRef = useRef(null);
 
   const tableHeaders = [
-    { label: "Sample Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -54,7 +54,7 @@ const FilterProduct = () => {
     { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -71,7 +71,7 @@ const FilterProduct = () => {
     const item = sessionStorage.getItem("filterProduct");
     if (item) {
       const parsed = JSON.parse(item);
-      const diseaseName = parsed?.diseasename;
+      const Analyte = parsed?.Analyte;
       const image_url = parsed?.imageUrl;
 
 
@@ -84,8 +84,8 @@ const FilterProduct = () => {
       setProduct([normalizedItem]);
       setFilteredSamples([normalizedItem]);
 
-      if (diseaseName) {
-        getSample(diseaseName);
+      if (Analyte) {
+        getSample(Analyte);
         setImageURL(image_url);
       }
     }
@@ -229,7 +229,7 @@ const FilterProduct = () => {
                               content = sample.price
                                 ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
                                 : "----";
-                            } else if (key === "diseasename") {
+                            } else if (key === "Analyte") {
                               content = (
                                 <span
                                   className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
@@ -245,7 +245,7 @@ const FilterProduct = () => {
                                   }
                                   onMouseOut={(e) => (e.target.style.color = "")}
                                 >
-                                  {sample.diseasename || "----"}
+                                  {sample.Analyte || "----"}
                                 </span>
                               );
                             } else if (key === "volume") {
@@ -264,7 +264,7 @@ const FilterProduct = () => {
                                 className={
                                   key === "price"
                                     ? "text-end"
-                                    : key === "diseasename"
+                                    : key === "Analyte"
                                       ? ""
                                       : "text-center text-truncate"
                                 }

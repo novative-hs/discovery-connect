@@ -64,7 +64,7 @@ const fetchOrderHistory = (researcherId, callback) => {
   const query = `
     SELECT 
       r.ResearcherName AS researcher_name,
-      s.diseasename,
+      s.Analyte,
       c.quantity,
       c.totalpayment,
       c.price,

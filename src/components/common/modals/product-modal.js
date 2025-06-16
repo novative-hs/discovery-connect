@@ -69,7 +69,7 @@ const ProductModal = ({ product }) => {
           className="d-flex justify-content-between align-items-center p-2"
           style={{ backgroundColor: "#cfe2ff", color: "#000" }}
         >
-          <h5 className="fw-bold">{product.diseasename}</h5>
+          <h5 className="fw-bold">{product.Analyte}</h5>
           <button
             type="button"
             onClick={handleModalClose}
@@ -90,7 +90,7 @@ const ProductModal = ({ product }) => {
                 <div className="col-md-5 text-center">
                   <img
                     src={product.imageUrl || "/placeholder.jpg"}
-                    alt={product.diseasename}
+                    alt={product.Analyte}
                     className="img-fluid rounded"
                     style={{ maxHeight: "200px", objectFit: "cover" }}
                   />
@@ -112,7 +112,7 @@ const ProductModal = ({ product }) => {
               <div className="col-12 text-center">
                 <img
                   src={product.imageUrl || "/placeholder.jpg"}
-                  alt={product.diseasename}
+                  alt={product.Analyte}
                   className="img-fluid rounded"
                   style={{ maxHeight: "130px", objectFit: "cover" }}
 

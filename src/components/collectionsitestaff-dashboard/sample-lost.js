@@ -104,7 +104,7 @@ const SampleLost = () => {
   };
 
   const tableHeaders = [
-    { label: "Sample Name", key: "diseasename" },
+    { label: "Analyte ", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -123,7 +123,7 @@ const SampleLost = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -182,7 +182,7 @@ const SampleLost = () => {
                         }
                         style={{ maxWidth: "150px" }}
                       >
-                        {key === "diseasename" ? (
+                        {key === "Analyte" ? (
                           <span
                             className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -197,7 +197,7 @@ const SampleLost = () => {
                             }
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.diseasename || "----"}
+                            {sample.Analyte || "----"}
                           </span>
                         ) : key === "volume" ? (
                           `${sample.volume || "----"} ${sample.VolumeUnit || ""}`

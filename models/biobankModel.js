@@ -170,7 +170,7 @@ const createBiobankSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, donorID, room_number, freezer_id, box_id, user_account_id, volume, diseasename, phoneNumber,age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+      id, MRNumber, room_number, freezer_id, box_id, user_account_id, volume, Analyte, phoneNumber,age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -178,13 +178,13 @@ const createBiobankSample = (data, callback) => {
     insertQuery,
     [
       id,
-      data.donorID,
+      data.MRNumber,
       room_number,
       freezer_id,
       box_id,
       data.user_account_id,
       data.volume,
-      data.diseasename,
+      data.Analyte,
       data.phoneNumber,
       data.age,
       data.gender,
@@ -309,11 +309,11 @@ const updateBiobankSample = (id, data, callback) => {
 
   const query = `
     UPDATE sample
-    SET room_number = ?, freezer_id = ?, box_id = ?, volume=?,diseasename = ?, age = ?, phoneNumber= ?, gender = ?, ethnicity = ?, samplecondition = ?,
+    SET room_number = ?, freezer_id = ?, box_id = ?, volume=?,Analyte = ?, age = ?, phoneNumber= ?, gender = ?, ethnicity = ?, samplecondition = ?,
         storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, price = ?, SamplePriceCurrency = ?,
         quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, 
         InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfSampling = ?, 
-        ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, DiagnosisTestParameter = ?, TestResult = ?,
+        ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, Analyte = ?, TestResult = ?,
         TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
     WHERE id = ?
   `;
@@ -323,7 +323,7 @@ const updateBiobankSample = (id, data, callback) => {
     freezer_id,
     box_id,
     data.volume,
-    data.diseasename,
+    data.Analyte,
     data.age,
     data.phoneNumber,
     data.gender,
@@ -345,7 +345,7 @@ const updateBiobankSample = (id, data, callback) => {
     data.DateOfSampling,
     data.ConcurrentMedicalConditions,
     data.ConcurrentMedications,
-    data.DiagnosisTestParameter,
+    data.Analyte,
     data.TestResult,
     data.TestResultUnit,
     data.TestMethod,
@@ -472,7 +472,7 @@ const getBiobankVisibilitySamples = (
 // Get price dropdown while adding price in Biobank
 const getPrice = (name, callback) => {
 
-  const query = 'SELECT DISTINCT price FROM sample WHERE diseasename = ?';
+  const query = 'SELECT DISTINCT price FROM sample WHERE Analyte = ?';
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {

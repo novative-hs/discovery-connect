@@ -70,7 +70,7 @@ const SingleListProduct = ({ product }) => {
 
         <div className="col-xl-7 col-lg-7" style={{ flex: "1 1 55%" }}>
           <h3 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "8px" }}>
-            {product.diseasename}
+            {product.Analyte}
           </h3>
 
           <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "4px" }}>

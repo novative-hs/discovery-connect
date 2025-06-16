@@ -29,7 +29,7 @@ const BioBankSampleArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Test Result", key: "TestResult" },
     { label: "Test Result Unit", key: "TestResultUnit" },
     { label: "Test Method", key: "TestMethod" },
@@ -45,7 +45,7 @@ const BioBankSampleArea = () => {
   ];
 
   const tableHeaders = [
-    { label: "Disease Name", key: "diseasename" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
@@ -265,7 +265,7 @@ const BioBankSampleArea = () => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "diseasename"
+                            : key === "Analyte"
                               ? "text-start"
                               : "text-center text-truncate"
                         }
@@ -276,7 +276,7 @@ const BioBankSampleArea = () => {
                           whiteSpace: "normal",
                         }}
                       >
-                        {key === "diseasename" ? (
+                        {key === "Analyte" ? (
                           <span
                             className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -289,7 +289,7 @@ const BioBankSampleArea = () => {
                             onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.diseasename || "----"}
+                            {sample.Analyte || "----"}
                           </span>
                         ) : key === "volume" ? (
                           `${sample.volume || "----"} ${sample.VolumeUnit || ""}`

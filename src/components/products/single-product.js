@@ -10,7 +10,7 @@ import { setProduct } from "src/redux/features/productSlice";
 import { useRouter } from "next/router";
 
 const SingleProduct = ({ product }) => {
-  const { id, image_url, diseasename, quantity, quantity_allocated } =
+  const { id, image_url, Analyte, quantity, quantity_allocated } =
     product || {};
 const router=useRouter();
  
@@ -42,8 +42,8 @@ router.push('/filter-samples');
     dispatch(setProduct(prd))
   };
 
-  const isAlreadyAdded = (diseaseName) =>
-    cartItems.some((item) => item.diseasename === diseaseName);
+  const isAlreadyAdded = (Analyte) =>
+    cartItems.some((item) => item.Analyte === Analyte);
 
   return (
     <React.Fragment>
@@ -66,7 +66,7 @@ router.push('/filter-samples');
           />
         </div>
 
-        <h5 className="mb-2 fw-bold text-dark">{diseasename}</h5>
+        <h5 className="mb-2 fw-bold text-dark">{Analyte}</h5>
 
         <div className="d-flex justify-content-between text-muted small mb-1">
           <span>
@@ -90,14 +90,14 @@ router.push('/filter-samples');
           ) : (
             <button
               className={`btn w-75 ${
-                isAlreadyAdded(diseasename)
+                isAlreadyAdded(Analyte)
                   ? "btn-secondary"
                   : "btn-danger"
               }`}
-              disabled={isAlreadyAdded(diseasename)}
+              disabled={isAlreadyAdded(Analyte)}
               onClick={() => handleAddToCart(product)}
             >
-              {isAlreadyAdded(diseasename) ? "Added" : "Add to Cart"}
+              {isAlreadyAdded(Analyte) ? "Added" : "Add to Cart"}
             </button>
           )}
 

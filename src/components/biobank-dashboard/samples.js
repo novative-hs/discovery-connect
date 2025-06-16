@@ -64,7 +64,7 @@ const BioBankSampleArea = () => {
   const [testkitmanufacturerNames, setTestKitManufacturerNames] = useState([]);
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
-  const [diagnosistestparameterNames, setDiagnosisTestParameterNames] = useState([]);
+  const [AnalyteNames, setAnalyteNames] = useState([]);
   const [infectiousdiseasetestingName, setInfectiousdiseasetestingNames] = useState([]);
   const [showTestResultNumericInput, setShowTestResultNumericInput] = useState(false);
   const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
@@ -85,7 +85,8 @@ const BioBankSampleArea = () => {
   const [priceFilter, setPriceFilter] = useState("");
 
   const tableHeaders = [
-    { label: "Disease Name", key: "diseasename" },
+
+    { label: "Analyte", key: "Analyte" },
     { label: "Location", key: "locationids" },
     { label: "Volume", key: "volume" },
     { label: "Container Type", key: "ContainerType" },
@@ -98,6 +99,7 @@ const BioBankSampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Patient Name", key: "patintname" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Phone Number", key: "phoneNumber" },
@@ -120,8 +122,9 @@ const BioBankSampleArea = () => {
   ];
 
   const [formData, setFormData] = useState({
+    patientname:"",
     locationids: "",
-    diseasename: "",
+    Analyte: "",
     age: 0,
     volume: "",
     phoneNumber: "",
@@ -144,7 +147,7 @@ const BioBankSampleArea = () => {
     DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
+    Analyte: "",
     TestResult: "",
     TestResultUnit: "",
     TestMethod: "",
@@ -158,7 +161,7 @@ const BioBankSampleArea = () => {
 
   const filterOptions = [
     { value: "", text: "All" },
-    { value: "diseasename", text: "Disease Name" },
+    { value: "Analyte", text: "Analyte" },
     { value: "gender", text: "Gender" },
     { value: "CollectionSiteName", text: "Collectionsite Name" },
     { value: "sample_visibility", text: "Visibility Status" },
@@ -230,7 +233,7 @@ const BioBankSampleArea = () => {
   const tableNames = [
     { name: "ethnicity", setter: setEthnicityNames },
     { name: "samplecondition", setter: setSampleConditionNames },
-    { name: "diagnosistestparameter", setter: setDiagnosisTestParameterNames },
+    { name: "Analyte", setter: setAnalyteNames },
     { name: "samplepricecurrency", setter: setSamplePriceCurrencyNames },
     { name: "storagetemperature", setter: setStorageTemperatureNames },
     { name: "containertype", setter: setContainerTypeNames },
@@ -426,7 +429,8 @@ const BioBankSampleArea = () => {
 
       // Clear form after submission
       setFormData({
-        diseasename: "",
+        patientname:"",
+        Analyte: "",
         age: 0,
         gender: "",
         phoneNumber: "",
@@ -448,7 +452,7 @@ const BioBankSampleArea = () => {
         DateOfSampling: "",
         ConcurrentMedicalConditions: "",
         ConcurrentMedications: "",
-        DiagnosisTestParameter: "",
+        Analyte: "",
         TestResult: "",
         TestResultUnit: "",
         TestMethod: "",
@@ -625,11 +629,11 @@ const BioBankSampleArea = () => {
   };
 
   const handleEditClick = (sample) => {
-    setSelectedSampleName(sample.diseasename)
+    setSelectedSampleName(sample.Analyte)
     setSelectedSampleUnit(sample.VolumeUnit)
     setSelectedSampleVolume(sample.volume)
     setSelectedSampleId(sample.id);
-    setSelectedSampleName(sample.diseasename);
+    setSelectedSampleName(sample.Analyte);
     setSelectedSampleVolume(sample.volume);
     setMode(sample.samplemode || "individual");
     setEditSample(sample);
@@ -644,9 +648,10 @@ const BioBankSampleArea = () => {
     ).padStart(3, "0")}`;
 
     setFormData({
-      donorID: sample.donorID,
+      patientname:sample.PatientName,
+      MRNumber: sample.MRNumber,
       locationids: formattedLocationId,
-      diseasename: sample.diseasename,
+      Analyte: sample.Analyte,
       age: sample.age,
       phoneNumber: sample.phoneNumber,
       gender: sample.gender,
@@ -669,7 +674,7 @@ const BioBankSampleArea = () => {
       DateOfSampling: sample.DateOfSampling,
       ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
       ConcurrentMedications: sample.ConcurrentMedications,
-      DiagnosisTestParameter: sample.DiagnosisTestParameter,
+      Analyte: sample.Analyte,
       TestResult: sample.TestResult,
       TestResultUnit: sample.TestResultUnit,
       TestMethod: sample.TestMethod,
@@ -698,9 +703,9 @@ const BioBankSampleArea = () => {
   };
 
   const handlePriceCurrencyClick = (sample) => {
-    getSamplePrice(sample.diseasename);
+    getSamplePrice(sample.Analyte);
     setSelectedSampleForPricing(sample);
-    setSelectedSampleName(sample.diseasename);
+    setSelectedSampleName(sample.Analyte);
     setSelectedSampleVolume(sample.volume);
     setSelectedSampleUnit(sample.VolumeUnit);
     setPrice(sample.price || ""); // <-- Clear price, so user selects or types manually
@@ -728,8 +733,9 @@ const BioBankSampleArea = () => {
 
       // Reset formData after update
       setFormData({
+        patientname:"",
         locationids: "",
-        diseasename: "",
+        Analyte: "",
         phoneNumber: "",
         age: 0,
         gender: "",
@@ -752,7 +758,7 @@ const BioBankSampleArea = () => {
         DateOfSampling: "",
         ConcurrentMedicalConditions: "",
         ConcurrentMedications: "",
-        DiagnosisTestParameter: "",
+        Analyte: "",
         TestResult: "",
         TestResultUnit: "",
         TestMethod: "",
@@ -810,7 +816,7 @@ const BioBankSampleArea = () => {
     }
   };
   const openVisibilitystatusModal = (sample) => {
-    setSelectedSampleName(sample.diseasename);
+    setSelectedSampleName(sample.Analyte);
     setSelectedSampleVolume(sample.volume);
     setSelectedSampleUnit(sample.VolumeUnit);
     setSelectedSampleVisibilityId(sample.id);
@@ -847,9 +853,10 @@ const BioBankSampleArea = () => {
 
   const resetFormData = () => {
     setFormData({
+      patientname:"",
       locationids: "",
       volume: "",
-      diseasename: "",
+      Analyte: "",
       age: 0,
       phoneNumber: "",
       gender: "",
@@ -870,7 +877,7 @@ const BioBankSampleArea = () => {
       DateOfSampling: "",
       ConcurrentMedicalConditions: "",
       ConcurrentMedications: "",
-      DiagnosisTestParameter: "",
+      Analyte: "",
       TestResult: "",
       TestResultUnit: "",
       TestMethod: "",
@@ -900,8 +907,9 @@ const BioBankSampleArea = () => {
   const areMandatoryFieldsFilled = () => {
     if (mode === "individual") {
       return (
-        formData.donorID?.toString().trim() &&
-        formData.diseasename?.toString().trim() &&
+        formData.patientname?.toString().trim() &&
+        formData.MRNumber?.toString().trim() &&
+        formData.Analyte?.toString().trim() &&
         formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
         formData.phoneNumber?.toString().trim() &&
@@ -914,8 +922,8 @@ const BioBankSampleArea = () => {
       );
     } else if (mode === "pool") {
       return (
-        formData.donorID?.toString().trim() &&
-        formData.diseasename?.toString().trim() &&
+        formData.MRNumber?.toString().trim() &&
+        formData.Analyte?.toString().trim() &&
         formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
         formData.TestResult?.toString().trim() &&
@@ -1143,7 +1151,7 @@ const BioBankSampleArea = () => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "diseasename"
+                            : key === "Analyte"
                               ? "text-start"
                               : "text-center text-truncate"
                         }
@@ -1153,7 +1161,7 @@ const BioBankSampleArea = () => {
                           whiteSpace: "normal",
                         }}
                       >
-                        {key === "diseasename" ? (
+                        {key === "Analyte" ? (
                           <span
                             className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
@@ -1168,7 +1176,7 @@ const BioBankSampleArea = () => {
                             }
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
-                            {sample.diseasename || "----"}
+                            {sample.Analyte || "----"}
                           </span>
                         ) : (
                           (() => {
@@ -1504,49 +1512,70 @@ Box ID=${sample.box_id || "----"} `;
                                   {showAddModal && (
                                     <div className="form-group col-md-6">
                                       <label>
-                                        Donor ID{" "}
+                                        Medical Record Number{" "}
                                         <span className="text-danger">*</span>
                                       </label>
                                       <input
                                         type="text"
                                         className="form-control"
-                                        name="donorID"
-                                        value={formData.donorID}
+                                        name="MRNumber"
+                                        value={formData.MRNumber}
                                         onChange={handleInputChange}
                                         required
                                         title="This is the ID of patient generated by hospital"
-                                        placeholder="Enter Donor ID"
+                                        placeholder="Enter MRNumber"
                                         style={{
                                           height: "45px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.donorID
+                                          backgroundColor: !formData.MRNumber
                                             ? "#fdecea"
                                             : "#fff",
                                         }}
                                       />
                                     </div>
                                   )}
+                                   <div className="form-group col-md-6">
+                                    <label>
+                                      Patient Name{" "}
+                                      <span className="text-danger">*</span>
+                                    </label>
+                                   <input
+                                      type="text"
+                                      className="form-control"
+                                      name="patientname"
+                                      value={formData.patientname}
+                                      onChange={handleInputChange}
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.patientname
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      }}
+                                      required
+                                    />
+                                  </div>
                                   <div className="form-group col-md-6">
                                     <label>
-                                      Disease Name{" "}
+                                      Analyte{" "}
                                       <span className="text-danger">*</span>
                                     </label>
                                     <select
                                       className="form-control"
-                                      name="diseasename"
-                                      value={formData.diseasename}
+                                      name="Analyte"
+                                      value={formData.Analyte}
                                       onChange={handleInputChange}
                                       required
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.diseasename
+                                        backgroundColor: !formData.Analyte
                                           ? "#fdecea"
                                           : "#fff",
                                       }}
                                     >
                                       <option value="" hidden></option>
-                                      {diagnosistestparameterNames.map(
+                                      {AnalyteNames.map(
                                         (name, index) => (
                                           <option key={index} value={name}>
                                             {name}
@@ -1847,9 +1876,7 @@ Box ID=${sample.box_id || "----"} `;
                                       ))}
                                     </select>
                                   </div>
-                                </div>
-                                <div className="row">
-                                  <div className="form-group col-md-6">
+                                    <div className="form-group col-md-6">
                                     <label>
                                       Age (Years){" "}
                                       <span className="text-danger">*</span>
@@ -1899,9 +1926,7 @@ Box ID=${sample.box_id || "----"} `;
                                       ))}
                                     </select>
                                   </div>
-                                </div>
-                                <div className="row">
-                                  <div className="form-group col-md-6">
+                               <div className="form-group col-md-6">
                                     <label>
                                       Sample Picture{" "}
                                       <span className="text-danger">*</span>
@@ -1938,6 +1963,7 @@ Box ID=${sample.box_id || "----"} `;
                                     </div>
                                   </div>
                                 </div>
+                                 
                               </div>
                             )}
                             {/* Column 2 */}
@@ -2482,25 +2508,25 @@ Box ID=${sample.box_id || "----"} `;
                               <div className="row">
                                 <div className="form-group col-md-6">
                                   <label>
-                                    Disease Name{" "}
+                                    Analyte{" "}
                                     <span className="text-danger">*</span>
                                   </label>
                                   <select
                                     className="form-control"
-                                    name="diseasename"
-                                    value={formData.diseasename}
+                                    name="Analyte"
+                                    value={formData.Analyte}
                                     onChange={handleInputChange}
                                     required
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.diseasename
+                                      backgroundColor: !formData.Analyte
                                         ? "#fdecea"
                                         : "#fff",
                                     }}
                                   >
                                     <option value="" hidden></option>
-                                    {diagnosistestparameterNames.map(
+                                    {AnalyteNames.map(
                                       (name, index) => (
                                         <option key={index} value={name}>
                                           {name}
@@ -3396,7 +3422,7 @@ Box ID=${sample.box_id || "----"} `;
                     {historyData && historyData.length > 0 ? (
                       historyData.map((log, index) => {
                         const {
-                          diseasename,
+                          Analyte,
                           updated_name,
                           added_by,
                           action_type,
@@ -3428,8 +3454,8 @@ Box ID=${sample.box_id || "----"} `;
                                   textAlign: "left",
                                 }}
                               >
-                                Disease: <b>{diseasename}</b> was <b>added</b> by{" "}
-                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                Analyte: <b>{Analyte}</b> was <b>added</b> by{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Biobank"}</span> at{" "}
                                 {moment(created_at).format("DD MMM YYYY, h:mm A")}
                               </div>
                             )}
@@ -3448,7 +3474,7 @@ Box ID=${sample.box_id || "----"} `;
                                   marginTop: "5px",
                                 }}
                               >
-                                Disease: <b>{updated_name}</b> was <b>updated</b> by{" "}
+                                Analyte: <b>{updated_name}</b> was <b>updated</b> by{" "}
                                 <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
                                 {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                               </div>

@@ -63,7 +63,7 @@ const CartArea = () => {
   alt="Visa"
   style={{ width: "60px", borderRadius: "8px" }}
 />
-                                <span>{item.diseasename}</span>
+                                <span>{item.Analyte}</span>
                               </div>
                             </td>
                             <td>{item.price.toFixed(2)}</td>
