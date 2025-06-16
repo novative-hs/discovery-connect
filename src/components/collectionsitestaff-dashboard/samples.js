@@ -81,20 +81,22 @@ const SampleArea = () => {
   };
 
   const tableHeaders = [
-    { label: "Analyte", key: "Analyte" },
+    { label: "Patient Name", key: "PatientName" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "MRNumber", key: "MRNumber" },
     { label: "Location", key: "locationids" },
-    { label: "Volume", key: "volume" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
+    { label: "Volume", key: "volume" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Barcode", key: "barcode" },
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Gender", key: "gender" },
-    { label: "Age", key: "age" },
+    { label: "Container Type", key: "ContainerType" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -115,7 +117,7 @@ const SampleArea = () => {
   ];
 
   const [formData, setFormData] = useState({
-    patientname:"",
+    patientname: "",
     locationids: "",
     Analyte: "",
     age: 0,
@@ -381,7 +383,7 @@ const SampleArea = () => {
   };
 
   const handlePageChange = (event) => {
-    const selectedPage = event.selected+1; // React Paginate is 0-indexed, so we adjust
+    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
@@ -581,7 +583,7 @@ const SampleArea = () => {
 
 
     setFormData({
-      patientname:sample.PatientName,
+      patientname: sample.PatientName,
       MRNumber: sample.MRNumber,
       locationids: formattedLocationId,
       Analyte: sample.Analyte,
@@ -639,7 +641,7 @@ const SampleArea = () => {
 
   const resetFormData = () => {
     setFormData({
-      patientname:"",
+      patientname: "",
       locationids: "",
       Analyte: "",
       age: 0,
@@ -752,7 +754,7 @@ const SampleArea = () => {
   const areMandatoryFieldsFilled = () => {
     if (mode === "individual") {
       return (
-        formData.patientname?.toString().trim()&&
+        formData.patientname?.toString().trim() &&
         formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
         formData.locationids?.toString().trim() &&
@@ -893,15 +895,8 @@ const SampleArea = () => {
         </div>
 
         {/* Table */}
-        <div
-          onScroll={handleScroll}
-          className="table-responsive"
-          style={{ overflowX: "auto" }}
-        >
-          <table
-            className="table table-bordered table-hover text-center align-middle"
-            style={{ minWidth: "1000px" }}
-          >
+        <div className="table-responsive w-100">
+          <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
@@ -913,7 +908,8 @@ const SampleArea = () => {
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
+                        // style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}  // a bit wide table 
+                        style={{ width: "100%" }}
                       />
                       <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                         {label}
@@ -1152,7 +1148,7 @@ ${sample.box_id || "N/A"} = Box ID`;
               style={{
                 zIndex: 1050,
                 position: "fixed",
-                top: "-10px",
+                top: "-30px",
                 left: "50%",
                 transform: "translateX(-50%)",
                 width: "100%",
@@ -1254,7 +1250,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   {showAddModal && (
                                     <div className="form-group col-md-6">
                                       <label>
-                                        MRNumber{" "}
+                                        Medical Record Number{" "}
                                         <span className="text-danger">*</span>
                                       </label>
                                       <input
@@ -1264,8 +1260,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         value={formData.MRNumber}
                                         onChange={handleInputChange}
                                         required
-                                        title="This is the MRNumber of patient generated by hospital"
-                                        placeholder="Enter MRNumber"
+                                        title="This is the MR Number of patient generated by hospital"
+                                        placeholder="Enter MR Number"
                                         style={{
                                           height: "45px",
                                           fontSize: "14px",
@@ -1276,12 +1272,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       />
                                     </div>
                                   )}
-                                   <div className="form-group col-md-6">
+                                  <div className="form-group col-md-6">
                                     <label>
                                       Patient Name{" "}
                                       <span className="text-danger">*</span>
                                     </label>
-                                   <input
+                                    <input
                                       type="text"
                                       className="form-control"
                                       name="patientname"
@@ -1618,8 +1614,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       ))}
                                     </select>
                                   </div>
-                                </div>
-                                <div className="row">
                                   <div className="form-group col-md-6">
                                     <label>
                                       Age (Years){" "}
@@ -1643,6 +1637,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       }}
                                     />
                                   </div>
+                                </div>
+                                <div className="row">
                                   <div className="form-group col-md-6">
                                     <label>
                                       Container Type{" "}
@@ -1670,8 +1666,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       ))}
                                     </select>
                                   </div>
-                                </div>
-                                <div className="row">
                                   <div className="form-group col-md-6">
                                     <label>
                                       Sample Picture{" "}
@@ -2657,7 +2651,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                           </button>
                         </>)}
                     </div>
-                    <div className="text-start text-muted fs-6 mb-3 ms-3">
+                    <div className="text-start text-muted fs-6 mb-3 ms-3" style={{ marginTop: '-8px' }}>
                       <code> Please move cursor to field to get help</code>
                     </div>
                   </form>
@@ -2910,12 +2904,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   textAlign: "left",
                                 }}
                               >
-                                Analyte: <b>{Analyte}</b> was <b>added</b> by{" "}
-                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                Analyte: <b>{Analyte}</b> was{" "}
+                                <b style={{ color: "#388e3c" }}>added</b> by{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Biobank"}</span> at{" "}
                                 {moment(created_at).format("DD MMM YYYY, h:mm A")}
                               </div>
                             )}
-
                             {/* Update */}
                             {action_type === "update" && updated_name && (
                               <div
@@ -2930,7 +2924,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   marginTop: "5px",
                                 }}
                               >
-                                Analyte: <b>{updated_name}</b> was <b>updated</b> by{" "}
+                                Analyte: <b>{updated_name}</b> was{" "}
+                                <b style={{ color: "#388e3c" }}>updated</b> by{" "}
                                 <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
                                 {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                               </div>
