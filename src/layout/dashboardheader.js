@@ -434,13 +434,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   </ul>
                 </div>
                 {userType === "researcher" && (
-                  <Link
-                    href={{
-                      pathname: router.pathname,
-                      query: { ...router.query, tab: "Cart" },
-                    }}
-                    className="btn btn-sm position-relative"
-                  >
+                <Link href="/cart" className="btn btn-sm position-relative">
                     <Cart className="fs-7 text-white" />
                     {sampleCount > 0 && (
                       <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">

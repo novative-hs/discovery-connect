@@ -8,10 +8,7 @@ const createSampleTable = () => {
   const sampleTable = `
     CREATE TABLE IF NOT EXISTS sample (
         id VARCHAR(36) PRIMARY KEY,
-        MRNuber VARCHAR(50),
-        room_number INT,
-        freezer_id INT,
-        box_id INT,
+        MRNumber VARCHAR(50),
         masterID VARCHAR(36),
         user_account_id INT,
         patientname VARCHAR(100),
@@ -19,17 +16,20 @@ const createSampleTable = () => {
         age INT,
         gender VARCHAR(10),
         phoneNumber VARCHAR(15),
-        ethnicity VARCHAR(50),
-        samplecondition VARCHAR(100),
-        storagetemp VARCHAR(255),
-        ContainerType VARCHAR(50),
-        CountryOfCollection VARCHAR(50),
-        price FLOAT,
+         price FLOAT,
         SamplePriceCurrency VARCHAR(255),
         quantity FLOAT,
         quantity_allocated INT,
         volume DOUBLE,
         VolumeUnit VARCHAR(20),
+        room_number INT,
+        freezer_id INT,
+        box_id INT,
+        ethnicity VARCHAR(50),
+        samplecondition VARCHAR(100),
+        storagetemp VARCHAR(255),
+        ContainerType VARCHAR(50),
+        CountryOfCollection VARCHAR(50),
         SampleTypeMatrix VARCHAR(100),
         SmokingStatus VARCHAR(50),
         AlcoholOrDrugAbuse VARCHAR(50),
@@ -329,7 +329,8 @@ const getAllVolumnUnits = (name, callback) => {
 };
 
 const getAllSampleinIndex = (name, callback) => {
-  const query = 'SELECT * FROM sample WHERE Analyte = ? and quantity>0';
+  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND price IS NOT NULL';
+
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {

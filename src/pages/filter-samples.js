@@ -54,7 +54,6 @@ const FilterProduct = () => {
     { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Analyte", key: "Analyte" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -338,19 +337,20 @@ const FilterProduct = () => {
             {selectedSample ? (
               <div className="p-3">
                 <div className="row g-3">
-                  {fieldsToShowInOrder.map(({ key, label }) => {
-                    const value = selectedSample[key];
-                    if (value === undefined) return null;
+                 {fieldsToShowInOrder.map(({ key, label }) => {
+  const value = selectedSample[key];
+  if (value === undefined || value === null || value === "") return null;
 
-                    return (
-                      <div className="col-md-6" key={key}>
-                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                          <span className="text-muted small fw-bold mb-1">{label}</span>
-                          <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+  return (
+    <div className="col-md-6" key={key}>
+      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+        <span className="text-muted small fw-bold mb-1">{label}</span>
+        <span className="fs-6 text-dark">{value.toString()}</span>
+      </div>
+    </div>
+  );
+})}
+
                 </div>
               </div>
             ) : (
