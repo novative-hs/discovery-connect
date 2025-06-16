@@ -2,37 +2,65 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Modal from "react-bootstrap/Modal";
-import {
-  faEdit,
-  faTrash,
-  faExchangeAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faExchangeAlt } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
+
 const BioBankSampleDispatchArea = () => {
-  const id = sessionStorage.getItem("userID");
-  if (id === null) {
-    return <div>Loading...</div>; // Or redirect to login
-  } 
+  const [id, setId] = useState(null);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [samples, setSamples] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [selectedSampleId, setSelectedSampleId] = useState(null); // Store ID of sample to delete
-
+  const [selectedSampleId, setSelectedSampleId] = useState(null);
+  const [formData, setFormData] = useState({
+    diseasename: "",
+    age: "",
+    gender: "",
+    ethnicity: "",
+    volume: 0,
+    samplecondition: "",
+    storagetemp: "",
+    ContainerType: "",
+    CountryOfCollection: "",
+    Quantity: 1,
+    VolumeUnit: "",
+    SampleTypeMatrix: "",
+    SmokingStatus: "",
+    AlcoholOrDrugAbuse: "",
+    InfectiousDiseaseTesting: "",
+    InfectiousDiseaseResult: "",
+    FreezeThawCycles: "",
+    DateOfSampling: "",
+    ConcurrentMedicalConditions: "",
+    ConcurrentMedications: "",
+    DiagnosisTestParameter: "",
+    TestResult: "",
+    TestResultUnit: "",
+    TestMethod: "",
+    TestKitManufacturer: "",
+    TestSystem: "",
+    TestSystemManufacturer: "",
+  });
+  const [successMessage, setSuccessMessage] = useState("");
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(0);
+  const [transferDetails, setTransferDetails] = useState({
+    receiverName: "",
+  });
 
   const tableHeaders = [
     { label: "Disease Name", key: "diseasename" },
     { label: "Volume", key: "volume" },
-
     { label: "Price", key: "price" },
     { label: "Currency", key: "SamplePriceCurrency" },
     { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
-
-
   ];
+
   const fieldsToShowInOrder = [
     { label: "Disease Name", key: "diseasename" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -52,119 +80,53 @@ const BioBankSampleDispatchArea = () => {
     { label: "Test System Manufacturer", key: "TestSystemManufacturer" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-
     { label: "Country of Collection", key: "CountryOfCollection" },
-
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },
-
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfSampling" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
-
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
-  const [formData, setFormData] = useState({
-    diseasename: "",
-    age: "",
-    gender: "",
-    ethnicity: "",
-    volume: 0,
-    samplecondition: "",
-    storagetemp: "",
-    ContainerType: "",
-    CountryOfCollection: "",
-    Quantity: 1,
-    QuantityUnit: "",
-    SampleTypeMatrix: "",
-    SmokingStatus: "",
-    AlcoholOrDrugAbuse: "",
-    InfectiousDiseaseTesting: "",
-    InfectiousDiseaseResult: "",
-    FreezeThawCycles: "",
-    DateOfSampling: "",
-    ConcurrentMedicalConditions: "",
-    ConcurrentMedications: "",
-    DiagnosisTestParameter: "",
-    TestResult: "",
-    TestResultUnit: "",
-    TestMethod: "",
-    TestKitManufacturer: "",
-    TestSystem: "",
-    TestSystemManufacturer: "",
-    // logo: ""
-  });
 
-  const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSamplename, setFilteredSamplename] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
-  // Calculate total pages
-  const [totalPages, setTotalPages] = useState(0);
+  useEffect(() => {
+    if (!id) return;
 
-  // Stock Transfer modal fields names
-  const [transferDetails, setTransferDetails] = useState({
-    receiverName: "",
-  });
+    const fetchSamples = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`
+        );
+        const apiData = response.data;
 
-  const handleTransferClick = (sample) => {
-
-    setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
-    setShowReceiveModal(true); // Show the modal
-  };
-
-  const fetchSamples = async () => {
-    try {
-      // will fetch sample to correct dedicated collectionsite with correct ID
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/get/${id}`
-      );
-      const apiData = response.data;
-
-      // Directly set the data array from the response
-      if (apiData.data && Array.isArray(apiData.data)) {
-        setFilteredSamplename(apiData.data);
-        setSamples(apiData.data);
-      } else {
-        console.warn("Invalid response structure:", apiData);
-        setSamples([]); // Default to an empty array
+        if (apiData.data && Array.isArray(apiData.data)) {
+          setFilteredSamplename(apiData.data);
+          setSamples(apiData.data);
+        } else {
+          console.warn("Invalid response structure:", apiData);
+          setSamples([]);
+        }
+      } catch (error) {
+        console.error("Error fetching samples:", error);
+        setSamples([]);
       }
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-      setSamples([]); // Default to an empty array on error
-    }
-  };
+    };
 
-  // Fetch samples from backend when component loads
-  useEffect(() => {
-    fetchSamples(); // Call the function when the component mounts
-  }, []);
+    fetchSamples();
+  }, [id]);
 
   useEffect(() => {
-    const pages = Math.max(
-      1,
-      Math.ceil(filteredSamplename.length / itemsPerPage)
-    );
+    const pages = Math.max(1, Math.ceil(filteredSamplename.length / itemsPerPage));
     setTotalPages(pages);
+    if (currentPage >= pages) setCurrentPage(0);
+  }, [filteredSamplename, currentPage]);
 
-    if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-    }
-  }, [filteredSamplename]);
-
-  // Get the current data for the table
   const currentData = filteredSamplename.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
 
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-  };
+  const handlePageChange = (event) => setCurrentPage(event.selected);
 
-  // Filter the researchers list
   const handleFilterChange = (field, value) => {
     let filtered = [];
 
@@ -172,51 +134,37 @@ const BioBankSampleDispatchArea = () => {
       filtered = samples;
     } else {
       const lowerValue = value.toLowerCase();
-
       filtered = samples.filter((sample) => {
         if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""
-            }`.toLowerCase();
-          return combinedVolume.includes(lowerValue);
+          const combined = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""}`.toLowerCase();
+          return combined.includes(lowerValue);
         }
         if (field === "TestResult") {
-          const combinedVolume = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""
-            }`.toLowerCase();
-          return combinedVolume.includes(lowerValue);
+          const combined = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
+          return combined.includes(lowerValue);
         }
-
         if (field === "price") {
-          const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""
-            }`.toLowerCase();
-          return combinedPrice.includes(lowerValue);
+          const combined = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""}`.toLowerCase();
+          return combined.includes(lowerValue);
         }
-
         if (field === "gender") {
-          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+          return sample.gender?.toLowerCase().startsWith(lowerValue);
         }
-
         return sample[field]?.toString().toLowerCase().includes(lowerValue);
       });
     }
 
-    setFilteredSamples(filtered);
+    setFilteredSamplename(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
   };
 
   const handleInputChange = (e) => {
-    // Update both formData and transferDetails state if applicable
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setTransferDetails({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setTransferDetails({ ...transferDetails, [e.target.name]: e.target.value });
   };
-  const openModal = (sample) => {
 
+  const openModal = (sample) => {
     setSelectedSample(sample);
     setShowModal(true);
   };
@@ -226,77 +174,50 @@ const BioBankSampleDispatchArea = () => {
     setShowModal(false);
   };
 
+  const handleTransferClick = (sample) => {
+    setSelectedSampleId(sample.id);
+    setShowReceiveModal(true);
+  };
 
   const handleTransferSubmit = async (e) => {
     e.preventDefault();
-
     const { receiverName } = transferDetails;
-    const userID = sessionStorage.getItem("userID"); // Retrieve user ID from sessionStorage
+    const userID = sessionStorage.getItem("userID");
 
-    // Validate input before making the API call
-    if (!receiverName) {
+    if (!receiverName || !userID) {
       alert("All fields are required.");
-      return;
-    }
-    if (!userID) {
-      alert("User ID is missing.");
       return;
     }
 
     try {
-
-      // POST request to your backend API
-      const response = await axios.post(
+      await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/post/${selectedSampleId}`,
-        {
-          receiverName,
-          ReceivedByCollectionSite: userID, // Pass user ID along with receiverName
-        }
+        { receiverName, ReceivedByCollectionSite: userID }
       );
 
-
       setSuccessMessage("Sample received successfully.");
-
-      // Clear the success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-
+      setTimeout(() => setSuccessMessage(""), 3000);
       fetchSamples();
-
-      setShowReceiveModal(false); // Close the modal after submission
+      setShowReceiveModal(false);
     } catch (error) {
       if (error.response) {
-        // Server responded with a status other than 200
-        console.error("Error response:", error.response.data);
         alert(`Error: ${error.response.data.error}`);
       } else if (error.request) {
-        // Request was made but no response received
-        console.error("No response received:", error.request);
         alert("No response received from server.");
       } else {
-        // Something else happened
-        console.error("Error receiving sample:", error.message);
         alert("An unexpected error occurred.");
       }
     }
   };
 
-  const handleModalClose = () => {
-    setShowReceiveModal(false); // Close the modal
-  };
+  const handleModalClose = () => setShowReceiveModal(false);
 
   useEffect(() => {
-    if (showReceiveModal) {
-      // Prevent background scroll when modal is open
-      document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open");
-    } else {
-      // Allow scrolling again when modal is closed
-      document.body.style.overflow = "auto";
-      document.body.classList.remove("modal-open");
-    }
+    document.body.style.overflow = showReceiveModal ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", showReceiveModal);
   }, [showReceiveModal]);
+
+  if (!id) return <div>Loading...</div>;
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -370,7 +291,7 @@ const BioBankSampleDispatchArea = () => {
                           ) : (
                             (() => {
                               if (key === "volume") {
-                                return `${sample.volume || "----"} ${sample.QuantityUnit || ""}`;
+                                return `${sample.volume || "----"} ${sample.VolumeUnit || ""}`;
                               } else {
                                 return sample[key] || "----";
                               }

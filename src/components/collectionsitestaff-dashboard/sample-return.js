@@ -35,7 +35,7 @@ const SampleReturn = () => {
     { label: "Country of Collection", key: "CountryOfCollection" },
     { label: "Sample Price Currency", key: "SamplePriceCurrency" },
     { label: "Quantity", key: "Quantity" },
-    { label: "Quantity Unit", key: "QuantityUnit" },
+    { label: "Volume Unit", key: "VolumeUnit" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Smoking Status", key: "SmokingStatus" },
     { label: "Alcohol Or Drug Abuse", key: "AlcoholOrDrugAbuse" },

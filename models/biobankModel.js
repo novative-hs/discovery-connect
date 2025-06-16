@@ -59,8 +59,8 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
         break;
 
       case "volume":
-        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.QuantityUnit)) LIKE ? OR LOWER(sample.QuantityUnit) = ?)`;
-        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.QuantityUnit)) LIKE ? OR LOWER(sample.QuantityUnit) = ?)`;
+        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
         paramsShared.push(likeValue, searchValue.toLowerCase());
         paramsOwn.push(likeValue, searchValue.toLowerCase());
         break;
@@ -471,7 +471,8 @@ const getBiobankVisibilitySamples = (
 
 // Get price dropdown while adding price in Biobank
 const getPrice = (name, callback) => {
-  const query = "SELECT price FROM sample WHERE diseasename = ?";
+
+  const query = 'SELECT DISTINCT price FROM sample WHERE diseasename = ?';
 
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {

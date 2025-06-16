@@ -106,10 +106,10 @@ const createContainerTypeTable = () => {
   });
 };
 
-// Function to create the QuantityUnit table
-const createQuantityUnitTable = () => {
-  const createQuantityUnitTable = `
-    CREATE TABLE IF NOT EXISTS quantityunit (
+// Function to create the VolumeUnit table
+const createVolumeUnitTable = () => {
+  const createVolumeUnitTable = `
+    CREATE TABLE IF NOT EXISTS volumeunit (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
       added_by INT,
@@ -119,11 +119,11 @@ const createQuantityUnitTable = () => {
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
     )`;
 
-  mysqlConnection.query(createQuantityUnitTable, (err, results) => {
+  mysqlConnection.query(createVolumeUnitTable, (err, results) => {
     if (err) {
-      console.error("Error creating Quantity Unit table: ", err);
+      console.error("Error creating Volume Unit table: ", err);
     } else {
-      console.log("Quantity Unit table created Successfully");
+      console.log("Volume Unit table created Successfully");
     }
   });
 };
@@ -294,6 +294,7 @@ const getAllSampleFields = (tableName, callback) => {
     if (err) {
       callback(err, null);
     } else {
+      console.log(results)
       callback(null, results);
     }
   });
@@ -455,7 +456,7 @@ module.exports = {
   createSamplePriceCurrencyTable,
   createStorageTemperatureTable,
   createContainerTypeTable,
-  createQuantityUnitTable,
+  createVolumeUnitTable,
   createSampleTypeMatrixTable,
   createTestMethodTable,
   createTestResultUnitTable,

@@ -47,7 +47,7 @@ const getDispatchedwithInTransitStatus = (userId, callback) => {
       s.CountryOfCollection,
       s.price,
       s.SamplePriceCurrency,
-      s.QuantityUnit,
+      s.VolumeUnit,
       s.SampleTypeMatrix,
       s.SmokingStatus,
       s.AlcoholOrDrugAbuse,

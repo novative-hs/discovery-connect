@@ -11,9 +11,9 @@ import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 
-const QuantityUnitArea = () => {
+const VolumeUnitArea = () => {
   const id = sessionStorage.getItem("userID");
-const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
@@ -36,21 +36,21 @@ const [showAddModal, setShowAddModal] = useState(false);
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchinfectiousdiseasename = async () => {
-    try {
-      const response = await axios.get(`${url}/infectiousdisease/get-infectiousdisease`);
-      setinfectiousdiseasename(response.data);
-      setFilteredinfectiousdiseasename(response.data); // Initialize filtered list
-    } catch (error) {
-      console.error("Error fetching infectious disease:", error);
+      try {
+        const response = await axios.get(`${url}/infectiousdisease/get-infectiousdisease`);
+        setinfectiousdiseasename(response.data);
+        setFilteredinfectiousdiseasename(response.data); // Initialize filtered list
+      } catch (error) {
+        console.error("Error fetching infectious disease:", error);
+      }
     }
-  }
 
     fetchinfectiousdiseasename();
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
 
- useEffect(() => {
+  useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredinfectiousdiseasename.length / itemsPerPage)
@@ -60,7 +60,7 @@ const [showAddModal, setShowAddModal] = useState(false);
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredinfectiousdiseasename,currentPage]);
+  }, [filteredinfectiousdiseasename, currentPage]);
 
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
@@ -80,18 +80,18 @@ const [showAddModal, setShowAddModal] = useState(false);
     setCurrentPage(event.selected);
   };
 
- const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
       filtered = infectiousdiseasename; // Show all if filter is empty
     } else {
-      filtered = infectiousdiseasename.filter((infectiousdisease) =>{
-         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
+      filtered = infectiousdiseasename.filter((infectiousdisease) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
         return infectiousdisease[field]?.toString().toLowerCase().includes(value.toLowerCase())
-    }
+      }
       );
     }
 
@@ -100,10 +100,10 @@ const [showAddModal, setShowAddModal] = useState(false);
     setCurrentPage(0); // Reset to first page after filtering
   };
 
- 
+
 
   const handleEditClick = (infectiousdiseasename) => {
-   
+
     setSelectedinfectiousdiseasenameId(infectiousdiseasename.id);
     setEditinfectiousdiseasename(infectiousdiseasename);
 
@@ -190,7 +190,7 @@ const [showAddModal, setShowAddModal] = useState(false);
   const handleDelete = async () => {
     try {
       await axios.delete(
-          `${url}/infectiousdisease/delete-infectiousdisease/${selectedinfectiousdiseasenameId}`,
+        `${url}/infectiousdisease/delete-infectiousdisease/${selectedinfectiousdiseasenameId}`,
       );
       const response = await axios.get(
         `${url}/infectiousdisease/get-infectiousdisease`
@@ -247,34 +247,34 @@ const [showAddModal, setShowAddModal] = useState(false);
     return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
- const handleExportToExcel = () => {
-  const dataToExport = filteredinfectiousdiseasename.map((item) => ({
-    Name: item.name ?? "", // Fallback to empty string
-    "Added By": "Registration Admin",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+  const handleExportToExcel = () => {
+    const dataToExport = filteredinfectiousdiseasename.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  // Add an empty row with all headers if filteredCityname is empty (optional)
-  if (dataToExport.length === 0) {
-    dataToExport.push({
-      Name: "",
-      "Added By": "",
-      "Created At": "",
-      "Updated At": "",
-    });
-  }
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "infectiousdisease");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "infectiousdisease");
 
-  XLSX.writeFile(workbook, "Infectious_disease_testing_List.xlsx");
-};
+    XLSX.writeFile(workbook, "Infectious_disease_testing_List.xlsx");
+  };
 
   if (!id) return <div>Loading...</div>;
 
- return (
+  return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
@@ -725,4 +725,4 @@ const [showAddModal, setShowAddModal] = useState(false);
   );
 };
 
-export default QuantityUnitArea;
+export default VolumeUnitArea;

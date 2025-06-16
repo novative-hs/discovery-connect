@@ -126,12 +126,12 @@ const getSampleById = (req, res) => {
 // Controller to create a sample
 const createSample = (req, res) => {
 
-const mode = req.body.mode;
-const file = req.file;
+  const mode = req.body.mode;
+  const file = req.file;
 
-const sampleData = { ...req.body }; // copy all fields from body
-sampleData.logo = file?.buffer;     // attach the uploaded image buffer
-sampleData.mode = mode;
+  const sampleData = { ...req.body }; // copy all fields from body
+  sampleData.logo = file?.buffer;     // attach the uploaded image buffer
+  sampleData.mode = mode;
 
   // DateOfSampling will show data only before today
   const today = new Date();

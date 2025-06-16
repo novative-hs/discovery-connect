@@ -37,40 +37,37 @@ const ChangePassword = () => {
   const { user } = useSelector((state) => state.auth);
   const [userDetail, setUserDetail] = useState();
   const [changePassword] = useChangePasswordMutation();
-  // react hook form
+
   const {
     register,
     handleSubmit,
-    setValue, // Add this line
+    setValue,
     formState: { errors },
     reset,
   } = useForm({
     resolver: yupResolver(schema),
   });
-  
 
   useEffect(() => {
-    if (id === null) {
-      return <div>Loading...</div>; // Or redirect to login
-    } else {
-      fetchUser(); // Call the function when the component mounts
-    }
-  }, []);
+    if (!id) return;
 
-  const fetchUser = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${id}`
-      );
-      const userEmail = response.data?.data[0]; // Extract email from the response
-      setUserDetail(userEmail); // Set only the email in state
-      setValue("email", userEmail);
-    } catch (error) {
-      console.error("Error fetching user detail:", error);
-    }
-  };
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${id}`
+        );
+        const userEmail = response.data?.data[0];
+        setUserDetail(userEmail);
+        setValue("email", userEmail);
+      } catch (error) {
+        console.error("Error fetching user detail:", error);
+      }
+    };
 
-  // on submit
+    fetchUser();
+    console.log("account_id on city page is:", id);
+  }, [id, setValue]);
+
   const onSubmit = async (data) => {
     if (data.password === data.newPassword) {
       notifyError("New password cannot be the same as the old password.");
@@ -94,7 +91,6 @@ const ChangePassword = () => {
           reset();
         },
         (error) => {
-          // Error handling inside .then()
           if (error.response) {
             notifyError(error.response.data.message || "An error occurred.");
           } else {
@@ -114,7 +110,7 @@ const ChangePassword = () => {
             <div className="profile__input-box">
               <h4>Email Address</h4>
               <div className="profile__input">
-              <input
+                <input
                   {...register("email")}
                   type="email"
                   placeholder="Enter Email Address"

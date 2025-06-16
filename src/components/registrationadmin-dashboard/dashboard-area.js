@@ -17,7 +17,7 @@ import SampleConditionArea from "./sample-condition";
 import SamplePriceCurrencyArea from "./sample-price-currency";
 import StorageTemperatureArea from "./storage-temperature";
 import ContainerTypeArea from "./container-type";
-import QuantityUnitArea from "./quantity-unit";
+import VolumeUnitArea from "./volume-unit";
 import SampleTypeMatrixArea from "./sample-type-matrix";
 import TestMethodArea from "./test-method";
 import TestResultUnitArea from "./test-result-unit";
@@ -90,8 +90,8 @@ const DashboardArea = () => {
         return <StorageTemperatureArea />;
       case "container-type":
         return <ContainerTypeArea />;
-      case "quantity-unit":
-        return <QuantityUnitArea />;
+      case "volume-unit":
+        return <VolumeUnitArea />;
       case "sample-type-matrix":
         return <SampleTypeMatrixArea />;
       case "test-method":
@@ -136,7 +136,7 @@ case "staffManagementPage:csr":
           "sample-price-currency",
           "storage-temperature",
           "container-type",
-          "quantity-unit",
+          "volume-unit",
           "sample-type-matrix",
           "test-method",
           "test-result-unit",

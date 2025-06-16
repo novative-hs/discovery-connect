@@ -1,8 +1,6 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
-
-
-  {
+{
     table:"sample",
     columnsToAdd:[
    {   column:"samplemode",
@@ -31,23 +29,24 @@ const tablesAndColumns = [
   //     },
   //   ]
   // },
-  ,{
-    table: "sample",
-    columnsToDelete: ["DiagnosisTestParameter"],
-    columnsToAdd: [
-      {
-        column: "volume",
-        type: "DOUBLE",
-        nullable: true,
-      },
-      {
-        column: "updated_at",
-        type: "DATETIME",
-        default: "CURRENT_TIMESTAMP",
-        onUpdate: "CURRENT_TIMESTAMP",
-      },
-    ]
-  },
+  // {
+  //   table: "sample",
+  //   columnsToDelete: ["DiagnosisTestParameter"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "volume",
+  //       type: "DOUBLE",
+  //       nullable: true,
+  //     },
+  //     {
+  //       column: "updated_at",
+  //       type: "DATETIME",
+  //       default: "CURRENT_TIMESTAMP",
+  //       onUpdate: "CURRENT_TIMESTAMP",
+  //     },
+  //   ]
+  // },
+
   // {
   //   table: "registrationadmin_history",
   //   columnsToAdd: [
@@ -59,7 +58,15 @@ const tablesAndColumns = [
   //     },
   //   ]
   // },
-
+  // {
+  //   table: "sample",
+  //   columnsToAdd: [
+  //     {
+  //       column: "samplemode",
+  //       type: "Enum ('individual','pool') DEFAULT 'individual'"
+  //     }
+  //   ]
+  // },
   // {
   //   table: "csr",
   //   columnsToAdd: [
@@ -92,7 +99,7 @@ const tablesAndColumns = [
   //       nullable: false
   //     },
   //     {
-  //       column: "QuantityUnit",
+  //       column: "VolumeUnit",
   //       type: "VARCHAR(20)",
   //       nullable: false
   //     }
@@ -403,29 +410,29 @@ const createOrUpdateTables = async () => {
     }
 
     // Rename 'packsize' to 'volume'
-  //   renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
+    // renameColumn("sample", "packsize", "volume", "VARCHAR(255)");
 
-  //   // Rename 'DateOfCollection' to 'DateOfSampling'
-  //   renameColumn("sample", "DateOfCollection", "DateOfSampling", "VARCHAR(255)");
+    // // Rename 'DateOfCollection' to 'DateOfSampling'
+    // renameColumn("sample", "DateOfCollection", "DateOfSampling", "VARCHAR(255)");
 
-  //   // Rename 'samplename' to 'diseasename'
-  //   renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
+    // // Rename 'samplename' to 'diseasename'
+    // renameColumn("sample", "samplename", "diseasename", "VARCHAR(255)");
 
-  //   // RENAME sample_status TO sample_visibility
-  //   renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
+    // // RENAME sample_status TO sample_visibility
+    // renameColumn("sample", "sample_status", "sample_visibility", "ENUM('Public', 'Private') DEFAULT 'Private'");
 
-  //   updateEnumColumn("collectionsitestaff", "permission", [
-  //     "add_full",
-  //     "add_basic",
-  //     "edit",
-  //     "dispatch",
-  //     "receive",
-  //     "all"
-  //   ], true, "all");
-  //   updateEnumColumn("sample", "sample_visibility", [
-  //     "Public",
-  //     "Non-Public",
-  //   ], true, "Non-Public");
+    // updateEnumColumn("collectionsitestaff", "permission", [
+    //   "add_full",
+    //   "add_basic",
+    //   "edit",
+    //   "dispatch",
+    //   "receive",
+    //   "all"
+    // ], true, "all");
+    updateEnumColumn("sample", "sample_visibility", [
+      "Public",
+      "Non-Public",
+    ], true, "Non-Public");
   });
 
 

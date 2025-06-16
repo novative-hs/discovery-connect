@@ -46,7 +46,7 @@ const SampleArea = () => {
   const [sampleconditionNames, setSampleConditionNames] = useState([]);
   const [storagetemperatureNames, setStorageTemperatureNames] = useState([]);
   const [containertypeNames, setContainerTypeNames] = useState([]);
-  const [quantityunitNames, setQuantityUnitNames] = useState([]);
+  const [volumeunitNames, setVolumeUnitNames] = useState([]);
   const [sampletypematrixNames, setSampleTypeMatrixNames] = useState([]);
   const [testmethodNames, setTestMethodNames] = useState([]);
   const [testresultunitNames, setTestResultUnitNames] = useState([]);
@@ -71,7 +71,6 @@ const SampleArea = () => {
   });
 
   const openModal = (sample) => {
-
     setSelectedSample(sample);
     setShowModal(true);
   };
@@ -85,19 +84,17 @@ const SampleArea = () => {
     { label: "Disease Name", key: "diseasename" },
     { label: "Location", key: "locationids" },
     { label: "Volume", key: "volume" },
-    { label: "Gender", key: "gender" },
-    { label: "Age", key: "age" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result & Unit", key: "TestResult" },
-    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Barcode", key: "barcode" },
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Test Result Unit", key: "TestResultUnit" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Gender", key: "gender" },
+    { label: "Age", key: "age" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -130,7 +127,7 @@ const SampleArea = () => {
     CountryOfCollection: "",
     quantity: 1,
     volume: "",
-    QuantityUnit: "",
+    VolumeUnit: "",
     SampleTypeMatrix: "",
     SmokingStatus: "",
     AlcoholOrDrugAbuse: "",
@@ -197,7 +194,7 @@ const SampleArea = () => {
     { name: "samplecondition", setter: setSampleConditionNames },
     { name: "storagetemperature", setter: setStorageTemperatureNames },
     { name: "containertype", setter: setContainerTypeNames },
-    { name: "quantityunit", setter: setQuantityUnitNames },
+    { name: "volumeunit", setter: setVolumeUnitNames },
     { name: "sampletypematrix", setter: setSampleTypeMatrixNames },
     { name: "testmethod", setter: setTestMethodNames },
     { name: "testresultunit", setter: setTestResultUnitNames },
@@ -357,7 +354,7 @@ const SampleArea = () => {
 
       filtered = samples.filter((sample) => {
         if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${sample.QuantityUnit ?? ""}`.toLowerCase();
+          const combinedVolume = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""}`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
 
@@ -379,11 +376,11 @@ const SampleArea = () => {
 
     setFilteredSamplename(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
+    setCurrentPage(1);
   };
 
   const handlePageChange = (event) => {
-    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
+    const selectedPage = event.selected+1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
@@ -436,14 +433,19 @@ const SampleArea = () => {
       [name]: value,
     }));
   };
-
   const handleSubmit = async (e) => {
+    let isMounted = true;
     e.preventDefault();
-
+    const formDataToSend = new FormData();
+    for (let key in formData) {
+      formDataToSend.append(key, formData[key]);
+    }
+    formDataToSend.append("mode", mode); // append mode
     try {
+      // POST request to your backend API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-        formData,
+        formDataToSend,
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -566,7 +568,7 @@ const SampleArea = () => {
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     setShowEditModal(true);
-
+    setMode(sample.samplemode || "individual")
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
 
@@ -591,7 +593,7 @@ const SampleArea = () => {
       ContainerType: sample.ContainerType,
       CountryOfCollection: sample.CountryOfCollection,
       quantity: sample.quantity,
-      QuantityUnit: sample.QuantityUnit,
+      VolumeUnit: sample.VolumeUnit,
       SampleTypeMatrix: sample.SampleTypeMatrix,
       SmokingStatus: sample.SmokingStatus,
       AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
@@ -647,7 +649,7 @@ const SampleArea = () => {
       ContainerType: "",
       CountryOfCollection: "",
       quantity: 1,
-      QuantityUnit: "",
+      VolumeUnit: "",
       SampleTypeMatrix: "",
       SmokingStatus: "",
       AlcoholOrDrugAbuse: "",
@@ -747,32 +749,33 @@ const SampleArea = () => {
   const areMandatoryFieldsFilled = () => {
     if (mode === "individual") {
       return (
-        formData.donorID?.trim() &&
-        formData.diseasename?.trim() &&
-        formData.locationids?.trim() &&
-        formData.volume?.trim() &&
-        formData.phoneNumber?.trim() &&
-        formData.TestResult?.trim() &&
-        formData.gender?.trim() &&
-        formData.SampleTypeMatrix?.trim() &&
-        formData.age?.trim() &&
-        formData.ContainerType?.trim() &&
+        formData.donorID?.toString().trim() &&
+        formData.diseasename?.toString().trim() &&
+        formData.locationids?.toString().trim() &&
+        formData.volume !== "" &&
+        formData.phoneNumber?.toString().trim() &&
+        formData.TestResult?.toString().trim() &&
+        formData.gender?.toString().trim() &&
+        formData.SampleTypeMatrix?.toString().trim() &&
+        formData.age !== "" &&
+        formData.ContainerType?.toString().trim() &&
         formData.logo instanceof File
       );
     } else if (mode === "pool") {
       return (
-        formData.donorID?.trim() &&
-        formData.diseasename?.trim() &&
-        formData.locationids?.trim() &&
-        formData.volume?.trim() &&
-        formData.TestResult?.trim() &&
-        formData.TestResultUnit?.trim() &&
-        formData.SampleTypeMatrix?.trim() &&
-        formData.ContainerType?.trim() &&
+        formData.donorID?.toString().trim() &&
+        formData.diseasename?.toString().trim() &&
+        formData.locationids?.toString().trim() &&
+        formData.volume !== "" &&
+        formData.TestResult?.toString().trim() &&
+        formData.TestResultUnit?.toString().trim() &&
+        formData.SampleTypeMatrix?.toString().trim() &&
+        formData.ContainerType?.toString().trim() &&
         formData.logo instanceof File
       );
     }
   };
+
 
   const unitMaxValues = {
     L: 100,
@@ -982,7 +985,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </span>
                               );
                             } else if (key === "volume") {
-                              return `${sample.volume} ${sample.QuantityUnit || ""}`;
+                              return `${sample.volume} ${sample.VolumeUnit || ""}`;
                             }
                             else if (key === "barcode") {
                               return <button
@@ -995,13 +998,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 Show Barcode
                               </button>
                             }
-                           else if (key === "age") {
-  if (!sample.age || sample.age === 0) {
-    return "-----";
-  }
-  return `${sample.age} years`;
-}
- else if (key === "TestResult") {
+                            else if (key === "age") {
+                              if (!sample.age || sample.age === 0) {
+                                return "-----";
+                              }
+                              return `${sample.age} years`;
+                            } else if (key === "TestResult") {
                               return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                             } else {
                               return sample[key] || "----";
@@ -1352,7 +1354,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         step="0.5"
                                         min="0.5"
                                         max={
-                                          unitMaxValues[formData.QuantityUnit] ||
+                                          unitMaxValues[formData.VolumeUnit] ||
                                           undefined
                                         }
                                         required
@@ -1366,14 +1368,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       />
                                       <select
                                         className="form-control"
-                                        name="QuantityUnit"
-                                        value={formData.QuantityUnit}
+                                        name="VolumeUnit"
+                                        value={formData.VolumeUnit}
                                         onChange={handleInputChange}
                                         required
                                         style={{
                                           height: "45px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.QuantityUnit
+                                          backgroundColor: !formData.VolumeUnit
                                             ? "#fdecea"
                                             : "#fff",
                                         }}
@@ -1381,7 +1383,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         <option value="" hidden>
                                           Select Unit
                                         </option>
-                                        {quantityunitNames.map((name, index) => (
+                                        {volumeunitNames.map((name, index) => (
                                           <option key={index} value={name}>
                                             {name}
                                           </option>
@@ -1390,14 +1392,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     </div>
                                     {/* Validation message*/}
                                     {formData.volume &&
-                                      formData.QuantityUnit &&
+                                      formData.VolumeUnit &&
                                       parseFloat(formData.volume) >
-                                      (unitMaxValues[formData.QuantityUnit] ||
+                                      (unitMaxValues[formData.VolumeUnit] ||
                                         Infinity) && (
                                         <small className="text-danger mt-1">
                                           Value must be less than or equal to{" "}
                                           {unitMaxValues[
-                                            formData.QuantityUnit
+                                            formData.VolumeUnit
                                           ].toLocaleString()}
                                           .
                                         </small>
@@ -2302,7 +2304,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         );
                                         const max =
                                           unitMaxValues[
-                                          formData.QuantityUnit
+                                          formData.VolumeUnit
                                           ] || Infinity;
 
                                         if (
@@ -2317,7 +2319,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       min="0.5"
                                       max={
                                         unitMaxValues[
-                                        formData.QuantityUnit
+                                        formData.VolumeUnit
                                         ] || undefined
                                       }
                                       required
@@ -2331,15 +2333,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     />
                                     <select
                                       className="form-control"
-                                      name="QuantityUnit"
-                                      value={formData.QuantityUnit}
+                                      name="VolumeUnit"
+                                      value={formData.VolumeUnit}
                                       onChange={handleInputChange}
                                       required
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
                                         backgroundColor:
-                                          !formData.QuantityUnit
+                                          !formData.VolumeUnit
                                             ? "#fdecea"
                                             : "#fff",
                                       }}
@@ -2347,7 +2349,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       <option value="" hidden>
                                         Select Unit
                                       </option>
-                                      {quantityunitNames.map(
+                                      {volumeunitNames.map(
                                         (name, index) => (
                                           <option key={index} value={name}>
                                             {name}
@@ -2358,14 +2360,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   </div>
                                   {/* Validation message*/}
                                   {formData.volume &&
-                                    formData.QuantityUnit &&
+                                    formData.VolumeUnit &&
                                     parseFloat(formData.volume) >
-                                    (unitMaxValues[formData.QuantityUnit] ||
+                                    (unitMaxValues[formData.VolumeUnit] ||
                                       Infinity) && (
                                       <small className="text-danger mt-1">
                                         Value must be less than or equal to{" "}
                                         {unitMaxValues[
-                                          formData.QuantityUnit
+                                          formData.VolumeUnit
                                         ].toLocaleString()}
                                         .
                                       </small>
