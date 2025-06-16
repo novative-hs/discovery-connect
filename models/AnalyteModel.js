@@ -4,7 +4,7 @@ const { sendEmail } = require("../config/email");
 
 const create_AnalyteTable = () => {
   const AnalyteTable = `
-  CREATE TABLE IF NOT EXISTS Analyte (
+  CREATE TABLE IF NOT EXISTS analyte (
     id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
       added_by INT,
