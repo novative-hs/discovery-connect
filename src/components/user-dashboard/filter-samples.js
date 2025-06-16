@@ -10,7 +10,7 @@ import DashboardHeader from "@layout/dashboardheader";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-const FilterProduct = () => {
+const FilterProductArea = () => {
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -174,8 +174,15 @@ const FilterProduct = () => {
   return (
     <>
       {/* Conditional header rendering */}
-      {userID ? <DashboardHeader setActiveTab={setActiveTab} activeTab={activeTab} />
-        : <Header style_2={true} />}
+      {userID ? (
+  <div style={{ position: "relative", zIndex: 1050 }}>
+    <DashboardHeader setActiveTab={setActiveTab} activeTab={activeTab} />
+  </div>
+) : (
+  <div style={{ position: "relative", zIndex: 1050 }}>
+    <Header style_2={true} />
+  </div>
+)}
 
       <section className="policy__area pb-40 overflow-hidden p-3">
         <div className="container">
@@ -364,4 +371,4 @@ const FilterProduct = () => {
   );
 };
 
-export default FilterProduct;
+export default FilterProductArea;

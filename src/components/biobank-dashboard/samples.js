@@ -99,7 +99,7 @@ const BioBankSampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Patient Name", key: "patintname" },
+    { label: "Patient Name", key: "PatientName" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "Phone Number", key: "phoneNumber" },

@@ -529,7 +529,7 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'MRNumber = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName=?','MRNumber = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -541,7 +541,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.MRNumber, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity,
+    data.patientname,data.MRNumber, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity,
     data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult,
     data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
   ];
