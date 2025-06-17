@@ -61,7 +61,7 @@ const DashboardArea = () => {
         return <Shop setActiveTab={setActiveTab} />;
       case "Cart":
         return <Cart setActiveTab={setActiveTab} />;
-         case "filter-sample":
+         case "filter-samples":
         return <FilterProductArea setActiveTab={setActiveTab} />;
       case "Checkout":
           return <Checkout setActiveTab={setActiveTab} />;

@@ -31,16 +31,13 @@ const router=useRouter();
 
  
 
-  const handleAddToCart = async (product) => {
- 
-   sessionStorage.setItem('filterProduct', JSON.stringify(product));
-router.push('/filter-samples');
-  };
-
-  const handleQuickView = (prd) => {
-    dispatch(initialOrderQuantity());
-    dispatch(setProduct(prd))
-  };
+ const handleAddToCart = async (product) => {
+  sessionStorage.setItem("filterProduct", JSON.stringify(product));
+  router.push({
+    pathname: "/dashboardheader",
+    query: { tab: "filter-samples" },
+  });
+};
 
   const isAlreadyAdded = (Analyte) =>
     cartItems.some((item) => item.Analyte === Analyte);

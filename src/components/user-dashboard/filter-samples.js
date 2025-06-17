@@ -173,17 +173,6 @@ const FilterProductArea = () => {
 
   return (
     <>
-      {/* Conditional header rendering */}
-      {userID ? (
-  <div style={{ position: "relative", zIndex: 1050 }}>
-    <DashboardHeader setActiveTab={setActiveTab} activeTab={activeTab} />
-  </div>
-) : (
-  <div style={{ position: "relative", zIndex: 1050 }}>
-    <Header style_2={true} />
-  </div>
-)}
-
       <section className="policy__area pb-40 overflow-hidden p-3">
         <div className="container">
           <p className="text-danger fw-bold mt-3 mb-3">
