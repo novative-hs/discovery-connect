@@ -44,7 +44,7 @@ const registrationadmin_history = () => {
       FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
       FOREIGN KEY (district_id) REFERENCES district(id) ON DELETE CASCADE,
       FOREIGN KEY (ethnicity_id) REFERENCES ethnicity(id) ON DELETE CASCADE,
-      FOREIGN KEY (Analyte_id) REFERENCES Analyte(id) ON DELETE CASCADE,
+      FOREIGN KEY (Analyte_id) REFERENCES analyte(id) ON DELETE CASCADE,
       FOREIGN KEY (samplecondition_id) REFERENCES samplecondition(id) ON DELETE CASCADE,
       FOREIGN KEY (samplepricecurrency_id) REFERENCES samplepricecurrency(id) ON DELETE CASCADE,
       FOREIGN KEY (storagetemperature_id) REFERENCES storagetemperature(id) ON DELETE CASCADE,

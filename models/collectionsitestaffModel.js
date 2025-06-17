@@ -46,8 +46,8 @@ ORDER BY collectionsitestaff.id DESC
   });
 }
 
-const getCollectionSiteStaffDetail=(id,callback)=>{
-   const query = `
+const getCollectionSiteStaffDetail = (id, callback) => {
+  const query = `
    SELECT 
   collectionsitestaff.*, 
   user_account.email AS useraccount_email
@@ -75,20 +75,20 @@ const createCollectionsiteStaff = (req, callback) => {
     status
   } = req.body;
 
- const VALID_PERMISSIONS = ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'];
+  const VALID_PERMISSIONS = ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'];
 
-let permissionsString = "";
+  let permissionsString = "";
 
-if (permission === "all") {
-  permissionsString = "all";
-} else if (Array.isArray(permission)) {
-  const filtered = permission.filter((p) => VALID_PERMISSIONS.includes(p));
-  permissionsString = filtered.join(",");
-}
+  if (permission === "all") {
+    permissionsString = "all";
+  } else if (Array.isArray(permission)) {
+    const filtered = permission.filter((p) => VALID_PERMISSIONS.includes(p));
+    permissionsString = filtered.join(",");
+  }
 
-if (!permissionsString) {
-  return callback(new Error("Invalid permissions provided."), null);
-}
+  if (!permissionsString) {
+    return callback(new Error("Invalid permissions provided."), null);
+  }
 
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
@@ -256,7 +256,7 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
     }
     // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)
-      
+
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
     return { message: "Status updated and email sent" };
@@ -265,6 +265,7 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
     throw error;
   }
 }
+
 const updateCollectonsiteStaffDetail = async (id, req) => {
   const {
     email,
@@ -289,6 +290,11 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
         const updateUserQuery = `UPDATE user_account SET email = ?, password = ? WHERE id = ?`;
         await conn.query(updateUserQuery, [email, password, user_account_id]);
 
+        // ✅ Convert permission to string if it's an array
+        const formattedPermission = Array.isArray(permission)
+          ? permission.join(',') // e.g., "add_full,edit,dispatch"
+          : permission;
+
         // 2. Update collectionsitestaff
         const updateCSQuery = `
           UPDATE collectionsitestaff 
@@ -298,7 +304,7 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
         await conn.query(updateCSQuery, [
           collectionsitesid,
           staffName,
-          permission,
+          formattedPermission,
           status,
           user_account_id
         ]);
@@ -324,7 +330,7 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
           email,
           password,
           staffName || null,
-          permission,
+          formattedPermission,
           collectionsitesid,
           collectionsitestaffId,
           status
@@ -354,8 +360,6 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
     });
   });
 };
-
-
 
 module.exports = {
   create_collectionsitestaffTable,

@@ -85,6 +85,7 @@ const BioBankSampleArea = () => {
   const [priceFilter, setPriceFilter] = useState("");
 
   const tableHeaders = [
+    { label: "Patient Name", key: "PatientName" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
@@ -1149,7 +1150,7 @@ const BioBankSampleArea = () => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "Analyte"
+                            : key === "Analyte" || key === "PatientName"
                               ? "text-start"
                               : "text-center text-truncate"
                         }
@@ -1941,7 +1942,7 @@ Box ID=${sample.box_id || "----"} `;
                                         onChange={(e) =>
                                           logoHandler(e.target.files[0])
                                         }
-                                        required
+                                        required={!formData.logo} // only required if no logo is set
                                         className="form-control"
                                         style={{
                                           height: "45px",
@@ -2856,7 +2857,7 @@ Box ID=${sample.box_id || "----"} `;
                                       onChange={(e) =>
                                         logoHandler(e.target.files[0])
                                       }
-                                      required
+                                      required={!formData.logo} // only required if no logo is set
                                       className="form-control"
                                       style={{
                                         height: "45px",
