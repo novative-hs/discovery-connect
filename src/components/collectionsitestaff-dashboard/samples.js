@@ -81,6 +81,7 @@ const SampleArea = () => {
   };
 
   const tableHeaders = [
+    { label: "Patient Name", key: "PatientName" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
@@ -1680,7 +1681,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         onChange={(e) =>
                                           logoHandler(e.target.files[0])
                                         }
-                                        required
+                                        required={!formData.logo} // only required if no logo is set
                                         className="form-control"
                                         style={{
                                           height: "45px",
@@ -2595,7 +2596,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       onChange={(e) =>
                                         logoHandler(e.target.files[0])
                                       }
-                                      required
+                                      required={!formData.logo} // only required if no logo is set
                                       className="form-control"
                                       style={{
                                         height: "45px",
@@ -2617,7 +2618,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       />
                                     )}
                                   </div>
-
                                 </div>
                               </div>
                             </div>

@@ -21,7 +21,7 @@ const tablesAndColumns = [
         column: "Analyte_id",
         type: "INT",
         nullable: true, // Change to true
-        references: { table: "Analyte", column: "id" },
+        references: { table: "analyte", column: "id" },
       }]
   }
 
