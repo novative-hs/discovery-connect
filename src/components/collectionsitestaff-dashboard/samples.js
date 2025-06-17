@@ -935,7 +935,7 @@ const SampleArea = () => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "Analyte"
+                            : key === "Analyte" || key === "PatientName"
                               ? "text-start"
                               : "text-center text-truncate"
                         }
