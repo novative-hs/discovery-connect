@@ -176,7 +176,7 @@ const FilterProductArea = () => {
       <section className="policy__area pb-40 overflow-hidden p-3">
         <div className="container">
           <p className="text-danger fw-bold mt-3 mb-3">
-            Click on Sample Name to get detail about sample.
+            Click on Analyte to get detail about sample.
           </p>
 
           <div className="row justify-content-center">

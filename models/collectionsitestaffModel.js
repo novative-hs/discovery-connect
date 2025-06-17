@@ -289,6 +289,11 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
         const updateUserQuery = `UPDATE user_account SET email = ?, password = ? WHERE id = ?`;
         await conn.query(updateUserQuery, [email, password, user_account_id]);
 
+        // ✅ Convert permission to string if it's an array
+        const formattedPermission = Array.isArray(permission)
+          ? permission.join(',') // e.g., "add_full,edit,dispatch"
+          : permission;
+
         // 2. Update collectionsitestaff
         const updateCSQuery = `
           UPDATE collectionsitestaff 
@@ -298,7 +303,7 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
         await conn.query(updateCSQuery, [
           collectionsitesid,
           staffName,
-          permission,
+          formattedPermission,
           status,
           user_account_id
         ]);
@@ -324,7 +329,7 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
           email,
           password,
           staffName || null,
-          permission,
+          formattedPermission,
           collectionsitesid,
           collectionsitestaffId,
           status

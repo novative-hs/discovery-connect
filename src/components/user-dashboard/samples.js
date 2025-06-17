@@ -273,7 +273,7 @@ const SampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h7 className="text-danger fw-bold mb-3">Click on Sample Name to get detail about sample.</h7>
+        <h7 className="text-danger fw-bold mb-3">Click on Analyte to get detail about sample.</h7>
         <div className="row justify-content-center">
           {/* {Button} */}
           <div className="d-flex flex-column w-100">

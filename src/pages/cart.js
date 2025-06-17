@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import SEO from "@components/seo";
 import Footer from "@layout/footer";
 import Header from "@layout/header";
-import DashbaordHeader from "@layout/dashboardheader";
+import DashboardHeader from "@layout/dashboardheader";
 import Wrapper from "@layout/wrapper";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import CartArea from "@components/cart/cart-area";
@@ -14,7 +14,7 @@ export default function Cart({ query }) {
 
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-
+// const [activeTab, setActiveTab] = useState("Booksamples");
   useEffect(() => {
     if (typeof window !== "undefined") {
       const id = sessionStorage.getItem("userID");
@@ -31,8 +31,11 @@ export default function Cart({ query }) {
       <SEO pageTitle={"Cart"} />
       {userId ? (
   <>
+  {/* <DashboardHeader setActiveTab={setActiveTab} activeTab={"Booksamples"} /> */}
     <CartBreadcrumb title='My Cart' subtitle='Cart' />
+    
 <CartArea product={product} /> 
+
   </>
 ) : (
   <>

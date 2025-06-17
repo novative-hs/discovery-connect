@@ -31,13 +31,27 @@ const router=useRouter();
 
  
 
- const handleAddToCart = async (product) => {
+const handleAddToCart = async (product) => {
+  const userID = sessionStorage.getItem("userID");
+
+  if (!userID) {
+    // User is not logged in, redirect to login
+    router.push({
+      pathname: "/login",
+      query: { tab: "filter-samples" }, // Optional: you can track where user was going
+    });
+    return;
+  }
+
+  // User is logged in, proceed to dashboard
   sessionStorage.setItem("filterProduct", JSON.stringify(product));
   router.push({
     pathname: "/dashboardheader",
     query: { tab: "filter-samples" },
   });
 };
+
+
 
   const isAlreadyAdded = (Analyte) =>
     cartItems.some((item) => item.Analyte === Analyte);

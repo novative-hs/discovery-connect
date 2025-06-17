@@ -1173,7 +1173,7 @@ const CommitteeMemberArea = () => {
                           <thead className="table-dark">
                             <tr>
                               <th>Researcher Name</th>
-                              <th>Sample Name</th>
+                              <th>Analyte</th>
                               <th>Quantity</th>
                               <th>Comments</th>
                               <th>Documents</th>

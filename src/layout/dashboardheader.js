@@ -55,17 +55,13 @@ const Header = ({ setActiveTab, activeTab }) => {
   const dropdownRef = useRef(null);
   useEffect(() => {
     if (id === null) {
-      return <div>Loading...</div>; // Or redirect to loginr4
+      return <div>Loading...</div>; // Or redirect to login
     } else {
       fetchCart();
       fetchUserDetail();
     }
   }, []);
- useEffect(() => {
-    const pathParts = router.asPath.split("/");
-    const lastPart = pathParts[pathParts.length - 1];
-    setActiveTab(lastPart || "Booksamples");
-  }, [router.asPath]);
+
   const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
@@ -280,7 +276,6 @@ const Header = ({ setActiveTab, activeTab }) => {
                       } fs-7`}
                     onClick={() => {
                       if (!dropdown) {
-                        console.log(tab)
                         setActiveTab(tab);
                       }
                     }}
@@ -325,7 +320,6 @@ const Header = ({ setActiveTab, activeTab }) => {
                               );
                             }}
                             onClick={() => {
-                              console.log(tab)
                               setActiveTab(tab);
                               setShowSampleDropdown(null);
                             }}
@@ -440,7 +434,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   </ul>
                 </div>
                 {userType === "researcher" && (
-                    <Link
+                <Link
                     href={{
                       pathname: router.pathname,
                       query: { ...router.query, tab: "Cart" },

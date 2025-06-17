@@ -225,105 +225,86 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
-  useEffect(() => {
-    const storedUser = getsessionStorage("user");
-    fetchSamples(currentPage, itemsPerPage, {
-
-      searchField,
-      searchValue,
-    });
-    fetchCollectionSiteNames();
-  }, [currentPage, searchField, searchValue]);
+ useEffect(() => {
+  fetchSamples(currentPage, itemsPerPage, {
+    searchField,
+    searchValue,
+  });
+  fetchCollectionSiteNames();
+}, [currentPage, searchField, searchValue]);
 
 
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
+const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { searchField, searchValue } = filters;
 
-      if (!id) {
-        console.error("ID is missing.");
-        return;
-      }
-
-      // Construct URLs
-      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-
-      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-      if (searchField && searchValue) {
-        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      // Fetch own samples
-      const ownResponse = await axios.get(ownResponseurl);
-      const { samples: ownSampleData, totalCount: ownTotalCount } = ownResponse.data;
-
-      const ownSamples = ownSampleData.map((sample) => {
-        let base64Logo = "";
-        if (sample.logo && sample.logo.data) {
-          const binary = sample.logo.data.map((byte) => String.fromCharCode(byte)).join("");
-          base64Logo = `data:image/jpeg;base64,${btoa(binary)}`;
-        }
-
-        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-
-        return {
-          ...sample,
-          quantity,
-          logo: base64Logo,
-          isReturn: false,
-        };
-      });
-
-      // Fetch received samples
-      const receivedResponse = await axios.get(receivedResponseurl);
-      const { samples: receivedSampleData, totalCount: receivedTotalCount } = receivedResponse.data;
-
-      const receivedSamples = receivedSampleData.map((sample) => {
-        const quantity = Number(sample.quantity ?? sample.Quantity ?? 0);
-        return {
-          ...sample,
-          quantity,
-          isReturn: true,
-        };
-      });
-
-      // Merge and sum duplicate quantities
-      const sampleMap = new Map();
-
-      [...ownSamples, ...receivedSamples].forEach((sample) => {
-        const sampleId = sample.id;
-        if (sampleMap.has(sampleId)) {
-          const existingSample = sampleMap.get(sampleId);
-          existingSample.quantity += sample.quantity;
-
-          // If any source is from received, mark isReturn false
-          if (sample.isReturn === false) {
-            existingSample.isReturn = false;
-          }
-
-          sampleMap.set(sampleId, existingSample);
-        } else {
-          sampleMap.set(sampleId, { ...sample });
-        }
-      });
-
-      const combinedSamples = Array.from(sampleMap.values());
-      console.log("Combined sample count:", combinedSamples.length); // Should show 16
-      const totalPages = Math.ceil(combinedSamples.length / pageSize);
-      console.log(combinedSamples)
-      setTotalPages(totalPages);
-      setfiltertotal(totalPages); // Only if you actually need this
-      setSamples(combinedSamples);
-      setFilteredSamplename(combinedSamples);
-
-    } catch (error) {
-      console.error("Error fetching samples:", error);
+    if (!id) {
+      console.error("ID is missing.");
+      return;
     }
-  };
+
+    // Build URLs
+    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`;
+    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`;
+
+    if (searchField && searchValue) {
+      ownResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
+      receivedResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
+    }
+
+    const [ownResponse, receivedResponse] = await Promise.all([
+      axios.get(ownResponseurl),
+      axios.get(receivedResponseurl),
+    ]);
+
+    const ownSamples = ownResponse.data.samples.map((s) => ({
+      ...s,
+      quantity: Number(s.quantity ?? s.Quantity ?? 0),
+      logo: s.logo?.data
+        ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
+        : "",
+      isReturn: false,
+    }));
+
+    const receivedSamples = receivedResponse.data.samples.map((s) => ({
+      ...s,
+      quantity: Number(s.quantity ?? s.Quantity ?? 0),
+      isReturn: true,
+    }));
+
+    // Merge and deduplicate by ID
+    const sampleMap = new Map();
+    [...ownSamples, ...receivedSamples].forEach((sample) => {
+      const sampleId = sample.id;
+      if (sampleMap.has(sampleId)) {
+        const existing = sampleMap.get(sampleId);
+        existing.quantity += sample.quantity;
+        if (!sample.isReturn) existing.isReturn = false;
+        sampleMap.set(sampleId, existing);
+      } else {
+        sampleMap.set(sampleId, { ...sample });
+      }
+    });
+
+    const merged = Array.from(sampleMap.values());
+
+    // Pagination on merged list
+    const totalCount = merged.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const paginated = merged.slice((page - 1) * pageSize, page * pageSize);
+
+    setSamples(merged);
+    setFilteredSamplename(paginated);
+    setTotalPages(totalPages);
+    setfiltertotal(totalPages);
+
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+
+
+
 
   const fetchCollectionSiteNames = async () => {
     try {
@@ -381,10 +362,10 @@ const SampleArea = () => {
     setCurrentPage(1);
   };
 
-  const handlePageChange = (event) => {
-    const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
-    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
-  };
+ const handlePageChange = (event) => {
+  const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
+  setCurrentPage(selectedPage); // Correct ✅
+};
 
   const handleScroll = (e) => {
     const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
@@ -456,7 +437,7 @@ const SampleArea = () => {
       );
 
       fetchSamples(); // Refresh only current page
-      setCurrentPage(0);
+      setCurrentPage(1);
 
       setSuccessMessage("Sample added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -710,7 +691,7 @@ const SampleArea = () => {
       );
 
       fetchSamples(); // Refresh only current page
-      setCurrentPage(0);
+      setCurrentPage(1);
 
       setShowEditModal(false);
       setSuccessMessage("Sample updated successfully.");
@@ -1065,7 +1046,7 @@ ${sample.box_id || "N/A"} = Box ID`;
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage} // If using react-paginate, which is 0-based
+            focusPage={currentPage-1} // If using react-paginate, which is 0-based
           />
         )}
 
@@ -1260,7 +1241,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         onChange={handleInputChange}
                                         required
                                         title="This is the MR Number of patient generated by hospital"
-                                        placeholder="Enter MR Number"
+                                        
                                         style={{
                                           height: "45px",
                                           fontSize: "14px",

@@ -113,7 +113,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
                   <input
                     type="text"
                     className="form-control border-0 shadow-sm"
-                    placeholder="Search Sample Name..."
+                    placeholder="Search Analyte..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
