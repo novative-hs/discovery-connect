@@ -2,25 +2,26 @@ import { useState, useEffect } from "react";
 import SEO from "@components/seo";
 import Footer from "@layout/footer";
 import Header from "@layout/header";
-import DashbaordHeader from "@layout/dashboardheader";
+import DashboardHeader from "@layout/dashboardheader";
 import Wrapper from "@layout/wrapper";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import CartArea from "@components/cart/cart-area";
-// import ShopCta from "@components/cta";
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
 
-export default function Cart({ query }) {
-  const { data: product, isError, isLoading, error } = useGetAllSamplesQuery();
+export default function Cart() {
+  const { data: product } = useGetAllSamplesQuery();
 
   const [userId, setUserId] = useState(null);
+  const [accountType, setAccountType] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const id = sessionStorage.getItem("userID");
+      const role = sessionStorage.getItem("accountType");
       setUserId(id);
+      setAccountType(role?.toLowerCase());
       setLoadingUser(false);
-      
     }
   }, []);
 
@@ -29,19 +30,17 @@ export default function Cart({ query }) {
   return (
     <Wrapper>
       <SEO pageTitle={"Cart"} />
-      {userId ? (
-  <>
-    <CartBreadcrumb title='My Cart' subtitle='Cart' />
-<CartArea product={product} /> 
-  </>
-) : (
-  <>
-    <Header style_2={true} />
-    <CartBreadcrumb title='My Cart' subtitle='Cart' />
-    <CartArea product={product} />
-    <Footer />
-  </>
-)}   
+
+      {/* Show appropriate header */}
+      {userId && accountType === "researcher" ? (
+        <DashboardHeader setActiveTab={() => {}} activeTab={"Cart"} />
+      ) : (
+        <Header style_2={true} />
+      )}
+
+      <CartBreadcrumb title="My Cart" subtitle="Cart" />
+      <CartArea product={product} />
+      <Footer />
     </Wrapper>
   );
 }

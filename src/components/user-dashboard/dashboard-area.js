@@ -12,9 +12,10 @@ import OrderInfo from "./order-info";
 import Shop from "../../pages/shop"
 import Cart from "../../pages/cart";
 import Checkout from "../../pages/checkout";
+import FilterProductArea from "./filter-samples";
 const DashboardArea = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("order-info");
+  const [activeTab, setActiveTab] = useState("Booksamples");
   const [id, setUserID] = useState(null);
 
   // 🔹 Ensure hooks run in a stable order
@@ -60,6 +61,8 @@ const DashboardArea = () => {
         return <Shop setActiveTab={setActiveTab} />;
       case "Cart":
         return <Cart setActiveTab={setActiveTab} />;
+         case "filter-sample":
+        return <FilterProductArea setActiveTab={setActiveTab} />;
       case "Checkout":
           return <Checkout setActiveTab={setActiveTab} />;
       case "samples":

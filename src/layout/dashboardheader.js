@@ -55,13 +55,17 @@ const Header = ({ setActiveTab, activeTab }) => {
   const dropdownRef = useRef(null);
   useEffect(() => {
     if (id === null) {
-      return <div>Loading...</div>; // Or redirect to login
+      return <div>Loading...</div>; // Or redirect to loginr4
     } else {
       fetchCart();
       fetchUserDetail();
     }
   }, []);
-
+ useEffect(() => {
+    const pathParts = router.asPath.split("/");
+    const lastPart = pathParts[pathParts.length - 1];
+    setActiveTab(lastPart || "Booksamples");
+  }, [router.asPath]);
   const fetchUserDetail = async () => {
     try {
       const response = await axios.get(
@@ -276,6 +280,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                       } fs-7`}
                     onClick={() => {
                       if (!dropdown) {
+                        console.log(tab)
                         setActiveTab(tab);
                       }
                     }}
@@ -320,6 +325,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                               );
                             }}
                             onClick={() => {
+                              console.log(tab)
                               setActiveTab(tab);
                               setShowSampleDropdown(null);
                             }}
@@ -434,7 +440,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   </ul>
                 </div>
                 {userType === "researcher" && (
-                <Link href="/cart" className="btn btn-sm position-relative">
+                    <Link href="/cart" className="btn btn-sm position-relative">
                     <Cart className="fs-7 text-white" />
                     {sampleCount > 0 && (
                       <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
