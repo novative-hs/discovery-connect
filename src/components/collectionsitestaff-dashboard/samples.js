@@ -81,7 +81,6 @@ const SampleArea = () => {
   };
 
   const tableHeaders = [
-    { label: "Patient Name", key: "PatientName" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
@@ -205,7 +204,7 @@ const SampleArea = () => {
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
-    { name: "Analyte", setter: setAnalyteNames },
+    { name: "analyte", setter: setAnalyteNames },
     { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
   ];
 
