@@ -46,8 +46,8 @@ ORDER BY collectionsitestaff.id DESC
   });
 }
 
-const getCollectionSiteStaffDetail=(id,callback)=>{
-   const query = `
+const getCollectionSiteStaffDetail = (id, callback) => {
+  const query = `
    SELECT 
   collectionsitestaff.*, 
   user_account.email AS useraccount_email
@@ -75,20 +75,20 @@ const createCollectionsiteStaff = (req, callback) => {
     status
   } = req.body;
 
- const VALID_PERMISSIONS = ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'];
+  const VALID_PERMISSIONS = ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'];
 
-let permissionsString = "";
+  let permissionsString = "";
 
-if (permission === "all") {
-  permissionsString = "all";
-} else if (Array.isArray(permission)) {
-  const filtered = permission.filter((p) => VALID_PERMISSIONS.includes(p));
-  permissionsString = filtered.join(",");
-}
+  if (permission === "all") {
+    permissionsString = "all";
+  } else if (Array.isArray(permission)) {
+    const filtered = permission.filter((p) => VALID_PERMISSIONS.includes(p));
+    permissionsString = filtered.join(",");
+  }
 
-if (!permissionsString) {
-  return callback(new Error("Invalid permissions provided."), null);
-}
+  if (!permissionsString) {
+    return callback(new Error("Invalid permissions provided."), null);
+  }
 
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
@@ -256,7 +256,7 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
     }
     // Send email asynchronously
     sendEmail(email, "Account Status Update", emailText)
-      
+
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
     return { message: "Status updated and email sent" };
@@ -265,6 +265,7 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
     throw error;
   }
 }
+
 const updateCollectonsiteStaffDetail = async (id, req) => {
   const {
     email,
@@ -359,8 +360,6 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
     });
   });
 };
-
-
 
 module.exports = {
   create_collectionsitestaffTable,
