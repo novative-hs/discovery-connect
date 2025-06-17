@@ -916,7 +916,7 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
                         className={
                           key === "price"
                             ? "text-end"
-                            : key === "Analyte"
+                            : key === "Analyte" || key === "PatientName"
                               ? "text-start"
                               : "text-center text-truncate"
                         }
