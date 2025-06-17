@@ -85,7 +85,6 @@ const BioBankSampleArea = () => {
   const [priceFilter, setPriceFilter] = useState("");
 
   const tableHeaders = [
-    { label: "Patient Name", key: "PatientName" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
@@ -101,7 +100,6 @@ const BioBankSampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
-
     { label: "Container Type", key: "ContainerType" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -234,7 +232,7 @@ const BioBankSampleArea = () => {
   const tableNames = [
     { name: "ethnicity", setter: setEthnicityNames },
     { name: "samplecondition", setter: setSampleConditionNames },
-    { name: "Analyte", setter: setAnalyteNames },
+    { name: "analyte", setter: setAnalyteNames },
     { name: "samplepricecurrency", setter: setSamplePriceCurrencyNames },
     { name: "storagetemperature", setter: setStorageTemperatureNames },
     { name: "containertype", setter: setContainerTypeNames },
