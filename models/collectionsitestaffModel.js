@@ -157,7 +157,7 @@ const createCollectionsiteStaff = (req, callback) => {
               permissionsString,
               collectionsitesid,
               collectionsitestaffId,
-              status
+              'added'
             ];
 
             connection.query(historyQuery, historyValues, (err, historyResults) => {
@@ -200,33 +200,45 @@ const createCollectionsiteStaff = (req, callback) => {
 
 
 const updateCollectonsiteStaffStatus = async (id, status) => {
+  const connection = mysqlConnection.promise();
 
   const updateQuery = 'UPDATE collectionsitestaff SET status = ? WHERE id = ?';
-  const getEmailQuery = `
-    SELECT ua.email, cs.staffName
+  const getStaffQuery = `
+    SELECT ua.email, cs.staffName, cs.collectionsite_id
     FROM collectionsitestaff cs
     JOIN user_account ua ON cs.user_account_id = ua.id
     WHERE cs.id = ?
   `;
+
   try {
-    // Update collection site status
-    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    // Step 1: Update status
+    const [updateResult] = await connection.query(updateQuery, [status, id]);
     if (updateResult.affectedRows === 0) {
       throw new Error("No collection site staff found with the given ID.");
     }
-    // Fetch email
-    const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
-    if (emailResults.length === 0) {
-      throw new Error("collection site staff email not found.");
+
+    // Step 2: Fetch email, name, collectionsite_id
+    const [staffResults] = await connection.query(getStaffQuery, [id]);
+    if (staffResults.length === 0) {
+      throw new Error("Collection site staff not found.");
     }
-    const email = emailResults[0].email;
-    const name = emailResults[0].staffName;
-    // Construct email content based on status
+
+    const { email, staffName, collectionsite_id } = staffResults[0];
+
+    // ✅ Step 3: Insert into history table
+    const insertHistoryQuery = `
+      INSERT INTO history (staffName, email, collectionsite_id, collectionsitestaff_id, status)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    await connection.query(insertHistoryQuery, [staffName, email, collectionsite_id, id, status]);
+
+    // Step 4: Send status email
     let emailText = "";
+
     if (status === "inactive") {
       emailText = `
-      Dear ${name},
-      
+      Dear ${staffName},
+
       We hope you're doing well.
 
       We wanted to inform you that your collection site's staff account on Discovery Connect has been set to <b>inactive</b>. This means you will no longer be able to access the platform or its services until reactivation.
@@ -240,7 +252,7 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
       `;
     } else if (status === "active") {
       emailText = `
-      Dear ${name},
+      Dear ${staffName},
 
       We are pleased to inform you that your collection site's staff account on Discovery Connect has been <b>approved and activated</b>!
 
@@ -254,17 +266,19 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
       The Discovery Connect Team
       `;
     }
-    // Send email asynchronously
-    sendEmail(email, "Account Status Update", emailText)
 
+    // Send email
+    sendEmail(email, "Account Status Update", emailText)
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 
-    return { message: "Status updated and email sent" };
+    return { message: "Status updated, history saved, and email sent" };
+
   } catch (error) {
     console.error("Error updating collection site staff status:", error);
     throw error;
   }
 }
+
 
 const updateCollectonsiteStaffDetail = async (id, req) => {
   const {
@@ -333,7 +347,7 @@ const updateCollectonsiteStaffDetail = async (id, req) => {
           formattedPermission,
           collectionsitesid,
           collectionsitestaffId,
-          status
+          'updated'
         ];
         await conn.query(insertHistoryQuery, historyValues);
 

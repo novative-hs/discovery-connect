@@ -2227,7 +2227,7 @@ Box ID=${sample.box_id || "----"} `;
                                     </label>
                                     <select
                                       className="form-control"
-                                      name="TestResultUnit"
+                                      name="InfectiousDiseaseTesting"
                                       value={formData.InfectiousDiseaseTesting}
                                       onChange={handleInputChange}
                                       style={{

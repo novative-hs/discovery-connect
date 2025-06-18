@@ -144,7 +144,7 @@ const CollectionSiteStaffArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/get`
       );
-    
+
       setAllCollectionsitesstaff(response.data);
       setCollectionsitesstaff(response.data); // Store fetched collectionsites in state
     } catch (error) {
@@ -156,7 +156,7 @@ const CollectionSiteStaffArea = () => {
     try {
 
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/getCSinRA`);
-    
+
       setCollectionsites(response.data);
     } catch (error) {
       console.error("Error fetching collectionsites:", error);
@@ -201,7 +201,7 @@ const CollectionSiteStaffArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-     
+
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -215,30 +215,30 @@ const CollectionSiteStaffArea = () => {
     setShowHistoryModal(true);
   };
 
-const handleFilterChange = (field, value) => {
-  setSearchTerm(value);
+  const handleFilterChange = (field, value) => {
+    setSearchTerm(value);
 
-  if (!value) {
-    setCollectionsitesstaff(allcollectionsitesstaff); // Restore full list
-  } else {
-    const filtered = allcollectionsitesstaff.filter((staff) => {
-      const fieldValue = staff[field]?.toString().toLowerCase();
-      const searchValue = value.toLowerCase();
+    if (!value) {
+      setCollectionsitesstaff(allcollectionsitesstaff); // Restore full list
+    } else {
+      const filtered = allcollectionsitesstaff.filter((staff) => {
+        const fieldValue = staff[field]?.toString().toLowerCase();
+        const searchValue = value.toLowerCase();
 
-      if (field === "status") {
-        // Use exact match for status
-        return fieldValue === searchValue;
-      }
+        if (field === "status") {
+          // Use exact match for status
+          return fieldValue === searchValue;
+        }
 
-      // Use partial match for other fields
-      return fieldValue?.includes(searchValue);
-    });
+        // Use partial match for other fields
+        return fieldValue?.includes(searchValue);
+      });
 
-    setCollectionsitesstaff(filtered);
-  }
+      setCollectionsitesstaff(filtered);
+    }
 
-  setCurrentPage(0); // Reset to first page when filtering
-};
+    setCurrentPage(0); // Reset to first page when filtering
+  };
 
 
   useEffect(() => {
@@ -317,7 +317,7 @@ const handleFilterChange = (field, value) => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-  
+
     try {
       // Send status update request to backend
       const response = await axios.put(
@@ -345,17 +345,17 @@ const handleFilterChange = (field, value) => {
     }
   };
 
-useEffect(() => {
-  const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
+  useEffect(() => {
+    const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
 
-  if (anyModalOpen) {
-    document.body.style.overflow = "hidden";
-    document.body.classList.add("modal-open");
-  } else {
-    document.body.style.overflow = "auto";
-    document.body.classList.remove("modal-open");
-  }
-}, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
+    if (anyModalOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("modal-open");
+    }
+  }, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
 
   const resetFormData = () => {
     setFormData({
@@ -953,6 +953,11 @@ useEffect(() => {
                         updated_at,
                         status
                       } = log;
+                      // Determine timestamp and person depending on status type:
+                      const time =
+                        status === "added" || status === "active"
+                          ? created_at
+                          : updated_at;
 
                       return (
                         <div
@@ -964,64 +969,52 @@ useEffect(() => {
                             marginBottom: "10px",
                           }}
                         >
-                          {/* Message for City Addition */}
-                          {status === 'added' && (
-                            <div style={baseStyle}>
-                              <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
-                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
+                          {/* Added */}
+                          {(status === "added" || status === "updated") && (
+                            <div
+                              style={{
+                                padding: "10px 15px",
+                                borderRadius: "15px",
+                                backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
+                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                maxWidth: "75%",
+                                fontSize: "14px",
+                                textAlign: "left",
+                                marginTop: status === "updated" ? "5px" : "0px",
+                              }}
+                            >
+                              Collection Site Staff: <b>{staffName}</b> was{" "}
+                              <b style={{ color: "green" }}>{status}</b> by Registration Admin at{" "}
+                              {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
                             </div>
                           )}
-
-                          {status === 'updated' && (
-                            <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
-                              <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
-                              {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
-                          {status === 'active' && (
-                            <div style={baseStyle}>
-                              <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
-                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
-                          {status === 'inactive' && (
-                            <div style={baseStyle}>
-                              <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
-                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
-                          {/* Message for City Addition */}
-                          {status === 'added' && (
-                            <div style={baseStyle}>
-                              <b>Collectionsite staff:</b> {staffName} was <b>added</b> and <b>{permission}</b> by Registration Admin at{" "}
-                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
-                          {status === 'updated' && (
-                            <div style={{ ...baseStyle, backgroundColor: "#dcf8c6", marginTop: "5px" }}>
-                              <b>Collectionsite staff:</b> {staffName} was <b>updated</b> and <b>{permission}</b> by Registration Admin at{" "}
-                              {updated_at ? moment(updated_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
-                          {status === 'active' && (
-                            <div style={baseStyle}>
-                              <b>Collectionsite staff:</b> {staffName} is <b>{status}</b> with <b>{permission}</b> permission as of{" "}
-                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
-                          {status === 'inactive' && (
-                            <div style={baseStyle}>
-                              <b>Collectionsite staff:</b> {staffName} was marked <b>{status}</b> and <b>{permission}</b> by Registration Admin at{" "}
-                              {created_at ? moment(created_at).format("DD MMM YYYY, h:mm A") : "Unknown Date"}
-                            </div>
-                          )}
-
+                          {/* Active */}
+                          {(status === "active" ||
+                            status === "inactive") && (
+                              <div
+                                style={{
+                                  padding: "10px 15px",
+                                  borderRadius: "15px",
+                                  backgroundColor:
+                                    status === "active"
+                                      ? "#cce5ff"
+                                      : "#f8d7da", // blue or red
+                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                  maxWidth: "75%",
+                                  fontSize: "14px",
+                                  textAlign: "left",
+                                  marginTop: "5px",
+                                }}
+                              >
+                                Collection Site Staff: <b>{staffName}</b>{" "}
+                                was <b>{status}</b> by Registration Admin at{" "}
+                                {moment(
+                                  status === "active"
+                                    ? created_at
+                                    : updated_at
+                                ).format("DD MMM YYYY, h:mm A")}
+                              </div>
+                            )}
                         </div>
                       );
                     })

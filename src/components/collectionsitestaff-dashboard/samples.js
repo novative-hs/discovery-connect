@@ -226,83 +226,83 @@ const SampleArea = () => {
   };
 
   // Fetch samples from backend when component loads
- useEffect(() => {
-  fetchSamples(currentPage, itemsPerPage, {
-    searchField,
-    searchValue,
-  });
-  fetchCollectionSiteNames();
-}, [currentPage, searchField, searchValue]);
-
-
-const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-  try {
-    const { searchField, searchValue } = filters;
-
-    if (!id) {
-      console.error("ID is missing.");
-      return;
-    }
-
-    // Build URLs
-    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`;
-    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`;
-
-    if (searchField && searchValue) {
-      ownResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
-      receivedResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
-    }
-
-    const [ownResponse, receivedResponse] = await Promise.all([
-      axios.get(ownResponseurl),
-      axios.get(receivedResponseurl),
-    ]);
-
-    const ownSamples = ownResponse.data.samples.map((s) => ({
-      ...s,
-      quantity: Number(s.quantity ?? s.Quantity ?? 0),
-      logo: s.logo?.data
-        ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
-        : "",
-      isReturn: false,
-    }));
-
-    const receivedSamples = receivedResponse.data.samples.map((s) => ({
-      ...s,
-      quantity: Number(s.quantity ?? s.Quantity ?? 0),
-      isReturn: true,
-    }));
-
-    // Merge and deduplicate by ID
-    const sampleMap = new Map();
-    [...ownSamples, ...receivedSamples].forEach((sample) => {
-      const sampleId = sample.id;
-      if (sampleMap.has(sampleId)) {
-        const existing = sampleMap.get(sampleId);
-        existing.quantity += sample.quantity;
-        if (!sample.isReturn) existing.isReturn = false;
-        sampleMap.set(sampleId, existing);
-      } else {
-        sampleMap.set(sampleId, { ...sample });
-      }
+  useEffect(() => {
+    fetchSamples(currentPage, itemsPerPage, {
+      searchField,
+      searchValue,
     });
+    fetchCollectionSiteNames();
+  }, [currentPage, searchField, searchValue]);
 
-    const merged = Array.from(sampleMap.values());
 
-    // Pagination on merged list
-    const totalCount = merged.length;
-    const totalPages = Math.ceil(totalCount / pageSize);
-    const paginated = merged.slice((page - 1) * pageSize, page * pageSize);
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { searchField, searchValue } = filters;
 
-    setSamples(merged);
-    setFilteredSamplename(paginated);
-    setTotalPages(totalPages);
-    setfiltertotal(totalPages);
+      if (!id) {
+        console.error("ID is missing.");
+        return;
+      }
 
-  } catch (error) {
-    console.error("Fetch error:", error);
-  }
-};
+      // Build URLs
+      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`;
+      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`;
+
+      if (searchField && searchValue) {
+        ownResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
+        receivedResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
+      }
+
+      const [ownResponse, receivedResponse] = await Promise.all([
+        axios.get(ownResponseurl),
+        axios.get(receivedResponseurl),
+      ]);
+
+      const ownSamples = ownResponse.data.samples.map((s) => ({
+        ...s,
+        quantity: Number(s.quantity ?? s.Quantity ?? 0),
+        logo: s.logo?.data
+          ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
+          : "",
+        isReturn: false,
+      }));
+
+      const receivedSamples = receivedResponse.data.samples.map((s) => ({
+        ...s,
+        quantity: Number(s.quantity ?? s.Quantity ?? 0),
+        isReturn: true,
+      }));
+
+      // Merge and deduplicate by ID
+      const sampleMap = new Map();
+      [...ownSamples, ...receivedSamples].forEach((sample) => {
+        const sampleId = sample.id;
+        if (sampleMap.has(sampleId)) {
+          const existing = sampleMap.get(sampleId);
+          existing.quantity += sample.quantity;
+          if (!sample.isReturn) existing.isReturn = false;
+          sampleMap.set(sampleId, existing);
+        } else {
+          sampleMap.set(sampleId, { ...sample });
+        }
+      });
+
+      const merged = Array.from(sampleMap.values());
+
+      // Pagination on merged list
+      const totalCount = merged.length;
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const paginated = merged.slice((page - 1) * pageSize, page * pageSize);
+
+      setSamples(merged);
+      setFilteredSamplename(paginated);
+      setTotalPages(totalPages);
+      setfiltertotal(totalPages);
+
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
 
 
 
@@ -363,10 +363,10 @@ const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     setCurrentPage(1);
   };
 
- const handlePageChange = (event) => {
-  const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
-  setCurrentPage(selectedPage); // Correct ✅
-};
+  const handlePageChange = (event) => {
+    const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
+    setCurrentPage(selectedPage); // Correct ✅
+  };
 
   const handleScroll = (e) => {
     const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
@@ -1047,7 +1047,7 @@ ${sample.box_id || "N/A"} = Box ID`;
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage-1} // If using react-paginate, which is 0-based
+            focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
         )}
 
@@ -1947,7 +1947,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     </label>
                                     <select
                                       className="form-control"
-                                      name="TestResultUnit"
+                                      name="InfectiousDiseaseTesting"
                                       value={formData.InfectiousDiseaseTesting}
                                       onChange={handleInputChange}
                                       style={{

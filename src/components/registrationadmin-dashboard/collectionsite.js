@@ -177,7 +177,7 @@ const CollectionSiteArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
       );
-      
+
       setAllCollectionsites(response.data);
       setCollectionsites(response.data); // Store fetched collectionsites in state
     } catch (error) {
@@ -320,7 +320,7 @@ const CollectionSiteArea = () => {
     }
 
     // Debugging: log the FormData
-    
+
 
     try {
       const response = await axios.put(
@@ -354,7 +354,7 @@ const CollectionSiteArea = () => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    
+
     try {
       // Send status update request to backend
       const response = await axios.delete(
@@ -760,6 +760,7 @@ const CollectionSiteArea = () => {
               focusPage={currentPage}
             />
           )}
+
           {(showAddModal || showEditModal) && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -878,10 +879,10 @@ const CollectionSiteArea = () => {
                           {!/^[A-Za-z\s]*$/.test(
                             formData.CollectionSiteName
                           ) && (
-                            <small className="text-danger">
-                              Only letters and spaces are allowed.
-                            </small>
-                          )}
+                              <small className="text-danger">
+                                Only letters and spaces are allowed.
+                              </small>
+                            )}
                         </div>
                         <div className="form-group">
                           <label>Collection Site Type</label>
@@ -1002,6 +1003,7 @@ const CollectionSiteArea = () => {
               </div>
             </>
           )}
+
           {showHistoryModal && (
             <>
               {/* Bootstrap Backdrop with Blur */}
@@ -1059,12 +1061,6 @@ const CollectionSiteArea = () => {
                         historyData.map((log, index) => {
                           const {
                             CollectionSiteName,
-                            CollectionSiteType,
-                            phoneNumber,
-                            city_name,
-                            country_name,
-                            district_name,
-                            fullAddress,
                             created_at,
                             updated_at,
                             status,
@@ -1087,63 +1083,51 @@ const CollectionSiteArea = () => {
                               }}
                             >
                               {/* Added */}
-                             {(status === "added" || status === "updated") && (
-  <div
-    style={{
-      padding: "10px 15px",
-      borderRadius: "15px",
-      backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
-      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-      maxWidth: "75%",
-      fontSize: "14px",
-      textAlign: "left",
-      marginTop: status === "updated" ? "5px" : "0px",
-    }}
-  >
-    <b>Collectionsite:</b> {CollectionSiteName} was <b>{status}</b> by Registration Admin at{" "}
-    {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
-
-    {/* Only show full details for "added" */}
-      <>
-        <div><b>Type:</b> {CollectionSiteType}</div>
-        <div><b>Phone:</b> {phoneNumber}</div>
-        <div><b>Country:</b> {country_name}</div>
-        <div><b>District:</b> {district_name}</div>
-        <div><b>City:</b> {city_name}</div>
-        <div><b>Address:</b> {fullAddress}</div>
-      </>
-    
-  </div>
-)}
-
-
-                              {/* Active */}
-                              {(status === "active" ||
-                                status === "inactive") && (
+                              {(status === "added" || status === "updated") && (
                                 <div
                                   style={{
                                     padding: "10px 15px",
                                     borderRadius: "15px",
-                                    backgroundColor:
-                                      status === "active"
-                                        ? "#cce5ff"
-                                        : "#f8d7da", // blue or red
+                                    backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
                                     boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
-                                    marginTop: "5px",
+                                    marginTop: status === "updated" ? "5px" : "0px",
                                   }}
                                 >
-                                  <b>Collectionsite:</b> {CollectionSiteName}{" "}
-                                  was <b>{status}</b> by Registration Admin at{" "}
-                                  {moment(
-                                    status === "active"
-                                      ? created_at
-                                      : updated_at
-                                  ).format("DD MMM YYYY, h:mm A")}
+                                  Collectionsite: <b>{CollectionSiteName}</b> was{" "}
+                                  <b style={{ color: "green" }}>{status}</b> by Registration Admin at{" "}
+                                  {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
                                 </div>
                               )}
+                              {/* Active */}
+                              {(status === "active" ||
+                                status === "inactive") && (
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor:
+                                        status === "active"
+                                          ? "#cce5ff"
+                                          : "#f8d7da", // blue or red
+                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                      marginTop: "5px",
+                                    }}
+                                  >
+                                    <b>Collectionsite:</b> {CollectionSiteName}{" "}
+                                    was <b>{status}</b> by Registration Admin at{" "}
+                                    {moment(
+                                      status === "active"
+                                        ? created_at
+                                        : updated_at
+                                    ).format("DD MMM YYYY, h:mm A")}
+                                  </div>
+                                )}
                             </div>
                           );
                         })
@@ -1156,6 +1140,7 @@ const CollectionSiteArea = () => {
               </div>
             </>
           )}
+          
         </div>
       </div>
       <Modal
