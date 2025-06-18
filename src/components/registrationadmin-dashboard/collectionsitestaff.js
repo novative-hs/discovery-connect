@@ -282,7 +282,9 @@ const CollectionSiteStaffArea = () => {
       staffName: collectionsitestaff.staffName,
       email: collectionsitestaff.useraccount_email,
       password: collectionsitestaff.useraccount_password,
-      permission: collectionsitestaff.permission,
+      permission: Array.isArray(collectionsitestaff.permission)
+        ? collectionsitestaff.permission
+        : (collectionsitestaff.permission?.split(",") || []),
       status: collectionsitestaff.status
     });
   };
