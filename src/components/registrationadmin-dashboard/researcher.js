@@ -5,7 +5,7 @@ import {
   faEdit,
   faTrash,
   faHistory,
-  faShoppingCart,
+  faReceipt,
 } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
@@ -418,14 +418,19 @@ const ResearcherArea = () => {
                               <FontAwesomeIcon icon={faHistory} size="sm" />
                             </button>
                             <button
-                              className="btn btn-success btn-sm"
+                              className="btn btn-sm"
+                              style={{
+                                backgroundColor: "#6f42c1",
+                                color: "#fff",
+                                border: "none"
+                              }}
                               onClick={() =>
                                 handleShowOrderHistory(researcher.id)
                               }
                               title="History"
                             >
                               <FontAwesomeIcon
-                                icon={faShoppingCart}
+                                icon={faReceipt}
                                 size="sm"
                               />
                             </button>
@@ -637,88 +642,87 @@ const ResearcherArea = () => {
                             district_name,
                             fullAddress,
                             status,
-                           created_at,
-                           updated_at
+                            created_at,
+                            updated_at
                           } = log;
 
                           return (
-                           <div
-  key={index}
-  style={{
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    marginBottom: "16px",
-  }}
->
-  {/* For 'added' or 'updated' statuses — show researcher detail */}
-  {(status === "added" || status === "updated") && (
-  <div
-    style={{
-      backgroundColor: status === "updated" ? "#dcf8c6" : "#ffffff",
-      border: "1px solid #ccc",
-      borderRadius: "18px",
-      padding: "16px",
-      maxWidth: "85%",
-      boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
-      fontSize: "14px",
-      lineHeight: "1.5",
-      fontFamily: "Segoe UI, sans-serif",
-    }}
-  >
-    <div style={{ marginBottom: "8px", fontWeight: "bold", color: "#555" }}>
-      Researcher status: {status === "added" ? "added" : "updated"}
-    </div>
-    <div><b>Name:</b> {ResearcherName}</div>
-    <div><b>Email:</b> {email}</div>
-    <div><b>Phone:</b> {phoneNumber}</div>
-    <div><b>Organization:</b> {nameofOrganization}</div>
-    <div><b>Country:</b> {country_name}</div>
-    <div><b>District:</b> {district_name}</div>
-    <div><b>City:</b> {city_name}</div>
-    <div><b>Address:</b> {fullAddress}</div>
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                marginBottom: "16px",
+                              }}
+                            >
+                              {/* For 'added' or 'updated' statuses — show researcher detail */}
+                              {(status === "added" || status === "updated") && (
+                                <div
+                                  style={{
+                                    backgroundColor: status === "updated" ? "#dcf8c6" : "#ffffff",
+                                    border: "1px solid #ccc",
+                                    borderRadius: "18px",
+                                    padding: "16px",
+                                    maxWidth: "85%",
+                                    boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
+                                    fontSize: "14px",
+                                    lineHeight: "1.5",
+                                    fontFamily: "Segoe UI, sans-serif",
+                                  }}
+                                >
+                                  <div style={{ marginBottom: "8px", fontWeight: "bold", color: "#555" }}>
+                                    Researcher status: {status === "added" ? "added" : "updated"}
+                                  </div>
+                                  <div><b>Name:</b> {ResearcherName}</div>
+                                  <div><b>Email:</b> {email}</div>
+                                  <div><b>Phone:</b> {phoneNumber}</div>
+                                  <div><b>Organization:</b> {nameofOrganization}</div>
+                                  <div><b>Country:</b> {country_name}</div>
+                                  <div><b>District:</b> {district_name}</div>
+                                  <div><b>City:</b> {city_name}</div>
+                                  <div><b>Address:</b> {fullAddress}</div>
 
-    {/* Conditionally show created_at or updated_at */}
-    {status === "added" && created_at && (
-      <div>
-        <b>Created At:</b> {moment(created_at).format("DD MMM YYYY, h:mm A")}
-      </div>
-    )}
+                                  {/* Conditionally show created_at or updated_at */}
+                                  {status === "added" && created_at && (
+                                    <div>
+                                      <b>Created At:</b> {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
 
-    {status === "updated" && updated_at && (
-      <div>
-        <b>Updated At:</b> {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-      </div>
-    )}
-  </div>
-)}
+                                  {status === "updated" && updated_at && (
+                                    <div>
+                                      <b>Updated At:</b> {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
 
-  {/* For 'approved' or 'unapproved' — status only */}
-  {(status === "approved" || status === "unapproved") && (
-    <div
-      style={{
-        backgroundColor: status === "approved" ? "#e6f4ea" : "#fdecea",
-        borderLeft: `6px solid ${
-          status === "approved" ? "#28a745" : "#dc3545"
-        }`,
-        borderRadius: "12px",
-        padding: "12px 16px",
-        maxWidth: "70%",
-        fontSize: "14px",
-        color: "#333",
-        fontFamily: "Segoe UI, sans-serif",
-      }}
-    >
-      Researcher was <b>{status}</b> at 
-      {updated_at && (
-        <div>
-          {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-        </div>
-      )}
-    </div>
-  )}
-</div>
+                              {/* For 'approved' or 'unapproved' — status only */}
+                              {(status === "approved" || status === "unapproved") && (
+                                <div
+                                  style={{
+                                    backgroundColor: status === "approved" ? "#e6f4ea" : "#fdecea",
+                                    borderLeft: `6px solid ${status === "approved" ? "#28a745" : "#dc3545"
+                                      }`,
+                                    borderRadius: "12px",
+                                    padding: "12px 16px",
+                                    maxWidth: "70%",
+                                    fontSize: "14px",
+                                    color: "#333",
+                                    fontFamily: "Segoe UI, sans-serif",
+                                  }}
+                                >
+                                  Researcher was <b>{status}</b> at
+                                  {updated_at && (
+                                    <div>
+                                      {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
 
                           );
                         })
