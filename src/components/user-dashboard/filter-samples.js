@@ -11,7 +11,6 @@ import axios from "axios";
 import { useRouter } from "next/router";
 
 const FilterProductArea = () => {
-
   const dispatch = useDispatch();
   const router = useRouter();
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
@@ -52,7 +51,10 @@ const FilterProductArea = () => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfSampling" },
-    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
+    {
+      label: "Concurrent Medical Conditions",
+      key: "ConcurrentMedicalConditions",
+    },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
@@ -66,13 +68,11 @@ const FilterProductArea = () => {
   }, []);
 
   useEffect(() => {
-
     const item = sessionStorage.getItem("filterProduct");
     if (item) {
       const parsed = JSON.parse(item);
       const Analyte = parsed?.Analyte;
       const image_url = parsed?.imageUrl;
-
 
       // Normalize image_url to imageUrl for your state usage
       const normalizedItem = {
@@ -90,14 +90,13 @@ const FilterProductArea = () => {
     }
   }, []);
 
-
   const getSample = async (name) => {
     setLoading(true);
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAllSampleinindex/${name}`
       );
-      
+
       setFilteredSamples(response.data.data);
       setProduct(response.data.data);
 
@@ -136,7 +135,9 @@ const FilterProductArea = () => {
       const filtered = products.filter((sample) => {
         // Custom logic for composite fields
         if (field === "volume") {
-          const volumeWithUnit = `${sample.volume || ""} ${sample.VolumeUnit || ""}`.toLowerCase();
+          const volumeWithUnit = `${sample.volume || ""} ${
+            sample.VolumeUnit || ""
+          }`.toLowerCase();
           return volumeWithUnit.includes(search);
         }
 
@@ -148,7 +149,6 @@ const FilterProductArea = () => {
       setCurrentPage(0);
     }, 300);
   };
-
 
   const openModal = (sample) => {
     setSelectedSample(sample);
@@ -165,11 +165,10 @@ const FilterProductArea = () => {
   const handleAddToCart = (sample) => {
     const productWithImage = {
       ...sample,
-      imageUrl: image_url  // Adjust key here as needed
+      imageUrl: image_url, // Adjust key here as needed
     };
     dispatch(add_cart_product(productWithImage));
   };
-
 
   return (
     <>
@@ -209,7 +208,10 @@ const FilterProductArea = () => {
                           </div>
                         </th>
                       ))}
-                      <th className="p-2 text-center" style={{ minWidth: "30px" }}>
+                      <th
+                        className="p-2 text-center"
+                        style={{ minWidth: "30px" }}
+                      >
                         Action
                       </th>
                     </tr>
@@ -222,7 +224,9 @@ const FilterProductArea = () => {
                             let content;
                             if (key === "price") {
                               content = sample.price
-                                ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+                                ? `${sample.price} ${
+                                    sample.SamplePriceCurrency || ""
+                                  }`
                                 : "----";
                             } else if (key === "Analyte") {
                               content = (
@@ -238,17 +242,25 @@ const FilterProductArea = () => {
                                   onMouseOver={(e) =>
                                     (e.target.style.color = "#0a58ca")
                                   }
-                                  onMouseOut={(e) => (e.target.style.color = "")}
+                                  onMouseOut={(e) =>
+                                    (e.target.style.color = "")
+                                  }
                                 >
                                   {sample.Analyte || "----"}
                                 </span>
                               );
                             } else if (key === "volume") {
-                              content = `${sample.volume || "----"} ${sample.VolumeUnit || ""}`;
+                              content = `${sample.volume || "----"} ${
+                                sample.VolumeUnit || ""
+                              }`;
                             } else if (key === "age") {
-                              content = `${sample.age ? sample.age + " years" : "----"}`;
+                              content = `${
+                                sample.age ? sample.age + " years" : "----"
+                              }`;
                             } else if (key === "TestResult") {
-                              content = `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`;
+                              content = `${sample.TestResult || "----"} ${
+                                sample.TestResultUnit || ""
+                              }`;
                             } else {
                               content = sample[key] || "----";
                             }
@@ -260,8 +272,8 @@ const FilterProductArea = () => {
                                   key === "price"
                                     ? "text-end"
                                     : key === "Analyte"
-                                      ? ""
-                                      : "text-center text-truncate"
+                                    ? ""
+                                    : "text-center text-truncate"
                                 }
                                 style={{ maxWidth: "150px" }}
                               >
@@ -272,7 +284,10 @@ const FilterProductArea = () => {
                           <td className="w-auto" style={{ minWidth: "40px" }}>
                             <div className="d-flex justify-content-around gap-3">
                               {isInCart(sample.id) ? (
-                                <button className="btn btn-secondary btn-sm" disabled>
+                                <button
+                                  className="btn btn-secondary btn-sm"
+                                  disabled
+                                >
                                   Added
                                 </button>
                               ) : (
@@ -289,7 +304,10 @@ const FilterProductArea = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={tableHeaders.length + 1} className="text-center">
+                        <td
+                          colSpan={tableHeaders.length + 1}
+                          className="text-center"
+                        >
                           No samples found.
                         </td>
                       </tr>
@@ -309,7 +327,12 @@ const FilterProductArea = () => {
                 <div className="text-center mt-4">
                   <button
                     className="btn btn-outline-secondary"
-                    onClick={() => router.push("/shop")}
+                    onClick={() =>
+                      router.push({
+                        pathname: "/dashboardheader",
+                        query: { tab: "Booksamples" },
+                      })
+                    }
                   >
                     ← Back to Samples
                   </button>
@@ -319,38 +342,52 @@ const FilterProductArea = () => {
           </div>
         </div>
 
-        <Modal show={showModal}
+        <Modal
+          show={showModal}
           onHide={closeModal}
           size="lg"
           centered
           backdrop="static"
-          keyboard={false}>
+          keyboard={false}
+        >
           <Modal.Header closeButton className="border-0">
-            <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+            <Modal.Title className="fw-bold text-danger">
+              {" "}
+              Sample Details
+            </Modal.Title>
           </Modal.Header>
 
-          <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          <Modal.Body
+            style={{ maxHeight: "500px", overflowY: "auto" }}
+            className="bg-light rounded"
+          >
             {selectedSample ? (
               <div className="p-3">
                 <div className="row g-3">
-                 {fieldsToShowInOrder.map(({ key, label }) => {
-  const value = selectedSample[key];
-  if (value === undefined || value === null || value === "") return null;
+                  {fieldsToShowInOrder.map(({ key, label }) => {
+                    const value = selectedSample[key];
+                    if (value === undefined || value === null || value === "")
+                      return null;
 
-  return (
-    <div className="col-md-6" key={key}>
-      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-        <span className="text-muted small fw-bold mb-1">{label}</span>
-        <span className="fs-6 text-dark">{value.toString()}</span>
-      </div>
-    </div>
-  );
-})}
-
+                    return (
+                      <div className="col-md-6" key={key}>
+                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                          <span className="text-muted small fw-bold mb-1">
+                            {label}
+                          </span>
+                          <span className="fs-6 text-dark">
+                            {value.toString()}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
-              <div className="text-center text-muted p-3">No details to show</div>
+              <div className="text-center text-muted p-3">
+                No details to show
+              </div>
             )}
           </Modal.Body>
           <Modal.Footer className="border-0"></Modal.Footer>

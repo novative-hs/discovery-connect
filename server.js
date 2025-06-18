@@ -42,12 +42,12 @@ const contactusRoutes = require("./routes/contactusRoutes");
 const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
 const collectionsiteStaffRoutes = require("./routes/collectionsitestaffRoutes")
 const samplereturnRoutes = require("./routes/samplereturnRoutes")
-const AnalyteRoutes = require("./routes/AnalyteRoutes")
-const infectiousdiseaseRoutes = require('./routes/infectiousdiseasetestingRoutes')
+
+
 // Routes
 
-app.use('/api/Analyte', AnalyteRoutes)
-app.use('/api/infectiousdisease', infectiousdiseaseRoutes)
+
+
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);

@@ -133,7 +133,6 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
       console.error("❌ Data Query Error:", err.sqlMessage || err.message);
       return callback(err);
     }
-
     const enrichedResults = results.map((sample) => ({
       ...sample,
       locationids: [sample.room_number, sample.freezer_id, sample.box_id]

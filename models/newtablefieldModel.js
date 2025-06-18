@@ -427,6 +427,7 @@ const createOrUpdateTables = async () => {
     }
 
     renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
+    renameColumn(" registrationadmin_history","infectiousdisease_id","infectiousdiseasetesting_id")
     renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
     // renameColumn("sample", "TestResultUnit", "Unit", "VARCHAR(20)");
     // renameColumn("sample", "TestResult", "Valueanylte", "VARCHAR(100)");

@@ -20,7 +20,7 @@ const VolumeUnitArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedinfectiousdiseasenameId, setSelectedinfectiousdiseasenameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
-    infectiousdiseasename: "",
+    name: "",
     added_by: id,
   });
   const [editinfectiousdiseasename, setEditinfectiousdiseasename] = useState(null); // State for selected City to edit
@@ -37,7 +37,7 @@ const VolumeUnitArea = () => {
   useEffect(() => {
     const fetchinfectiousdiseasename = async () => {
       try {
-        const response = await axios.get(`${url}/infectiousdisease/get-infectiousdisease`);
+        const response = await axios.get(`${url}/samplefields/get-samplefields/infectiousdiseasetesting`);
         setinfectiousdiseasename(response.data);
         setFilteredinfectiousdiseasename(response.data); // Initialize filtered list
       } catch (error) {
@@ -108,7 +108,7 @@ const VolumeUnitArea = () => {
     setEditinfectiousdiseasename(infectiousdiseasename);
 
     setFormData({
-      infectiousdiseasename: infectiousdiseasename.name,
+      name: infectiousdiseasename.name,
       added_by: id,
     });
 
@@ -146,20 +146,20 @@ const VolumeUnitArea = () => {
     e.preventDefault();
     try {
       await axios.post(
-        `${url}/infectiousdisease/post-infectiousdisease`,
+        `${url}/samplefields/post-samplefields/infectiousdiseasetesting`,
         formData
       );
       const response = await axios.get(
-        `${url}/infectiousdisease/get-infectiousdisease`
+        `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
       );
       setFilteredinfectiousdiseasename(response.data);
       setinfectiousdiseasename(response.data);
-      setSuccessMessage("Infectious Disease Name added successfully.");
+      setSuccessMessage("infectious disease testing added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding Infectious Disease Name", error);
+      console.error("Error adding infectious disease testing", error);
     }
   };
 
@@ -167,11 +167,11 @@ const VolumeUnitArea = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `${url}/infectiousdisease/put-infectiousdisease/${selectedinfectiousdiseasenameId}`,
+        `${url}/samplefields/put-samplefields/infectiousdiseasetesting/${selectedinfectiousdiseasenameId}`,
         formData
       );
       const response = await axios.get(
-        `${url}/infectiousdisease/get-infectiousdisease`
+        `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
       );
       setFilteredinfectiousdiseasename(response.data);
       setinfectiousdiseasename(response.data);
@@ -190,10 +190,10 @@ const VolumeUnitArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `${url}/infectiousdisease/delete-infectiousdisease/${selectedinfectiousdiseasenameId}`,
+        `${url}/samplefields/delete-samplefields/infectiousdiseasetesting/${selectedinfectiousdiseasenameId}`,
       );
       const response = await axios.get(
-        `${url}/infectiousdisease/get-infectiousdisease`
+        `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
       );
       setFilteredinfectiousdiseasename(response.data);
       setinfectiousdiseasename(response.data);
@@ -221,11 +221,11 @@ const VolumeUnitArea = () => {
       const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
-        await axios.post(`${url}/infectiousdisease/post-infectiousdisease`, {
+        await axios.post(`${url}/samplefields/post-samplefields/infectiousdiseasetesting`, {
           bulkData: payload,
         });
         const response = await axios.get(
-          `${url}/infectiousdisease/get-infectiousdisease`
+          `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
         );
         setFilteredinfectiousdiseasename(response.data);
         setinfectiousdiseasename(response.data);
@@ -432,7 +432,7 @@ const VolumeUnitArea = () => {
                           <button
                             className="btn btn-info btn-sm"
                             onClick={() =>
-                              handleShowHistory("infectiousdisease", infectiousdisease.id)
+                              handleShowHistory("infectiousdiseasetesting", infectiousdisease.id)
                             }
                             title="History infectious disease testing"
                           >
@@ -493,7 +493,7 @@ const VolumeUnitArea = () => {
                           setShowAddModal(false);
                           setShowEditModal(false);
                           setFormData({
-                            infectiousdiseasename: "",
+                            name: "",
                             added_by: id,
                           });
                         }}
@@ -519,8 +519,8 @@ const VolumeUnitArea = () => {
                           <input
                             type="text"
                             className="form-control"
-                            name="infectiousdiseasename"
-                            value={formData.infectiousdiseasename}
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
                             required
                           />

@@ -1,6 +1,45 @@
 const mysqlConnection = require("../config/db");
 const mysqlPool = require("../config/db");
+
 // Function to create the SampleFields table
+
+
+const create_AnalyteTable = () => {
+  const AnalyteTable = `
+  CREATE TABLE IF NOT EXISTS analyte (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      added_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status ENUM('active', 'inactive') DEFAULT 'active',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
+)`;
+  mysqlConnection.query(AnalyteTable, (err, result) => {
+    if (err) {
+      console.error("Error creating Analyte table: ", err);
+    } else {
+      console.log("Analyte table created Successfully");
+    }
+  });
+};
+const create_infectiousdiseaseTable=()=>{
+     const createInfectiousdiseaseTable = `
+    CREATE TABLE IF NOT EXISTS infectiousdiseasetesting (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      added_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status ENUM('active', 'inactive') DEFAULT 'active',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
+    )`;
+    mysqlConnection.query(createInfectiousdiseaseTable, (err, results) => {
+    if (err) {
+      console.error("Error creating infectious disease table: ", err);
+    }
+  });
+}
 const createEthnicityTable = () => {
   const createEthnicityTable = `
     CREATE TABLE IF NOT EXISTS ethnicity (
@@ -294,7 +333,6 @@ const getAllSampleFields = (tableName, callback) => {
     if (err) {
       callback(err, null);
     } else {
-      console.log(results)
       callback(null, results);
     }
   });
@@ -451,6 +489,8 @@ module.exports = {
   createSampleFields,
   deleteSampleFields,
   getSampleFieldsNames,
+  create_AnalyteTable,
+  create_infectiousdiseaseTable,
   createEthnicityTable,
   createSampleConditionTable,
   createSamplePriceCurrencyTable,

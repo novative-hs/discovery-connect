@@ -15,7 +15,7 @@ const AnalyteArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedAnalyteId, setSelectedAnalytenameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
-    Analytename: "",
+    name: "",
     added_by: id,
   });
   const [editAnalytename, setEditAnalytename] = useState(null); // State for selected City to edit
@@ -33,7 +33,7 @@ const AnalyteArea = () => {
     const fetchAnalytename = async () => {
       try {
         const response = await axios.get(
-          `${url}/Analyte/get-Analyte`
+          `${url}/samplefields/get-samplefields/analyte`
         );
         setAnalytename(response.data);
         setFilteredAnalytename(response.data); // Initialize filtered list
@@ -119,18 +119,18 @@ const AnalyteArea = () => {
     });
   };
   const resetFormData = () => {
-    setFormData({ Analytename: "", added_by: id });
+    setFormData({ name: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(
-        `${url}/Analyte/post-Analyte`,
+        `${url}/samplefields/post-samplefields/analyte`,
         formData
       );
       const response = await axios.get(
-        `${url}/Analyte/get-Analyte`
+        `${url}/samplefields/get-samplefields/analyte`
       );
       setFilteredAnalytename(response.data);
       setAnalytename(response.data);
@@ -147,7 +147,7 @@ const AnalyteArea = () => {
     setEditAnalytename(Analytename);
 
     setFormData({
-      Analytename: Analytename.name,
+      name: Analytename.name,
       added_by: id,
     });
 
@@ -158,11 +158,11 @@ const AnalyteArea = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `${url}/Analyte/update-Analyte/${selectedAnalyteId}`,
+        `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
         formData
       );
       const response = await axios.get(
-        `${url}/Analyte/get-Analyte`
+        `${url}/samplefields/get-samplefields/analyte`
       );
       setFilteredAnalytename(response.data);
       setAnalytename(response.data);
@@ -173,7 +173,7 @@ const AnalyteArea = () => {
         setSuccessMessage("");
       }, 3000);
       setFormData({
-        Analytename: "",
+        name: "",
         added_by: id,
       });
     } catch (error) {
@@ -183,7 +183,7 @@ const AnalyteArea = () => {
       );
     } finally {
       setFormData({
-        Analytename: "",
+        name: "",
         added_by: id,
       });
     }
@@ -192,10 +192,10 @@ const AnalyteArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `${url}/Analyte/delete-Analyte/${selectedAnalyteId}`
+        `${url}/samplefields/delete-samplefields/analyte/${selectedAnalyteId}`
       );
       const response = await axios.get(
-        `${url}/Analyte/get-Analyte`
+        `${url}/samplefields/get-samplefields/analyte`
       );
        setFilteredAnalytename(response.data);
       setAnalytename(response.data);
@@ -246,8 +246,8 @@ const AnalyteArea = () => {
        const payload = data.map((row) => ({ name: row.name, added_by: id }));
  
        try {
-         await axios.post(`${url}/Analyte/post-Analyte`, { bulkData: payload });
-         const response = await axios.get(`${url}/Analyte/get-Analyte`);
+         await axios.post(`${url}/samplefields/post-samplefields/analyte`, { bulkData: payload });
+         const response = await axios.get(`${url}/samplefields/get-samplefields/analyte`);
          setFilteredAnalytename(response.data);
          setAnalytename(response.data);
          setSuccessMessage("Successfully added")
@@ -515,7 +515,7 @@ const AnalyteArea = () => {
                           setShowAddModal(false);
                           setShowEditModal(false);
                           setFormData({
-                            Analytename: "",
+                            name: "",
                             added_by: id,
                           });
                         }}
@@ -541,8 +541,8 @@ const AnalyteArea = () => {
                           <input
                             type="text"
                             className="form-control"
-                            name="Analytename"
-                            value={formData.Analytename}
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
                             required
                           />

@@ -17,6 +17,7 @@ const getAllSampleFields = (req, res) => {
 
 // Controller to create a sample field dynamically
 const createSampleFields = (req, res) => {
+  
   const { tableName } = req.params;
   const newSampleFieldsData = req.body;
 

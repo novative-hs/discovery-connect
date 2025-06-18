@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import SEO from "@components/seo";
 import Footer from "@layout/footer";
 import Header from "@layout/header";
-import DashboardHeader from "@layout/dashboardheader";
 import Wrapper from "@layout/wrapper";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import CartArea from "@components/cart/cart-area";
@@ -14,13 +13,12 @@ export default function Cart({ query }) {
 
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-// const [activeTab, setActiveTab] = useState("Booksamples");
+  
   useEffect(() => {
     if (typeof window !== "undefined") {
       const id = sessionStorage.getItem("userID");
       setUserId(id);
       setLoadingUser(false);
-      
     }
   }, []);
 
@@ -30,21 +28,18 @@ export default function Cart({ query }) {
     <Wrapper>
       <SEO pageTitle={"Cart"} />
       {userId ? (
-  <>
-  {/* <DashboardHeader setActiveTab={setActiveTab} activeTab={"Booksamples"} /> */}
-    <CartBreadcrumb title='My Cart' subtitle='Cart' />
-    
-<CartArea product={product} /> 
-
-  </>
-) : (
-  <>
-    <Header style_2={true} />
-    <CartBreadcrumb title='My Cart' subtitle='Cart' />
-    <CartArea product={product} />
-    <Footer />
-  </>
-)}   
+        <>
+          <CartBreadcrumb title="My Cart" subtitle="Cart" />
+          <CartArea product={product} />
+        </>
+      ) : (
+        <>
+          <Header style_2={true} />
+          <CartBreadcrumb title="My Cart" subtitle="Cart" />
+          <CartArea product={product} />
+          <Footer />
+        </>
+      )}
     </Wrapper>
   );
 }
