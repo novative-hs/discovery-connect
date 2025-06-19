@@ -120,7 +120,7 @@ const SampleArea = () => {
     patientname: "",
     locationids: "",
     Analyte: "",
-    age: "",
+    age: 0,
     phoneNumber: "",
     gender: "",
     ethnicity: "",
@@ -303,9 +303,6 @@ const SampleArea = () => {
       console.error("Fetch error:", error);
     }
   };
-
-
-
 
   const fetchCollectionSiteNames = async () => {
     try {
@@ -599,9 +596,10 @@ const SampleArea = () => {
       TestSystem: sample.TestSystem,
       TestSystemManufacturer: sample.TestSystemManufacturer,
       status: sample.status,
-      user_account_id: sample.user_account_id,
+      user_account_id: id,
       logo: sample.logo,
     });
+    
     const logoPreviewUrl =
       typeof sample.logo === "string"
         ? sample.logo
@@ -625,7 +623,7 @@ const SampleArea = () => {
       patientname: "",
       locationids: "",
       Analyte: "",
-      age: "",
+      age: 0,
       volume: "",
       gender: "",
       phoneNumber: "",
@@ -899,7 +897,7 @@ const SampleArea = () => {
                     </div>
                   </th>
                 ))}
-                {actions.some(action => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(action)) && (
+                {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
                   </th>
