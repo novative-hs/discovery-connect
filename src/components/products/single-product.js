@@ -10,10 +10,9 @@ import { setProduct } from "src/redux/features/productSlice";
 import { useRouter } from "next/router";
 
 const SingleProduct = ({ product }) => {
-  const { id, image_url, Analyte, quantity, quantity_allocated } =
+  const { id, image_url, Analyte, quantity, total_allocated, total_quantity } =
     product || {};
-const router=useRouter();
- 
+  const router = useRouter();
   const dispatch = useDispatch();
 
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
@@ -29,27 +28,31 @@ const router=useRouter();
     }
   }, []);
 
- 
+  const handleQuickView = (prd) => {
 
-const handleAddToCart = async (product) => {
-  const userID = sessionStorage.getItem("userID");
+    dispatch(setProduct(prd));
+  };
 
-  if (!userID) {
-    // User is not logged in, redirect to login
+
+  const handleAddToCart = async (product) => {
+    const userID = sessionStorage.getItem("userID");
+
+    if (!userID) {
+      // User is not logged in, redirect to login
+      router.push({
+        pathname: "/login",
+        query: { tab: "filter-samples" }, // Optional: you can track where user was going
+      });
+      return;
+    }
+
+    // User is logged in, proceed to dashboard
+    sessionStorage.setItem("filterProduct", JSON.stringify(product));
     router.push({
-      pathname: "/login",
-      query: { tab: "filter-samples" }, // Optional: you can track where user was going
+      pathname: "/dashboardheader",
+      query: { tab: "filter-samples" },
     });
-    return;
-  }
-
-  // User is logged in, proceed to dashboard
-  sessionStorage.setItem("filterProduct", JSON.stringify(product));
-  router.push({
-    pathname: "/dashboardheader",
-    query: { tab: "filter-samples" },
-  });
-};
+  };
 
 
 
@@ -81,12 +84,12 @@ const handleAddToCart = async (product) => {
 
         <div className="d-flex justify-content-between text-muted small mb-1">
           <span>
-            Stock: <strong>{quantity}</strong>
+            Stock: <strong>{total_quantity}</strong>
           </span>
         </div>
 
         <div className="text-muted small mb-3">
-          Allocated: <strong>{quantity_allocated ?? 0}</strong>
+          Allocated: <strong>{total_allocated ?? 0}</strong>
         </div>
 
         <div className="d-flex gap-2">
@@ -100,11 +103,10 @@ const handleAddToCart = async (product) => {
             </button>
           ) : (
             <button
-              className={`btn w-75 ${
-                isAlreadyAdded(Analyte)
+              className={`btn w-75 ${isAlreadyAdded(Analyte)
                   ? "btn-secondary"
                   : "btn-danger"
-              }`}
+                }`}
               disabled={isAlreadyAdded(Analyte)}
               onClick={() => handleAddToCart(product)}
             >
@@ -124,7 +126,7 @@ const handleAddToCart = async (product) => {
         </div>
       </div>
 
-   
+
     </React.Fragment>
   );
 };

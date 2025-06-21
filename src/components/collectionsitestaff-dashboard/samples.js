@@ -120,7 +120,7 @@ const SampleArea = () => {
     patientname: "",
     locationids: "",
     Analyte: "",
-    age: 0,
+    age: "",
     phoneNumber: "",
     gender: "",
     ethnicity: "",
@@ -481,6 +481,7 @@ const SampleArea = () => {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sampledispatch/post/${selectedSampleId}`,
         {
+          sampleID: selectedSampleId,
           TransferFrom: id,
           TransferTo,
           dispatchVia,
@@ -500,7 +501,7 @@ const SampleArea = () => {
         dispatchVia: "",
         dispatcherName: "",
         dispatchReceiptNumber: "",
-        Quantity: "",
+        Quantity: 1,
       });
 
       setShowTransferModal(false);
@@ -599,7 +600,7 @@ const SampleArea = () => {
       user_account_id: id,
       logo: sample.logo,
     });
-    
+
     const logoPreviewUrl =
       typeof sample.logo === "string"
         ? sample.logo
@@ -623,7 +624,7 @@ const SampleArea = () => {
       patientname: "",
       locationids: "",
       Analyte: "",
-      age: 0,
+      age: "",
       volume: "",
       gender: "",
       phoneNumber: "",

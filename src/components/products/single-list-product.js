@@ -6,7 +6,7 @@ import { add_cart_product, initialOrderQuantity } from "src/redux/features/cartS
 import { setProduct } from "src/redux/features/productSlice";
 import { useSelector } from 'react-redux';
 const SingleListProduct = ({ product }) => {
-  
+
   const dispatch = useDispatch();
 
   const handleQuickView = (prd) => {
@@ -15,7 +15,7 @@ const SingleListProduct = ({ product }) => {
   };
 
   const handleAddToCart = (product) => {
-    
+
     dispatch(add_cart_product(product));
   };
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
@@ -78,13 +78,13 @@ const SingleListProduct = ({ product }) => {
           </div>
 
           <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "4px" }}>
-            Stock: {product.quantity}
+            Stock: {product.total_quantity}
           </div>
 
           <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "10px" }}>
             Allocated:{" "}
             <strong >
-              {product.quantity_allocated ?? 0}
+              {product.total_allocated ?? 0}
             </strong>
           </div>
 

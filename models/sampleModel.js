@@ -350,8 +350,6 @@ const getAllSampleinIndex = (name, callback) => {
 }
 
 const getAllCSSamples = (limit, offset, callback) => {
-
-  // Query to fetch a single representative full row per Analyte (latest by ID)
   const dataQuery = `
     SELECT 
       s.*,
@@ -359,7 +357,9 @@ const getAllCSSamples = (limit, offset, callback) => {
       st.staffName AS CollectionSiteStaffName,
       bb.Name AS BiobankName,
       c.name AS CityName,
-      d.name AS DistrictName
+      d.name AS DistrictName,
+      IFNULL(q.total_quantity, 0) AS total_quantity,
+      IFNULL(q.total_allocated, 0) AS total_allocated
     FROM sample s
     LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
     LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
@@ -375,12 +375,23 @@ const getAllCSSamples = (limit, offset, callback) => {
         AND sample_visibility = 'Public'
       GROUP BY Analyte
     ) AS grouped ON s.Analyte = grouped.Analyte AND s.id = grouped.max_id
+    LEFT JOIN (
+      SELECT 
+        Analyte, 
+        SUM(quantity) AS total_quantity,
+        SUM(quantity_allocated) AS total_allocated
+      FROM sample
+      WHERE 
+        status = 'In Stock'
+        AND price > 0
+        AND sample_visibility = 'Public'
+      GROUP BY Analyte
+    ) AS q ON s.Analyte = q.Analyte
     WHERE s.quantity > 0 OR s.quantity_allocated > 0
     ORDER BY s.Analyte
     LIMIT ? OFFSET ?;
   `;
 
-  // Query to count total distinct Analyte
   const countQuery = `
     SELECT COUNT(DISTINCT Analyte) AS total
     FROM sample
@@ -398,7 +409,6 @@ const getAllCSSamples = (limit, offset, callback) => {
     }
 
     const totalCount = countResult[0].total;
-
 
     mysqlConnection.query(dataQuery, [limit, offset], (dataErr, results) => {
       if (dataErr) {
@@ -432,8 +442,12 @@ const getAllCSSamples = (limit, offset, callback) => {
           const selectedImage = selectedImages[index];
           const imagePath = path.join(imageFolder, selectedImage);
           const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
-          sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
-          return sample;
+
+          return {
+            ...sample,
+            imageUrl: `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`,
+            total_remaining: Math.max(0, (sample.total_quantity || 0) - (sample.total_allocated || 0))
+          };
         });
 
         callback(null, { data: updatedResults, totalCount });
@@ -464,6 +478,10 @@ const createSample = (data, callback) => {
     room_number = parts[0] || null;
     freezer_id = parts[1] || null;
     box_id = parts[2] || null;
+  }
+
+  if (data.age === null || data.age === '') {
+    data.age = 0;
   }
 
   const insertQuery = `
@@ -529,7 +547,7 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'PatientName=?', 'MRNumber = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName=?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -541,7 +559,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.MRNumber, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity,
+    data.patientname, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity,
     data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult,
     data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
   ];
