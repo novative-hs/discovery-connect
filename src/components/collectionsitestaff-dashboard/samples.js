@@ -2606,7 +2606,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
-                      {mode === "individual" && (
+                      {mode === "individual" && (actions.includes("all") || actions.includes("add_full") || actions.includes("edit")) && (
                         <div className="form-check my-3">
                           <input
                             type="checkbox"
