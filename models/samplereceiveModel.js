@@ -155,12 +155,35 @@ const createSampleReceive = (receiveData, sampleID, callback) => {
     INSERT INTO samplereceive (receiverName, ReceivedByCollectionSite, sampleID)
     VALUES (?, ?, ?)
   `;
-  
+
   mysqlConnection.query(query, [receiverName, ReceivedByCollectionSite, sampleID], callback);
 };
+
+// Change user_account_id from dispatch one to receive one site
+const updateSampleUserAccountFromReceiveSite = (sampleID, callback) => {
+  const query = `
+    UPDATE sample s
+    JOIN samplereceive sr ON sr.sampleID = s.id
+    SET s.user_account_id = sr.ReceivedByCollectionSite
+    WHERE s.id = ?
+  `;
+
+  mysqlConnection.query(query, [sampleID], callback);
+};
+
+
+// Update sample status from 'In Transit' to 'In Stock' again after Receiving Sample
+const updateSampleStatusToInStock = (sampleID, callback) => {
+  const query = `UPDATE sample SET status = 'In Stock' WHERE id = ? AND status = 'In Transit'`;
+
+  mysqlConnection.query(query, [sampleID], callback);
+};
+
 
 module.exports = {
   createSampleReceiveTable,
   getSampleReceiveInTransit,
   createSampleReceive,
+  updateSampleUserAccountFromReceiveSite,
+  updateSampleStatusToInStock
 };

@@ -91,24 +91,24 @@ const createSampleDispatch = (req, res) => {
       return res.status(200).json({ message: "Sample marked as lost" });
     });
   }
-if (isReturn) {
-  return sampleDispatchModel.getDispatchBySampleId(sampleID, (err, results) => {
-    if (err) return res.status(500).json({ error: "Error checking existing dispatch" });
+  if (isReturn) {
+    return sampleDispatchModel.getDispatchBySampleId(sampleID, (err, results) => {
+      if (err) return res.status(500).json({ error: "Error checking existing dispatch" });
 
-    if (results.length > 0) {
-      const existingDispatchId = results[0].id;
+      if (results.length > 0) {
+        const existingDispatchId = results[0].id;
 
-      return sampleDispatchModel.updateExistingDispatch(dispatchData, existingDispatchId, (updateErr) => {
-        console.error("Error updating dispatch:", updateErr);
-        if (updateErr) return res.status(500).json({ error: "Failed to update dispatch" });
+        return sampleDispatchModel.updateExistingDispatch(dispatchData, existingDispatchId, (updateErr) => {
+          console.error("Error updating dispatch:", updateErr);
+          if (updateErr) return res.status(500).json({ error: "Failed to update dispatch" });
 
-        return res.status(200).json({ message: "Dispatch updated successfully" });
-      });
-    } else {
-      return res.status(404).json({ error: "No dispatch found with matching sampleID" });
-    }
-  });
-}
+          return res.status(200).json({ message: "Dispatch updated successfully" });
+        });
+      } else {
+        return res.status(404).json({ error: "No dispatch found with matching sampleID" });
+      }
+    });
+  }
 
 
   // 3. Validate required fields
@@ -126,61 +126,76 @@ if (isReturn) {
       return res.status(400).json({ error: "Insufficient quantity for dispatch" });
     }
 
-   sampleDispatchModel.getExistingDispatch(sampleID, TransferFrom, TransferTo, (checkErr, existingRows) => {
-  if (checkErr) return res.status(500).json({ error: "Error checking existing dispatch" });
+    sampleDispatchModel.getExistingDispatch(sampleID, TransferFrom, TransferTo, (checkErr, existingRows) => {
+      if (checkErr) return res.status(500).json({ error: "Error checking existing dispatch" });
 
-  if (existingRows.length > 0) {
-    // fetch full dispatch row to check status
-    const existingDispatchId = existingRows[0].id;
+      if (existingRows.length > 0) {
+        // fetch full dispatch row to check status
+        const existingDispatchId = existingRows[0].id;
 
-    // Get full dispatch details (including status)
-    sampleDispatchModel.getDispatchById(existingDispatchId, (err2, dispatchRows) => {
-      if (err2) return res.status(500).json({ error: "Error fetching existing dispatch" });
+        // Get full dispatch details (including status)
+        sampleDispatchModel.getDispatchById(existingDispatchId, (err2, dispatchRows) => {
+          if (err2) return res.status(500).json({ error: "Error fetching existing dispatch" });
 
-      if (dispatchRows.length > 0 && dispatchRows[0].status === 'In Stock') {
-        // update existing
-        return sampleDispatchModel.updateExistingDispatch(dispatchData, existingDispatchId, (updateErr) => {
-          if (updateErr) return res.status(500).json({ error: "Error updating dispatch" });
+          if (dispatchRows.length > 0 && dispatchRows[0].status === 'In Stock') {
+            // update existing
+            return sampleDispatchModel.updateExistingDispatch(dispatchData, existingDispatchId, (updateErr) => {
+              if (updateErr) return res.status(500).json({ error: "Error updating dispatch" });
 
-          // update sample qty
-          return sampleDispatchModel.updateSampleQuantity(id, parsedQuantity, (qtyErr) => {
-            if (qtyErr) return res.status(500).json({ error: "Error updating sample quantity" });
+              // update sample qty
+              // return sampleDispatchModel.updateSampleQuantity(id, parsedQuantity, (qtyErr) => {
+              //   if (qtyErr) return res.status(500).json({ error: "Error updating sample quantity" });
 
-            return res.status(200).json({ message: "Existing dispatch updated successfully" });
-          });
+              // Update sample status
+              return sampleDispatchModel.updateSampleStatusToInTransit(id, (statusErr) => {
+                if (statusErr) return res.status(500).json({ error: "Error updating sample status" });
+
+                return res.status(200).json({ message: "Existing dispatch updated successfully" });
+              });
+              // });
+            });
+          } else {
+            // existing dispatch is not 'In Stock' => create new
+            return sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
+              if (insertErr) return res.status(500).json({ error: "Error creating new dispatch" });
+
+              // return sampleDispatchModel.updateSampleQuantity(id, parsedQuantity, (qtyErr) => {
+              //   if (qtyErr) return res.status(500).json({ error: "Error updating sample quantity" });
+
+              // Update sample status
+              return sampleDispatchModel.updateSampleStatusToInTransit(id, (statusErr) => {
+                if (statusErr) return res.status(500).json({ error: "Error updating sample status" });
+
+                return res.status(201).json({
+                  message: "New dispatch created successfully",
+                  dispatchId: result.insertId,
+                });
+              });
+            });
+            // });
+          }
         });
       } else {
-        // existing dispatch is not 'In Stock' => create new
+        // no existing dispatch, create new
         return sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
           if (insertErr) return res.status(500).json({ error: "Error creating new dispatch" });
 
-          return sampleDispatchModel.updateSampleQuantity(id, parsedQuantity, (qtyErr) => {
-            if (qtyErr) return res.status(500).json({ error: "Error updating sample quantity" });
+          // return sampleDispatchModel.updateSampleQuantity(id, parsedQuantity, (qtyErr) => {
+          //   if (qtyErr) return res.status(500).json({ error: "Error updating sample quantity" });
+
+          // Update sample status
+          return sampleDispatchModel.updateSampleStatusToInTransit(id, (statusErr) => {
+            if (statusErr) return res.status(500).json({ error: "Error updating sample status" });
 
             return res.status(201).json({
               message: "New dispatch created successfully",
               dispatchId: result.insertId,
             });
           });
+          // });
         });
       }
     });
-  } else {
-    // no existing dispatch, create new
-    return sampleDispatchModel.createSampleDispatch(dispatchData, id, (insertErr, result) => {
-      if (insertErr) return res.status(500).json({ error: "Error creating new dispatch" });
-
-      return sampleDispatchModel.updateSampleQuantity(id, parsedQuantity, (qtyErr) => {
-        if (qtyErr) return res.status(500).json({ error: "Error updating sample quantity" });
-
-        return res.status(201).json({
-          message: "New dispatch created successfully",
-          dispatchId: result.insertId,
-        });
-      });
-    });
-  }
-});
   });
 };
 

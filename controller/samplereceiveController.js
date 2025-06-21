@@ -116,8 +116,6 @@ const getSampleReceiveInTransit = (req, res) => {
     AND s.id NOT IN (SELECT sampleID FROM samplereturn)
     ${searchClause}
 `;
-
-
         const countParams = [collectionSiteId, ...userIds];
         if (searchField && searchValue) {
           countParams.push(`%${searchValue}%`);
@@ -204,17 +202,29 @@ LIMIT 1;
                   .json({ error: "Error updating dispatch status" });
               }
 
-              res.status(201).json({
-                message:
-                  "Sample Receive created and status updated successfully",
-                id: result.insertId,
+              // Step 4: Update sample.user_account_id from samplereceive.ReceivedByCollectionSite
+              sampleReceiveModel.updateSampleUserAccountFromReceiveSite(id, (err4) => {
+                if (err4) {
+                  console.error("Error updating sample user_account_id:", err4);
+                  return res.status(500).json({ error: "Error updating sample owner" });
+                }
+
+                // ✅ Step 5: Update sample status to 'In Stock'
+                sampleReceiveModel.updateSampleStatusToInStock(id, (err5) => {
+                  if (err5) {
+                    console.error("Error updating sample status to In Stock:", err5);
+                    return res.status(500).json({ error: "Error updating sample status" });
+                  }
+                  res.status(201).json({
+                    message:
+                      "Sample Receive created and status updated successfully",
+                    id: result.insertId,
+                  });
+                });
               });
-            }
-          );
-        }
-      );
-    }
-  );
+            });
+        });
+    });
 };
 
 module.exports = {

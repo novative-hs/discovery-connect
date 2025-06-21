@@ -240,7 +240,7 @@ const updateExistingDispatch = (dispatchData, dispatchId, callback) => {
     dispatchReceiptNumber,
     TransferFrom,
     TransferTo,
-    sampleID 
+    sampleID
   } = dispatchData;
 
   const updateDispatchQuery = `
@@ -256,14 +256,14 @@ const updateExistingDispatch = (dispatchData, dispatchId, callback) => {
     WHERE id = ?
   `;
 
-mysqlConnection.query(
-  updateDispatchQuery,
-  [Quantity, dispatchVia, dispatcherName, dispatchReceiptNumber, TransferFrom, TransferTo, dispatchId],
-  (err, result) => {
-    if (err) {
-      console.error("MySQL updateExistingDispatch error:", err);
-      return callback(err);
-    }
+  mysqlConnection.query(
+    updateDispatchQuery,
+    [Quantity, dispatchVia, dispatcherName, dispatchReceiptNumber, TransferFrom, TransferTo, dispatchId],
+    (err, result) => {
+      if (err) {
+        console.error("MySQL updateExistingDispatch error:", err);
+        return callback(err);
+      }
 
 
       // Correct: check by sampleID, not id
@@ -273,7 +273,7 @@ mysqlConnection.query(
 
         if (rows.length > 0) {
           // Update by sampleID, not id
-        const updateSampleReceiveQuery = `
+          const updateSampleReceiveQuery = `
   UPDATE samplereceive
   SET status = 'Returned'
   WHERE sampleID = ?
@@ -298,6 +298,14 @@ const updateSampleQuantity = (sampleID, Quantity, callback) => {
 
   mysqlConnection.query(query, [Quantity, sampleID], callback);
 };
+
+// Update sample status from 'In Stock' to 'In Transit'
+const updateSampleStatusToInTransit = (sampleID, callback) => {
+  const query = `UPDATE sample SET status = 'In Transit' WHERE id = ? AND status = 'In Stock'`;
+
+  mysqlConnection.query(query, [sampleID], callback);
+};
+
 
 // Get sample by ID
 const getSampleById = (sampleID, callback) => {
@@ -357,6 +365,7 @@ module.exports = {
   markSampleLost,
   getSampleById,
   updateSampleQuantity,
-  getExistingDispatch ,
+  updateSampleStatusToInTransit,
+  getExistingDispatch,
   getDispatchBySampleId
 };
