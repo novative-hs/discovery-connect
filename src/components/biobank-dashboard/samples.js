@@ -941,8 +941,8 @@ const BioBankSampleArea = () => {
     g: 5000,
   };
 
-  const handlePrint = () => {
-    const barcodeId = selectedBarcodeId?.toString() || "";
+  const handlePrint = (barcodeId) => {
+    const barcodeString = barcodeId?.toString() || "";
 
     const printWindow = window.open("", "", "width=400,height=600");
     if (!printWindow) return;
@@ -966,9 +966,6 @@ const BioBankSampleArea = () => {
             margin: 0 auto;
             page-break-inside: avoid;
             break-inside: avoid;
-            /* Remove or keep transform as needed */
-            transform: scale(1);
-            transform-origin: center;
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -977,9 +974,9 @@ const BioBankSampleArea = () => {
         <svg id="barcode"></svg>
         <script>
           window.onload = function() {
-            JsBarcode("#barcode", "${barcodeId}", {
+            JsBarcode("#barcode", "${barcodeString}", {
               format: "CODE128",
-               height: 80,  
+              height: 80,
               width: 0.8,
               displayValue: false,
               margin: 0
@@ -996,6 +993,7 @@ const BioBankSampleArea = () => {
 
     printWindow.document.close();
   };
+
 
   if (id === null) {
     return <div>Loading...</div>;
@@ -1224,20 +1222,10 @@ Box ID=${sample.box_id || "----"} `;
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => {
                                   setSelectedBarcodeId(sample.id);
-                                  setShowBarcodeModal(true);
+                                  handlePrint(sample.id); // Pass the ID directly
                                 }}
                               >
-                                Show Barcode
-                              </button>
-                            } else if (key === "barcode") {
-                              return <button
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => {
-                                  setSelectedBarcodeId(sample.id);
-                                  setShowBarcodeModal(true);
-                                }}
-                              >
-                                Show Barcode
+                                Print Barcode
                               </button>
                             }
                             else if (key === "age") {
@@ -1329,68 +1317,6 @@ Box ID=${sample.box_id || "----"} `;
             pageCount={totalPages}
             focusPage={currentPage} // If using react-paginate, which is 0-based
           />
-        )}
-
-        {/* Modal for Generating Barcode for Samples */}
-        {showBarcodeModal && (
-          <div
-            className="modal show d-block"
-            tabIndex="-1"
-            onClick={() => setShowBarcodeModal(false)}
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          >
-            <div
-              className="modal-dialog modal-dialog-centered"
-              style={{ maxWidth: "700px" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div
-                className="modal-content p-4 text-center"
-                id="barcode-modal"
-                style={{
-                  margin: 0,
-                  padding: "1rem",
-                  boxShadow: "none",
-                  border: "none",
-                  maxHeight: "100vh",
-                  overflow: "hidden",
-                  pageBreakInside: "avoid",
-                  breakInside: "avoid",
-                  height: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Barcode
-                  value={selectedBarcodeId?.toString() || ""}
-                  height={50}         // Shrink height
-                  width={0.8}         // Thinner bars
-                  displayValue={false}
-                  margin={0}          // Remove extra space
-                />
-                {/* Buttons - hide on print */}
-                <div
-                  className="d-flex justify-content-center gap-2 mt-4 d-print-none"
-                  style={{ width: "100%" }}
-                >
-                  <button
-                    className="btn btn-outline-primary"
-                    onClick={handlePrint}
-                  >
-                    Print Barcode
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowBarcodeModal(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         )}
 
         {/* Modal for Adding and Editing Samples */}
@@ -2993,7 +2919,7 @@ Box ID=${sample.box_id || "----"} `;
 
                     <div className="modal-footer">
                       <button type="submit" className="btn btn-primary">
-                        Update Sample
+                        Save
                       </button>
                     </div>
                   </form>
@@ -3481,7 +3407,7 @@ Box ID=${sample.box_id || "----"} `;
                               >
                                 Analyte: <b>{updated_name}</b> was{" "}
                                 <b style={{ color: "#388e3c" }}>updated</b> by{" "}
-                                <span style={{ color: "#c2185b" }}>{staffName || "Unknown"}</span> at{" "}
+                                <span style={{ color: "#c2185b" }}>{staffName || "Biobank"}</span> at{" "}
                                 {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                               </div>
                             )}
@@ -3569,15 +3495,6 @@ Box ID=${sample.box_id || "----"} `;
                       onClick={handleQuarantineClick}
                     >
                       Quarantine Sample
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => {
-                        setShowQuarantineModal(false);
-                        setCommentError("");
-                      }}
-                    >
-                      Cancel
                     </button>
                   </div>
                 </div>

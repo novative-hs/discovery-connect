@@ -770,8 +770,8 @@ const SampleArea = () => {
     g: 5000,
   };
 
-  const handlePrint = () => {
-    const barcodeId = selectedBarcodeId?.toString() || "";
+  const handlePrint = (barcodeId) => {
+    const barcodeString = barcodeId?.toString() || "";
 
     const printWindow = window.open("", "", "width=400,height=600");
     if (!printWindow) return;
@@ -795,9 +795,6 @@ const SampleArea = () => {
             margin: 0 auto;
             page-break-inside: avoid;
             break-inside: avoid;
-            /* Remove or keep transform as needed */
-            transform: scale(1);
-            transform-origin: center;
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -806,9 +803,9 @@ const SampleArea = () => {
         <svg id="barcode"></svg>
         <script>
           window.onload = function() {
-            JsBarcode("#barcode", "${barcodeId}", {
+            JsBarcode("#barcode", "${barcodeString}", {
               format: "CODE128",
-               height: 80,  
+              height: 80,
               width: 0.8,
               displayValue: false,
               margin: 0
@@ -825,6 +822,7 @@ const SampleArea = () => {
 
     printWindow.document.close();
   };
+
 
   if (id === null) {
     return <div>Loading...</div>;
@@ -972,10 +970,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => {
                                   setSelectedBarcodeId(sample.id);
-                                  setShowBarcodeModal(true);
+                                  handlePrint(sample.id); // Pass the ID directly
                                 }}
                               >
-                                Show Barcode
+                                Print Barcode
                               </button>
                             }
                             else if (key === "age") {
@@ -1048,68 +1046,6 @@ ${sample.box_id || "N/A"} = Box ID`;
             pageCount={totalPages}
             focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
-        )}
-
-        {/* Modal for Generating Barcode for Samples */}
-        {showBarcodeModal && (
-          <div
-            className="modal show d-block"
-            tabIndex="-1"
-            onClick={() => setShowBarcodeModal(false)}
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          >
-            <div
-              className="modal-dialog modal-dialog-centered"
-              style={{ maxWidth: "700px" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div
-                className="modal-content p-4 text-center"
-                id="barcode-modal"
-                style={{
-                  margin: 0,
-                  padding: "1rem",
-                  boxShadow: "none",
-                  border: "none",
-                  maxHeight: "100vh",
-                  overflow: "hidden",
-                  pageBreakInside: "avoid",
-                  breakInside: "avoid",
-                  height: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Barcode
-                  value={selectedBarcodeId?.toString() || ""}
-                  height={50}         // Shrink height
-                  width={0.8}         // Thinner bars
-                  displayValue={false}
-                  margin={0}          // Remove extra space
-                />
-                {/* Buttons - hide on print */}
-                <div
-                  className="d-flex justify-content-center gap-2 mt-4 d-print-none"
-                  style={{ width: "100%" }}
-                >
-                  <button
-                    className="btn btn-outline-primary"
-                    onClick={handlePrint}
-                  >
-                    Print Barcode
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowBarcodeModal(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         )}
 
         {/* Modal for Adding and Editing Samples */}

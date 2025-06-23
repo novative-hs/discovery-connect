@@ -114,6 +114,7 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
       UNION ALL
       ${ownSamplesQuery}
     ) AS merged_samples
+    ORDER BY created_at DESC
     LIMIT ? OFFSET ?
   `;
 
@@ -146,108 +147,6 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
       callback(null, { samples: enrichedResults, totalCount });
     });
   });
-};
-
-
-
-
-// Function to create a new sample
-const createBiobankSample = (data, callback) => {
-  const id = uuidv4(); // Generate a secure unique ID
-  const masterID = uuidv4(); // Secure Master ID
-
-  let room_number = null;
-  let freezer_id = null;
-  let box_id = null;
-
-  if (data.locationids) {
-    const parts = data.locationids.split("-");
-    room_number = parts[0] || null;
-    freezer_id = parts[1] || null;
-    box_id = parts[2] || null;
-  }
-
-  const insertQuery = `
-    INSERT INTO sample (
-      id, MRNumber, room_number, freezer_id, box_id, user_account_id, volume, Analyte, phoneNumber,age, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, QuantityUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  mysqlConnection.query(
-    insertQuery,
-    [
-      id,
-      data.MRNumber,
-      room_number,
-      freezer_id,
-      box_id,
-      data.user_account_id,
-      data.volume,
-      data.Analyte,
-      data.phoneNumber,
-      data.age,
-      data.gender,
-      data.ethnicity,
-      data.samplecondition,
-      data.storagetemp,
-      data.ContainerType,
-      data.CountryOfCollection,
-      data.price,
-      data.SamplePriceCurrency,
-      data.quantity,
-      data.QuantityUnit,
-      data.SampleTypeMatrix,
-      data.SmokingStatus,
-      data.AlcoholOrDrugAbuse,
-      data.InfectiousDiseaseTesting,
-      data.InfectiousDiseaseResult,
-      data.FreezeThawCycles,
-      data.DateOfSampling,
-      data.ConcurrentMedicalConditions,
-      data.ConcurrentMedications,
-      data.TestResult,
-      data.TestResultUnit,
-      data.TestMethod,
-      data.TestKitManufacturer,
-      data.TestSystem,
-      data.TestSystemManufacturer,
-      "In Stock",
-      data.logo,
-    ],
-    (err, results) => {
-      if (err) {
-        console.error("Error inserting into sample:", err);
-        return callback(err, null);
-      }
-
-      const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
-      mysqlConnection.query(
-        updateQuery,
-        [masterID, id],
-        (err, updateResults) => {
-          if (err) {
-            console.error("Error updating masterID:", err);
-            return callback(err, null);
-          }
-
-          const historyQuery = `
-        INSERT INTO sample_history (sample_id)
-        VALUES (?)
-      `;
-
-          mysqlConnection.query(historyQuery, [id], (err, historyResults) => {
-            if (err) {
-              console.error("Error inserting into sample_history:", err);
-              return callback(err, null);
-            }
-
-            // 🟰 Now everything is successful
-            callback(null, { insertId: id, masterID: masterID });
-          });
-        }
-      );
-    }
-  );
 };
 
 // Function to add price and sample price currency from biobank
@@ -287,98 +186,6 @@ const postSamplePrice = (data, callback) => {
       );
     }
   );
-};
-
-// Function to update a sample by its ID
-const updateBiobankSample = (id, data, callback) => {
-  // Initialize to null instead of 'null' string
-  let room_number = null;
-  let freezer_id = null;
-  let box_id = null;
-
-  // Ensure locationids is split into the expected components and check if each part is a valid number
-  if (data.locationids) {
-    const parts = data.locationids.split("-");
-
-    // Check if each part is a valid number, otherwise set to null
-    room_number = isNaN(parts[0]) ? null : Number(parts[0]);
-    freezer_id = isNaN(parts[1]) ? null : Number(parts[1]);
-    box_id = isNaN(parts[2]) ? null : Number(parts[2]);
-  }
-
-  const query = `
-    UPDATE sample
-    SET room_number = ?, freezer_id = ?, box_id = ?, volume=?,Analyte = ?, age = ?, phoneNumber= ?, gender = ?, ethnicity = ?, samplecondition = ?,
-        storagetemp = ?, ContainerType = ?, CountryOfCollection = ?, price = ?, SamplePriceCurrency = ?,
-        quantity = ?, QuantityUnit = ?, SampleTypeMatrix = ?, SmokingStatus = ?, AlcoholOrDrugAbuse = ?, 
-        InfectiousDiseaseTesting = ?, InfectiousDiseaseResult = ?, FreezeThawCycles = ?, DateOfSampling = ?, 
-        ConcurrentMedicalConditions = ?, ConcurrentMedications = ?, Analyte = ?, TestResult = ?,
-        TestResultUnit = ?, TestMethod = ?, TestKitManufacturer = ?, TestSystem = ?, TestSystemManufacturer = ?, status = ?, logo = ?
-    WHERE id = ?
-  `;
-
-  const values = [
-    room_number,
-    freezer_id,
-    box_id,
-    data.volume,
-    data.Analyte,
-    data.age,
-    data.phoneNumber,
-    data.gender,
-    data.ethnicity,
-    data.samplecondition,
-    data.storagetemp,
-    data.ContainerType,
-    data.CountryOfCollection,
-    data.price,
-    data.SamplePriceCurrency,
-    data.quantity,
-    data.QuantityUnit,
-    data.SampleTypeMatrix,
-    data.SmokingStatus,
-    data.AlcoholOrDrugAbuse,
-    data.InfectiousDiseaseTesting,
-    data.InfectiousDiseaseResult,
-    data.FreezeThawCycles,
-    data.DateOfSampling,
-    data.ConcurrentMedicalConditions,
-    data.ConcurrentMedications,
-    data.Analyte,
-    data.TestResult,
-    data.TestResultUnit,
-    data.TestMethod,
-    data.TestKitManufacturer,
-    data.TestSystem,
-    data.TestSystemManufacturer,
-    data.status,
-    data.logo,
-    id,
-  ];
-
-  mysqlConnection.query(query, values, (err, result) => {
-    if (err) {
-      console.error("Error updating sample:", err);
-      return callback(err, null);
-    }
-
-    const historyQuery = `
-      INSERT INTO sample_history (sample_id)
-      VALUES (?)
-    `;
-
-    mysqlConnection.query(historyQuery, [id], (err, historyResult) => {
-      if (err) {
-        console.error("Error inserting into sample_history:", err);
-        return callback(err, null);
-      }
-
-      // 🟰 Now everything is successful
-      callback(null, {
-        message: "Sample updated and history recorded successfully.",
-      });
-    });
-  });
 };
 
 const UpdateSampleStatus = (id, status, callback) => {
@@ -484,7 +291,6 @@ const getPrice = (name, callback) => {
 
 module.exports = {
   create_biobankTable,
-  createBiobankSample,
   getBiobankSamples,
   postSamplePrice,
   getQuarantineStock,

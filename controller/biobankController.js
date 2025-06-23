@@ -6,7 +6,7 @@ const create_biobankTable = (req, res) => {
   res.status(200).json({ message: "bio bank table creation process started" });
 };
 
-// Controller to create a sample
+// Controller to get samples in biobank
 const getBiobankSamples = (req, res) => {
   const id = parseInt(req.params.id);
   const page = req.query.page || 1;
