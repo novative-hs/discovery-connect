@@ -96,7 +96,7 @@ const createOrganization = (req, callback) => {
         }
 
         const organizationId = orgResult.insertId;
-        
+
 
         const insertHistory = `
           INSERT INTO history (
@@ -132,7 +132,7 @@ const createOrganization = (req, callback) => {
             }
 
             connection.release();
-          
+
 
             callback(null, {
               message: "Organization registered successfully",
@@ -228,7 +228,7 @@ const updateOrganization = (data, organizationId, callback) => {
     district,
     country,
     website,
-    
+
   } = data;
 
   // Step 1: Get the existing record
@@ -299,65 +299,6 @@ const updateOrganization = (data, organizationId, callback) => {
   });
 };
 
-
-// Function to delete a collection site
-// const deleteOrganization = async (id, status) => {
-//   const insertHistoryQuery = `
-//   INSERT INTO registrationadmin_history (organization_id, status)
-//   VALUES (?, ?)
-// `;
-//   const updateQuery = 'UPDATE organization SET status = ? WHERE id = ?';
-//   const getEmailQuery = `
-//     SELECT ua.email, o.OrganizationName
-//     FROM organization o
-//     JOIN user_account ua ON o.user_account_id = ua.id
-//     WHERE o.id = ?
-//   `;
-//   try {
-//     // Update organization status
-//     const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
-//     if (updateResult.affectedRows === 0) {
-//       throw new Error("No organization found with the given ID.");
-//     }
-//     // Fetch email
-//     const [insertResult] = await mysqlConnection.promise().query(insertHistoryQuery, [id, status]);
-//     const [emailResults] = await mysqlConnection.promise().query(getEmailQuery, [id]);
-//     if (emailResults.length === 0) {
-//       throw new Error("Organization email not found.");
-//     }
-//     const email = emailResults[0].email;
-//     const name = emailResults[0].OrganizationName;
-
-//     // Construct email content based on status
-//     let emailText = "";
-//     if (status === "inactive") {
-//       emailText = `
-//       Dear ${name},
-
-//       We hope you're doing well.
-
-//       We wanted to inform you that your organization's account on Discovery Connect has been set to <b>inactive</b>. This means you will no longer be able to access the platform or its services until reactivation.
-
-//       If you believe this was done in error or you need further assistance, please reach out to our support team.
-
-//       Thank you for being a part of Discovery Connect.
-
-//       Best regards,  
-//       The Discovery Connect Team
-//       `;
-//     }
-
-//     // Send email asynchronously
-//     sendEmail(email, "Account Status Update", emailText)
-//       .then(() => console.log("Email sent successfully"))
-//       .catch((emailErr) => console.error("Error sending email:", emailErr));
-
-//     return { message: "Status updated and email sent" };
-//   } catch (error) {
-//     console.error("Error updating organization status:", error);
-//     throw error;
-//   }
-// };
 
 module.exports = {
   create_organizationTable,

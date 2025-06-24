@@ -717,7 +717,7 @@ const ResearcherArea = () => {
                                   Researcher was <b>{status}</b> at
                                   {updated_at && (
                                     <div>
-                                      {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                      {moment(updated_at).format("DD MMM YYYY, h:mm A")} by <b>Registration Admin</b>
                                     </div>
                                   )}
                                 </div>

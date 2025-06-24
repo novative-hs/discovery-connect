@@ -3,7 +3,6 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
-  faTrash,
   faHistory,
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -14,7 +13,6 @@ import { notifyError, notifySuccess } from "@utils/toast";
 import * as XLSX from "xlsx";
 import Image from "next/image"; // at the top
 const OrganizationArea = () => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -27,7 +25,6 @@ const OrganizationArea = () => {
   const [districtname, setdistrictname] = useState([]);
   const [countryname, setCountryname] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [preview, setPreview] = useState(null);
   const [formData, setFormData] = useState({
     user_account_id: "",
     OrganizationName: "",
@@ -126,7 +123,7 @@ const OrganizationArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      
+
       setHistoryData(data);
       "Data", data;
     } catch (error) {
@@ -173,7 +170,7 @@ const OrganizationArea = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
       );
-      
+
       setAllOrganizations(response.data);
       setOrganizations(response.data); // Store fetched organizations in state
     } catch (error) {
@@ -317,7 +314,7 @@ const OrganizationArea = () => {
       newformData.append("logo", formData.logo);
     }
 
-  
+
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
@@ -350,7 +347,7 @@ const OrganizationArea = () => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-    
+
     try {
       // Send status update request to backend
       const response = await axios.put(
@@ -375,7 +372,7 @@ const OrganizationArea = () => {
   };
   useEffect(() => {
     const anyModalOpen =
-      showAddModal || showDeleteModal || showEditModal || showHistoryModal;
+      showAddModal || showEditModal || showHistoryModal;
 
     if (anyModalOpen) {
       document.body.style.overflow = "hidden";
@@ -384,7 +381,7 @@ const OrganizationArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showAddModal, showDeleteModal, showEditModal, showHistoryModal]); // ✅
+  }, [showAddModal, showEditModal, showHistoryModal]); // ✅
 
   const resetFormData = () => {
     setFormData({
@@ -1089,20 +1086,17 @@ const OrganizationArea = () => {
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
                           const {
-                            
                             OrganizationName,
-                            type,
-                            HECPMDCRegistrationNo,
-                            phoneNumber,
-                            website,
-                            city_name,
-                            country_name,
-                            district_name,
-                            fullAddress,
                             created_at,
                             updated_at,
                             status,
                           } = log;
+
+                          // Determine timestamp and person depending on status type:
+                          const time =
+                            status === "added" || status === "active"
+                              ? created_at
+                              : updated_at;
 
                           return (
                             <div
@@ -1114,74 +1108,52 @@ const OrganizationArea = () => {
                                 marginBottom: "10px",
                               }}
                             >
-                                 {(status === "active" || status === "inactive") && (
+                              {/* Added */}
+                              {(status === "added" || status === "updated") && (
                                 <div
                                   style={{
-                                    backgroundColor: status === "active" ? "#e6f4ea" : "#fdecea",
-                                    borderLeft: `6px solid ${
-                                      status === "active" ? "#28a745" : "#dc3545"
-                                    }`,
-                                    borderRadius: "12px",
-                                    padding: "12px 16px",
-                                    maxWidth: "70%",
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
                                     fontSize: "14px",
-                                    color: "#333",
-                                    fontFamily: "Segoe UI, sans-serif",
+                                    textAlign: "left",
+                                    marginTop: status === "updated" ? "5px" : "0px",
                                   }}
                                 >
-                                  Researcher was <b>{status}</b> at 
-                                  {updated_at && (
-                                    <div>
-                                      {moment(updated_at).format("DD MMM YYYY, h:mm A")}
-                                    </div>
-                                  )}
+                                  Organization: <b>{OrganizationName}</b> was{" "}
+                                  <b style={{ color: "green" }}>{status}</b> by Registration Admin at{" "}
+                                  {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
                                 </div>
                               )}
-
-                            {(status === "added" || status === "updated") && (
-  <div
-    style={{
-      padding: "10px 15px",
-      borderRadius: "15px",
-      backgroundColor: status === "updated" ? "#dcf8c6" : "#ffffff",
-      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-      maxWidth: "75%",
-      fontSize: "14px",
-      textAlign: "left",
-      marginTop: status === "updated" ? "5px" : "0",
-    }}
-  >
-    <div>
-      <b>Organization:</b> {OrganizationName} was{" "}
-      <b>{status}</b> by Registration Admin at{" "}
-      {moment(status === "updated" ? updated_at : created_at).format("DD MMM YYYY, h:mm A")}
-    </div>
-
-        <div>
-          <b>Type:</b> {type}
-        </div>
-        <div>
-          <b>HECPMDCRegistrationNo:</b> {HECPMDCRegistrationNo}
-        </div>
-        <div>
-          <b>Phone:</b> {phoneNumber}
-        </div>
-        <div>
-          <b>Country:</b> {country_name}
-        </div>
-        <div>
-          <b>District:</b> {district_name}
-        </div>
-        <div>
-          <b>City:</b> {city_name}
-        </div>
-        <div>
-          <b>Address:</b> {fullAddress}
-        </div>
-      
-  </div>
-)}
-
+                              {/* Active */}
+                              {(status === "active" ||
+                                status === "inactive") && (
+                                  <div
+                                    style={{
+                                      padding: "10px 15px",
+                                      borderRadius: "15px",
+                                      backgroundColor:
+                                        status === "active"
+                                          ? "#cce5ff"
+                                          : "#f8d7da", // blue or red
+                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                      maxWidth: "75%",
+                                      fontSize: "14px",
+                                      textAlign: "left",
+                                      marginTop: "5px",
+                                    }}
+                                  >
+                                    <b>Organization:</b> {OrganizationName}{" "}
+                                    was <b>{status}</b> by Registration Admin at{" "}
+                                    {moment(
+                                      status === "active"
+                                        ? created_at
+                                        : updated_at
+                                    ).format("DD MMM YYYY, h:mm A")}
+                                  </div>
+                                )}
                             </div>
                           );
                         })
@@ -1194,6 +1166,7 @@ const OrganizationArea = () => {
               </div>
             </>
           )}
+
         </div>
       </div>
       <Modal
