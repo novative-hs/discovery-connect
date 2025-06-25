@@ -46,8 +46,6 @@ const notifyResearcher = (cartIds, message, subject) => {
   });
 };
 
-
-
 const updateCartStatusToCompleted = (cartId, callback) => {
   const getCartDetailsQuery = `
     SELECT delivered_at, order_status
@@ -108,7 +106,6 @@ const updateCartStatusToCompleted = (cartId, callback) => {
   });
 };
 
-
 const createCartTable = () => {
   const cartTableQuery = `
   CREATE TABLE IF NOT EXISTS cart (
@@ -138,8 +135,6 @@ const createCartTable = () => {
   });
 };
 
-
-// cartModel.js
 const createCart = (data, callback) => {
   const {
     researcher_id,
@@ -299,10 +294,6 @@ const createCart = (data, callback) => {
   });
 };
 
-
-
-
-
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
@@ -327,6 +318,7 @@ const getAllCart = (id, callback, res) => {
     }
   });
 };
+
 const getCartCount = (id, callback, res) => {
   const sqlQuery = `
     
@@ -356,6 +348,7 @@ WHERE user_id = ?;
     }
   });
 };
+
 const deleteSingleCartItem = (id, callback, res) => {
   const sqlQuery = `
       DELETE FROM cart 
@@ -367,6 +360,7 @@ const deleteSingleCartItem = (id, callback, res) => {
     }
   });
 };
+
 const updateCart = (id, data, callback, res) => {
   const { researcher_id, user_account_id, price, samplequantity, total } = data;
 
@@ -393,6 +387,7 @@ const updateCart = (id, data, callback, res) => {
     }
   });
 };
+
 const baseCommitteeStatus = (committeeType) => `
   (
     SELECT 
@@ -425,16 +420,16 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   let searchCondition = '';
 
   // Map searchField to actual DB fields
- const searchFieldMap = {
-  order_id: 'c.id',
-   Analyte: 's.Analyte',
-  researcher_name: 'r.ResearcherName',
-  organization_name: 'org.OrganizationName',
-  scientific_committee_status: baseCommitteeStatus('Scientific'),
-  ethical_committee_status: baseCommitteeStatus('Ethical'),
-  order_status: 'c.order_status', // ✅ ADD THIS
-   technical_admin_status: 'ra.technical_admin_status',
-};
+  const searchFieldMap = {
+    order_id: 'c.id',
+    Analyte: 's.Analyte',
+    researcher_name: 'r.ResearcherName',
+    organization_name: 'org.OrganizationName',
+    scientific_committee_status: baseCommitteeStatus('Scientific'),
+    ethical_committee_status: baseCommitteeStatus('Ethical'),
+    order_status: 'c.order_status', // ✅ ADD THIS
+    technical_admin_status: 'ra.technical_admin_status',
+  };
 
 
   const dbField = searchFieldMap[searchField];
@@ -444,7 +439,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     queryParams.push(`%${searchValue}%`);
     whereClauses.push(searchCondition);
   }
-if (status === 'Rejected') {
+  if (status === 'Rejected') {
     whereClauses.push("c.order_status = 'Rejected'");
   } else if (status === 'Accepted') {
     whereClauses.push("c.order_status != 'Rejected'");
@@ -542,7 +537,6 @@ if (status === 'Rejected') {
     }
   });
 };
-
 
 const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, callback) => {
   const offset = (page - 1) * pageSize;
@@ -708,7 +702,10 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
 
       city.name AS city_name,
       country.name AS country_name,
-      district.name AS district_name
+      district.name AS district_name,
+
+      cs.CollectionSiteName,
+      bb.Name AS BiobankName
 
     FROM cart c
     JOIN user_account u ON c.user_id = u.id
@@ -719,17 +716,17 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
     LEFT JOIN country ON r.country = country.id
     LEFT JOIN district ON r.district = district.id
 
-    JOIN collectionsitestaff cs_staff ON cs_staff.user_account_id = s.user_account_id
-    JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
+    LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
+    LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
+    LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
+
+    LEFT JOIN collectionsitestaff cs_staff ON s.user_account_id = cs_staff.user_account_id
+    LEFT JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
   `;
 
   const params = [];
 
-  if (staffAction === "all_order") {
-    // Show all orders - no filtering by CSR user_account_id
-    // So no WHERE clause restricting csr.user_account_id
-  } else {
-    // Show only orders from CSR's collection site
+  if (staffAction !== "all_order") {
     sqlQuery += ` WHERE csr.user_account_id = ? `;
     params.push(csrUserId);
   }
@@ -745,8 +742,6 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
   });
 };
 
-
-
 const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
   try {
 
@@ -759,8 +754,6 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     // Use promise-based query to avoid blocking
     await queryAsync(sqlQuery, [technical_admin_status, id]);
 
-
-
     // Step 2: Determine new cart status based on Technical admin status
     let newCartStatus = null;
 
@@ -769,7 +762,6 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     } else if (technical_admin_status === 'Rejected') {
       newCartStatus = 'Rejected';
     }
-
 
     if (newCartStatus) {
       await updateCartStatus(id, newCartStatus);
@@ -850,10 +842,6 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
     }
   }
 };
-
-
-
-
 
 const queryAsync = (sql, params) => {
   return new Promise((resolve, reject) => {
@@ -941,11 +929,6 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     }
   }
 };
-
-
-
-
-
 
 module.exports = {
   createCartTable,

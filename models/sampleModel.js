@@ -12,6 +12,7 @@ const createSampleTable = () => {
         masterID VARCHAR(36),
         user_account_id INT,
         patientname VARCHAR(100),
+        patientlocation VARCHAR(100),
         Analyte VARCHAR(100),
         age INT,
         gender VARCHAR(10),
@@ -486,12 +487,12 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
     INSERT INTO sample (
-      id, MRNumber, samplemode, room_number, freezer_id, box_id, user_account_id, volume,PatientName, Analyte, age,phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, MRNumber, samplemode, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, Analyte, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   mysqlConnection.query(insertQuery, [
-    id, data.MRNumber, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.patientname, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
+    id, data.MRNumber, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.patientname, data.patientlocation, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
   ], (err, results) => {
     if (err) {
       console.error('Error inserting into sample:', err);
@@ -547,21 +548,18 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'PatientName=?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
     'AlcoholOrDrugAbuse = ?', 'InfectiousDiseaseTesting = ?', 'InfectiousDiseaseResult = ?',
     'FreezeThawCycles = ?', 'DateOfSampling = ?', 'ConcurrentMedicalConditions = ?',
-    'ConcurrentMedications = ?', 'TestResult = ?',
-    'TestResultUnit = ?', 'TestMethod = ?', 'TestKitManufacturer = ?', 'TestSystem = ?',
+    'ConcurrentMedications = ?', 'TestResult = ?', 'TestResultUnit = ?', 'TestMethod = ?', 'TestKitManufacturer = ?', 'TestSystem = ?',
     'TestSystemManufacturer = ?', 'status = ?'
   ];
 
   const values = [
-    data.patientname, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity,
-    data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult,
-    data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
+    data.patientname, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
   ];
 
   // Add logo file if available
