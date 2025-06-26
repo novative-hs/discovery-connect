@@ -123,6 +123,19 @@ const getSampleById = (req, res) => {
   });
 };
 
+const getPoolSampleDetails=(req,res)=>{
+  const {id}=req.params;
+  SampleModel.getPoolSampleDetails(id,(err,results)=>{
+     if (err) {
+      return res.status(500).json({ error: "Error fetching sample" });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Sample not found" });
+    }
+    res.status(200).json(results);
+  })
+}
+
 // Controller to create a sample
 const createSample = (req, res) => {
 
@@ -223,5 +236,6 @@ module.exports = {
   updateQuarantineSamples,
   deleteSample,
   getAllVolumnUnits,
-  getAllSampleinIndex
+  getAllSampleinIndex,
+  getPoolSampleDetails
 };

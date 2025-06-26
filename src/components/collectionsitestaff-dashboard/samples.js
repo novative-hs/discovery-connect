@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "react-bootstrap/Modal";
@@ -14,11 +15,13 @@ import Barcode from "react-barcode";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
+  const[locationError,setLocationError]=useState("")
   const [mode, setMode] = useState("");
   const [staffAction, setStaffAction] = useState("");
   const [actions, setActions] = useState([]);
   const [poolMode, setPoolMode] = useState(false);
   const [selectedSamples, setSelectedSamples] = useState([]);
+const [selectedSampleName, setSelectedSampleName] = useState("");
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddPoolModal, setshowAddPoolModal] = useState(false);
@@ -26,7 +29,9 @@ const SampleArea = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+  const [poolhistoryData, setPoolHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [PoolSampleHistoryModal, setPoolSampleHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [countryname, setCountryname] = useState([]);
@@ -98,6 +103,7 @@ const SampleArea = () => {
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
+    { label: "Sample Mode", key: "samplemode" },
     { label: "Barcode", key: "barcode" },
   ];
 
@@ -421,6 +427,66 @@ const SampleArea = () => {
       [name]: value,
     }));
   };
+const validateLocationID = () => {
+  const value = formData.locationids?.trim();
+
+  // Remove all non-digits (like dashes)
+  const numericOnly = value.replace(/-/g, "");
+
+  // If less than 9 digits, don't validate yet
+  if (numericOnly.length < 9) {
+    setLocationError("");
+    return;
+  }
+
+  // Now validate full format and values
+  const parts = value.split("-");
+  const isThreeParts = parts.length === 3;
+  const isValid =
+    isThreeParts &&
+    parts.every((part) => /^\d{3}$/.test(part) && part !== "000");
+
+  if (!isValid) {
+    setLocationError("❌ Invalid Location ID! Use format 101-202-303");
+  } else {
+    setLocationError("");
+  }
+};
+
+const handlePoolButtonClick = () => {
+  if (poolMode) {
+    // Get the latest selected sample IDs
+    const newlySelectedSamples = [...selectedSamples];
+
+    if (newlySelectedSamples.length === 0) {
+      alert("Please select at least one sample to pool.");
+      return;
+    }
+
+    const firstSelectedSample = samples.find(
+      (sample) => sample.id === newlySelectedSamples[0]
+    );
+
+    if (firstSelectedSample) {
+      const analyteName = firstSelectedSample.Analyte || "";
+      setSelectedSampleName(analyteName);
+
+      // Save analyte name in form data
+      setFormData((prev) => ({
+        ...prev,
+        Analyte: analyteName,
+      }));
+    }
+
+    setMode("pool");
+    setshowAddPoolModal(true);
+  } else {
+    // Enable pool mode
+    setPoolMode(true);
+  }
+};
+
+
   const handleSubmit = async (e) => {
     let isMounted = true;
     e.preventDefault();
@@ -429,6 +495,12 @@ const SampleArea = () => {
       formDataToSend.append(key, formData[key]);
     }
     formDataToSend.append("mode", mode); // append mode
+    if (mode === "pool" && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
+    formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
+  }
+     for (let key in formData) {
+      console.log(key, formData[key]);
+    }
     try {
       // POST request to your backend API
       const response = await axios.post(
@@ -442,8 +514,11 @@ const SampleArea = () => {
       );
 
       fetchSamples(); // Refresh only current page
-      setCurrentPage(1);
-
+setSelectedSamples([]); // Correctly reset the array
+setSelectedSampleName("");
+      setshowAddPoolModal(false)
+      setPoolMode(false)
+      setShowAddModal(false);
       setSuccessMessage("Sample added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
 
@@ -451,10 +526,10 @@ const SampleArea = () => {
       resetFormData();
       setLogoPreview(false);
       setShowAdditionalFields(false);
-      setShowAddModal(false);
     } catch (error) {
       console.error("Error adding sample:", error);
     }
+   
   };
 
   const handleTransferSubmit = async (e) => {
@@ -546,17 +621,36 @@ const SampleArea = () => {
       console.error("Error fetching history:", error);
     }
   };
+   const fetchPoolSampleHistory = async (id) => {
+   
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getpoolsamplehistory/${id}`
+      );
+      const data = await response.json();
+      console.log(data)
+      setPoolHistoryData(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
 
   // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
+  const handlePoolSampleHistory=(id,Analyte)=>{
+    fetchPoolSampleHistory(id)
+    setSelectedSampleName(Analyte)
+    setPoolSampleHistoryModal(true)
+  }
 
   const handleEditClick = (sample) => {
+
     setSelectedSampleId(sample.id);
     setEditSample(sample);
-    setShowEditModal(true);
+   
     setMode(sample.samplemode || "individual")
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
@@ -566,7 +660,14 @@ const SampleArea = () => {
     const testResultMatch = testResult.match(/^([<>]=?|=|\+|-)?\s*(.*)$/);
     const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
     const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
+if(sample.mode==='individual'){
+setShowEditModal(true);
 
+}else{
+  setShowEditPoolModal(true)
+  setPoolMode(true)
+  setSelectedSampleName(sample.Analyte)
+}
 
     setFormData({
       patientname: sample.PatientName,
@@ -860,42 +961,30 @@ const SampleArea = () => {
           {actions.some(a => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)) && (
             <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
 
-              <button
-                onClick={() => {
-                  if (poolMode) {
-                    if (selectedSamples.length === 0) {
-                      alert("Please select at least one sample to pool.");
-                      return;
-                    }
+            <button
+  onClick={handlePoolButtonClick}
+  style={{
+    backgroundColor: "#4a90e2",
+    color: "#fff",
+    border: "none",
+    padding: "10px 20px",
+    borderRadius: "6px",
+    fontWeight: "500",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+  }}
+>
+  {poolMode ? "Make Pool" : "Mark Sample as Pool"}
+</button>
 
-                    console.log(
-                      "Selected Sample IDs for Pooling:",
-                      selectedSamples
-                    );
-                    setshowAddPoolModal(true);
-                  } else {
-                    setPoolMode(true); // Enter pool mode
-                  }
-                }}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
-              >
-
-                {poolMode ? "Make Pool" : "Mark Sample as Pool"}
-              </button>
               {(actions.includes('add_full') || actions.includes('add_basic') || actions.includes('all')) && (
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => {
+                    setMode("individual");
+                    setShowAddModal(true)
+                  }}
                   style={{
                     backgroundColor: "#4a90e2",
                     color: "#fff",
@@ -939,7 +1028,7 @@ const SampleArea = () => {
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        // style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}  // a bit wide table 
+                        // style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}  // a bit wide table
                         style={{ width: "100%" }}
                       />
                       <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
@@ -949,11 +1038,12 @@ const SampleArea = () => {
                     </div>
                   </th>
                 ))}
-                {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
+               {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
                   </th>
                 )}
+                 
               </tr>
             </thead>
             <tbody className="table-light">
@@ -972,6 +1062,7 @@ const SampleArea = () => {
                                 : [...prev, sample.id]
                             );
                           }}
+                         
                         />
                       </td>
                     )}
@@ -1089,6 +1180,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                               title="History"
                             >
                               <i className="fa fa-history"></i>
+                            </button>
+                          )}
+                          {(actions.includes("history") || actions.includes("all")) && (
+                            <button
+                              className="btn btn-outline-success btn-sm"
+                              onClick={() => handlePoolSampleHistory(sample.id,sample.Analyte)}
+                              title="Track Sample"
+                            >
+                              <i class="fas fa-vial"></i>
                             </button>
                           )}
                         </div>
@@ -2281,6 +2381,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                         setshowAddPoolModal(false);
                         setShowEditPoolModal(false);
                         setSelectedSample([]);
+                        setSelectedSampleName("")
                         setPoolMode(false);
                         resetFormData();
                       }}
@@ -2306,6 +2407,24 @@ ${sample.box_id || "N/A"} = Box ID`;
                             {/* Only show selected fields in pool mode */}
                             <div className="col-md-12">
                               <div className="row">
+                                <div className="form-group col-md-6">
+  <label>
+    Analyte <span className="text-danger">*</span>
+  </label>
+  <input
+    type="text"
+    className="form-control"
+    name="Analyte"
+    value={selectedSampleName}
+    disabled
+    style={{
+      height: "45px",
+      fontSize: "14px",
+      backgroundColor: "#f5f5f5",
+    }}
+  />
+</div>
+
                                 <div className="form-group col-md-6">
                                   <label>
                                     Location (IDs){" "}
@@ -2519,9 +2638,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     ))}
                                   </select>
                                 </div>
-                              </div>
-                              <div className="row">
-                                <div className="form-group col-md-6">
+                                 <div className="form-group col-md-6">
                                   <label>
                                     Sample Picture{" "}
                                     <span className="text-danger">*</span>
@@ -2557,8 +2674,11 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       />
                                     )}
                                   </div>
-                                </div>
+                               
                               </div>
+                              </div>
+                             
+                               
                             </div>
                           </>
                         )}
@@ -2863,6 +2983,105 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+        {PoolSampleHistoryModal && (
+          <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "100px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="modal-dialog modal-md" role="document">
+                <div className="modal-content">
+                  {/* Modal Header */}
+                  <div className="modal-header">
+                    <h5 className="modal-title">{selectedSampleName}</h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => 
+                        {setSelectedSampleName("")
+                          setPoolSampleHistoryModal(false);}}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+
+                  {/* Chat-style Modal Body */}
+                <div
+  className="modal-body"
+  style={{
+    maxHeight: "500px",
+    overflowY: "auto",
+    backgroundColor: "#f8f9fa", // light background for table
+    padding: "15px",
+    borderRadius: "10px",
+  }}
+>
+  {poolhistoryData && poolhistoryData.length > 0 ? (
+    <div className="table-responsive">
+      <table className="table table-bordered table-hover">
+        <thead className="thead-dark">
+          <tr>
+            <th>Analyte</th>
+            <th>Patient Name</th>
+            <th>Test Result</th>
+            <th>MR Number</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Phone</th>
+            <th>Location</th>
+            
+          </tr>
+        </thead>
+        <tbody>
+          {poolhistoryData.map((sample, index) => (
+            <tr key={index}>
+              <td>{sample.Analyte || "—"}</td>
+              <td>{sample.PatientName || "—"}</td>
+              <td>{sample.TestResult || "—"}{sample.TestResultUnit || "—"}</td>
+              <td>{sample.MRNumber || "—"}</td>
+              <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
+              <td>{sample.gender || "—"}</td>
+              <td>{sample.phoneNumber || "—"}</td>
+              <td>{sample.PatientLocation || "—"}</td>
+              
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    <p>No patient records found for this pooled sample.</p>
+  )}
+</div>
+
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
 
         {/* Modal to show Sample Picture */}
         {showLogoModal && (

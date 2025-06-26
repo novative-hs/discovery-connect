@@ -27,4 +27,5 @@ router.post('/samples/postsample', upload.single("logo"), SampleController.creat
 router.put('/samples/edit/:id', upload.single("logo"), SampleController.updateSample);
 router.delete('/samples/delete/:id', SampleController.deleteSample);
 router.put('/samples/QuarantineSamples/:id', SampleController.updateQuarantineSamples);
+router.get('/sample/getpoolsamplehistory/:id',SampleController.getPoolSampleDetails)
 module.exports = router;

@@ -64,6 +64,26 @@ const createSampleTable = () => {
     }
   });
 };
+const createPoolSampleTable = () => {
+  const poolsampleTable = `
+    CREATE TABLE IF NOT EXISTS poolsample (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sample_id VARCHAR(36),
+        poolsample_id VARCHAR(36),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
+        FOREIGN KEY (poolsample_id) REFERENCES sample(id) ON DELETE CASCADE
+    )`;
+
+  mysqlConnection.query(poolsampleTable, (err, results) => {
+    if (err) {
+      console.error("❌ Error creating poolsample table:", err);
+    } else {
+      console.log("✅ Poolsample table created or already exists");
+    }
+  });
+};
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
@@ -457,6 +477,7 @@ const getAllCSSamples = (limit, offset, callback) => {
   });
 };
 
+
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
@@ -465,10 +486,31 @@ const getSampleById = (id, callback) => {
   });
 };
 
+
+const getPoolSampleDetails = (pooledSampleId, callback) => {
+  const query = `
+   SELECT s.*
+FROM poolsample ps
+JOIN sample s ON ps.sample_id = s.id
+WHERE ps.poolsample_id = ?
+GROUP BY s.id
+
+  `;
+
+  mysqlConnection.query(query, [pooledSampleId], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching pooled sample details:", err);
+      return callback(err, null);
+    }
+
+    return callback(null, results); // Array of samples part of this pool
+  });
+};
+
 // Function to create a new sample (Collectionsites will add samples)
 const createSample = (data, callback) => {
-  const id = uuidv4(); // Generate a secure unique ID
-  const masterID = uuidv4(); // Secure Master ID
+  const id = uuidv4(); // ID for the new sample (individual or pool)
+  const masterID = uuidv4();
 
   let room_number = null;
   let freezer_id = null;
@@ -481,47 +523,155 @@ const createSample = (data, callback) => {
     box_id = parts[2] || null;
   }
 
-  if (data.age === null || data.age === '') {
+  if (data.age === null || data.age === "") {
     data.age = 0;
+  }
+  if (
+    data.volume === "" ||
+    data.volume === null 
+  ) {
+    data.volume = 0; // or use null if you want to skip it
   }
 
   const insertQuery = `
-    INSERT INTO sample (
-      id, MRNumber, samplemode, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, Analyte, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+   INSERT INTO sample (
+      id, MRNumber, samplemode, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, 
+      Analyte, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection,
+       price, SamplePriceCurrency, quantity,VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, 
+       InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, 
+       ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer,
+        status, logo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  mysqlConnection.query(insertQuery, [
-    id, data.MRNumber, data.mode, room_number, freezer_id, box_id, data.user_account_id, data.volume, data.patientname, data.patientlocation, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.price, data.SamplePriceCurrency, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, 'In Stock', data.logo
-  ], (err, results) => {
+  const insertValues = [
+    id,
+    data.MRNumber,
+    data.mode,
+    room_number,
+    freezer_id,
+    box_id,
+    data.user_account_id,
+    data.volume,
+    data.patientname,
+    data.patientlocation,
+    data.Analyte,
+    data.age,
+    data.phoneNumber,
+    data.gender,
+    data.ethnicity,
+    data.samplecondition,
+    data.storagetemp,
+    data.ContainerType,
+    data.CountryOfCollection,
+    data.price,
+    data.SamplePriceCurrency,
+    data.quantity,
+    data.VolumeUnit,
+    data.SampleTypeMatrix,
+    data.SmokingStatus,
+    data.AlcoholOrDrugAbuse,
+    data.InfectiousDiseaseTesting,
+    data.InfectiousDiseaseResult,
+    data.FreezeThawCycles,
+    data.DateOfSampling,
+    data.ConcurrentMedicalConditions,
+    data.ConcurrentMedications,
+    data.TestResult,
+    data.TestResultUnit,
+    data.TestMethod,
+    data.TestKitManufacturer,
+    data.TestSystem,
+    data.TestSystemManufacturer,
+    "In Stock",
+    data.logo,
+  ];
+
+
+
+  mysqlConnection.query(insertQuery, insertValues, (err, results) => {
     if (err) {
-      console.error('Error inserting into sample:', err);
+      console.error("❌ Error inserting into sample:", err);
       return callback(err, null);
     }
 
-    // Now update masterID
+    // Set masterID
     const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
     mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
       if (err) {
-        console.error('Error updating masterID:', err);
+        console.error("❌ Error updating masterID:", err);
         return callback(err, null);
       }
 
-      // Now insert into sample_history
+      // Log to history
       const historyQuery = `
-  INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
-  VALUES (?, ?, 'add', ?)
+        INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
+        VALUES (?, ?, 'add', ?)
+      `;
+      mysqlConnection.query(
+        historyQuery,
+        [id, data.user_account_id || null, data.Analyte || null],
+        (err, historyResults) => {
+          if (err) {
+            console.error("❌ Error inserting into sample_history:", err);
+            return callback(err, null);
+          }
+console.log("🆕 New pooled sample ID:", id);
+          // ✅ If mode is pool, handle poolsample logic
+          if (data.mode === "pool" && data.poolSamples) {
+            const poolSamplesArray = JSON.parse(data.poolSamples); // Array of sample IDs
+
+console.log("📦 Pooling these sample IDs:", poolSamplesArray);
+
+            const poolInsertValues = [];
+            const valuePlaceholders = [];
+
+            poolSamplesArray.forEach((sampleId) => {
+              valuePlaceholders.push("(?, ?)");
+              poolInsertValues.push(sampleId, id); // Flattened
+            });
+
+            const poolInsertQuery = `
+  INSERT INTO poolsample (sample_id, poolsample_id)
+  VALUES ${valuePlaceholders.join(", ")}
 `;
 
-      mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.Analyte || null], (err, historyResults) => {
-        if (err) {
-          console.error('Error inserting into sample_history:', err);
-          return callback(err, null);
-        }
+            mysqlConnection.query(
+              poolInsertQuery,
+              poolInsertValues,
+              (err, poolInsertResults) => {
+                if (err) {
+                  console.error("❌ Error inserting into poolsample:", err);
+                  return callback(err, null);
+                }
 
-        // All queries successful
-        return callback(null, { insertId: id, masterID: masterID });
-      });
+                // ✅ Update status of those samples to "Pooled Sample"
+                const updateStatusQuery = `
+              UPDATE sample SET status = 'Pool'
+              WHERE id IN (?)
+            `;
+                mysqlConnection.query(
+                  updateStatusQuery,
+                  [poolSamplesArray],
+                  (err, statusResults) => {
+                    if (err) {
+                      console.error(
+                        "❌ Error updating sample statuses to Pooled Sample:",
+                        err
+                      );
+                      return callback(err, null);
+                    }
+
+                    return callback(null, { insertId: id, masterID });
+                  }
+                );
+              }
+            );
+          } else {
+            // Mode was "individual", return success
+            return callback(null, { insertId: id, masterID });
+          }
+        }
+      );
     });
   });
 };
@@ -733,6 +883,7 @@ const updateQuarantineSamples = (id, status, comment, callback) => {
 module.exports = {
   getFilteredSamples,
   createSampleTable,
+  createPoolSampleTable,
   getSamples,
   getAllSamples,
   getResearcherSamples,
@@ -744,6 +895,7 @@ module.exports = {
   deleteSample,
   updateQuarantineSamples,
   getAllVolumnUnits,
-  getAllSampleinIndex
+  getAllSampleinIndex,
+  getPoolSampleDetails
 
 };
