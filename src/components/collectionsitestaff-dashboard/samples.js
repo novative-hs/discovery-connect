@@ -2983,104 +2983,159 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
-        {PoolSampleHistoryModal && (
-          <>
-            {/* Bootstrap Backdrop with Blur */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(5px)" }}
-            ></div>
+       {PoolSampleHistoryModal && (
+  <>
+    {/* Backdrop */}
+    <div
+      className="modal-backdrop fade show"
+      style={{ backdropFilter: "blur(4px)", backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+    ></div>
 
-            {/* Modal Content */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
+    {/* Modal Container */}
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{
+        zIndex: 1050,
+        position: "fixed",
+        top: "80px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "95%",
+        maxWidth: "900px",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      }}
+    >
+      <div className="modal-dialog" role="document">
+        <div
+          className="modal-content"
+          style={{
+            borderRadius: "12px",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
+            overflow: "hidden",
+            backgroundColor: "#fff",
+          }}
+        >
+          {/* Header */}
+          <div
+            className="modal-header"
+            style={{
+              padding: "16px 24px",
+              backgroundColor: "#f6f6f6",
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            <h5
+              className="modal-title"
               style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "100px",
-                left: "50%",
-                transform: "translateX(-50%)",
+                margin: 0,
+                fontSize: "20px",
+                fontWeight: "600",
+                color: "#333",
               }}
             >
-              <div className="modal-dialog modal-md" role="document">
-                <div className="modal-content">
-                  {/* Modal Header */}
-                  <div className="modal-header">
-                    <h5 className="modal-title">{selectedSampleName}</h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => 
-                        {setSelectedSampleName("")
-                          setPoolSampleHistoryModal(false);}}
-                      style={{
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span>&times;</span>
-                    </button>
-                  </div>
+              {selectedSampleName || "Pool Sample History"}
+            </h5>
+            <button
+              type="button"
+              className="close"
+              onClick={() => {
+                setSelectedSampleName("");
+                setPoolSampleHistoryModal(false);
+              }}
+              style={{
+                fontSize: "1.5rem",
+                color: "#888",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+              }}
+              title="Close"
+            >
+              &times;
+            </button>
+          </div>
 
-                  {/* Chat-style Modal Body */}
-                <div
-  className="modal-body"
-  style={{
-    maxHeight: "500px",
-    overflowY: "auto",
-    backgroundColor: "#f8f9fa", // light background for table
-    padding: "15px",
-    borderRadius: "10px",
-  }}
->
-  {poolhistoryData && poolhistoryData.length > 0 ? (
-    <div className="table-responsive">
-      <table className="table table-bordered table-hover">
-        <thead className="thead-dark">
-          <tr>
-            <th>Analyte</th>
-            <th>Patient Name</th>
-            <th>Test Result</th>
-            <th>MR Number</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>Phone</th>
-            <th>Location</th>
-            
-          </tr>
-        </thead>
-        <tbody>
-          {poolhistoryData.map((sample, index) => (
-            <tr key={index}>
-              <td>{sample.Analyte || "—"}</td>
-              <td>{sample.PatientName || "—"}</td>
-              <td>{sample.TestResult || "—"}{sample.TestResultUnit || "—"}</td>
-              <td>{sample.MRNumber || "—"}</td>
-              <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
-              <td>{sample.gender || "—"}</td>
-              <td>{sample.phoneNumber || "—"}</td>
-              <td>{sample.PatientLocation || "—"}</td>
-              
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <p>No patient records found for this pooled sample.</p>
-  )}
-</div>
-
-                </div>
+          {/* Body */}
+          <div
+            className="modal-body"
+            style={{
+              padding: "24px",
+              backgroundColor: "#fafafa",
+              maxHeight: "500px",
+              overflowY: "auto",
+            }}
+          >
+            {poolhistoryData && poolhistoryData.length > 0 ? (
+              <div className="table-responsive">
+                <table className="table table-striped table-borderless">
+                  <thead
+                    style={{
+                      backgroundColor: "#3f3f3f",
+                      color: "#fff",
+                      fontSize: "14px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    <tr>
+                      <th>Analyte</th>
+                      <th>Patient Name</th>
+                      <th>Test Result</th>
+                      <th>MR #</th>
+                      <th>Age</th>
+                      <th>Gender</th>
+                      <th>Phone</th>
+                      <th>Location</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {poolhistoryData.map((sample, index) => (
+                      <tr
+                        key={index}
+                        style={{
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#f3f3f3",
+                          fontSize: "14px",
+                          color: "#444",
+                        }}
+                      >
+                        <td>{sample.Analyte || "—"}</td>
+                        <td>{sample.PatientName || "—"}</td>
+                        <td>
+                          {sample.TestResult || "—"}{" "}
+                          {sample.TestResultUnit || ""}
+                        </td>
+                        <td>{sample.MRNumber || "—"}</td>
+                        <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
+                        <td>{sample.gender || "—"}</td>
+                        <td>{sample.phoneNumber || "—"}</td>
+                        <td>{sample.PatientLocation || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </>
-        )}
+            ) : (
+              <p
+                style={{
+                  textAlign: "center",
+                  fontStyle: "italic",
+                  color: "#777",
+                  marginTop: "20px",
+                }}
+              >
+                No patient records found for this pooled sample.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
+
+
 
 
         {/* Modal to show Sample Picture */}
