@@ -3,9 +3,11 @@ const tablesAndColumns = [
   {
     table: "sample",
     columnsToAdd: [
+      
       {
         column: "samplemode",
-        type: "Enum ('individual','pool') DEFAULT 'individual'"
+        type: "VARCHAR(30)",
+        nullable:true
       },
       {
         column: "PatientName",
@@ -17,17 +19,18 @@ const tablesAndColumns = [
       }
     ]
   },
-  {
-    table: "registrationadmin_history",
-    columnsToDelete: ["diagnosistestparameter_id"],
-    columnsToAdd: [
-      {
-        column: "Analyte_id",
-        type: "INT",
-        nullable: true, // Change to true
-        references: { table: "analyte", column: "id" },
-      }]
-  }
+  // {
+  //   table: "registrationadmin_history",
+  //   columnsToDelete: ["diagnosistestparameter_id"],
+  //   columnsToAdd: [
+  //     {
+  //       column: "Analyte_id",
+  //       type: "INT",
+  //       nullable: true, // Change to true
+  //       references: { table: "analyte", column: "id" },
+  //     }]
+  // }
+   
 
   // {
   //   table: "csr",
@@ -84,7 +87,7 @@ const tablesAndColumns = [
   //   columnsToAdd: [
   //     {
   //       column: "samplemode",
-  //       type: "Enum ('individual','pool') DEFAULT 'individual'"
+  //       type: "Enum ('Individual','Pooled') DEFAULT 'individual'"
   //     }
   //   ]
   // },
@@ -430,9 +433,9 @@ const createOrUpdateTables = async () => {
       deleteColumns(table, columnsToDelete);
     }
 
-    renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
-    renameColumn(" registrationadmin_history", "infectiousdisease_id", "infectiousdiseasetesting_id")
-    renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
+    // renameColumn("sample", "diseasename", "Analyte", "VARCHAR(255)");
+    // renameColumn(" registrationadmin_history", "infectiousdisease_id", "infectiousdiseasetesting_id")
+    // renameColumn("sample", "donorID", "MRNumber", "VARCHAR(50)");
     // renameColumn("sample", "TestResultUnit", "Unit", "VARCHAR(20)");
     // renameColumn("sample", "TestResult", "Valueanylte", "VARCHAR(100)");
 
@@ -460,6 +463,8 @@ const createOrUpdateTables = async () => {
     //   "Public",
     //   "Non-Public",
     // ], true, "Non-Public");
+      
+   
   });
 
 

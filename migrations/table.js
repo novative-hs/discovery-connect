@@ -70,6 +70,6 @@ sampleModel.createPoolSampleTable();
   contactusModel.createContactUsTable();
   samplefieldsModel.create_AnalyteTable();
   samplefieldsModel.create_infectiousdiseaseTable()
-  // newtablefieldModel.createOrUpdateTables();
+  newtablefieldModel.createOrUpdateTables();
 }
 Database();

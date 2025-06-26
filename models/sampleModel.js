@@ -488,6 +488,7 @@ const getSampleById = (id, callback) => {
 
 
 const getPoolSampleDetails = (pooledSampleId, callback) => {
+  console.log(pooledSampleId)
   const query = `
    SELECT s.*
 FROM poolsample ps
@@ -502,7 +503,7 @@ GROUP BY s.id
       console.error("❌ Error fetching pooled sample details:", err);
       return callback(err, null);
     }
-
+console.log(results)
     return callback(null, results); // Array of samples part of this pool
   });
 };
@@ -615,12 +616,11 @@ const createSample = (data, callback) => {
             console.error("❌ Error inserting into sample_history:", err);
             return callback(err, null);
           }
-console.log("🆕 New pooled sample ID:", id);
+
           // ✅ If mode is pool, handle poolsample logic
-          if (data.mode === "pool" && data.poolSamples) {
+          if ((data.mode === "Pooled" || data.mode === "AddtoPool" ) && data.poolSamples) {
             const poolSamplesArray = JSON.parse(data.poolSamples); // Array of sample IDs
 
-console.log("📦 Pooling these sample IDs:", poolSamplesArray);
 
             const poolInsertValues = [];
             const valuePlaceholders = [];
@@ -646,7 +646,7 @@ console.log("📦 Pooling these sample IDs:", poolSamplesArray);
 
                 // ✅ Update status of those samples to "Pooled Sample"
                 const updateStatusQuery = `
-              UPDATE sample SET status = 'Pool'
+              UPDATE sample SET status = 'Pooled'
               WHERE id IN (?)
             `;
                 mysqlConnection.query(
@@ -698,7 +698,7 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'PatientName = ?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?','samplemode=?' ,'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -709,7 +709,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
+    data.patientname, data.mode,data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
   ];
 
   // Add logo file if available

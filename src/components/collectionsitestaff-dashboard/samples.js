@@ -22,6 +22,7 @@ const SampleArea = () => {
   const [poolMode, setPoolMode] = useState(false);
   const [selectedSamples, setSelectedSamples] = useState([]);
 const [selectedSampleName, setSelectedSampleName] = useState("");
+const [analyteOptions, setAnalyteOptions] = useState([]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddPoolModal, setshowAddPoolModal] = useState(false);
@@ -455,82 +456,112 @@ const validateLocationID = () => {
 
 const handlePoolButtonClick = () => {
   if (poolMode) {
-    // Get the latest selected sample IDs
-    const newlySelectedSamples = [...selectedSamples];
-
-    if (newlySelectedSamples.length === 0) {
+    const selected = [...selectedSamples];
+    if (selected.length === 0) {
       alert("Please select at least one sample to pool.");
       return;
     }
 
-    const firstSelectedSample = samples.find(
-      (sample) => sample.id === newlySelectedSamples[0]
-    );
+    const selectedAnalytes = samples
+      .filter((sample) => selected.includes(sample.id))
+      .map((sample) => sample.Analyte)
+      .filter(Boolean);
 
-    if (firstSelectedSample) {
-      const analyteName = firstSelectedSample.Analyte || "";
-      setSelectedSampleName(analyteName);
+    const uniqueAnalytes = [...new Set(selectedAnalytes)];
+    console.log("🔍 Unique analytes:", uniqueAnalytes); // ✅
 
-      // Save analyte name in form data
+    setAnalyteOptions(uniqueAnalytes);
+
+    if (uniqueAnalytes.length === 1) {
+      setSelectedSampleName(uniqueAnalytes[0]);
       setFormData((prev) => ({
         ...prev,
-        Analyte: analyteName,
+        Analyte: uniqueAnalytes[0],
+      }));
+    } else {
+      setSelectedSampleName("");
+      setFormData((prev) => ({
+        ...prev,
+        Analyte: "",
       }));
     }
 
-    setMode("pool");
+    setMode("Pooled");
     setshowAddPoolModal(true);
   } else {
-    // Enable pool mode
     setPoolMode(true);
   }
 };
 
 
-  const handleSubmit = async (e) => {
-    let isMounted = true;
-    e.preventDefault();
-    const formDataToSend = new FormData();
-    for (let key in formData) {
-      formDataToSend.append(key, formData[key]);
-    }
-    formDataToSend.append("mode", mode); // append mode
-    if (mode === "pool" && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
+
+
+const handleSubmit = async (e) => {
+  let isMounted = true;
+  e.preventDefault();
+
+  // ✅ 1. Determine effectiveMode
+  const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
+
+  let effectiveMode = mode; // "Individual", "Pooled", or "AddtoPool"
+
+  if (mode === "Pooled") {
+    effectiveMode = isResultFilled ? "Pooled" : "AddtoPool";
+  } else if (mode === "Individual") {
+    effectiveMode = "Individual";
+  }
+
+  // ✅ 2. Construct form data
+  const formDataToSend = new FormData();
+  for (let key in formData) {
+    formDataToSend.append(key, formData[key]);
+  }
+
+  formDataToSend.append("mode", effectiveMode);
+
+  // ✅ 3. Append selected samples if it's truly a pooled sample
+  if (
+    (effectiveMode === "Pooled" || effectiveMode === "AddtoPool") &&
+    Array.isArray(selectedSamples) &&
+    selectedSamples.length > 0
+  ) {
     formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
   }
-     for (let key in formData) {
-      console.log(key, formData[key]);
-    }
-    try {
-      // POST request to your backend API
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
 
-      fetchSamples(); // Refresh only current page
-setSelectedSamples([]); // Correctly reset the array
-setSelectedSampleName("");
-      setshowAddPoolModal(false)
-      setPoolMode(false)
-      setShowAddModal(false);
-      setSuccessMessage("Sample added successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+  for (let key in formData) {
+    console.log(key, formData[key]);
+  }
 
-      // Reset form
-      resetFormData();
-      setLogoPreview(false);
-      setShowAdditionalFields(false);
-    } catch (error) {
-      console.error("Error adding sample:", error);
-    }
-   
-  };
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    fetchSamples(); // Refresh only current page
+    setSelectedSamples([]);
+    setSelectedSampleName("");
+    setshowAddPoolModal(false);
+    setPoolMode(false);
+    setShowAddModal(false);
+    setSuccessMessage("Sample added successfully.");
+    setTimeout(() => setSuccessMessage(""), 3000);
+
+    // Reset form
+    resetFormData();
+    setLogoPreview(false);
+    setShowAdditionalFields(false);
+  } catch (error) {
+    console.error("Error adding sample:", error);
+  }
+};
+
+
 
   const handleTransferSubmit = async (e) => {
     const sampleToSend = samples.find(s => s.id === selectedSampleId);
@@ -650,8 +681,8 @@ setSelectedSampleName("");
 
     setSelectedSampleId(sample.id);
     setEditSample(sample);
-   
-    setMode(sample.samplemode || "individual")
+   console.log(sample)
+    setMode(sample.samplemode || "Individual")
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
 
@@ -660,7 +691,9 @@ setSelectedSampleName("");
     const testResultMatch = testResult.match(/^([<>]=?|=|\+|-)?\s*(.*)$/);
     const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
     const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
-if(sample.mode==='individual'){
+    const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
+setShowTestResultNumericInput(isNumeric); // 👈 Add this line
+if(sample.samplemode==='Individual'){
 setShowEditModal(true);
 
 }else{
@@ -772,52 +805,62 @@ setShowEditModal(true);
     setLogoPreview(null)
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    const formDataToSend = new FormData();
+ const handleUpdate = async (e) => {
+  e.preventDefault();
 
-    // Add all fields to FormData
-    for (const key in formData) {
-      // Skip adding logo here — we handle it separately
-      if (key !== "logo") {
-        formDataToSend.append(key, formData[key]);
+  const formDataToSend = new FormData();
+
+  // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
+  let updatedMode = mode;
+  if (
+    mode === "AddtoPool" &&
+    formData.TestResult?.trim() &&
+    formData.TestResultUnit?.trim()
+  ) {
+    updatedMode = "Pooled";
+    setMode("Pooled"); // optional: update state for consistency
+  }
+
+  // Append all form fields except logo
+  for (const key in formData) {
+    if (key !== "logo") {
+      formDataToSend.append(key, formData[key]);
+    }
+  }
+
+  formDataToSend.append("mode", updatedMode); // 👈 append computed mode
+
+  // Only append logo if it's a new file
+  if (formData.logo instanceof File) {
+    formDataToSend.append("logo", formData.logo);
+  }
+
+  try {
+    await axios.put(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
-    }
+    );
 
-    // Add logo only if it's a File (means it's a new upload)
-    if (formData.logo instanceof File) {
-      formDataToSend.append("logo", formData.logo);
-    }
+    fetchSamples();
+    setCurrentPage(1);
+    setShowEditModal(false);
+    setShowEditPoolModal(false);
+    setSuccessMessage("Sample updated successfully.");
+    resetFormData();
 
-    try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data", // Make sure it's set to multipart/form-data
-          },
-        }
-      );
+    setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+  } catch (error) {
+    console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+  }
+};
 
-      fetchSamples(); // Refresh only current page
-      setCurrentPage(1);
-
-      setShowEditModal(false);
-      setSuccessMessage("Sample updated successfully.");
-
-      // Reset formData after update
-      resetFormData()
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(
-        `Error updating sample with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  };
 
   useEffect(() => {
     if (
@@ -842,7 +885,7 @@ setShowEditModal(true);
   ]);
 
   const areMandatoryFieldsFilled = () => {
-    if (mode === "individual") {
+    if (mode === "Individual") {
       return (
         formData.patientname?.toString().trim() &&
         formData.patientlocation?.toString().trim() &&
@@ -858,7 +901,7 @@ setShowEditModal(true);
         formData.ContainerType?.toString().trim() &&
         formData.logo instanceof File
       );
-    } else if (mode === "pool") {
+    } else if (mode === "Pooled") {
       return (
         formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
@@ -982,7 +1025,7 @@ setShowEditModal(true);
               {(actions.includes('add_full') || actions.includes('add_basic') || actions.includes('all')) && (
                 <button
                   onClick={() => {
-                    setMode("individual");
+                    setMode("Individual");
                     setShowAddModal(true)
                   }}
                   style={{
@@ -1141,7 +1184,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               }
                               return `${sample.age} years`;
                             } else if (key === "TestResult") {
-                              return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
+                              return `${sample.TestResult} ${sample.TestResultUnit || "----"}`;
                             } else {
                               return sample[key] || "----";
                             }
@@ -1182,7 +1225,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i className="fa fa-history"></i>
                             </button>
                           )}
-                          {(actions.includes("history") || actions.includes("all")) && (
+                          {(actions.includes("history") || actions.includes("all")) && (sample.samplemode==='Pooled') && (
                             <button
                               className="btn btn-outline-success btn-sm"
                               onClick={() => handlePoolSampleHistory(sample.id,sample.Analyte)}
@@ -1191,6 +1234,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i class="fas fa-vial"></i>
                             </button>
                           )}
+
                         </div>
                       </td>
                     )}
@@ -2407,10 +2451,41 @@ ${sample.box_id || "N/A"} = Box ID`;
                             {/* Only show selected fields in pool mode */}
                             <div className="col-md-12">
                               <div className="row">
-                                <div className="form-group col-md-6">
+                               <div className="form-group col-md-6">
   <label>
     Analyte <span className="text-danger">*</span>
   </label>
+
+{analyteOptions.length > 0 ? (
+  <select
+    className="form-control"
+    name="Analyte"
+    value={formData.Analyte}
+    onChange={(e) => {
+      const selected = e.target.value;
+      setSelectedSampleName(selected);
+      setFormData((prev) => ({
+        ...prev,
+        Analyte: selected,
+      }));
+    }}
+    required
+    style={{
+      height: "45px",
+      fontSize: "14px",
+      backgroundColor: "#fff",
+    }}
+  >
+    <option value="" disabled hidden>
+      Select Analyte
+    </option>
+    {analyteOptions.map((analyte, index) => (
+      <option key={index} value={analyte}>
+        {analyte}
+      </option>
+    ))}
+  </select>
+) : (
   <input
     type="text"
     className="form-control"
@@ -2423,7 +2498,10 @@ ${sample.box_id || "N/A"} = Box ID`;
       backgroundColor: "#f5f5f5",
     }}
   />
+)}
+
 </div>
+
 
                                 <div className="form-group col-md-6">
                                   <label>
@@ -2492,7 +2570,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             })); // Clear unit
                                           }
                                         }}
-                                        required
+                                        
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
@@ -2525,7 +2603,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             TestResult: e.target.value,
                                           }))
                                         }
-                                        required
+                                        
                                         style={{
                                           width: "110px",
                                           height: "40px",
@@ -2988,10 +3066,10 @@ ${sample.box_id || "N/A"} = Box ID`;
     {/* Backdrop */}
     <div
       className="modal-backdrop fade show"
-      style={{ backdropFilter: "blur(4px)", backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+      style={{ backdropFilter: "blur(4px)", backgroundColor: "rgba(0,0,0,0.2)" }}
     ></div>
 
-    {/* Modal Container */}
+    {/* Modal */}
     <div
       className="modal show d-block"
       tabIndex="-1"
@@ -2999,43 +3077,31 @@ ${sample.box_id || "N/A"} = Box ID`;
       style={{
         zIndex: 1050,
         position: "fixed",
-        top: "80px",
+        top: "100px",
         left: "50%",
         transform: "translateX(-50%)",
-        width: "95%",
-        maxWidth: "900px",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        width: "90%",
+        maxWidth: "850px",
       }}
     >
-      <div className="modal-dialog" role="document">
-        <div
-          className="modal-content"
-          style={{
-            borderRadius: "12px",
-            boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-            overflow: "hidden",
-            backgroundColor: "#fff",
-          }}
-        >
+      <div className="modal-dialog modal-lg" role="document">
+        <div className="modal-content" style={{ backgroundColor: "#f2f2f2", borderRadius: "10px" }}>
+          
           {/* Header */}
           <div
             className="modal-header"
             style={{
-              padding: "16px 24px",
-              backgroundColor: "#f6f6f6",
-              borderBottom: "1px solid #e0e0e0",
+              borderBottom: "1px solid #ddd",
+              backgroundColor: "#eaeaea",
+              borderTopLeftRadius: "10px",
+              borderTopRightRadius: "10px",
             }}
           >
             <h5
               className="modal-title"
-              style={{
-                margin: 0,
-                fontSize: "20px",
-                fontWeight: "600",
-                color: "#333",
-              }}
+              style={{ fontWeight: "600", color: "#333", fontSize: "18px" }}
             >
-              {selectedSampleName || "Pool Sample History"}
+              {selectedSampleName || "Sample History"}
             </h5>
             <button
               type="button"
@@ -3046,9 +3112,12 @@ ${sample.box_id || "N/A"} = Box ID`;
               }}
               style={{
                 fontSize: "1.5rem",
-                color: "#888",
-                background: "transparent",
+                position: "absolute",
+                right: "10px",
+                top: "10px",
+                background: "none",
                 border: "none",
+                color: "#555",
                 cursor: "pointer",
               }}
               title="Close"
@@ -3061,29 +3130,29 @@ ${sample.box_id || "N/A"} = Box ID`;
           <div
             className="modal-body"
             style={{
-              padding: "24px",
-              backgroundColor: "#fafafa",
               maxHeight: "500px",
               overflowY: "auto",
+              padding: "20px",
+              backgroundColor: "#fff",
+              borderBottomLeftRadius: "10px",
+              borderBottomRightRadius: "10px",
             }}
           >
             {poolhistoryData && poolhistoryData.length > 0 ? (
               <div className="table-responsive">
-                <table className="table table-striped table-borderless">
+                <table className="table table-bordered">
                   <thead
                     style={{
-                      backgroundColor: "#3f3f3f",
+                      backgroundColor: "#444",
                       color: "#fff",
                       fontSize: "14px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
                     }}
                   >
                     <tr>
                       <th>Analyte</th>
                       <th>Patient Name</th>
                       <th>Test Result</th>
-                      <th>MR #</th>
+                      <th>MR Number</th>
                       <th>Age</th>
                       <th>Gender</th>
                       <th>Phone</th>
@@ -3095,16 +3164,14 @@ ${sample.box_id || "N/A"} = Box ID`;
                       <tr
                         key={index}
                         style={{
-                          backgroundColor: index % 2 === 0 ? "#fff" : "#f3f3f3",
-                          fontSize: "14px",
-                          color: "#444",
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                          fontSize: "13px",
                         }}
                       >
                         <td>{sample.Analyte || "—"}</td>
                         <td>{sample.PatientName || "—"}</td>
                         <td>
-                          {sample.TestResult || "—"}{" "}
-                          {sample.TestResultUnit || ""}
+                          {sample.TestResult || "—"} {sample.TestResultUnit || ""}
                         </td>
                         <td>{sample.MRNumber || "—"}</td>
                         <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
@@ -3122,7 +3189,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                   textAlign: "center",
                   fontStyle: "italic",
                   color: "#777",
-                  marginTop: "20px",
                 }}
               >
                 No patient records found for this pooled sample.
