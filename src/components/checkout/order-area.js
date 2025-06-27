@@ -139,7 +139,7 @@ const handleSubmit = async (paymentId) => {
           <table className="table table-striped table-bordered align-middle">
             <thead className="table-dark text-center">
               <tr>
-                <th>Sample</th>
+                <th>Analyte</th>
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Total</th>

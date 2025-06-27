@@ -503,7 +503,7 @@ GROUP BY s.id
       console.error("❌ Error fetching pooled sample details:", err);
       return callback(err, null);
     }
-console.log(results)
+    console.log(results)
     return callback(null, results); // Array of samples part of this pool
   });
 };
@@ -529,7 +529,7 @@ const createSample = (data, callback) => {
   }
   if (
     data.volume === "" ||
-    data.volume === null 
+    data.volume === null
   ) {
     data.volume = 0; // or use null if you want to skip it
   }
@@ -618,7 +618,7 @@ const createSample = (data, callback) => {
           }
 
           // ✅ If mode is pool, handle poolsample logic
-          if ((data.mode === "Pooled" || data.mode === "AddtoPool" ) && data.poolSamples) {
+          if ((data.mode === "Pooled" || data.mode === "AddtoPool") && data.poolSamples) {
             const poolSamplesArray = JSON.parse(data.poolSamples); // Array of sample IDs
 
 
@@ -698,7 +698,7 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'PatientName = ?','samplemode=?' ,'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -709,7 +709,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.mode,data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
+    data.patientname, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
   ];
 
   // Add logo file if available

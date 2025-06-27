@@ -73,8 +73,15 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
     e.preventDefault();
     if (loading) return; // 🔒 Prevent double-click
     setLoading(true);
-    if (!validateDocuments()) return;
-    if (!validateFields()) return;
+    if (!validateDocuments()) {
+      setLoading(false);
+      return;
+    }
+
+    if (!validateFields()) {
+      setLoading(false);
+      return;
+    }
 
     const paymentData = {
       cardholder_name: formData.cardholderName,
@@ -98,13 +105,12 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
       }
 
       await handleSubmit(response.data.insertedId);
-      setIsLoading(false); // End loading
     } catch (error) {
-      setIsLoading(false); // End loading on error
       notifyError(error.response?.data?.message || "An unexpected error occurred.");
     }
     finally {
-      setLoading(false); // ✅ Always stop loading
+      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -186,9 +192,8 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                   {["Credit", "Debit"].map((type) => (
                     <div
                       key={type}
-                      className={`border rounded p-3 d-flex align-items-center gap-3 ${
-                        formData.paymentType === type ? "border-primary" : ""
-                      }`}
+                      className={`border rounded p-3 d-flex align-items-center gap-3 ${formData.paymentType === type ? "border-primary" : ""
+                        }`}
                       style={{ cursor: "pointer" }}
                       onClick={() => handleRadioChange({ target: { value: type, name: "paymentType" } })}
                     >
@@ -203,17 +208,17 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
                       />
                       <label htmlFor={`${type}Radio`} className="mb-0">{type}</label>
                       <img
-  src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
-  alt="Visa"
-  width={30}
-  height={20}
-/>
-<img
-  src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
-  alt="MasterCard"
-  width={30}
-  height={20}
-/>
+                        src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+                        alt="Visa"
+                        width={30}
+                        height={20}
+                      />
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png"
+                        alt="MasterCard"
+                        width={30}
+                        height={20}
+                      />
                     </div>
                   ))}
                 </div>

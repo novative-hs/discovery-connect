@@ -46,7 +46,7 @@ const CartArea = () => {
                           </th>
                         </tr>
                         <tr>
-                          <th>Product</th>
+                          <th>Analyte</th>
                           <th>Price</th>
                           <th>Quantity</th>
                           <th>Total</th>

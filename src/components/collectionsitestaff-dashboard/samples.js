@@ -15,14 +15,14 @@ import Barcode from "react-barcode";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  const[locationError,setLocationError]=useState("")
+  const [locationError, setLocationError] = useState("")
   const [mode, setMode] = useState("");
   const [staffAction, setStaffAction] = useState("");
   const [actions, setActions] = useState([]);
   const [poolMode, setPoolMode] = useState(false);
   const [selectedSamples, setSelectedSamples] = useState([]);
-const [selectedSampleName, setSelectedSampleName] = useState("");
-const [analyteOptions, setAnalyteOptions] = useState([]);
+  const [selectedSampleName, setSelectedSampleName] = useState("");
+  const [analyteOptions, setAnalyteOptions] = useState([]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddPoolModal, setshowAddPoolModal] = useState(false);
@@ -428,138 +428,138 @@ const [analyteOptions, setAnalyteOptions] = useState([]);
       [name]: value,
     }));
   };
-const validateLocationID = () => {
-  const value = formData.locationids?.trim();
+  const validateLocationID = () => {
+    const value = formData.locationids?.trim();
 
-  // Remove all non-digits (like dashes)
-  const numericOnly = value.replace(/-/g, "");
+    // Remove all non-digits (like dashes)
+    const numericOnly = value.replace(/-/g, "");
 
-  // If less than 9 digits, don't validate yet
-  if (numericOnly.length < 9) {
-    setLocationError("");
-    return;
-  }
-
-  // Now validate full format and values
-  const parts = value.split("-");
-  const isThreeParts = parts.length === 3;
-  const isValid =
-    isThreeParts &&
-    parts.every((part) => /^\d{3}$/.test(part) && part !== "000");
-
-  if (!isValid) {
-    setLocationError("❌ Invalid Location ID! Use format 101-202-303");
-  } else {
-    setLocationError("");
-  }
-};
-
-const handlePoolButtonClick = () => {
-  if (poolMode) {
-    const selected = [...selectedSamples];
-    if (selected.length === 0) {
-      alert("Please select at least one sample to pool.");
+    // If less than 9 digits, don't validate yet
+    if (numericOnly.length < 9) {
+      setLocationError("");
       return;
     }
 
-    const selectedAnalytes = samples
-      .filter((sample) => selected.includes(sample.id))
-      .map((sample) => sample.Analyte)
-      .filter(Boolean);
+    // Now validate full format and values
+    const parts = value.split("-");
+    const isThreeParts = parts.length === 3;
+    const isValid =
+      isThreeParts &&
+      parts.every((part) => /^\d{3}$/.test(part) && part !== "000");
 
-    const uniqueAnalytes = [...new Set(selectedAnalytes)];
-    console.log("🔍 Unique analytes:", uniqueAnalytes); // ✅
-
-    setAnalyteOptions(uniqueAnalytes);
-
-    if (uniqueAnalytes.length === 1) {
-      setSelectedSampleName(uniqueAnalytes[0]);
-      setFormData((prev) => ({
-        ...prev,
-        Analyte: uniqueAnalytes[0],
-      }));
+    if (!isValid) {
+      setLocationError("❌ Invalid Location ID! Use format 101-202-303");
     } else {
-      setSelectedSampleName("");
-      setFormData((prev) => ({
-        ...prev,
-        Analyte: "",
-      }));
+      setLocationError("");
+    }
+  };
+
+  const handlePoolButtonClick = () => {
+    if (poolMode) {
+      const selected = [...selectedSamples];
+      if (selected.length === 0) {
+        alert("Please select at least one sample to pool.");
+        return;
+      }
+
+      const selectedAnalytes = samples
+        .filter((sample) => selected.includes(sample.id))
+        .map((sample) => sample.Analyte)
+        .filter(Boolean);
+
+      const uniqueAnalytes = [...new Set(selectedAnalytes)];
+      console.log("🔍 Unique analytes:", uniqueAnalytes); // ✅
+
+      setAnalyteOptions(uniqueAnalytes);
+
+      if (uniqueAnalytes.length === 1) {
+        setSelectedSampleName(uniqueAnalytes[0]);
+        setFormData((prev) => ({
+          ...prev,
+          Analyte: uniqueAnalytes[0],
+        }));
+      } else {
+        setSelectedSampleName("");
+        setFormData((prev) => ({
+          ...prev,
+          Analyte: "",
+        }));
+      }
+
+      setMode("Pooled");
+      setshowAddPoolModal(true);
+    } else {
+      setPoolMode(true);
+    }
+  };
+
+
+
+
+  const handleSubmit = async (e) => {
+    let isMounted = true;
+    e.preventDefault();
+
+    // ✅ 1. Determine effectiveMode
+    const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
+
+    let effectiveMode = mode; // "Individual", "Pooled", or "AddtoPool"
+
+    if (mode === "Pooled") {
+      effectiveMode = isResultFilled ? "Pooled" : "AddtoPool";
+    } else if (mode === "Individual") {
+      effectiveMode = "Individual";
     }
 
-    setMode("Pooled");
-    setshowAddPoolModal(true);
-  } else {
-    setPoolMode(true);
-  }
-};
+    // ✅ 2. Construct form data
+    const formDataToSend = new FormData();
+    for (let key in formData) {
+      formDataToSend.append(key, formData[key]);
+    }
 
+    formDataToSend.append("mode", effectiveMode);
 
+    // ✅ 3. Append selected samples if it's truly a pooled sample
+    if (
+      (effectiveMode === "Pooled" || effectiveMode === "AddtoPool") &&
+      Array.isArray(selectedSamples) &&
+      selectedSamples.length > 0
+    ) {
+      formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
+    }
 
+    for (let key in formData) {
+      console.log(key, formData[key]);
+    }
 
-const handleSubmit = async (e) => {
-  let isMounted = true;
-  e.preventDefault();
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-  // ✅ 1. Determine effectiveMode
-  const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
+      fetchSamples(); // Refresh only current page
+      setSelectedSamples([]);
+      setSelectedSampleName("");
+      setshowAddPoolModal(false);
+      setPoolMode(false);
+      setShowAddModal(false);
+      setSuccessMessage("Sample added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
 
-  let effectiveMode = mode; // "Individual", "Pooled", or "AddtoPool"
-
-  if (mode === "Pooled") {
-    effectiveMode = isResultFilled ? "Pooled" : "AddtoPool";
-  } else if (mode === "Individual") {
-    effectiveMode = "Individual";
-  }
-
-  // ✅ 2. Construct form data
-  const formDataToSend = new FormData();
-  for (let key in formData) {
-    formDataToSend.append(key, formData[key]);
-  }
-
-  formDataToSend.append("mode", effectiveMode);
-
-  // ✅ 3. Append selected samples if it's truly a pooled sample
-  if (
-    (effectiveMode === "Pooled" || effectiveMode === "AddtoPool") &&
-    Array.isArray(selectedSamples) &&
-    selectedSamples.length > 0
-  ) {
-    formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
-  }
-
-  for (let key in formData) {
-    console.log(key, formData[key]);
-  }
-
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-      formDataToSend,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    fetchSamples(); // Refresh only current page
-    setSelectedSamples([]);
-    setSelectedSampleName("");
-    setshowAddPoolModal(false);
-    setPoolMode(false);
-    setShowAddModal(false);
-    setSuccessMessage("Sample added successfully.");
-    setTimeout(() => setSuccessMessage(""), 3000);
-
-    // Reset form
-    resetFormData();
-    setLogoPreview(false);
-    setShowAdditionalFields(false);
-  } catch (error) {
-    console.error("Error adding sample:", error);
-  }
-};
+      // Reset form
+      resetFormData();
+      setLogoPreview(false);
+      setShowAdditionalFields(false);
+    } catch (error) {
+      console.error("Error adding sample:", error);
+    }
+  };
 
 
 
@@ -652,8 +652,8 @@ const handleSubmit = async (e) => {
       console.error("Error fetching history:", error);
     }
   };
-   const fetchPoolSampleHistory = async (id) => {
-   
+  const fetchPoolSampleHistory = async (id) => {
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getpoolsamplehistory/${id}`
@@ -671,7 +671,7 @@ const handleSubmit = async (e) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-  const handlePoolSampleHistory=(id,Analyte)=>{
+  const handlePoolSampleHistory = (id, Analyte) => {
     fetchPoolSampleHistory(id)
     setSelectedSampleName(Analyte)
     setPoolSampleHistoryModal(true)
@@ -681,7 +681,7 @@ const handleSubmit = async (e) => {
 
     setSelectedSampleId(sample.id);
     setEditSample(sample);
-   console.log(sample)
+    console.log(sample)
     setMode(sample.samplemode || "Individual")
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
@@ -692,15 +692,15 @@ const handleSubmit = async (e) => {
     const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
     const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
     const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
-setShowTestResultNumericInput(isNumeric); // 👈 Add this line
-if(sample.samplemode==='Individual'){
-setShowEditModal(true);
+    setShowTestResultNumericInput(isNumeric); // 👈 Add this line
+    if (sample.samplemode === 'Individual') {
+      setShowEditModal(true);
 
-}else{
-  setShowEditPoolModal(true)
-  setPoolMode(true)
-  setSelectedSampleName(sample.Analyte)
-}
+    } else {
+      setShowEditPoolModal(true)
+      setPoolMode(true)
+      setSelectedSampleName(sample.Analyte)
+    }
 
     setFormData({
       patientname: sample.PatientName,
@@ -805,61 +805,61 @@ setShowEditModal(true);
     setLogoPreview(null)
   };
 
- const handleUpdate = async (e) => {
-  e.preventDefault();
+  const handleUpdate = async (e) => {
+    e.preventDefault();
 
-  const formDataToSend = new FormData();
+    const formDataToSend = new FormData();
 
-  // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
-  let updatedMode = mode;
-  if (
-    mode === "AddtoPool" &&
-    formData.TestResult?.trim() &&
-    formData.TestResultUnit?.trim()
-  ) {
-    updatedMode = "Pooled";
-    setMode("Pooled"); // optional: update state for consistency
-  }
-
-  // Append all form fields except logo
-  for (const key in formData) {
-    if (key !== "logo") {
-      formDataToSend.append(key, formData[key]);
+    // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
+    let updatedMode = mode;
+    if (
+      mode === "AddtoPool" &&
+      formData.TestResult?.trim() &&
+      formData.TestResultUnit?.trim()
+    ) {
+      updatedMode = "Pooled";
+      setMode("Pooled"); // optional: update state for consistency
     }
-  }
 
-  formDataToSend.append("mode", updatedMode); // 👈 append computed mode
-
-  // Only append logo if it's a new file
-  if (formData.logo instanceof File) {
-    formDataToSend.append("logo", formData.logo);
-  }
-
-  try {
-    await axios.put(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
-      formDataToSend,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+    // Append all form fields except logo
+    for (const key in formData) {
+      if (key !== "logo") {
+        formDataToSend.append(key, formData[key]);
       }
-    );
+    }
 
-    fetchSamples();
-    setCurrentPage(1);
-    setShowEditModal(false);
-    setShowEditPoolModal(false);
-    setSuccessMessage("Sample updated successfully.");
-    resetFormData();
+    formDataToSend.append("mode", updatedMode); // 👈 append computed mode
 
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 3000);
-  } catch (error) {
-    console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
-  }
-};
+    // Only append logo if it's a new file
+    if (formData.logo instanceof File) {
+      formDataToSend.append("logo", formData.logo);
+    }
+
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      fetchSamples();
+      setCurrentPage(1);
+      setShowEditModal(false);
+      setShowEditPoolModal(false);
+      setSuccessMessage("Sample updated successfully.");
+      resetFormData();
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } catch (error) {
+      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+    }
+  };
 
 
   useEffect(() => {
@@ -1004,23 +1004,23 @@ setShowEditModal(true);
           {actions.some(a => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)) && (
             <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
 
-            <button
-  onClick={handlePoolButtonClick}
-  style={{
-    backgroundColor: "#4a90e2",
-    color: "#fff",
-    border: "none",
-    padding: "10px 20px",
-    borderRadius: "6px",
-    fontWeight: "500",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-  }}
->
-  {poolMode ? "Make Pool" : "Mark Sample as Pool"}
-</button>
+              <button
+                onClick={handlePoolButtonClick}
+                style={{
+                  backgroundColor: "#4a90e2",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                }}
+              >
+                {poolMode ? "Make Pool" : "Mark Sample as Pool"}
+              </button>
 
               {(actions.includes('add_full') || actions.includes('add_basic') || actions.includes('all')) && (
                 <button
@@ -1081,12 +1081,12 @@ setShowEditModal(true);
                     </div>
                   </th>
                 ))}
-               {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
+                {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
                   </th>
                 )}
-                 
+
               </tr>
             </thead>
             <tbody className="table-light">
@@ -1105,7 +1105,7 @@ setShowEditModal(true);
                                 : [...prev, sample.id]
                             );
                           }}
-                         
+
                         />
                       </td>
                     )}
@@ -1225,10 +1225,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i className="fa fa-history"></i>
                             </button>
                           )}
-                          {(actions.includes("history") || actions.includes("all")) && (sample.samplemode==='Pooled') && (
+                          {(actions.includes("history") || actions.includes("all")) && (sample.samplemode === 'Pooled') && (
                             <button
                               className="btn btn-outline-success btn-sm"
-                              onClick={() => handlePoolSampleHistory(sample.id,sample.Analyte)}
+                              onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
                               title="Track Sample"
                             >
                               <i class="fas fa-vial"></i>
@@ -1526,14 +1526,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </div>
                                 <div className="form-group col-md-4">
                                   <label>
-                                    Test Result & Unit{" "}
-                                    <span className="text-danger">*</span>
+                                    Test Result & Unit <span className="text-danger">*</span>
                                   </label>
                                   <div
                                     style={{
                                       display: "flex",
                                       gap: "10px",
                                       alignItems: "center",
+                                      position: "relative", // Ensure dropdown stays within container
+                                      zIndex: 1, // Helps if there are overlapping elements
                                     }}
                                   >
                                     {/* Test Result Dropdown or Numeric Input */}
@@ -1550,7 +1551,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                               TestResult: "",
                                             }));
                                           } else {
-                                            setShowTestResultNumericInput(false); // Ensure this is reset
+                                            setShowTestResultNumericInput(false); // Ensure reset
                                             setFormData((prev) => ({
                                               ...prev,
                                               TestResult: val,
@@ -1562,10 +1563,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.TestResult
-                                            ? "#fdecea"
-                                            : "#fff",
+                                          backgroundColor: !formData.TestResult ? "#fdecea" : "#fff",
                                           minWidth: "140px",
+                                          zIndex: 1051,
+                                          position: "relative",
                                         }}
                                       >
                                         <option value="" disabled hidden></option>
@@ -1590,10 +1591,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                           width: "110px",
                                           height: "40px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.TestResult
-                                            ? "#fdecea"
-                                            : "#fff",
+                                          backgroundColor: !formData.TestResult ? "#fdecea" : "#fff",
                                           paddingRight: "10px",
+                                          zIndex: 1051,
+                                          position: "relative",
                                         }}
                                         autoFocus
                                         onBlur={() => {
@@ -1602,11 +1603,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             setFormData((prev) => ({
                                               ...prev,
                                               TestResultUnit: "",
-                                            })); // Clear unit
+                                            }));
                                           }
                                         }}
                                       />
                                     )}
+
                                     {/* Conditionally render Unit Dropdown */}
                                     {showTestResultNumericInput && (
                                       <select
@@ -1618,27 +1620,25 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
-                                          backgroundColor:
-                                            !formData.TestResultUnit
-                                              ? "#fdecea"
-                                              : "#fff",
+                                          backgroundColor: !formData.TestResultUnit ? "#fdecea" : "#fff",
                                           minWidth: "100px",
+                                          zIndex: 1051,
+                                          position: "relative",
                                         }}
                                       >
                                         <option value="" hidden>
                                           Unit
                                         </option>
-                                        {testresultunitNames.map(
-                                          (name, index) => (
-                                            <option key={index} value={name}>
-                                              {name}
-                                            </option>
-                                          )
-                                        )}
+                                        {testresultunitNames.map((name, index) => (
+                                          <option key={index} value={name}>
+                                            {name}
+                                          </option>
+                                        ))}
                                       </select>
                                     )}
                                   </div>
                                 </div>
+
                                 <div className="form-group col-md-6">
                                   <label>
                                     Volume <span className="text-danger">*</span>
@@ -2451,56 +2451,56 @@ ${sample.box_id || "N/A"} = Box ID`;
                             {/* Only show selected fields in pool mode */}
                             <div className="col-md-12">
                               <div className="row">
-                               <div className="form-group col-md-6">
-  <label>
-    Analyte <span className="text-danger">*</span>
-  </label>
+                                <div className="form-group col-md-6">
+                                  <label>
+                                    Analyte <span className="text-danger">*</span>
+                                  </label>
 
-{analyteOptions.length > 0 ? (
-  <select
-    className="form-control"
-    name="Analyte"
-    value={formData.Analyte}
-    onChange={(e) => {
-      const selected = e.target.value;
-      setSelectedSampleName(selected);
-      setFormData((prev) => ({
-        ...prev,
-        Analyte: selected,
-      }));
-    }}
-    required
-    style={{
-      height: "45px",
-      fontSize: "14px",
-      backgroundColor: "#fff",
-    }}
-  >
-    <option value="" disabled hidden>
-      Select Analyte
-    </option>
-    {analyteOptions.map((analyte, index) => (
-      <option key={index} value={analyte}>
-        {analyte}
-      </option>
-    ))}
-  </select>
-) : (
-  <input
-    type="text"
-    className="form-control"
-    name="Analyte"
-    value={selectedSampleName}
-    disabled
-    style={{
-      height: "45px",
-      fontSize: "14px",
-      backgroundColor: "#f5f5f5",
-    }}
-  />
-)}
+                                  {analyteOptions.length > 0 ? (
+                                    <select
+                                      className="form-control"
+                                      name="Analyte"
+                                      value={formData.Analyte}
+                                      onChange={(e) => {
+                                        const selected = e.target.value;
+                                        setSelectedSampleName(selected);
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          Analyte: selected,
+                                        }));
+                                      }}
+                                      required
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: "#fff",
+                                      }}
+                                    >
+                                      <option value="" disabled hidden>
+                                        Select Analyte
+                                      </option>
+                                      {analyteOptions.map((analyte, index) => (
+                                        <option key={index} value={analyte}>
+                                          {analyte}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <input
+                                      type="text"
+                                      className="form-control"
+                                      name="Analyte"
+                                      value={selectedSampleName}
+                                      disabled
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: "#f5f5f5",
+                                      }}
+                                    />
+                                  )}
 
-</div>
+                                </div>
 
 
                                 <div className="form-group col-md-6">
@@ -2570,7 +2570,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             })); // Clear unit
                                           }
                                         }}
-                                        
+
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
@@ -2603,7 +2603,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             TestResult: e.target.value,
                                           }))
                                         }
-                                        
+
                                         style={{
                                           width: "110px",
                                           height: "40px",
@@ -2716,10 +2716,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     ))}
                                   </select>
                                 </div>
-                                 <div className="form-group col-md-6">
+                                <div className="form-group col-md-6">
                                   <label>
                                     Sample Picture{" "}
-                                    <span className="text-danger">*</span>
+                                    <span className="text-danger"></span>
                                   </label>
                                   <div className="d-flex align-items-center">
                                     <input
@@ -2730,7 +2730,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       onChange={(e) =>
                                         logoHandler(e.target.files[0])
                                       }
-                                      required={!formData.logo} // only required if no logo is set
+                                      // required={!formData.logo} // only required if no logo is set
                                       className="form-control"
                                       style={{
                                         height: "45px",
@@ -2752,11 +2752,11 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       />
                                     )}
                                   </div>
-                               
+
+                                </div>
                               </div>
-                              </div>
-                             
-                               
+
+
                             </div>
                           </>
                         )}
@@ -3061,145 +3061,145 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
-       {PoolSampleHistoryModal && (
-  <>
-    {/* Backdrop */}
-    <div
-      className="modal-backdrop fade show"
-      style={{ backdropFilter: "blur(4px)", backgroundColor: "rgba(0,0,0,0.2)" }}
-    ></div>
+        {PoolSampleHistoryModal && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(4px)", backgroundColor: "rgba(0,0,0,0.2)" }}
+            ></div>
 
-    {/* Modal */}
-    <div
-      className="modal show d-block"
-      tabIndex="-1"
-      role="dialog"
-      style={{
-        zIndex: 1050,
-        position: "fixed",
-        top: "100px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "90%",
-        maxWidth: "850px",
-      }}
-    >
-      <div className="modal-dialog modal-lg" role="document">
-        <div className="modal-content" style={{ backgroundColor: "#f2f2f2", borderRadius: "10px" }}>
-          
-          {/* Header */}
-          <div
-            className="modal-header"
-            style={{
-              borderBottom: "1px solid #ddd",
-              backgroundColor: "#eaeaea",
-              borderTopLeftRadius: "10px",
-              borderTopRightRadius: "10px",
-            }}
-          >
-            <h5
-              className="modal-title"
-              style={{ fontWeight: "600", color: "#333", fontSize: "18px" }}
-            >
-              {selectedSampleName || "Sample History"}
-            </h5>
-            <button
-              type="button"
-              className="close"
-              onClick={() => {
-                setSelectedSampleName("");
-                setPoolSampleHistoryModal(false);
-              }}
+            {/* Modal */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
               style={{
-                fontSize: "1.5rem",
-                position: "absolute",
-                right: "10px",
-                top: "10px",
-                background: "none",
-                border: "none",
-                color: "#555",
-                cursor: "pointer",
+                zIndex: 1050,
+                position: "fixed",
+                top: "100px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "90%",
+                maxWidth: "850px",
               }}
-              title="Close"
             >
-              &times;
-            </button>
-          </div>
+              <div className="modal-dialog modal-lg" role="document">
+                <div className="modal-content" style={{ backgroundColor: "#f2f2f2", borderRadius: "10px" }}>
 
-          {/* Body */}
-          <div
-            className="modal-body"
-            style={{
-              maxHeight: "500px",
-              overflowY: "auto",
-              padding: "20px",
-              backgroundColor: "#fff",
-              borderBottomLeftRadius: "10px",
-              borderBottomRightRadius: "10px",
-            }}
-          >
-            {poolhistoryData && poolhistoryData.length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-bordered">
-                  <thead
+                  {/* Header */}
+                  <div
+                    className="modal-header"
                     style={{
-                      backgroundColor: "#444",
-                      color: "#fff",
-                      fontSize: "14px",
+                      borderBottom: "1px solid #ddd",
+                      backgroundColor: "#eaeaea",
+                      borderTopLeftRadius: "10px",
+                      borderTopRightRadius: "10px",
                     }}
                   >
-                    <tr>
-                      <th>Analyte</th>
-                      <th>Patient Name</th>
-                      <th>Test Result</th>
-                      <th>MR Number</th>
-                      <th>Age</th>
-                      <th>Gender</th>
-                      <th>Phone</th>
-                      <th>Location</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {poolhistoryData.map((sample, index) => (
-                      <tr
-                        key={index}
+                    <h5
+                      className="modal-title"
+                      style={{ fontWeight: "600", color: "#333", fontSize: "18px" }}
+                    >
+                      {selectedSampleName || "Sample History"}
+                    </h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => {
+                        setSelectedSampleName("");
+                        setPoolSampleHistoryModal(false);
+                      }}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        background: "none",
+                        border: "none",
+                        color: "#555",
+                        cursor: "pointer",
+                      }}
+                      title="Close"
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div
+                    className="modal-body"
+                    style={{
+                      maxHeight: "500px",
+                      overflowY: "auto",
+                      padding: "20px",
+                      backgroundColor: "#fff",
+                      borderBottomLeftRadius: "10px",
+                      borderBottomRightRadius: "10px",
+                    }}
+                  >
+                    {poolhistoryData && poolhistoryData.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-bordered">
+                          <thead
+                            style={{
+                              backgroundColor: "#444",
+                              color: "#fff",
+                              fontSize: "14px",
+                            }}
+                          >
+                            <tr>
+                              <th>Analyte</th>
+                              <th>Patient Name</th>
+                              <th>Test Result</th>
+                              <th>MR Number</th>
+                              <th>Age</th>
+                              <th>Gender</th>
+                              <th>Phone</th>
+                              <th>Location</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {poolhistoryData.map((sample, index) => (
+                              <tr
+                                key={index}
+                                style={{
+                                  backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                                  fontSize: "13px",
+                                }}
+                              >
+                                <td>{sample.Analyte || "—"}</td>
+                                <td>{sample.PatientName || "—"}</td>
+                                <td>
+                                  {sample.TestResult || "—"} {sample.TestResultUnit || ""}
+                                </td>
+                                <td>{sample.MRNumber || "—"}</td>
+                                <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
+                                <td>{sample.gender || "—"}</td>
+                                <td>{sample.phoneNumber || "—"}</td>
+                                <td>{sample.PatientLocation || "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p
                         style={{
-                          backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
-                          fontSize: "13px",
+                          textAlign: "center",
+                          fontStyle: "italic",
+                          color: "#777",
                         }}
                       >
-                        <td>{sample.Analyte || "—"}</td>
-                        <td>{sample.PatientName || "—"}</td>
-                        <td>
-                          {sample.TestResult || "—"} {sample.TestResultUnit || ""}
-                        </td>
-                        <td>{sample.MRNumber || "—"}</td>
-                        <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
-                        <td>{sample.gender || "—"}</td>
-                        <td>{sample.phoneNumber || "—"}</td>
-                        <td>{sample.PatientLocation || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        No patient records found for this pooled sample.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-            ) : (
-              <p
-                style={{
-                  textAlign: "center",
-                  fontStyle: "italic",
-                  color: "#777",
-                }}
-              >
-                No patient records found for this pooled sample.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-)}
+            </div>
+          </>
+        )}
 
 
 
