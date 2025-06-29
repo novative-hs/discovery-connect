@@ -123,10 +123,10 @@ const getSampleById = (req, res) => {
   });
 };
 
-const getPoolSampleDetails=(req,res)=>{
-  const {id}=req.params;
-  SampleModel.getPoolSampleDetails(id,(err,results)=>{
-     if (err) {
+const getPoolSampleDetails = (req, res) => {
+  const { id } = req.params;
+  SampleModel.getPoolSampleDetails(id, (err, results) => {
+    if (err) {
       return res.status(500).json({ error: "Error fetching sample" });
     }
     if (results.length === 0) {
@@ -140,10 +140,11 @@ const getPoolSampleDetails=(req,res)=>{
 const createSample = (req, res) => {
 
   const mode = req.body.mode;
-  const file = req.file;
+  const files = req.files;
 
   const sampleData = { ...req.body }; // copy all fields from body
-  sampleData.logo = file?.buffer;     // attach the uploaded image buffer
+  sampleData.logo = files?.logo?.[0]?.buffer || null;
+  sampleData.samplepdf = files?.samplepdf?.[0]?.buffer || null;
   sampleData.mode = mode;
 
   // DateOfSampling will show data only before today
@@ -166,22 +167,25 @@ const createSample = (req, res) => {
 const updateSample = (req, res) => {
   const { id } = req.params;
   const sampleData = req.body;
-  const file = req.file;
+  const files = req.files;
+  const logoFile = files?.logo?.[0];
+  const samplePdfFile = files?.samplepdf?.[0];
 
   // Attach file buffer to the sampleData
-  sampleData.logo = file?.buffer;
+  sampleData.logo = logoFile?.buffer;
+  sampleData.samplepdf = samplePdfFile?.buffer;
   if (sampleData.DateOfSampling) {
     sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
 
-  SampleModel.updateSample(id, sampleData, file, (err, result) => {
+  SampleModel.updateSample(id, sampleData, files, (err, result) => {
     if (err) {
       console.error('Error updating sample:', err);
       return res.status(500).json({ error: "Error updating sample" });
     }
 
     // Log the result to check what is being returned
-    
+
 
     // Check if result is not undefined and contains affectedRows
     if (result && result.affectedRows === 0) {

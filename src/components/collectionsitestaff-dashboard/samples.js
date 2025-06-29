@@ -23,7 +23,6 @@ const SampleArea = () => {
   const [selectedSamples, setSelectedSamples] = useState([]);
   const [selectedSampleName, setSelectedSampleName] = useState("");
   const [analyteOptions, setAnalyteOptions] = useState([]);
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddPoolModal, setshowAddPoolModal] = useState(false);
   const [showEditPoolModal, setShowEditPoolModal] = useState(false);
@@ -68,6 +67,7 @@ const SampleArea = () => {
   const [AnalyteNames, setAnalyteNames] = useState([]);
   const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [samplePdfPreview, setSamplePdfPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -166,6 +166,7 @@ const SampleArea = () => {
     status: "In Stock",
     user_account_id: id,
     logo: "",
+    samplepdf: "",
   });
 
   const handleSelectCountry = (country) => {
@@ -428,37 +429,38 @@ const SampleArea = () => {
       [name]: value,
     }));
   };
-  const validateLocationID = () => {
-    const value = formData.locationids?.trim();
 
-    // Remove all non-digits (like dashes)
-    const numericOnly = value.replace(/-/g, "");
+  // const validateLocationID = () => {
+  //   const value = formData.locationids?.trim();
 
-    // If less than 9 digits, don't validate yet
-    if (numericOnly.length < 9) {
-      setLocationError("");
-      return;
-    }
+  //   // Remove all non-digits (like dashes)
+  //   const numericOnly = value.replace(/-/g, "");
 
-    // Now validate full format and values
-    const parts = value.split("-");
-    const isThreeParts = parts.length === 3;
-    const isValid =
-      isThreeParts &&
-      parts.every((part) => /^\d{3}$/.test(part) && part !== "000");
+  //   // If less than 9 digits, don't validate yet
+  //   if (numericOnly.length < 9) {
+  //     setLocationError("");
+  //     return;
+  //   }
 
-    if (!isValid) {
-      setLocationError("❌ Invalid Location ID! Use format 101-202-303");
-    } else {
-      setLocationError("");
-    }
-  };
+  //   // Now validate full format and values
+  //   const parts = value.split("-");
+  //   const isThreeParts = parts.length === 3;
+  //   const isValid =
+  //     isThreeParts &&
+  //     parts.every((part) => /^\d{3}$/.test(part) && part !== "000");
+
+  //   if (!isValid) {
+  //     setLocationError("❌ Invalid Location ID! Use format 101-202-303");
+  //   } else {
+  //     setLocationError("");
+  //   }
+  // };
 
   const handlePoolButtonClick = () => {
     if (poolMode) {
       const selected = [...selectedSamples];
-      if (selected.length === 0) {
-        alert("Please select at least one sample to pool.");
+      if (selected.length < 2) {
+        alert("Please select at least two samples to create a pool.");
         return;
       }
 
@@ -493,25 +495,21 @@ const SampleArea = () => {
     }
   };
 
-
-
-
   const handleSubmit = async (e) => {
-    let isMounted = true;
     e.preventDefault();
 
-    // ✅ 1. Determine effectiveMode
     const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
 
-    let effectiveMode = mode; // "Individual", "Pooled", or "AddtoPool"
+    let effectiveMode = mode; // This is now directly the radio value if you use it for Low/Medium/High
 
+    // ✅ Only run fallback if mode is "Pooled"
     if (mode === "Pooled") {
       effectiveMode = isResultFilled ? "Pooled" : "AddtoPool";
-    } else if (mode === "Individual") {
-      effectiveMode = "Individual";
     }
 
-    // ✅ 2. Construct form data
+    // ✅ If your radio sets mode to "Low"/"Medium"/"High", then it will override this anyway
+    // So no extra FinalConcentration check is needed — the radio sets it.
+
     const formDataToSend = new FormData();
     for (let key in formData) {
       formDataToSend.append(key, formData[key]);
@@ -519,9 +517,8 @@ const SampleArea = () => {
 
     formDataToSend.append("mode", effectiveMode);
 
-    // ✅ 3. Append selected samples if it's truly a pooled sample
     if (
-      (effectiveMode === "Pooled" || effectiveMode === "AddtoPool") &&
+      (effectiveMode !== "Individual") &&
       Array.isArray(selectedSamples) &&
       selectedSamples.length > 0
     ) {
@@ -531,6 +528,7 @@ const SampleArea = () => {
     for (let key in formData) {
       console.log(key, formData[key]);
     }
+    console.log("Final effectiveMode:", effectiveMode);
 
     try {
       const response = await axios.post(
@@ -543,7 +541,7 @@ const SampleArea = () => {
         }
       );
 
-      fetchSamples(); // Refresh only current page
+      fetchSamples();
       setSelectedSamples([]);
       setSelectedSampleName("");
       setshowAddPoolModal(false);
@@ -552,7 +550,6 @@ const SampleArea = () => {
       setSuccessMessage("Sample added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Reset form
       resetFormData();
       setLogoPreview(false);
       setShowAdditionalFields(false);
@@ -560,8 +557,6 @@ const SampleArea = () => {
       console.error("Error adding sample:", error);
     }
   };
-
-
 
   const handleTransferSubmit = async (e) => {
     const sampleToSend = samples.find(s => s.id === selectedSampleId);
@@ -652,6 +647,7 @@ const SampleArea = () => {
       console.error("Error fetching history:", error);
     }
   };
+
   const fetchPoolSampleHistory = async (id) => {
 
     try {
@@ -671,6 +667,7 @@ const SampleArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
+
   const handlePoolSampleHistory = (id, Analyte) => {
     fetchPoolSampleHistory(id)
     setSelectedSampleName(Analyte)
@@ -741,6 +738,7 @@ const SampleArea = () => {
       status: sample.status,
       user_account_id: id,
       logo: sample.logo,
+      samplepdf: sample.samplepdf,
     });
 
     const logoPreviewUrl =
@@ -752,6 +750,21 @@ const SampleArea = () => {
           )
           : null;
     setLogoPreview(logoPreviewUrl);
+
+    // ✅ Generate sample PDF preview (if available)
+    const pdfPreviewUrl =
+      typeof sample.samplepdf === "string"
+        ? sample.samplepdf
+        : sample.samplepdf?.data
+          ? URL.createObjectURL(
+            new Blob([new Uint8Array(sample.samplepdf.data)], {
+              type: "application/pdf",
+            })
+          )
+          : null;
+
+    setSamplePdfPreview(pdfPreviewUrl);
+
     // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
       (c) =>
@@ -799,6 +812,7 @@ const SampleArea = () => {
       status: "In Stock",
       user_account_id: id,
       logo: "",
+      samplepdf: "",
     });
     setMode("");
     setShowAdditionalFields(false);
@@ -813,7 +827,7 @@ const SampleArea = () => {
     // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
     let updatedMode = mode;
     if (
-      mode === "AddtoPool" &&
+      mode !== "Individual" &&
       formData.TestResult?.trim() &&
       formData.TestResultUnit?.trim()
     ) {
@@ -860,7 +874,6 @@ const SampleArea = () => {
       console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
     }
   };
-
 
   useEffect(() => {
     if (
@@ -911,7 +924,8 @@ const SampleArea = () => {
         formData.TestResultUnit?.toString().trim() &&
         formData.SampleTypeMatrix?.toString().trim() &&
         formData.ContainerType?.toString().trim() &&
-        formData.logo instanceof File
+        formData.logo instanceof File &&
+        formData.samplepdf instanceof File
       );
     }
   };
@@ -1225,7 +1239,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i className="fa fa-history"></i>
                             </button>
                           )}
-                          {(actions.includes("history") || actions.includes("all")) && (sample.samplemode === 'Pooled') && (
+                          {(actions.includes("history") || actions.includes("all")) && (sample.samplemode !== 'Individual') && (
                             <button
                               className="btn btn-outline-success btn-sm"
                               onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
@@ -1234,7 +1248,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i class="fas fa-vial"></i>
                             </button>
                           )}
-
                         </div>
                       </td>
                     )}
@@ -1325,7 +1338,6 @@ ${sample.box_id || "N/A"} = Box ID`;
 
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
-
                         <>
                           {/* Column 1 */}
                           {!showAdditionalFields && (
@@ -1391,7 +1403,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       height: "45px",
                                       fontSize: "14px",
                                       backgroundColor: !formData.age
-                                        ? "#fdecea"
+                                        ? "#fff"
                                         : "#fff",
                                     }}
                                   />
@@ -1436,7 +1448,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       height: "45px",
                                       fontSize: "14px",
                                       backgroundColor: !formData.MRNumber
-                                        ? "#fdecea"
+                                        ? "#fff"
                                         : "#fff",
                                     }}
                                   />
@@ -1456,7 +1468,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       height: "45px",
                                       fontSize: "14px",
                                       backgroundColor: !formData.phoneNumber
-                                        ? "#fdecea"
+                                        ? "#fff"
                                         : "#fff",
                                     }}
                                     pattern="03[0-9]{2}-[0-9]{7}"
@@ -1466,8 +1478,8 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </div>
                                 <div className="form-group col-md-4">
                                   <label>
-                                    Location (IDs){" "}
-                                    <span className="text-danger">*</span>
+                                    Location (IDss){" "}
+                                    <span className="text-danger"></span>
                                   </label>
                                   <InputMask
                                     mask="999-999-999"
@@ -1486,10 +1498,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                                           height: "45px",
                                           fontSize: "14px",
                                           backgroundColor: !formData.locationids
-                                            ? "#fdecea"
+                                            ? "#fff"
                                             : "#fff",
                                         }}
-                                        required
+                                        // required
                                         title="Location ID's = Room Number, Freezer ID and Box ID"
                                       />
                                     )}
@@ -1638,7 +1650,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     )}
                                   </div>
                                 </div>
-
                                 <div className="form-group col-md-6">
                                   <label>
                                     Volume <span className="text-danger">*</span>
@@ -1786,7 +1797,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         height: "45px",
                                         fontSize: "14px",
                                         backgroundColor: !formData.logo
-                                          ? "#fdecea"
+                                          ? "#fff"
                                           : "#fff",
                                       }}
                                     />
@@ -2340,8 +2351,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                             </>
                           )}
                         </>
-
-
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
@@ -2473,7 +2482,9 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: "#fff",
+                                        backgroundColor: !formData.Analyte
+                                          ? "#fdecea"
+                                          : "#fff",
                                       }}
                                     >
                                       <option value="" disabled hidden>
@@ -2499,10 +2510,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       }}
                                     />
                                   )}
-
                                 </div>
-
-
                                 <div className="form-group col-md-6">
                                   <label>
                                     Location (IDs){" "}
@@ -2535,9 +2543,42 @@ ${sample.box_id || "N/A"} = Box ID`;
                                   </InputMask>
                                 </div>
                                 <div className="form-group col-md-6">
+                                  <label className="mb-2">
+                                    Final Concentration <span className="text-danger">*</span>
+                                  </label>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: "10px",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {["Low", "Medium", "High"].map((level) => (
+                                      <div key={level} className="form-check">
+                                        <input
+                                          className="form-check-input"
+                                          type="radio"
+                                          name="FinalConcentration" // name is fine
+                                          id={`finalConcentration-${level}`}
+                                          value={level}
+                                          checked={mode === level}
+                                          onChange={() => setMode(level)}
+                                          required
+                                        />
+                                        <label
+                                          className="form-check-label"
+                                          htmlFor={`finalConcentration-${level}`}
+                                        >
+                                          {level}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="form-group col-md-6">
                                   <label>
                                     Test Result & Unit{" "}
-                                    <span className="text-danger">*</span>
+                                    <span className="text-danger"></span>
                                   </label>
                                   <div
                                     style={{
@@ -2574,9 +2615,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.TestResult
-                                            ? "#fdecea"
-                                            : "#fff",
+                                          border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
                                           minWidth: "140px",
                                         }}
                                       >
@@ -2603,14 +2642,11 @@ ${sample.box_id || "N/A"} = Box ID`;
                                             TestResult: e.target.value,
                                           }))
                                         }
-
                                         style={{
                                           width: "110px",
                                           height: "40px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.TestResult
-                                            ? "#fdecea"
-                                            : "#fff",
+                                          border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
                                           paddingRight: "10px",
                                         }}
                                         autoFocus
@@ -2658,6 +2694,77 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       </select>
                                     )}
                                   </div>
+                                </div>
+                                <div className="form-group col-md-6">
+                                  <label>
+                                    Volume <span className="text-danger">*</span>
+                                  </label>
+                                  <div className="d-flex">
+                                    <input
+                                      type="number"
+                                      className="form-control me-2"
+                                      name="volume"
+                                      value={formData.volume}
+                                      onChange={(e) => {
+                                        const value = parseFloat(e.target.value);
+                                        if (
+                                          e.target.value === "" ||
+                                          (value * 10) % 5 === 0
+                                        ) {
+                                          handleInputChange(e);
+                                        }
+                                      }}
+                                      step="0.5"
+                                      min="0.5"
+                                      max={
+                                        unitMaxValues[formData.VolumeUnit] ||
+                                        undefined
+                                      }
+                                      required
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.volume
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      }}
+                                    />
+                                    <select
+                                      className="form-control"
+                                      name="VolumeUnit"
+                                      value={formData.VolumeUnit}
+                                      onChange={handleInputChange}
+                                      required
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.VolumeUnit
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      }}
+                                    >
+                                      <option value="" hidden></option>
+                                      {volumeunitNames.map((name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  {/* Validation message*/}
+                                  {formData.volume &&
+                                    formData.VolumeUnit &&
+                                    parseFloat(formData.volume) >
+                                    (unitMaxValues[formData.VolumeUnit] ||
+                                      Infinity) && (
+                                      <small className="text-danger mt-1">
+                                        Value must be less than or equal to{" "}
+                                        {unitMaxValues[
+                                          formData.VolumeUnit
+                                        ].toLocaleString()}
+                                        .
+                                      </small>
+                                    )}
                                 </div>
                                 <div className="form-group col-md-6">
                                   <label>
@@ -2718,6 +2825,49 @@ ${sample.box_id || "N/A"} = Box ID`;
                                 </div>
                                 <div className="form-group col-md-6">
                                   <label>
+                                    Sample PDF <span className="text-danger">*</span>
+                                  </label>
+                                  <div className="d-flex align-items-center">
+                                    <input
+                                      name="samplepdf"
+                                      type="file"
+                                      accept="application/pdf"
+                                      onChange={(e) =>
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          samplepdf: e.target.files[0],
+                                        }))
+                                      }
+                                      className="form-control"
+                                      required
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.samplepdf
+                                          ? "#fdecea"
+                                          : "#fff",
+                                        border: "1px solid #ced4da",
+                                      }}
+                                    />
+                                    {(formData.samplepdf instanceof File || samplePdfPreview) && (
+                                      <a
+                                        href={
+                                          formData.samplepdf instanceof File
+                                            ? URL.createObjectURL(formData.samplepdf)
+                                            : samplePdfPreview
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ms-3"
+                                        style={{ fontSize: "13px" }}
+                                      >
+                                        View PDF
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="form-group col-md-6">
+                                  <label>
                                     Sample Picture{" "}
                                     <span className="text-danger"></span>
                                   </label>
@@ -2735,9 +2885,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.logo
-                                          ? "#fdecea"
-                                          : "#fff",
+                                        border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
                                       }}
                                     />
                                     {logoPreview && (
@@ -2755,8 +2903,6 @@ ${sample.box_id || "N/A"} = Box ID`;
 
                                 </div>
                               </div>
-
-
                             </div>
                           </>
                         )}
@@ -3061,6 +3207,7 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+
         {PoolSampleHistoryModal && (
           <>
             {/* Backdrop */}
@@ -3200,9 +3347,6 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
-
-
-
 
         {/* Modal to show Sample Picture */}
         {showLogoModal && (

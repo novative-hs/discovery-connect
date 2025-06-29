@@ -3,11 +3,11 @@ const tablesAndColumns = [
   {
     table: "sample",
     columnsToAdd: [
-      
+
       {
         column: "samplemode",
         type: "VARCHAR(30)",
-        nullable:true
+        nullable: true
       },
       {
         column: "PatientName",
@@ -16,7 +16,12 @@ const tablesAndColumns = [
       {
         column: "PatientLocation",
         type: "VARCHAR(100)"
-      }
+      },
+      {
+        column: "samplepdf",
+        type: "LONGBLOB",
+        nullable: true  
+      },
     ]
   },
   // {
@@ -30,7 +35,7 @@ const tablesAndColumns = [
   //       references: { table: "analyte", column: "id" },
   //     }]
   // }
-   
+
 
   // {
   //   table: "csr",
@@ -463,8 +468,8 @@ const createOrUpdateTables = async () => {
     //   "Public",
     //   "Non-Public",
     // ], true, "Non-Public");
-      
-   
+
+
   });
 
 

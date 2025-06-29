@@ -50,6 +50,7 @@ const createSampleTable = () => {
         status ENUM('In Stock', 'In Transit', 'Quarantine') NOT NULL DEFAULT 'In Stock',
         samplemode ENUM('individual', 'pool') DEFAULT 'individual',
         logo LONGBLOB,
+        samplepdf LONGBLOB NULL,
         is_deleted BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -495,7 +496,6 @@ FROM poolsample ps
 JOIN sample s ON ps.sample_id = s.id
 WHERE ps.poolsample_id = ?
 GROUP BY s.id
-
   `;
 
   mysqlConnection.query(query, [pooledSampleId], (err, results) => {
@@ -541,8 +541,8 @@ const createSample = (data, callback) => {
        price, SamplePriceCurrency, quantity,VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, 
        InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, 
        ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer,
-        status, logo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        status, logo, samplepdf
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const insertValues = [
     id,
@@ -585,9 +585,8 @@ const createSample = (data, callback) => {
     data.TestSystemManufacturer,
     "In Stock",
     data.logo,
+    data.samplepdf,
   ];
-
-
 
   mysqlConnection.query(insertQuery, insertValues, (err, results) => {
     if (err) {
@@ -618,9 +617,8 @@ const createSample = (data, callback) => {
           }
 
           // ✅ If mode is pool, handle poolsample logic
-          if ((data.mode === "Pooled" || data.mode === "AddtoPool") && data.poolSamples) {
+          if ((data.mode !== "Individual") && data.poolSamples) {
             const poolSamplesArray = JSON.parse(data.poolSamples); // Array of sample IDs
-
 
             const poolInsertValues = [];
             const valuePlaceholders = [];
@@ -634,7 +632,6 @@ const createSample = (data, callback) => {
   INSERT INTO poolsample (sample_id, poolsample_id)
   VALUES ${valuePlaceholders.join(", ")}
 `;
-
             mysqlConnection.query(
               poolInsertQuery,
               poolInsertValues,
@@ -705,11 +702,11 @@ const updateSample = (id, data, file, callback) => {
     'AlcoholOrDrugAbuse = ?', 'InfectiousDiseaseTesting = ?', 'InfectiousDiseaseResult = ?',
     'FreezeThawCycles = ?', 'DateOfSampling = ?', 'ConcurrentMedicalConditions = ?',
     'ConcurrentMedications = ?', 'TestResult = ?', 'TestResultUnit = ?', 'TestMethod = ?', 'TestKitManufacturer = ?', 'TestSystem = ?',
-    'TestSystemManufacturer = ?', 'status = ?'
+    'TestSystemManufacturer = ?', 'status = ?', 'samplepdf = ?'
   ];
 
   const values = [
-    data.patientname, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status
+    data.patientname, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
   ];
 
   // Add logo file if available
@@ -749,8 +746,6 @@ const updateSample = (id, data, file, callback) => {
         console.error('Error inserting into sample_history:', err);
         return callback(err, null);
       }
-
-
       callback(null, result);
     });
   });
