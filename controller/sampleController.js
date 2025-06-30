@@ -172,8 +172,12 @@ const updateSample = (req, res) => {
   const samplePdfFile = files?.samplepdf?.[0];
 
   // Attach file buffer to the sampleData
-  sampleData.logo = logoFile?.buffer;
-  sampleData.samplepdf = samplePdfFile?.buffer;
+  if (logoFile) {
+    sampleData.logo = logoFile.buffer;
+  }
+  if (samplePdfFile) {
+    sampleData.samplepdf = samplePdfFile.buffer;
+  }
   if (sampleData.DateOfSampling) {
     sampleData.DateOfSampling = moment(sampleData.DateOfSampling).format('YYYY-MM-DD');
   }
@@ -184,9 +188,6 @@ const updateSample = (req, res) => {
       return res.status(500).json({ error: "Error updating sample" });
     }
 
-    // Log the result to check what is being returned
-
-
     // Check if result is not undefined and contains affectedRows
     if (result && result.affectedRows === 0) {
       return res.status(404).json({ error: "Sample not found" });
@@ -195,7 +196,6 @@ const updateSample = (req, res) => {
     res.status(200).json({ message: "Sample updated successfully" });
   });
 };
-
 
 const getFilteredSamples = (req, res) => {
   const { price, smokingStatus } = req.query;

@@ -380,18 +380,19 @@ const SampleArea = () => {
     setCurrentPage(selectedPage); // Correct ✅
   };
 
-  const handleScroll = (e) => {
-    const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
+  // const handleScroll = (e) => {
+  //   const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
 
-    if (isVerticalScroll) {
-      const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+  //   if (isVerticalScroll) {
+  //     const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
 
-      if (bottom && currentPage < totalPages) {
-        setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
-        fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
-      }
-    }
-  };
+  //     if (bottom && currentPage < totalPages) {
+  //       setCurrentPage((prevPage) => prevPage + 1); // Trigger fetch for next page
+  //       fetchSamples(currentPage + 1); // Fetch more data if bottom is reached
+  //     }
+  //   }
+  // };
+
   const currentData = filteredSamplename;
 
 
@@ -837,7 +838,7 @@ const SampleArea = () => {
 
     // Append all form fields except logo
     for (const key in formData) {
-      if (key !== "logo") {
+      if (key !== "logo" && key !== "samplepdf") {
         formDataToSend.append(key, formData[key]);
       }
     }
@@ -847,6 +848,25 @@ const SampleArea = () => {
     // Only append logo if it's a new file
     if (formData.logo instanceof File) {
       formDataToSend.append("logo", formData.logo);
+    } else if (logoPreview && formData.logo?.data) {
+      const mimeType = logoPreview.includes(".jpg") || logoPreview.includes(".jpeg")
+        ? "image/jpeg"
+        : "image/png";
+
+      const logoBlob = new Blob([new Uint8Array(formData.logo.data)], {
+        type: mimeType,
+      });
+      formDataToSend.append("logo", logoBlob, "existing-logo.png");
+    }
+
+    if (formData.samplepdf instanceof File) {
+      formDataToSend.append("samplepdf", formData.samplepdf);
+    } else if (samplePdfPreview && typeof formData.samplepdf === "object") {
+      // Convert existing Uint8Array or Buffer to Blob and append
+      const pdfBlob = new Blob([new Uint8Array(formData.samplepdf.data)], {
+        type: "application/pdf",
+      });
+      formDataToSend.append("samplepdf", pdfBlob, "existing-sample.pdf");
     }
 
     try {
@@ -1100,7 +1120,6 @@ const SampleArea = () => {
                     Action
                   </th>
                 )}
-
               </tr>
             </thead>
             <tbody className="table-light">
@@ -2839,7 +2858,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         }))
                                       }
                                       className="form-control"
-                                      required
+                                      required={!formData.samplepdf}
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
@@ -2900,7 +2919,6 @@ ${sample.box_id || "N/A"} = Box ID`;
                                       />
                                     )}
                                   </div>
-
                                 </div>
                               </div>
                             </div>

@@ -525,7 +525,7 @@ const createSample = (data, callback) => {
   }
 
   if (data.age === null || data.age === "") {
-    data.age = 0;
+    data.age = null;
   }
   if (
     data.volume === "" ||
@@ -689,13 +689,21 @@ const updateSample = (id, data, file, callback) => {
   }
 
   const volume = data.volume === '' ? null : data.volume;
-
+  let age = data.age;
+  if (age === '' || age === null || age === undefined) {
+    age = null;
+  } else {
+    age = Number(age);
+    if (isNaN(age)) {
+      age = null;
+    }
+  }
   console.log("Updating sample ID:", id);
   console.log("volume value:", volume);
 
   // Start with fields and values
   const fields = [
-    'PatientName = ?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?', 'samplemode = ?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -706,13 +714,18 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, data.age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
+    data.patientname, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
   ];
 
   // Add logo file if available
-  if (logoFile) {
+  if (file?.logo?.[0]?.buffer) {
     fields.push('logo = ?');
-    values.push(logoFile.buffer);
+    values.push(file.logo[0].buffer);
+  }
+
+  if (file?.samplepdf?.[0]?.buffer) {
+    fields.push('samplepdf = ?');
+    values.push(file.samplepdf[0].buffer);
   }
 
   fields.push('updated_at = CURRENT_TIMESTAMP');
