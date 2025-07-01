@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors"); // Import CORS
 const app = express();
 const port = process.env.PORT || 5000;
+const compression = require("compression");
+app.use(compression());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
