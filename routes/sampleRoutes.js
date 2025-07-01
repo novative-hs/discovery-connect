@@ -41,4 +41,9 @@ router.put(
 router.delete('/samples/delete/:id', SampleController.deleteSample);
 router.put('/samples/QuarantineSamples/:id', SampleController.updateQuarantineSamples);
 router.get('/sample/getpoolsamplehistory/:id', SampleController.getPoolSampleDetails)
+router.put('/sample/updatetestresultandunit/:id',
+      upload.fields([
+        { name: 'logo', maxCount: 1 },
+        { name: 'samplepdf', maxCount: 1 },
+    ]),SampleController.updatetestResultandUnit)
 module.exports = router;

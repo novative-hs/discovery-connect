@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "react-bootstrap/Modal";
@@ -7,7 +6,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faExchangeAlt,
+  faRuler,
 } from "@fortawesome/free-solid-svg-icons";
+import NiceSelect from "@ui/NiceSelect";
 import Pagination from "@ui/Pagination";
 import InputMask from "react-input-mask";
 import { getsessionStorage } from "@utils/sessionStorage";
@@ -16,6 +17,8 @@ import Barcode from "react-barcode";
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
   const [locationError, setLocationError] = useState("")
+  const [showAddtestResultandUnitModal,setShowAddTestResultandUnitModal]=useState("");
+  const [showEdittestResultandUnitModal,setShowEditTestResultandUnitModal]=useState("")
   const [mode, setMode] = useState("");
   const [staffAction, setStaffAction] = useState("");
   const [actions, setActions] = useState([]);
@@ -80,6 +83,15 @@ const SampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: 1,
   });
+const filterOptions = [
+  { value: "", text: "All" },
+  { value: "individual", text: "Individual" },
+  { value: "High", text: "High" },
+  { value: "Low", text: "Low" },
+  { value: "Medium", text: "Medium" },
+  { value: "Pooled", text: "Pooled" },
+
+];
 
   const openModal = (sample) => {
     setSelectedSample(sample);
@@ -101,7 +113,7 @@ const SampleArea = () => {
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
     { label: "Volume", key: "volume" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    // { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Sample Mode", key: "samplemode" },
@@ -131,6 +143,7 @@ const SampleArea = () => {
 
   const [formData, setFormData] = useState({
     patientname: "",
+    finalConcentration:"",
     patientlocation: "",
     locationids: "",
     Analyte: "",
@@ -267,11 +280,10 @@ const SampleArea = () => {
         ownResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
         receivedResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
       }
-
-      const [ownResponse, receivedResponse] = await Promise.all([
-        axios.get(ownResponseurl),
-        axios.get(receivedResponseurl),
-      ]);
+const [ownResponse, receivedResponse] = await Promise.all([
+  axios.get(ownResponseurl),
+  axios.get(receivedResponseurl),
+]);
 
       const ownSamples = ownResponse.data.samples.map((s) => ({
         ...s,
@@ -365,6 +377,10 @@ const SampleArea = () => {
         if (field === "sample_visibility") {
           return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
         }
+        if (field === "samplemode") {
+         
+        return sample.samplemode?.toLowerCase() === lowerValue;
+      }
 
         return sample[field]?.toString().toLowerCase().includes(lowerValue);
       });
@@ -460,7 +476,7 @@ const SampleArea = () => {
   const handlePoolButtonClick = () => {
     if (poolMode) {
       const selected = [...selectedSamples];
-      if (selected.length < 2) {
+      if (selected.length < 1) {
         alert("Please select at least two samples to create a pool.");
         return;
       }
@@ -558,6 +574,38 @@ const SampleArea = () => {
       console.error("Error adding sample:", error);
     }
   };
+const handleAddTestResult = async (e) => {
+    e.preventDefault();
+ 
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`,
+         {
+    mode: "Pooled",
+    TestResult: formData.TestResult,
+    TestResultUnit: formData.TestResultUnit
+  },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      fetchSamples();
+      setSelectedSampleId("")
+      setSelectedSampleName("");
+      setShowAddTestResultandUnitModal(false);
+      setSuccessMessage("Test result unit added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      resetFormData();
+    } catch (error) {
+      console.error("Error adding sample:", error);
+    }
+  };
+
+
 
   const handleTransferSubmit = async (e) => {
     const sampleToSend = samples.find(s => s.id === selectedSampleId);
@@ -674,13 +722,31 @@ const SampleArea = () => {
     setSelectedSampleName(Analyte)
     setPoolSampleHistoryModal(true)
   }
-
+const handleTestRsultsandUnit=(sample)=>{
+  setSelectedSampleId(sample.id)
+   const testResult = sample.TestResult || "";
+    const testResultMatch = testResult.match(/^([<>]=?|=|\+|-)?\s*(.*)$/);
+    const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
+    const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
+    const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
+    setShowTestResultNumericInput(isNumeric); // 👈 Add this line
+     setFormData({
+      // TestResult: sample.TestResult,
+      TestSign,
+      TestValue,
+      TestResult: testResult,
+      TestResultUnit: sample.TestResultUnit,
+   
+    });
+  setSelectedSampleName(sample.Analyte)
+  setShowAddTestResultandUnitModal(true)
+}
   const handleEditClick = (sample) => {
 
     setSelectedSampleId(sample.id);
     setEditSample(sample);
     console.log(sample)
-    setMode(sample.samplemode || "Individual")
+    setMode(sample.samplemode)
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
 
@@ -691,7 +757,7 @@ const SampleArea = () => {
     const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
     const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
     setShowTestResultNumericInput(isNumeric); // 👈 Add this line
-    if (sample.samplemode === 'Individual') {
+    if (sample.samplemode==='Individual') {
       setShowEditModal(true);
 
     } else {
@@ -702,6 +768,7 @@ const SampleArea = () => {
 
     setFormData({
       patientname: sample.PatientName,
+      finalConcentration:sample.finalConcentration,
       patientlocation: sample.PatientLocation,
       MRNumber: sample.MRNumber,
       locationids: formattedLocationId,
@@ -778,6 +845,7 @@ const SampleArea = () => {
   const resetFormData = () => {
     setFormData({
       patientname: "",
+      finalConcentration:"",
       patientlocation: "",
       locationids: "",
       Analyte: "",
@@ -921,6 +989,7 @@ const SampleArea = () => {
     if (mode === "Individual") {
       return (
         formData.patientname?.toString().trim() &&
+       
         formData.patientlocation?.toString().trim() &&
         formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
@@ -937,6 +1006,7 @@ const SampleArea = () => {
     } else if (mode === "Pooled") {
       return (
         formData.MRNumber?.toString().trim() &&
+        formData.finalConcentration?.toString().trim()&&
         formData.Analyte?.toString().trim() &&
         formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
@@ -1030,57 +1100,76 @@ const SampleArea = () => {
           <h6>
             Note: Click on Location Id's to see Sample Picture.
           </h6>
+           <h6>
+            Note: Click on Sample Icon to see Pooled Sample History.
+          </h6>
         </div>
+       
 
         {/* Button */}
-        <div className="d-flex justify-content-end align-items-end flex-wrap gap-2 mb-4">
-          {/* Button */}
-          {actions.some(a => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)) && (
-            <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+             <div className="d-flex align-items-center gap-2">
+    <label className="fw-semibold text-secondary mb-0">Filter Sample Mode by:</label>
+    <NiceSelect
+      options={filterOptions}
+      defaultCurrent={0}
+      name="filter-by"
+      onChange={(item) => handleFilterChange("samplemode", item.value)}
+    />
+  </div>
 
-              <button
-                onClick={handlePoolButtonClick}
-                style={{
-                  backgroundColor: "#4a90e2",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontWeight: "500",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
-              >
-                {poolMode ? "Make Pool" : "Mark Sample as Pool"}
-              </button>
 
-              {(actions.includes('add_full') || actions.includes('add_basic') || actions.includes('all')) && (
-                <button
-                  onClick={() => {
-                    setMode("Individual");
-                    setShowAddModal(true)
-                  }}
-                  style={{
-                    backgroundColor: "#4a90e2",
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <i className="fas fa-vial"></i> Add Sample
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+  {/* Buttons RIGHT */}
+  {actions.some(a =>
+    ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)
+  ) && (
+    <div className="d-flex align-items-center flex-wrap gap-2">
+      <button
+        onClick={handlePoolButtonClick}
+        style={{
+          backgroundColor: "#4a90e2",
+          color: "#fff",
+          border: "none",
+          padding: "10px 20px",
+          borderRadius: "6px",
+          fontWeight: "500",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        }}
+      >
+        {poolMode ? "Make Pool" : "Mark Sample as Pool"}
+      </button>
+
+      {(actions.includes('add_full') ||
+        actions.includes('add_basic') ||
+        actions.includes('all')) && (
+        <button
+          onClick={() => {
+            setMode("Individual");
+            setShowAddModal(true);
+          }}
+          style={{
+            backgroundColor: "#4a90e2",
+            color: "#fff",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "6px",
+            fontWeight: "500",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          }}
+        >
+          <i className="fas fa-vial"></i> Add Sample
+        </button>
+      )}
+    </div>
+  )}
+</div>
+
 
         {/* Table */}
         <div className="table-responsive w-100">
@@ -1228,7 +1317,15 @@ ${sample.box_id || "N/A"} = Box ID`;
                     {actions.some(action => ["edit", "dispatch", "history", "all"].includes(action)) && (
                       <td className="text-center align-middle">
                         <div className="d-flex justify-content-center gap-2 px-1">
-
+{(actions.includes("edit")|| actions.includes("add") || actions.includes("all")) && (sample.samplemode !== 'Individual')&& (sample.samplemode !== 'Pooled')&& (
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() =>  handleTestRsultsandUnit(sample)}
+                              title="Test Result and Unit"
+                            >
+                              <FontAwesomeIcon icon={faRuler} size="sm" />
+                            </button>
+                          )}
                           {(actions.includes("edit") || actions.includes("all")) && (
                             <button
                               className="btn btn-success btn-sm"
@@ -1262,11 +1359,13 @@ ${sample.box_id || "N/A"} = Box ID`;
                             <button
                               className="btn btn-outline-success btn-sm"
                               onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
-                              title="Track Sample"
+                              title="Track Sample History"
                             >
                               <i class="fas fa-vial"></i>
                             </button>
                           )}
+                         
+
                         </div>
                       </td>
                     )}
@@ -2577,11 +2676,16 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         <input
                                           className="form-check-input"
                                           type="radio"
-                                          name="FinalConcentration" // name is fine
+                                          name="finalConcentration" // name is fine
                                           id={`finalConcentration-${level}`}
                                           value={level}
                                           checked={mode === level}
-                                          onChange={() => setMode(level)}
+                                          onChange={(e) => {
+                                             setFormData((prev) => ({
+                                            ...prev,
+                                            finalConcentration: e.target.value,
+                                          }))
+                                            setMode(level)}}
                                           required
                                         />
                                         <label
@@ -2594,126 +2698,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     ))}
                                   </div>
                                 </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Test Result & Unit{" "}
-                                    <span className="text-danger"></span>
-                                  </label>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      gap: "10px",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    {/* Test Result Dropdown or Numeric Input */}
-                                    {!showTestResultNumericInput ? (
-                                      <select
-                                        className="form-control"
-                                        value={formData.TestResult}
-                                        onChange={(e) => {
-                                          const val = e.target.value;
-                                          if (val === "Value") {
-                                            setShowTestResultNumericInput(true);
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResult: "",
-                                            }));
-                                          } else {
-                                            setShowTestResultNumericInput(
-                                              false
-                                            ); // Ensure this is reset
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResult: val,
-                                              TestResultUnit: "",
-                                            })); // Clear unit
-                                          }
-                                        }}
-
-                                        style={{
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
-                                          minWidth: "140px",
-                                        }}
-                                      >
-                                        <option value="" disabled hidden>
-                                          Select result
-                                        </option>
-                                        <option value="Positive">
-                                          Positive
-                                        </option>
-                                        <option value="Negative">
-                                          Negative
-                                        </option>
-                                        <option value="Value">Value</option>
-                                      </select>
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        className="form-control"
-                                        placeholder="Enter numeric value"
-                                        value={formData.TestResult}
-                                        onChange={(e) =>
-                                          setFormData((prev) => ({
-                                            ...prev,
-                                            TestResult: e.target.value,
-                                          }))
-                                        }
-                                        style={{
-                                          width: "110px",
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
-                                          paddingRight: "10px",
-                                        }}
-                                        autoFocus
-                                        onBlur={() => {
-                                          if (!formData.TestResult) {
-                                            setShowTestResultNumericInput(
-                                              false
-                                            );
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResultUnit: "",
-                                            })); // Clear unit
-                                          }
-                                        }}
-                                      />
-                                    )}
-                                    {/* Conditionally render Unit Dropdown */}
-                                    {showTestResultNumericInput && (
-                                      <select
-                                        className="form-control"
-                                        name="TestResultUnit"
-                                        value={formData.TestResultUnit}
-                                        onChange={handleInputChange}
-                                        required
-                                        style={{
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          backgroundColor:
-                                            !formData.TestResultUnit
-                                              ? "#fdecea"
-                                              : "#fff",
-                                          minWidth: "100px",
-                                        }}
-                                      >
-                                        <option value="" hidden>
-                                          Unit
-                                        </option>
-                                        {testresultunitNames.map(
-                                          (name, index) => (
-                                            <option key={index} value={name}>
-                                              {name}
-                                            </option>
-                                          )
-                                        )}
-                                      </select>
-                                    )}
-                                  </div>
-                                </div>
+                             
                                 <div className="form-group col-md-6">
                                   <label>
                                     Volume <span className="text-danger">*</span>
@@ -2943,7 +2928,211 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
+{(showAddtestResultandUnitModal || showEdittestResultandUnitModal) && (
+          <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "-30px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "100%",
+                overflow: "hidden",
+                transition: "top 0.3s ease-in-out",
+              }}
+            >
+              <div
+                className="modal-dialog"
+                role="document"
+                style={{
+                  width: "100%",
+                  transition: "all 0.3s ease-in-out",
+                }}
+              >
+                <div className="modal-content">
+                  <div
+                    className="modal-header"
+                    style={{ backgroundColor: "#cfe2ff" }}
+                  >
+                    <h5 className="modal-title">
+                      {selectedSampleName}
+                    </h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => {
+                        setShowAddTestResultandUnitModal(false);
+                        setSelectedSampleName("")
+                        setSelectedSampleId("")
+                        resetFormData();
+                      }}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <form
+                    onSubmit={handleAddTestResult }
+                  >
+                    <div className="modal-body">
+                      {/* Parallel Columns - 5 columns */}
+                      <div className="row">
+                            {/* Only show selected fields in pool mode */}
+                            <div className="col-md-12">
+                              <div className="row">
+                               
+                                <div className="form-group col-md-6">
+                                  <label>
+                                    Test Result & Unit{" "}
+                                    <span className="text-danger"></span>
+                                  </label>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: "10px",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {/* Test Result Dropdown or Numeric Input */}
+                                    {!showTestResultNumericInput ? (
+                                      <select
+                                        className="form-control"
+                                        value={formData.TestResult}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          if (val === "Value") {
+                                            setShowTestResultNumericInput(true);
+                                            setFormData((prev) => ({
+                                              ...prev,
+                                              TestResult: "",
+                                            }));
+                                          } else {
+                                            setShowTestResultNumericInput(
+                                              false
+                                            ); // Ensure this is reset
+                                            setFormData((prev) => ({
+                                              ...prev,
+                                              TestResult: val,
+                                              TestResultUnit: "",
+                                            })); // Clear unit
+                                          }
+                                        }}
 
+                                        style={{
+                                          height: "40px",
+                                          fontSize: "14px",
+                                          border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
+                                          minWidth: "140px",
+                                        }}
+                                      >
+                                        <option value="" disabled hidden>
+                                          Select result
+                                        </option>
+                                        <option value="Positive">
+                                          Positive
+                                        </option>
+                                        <option value="Negative">
+                                          Negative
+                                        </option>
+                                        <option value="Value">Value</option>
+                                      </select>
+                                    ) : (
+                                      <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="Enter numeric value"
+                                        value={formData.TestResult}
+                                        onChange={(e) =>
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            TestResult: e.target.value,
+                                          }))
+                                        }
+                                        style={{
+                                          width: "110px",
+                                          height: "40px",
+                                          fontSize: "14px",
+                                          border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
+                                          paddingRight: "10px",
+                                        }}
+                                        autoFocus
+                                        onBlur={() => {
+                                          if (!formData.TestResult) {
+                                            setShowTestResultNumericInput(
+                                              false
+                                            );
+                                            setFormData((prev) => ({
+                                              ...prev,
+                                              TestResultUnit: "",
+                                            })); // Clear unit
+                                          }
+                                        }}
+                                      />
+                                    )}
+                                    {/* Conditionally render Unit Dropdown */}
+                                    {showTestResultNumericInput && (
+                                      <select
+                                        className="form-control"
+                                        name="TestResultUnit"
+                                        value={formData.TestResultUnit}
+                                        onChange={handleInputChange}
+                                        required
+                                        style={{
+                                          height: "40px",
+                                          fontSize: "14px",
+                                          backgroundColor:
+                                            !formData.TestResultUnit
+                                              ? "#fdecea"
+                                              : "#fff",
+                                          minWidth: "100px",
+                                        }}
+                                      >
+                                        <option value="" hidden>
+                                          Unit
+                                        </option>
+                                        {testresultunitNames.map(
+                                          (name, index) => (
+                                            <option key={index} value={name}>
+                                              {name}
+                                            </option>
+                                          )
+                                        )}
+                                      </select>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                      </div>
+                    </div>
+                    <div className="modal-footer d-flex justify-content-between align-items-center">
+                      <button type="submit" className="btn btn-primary">
+                        {showAddtestResultandUnitModal ? "Save" : "Update"}
+                      </button>
+                    </div>
+                   
+                  </form>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
         {/* Modal for transfreing Samples */}
         {showTransferModal && (
           <div

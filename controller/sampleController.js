@@ -226,7 +226,21 @@ const updateQuarantineSamples = (req, res) => {
   });
 };
 
+const updatetestResultandUnit=(req,res)=>{
+    
+    const {id}=req.params;
+    const data=req.body;
+    
+    SampleModel.updatetestResultandUnit(id,data,(err,result)=>{
+       if (err) {
+      console.error("Error in updating Test Result and Unit:", err);
+      return res.status(500).json({ error: 'Error in updating Sample status' });
+    }
 
+    return res.status(200).json({ message: 'Sample mode status updated' });
+  
+    })
+  }
 module.exports = {
   createSampleTable,
   getFilteredSamples,
@@ -241,5 +255,6 @@ module.exports = {
   deleteSample,
   getAllVolumnUnits,
   getAllSampleinIndex,
-  getPoolSampleDetails
+  getPoolSampleDetails,
+  updatetestResultandUnit
 };

@@ -22,6 +22,11 @@ const tablesAndColumns = [
         type: "LONGBLOB",
         nullable: true  
       },
+      {
+        column: "finalConcentration",
+        type: "VARCHAR(20)",
+        nullable: true  
+      },
     ]
   },
   // {

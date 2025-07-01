@@ -1,3 +1,4 @@
+
 const mysqlConnection = require("../config/db");
 const fs = require('fs');
 const crypto = require('crypto');
@@ -26,6 +27,7 @@ const createSampleTable = () => {
         room_number INT,
         freezer_id INT,
         box_id INT,
+        finalConcentration VARCHAR(20),
         ethnicity VARCHAR(50),
         samplecondition VARCHAR(100),
         storagetemp VARCHAR(255),
@@ -489,7 +491,7 @@ const getSampleById = (id, callback) => {
 
 
 const getPoolSampleDetails = (pooledSampleId, callback) => {
-  console.log(pooledSampleId)
+  
   const query = `
    SELECT s.*
 FROM poolsample ps
@@ -503,7 +505,7 @@ GROUP BY s.id
       console.error("❌ Error fetching pooled sample details:", err);
       return callback(err, null);
     }
-    console.log(results)
+    
     return callback(null, results); // Array of samples part of this pool
   });
 };
@@ -526,6 +528,7 @@ const createSample = (data, callback) => {
 
   if (data.age === null || data.age === "") {
     data.age = null;
+    data.age = null;
   }
   if (
     data.volume === "" ||
@@ -536,18 +539,19 @@ const createSample = (data, callback) => {
 
   const insertQuery = `
    INSERT INTO sample (
-      id, MRNumber, samplemode, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, 
+      id, MRNumber, samplemode,FinalConcentration, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, 
       Analyte, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection,
        price, SamplePriceCurrency, quantity,VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, 
        InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, 
        ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer,
         status, logo, samplepdf
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const insertValues = [
     id,
     data.MRNumber,
     data.mode,
+    data.finalConcentration,
     room_number,
     freezer_id,
     box_id,
@@ -687,23 +691,21 @@ const updateSample = (id, data, file, callback) => {
     freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
     box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
   }
+  
 
-  const volume = data.volume === '' ? null : data.volume;
-  let age = data.age;
+  const volume = data.volume === '' ? '' : data.volume;
+ let age = data.age;
   if (age === '' || age === null || age === undefined) {
-    age = null;
+    age = null; 
   } else {
     age = Number(age);
     if (isNaN(age)) {
-      age = null;
+      age = null; 
     }
   }
-  console.log("Updating sample ID:", id);
-  console.log("volume value:", volume);
-
   // Start with fields and values
   const fields = [
-    'PatientName = ?', 'samplemode = ?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?', 'FinalConcentration=?','samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -714,7 +716,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
+    data.patientname,data.finalConcentration ,data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
   ];
 
   // Add logo file if available
@@ -745,9 +747,7 @@ const updateSample = (id, data, file, callback) => {
 
     if (result.affectedRows === 0) {
       console.warn('⚠️ No rows updated. Check if the sample ID exists.');
-    } else {
-      console.log('✅ Sample updated successfully.');
-    }
+    } 
 
     const historyQuery = `
       INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
@@ -775,6 +775,21 @@ const updateSampleStatus = (id, status, callback) => {
     callback(err, result);
   });
 };
+const updatetestResultandUnit = (id, data, callback) => {
+  const query = `
+    UPDATE sample
+    SET samplemode = ?, TestResult = ?, TestResultUnit = ?
+    WHERE id = ?`;
+
+  mysqlConnection.query(
+    query,
+    [data.mode, data.TestResult, data.TestResultUnit, id],
+    (err, result) => {
+      callback(err, result);
+    }
+  );
+};
+
 
 const deleteSample = (id, callback) => {
   mysqlConnection.getConnection((err, connection) => {
@@ -904,6 +919,7 @@ module.exports = {
   updateQuarantineSamples,
   getAllVolumnUnits,
   getAllSampleinIndex,
-  getPoolSampleDetails
+  getPoolSampleDetails,
+  updatetestResultandUnit
 
 };
