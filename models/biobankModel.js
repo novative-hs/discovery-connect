@@ -20,7 +20,15 @@ const create_biobankTable = () => {
   });
 };
 
-const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchField, searchValue, callback) => {
+const getBiobankSamples = (
+  user_account_id,
+  page,
+  pageSize,
+  priceFilter,
+  searchField,
+  searchValue,
+  callback
+) => {
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 10;
   const offset = (pageInt - 1) * pageSizeInt;
@@ -82,7 +90,6 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
       case "CollectionSiteName":
         baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
         paramsShared.push(likeValue);
-        // Do not include this filter in baseWhereOwn because collectionsite is not joined there
         break;
 
       default:
@@ -114,7 +121,7 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
       UNION ALL
       ${ownSamplesQuery}
     ) AS merged_samples
-    ORDER BY created_at DESC
+    ORDER BY id DESC
     LIMIT ? OFFSET ?
   `;
 
@@ -134,6 +141,7 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
       console.error("❌ Data Query Error:", err.sqlMessage || err.message);
       return callback(err);
     }
+
     const enrichedResults = results.map((sample) => ({
       ...sample,
       locationids: [sample.room_number, sample.freezer_id, sample.box_id]
@@ -148,7 +156,6 @@ const getBiobankSamples = (user_account_id, page, pageSize, priceFilter, searchF
     });
   });
 };
-
 // Function to add price and sample price currency from biobank
 const postSamplePrice = (data, callback) => {
   const updateQuery = `
