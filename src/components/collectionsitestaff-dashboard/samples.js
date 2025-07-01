@@ -1103,6 +1103,9 @@ const handleTestRsultsandUnit=(sample)=>{
            <h6>
             Note: Click on Sample Icon to see Pooled Sample History.
           </h6>
+           <h6>
+            Note: Click on Scale Icon to Add <b>Test Result and Unit of Pooled Sample</b>
+          </h6>
         </div>
        
 
