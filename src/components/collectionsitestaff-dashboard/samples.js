@@ -1027,32 +1027,33 @@ const handleTestRsultsandUnit=(sample)=>{
     mg: 10000,
     g: 5000,
   };
+const handlePrint = (barcodeId) => {
+  const barcodeString = barcodeId?.toString() || "";
 
-  const handlePrint = (barcodeId) => {
-    const barcodeString = barcodeId?.toString() || "";
+  const printWindow = window.open("", "", "width=300,height=200");
+  if (!printWindow) return;
 
-    const printWindow = window.open("", "", "width=400,height=600");
-    if (!printWindow) return;
-
-    printWindow.document.write(`
+  printWindow.document.write(`
     <html>
       <head>
         <style>
           @page {
-            margin: 5mm;
+            size: 50mm 25mm;
+            margin: 0;
           }
           body {
             margin: 0;
             padding: 0;
-            text-align: center;
-            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 25mm;
+            width: 50mm;
           }
-          #barcode {
-            width: 130px;
-            height: 80px;
-            margin: 0 auto;
-            page-break-inside: avoid;
-            break-inside: avoid;
+          svg {
+            width: 90%;
+            height: auto;
+            max-height: 90%;
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -1063,23 +1064,29 @@ const handleTestRsultsandUnit=(sample)=>{
           window.onload = function() {
             JsBarcode("#barcode", "${barcodeString}", {
               format: "CODE128",
-              height: 80,
-              width: 0.8,
+              height: 80,         // Increase line height
+              width: 1,           // Keep lines narrow
               displayValue: false,
               margin: 0
             });
             setTimeout(() => {
               window.print();
               window.close();
-            }, 300);
+            }, 500);
           };
         </script>
       </body>
     </html>
   `);
 
-    printWindow.document.close();
-  };
+  printWindow.document.close();
+};
+
+
+
+
+
+
 
 
   if (id === null) {
