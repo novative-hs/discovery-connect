@@ -49,7 +49,7 @@ const createSampleTable = () => {
         TestSystem VARCHAR(50),
         TestSystemManufacturer VARCHAR(50),
         sample_visibility ENUM('Public', 'Non-Public') DEFAULT 'Non-Public',
-        status ENUM('In Stock', 'In Transit', 'Quarantine','Pooled') NOT NULL DEFAULT 'In Stock',
+         status ENUM('In Stock', 'In Transit', 'Quarantine','Pooled') NOT NULL DEFAULT 'In Stock',
         samplemode VARCHAR(30) DEFAULT 'Individual',
         logo LONGBLOB,
         samplepdf LONGBLOB NULL,
@@ -179,7 +179,7 @@ const getSamples = (userId, page, pageSize, searchField, searchValue, callback) 
 const getAllSamples = (callback) => {
 
   const query = `
-    SELECT 
+     SELECT 
       s.*,
       cs.CollectionSiteName AS Name,
       bb.Name AS BiobankName,
@@ -200,7 +200,7 @@ const getAllSamples = (callback) => {
     WHERE 
       s.status = 'In Stock' 
       AND s.Quantity>0
-      AND s.price > 0;
+  
   `;
 
   mysqlConnection.query(query, (err, results) => {
@@ -356,7 +356,7 @@ const getAllVolumnUnits = (name, callback) => {
 };
 
 const getAllSampleinIndex = (name, callback) => {
-  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND price IS NOT NULL';
+  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 ';
 
 
   mysqlConnection.query(query, [name], (err, results) => {
@@ -395,7 +395,6 @@ const getAllCSSamples = (limit, offset, callback) => {
       FROM sample
       WHERE 
         status = 'In Stock'
-        AND price > 0
         AND sample_visibility = 'Public'
       GROUP BY Analyte
     ) AS grouped ON s.Analyte = grouped.Analyte AND s.id = grouped.max_id
@@ -407,7 +406,6 @@ const getAllCSSamples = (limit, offset, callback) => {
       FROM sample
       WHERE 
         status = 'In Stock'
-        AND price > 0
         AND sample_visibility = 'Public'
       GROUP BY Analyte
     ) AS q ON s.Analyte = q.Analyte
@@ -421,7 +419,6 @@ const getAllCSSamples = (limit, offset, callback) => {
     FROM sample
     WHERE 
       status = 'In Stock' 
-      AND price > 0  
       AND sample_visibility = 'Public'
       AND quantity > 0
   `;
@@ -791,6 +788,8 @@ const updatetestResultandUnit = (id, data, callback) => {
 };
 
 
+
+
 const deleteSample = (id, callback) => {
   mysqlConnection.getConnection((err, connection) => {
     if (err) return callback(err);
@@ -920,6 +919,7 @@ module.exports = {
   getAllVolumnUnits,
   getAllSampleinIndex,
   getPoolSampleDetails,
-  updatetestResultandUnit
+  updatetestResultandUnit,
+  
 
 };

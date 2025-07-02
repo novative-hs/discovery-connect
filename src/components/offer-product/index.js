@@ -33,8 +33,8 @@ const OfferPopularProduct = () => {
   const dispatch = useDispatch();
 
   const sampleList = categories?.data || [];
-  const filteredCategories = sampleList.filter((category) => category.price !== null);
-  const displayedCategories = filteredCategories.slice(0, 6);
+ const displayedCategories = sampleList.slice(0, 6);
+
 
   useEffect(() => {
     AOS.init({ duration: 500 });
@@ -113,11 +113,11 @@ const OfferPopularProduct = () => {
                   />
                 </div>
                 <h5 className="fw-bold text-primary">{category.Analyte}</h5>
-                <p className="fs-5 text-dark fw-semibold">
+                {/* <p className="fs-5 text-dark fw-semibold">
                   {category.price
                     ? `${category.price} ${category.SamplePriceCurrency || ""}`
                     : "Price not available"}
-                </p>
+                </p> */}
                 <button
                   className="btn btn-outline-danger mt-2 w-100 fw-bold"
                   onClick={() => handleQuickView(category)}
