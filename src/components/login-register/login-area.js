@@ -21,7 +21,7 @@ const LoginArea = () => {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.75)",
+          backgroundColor: "rgba(81, 81, 81, 0.75)",
           backdropFilter: "blur(5px)", // This softens background text
           zIndex: 1,
         }}

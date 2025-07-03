@@ -16,6 +16,7 @@ import Barcode from "react-barcode";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationError, setLocationError] = useState("")
   const [showAddtestResultandUnitModal,setShowAddTestResultandUnitModal]=useState("");
   const [showEdittestResultandUnitModal,setShowEditTestResultandUnitModal]=useState("")
@@ -514,7 +515,9 @@ const [ownResponse, receivedResponse] = await Promise.all([
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+if (isSubmitting) return; // 🛑 Prevent double submission
 
+  setIsSubmitting(true); // 
     const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
 
     let effectiveMode = mode; // This is now directly the radio value if you use it for Low/Medium/High
@@ -573,6 +576,9 @@ const [ownResponse, receivedResponse] = await Promise.all([
     } catch (error) {
       console.error("Error adding sample:", error);
     }
+    finally {
+    setIsSubmitting(false); // ✅ Always turn off loading state
+  }
   };
 const handleAddTestResult = async (e) => {
     e.preventDefault();
@@ -890,6 +896,8 @@ const handleTestRsultsandUnit=(sample)=>{
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+  setIsSubmitting(true);
 
     const formDataToSend = new FormData();
 
@@ -960,7 +968,9 @@ const handleTestRsultsandUnit=(sample)=>{
       }, 3000);
     } catch (error) {
       console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
-    }
+    }finally {
+    setIsSubmitting(false);
+  }
   };
 
   useEffect(() => {
@@ -2503,9 +2513,25 @@ ${sample.box_id || "N/A"} = Box ID`;
                         </div>
                       )}
 
-                      <button type="submit" className="btn btn-primary">
-                        {showAddModal ? "Save" : "Update"}
-                      </button>
+                     <button
+  type="submit"
+  className="btn btn-primary"
+  disabled={isSubmitting} // prevent multiple clicks
+>
+  {isSubmitting ? (
+    <>
+      <span
+        className="spinner-border spinner-border-sm me-2"
+        role="status"
+        aria-hidden="true"
+      ></span>
+      {showAddModal ? "Saving..." : "Updating..."}
+    </>
+  ) : (
+    showAddModal ? "Save" : "Update"
+  )}
+</button>
+
                     </div>
                     <div className="text-start text-muted fs-6 mb-3 ms-3" style={{ marginTop: '-8px' }}>
                       <code> Please move cursor to field to get help</code>

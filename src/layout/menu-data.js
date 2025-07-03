@@ -17,7 +17,7 @@ const menu_data = [
   {
     id: 4,
     hasDropdown: true,
-    title: 'Pages',
+    title: 'Learn More',
     link: '/about',
     submenus: [
       { title: 'Privacy & Policy', link: '/policy' },
