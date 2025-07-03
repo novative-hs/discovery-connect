@@ -4,11 +4,6 @@ import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import dashboardheader from "@components/user-dashboard/dashboard-area";
-import axios from "axios";
-// internal
-import { EyeCut, Lock, UserTwo } from "@svg/index";
-import ErrorMessage from "@components/error-message/error";
 import { useLoginUserMutation } from "src/redux/features/auth/authApi";
 import { notifyError, notifySuccess } from "@utils/toast";
 
@@ -19,43 +14,26 @@ const schema = Yup.object().shape({
 
 const LoginForm = () => {
   const [showPass, setShowPass] = useState(false);
-  const [loginUser, {}] = useLoginUserMutation();
+  const [loginUser] = useLoginUserMutation();
   const router = useRouter();
-  // react hook form
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
+  } = useForm({ resolver: yupResolver(schema) });
 
   const onSubmit = async (data) => {
     try {
-      const result = await loginUser({
-        email: data.email,
-        password: data.password,
-      });
-
+      const result = await loginUser(data);
       if (result?.error) {
-        // ✅ Try to get the most helpful error message
         const errorData = result.error?.data;
-
         const errorMsg =
-          errorData?.message ||
-          errorData?.error || // If backend sends it under `error`
-          result.error?.statusText || // Generic HTTP error
-          "Internal Server Error"; // Fallback
-
+          errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
         notifyError(errorMsg);
       } else {
         const { id, accountType, action, authToken } = result?.data?.user || {};
-    
-
-        if (!id) {
-          return notifyError("Unexpected error: User ID is missing.");
-        }
+        if (!id) return notifyError("Unexpected error: User ID is missing.");
 
         sessionStorage.setItem("userID", id);
         sessionStorage.setItem("accountType", accountType);
@@ -67,86 +45,70 @@ const LoginForm = () => {
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
 
         const fromPage = router.query.from;
-        if (fromPage === "checkout") {
-          router.push("/dashboardheader?tab=Checkout");
-        } else {
-          router.push(accountType ? "/dashboardheader" : "/default-dashboard");
-        }
+        router.push(fromPage === "checkout" ? "/dashboardheader?tab=Checkout" : "/dashboardheader");
       }
     } catch (error) {
-      console.error("Login request failed:", error);
-
-      const fallbackMessage =
-        error?.response?.data?.error || // Custom backend error
-        error?.message || // JS error
-        "Something went wrong. Please try again."; // Fallback
-
-      notifyError(fallbackMessage);
+      notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="login__input-wrapper">
-        <div className="login__input-item">
-          <div className="login__input">
-            <input
-              {...register("email")}
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              id="email"
-            />
-            <span>
-              <UserTwo />
-            </span>
-          </div>
-          <ErrorMessage message={errors.email?.message} />
-        </div>
-
-        <div className="login__input-item">
-          <div className="login__input-item-inner p-relative">
-            <div className="login__input">
-              <input
-                {...register("password")}
-                name="password"
-                type={showPass ? "text" : "password"}
-                placeholder="Password"
-                id="password"
-              />
-              <span>
-                <Lock />
-              </span>
-            </div>
-            <span
-              className="login-input-eye"
-              onClick={() => setShowPass(!showPass)}
-            >
-              {showPass ? <i className="fa-regular fa-eye"></i> : <EyeCut />}
-            </span>
-            {/* error msg start */}
-            <ErrorMessage message={errors.password?.message} />
-            {/* error msg end */}
-          </div>
-        </div>
+      <div className="mb-3">
+        <label htmlFor="email" className="form-label">Email address</label>
+        <input
+          {...register("email")}
+          type="email"
+          className={`form-control ${errors.email ? "is-invalid" : ""}`}
+          id="email"
+          placeholder="Enter email"
+        />
+        <div className="invalid-feedback">{errors.email?.message}</div>
       </div>
 
-      <div className="login__option mb-25 d-sm-flex justify-content-between">
-        <div className="login__remember">
-          <input type="checkbox" id="tp-remember" />
-          <label htmlFor="tp-remember">Remember me</label>
-        </div>
-        <div className="login__forgot">
-          <Link href="/forgot">forgot password?</Link>
-        </div>
+      <div className="mb-3 position-relative">
+        <label htmlFor="password" className="form-label">Password</label>
+        <input
+          {...register("password")}
+          type={showPass ? "text" : "password"}
+          className={`form-control ${errors.password ? "is-invalid" : ""}`}
+          id="password"
+          placeholder="Password"
+        />
+        <span
+          className="position-absolute top-50 end-0 translate-middle-y me-3"
+          style={{ cursor: "pointer" }}
+          onClick={() => setShowPass(!showPass)}
+        >
+          {showPass ? <i className="fa fa-eye-slash text-light"></i> : <i className="fa fa-eye text-light"></i>}
+        </span>
+        <div className="invalid-feedback">{errors.password?.message}</div>
       </div>
-      <div className="login__btn">
-        {/* <Link href="/user-dashboard"> */}
-        <button type="submit" className="tp-btn w-100">
-          Sign In
-        </button>
-        {/* </Link> */}
+
+      <div className="mb-3 form-check d-flex justify-content-end align-items-center">
+        {/* <div>
+          <input type="checkbox" className="form-check-input" id="rememberMe" />
+          <label className="form-check-label" htmlFor="rememberMe">Keep me logged in</label>
+        </div> */}
+        <Link href="/forgot" className="text-info small">Forgot password?</Link>
       </div>
+
+      <button type="submit" className="btn btn-primary w-100">Log In</button>
+
+      {/* <div className="text-center mt-3">
+        <small>Or login using:</small>
+        <div className="d-flex justify-content-center gap-3 mt-2">
+          <button type="button" className="btn btn-outline-light btn-sm rounded-circle">
+            <i className="fab fa-facebook-f"></i>
+          </button>
+          <button type="button" className="btn btn-outline-light btn-sm rounded-circle">
+            <i className="fab fa-twitter"></i>
+          </button>
+          <button type="button" className="btn btn-outline-light btn-sm rounded-circle">
+            <i className="fab fa-google-plus-g"></i>
+          </button>
+        </div> 
+      </div>*/}
     </form>
   );
 };

@@ -1,40 +1,55 @@
 import React from "react";
 import Link from "next/link";
-// internal
-import Shapes from "./shapes";
 import RegisterForm from "@components/forms/register-form";
-import bg from "@assets/img/contact/contact-bg.png";
+import bg from "@assets/img/slider/13/bg-reg.png";
+
 const RegisterArea = () => {
   return (
-    <section className="login__area pt-110 pb-110"
-    style={{
-     // backgroundImage: `url(${bg.src})`
-      }}>
-      <div className="container">
-        <div className="login__inner p-relative z-index-1">
-          <Shapes />
-          <div className="row justify-content-center">
-            <div className="col-xl-6 col-lg-8 col-md-10">
-              <div className="login__wrapper">
-                <div className="login__top mb-30 text-center">
+    <section
+      className="position-relative"
+      style={{
+        backgroundImage: `url(${bg.src})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Dark Overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          zIndex: 1,
+        }}
+      ></div>
+
+      {/* Form Area */}
+   <div className="container position-relative z-index-2 py-5" style={{ zIndex: 2 }}>
+  <div className="row justify-content-center align-items-center min-vh-100">
+    <div className="col-md-10 col-lg-6 col-xl-5">
+      <div className="card shadow border-0 rounded-4 p-3 p-sm-4">
+         <div className="login__top mb-30 text-center">
                   <h3 className="login__title">Register Now!</h3>
                   <p>You can signup with you social account below</p>
                 </div>
-                <div className="login__form">
-                  {/* register form start */}
-                  <RegisterForm/>
-                  {/* register form end */}
-                  <div className="login__register-now">
-                    <p>
-                      Already have an account? <Link href="/login">Log in</Link>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+
+        <RegisterForm />
+
+        <div className="text-center mt-3">
+          <p className="small text-muted">
+            Already have an account?{" "}
+            <Link href="/login" className="text-primary fw-semibold text-decoration-none">
+              Log in
+            </Link>
+          </p>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
     </section>
   );
 };
