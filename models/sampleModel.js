@@ -356,7 +356,7 @@ const getAllVolumnUnits = (name, callback) => {
 };
 
 const getAllSampleinIndex = (name, callback) => {
-  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 ';
+  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND sample_visibility="Public" ';
 
 
   mysqlConnection.query(query, [name], (err, results) => {
