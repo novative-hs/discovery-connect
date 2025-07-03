@@ -10,7 +10,9 @@ import DashboardHeader from "@layout/dashboardheader";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-const FilterProductArea = () => {
+const FilterProductArea = ({ selectedProduct, closeModals }) => {
+
+
   const dispatch = useDispatch();
   const router = useRouter();
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
@@ -67,28 +69,21 @@ const FilterProductArea = () => {
     setUserID(storedUserID);
   }, []);
 
-  useEffect(() => {
-    const item = sessionStorage.getItem("filterProduct");
-    if (item) {
-      const parsed = JSON.parse(item);
-      const Analyte = parsed?.Analyte;
-      const image_url = parsed?.imageUrl;
+useEffect(() => {
+  if (selectedProduct) {
+    const Analyte = selectedProduct.Analyte;
+    const image_url = selectedProduct.imageUrl;
 
-      // Normalize image_url to imageUrl for your state usage
-      const normalizedItem = {
-        ...parsed,
-        imageUrl: image_url || "",
-      };
+    setProduct([selectedProduct]);
+    setFilteredSamples([selectedProduct]);
 
-      setProduct([normalizedItem]);
-      setFilteredSamples([normalizedItem]);
-
-      if (Analyte) {
-        getSample(Analyte);
-        setImageURL(image_url);
-      }
+    if (Analyte) {
+      getSample(Analyte);
+      setImageURL(image_url);
     }
-  }, []);
+  }
+}, [selectedProduct]);
+
 
   const getSample = async (name) => {
     setLoading(true);
@@ -162,13 +157,21 @@ const FilterProductArea = () => {
 
   const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
 
-  const handleAddToCart = (sample) => {
-    const productWithImage = {
-      ...sample,
-      imageUrl: image_url, // Adjust key here as needed
-    };
-    dispatch(add_cart_product(productWithImage));
-  };
+const handleAddToCart = (sample) => {
+  
+  dispatch(
+    add_cart_product({
+      id: sample.id,
+      Analyte: sample.Analyte,
+      quantity: sample.quantity ?? 1,
+      price:sample.price,
+      imageUrl: image_url || "",
+    })
+  );
+  closeModals();
+
+};
+
 
   return (
     <>

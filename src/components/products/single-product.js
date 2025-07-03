@@ -1,71 +1,35 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye } from "@svg/index";
-import {
-  add_cart_product,
-  initialOrderQuantity,
-} from "src/redux/features/cartSlice";
-import { setProduct } from "src/redux/features/productSlice";
+import Modal from "react-bootstrap/Modal";
 import { useRouter } from "next/router";
+import FilterProductArea from "@components/user-dashboard/filter-samples";
+import { add_cart_product,remove_product } from "src/redux/features/cartSlice";
 
 const SingleProduct = ({ product }) => {
-  const { id, image_url, Analyte, quantity, total_allocated, total_quantity } =
-    product || {};
-  const router = useRouter();
+  const { imageUrl, Analyte, total_allocated, total_quantity } = product || {};
   const dispatch = useDispatch();
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      import("bootstrap").then((bootstrap) => {
-        const tooltipTriggerList = document.querySelectorAll(
-          '[data-bs-toggle="tooltip"]'
-        );
-        tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
-      });
-    }
-  }, []);
-
-  const handleQuickView = (prd) => {
-
-    dispatch(setProduct(prd));
+  const handleAddToCart = (product) => {
+    setSelectedProduct(product);
+    setShowModal(true);
   };
-
-
-  const handleAddToCart = async (product) => {
-    const userID = sessionStorage.getItem("userID");
-
-    if (!userID) {
-      // User is not logged in, redirect to login
-      router.push({
-        pathname: "/login",
-        query: { tab: "filter-samples" }, // Optional: you can track where user was going
-      });
-      return;
-    }
-
-    // User is logged in, proceed to dashboard
-    sessionStorage.setItem("filterProduct", JSON.stringify(product));
-    router.push({
-      pathname: "/dashboardheader",
-      query: { tab: "filter-samples" },
-    });
-  };
-
+//   const handleRemoveFromCart = (product) => {
+//   dispatch(remove_product(product));
+// };
 
 
   const isAlreadyAdded = (Analyte) =>
     cartItems.some((item) => item.Analyte === Analyte);
 
   return (
-    <React.Fragment>
-      <div
-        className="product__item p-relative transition-3 mb-50 shadow rounded border bg-white overflow-hidden"
-        style={{ transition: "0.3s ease", padding: "1rem" }}
-      >
-        <div className="product__thumb w-img p-relative mb-3 rounded overflow-hidden">
+    <>
+      <div className="product__item p-relative mb-50 shadow rounded border bg-white overflow-hidden" style={{ padding: "1rem" }}>
+        <div className="product__thumb w-img mb-3 rounded overflow-hidden">
           <Image
             src={product.imageUrl}
             alt="product image"
@@ -83,9 +47,7 @@ const SingleProduct = ({ product }) => {
         <h5 className="mb-2 fw-bold text-dark">{Analyte}</h5>
 
         <div className="d-flex justify-content-between text-muted small mb-1">
-          <span>
-            Stock: <strong>{total_quantity}</strong>
-          </span>
+          <span>Stock: <strong>{total_quantity}</strong></span>
         </div>
 
         <div className="text-muted small mb-3">
@@ -93,41 +55,36 @@ const SingleProduct = ({ product }) => {
         </div>
 
         <div className="d-flex gap-2">
-          {quantity === 0 ? (
-            <button
-              className="btn w-75"
-              disabled
-              style={{ backgroundColor: "black", color: "white" }}
-            >
-              Sample Allocated
-            </button>
-          ) : (
-            <button
-              className={`btn w-75 ${isAlreadyAdded(Analyte)
-                  ? "btn-secondary"
-                  : "btn-danger"
-                }`}
-              disabled={isAlreadyAdded(Analyte)}
-              onClick={() => handleAddToCart(product)}
-            >
-              {isAlreadyAdded(Analyte) ? "Added" : "Add to Cart"}
-            </button>
-          )}
-
           <button
-            onClick={() => handleQuickView(product)}
-            className="btn btn-outline-danger w-25"
+            onClick={() => handleAddToCart(product)}
+            className="btn btn-danger w-100"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
             title="Quick View"
           >
-            <Eye />
+            Add to Cart
           </button>
         </div>
       </div>
 
-
-    </React.Fragment>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        size="xl"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Filter Samples</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedProduct && (
+            <FilterProductArea selectedProduct={selectedProduct} closeModals={() => setShowModal(false)}/>
+          )}
+        </Modal.Body>
+      </Modal>
+    </>
   );
 };
 

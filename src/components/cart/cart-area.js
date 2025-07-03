@@ -47,9 +47,9 @@ const CartArea = () => {
                         </tr>
                         <tr>
                           <th>Analyte</th>
-                          <th>Price</th>
+                          {/* <th>Price</th> */}
                           <th>Quantity</th>
-                          <th>Total</th>
+                          {/* <th>Total</th> */}
                           <th>Remove</th>
                         </tr>
                       </thead>
@@ -59,16 +59,16 @@ const CartArea = () => {
                             <td className="text-start">
                               <div className="d-flex align-items-center gap-3">
                                 <img
-   src={item.imageUrl}
-  alt="Visa"
-  style={{ width: "60px", borderRadius: "8px" }}
-/>
+                                  src={item.imageUrl}
+                                  alt="Visa"
+                                  style={{ width: "60px", borderRadius: "8px" }}
+                                />
                                 <span>{item.Analyte}</span>
                               </div>
                             </td>
-                            <td>{item.price.toFixed(2)}</td>
-                            <td>1</td>
-                            <td>{(item.price * 1).toFixed(2)}</td>
+                            {/* <td>{item.price.toFixed(2)}</td> */}
+                            <td>{item.quantity}</td>
+                            {/* <td>{(item.price * 1).toFixed(2)}</td> */}
                             <td>
                               <button
                                 className="btn btn-sm btn-outline-danger rounded-circle"

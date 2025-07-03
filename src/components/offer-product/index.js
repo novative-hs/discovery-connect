@@ -84,7 +84,7 @@ const OfferPopularProduct = () => {
           </div>
         </div>
 
-        <div className="row py-4">
+        <div className="row gy-4 py-4">
           {displayedCategories.map((category, index) => (
             <div
               key={category.id}
@@ -100,7 +100,7 @@ const OfferPopularProduct = () => {
               }}
             >
               <div className="card border-0 shadow-lg p-3 h-100 text-center rounded-3">
-                <div className="product-image mb-3">
+                <div className="product-image mb-2 m-2">
                   <img
                     src={category.imageUrl || "/placeholder.jpg"}
                     alt={category.Analyte}
@@ -112,18 +112,18 @@ const OfferPopularProduct = () => {
                     }}
                   />
                 </div>
-                <h5 className="fw-bold text-primary">{category.Analyte}</h5>
+                <h5 className="fw-bold text-primary mb-2">{category.Analyte}</h5>
                 {/* <p className="fs-5 text-dark fw-semibold">
                   {category.price
                     ? `${category.price} ${category.SamplePriceCurrency || ""}`
                     : "Price not available"}
                 </p> */}
-                <button
+                {/* <button
                   className="btn btn-outline-danger mt-2 w-100 fw-bold"
                   onClick={() => handleQuickView(category)}
                 >
                   View
-                </button>
+                </button> */}
               </div>
             </div>
           ))}
