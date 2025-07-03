@@ -327,7 +327,7 @@ const handleAddToCart = (sample) => {
                   onPageChange={handlePageChange}
                   forcePage={currentPage}
                 />
-                <div className="text-center mt-4">
+                {/* <div className="text-center mt-4">
                   <button
                     className="btn btn-outline-secondary"
                     onClick={() =>
@@ -339,7 +339,7 @@ const handleAddToCart = (sample) => {
                   >
                     ← Back to Samples
                   </button>
-                </div>
+                </div> */}
               </>
             )}
           </div>
