@@ -85,7 +85,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
 
   return (
     <div className="your-order mb-30">
-      <h3>Sample Documents</h3>
+      <h3>Upload Documents</h3>
       <form onSubmit={handleFormSubmit}>
         {/* Study Copy */}
         <div className="row">
@@ -137,10 +137,15 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
         </div>
       </form>
       <div className="d-flex justify-content-end mt-3">
-        <button type="button" className="tp-btn" onClick={handleNext}>
-          Next
-        </button>
-      </div>
+  <button type="button" className="tp-btn me-2">
+    View Invoice
+  </button>
+  <button type="button" className="tp-btn" onClick={handleNext}>
+    Make Payment
+  </button>
+</div>
+
+      
     </div>
   );
 };

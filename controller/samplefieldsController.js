@@ -20,7 +20,8 @@ const createSampleFields = (req, res) => {
   
   const { tableName } = req.params;
   const newSampleFieldsData = req.body;
-
+ const files = req.files;
+ newSampleFieldsData.image = files?.image?.[0]?.buffer || null;
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return res.status(400).json({ error: "Invalid table name" });
   }
@@ -36,6 +37,12 @@ const createSampleFields = (req, res) => {
 const updateSampleFields = (req, res) => {
   const { tableName, id } = req.params;
   const updatedData = req.body;
+  const files = req.files;
+
+  // Attach image buffer if uploaded
+  if (files?.image?.[0]) {
+    updatedData.image = files.image[0].buffer;
+  }
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return res.status(400).json({ error: "Invalid table name" });
@@ -48,6 +55,7 @@ const updateSampleFields = (req, res) => {
     res.status(200).json({ message: "Sample fields updated successfully" });
   });
 };
+
 
 // Controller to delete (soft delete) a sample field dynamically
 const deleteSampleFields = (req, res) => {

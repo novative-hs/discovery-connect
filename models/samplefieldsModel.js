@@ -10,6 +10,7 @@ const create_AnalyteTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
       testresultunit_id INT,
+      image LONGBLOB,
       added_by INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive') DEFAULT 'active',
@@ -364,7 +365,7 @@ const getAnalyteName=(callback)=>{
 }
 // Function to create all SampleFields
 const createSampleFields = (tableName, data, callback) => {
-  const { bulkData, name, added_by, testresultunit_id } = data || {};
+  const { bulkData, name, added_by, testresultunit_id,image } = data || {};
   
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
@@ -402,8 +403,9 @@ const createSampleFields = (tableName, data, callback) => {
         else if (tableName === "analyte" && name && added_by && testresultunit_id) {
 
           // Insert into analyte
-          const insertAnalyte = `INSERT INTO analyte (name, added_by, testresultunit_id) VALUES (?, ?, ?);`;
-          const [result] = await connection.promise().query(insertAnalyte, [name, added_by, testresultunit_id]);
+         const insertAnalyte = `INSERT INTO analyte (name, added_by, testresultunit_id, image) VALUES (?, ?, ?, ?);`;
+const [result] = await connection.promise().query(insertAnalyte, [name, added_by, testresultunit_id, image]);
+
 
           // Insert into history
           const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, analyte_id, status) VALUES (?, ?, ?, ?);`;
@@ -429,8 +431,8 @@ const createSampleFields = (tableName, data, callback) => {
 
 // Function to update a record dynamically
 const updateSampleFields = (tableName, id, data, callback) => {
-  const { name, added_by, testresultunit_id } = data;
-console.log(data)
+  const { name, added_by, testresultunit_id,image } = data;
+
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return callback(new Error("Invalid table name"), null);
   }
@@ -451,9 +453,16 @@ console.log(data)
 
     // If table is analyte, also include testresultunit_id
     if (tableName === "analyte") {
-      updateQuery += `, testresultunit_id = ?`;
-      updateParams.push(testresultunit_id);
-    }
+  if (testresultunit_id) {
+    updateQuery += `, testresultunit_id = ?`;
+    updateParams.push(testresultunit_id);
+  }
+  if (image) {
+    updateQuery += `, image = ?`;
+    updateParams.push(image);
+  }
+}
+
 
     updateQuery += ` WHERE id = ?`;
     updateParams.push(id);

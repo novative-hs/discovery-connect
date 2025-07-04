@@ -24,7 +24,12 @@ const CartArea = () => {
     dispatch(remove_product(item));
   };
 
-  const subtotal = cart_products.reduce((acc, item) => acc + item.price * 1, 0);
+  // Filter out items with price null or 0
+  const validItems = cart_products.filter(
+    (item) => item.price !== null && item.price !== 0
+  );
+
+  const subtotal = validItems.reduce((acc, item) => acc + item.price * 1, 0);
 
   return (
     <section
@@ -47,9 +52,7 @@ const CartArea = () => {
                         </tr>
                         <tr>
                           <th>Analyte</th>
-                          {/* <th>Price</th> */}
                           <th>Quantity</th>
-                          {/* <th>Total</th> */}
                           <th>Remove</th>
                         </tr>
                       </thead>
@@ -60,15 +63,13 @@ const CartArea = () => {
                               <div className="d-flex align-items-center gap-3">
                                 <img
                                   src={item.imageUrl}
-                                  alt="Visa"
+                                  alt="Sample"
                                   style={{ width: "60px", borderRadius: "8px" }}
                                 />
-                                <span>{item.Analyte}</span>
+                                <span>{item.Analyte}{item.volume}{item.VolumeUnit}</span>
                               </div>
                             </td>
-                            {/* <td>{item.price.toFixed(2)}</td> */}
                             <td>{item.quantity}</td>
-                            {/* <td>{(item.price * 1).toFixed(2)}</td> */}
                             <td>
                               <button
                                 className="btn btn-sm btn-outline-danger rounded-circle"
@@ -88,23 +89,33 @@ const CartArea = () => {
                   <div className="card shadow-sm">
                     <div className="card-body">
                       <h5 className="card-title">Cart Totals</h5>
-                      <ul className="list-group list-group-flush mb-3">
-                        <li className="list-group-item d-flex justify-content-between">
-                          <strong>Subtotal</strong>
-                          <span>{subtotal.toFixed(2)}</span>
-                        </li>
-                        <li className="list-group-item d-flex justify-content-between">
-                          <strong>Total</strong>
-                          <span>{subtotal.toFixed(2)}</span>
-                        </li>
-                      </ul>
+
+                      {validItems.length > 0 ? (
+                        <ul className="list-group list-group-flush mb-3">
+                          <li className="list-group-item d-flex justify-content-between">
+                            <strong>Subtotal</strong>
+                            <span>{subtotal.toFixed(2)}</span>
+                          </li>
+                          <li className="list-group-item d-flex justify-content-between">
+                            <strong>Total</strong>
+                            <span>{subtotal.toFixed(2)}</span>
+                          </li>
+                        </ul>
+                      ) : (
+                        <div className="alert alert-warning p-2">
+                          Pricing not available.
+                        </div>
+                      )}
+
                       <button
                         className="tp-btn cursor-pointer w-100"
                         onClick={handleProceedToCheckout}
+                        
                         style={{
                           backgroundColor: "#003366",
                           color: "white",
                           border: "none",
+                          
                         }}
                       >
                         Proceed to Checkout

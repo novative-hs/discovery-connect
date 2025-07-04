@@ -227,12 +227,11 @@ const handleAddToCart = (sample) => {
                           {tableHeaders.map(({ key }, idx) => {
                             let content;
                             if (key === "price") {
-                              content = sample.price
-                                ? `${sample.price} ${
-                                    sample.SamplePriceCurrency || ""
-                                  }`
-                                : "----";
-                            } else if (key === "Analyte") {
+  content = sample.price
+    ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+    : "Request the Code";
+}
+else if (key === "Analyte") {
                               content = (
                                 <span
                                   className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"

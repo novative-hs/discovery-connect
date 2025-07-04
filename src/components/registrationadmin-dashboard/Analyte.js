@@ -14,10 +14,14 @@ const AnalyteArea = () => {
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedAnalyteId, setSelectedAnalytenameId] = useState(null); // Store ID of City to delete
+  const [logo, setLogo] = useState();
+  const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
  const [formData, setFormData] = useState({
   name: "",
   added_by: id,
   testresultunit_id: "", // store the ID here
+  image:""
 });
 
 
@@ -129,41 +133,56 @@ const AnalyteArea = () => {
   };
 
   const handleInputChange = (e) => {
+  const { name, value, files } = e.target;
+  if (name === "image") {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      image: files[0], // Handle image file
     });
-  };
-  const resetFormData = () => {
-   setFormData({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-
+  } else {
+    setFormData({
+      ...formData,
+      [name]: value,
     });
+  }
+};
 
-  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(
-        `${url}/samplefields/post-samplefields/analyte`,
-        formData
-      );
-      const response = await axios.get(
-        `${url}/samplefields/get/analyte`
-      );
-      setFilteredAnalytename(response.data);
-      setAnalytename(response.data);
-      setSuccessMessage("Analyte added successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      resetFormData();
-      setShowAddModal(false);
-    } catch (error) {
-      console.error("Error adding Analyte", error);
-    }
-  };
+    const payload = new FormData();
+payload.append("name", formData.name);
+payload.append("added_by", formData.added_by);
+payload.append("testresultunit_id", formData.testresultunit_id);
+payload.append("image", formData.image); // must be a File object
+
+  e.preventDefault();
+  try {
+  
+
+    await axios.post(`${url}/samplefields/post-samplefields/analyte`, payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    const response = await axios.get(`${url}/samplefields/get/analyte`);
+    setFilteredAnalytename(response.data);
+    setAnalytename(response.data);
+    setSuccessMessage("Analyte added successfully.");
+    setTimeout(() => setSuccessMessage(""), 3000);
+    setFormData({
+      name:"",
+      added_by:id,
+      testresultunit_id:"",
+      image:""
+    })
+    setLogoPreview(false);
+    setShowAddModal(false);
+  } catch (error) {
+    console.error("Error adding Analyte", error);
+  }
+};
+
   const handleEditClick = (Analytename) => {
     setSelectedAnalytenameId(Analytename.id);
     setEditAnalytename(Analytename);
@@ -172,51 +191,66 @@ const AnalyteArea = () => {
       name: Analytename.name,
       testresultunit_id:Analytename.testresultunit_id,
       added_by: id,
+      image:Analytename.image,
     });
+    
+    const logoPreviewUrl =
+      typeof Analytename.image === "string"
+        ? Analytename.image
+        : Analytename.image?.data
+          ? URL.createObjectURL(
+            new Blob([new Uint8Array(Analytename.image.data)], { type: "image/png" })
+          )
+          : null;
+    setLogoPreview(logoPreviewUrl);
 
 
     setShowEditModal(true);
   };
-
+ 
   const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
-        formData
-      );
-      const response = await axios.get(
-        `${url}/samplefields/get/analyte`
-      );
-      setFilteredAnalytename(response.data);
-      setAnalytename(response.data);
-      setShowEditModal(false);
-      setSuccessMessage("Analyte updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-     setFormData({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-
-    });
-
-    } catch (error) {
-      console.error(
-        `Error updating Analyte with ID ${selectedAnalyteId}:`,
-        error
-      );
-    } finally {
-     setFormData({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-
-    });
+  e.preventDefault();
+  try {
+    const form = new FormData();
+    form.append("name", formData.name);
+    form.append("added_by", formData.added_by);
+    form.append("testresultunit_id", formData.testresultunit_id);
+    if (formData.image) {
+      form.append("image", formData.image); // append only if image is selected
     }
-  };
+
+    await axios.put(
+      `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
+      form,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    const response = await axios.get(`${url}/samplefields/get/analyte`);
+    setFilteredAnalytename(response.data);
+    setAnalytename(response.data);
+    setShowEditModal(false);
+    setSuccessMessage("Analyte updated successfully.");
+
+    setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+
+    setFormData({
+      name: "",
+      added_by: id,
+      testresultunit_id: "",
+      image: "",
+    });
+    setLogoPreview(false);
+  } catch (error) {
+    console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
+  }
+};
+
 
   const handleDelete = async () => {
     try {
@@ -549,11 +583,12 @@ const AnalyteArea = () => {
                         onClick={() => {
                           setShowAddModal(false);
                           setShowEditModal(false);
+                          setLogoPreview("")
                           setFormData({
   name: "",
   added_by: id,
   testresultunit_id: "", // store the ID here
-
+image:""
     });
                         }}
                         style={{
@@ -603,6 +638,38 @@ const AnalyteArea = () => {
     ))}
   </select>
 </div>
+ <div className="col-md-6 mb-3">
+                                  <label>
+                                    Analyte Image
+                                    <span className="text-danger"></span>
+                                  </label>
+                                  <div className="d-flex align-items-center">
+                                  <input
+  type="file"
+  name="image"
+  accept="image/*"
+  className="form-control"
+  onChange={(e) => {
+    const file = e.target.files[0];
+    setFormData({ ...formData, image: file });
+    setLogoPreview(URL.createObjectURL(file)); // for previewing
+  }}
+/>
+
+                                    {logoPreview && (
+                                      <img
+                                        src={logoPreview}
+                                        alt="Logo Preview"
+                                        width="80"
+                                        style={{
+                                          marginLeft: "20px",
+                                          borderRadius: "5px",
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+
 
   </div>
 

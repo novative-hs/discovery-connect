@@ -1,23 +1,10 @@
-import ErrorMessage from "@components/error-message/error";
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 
 const BillingDetails = () => {
   const id = sessionStorage.getItem("userID");
-  const [userData, setUserData] = useState(null); // State to store user data
-  const [loading, setLoading] = useState(true); // Loading state
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // react-hook-form setup
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset, // To reset form values dynamically
-    formState: { errors },
-  } = useForm();
-
-
-  // Fetch user data from API
   useEffect(() => {
     if (id) {
       const fetchUserData = async () => {
@@ -26,148 +13,74 @@ const BillingDetails = () => {
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
           );
           const data = await response.json();
-         
-          if (response.ok) {
-            setUserData(data); // Store the fetched data
-            if (data && data.length > 0) {
-              // Populate form with fetched data
-              reset({
-                firstName: data[0]?.ResearcherName || "",
-                lastName: "",
-                address: data[0]?.fullAddress || "",
-                cityname: data[0]?.cityname || "",
-                countryname: data[0]?.countryname || "",
-                email: data[0]?.useraccount_email || "",
-                phone: data[0]?.phoneNumber || "",
-              });
-            }
+
+          if (response.ok && data.length > 0) {
+            setUserData(data[0]);
           } else {
             console.error("Failed to fetch user data");
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
         } finally {
-          setLoading(false); // Set loading to false once data is fetched
+          setLoading(false);
         }
       };
 
       fetchUserData();
     } else {
-      setLoading(false); // If no ID, set loading to false
+      setLoading(false);
     }
-  }, [id, reset]);
+  }, [id]);
 
-  // Handle loading state
-  if (loading) {
-    return <div>Loading...</div>; // Or a loading spinner
-  }
-
-  // Handle case if user data is not available
-  if (!userData) {
-    return <div>No user data found.</div>;
-  }
-
-  // Checkout form list component
-  function CheckoutFormList({
-    col,
-    label,
-    type = "text",
-    placeholder,
-    isRequired = true,
-    name,
-    register,
-    error,
-  }) {
-    return (
-      <div className={`col-md-${col}`}>
-        <div className="checkout-form-list">
-          {label && (
-            <label>
-              {label} {isRequired && <span className="required">*</span>}
-            </label>
-          )}
-          <input
-  {...register(`${name}`, {
-    required: isRequired && `${label} is required!`,
-  })}
-  type={type}
-  placeholder={placeholder}
-  defaultValue=""
-  readOnly
-/>
-
-          {error && <ErrorMessage message={error} />}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center">Loading...</div>;
+  if (!userData) return <div className="text-danger text-center">No user data found.</div>;
 
   return (
-    <form className="row" onSubmit={handleSubmit((data) => console.log(data))}>
-      <CheckoutFormList
-        name="firstName"
-        col="12"
-        label="Name"
-        placeholder="Name"
-        register={register}
-        error={errors?.firstName?.message}
-      />
-      <CheckoutFormList
-        name="address"
-        col="12"
-        label="Address"
-        placeholder="Street address"
-        register={register}
-        error={errors?.address?.message}
-      />
-      <CheckoutFormList
-        col="12"
-        label="City"
-        placeholder="City"
-        name="cityname"
-        register={register}
-        error={errors?.cityname?.message}
-      />
-      <CheckoutFormList
-        col="12"
-        label="County"
-        placeholder="County"
-        name="countryname"
-        register={register}
-        error={errors?.countryname?.message}
-      />
-      <CheckoutFormList
-        col="12"
-        type="email"
-        label="Email Address"
-        placeholder="Your Email"
-        name="email"
-        register={register}
-        error={errors?.email?.message}
-      />
-      <CheckoutFormList
-        name="phone"
-        col="12"
-        label="Phone"
-        placeholder="Phone number"
-        register={register}
-        error={errors?.phone?.message}
-      />
-
-      {/* <div className="order-notes">
-        <div className="checkout-form-list">
-          <label>Order Notes</label>
-          <textarea
-            id="checkout-mess"
-            cols="30"
-            rows="10"
-            placeholder="Notes about your order, e.g. special notes for delivery."
-          ></textarea>
+    <div className="container mt-4">
+      <div className="card shadow-sm border-0">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Billing Details</h5>
         </div>
-      </div> */}
-{/* 
-      <button type="submit">Submit</button> */}
-    </form>
+        <div className="card-body">
+
+          <div className="row mb-3">
+            <div className="col-md-4 fw-semibold">Name:</div>
+            <div className="col-md-8">{userData?.ResearcherName || "-"}</div>
+          </div>
+          <hr />
+
+          <div className="row mb-3">
+            <div className="col-md-4 fw-semibold">Address:</div>
+            <div className="col-md-8">{userData?.fullAddress || "-"}</div>
+          </div>
+          <hr />
+
+          <div className="row mb-3">
+            <div className="col-md-4 fw-semibold">City:</div>
+            <div className="col-md-8">{userData?.cityname || "-"}</div>
+          </div>
+          <hr />
+
+          <div className="row mb-3">
+            <div className="col-md-4 fw-semibold">Country:</div>
+            <div className="col-md-8">{userData?.countryname || "-"}</div>
+          </div>
+          <hr />
+
+          <div className="row mb-3">
+            <div className="col-md-4 fw-semibold">Email:</div>
+            <div className="col-md-8">{userData?.useraccount_email || "-"}</div>
+          </div>
+          <hr />
+
+          <div className="row mb-2">
+            <div className="col-md-4 fw-semibold">Phone:</div>
+            <div className="col-md-8">{userData?.phoneNumber || "-"}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   );
 };
 

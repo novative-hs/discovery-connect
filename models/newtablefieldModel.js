@@ -39,6 +39,11 @@ const tablesAndColumns = [
         nullable: true,
         references: { table: "testresultunit", column: "id" },
       },
+      {
+        column: "image",
+        type: "LONGBLOB",
+        nullable: true,
+      },
     ]
   }
   // {
