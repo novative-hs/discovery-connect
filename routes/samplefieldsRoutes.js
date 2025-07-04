@@ -8,5 +8,6 @@ router.post('/post-samplefields/:tableName', (req, res, next) => {
 router.put('/put-samplefields/:tableName/:id', samplefieldsController.updateSampleFields);
 router.delete('/delete-samplefields/:tableName/:id', samplefieldsController.deleteSampleFields);
 router.get('/:tableName', samplefieldsController.getSampleFieldsNames);
+router.get('/get/analyte',samplefieldsController.getAllAnalytes)
 
 module.exports = router;

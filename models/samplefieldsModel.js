@@ -9,11 +9,13 @@ const create_AnalyteTable = () => {
   CREATE TABLE IF NOT EXISTS analyte (
     id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
+      testresultunit_id INT,
       added_by INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive') DEFAULT 'active',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
+      FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
+      FOREIGN KEY (testresultunit) REFERENCES testresultunit(id) ON DELETE CASCADE
 )`;
   mysqlConnection.query(AnalyteTable, (err, result) => {
     if (err) {
@@ -338,9 +340,33 @@ const getAllSampleFields = (tableName, callback) => {
   });
 };
 
+const getAnalyteName=(callback)=>{
+ const query = `SELECT 
+    analyte.*,
+    testresultunit.id AS testresultunit_id,
+    testresultunit.name AS testresultunit
+  FROM 
+    analyte
+  LEFT JOIN 
+    testresultunit 
+  ON 
+    analyte.testresultunit_id = testresultunit.id
+  WHERE 
+    analyte.status = 'active'`;
+
+  mysqlConnection.query(query, (err, results) => {
+    if (err) {
+      callback(err, null);
+    } else {
+      callback(null, results);
+    }
+  });
+}
 // Function to create all SampleFields
 const createSampleFields = (tableName, data, callback) => {
-  const { bulkData, name, added_by } = data || {};
+  const { bulkData, name, added_by, testresultunit_id } = data || {};
+  
+
   if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
 
   mysqlPool.getConnection((err, connection) => {
@@ -353,30 +379,40 @@ const createSampleFields = (tableName, data, callback) => {
         let values = [];
 
         if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
+          // ✅ Handle bulk insert
           values = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
-        } else if (name && added_by) {
-          values = [{ name, added_by }];
-        } else {
-          throw new Error("Invalid data");
+
+          const insertQuery = `INSERT IGNORE INTO \`${tableName}\` (name, added_by) VALUES ?;`;
+          await connection.promise().query(insertQuery, [values.map(({ name, added_by }) => [name, added_by])]);
+
+          const [rows] = await connection.promise().query(
+            `SELECT id, name FROM \`${tableName}\` WHERE name IN (?)`,
+            [values.map(({ name }) => name)]
+          );
+
+          if (rows.length === 0) throw new Error("Failed to retrieve inserted IDs");
+
+          const idColumn = `${tableName}_id`;
+          const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
+          const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, ${idColumn}, status) VALUES ?;`;
+          await connection.promise().query(historyQuery, [historyValues]);
         }
 
-        // Insert unique values
-        const insertQuery = `INSERT IGNORE INTO \`${tableName}\` (name, added_by) VALUES ?;`;
-        await connection.promise().query(insertQuery, [values.map(({ name, added_by }) => [name, added_by])]);
+        // ✅ Handle single insert for `analyte` with testresultunit_id
+        else if (tableName === "analyte" && name && added_by && testresultunit_id) {
 
-        // Fetch inserted IDs
-        const [rows] = await connection.promise().query(
-          `SELECT id, name FROM \`${tableName}\` WHERE name IN (?)`,
-          [values.map(({ name }) => name)]
-        );
+          // Insert into analyte
+          const insertAnalyte = `INSERT INTO analyte (name, added_by, testresultunit_id) VALUES (?, ?, ?);`;
+          const [result] = await connection.promise().query(insertAnalyte, [name, added_by, testresultunit_id]);
 
-        if (rows.length === 0) throw new Error("Failed to retrieve inserted IDs");
+          // Insert into history
+          const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, analyte_id, status) VALUES (?, ?, ?, ?);`;
+          await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
+        }
 
-        // Insert history
-        const idColumn = `${tableName}_id`;
-        const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
-        const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, ${idColumn}, status) VALUES ?;`;
-        await connection.promise().query(historyQuery, [historyValues]);
+        else {
+          throw new Error("Invalid data or missing testresultunit_id");
+        }
 
         connection.commit();
         callback(null, { success: true });
@@ -390,15 +426,17 @@ const createSampleFields = (tableName, data, callback) => {
   });
 };
 
+
 // Function to update a record dynamically
 const updateSampleFields = (tableName, id, data, callback) => {
-  const { name, added_by } = data;
-
+  const { name, added_by, testresultunit_id } = data;
+console.log(data)
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return callback(new Error("Invalid table name"), null);
   }
 
   const fetchQuery = `SELECT name FROM \`${tableName}\` WHERE id = ?`;
+
   mysqlConnection.query(fetchQuery, [id], (err, results) => {
     if (err) return callback(err, null);
     if (results.length === 0)
@@ -407,13 +445,20 @@ const updateSampleFields = (tableName, id, data, callback) => {
     const oldName = results[0].name;
     const idColumn = `${tableName}_id`;
 
-    const updateQuery = `
-      UPDATE \`${tableName}\`
-      SET name = ?, added_by = ?
-      WHERE id = ?
-    `;
+    // Prepare dynamic update query
+    let updateQuery = `UPDATE \`${tableName}\` SET name = ?, added_by = ?`;
+    const updateParams = [name, added_by];
 
-    mysqlConnection.query(updateQuery, [name, added_by, id], (err, result) => {
+    // If table is analyte, also include testresultunit_id
+    if (tableName === "analyte") {
+      updateQuery += `, testresultunit_id = ?`;
+      updateParams.push(testresultunit_id);
+    }
+
+    updateQuery += ` WHERE id = ?`;
+    updateParams.push(id);
+
+    mysqlConnection.query(updateQuery, updateParams, (err, result) => {
       if (err) return callback(err, null);
 
       const updateHistoryQuery = `
@@ -433,6 +478,7 @@ const updateSampleFields = (tableName, id, data, callback) => {
     });
   });
 };
+
 
 // Function to delete (soft delete) a record dynamically
 const deleteSampleFields = (tableName, id, callback) => {
@@ -504,4 +550,5 @@ module.exports = {
   createTestKitManufacturerTable,
   createTestSystemTable,
   createTestSystemManufacturerTable,
+  getAnalyteName
 };

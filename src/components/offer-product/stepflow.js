@@ -51,8 +51,8 @@ const StepFlow = () => {
       </h4>
 
       <div className="d-flex justify-content-center position-relative flex-wrap">
-         <div
-        className="d-flex justify-content-between align-items-start flex-nowrap w-100"
+         
+        <div className="d-flex justify-content-between align-items-stretch flex-nowrap w-100"
         style={{
           gap: "1rem",
           overflow: "hidden", // prevents scroll

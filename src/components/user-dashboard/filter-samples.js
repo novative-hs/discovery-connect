@@ -40,6 +40,7 @@ const FilterProductArea = ({ selectedProduct, closeModals }) => {
     { label: "Test Result", key: "TestResult" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Price", key: "price" },
   ];
 
   const fieldsToShowInOrder = [

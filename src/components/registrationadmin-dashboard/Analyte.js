@@ -14,12 +14,16 @@ const AnalyteArea = () => {
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedAnalyteId, setSelectedAnalytenameId] = useState(null); // Store ID of City to delete
-  const [formData, setFormData] = useState({
-    name: "",
-    added_by: id,
-  });
+ const [formData, setFormData] = useState({
+  name: "",
+  added_by: id,
+  testresultunit_id: "", // store the ID here
+});
+
+
   const [editAnalytename, setEditAnalytename] = useState(null); // State for selected City to edit
   const [Analytename, setAnalytename] = useState([]); // Store all cities
+  const [testResultUnit, setTestResultUnit] = useState([]); // Store all cities
   const [filteredAnalytename, setFilteredAnalytename] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
@@ -33,14 +37,16 @@ const AnalyteArea = () => {
     const fetchAnalytename = async () => {
       try {
         const response = await axios.get(
-          `${url}/samplefields/get-samplefields/analyte`
+          `${url}/samplefields/get/analyte`
         );
+        console.log("analyte",response.data)
         setAnalytename(response.data);
         setFilteredAnalytename(response.data); // Initialize filtered list
       } catch (error) {
         console.error("Error fetching Analyte:", error);
       }
     };
+    fetchTestResultUnit()
     fetchAnalytename(); // Call the function when the component mounts
   }, [url]);
 
@@ -61,6 +67,16 @@ const AnalyteArea = () => {
     (currentPage + 1) * itemsPerPage
   );
 
+  const fetchTestResultUnit = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/testresultunit`
+        );
+        setTestResultUnit(response.data);
+      } catch (error) {
+        console.error("Error fetching test result:", error);
+      }
+    };
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
@@ -119,7 +135,13 @@ const AnalyteArea = () => {
     });
   };
   const resetFormData = () => {
-    setFormData({ name: "", added_by: id });
+   setFormData({
+  name: "",
+  added_by: id,
+  testresultunit_id: "", // store the ID here
+
+    });
+
   };
 
   const handleSubmit = async (e) => {
@@ -130,7 +152,7 @@ const AnalyteArea = () => {
         formData
       );
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/analyte`
+        `${url}/samplefields/get/analyte`
       );
       setFilteredAnalytename(response.data);
       setAnalytename(response.data);
@@ -148,8 +170,10 @@ const AnalyteArea = () => {
 
     setFormData({
       name: Analytename.name,
+      testresultunit_id:Analytename.testresultunit_id,
       added_by: id,
     });
+
 
     setShowEditModal(true);
   };
@@ -162,7 +186,7 @@ const AnalyteArea = () => {
         formData
       );
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/analyte`
+        `${url}/samplefields/get/analyte`
       );
       setFilteredAnalytename(response.data);
       setAnalytename(response.data);
@@ -172,20 +196,25 @@ const AnalyteArea = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-      setFormData({
-        name: "",
-        added_by: id,
-      });
+     setFormData({
+  name: "",
+  added_by: id,
+  testresultunit_id: "", // store the ID here
+
+    });
+
     } catch (error) {
       console.error(
         `Error updating Analyte with ID ${selectedAnalyteId}:`,
         error
       );
     } finally {
-      setFormData({
-        name: "",
-        added_by: id,
-      });
+     setFormData({
+  name: "",
+  added_by: id,
+  testresultunit_id: "", // store the ID here
+
+    });
     }
   };
 
@@ -195,7 +224,7 @@ const AnalyteArea = () => {
         `${url}/samplefields/delete-samplefields/analyte/${selectedAnalyteId}`
       );
       const response = await axios.get(
-        `${url}/samplefields/get-samplefields/analyte`
+        `${url}/samplefields/get/analyte`
       );
        setFilteredAnalytename(response.data);
       setAnalytename(response.data);
@@ -247,7 +276,7 @@ const AnalyteArea = () => {
  
        try {
          await axios.post(`${url}/samplefields/post-samplefields/analyte`, { bulkData: payload });
-         const response = await axios.get(`${url}/samplefields/get-samplefields/analyte`);
+         const response = await axios.get(`${url}/samplefields/get/analyte`);
          setFilteredAnalytename(response.data);
          setAnalytename(response.data);
          setSuccessMessage("Successfully added")
@@ -388,6 +417,11 @@ const AnalyteArea = () => {
                       field: "added_by",
                     },
                     {
+                      label:"Test Result Unit",
+                      placeholder:"Search testresultunit",
+                      field:"testresultunit"
+                    },
+                    {
                       label: "Status",
                       placeholder: "Search Status",
                       field: "status",
@@ -424,6 +458,7 @@ const AnalyteArea = () => {
                     <tr key={Analytename.id}>
                       <td>{Analytename.name}</td>
                       <td>Registration Admin</td>
+                      <td>{Analytename.testresultunit || "----"}</td>
                       <td>{Analytename.status}</td>
                       <td>{formatDate(Analytename.created_at)}</td>
                       <td>{formatDate(Analytename.updated_at)}</td>
@@ -515,9 +550,11 @@ const AnalyteArea = () => {
                           setShowAddModal(false);
                           setShowEditModal(false);
                           setFormData({
-                            name: "",
-                            added_by: id,
-                          });
+  name: "",
+  added_by: id,
+  testresultunit_id: "", // store the ID here
+
+    });
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -535,19 +572,67 @@ const AnalyteArea = () => {
                       onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
                     >
                       <div className="modal-body">
-                        {/* Form Fields */}
-                        <div className="form-group">
-                          <label>Analyte</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </div>
-                      </div>
+  {/* Row: Analyte + Test Result Unit */}
+  <div className="row">
+    <div className="col-md-6 mb-3">
+      <label>Analyte</label>
+      <input
+        type="text"
+        className="form-control"
+        name="name"
+        value={formData.name}
+        onChange={handleInputChange}
+        required
+      />
+    </div>
+
+ <div className="col-md-6 mb-3">
+  <label>Test Result Unit</label>
+  <select
+    className="form-control"
+    name="testresultunit_id" // 👈 match backend key if you're storing the id
+    value={formData.testresultunit_id || ""}
+    onChange={handleInputChange}
+    required
+  >
+    <option value="">Select Unit</option>
+    {testResultUnit?.map((unit) => (
+      <option key={unit.id} value={unit.id}>
+        {unit.name}
+      </option>
+    ))}
+  </select>
+</div>
+
+  </div>
+
+  {/* Row: Low Label + Range Inputs */}
+  {/* <div className="mb-2">
+    <label className="fw-bold">Low</label>
+  </div>
+
+  <div className="d-flex align-items-center gap-2 mb-3">
+    <input
+      type="number"
+      className="form-control"
+      name="low_min"
+      placeholder="Min"
+      value={formData.low_min || ""}
+      onChange={handleInputChange}
+      required
+    />
+    <span className="mx-2">to</span>
+    <input
+      type="number"
+      className="form-control"
+      name="low_max"
+      placeholder="Max"
+      value={formData.low_max || ""}
+      onChange={handleInputChange}
+      required
+    />
+  </div> */}
+</div>
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">

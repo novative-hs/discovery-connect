@@ -29,6 +29,18 @@ const tablesAndColumns = [
       },
     ]
   },
+  {
+     table: "analyte",
+    columnsToAdd: [
+
+      {
+        column: "testresultunit_id",
+        type: "INT",
+        nullable: true,
+        references: { table: "testresultunit", column: "id" },
+      },
+    ]
+  }
   // {
   //   table: "registrationadmin_history",
   //   columnsToDelete: ["diagnosistestparameter_id"],

@@ -83,8 +83,16 @@ const getSampleFieldsNames = (req, res) => {
     res.status(200).json(sampleFieldsNames);
   });
 };
-
+const getAllAnalytes=(req,res)=>{
+  samplefieldsModel.getAnalyteName((err,results)=>{
+     if (err) {
+      console.error("Error fetching data:", err);
+      return res.status(500).json({ error: "An error occurred while fetching data" });
+    }
+     res.status(200).json(results);
+  })
+}
 
 module.exports = {
-  getAllSampleFields, createSampleFields, updateSampleFields, deleteSampleFields, getSampleFieldsNames,
+  getAllSampleFields, createSampleFields, updateSampleFields, deleteSampleFields, getSampleFieldsNames,getAllAnalytes
 };
