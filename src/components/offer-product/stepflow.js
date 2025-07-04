@@ -1,85 +1,57 @@
 import React, { useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import AOS from "aos";
+import "aos/dist/aos.css";
 import {
   faSearch,
   faCreditCard,
   faUserCheck,
   faUsers,
   faShippingFast,
-  faCheckCircle,
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 
 const StepFlow = () => {
   useEffect(() => {
-    AOS.init({
-      duration: 800, // animation duration in ms
-      once: true, // animation happens only once
-    });
+    AOS.init({ duration: 800, once: true });
   }, []);
 
   const steps = [
     {
-      number: "1.",
+      title: "Search",
       icon: faSearch,
-      description: "Search for samples.",
-      bgColor: "#FF6F61",
-      animation: "fade-in",
+      description: "Search for samples",
     },
     {
-      number: "2.",
+      title: "Register",
       icon: faCreditCard,
-      description: "Enter personal info, upload documents, payment, and place order.",
-      bgColor: "#4CAF50",
-      animation: "zoom-in",
+      description: "Create login, upload required documents, and make payment to place order",
     },
     {
-      number: "3.",
+      title: "Acknowledgment",
       icon: faUserCheck,
-      description: "Admin approval.",
-      bgColor: "#8BC34A",
-      animation: "slide-up",
+      description: "Order Acknowledgment",
     },
     {
-      number: "4.",
+      title: "Review",
       icon: faUsers,
-      description: "Committee review.",
-      bgColor: "#673AB7",
-      animation: "flip-left",
+      description: "Scientific and Ethical Committee review approval",
     },
     {
-      number: "5.",
+      title: "Dispatch",
       icon: faShippingFast,
-      description: "Prepare sample and Dispatch the order.",
-      bgColor: "#FFC107",
-      animation: "rotate",
-    },
-    {
-      number: "6.",
-      icon: faCheckCircle,
-      description: "Delivery complete.",
-      bgColor: "#009688",
-      animation: "bounce",
+      description: "Order Dispatch",
     },
   ];
 
   return (
-    <div className="container-fluid my-5">
-      {/* Heading */}
-      <h4
-        className="text-center mb-5"
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "bold",
-          color: "#2b2c7f",
-          fontFamily: "sans-serif",
-        }}
-      >
+    <div className="container my-5">
+      <h4 className="text-center mb-5" style={{ fontWeight: "bold", color: "#2b2c7f" }}>
         Process for Requesting Samples for Research
       </h4>
 
-      <div
+      <div className="d-flex justify-content-center position-relative flex-wrap">
+         <div
         className="d-flex justify-content-between align-items-start flex-nowrap w-100"
         style={{
           gap: "1rem",
@@ -88,48 +60,57 @@ const StepFlow = () => {
           flexShrink: 1,
         }}
       >
-        {steps.map((step, index) => (
-          <React.Fragment key={index}>
-            <div
-              className="d-flex flex-column align-items-center text-center px-3"
-              style={{
-                width: "160px",
-                flexShrink: 0,
-              }}
-              data-aos={step.animation} // Add animation dynamically
-              data-aos-duration="1000" // Animation duration
-              data-aos-delay={index * 150} // Optional staggered delay
-            >
-              <div
-                className="rounded-circle d-flex align-items-center justify-content-center mb-2"
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  backgroundColor: step.bgColor,
-                  color: "white",
-                }}
-              >
-                <FontAwesomeIcon icon={step.icon} size="lg" />
-              </div>
-              <p className="fw-bold mb-1 text-primary">{step.number}</p>
-              <div style={{ fontSize: "0.85rem", wordBreak: "break-word" }}>
-                {step.description}
-              </div>
-            </div>
+          {steps.map((step, index) => (
+            <React.Fragment key={index}>
+             <div
+  className="text-center bg-white shadow-sm rounded-4 p-4"
+  style={{
+    width: "280px", // wider box
+    zIndex: 1,
+    border: "2px solid #e0e0e0",
+  }}
+  data-aos="fade-up"
+  data-aos-delay={index * 150}
+>
+  <div
+    className="mb-3 mx-auto rounded-circle d-flex justify-content-center align-items-center"
+    style={{
+      width: "60px",
+      height: "60px",
+      backgroundColor: "#2b2c7f",
+      color: "white",
+      fontSize: "24px",
+    }}
+  >
+    <FontAwesomeIcon icon={step.icon} />
+  </div>
+  <h6 className="text-dark mb-2">{step.title}</h6>
+  <p className="small text-muted mb-0">{step.description}</p>
+</div>
 
-            {/* Arrow between steps */}
-            {index !== steps.length - 1 && (
-              <div
-                className="d-flex align-items-center justify-content-center mt-5"
-                style={{ fontSize: "20px", color: "#333" }}
-                data-aos="fade-right" // Arrow animation
-                data-aos-delay={index * 150 + 100}
-              >
-                <FontAwesomeIcon icon={faArrowRight} />
-              </div>
-            )}
-          </React.Fragment>
-        ))}
+
+              {/* Arrow (except after the last step) */}
+              {index !== steps.length - 1 && (
+                <div
+  className="d-flex align-items-center justify-content-center"
+  style={{
+    width: "50px", // fixed space between cards
+    minWidth: "50px",
+    height: "100%",
+  }}
+  data-aos="fade-right"
+  data-aos-delay={index * 150 + 100}
+>
+  <FontAwesomeIcon
+    icon={faArrowRight}
+    style={{ fontSize: "40px", color: "#2b2c7f" }}
+  />
+</div>
+
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
     </div>
   );

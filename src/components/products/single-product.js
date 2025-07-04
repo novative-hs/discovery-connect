@@ -1,10 +1,10 @@
+// components/SingleProduct.js
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "react-bootstrap/Modal";
-import { useRouter } from "next/router";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
-import { add_cart_product,remove_product } from "src/redux/features/cartSlice";
+import { add_cart_product } from "src/redux/features/cartSlice";
 
 const SingleProduct = ({ product }) => {
   const { imageUrl, Analyte, total_allocated, total_quantity } = product || {};
@@ -18,20 +18,17 @@ const SingleProduct = ({ product }) => {
     setSelectedProduct(product);
     setShowModal(true);
   };
-//   const handleRemoveFromCart = (product) => {
-//   dispatch(remove_product(product));
-// };
-
 
   const isAlreadyAdded = (Analyte) =>
     cartItems.some((item) => item.Analyte === Analyte);
 
   return (
     <>
-      <div className="product__item p-relative mb-50 shadow rounded border bg-white overflow-hidden" style={{ padding: "1rem" }}>
+     <div className="h-100 d-flex flex-column shadow rounded border justify-content-between bg-white overflow-hidden mb-4" style={{ padding: "1rem" }}>
+
         <div className="product__thumb w-img mb-3 rounded overflow-hidden">
           <Image
-            src={product.imageUrl}
+            src={imageUrl}
             alt="product image"
             width={960}
             height={1125}
@@ -44,7 +41,9 @@ const SingleProduct = ({ product }) => {
           />
         </div>
 
-        <h5 className="mb-2 fw-bold text-dark">{Analyte}</h5>
+        <h5 className="mb-2 fw-bold text-dark" style={{ minHeight: "48px" }}>
+          {Analyte}
+        </h5>
 
         <div className="d-flex justify-content-between text-muted small mb-1">
           <span>Stock: <strong>{total_quantity}</strong></span>
@@ -54,13 +53,10 @@ const SingleProduct = ({ product }) => {
           Allocated: <strong>{total_allocated ?? 0}</strong>
         </div>
 
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 mt-auto">
           <button
             onClick={() => handleAddToCart(product)}
             className="btn btn-danger w-100"
-            data-bs-toggle="tooltip"
-            data-bs-placement="top"
-            title="Quick View"
           >
             Add to Cart
           </button>
@@ -80,7 +76,10 @@ const SingleProduct = ({ product }) => {
         </Modal.Header>
         <Modal.Body>
           {selectedProduct && (
-            <FilterProductArea selectedProduct={selectedProduct} closeModals={() => setShowModal(false)}/>
+            <FilterProductArea
+              selectedProduct={selectedProduct}
+              closeModals={() => setShowModal(false)}
+            />
           )}
         </Modal.Body>
       </Modal>

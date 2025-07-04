@@ -366,8 +366,8 @@ const BioBankSampleArea = () => {
   const handlePoolButtonClick = () => {
     if (poolMode) {
       const selected = [...selectedSamples];
-      if (selected.length < 2) {
-        alert("Please select at least two samples to create a pool.");
+      if (selected.length < 1) {
+        alert("Please select at least one samples to create a pool.");
         return;
       }
 
@@ -499,7 +499,7 @@ const BioBankSampleArea = () => {
         }
       );
 
-      fetchSamples(); // Refresh only current page
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setSelectedSamples([]);
       setSelectedSampleName("");
       setshowAddPoolModal(false);
@@ -559,7 +559,7 @@ const BioBankSampleArea = () => {
         }
       );
 
-      fetchSamples(isMounted); // Refresh the current page
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setCurrentPage(0);
       alert("Sample dispatched successfully!");
 
@@ -606,7 +606,7 @@ const BioBankSampleArea = () => {
       setSelectedSampleForPricing(null);
       setPrice("");
       setCurrency("");
-      fetchSamples(isMounted); // Refresh your data
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
     } catch (error) {
       if (error.response) {
         console.error("Error response:", error.response.data);
@@ -642,7 +642,7 @@ const BioBankSampleArea = () => {
         setSuccessMessage("");
       }, 3000);
 
-      fetchSamples(isMounted);
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setShowQuarantineModal(false);
       setSelectedSampleId(null);
       setQuarantineComment("");
@@ -836,8 +836,7 @@ const BioBankSampleArea = () => {
         }
       );
 
-      fetchSamples();
-      setCurrentPage(1);
+     fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setShowEditModal(false);
       setShowEditPoolModal(false);
       setSuccessMessage("Sample updated successfully.");
@@ -878,13 +877,14 @@ const BioBankSampleArea = () => {
       setSuccessMessage("Successfully changed sample visibility status")
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowVisibilityModal(false);
-
+setVisibilityStatus("")
       // ✅ Optional: Refresh the sample list
-      fetchSamples(isMounted);
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
     } catch (error) {
       console.error("Update error:", error);
     }
   };
+
   const openVisibilitystatusModal = (sample) => {
     setSelectedSampleName(sample.Analyte);
     setSelectedSampleVolume(sample.volume);
@@ -1083,13 +1083,24 @@ const BioBankSampleArea = () => {
           </div>
         )}
         <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
-          <h6>
-            Note 1: Click on Price Icon to Add Price and Price Currency for
-            Sample.
-          </h6>
-          <h6>Note 2: Click on Location Id's to see Sample Picture.</h6>
-          <h6>Note 3: Handle Sample Visibility through Action Item.</h6>
-        </div>
+  <ul style={{ listStyleType: "disc", paddingLeft: "1.5rem", marginBottom: 0 }}>
+    <li>
+      <h6>
+      Click on Price Icon to Add Price and Price Currency for Sample.
+      </h6>
+    </li>
+    <li>
+      <h6>
+      Click on Location Id's to see Sample Picture.
+      </h6>
+    </li>
+    <li>
+      <h6>
+      Once the Sample status is public, it is displayed on the discover page.
+      </h6>
+    </li>
+  </ul>
+</div>
 
         {/* Header Section with Filter and Button */}
         <div className="d-flex justify-content-between align-items-center flex-wrap mb-3 p-3 rounded shadow-sm bg-white border">

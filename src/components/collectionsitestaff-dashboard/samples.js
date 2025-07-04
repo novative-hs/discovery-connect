@@ -478,7 +478,7 @@ const [ownResponse, receivedResponse] = await Promise.all([
     if (poolMode) {
       const selected = [...selectedSamples];
       if (selected.length < 1) {
-        alert("Please select at least two samples to create a pool.");
+        alert("Please select at least one samples to create a pool.");
         return;
       }
 
@@ -561,7 +561,7 @@ if (isSubmitting) return; // 🛑 Prevent double submission
         }
       );
 
-      fetchSamples();
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setSelectedSamples([]);
       setSelectedSampleName("");
       setshowAddPoolModal(false);
@@ -598,7 +598,7 @@ const handleAddTestResult = async (e) => {
         }
       );
 
-      fetchSamples();
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setSelectedSampleId("")
       setSelectedSampleName("");
       setShowAddTestResultandUnitModal(false);
@@ -655,8 +655,7 @@ const handleAddTestResult = async (e) => {
         }
       );
 
-      fetchSamples(); // Refresh the current page
-      setCurrentPage(1);
+    fetchSamples(1, itemsPerPage, { searchField, searchValue });
       alert("Sample dispatched successfully!");
 
       setTransferDetails({
@@ -955,9 +954,7 @@ const handleTestRsultsandUnit=(sample)=>{
           },
         }
       );
-
-      fetchSamples();
-      setCurrentPage(1);
+fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setShowEditModal(false);
       setShowEditPoolModal(false);
       setSuccessMessage("Sample updated successfully.");
