@@ -229,7 +229,7 @@ const handleAddToCart = (sample) => {
                             if (key === "price") {
   content = sample.price
     ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
-    : "Request the Code";
+    : "Request the Quote";
 }
 else if (key === "Analyte") {
                               content = (
