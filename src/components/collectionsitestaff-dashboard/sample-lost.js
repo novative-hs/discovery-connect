@@ -149,23 +149,22 @@ const SampleLost = () => {
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="col-md-1 px-2">
-                    <div className="d-flex flex-column align-items-center">
-                      <input
-                        type="text"
-                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                        placeholder={`Search ${label}`}
-                        onChange={(e) =>
-                          handleFilterChange(key, e.target.value)
-                        }
-                        style={{ minWidth: "110px" }}
-                      />
-                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                        {label}
-                      </span>
-                    </div>
-                  </th>
-                ))}
+  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+    <div className="d-flex flex-column align-items-center">
+      <input
+        type="text"
+        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
+        placeholder={`Search ${label}`}
+        onChange={(e) => handleFilterChange(key, e.target.value)}
+        style={{ minWidth: "110px" }}
+      />
+      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
+        {label}
+      </span>
+    </div>
+  </th>
+))}
+
               </tr>
             </thead>
             <tbody className="table-light">

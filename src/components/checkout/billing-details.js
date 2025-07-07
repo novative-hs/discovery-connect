@@ -13,9 +13,21 @@ const BillingDetails = () => {
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
           );
           const data = await response.json();
-
+console.log(data[0])
           if (response.ok && data.length > 0) {
-            setUserData(data[0]);
+         const minimalData = {
+  name: data[0].ResearcherName,
+  email:data[0].useraccount_email,
+  OrganizationName:data[0].OrganizationName,
+  phone: data[0].phoneNumber,
+  address: data[0].fullAddress,
+  city: data[0].cityname,
+  country: data[0].countryname
+};
+
+sessionStorage.setItem("userdetail", JSON.stringify(minimalData));
+setUserData(minimalData);
+setUserData(data[0]);
           } else {
             console.error("Failed to fetch user data");
           }
@@ -36,48 +48,14 @@ const BillingDetails = () => {
   if (!userData) return <div className="text-danger text-center">No user data found.</div>;
 
   return (
-    <div className="container mt-4">
-      <div className="card shadow-sm border-0">
-        <div className="card-header bg-primary text-white">
-          <h5 className="mb-0">Billing Details</h5>
-        </div>
-        <div className="card-body">
-
-          <div className="row mb-3">
-            <div className="col-md-4 fw-semibold">Name:</div>
-            <div className="col-md-8">{userData?.ResearcherName || "-"}</div>
-          </div>
-          <hr />
-
-          <div className="row mb-3">
-            <div className="col-md-4 fw-semibold">Address:</div>
-            <div className="col-md-8">{userData?.fullAddress || "-"}</div>
-          </div>
-          <hr />
-
-          <div className="row mb-3">
-            <div className="col-md-4 fw-semibold">City:</div>
-            <div className="col-md-8">{userData?.cityname || "-"}</div>
-          </div>
-          <hr />
-
-          <div className="row mb-3">
-            <div className="col-md-4 fw-semibold">Country:</div>
-            <div className="col-md-8">{userData?.countryname || "-"}</div>
-          </div>
-          <hr />
-
-          <div className="row mb-3">
-            <div className="col-md-4 fw-semibold">Email:</div>
-            <div className="col-md-8">{userData?.useraccount_email || "-"}</div>
-          </div>
-          <hr />
-
-          <div className="row mb-2">
-            <div className="col-md-4 fw-semibold">Phone:</div>
-            <div className="col-md-8">{userData?.phoneNumber || "-"}</div>
-          </div>
-
+    <div className="container mt-5" style={{ maxWidth: "500px" }}>
+      <div className="card shadow-sm border-0 p-4">
+       
+        <div style={{ lineHeight: "1.8" }}>
+          <div className="fw-bold text-uppercase fs-5">{userData?.ResearcherName || "-"}</div>
+          <div className="fw-bold text-muted mt-2">Address</div>
+          <div>{userData?.fullAddress || "-"}</div>
+          <div>{userData?.cityname || "-"}, {userData?.countryname || "-"}</div>
         </div>
       </div>
     </div>

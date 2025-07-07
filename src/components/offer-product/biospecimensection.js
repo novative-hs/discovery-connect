@@ -31,7 +31,7 @@ const BioSpecimenSection = () => {
     >
       <Container>
         <h2 className="text-center fw-bold mb-4" style={{ color: "#003366" }}>
-          Premium Human Biospecimens for Research
+          Premium Human Biospecimens for Research and Product Development
         </h2>
 
         <Row className="align-items-center">

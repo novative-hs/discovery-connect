@@ -26,8 +26,8 @@ const TermsArea = () => {
               <div className="mb-4">
                 <h4 className="fw-bold">Informed Consent</h4>
                 <ul className="text-start ps-3">
-                  <li>Written informed consent prior to collection is taken by the collection site.</li>
-                  <li>Participants may withdraw consent by contacting us at any time.</li>
+                  <li>Participation in Discovery Connect is entirely voluntary. Only individuals who provide written informed consent may contribute samples. Participants may withdraw at any time without any impact on their current or future medical care.</li>
+                  <li>Participants may withdraw consent at any time by contacting Discovery Connect. Upon withdrawal, no further use of the participant's biological material or data will occur; however, materials or data that have already been distributed or anonymized may continue to be used.</li>
                 </ul>
               </div>
 
@@ -61,7 +61,7 @@ const TermsArea = () => {
                 <h4 className="fw-bold">Intellectual Property</h4>
                 <ul className="text-start ps-3">
                   <li>Research and development outcomes, publications, and intellectual property derived from participants’ samples will not be owned by participants.</li>
-                  <li>Participants will not have claims on profits or products developed using their samples.</li>
+                  <li>Participants acknowledge that they will not have any ownership or financial claims over any products, discoveries, or intellectual property that may result from the use of their biological materials.</li>
                 </ul>
               </div>
 
@@ -70,7 +70,7 @@ const TermsArea = () => {
                 <h4 className="fw-bold">Limitations of Liability</h4>
                 <ul className="text-start ps-3">
                   <li>Discovery-Connect cannot guarantee any personal health benefits from your participation.</li>
-                  <li>Discovery-Connect is not responsible for any third-party misuse of shared anonymized data.</li>
+                  <li>Discovery-Connect is not responsible for any third-party misuse of shared anonymized data or supplied samples.</li>
                 </ul>
               </div>
 

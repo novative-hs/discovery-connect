@@ -1,15 +1,21 @@
 import React, { useState, useRef } from "react";
 import { notifyError, notifySuccess } from "@utils/toast";
-
+import { useRouter } from "next/router";
 const SampleCopy = ({ setSampleCopyData, onComplete }) => {
   const [studyCopy, setStudyCopy] = useState(null);
   const [reportingMechanism, setReportingMechanism] = useState("")
   const [irbFile, setIrbFile] = useState(null);
   const [nbcFile, setNbcFile] = useState(null);
-
+const router = useRouter();
   const studyFileRef = useRef(null);
   const irbFileRef = useRef(null);
   const nbcFileRef = useRef(null);
+
+const handleInvoice=()=>{
+   
+      router.push("/dashboardheader?tab=invoice-area");
+    
+}
 
   const handleFileChange = (e, setter, field) => {
     const file = e.target.files[0];
@@ -137,9 +143,14 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
         </div>
       </form>
       <div className="d-flex justify-content-end mt-3">
-  <button type="button" className="tp-btn me-2">
-    View Invoice
-  </button>
+ <button
+  type="button"
+  className="tp-btn me-2"
+  onClick={() => handleInvoice()}
+>
+  View Invoice
+</button>
+
   <button type="button" className="tp-btn" onClick={handleNext}>
     Make Payment
   </button>

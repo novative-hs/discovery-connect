@@ -13,6 +13,7 @@ import Shop from "../../pages/shop"
 import Cart from "../../pages/cart";
 import Checkout from "../../pages/checkout";
 import FilterProductArea from "./filter-samples";
+import InvoicePage from "./invoice-area";
 const DashboardArea = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Booksamples");
@@ -61,6 +62,8 @@ const DashboardArea = () => {
         return <Shop setActiveTab={setActiveTab} />;
       case "Cart":
         return <Cart setActiveTab={setActiveTab} />;
+         case "invoice-area":
+        return <InvoicePage setActiveTab={setActiveTab} />;
       case "Checkout":
           return <Checkout setActiveTab={setActiveTab} />;
            case "filter-samples":

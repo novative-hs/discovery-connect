@@ -13,13 +13,14 @@ import Pagination from "@ui/Pagination";
 import InputMask from "react-input-mask";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Barcode from "react-barcode";
+import { notifyError } from "@utils/toast";
 
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationError, setLocationError] = useState("")
-  const [showAddtestResultandUnitModal,setShowAddTestResultandUnitModal]=useState("");
-  const [showEdittestResultandUnitModal,setShowEditTestResultandUnitModal]=useState("")
+  const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
+  const [showEdittestResultandUnitModal, setShowEditTestResultandUnitModal] = useState("")
   const [mode, setMode] = useState("");
   const [staffAction, setStaffAction] = useState("");
   const [actions, setActions] = useState([]);
@@ -84,15 +85,15 @@ const SampleArea = () => {
     dispatchReceiptNumber: "",
     Quantity: 1,
   });
-const filterOptions = [
-  { value: "", text: "All" },
-  { value: "individual", text: "Individual" },
-  { value: "High", text: "High" },
-  { value: "Low", text: "Low" },
-  { value: "Medium", text: "Medium" },
-  { value: "Pooled", text: "Pooled" },
+  const filterOptions = [
+    { value: "", text: "All" },
+    { value: "individual", text: "Individual" },
+    { value: "High", text: "High" },
+    { value: "Low", text: "Low" },
+    { value: "Medium", text: "Medium" },
+    { value: "Pooled", text: "Pooled" },
 
-];
+  ];
 
   const openModal = (sample) => {
     setSelectedSample(sample);
@@ -144,7 +145,7 @@ const filterOptions = [
 
   const [formData, setFormData] = useState({
     patientname: "",
-    finalConcentration:"",
+    finalConcentration: "",
     patientlocation: "",
     locationids: "",
     Analyte: "",
@@ -234,7 +235,7 @@ const filterOptions = [
     { name: "testkitmanufacturer", setter: setTestKitManufacturerNames },
     { name: "testsystem", setter: setTestSystemNames },
     { name: "testsystemmanufacturer", setter: setTestSystemManufacturerNames },
-    { name: "analyte", setter: setAnalyteNames },
+    { name: "/get/analyte", setter: setAnalyteNames },
     { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
   ];
 
@@ -263,7 +264,6 @@ const filterOptions = [
     fetchCollectionSiteNames();
   }, [currentPage, searchField, searchValue]);
 
-
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
     try {
       const { searchField, searchValue } = filters;
@@ -273,18 +273,19 @@ const filterOptions = [
         return;
       }
 
-      // Build URLs
-      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}`;
-      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}`;
+      // Build URLs with pagination
+      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
 
       if (searchField && searchValue) {
-        ownResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
-        receivedResponseurl += `?searchField=${searchField}&searchValue=${searchValue}`;
+        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
       }
-const [ownResponse, receivedResponse] = await Promise.all([
-  axios.get(ownResponseurl),
-  axios.get(receivedResponseurl),
-]);
+
+      const [ownResponse, receivedResponse] = await Promise.all([
+        axios.get(ownResponseurl),
+        axios.get(receivedResponseurl),
+      ]);
 
       const ownSamples = ownResponse.data.samples.map((s) => ({
         ...s,
@@ -301,7 +302,7 @@ const [ownResponse, receivedResponse] = await Promise.all([
         isReturn: true,
       }));
 
-      // Merge and deduplicate by ID
+      // Merge & deduplicate
       const sampleMap = new Map();
       [...ownSamples, ...receivedSamples].forEach((sample) => {
         const sampleId = sample.id;
@@ -317,15 +318,15 @@ const [ownResponse, receivedResponse] = await Promise.all([
 
       const merged = Array.from(sampleMap.values());
 
-      // Pagination on merged list
-      const totalCount = merged.length;
+      // Use backend total count
+      const totalCount = ownResponse.data.totalCount + receivedResponse.data.totalCount;
       const totalPages = Math.ceil(totalCount / pageSize);
-      const paginated = merged.slice((page - 1) * pageSize, page * pageSize);
 
-      setSamples(merged);
-      setFilteredSamplename(paginated);
+      // Show only current page data (already paginated by backend)
+      setSamples(merged);               // merged current page
+      setFilteredSamplename(merged);   // show current page
       setTotalPages(totalPages);
-      setfiltertotal(totalPages);
+      setfiltertotal(totalCount);
 
     } catch (error) {
       console.error("Fetch error:", error);
@@ -352,46 +353,18 @@ const [ownResponse, receivedResponse] = await Promise.all([
       setCurrentPage(totalPages); // Adjust down if needed
     }
   }, [totalPages]);
-
   const handleFilterChange = (field, value) => {
-    let filtered = [];
+    const trimmed = value.trim();
 
-    if (value.trim() === "") {
-      filtered = samples;
+    if (trimmed === "") {
+      fetchSamples(1, itemsPerPage); // Reset
     } else {
-      const lowerValue = value.toLowerCase();
-
-      filtered = samples.filter((sample) => {
-        if (field === "volume") {
-          const combinedVolume = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""}`.toLowerCase();
-          return combinedVolume.includes(lowerValue);
-        }
-
-        if (field === "TestResult") {
-          const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
-          return combinedPrice.includes(lowerValue);
-        }
-
-        if (field === "gender") {
-          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
-        }
-        if (field === "sample_visibility") {
-          return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
-        }
-        if (field === "samplemode") {
-         
-        return sample.samplemode?.toLowerCase() === lowerValue;
-      }
-
-        return sample[field]?.toString().toLowerCase().includes(lowerValue);
+      fetchSamples(1, itemsPerPage, {
+        searchField: field,
+        searchValue: trimmed,
       });
     }
-
-    setFilteredSamplename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(1);
   };
-
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
     setCurrentPage(selectedPage); // Correct ✅
@@ -436,17 +409,43 @@ const [ownResponse, receivedResponse] = await Promise.all([
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // Ensure both states update correctly
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    if (name === "Analyte") {
+      const selectedAnalyte = AnalyteNames.find((item) => item.name === value);
+      const unit = selectedAnalyte?.testresultunit || "";
 
-    setTransferDetails((prevDetails) => ({
-      ...prevDetails,
-      [name]: value,
-    }));
+      // ✅ Conditionally show/hide numeric input based on whether unit exists
+      if (unit === "") {
+        setShowTestResultNumericInput(false);
+      } else {
+        setShowTestResultNumericInput(true);
+      }
+
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+        TestResultUnit: unit,
+      }));
+
+      setTransferDetails((prevDetails) => ({
+        ...prevDetails,
+        [name]: value,
+        TestResultUnit: unit,
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+
+      setTransferDetails((prevDetails) => ({
+        ...prevDetails,
+        [name]: value,
+      }));
+    }
   };
+
+
+
 
   // const validateLocationID = () => {
   //   const value = formData.locationids?.trim();
@@ -515,9 +514,9 @@ const [ownResponse, receivedResponse] = await Promise.all([
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-if (isSubmitting) return; // 🛑 Prevent double submission
+    if (isSubmitting) return; // 🛑 Prevent double submission
 
-  setIsSubmitting(true); // 
+    setIsSubmitting(true); // 
     const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
 
     let effectiveMode = mode; // This is now directly the radio value if you use it for Low/Medium/High
@@ -574,23 +573,29 @@ if (isSubmitting) return; // 🛑 Prevent double submission
       setLogoPreview(false);
       setShowAdditionalFields(false);
     } catch (error) {
-      console.error("Error adding sample:", error);
+
+      if (error.response?.status === 409) {
+        // Duplicate entry
+        notifyError(error.response.data?.error || "Duplicate entry found.");
+      } else {
+        notifyError("Something went wrong while adding the sample.");
+      }
     }
     finally {
-    setIsSubmitting(false); // ✅ Always turn off loading state
-  }
+      setIsSubmitting(false); // ✅ Always turn off loading state
+    }
   };
-const handleAddTestResult = async (e) => {
+  const handleAddTestResult = async (e) => {
     e.preventDefault();
- 
+
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`,
-         {
-    mode: "Pooled",
-    TestResult: formData.TestResult,
-    TestResultUnit: formData.TestResultUnit
-  },
+        {
+          mode: "Pooled",
+          TestResult: formData.TestResult,
+          TestResultUnit: formData.TestResultUnit
+        },
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -655,7 +660,7 @@ const handleAddTestResult = async (e) => {
         }
       );
 
-    fetchSamples(1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       alert("Sample dispatched successfully!");
 
       setTransferDetails({
@@ -727,25 +732,25 @@ const handleAddTestResult = async (e) => {
     setSelectedSampleName(Analyte)
     setPoolSampleHistoryModal(true)
   }
-const handleTestRsultsandUnit=(sample)=>{
-  setSelectedSampleId(sample.id)
-   const testResult = sample.TestResult || "";
+  const handleTestRsultsandUnit = (sample) => {
+    setSelectedSampleId(sample.id)
+    const testResult = sample.TestResult || "";
     const testResultMatch = testResult.match(/^([<>]=?|=|\+|-)?\s*(.*)$/);
     const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
     const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
     const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
     setShowTestResultNumericInput(isNumeric); // 👈 Add this line
-     setFormData({
+    setFormData({
       // TestResult: sample.TestResult,
       TestSign,
       TestValue,
       TestResult: testResult,
       TestResultUnit: sample.TestResultUnit,
-   
+
     });
-  setSelectedSampleName(sample.Analyte)
-  setShowAddTestResultandUnitModal(true)
-}
+    setSelectedSampleName(sample.Analyte)
+    setShowAddTestResultandUnitModal(true)
+  }
   const handleEditClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -762,7 +767,7 @@ const handleTestRsultsandUnit=(sample)=>{
     const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
     const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
     setShowTestResultNumericInput(isNumeric); // 👈 Add this line
-    if (sample.samplemode==='Individual') {
+    if (sample.samplemode === 'Individual') {
       setShowEditModal(true);
 
     } else {
@@ -773,7 +778,7 @@ const handleTestRsultsandUnit=(sample)=>{
 
     setFormData({
       patientname: sample.PatientName,
-      finalConcentration:sample.finalConcentration,
+      finalConcentration: sample.finalConcentration,
       patientlocation: sample.PatientLocation,
       MRNumber: sample.MRNumber,
       locationids: formattedLocationId,
@@ -850,7 +855,7 @@ const handleTestRsultsandUnit=(sample)=>{
   const resetFormData = () => {
     setFormData({
       patientname: "",
-      finalConcentration:"",
+      finalConcentration: "",
       patientlocation: "",
       locationids: "",
       Analyte: "",
@@ -896,7 +901,7 @@ const handleTestRsultsandUnit=(sample)=>{
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
     const formDataToSend = new FormData();
 
@@ -954,7 +959,7 @@ const handleTestRsultsandUnit=(sample)=>{
           },
         }
       );
-fetchSamples(1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
       setShowEditModal(false);
       setShowEditPoolModal(false);
       setSuccessMessage("Sample updated successfully.");
@@ -965,9 +970,9 @@ fetchSamples(1, itemsPerPage, { searchField, searchValue });
       }, 3000);
     } catch (error) {
       console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
-    }finally {
-    setIsSubmitting(false);
-  }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -996,7 +1001,7 @@ fetchSamples(1, itemsPerPage, { searchField, searchValue });
     if (mode === "Individual") {
       return (
         formData.patientname?.toString().trim() &&
-       
+
         formData.patientlocation?.toString().trim() &&
         formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
@@ -1013,7 +1018,7 @@ fetchSamples(1, itemsPerPage, { searchField, searchValue });
     } else if (mode === "Pooled") {
       return (
         formData.MRNumber?.toString().trim() &&
-        formData.finalConcentration?.toString().trim()&&
+        formData.finalConcentration?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
         formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
@@ -1034,13 +1039,13 @@ fetchSamples(1, itemsPerPage, { searchField, searchValue });
     mg: 10000,
     g: 5000,
   };
-const handlePrint = (barcodeId) => {
-  const barcodeString = barcodeId?.toString() || "";
+  const handlePrint = (barcodeId) => {
+    const barcodeString = barcodeId?.toString() || "";
 
-  const printWindow = window.open("", "", "width=300,height=200");
-  if (!printWindow) return;
+    const printWindow = window.open("", "", "width=300,height=200");
+    if (!printWindow) return;
 
-  printWindow.document.write(`
+    printWindow.document.write(`
     <html>
       <head>
         <style>
@@ -1086,8 +1091,8 @@ const handlePrint = (barcodeId) => {
     </html>
   `);
 
-  printWindow.document.close();
-};
+    printWindow.document.close();
+  };
 
 
 
@@ -1114,78 +1119,78 @@ const handlePrint = (barcodeId) => {
           <h6>
             Note: Click on Location Id's to see Sample Picture.
           </h6>
-           <h6>
+          <h6>
             Note: Click on Sample Icon to see Pooled Sample History.
           </h6>
-           <h6>
+          <h6>
             Note: Click on Scale Icon to Add <b>Test Result and Unit of Pooled Sample</b>
           </h6>
         </div>
-       
+
 
         {/* Button */}
-       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-             <div className="d-flex align-items-center gap-2">
-    <label className="fw-semibold text-secondary mb-0">Filter Sample Mode by:</label>
-    <NiceSelect
-      options={filterOptions}
-      defaultCurrent={0}
-      name="filter-by"
-      onChange={(item) => handleFilterChange("samplemode", item.value)}
-    />
-  </div>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+          <div className="d-flex align-items-center gap-2">
+            <label className="fw-semibold text-secondary mb-0">Filter Sample Mode by:</label>
+            <NiceSelect
+              options={filterOptions}
+              defaultCurrent={0}
+              name="filter-by"
+              onChange={(item) => handleFilterChange("samplemode", item.value)}
+            />
+          </div>
 
 
-  {/* Buttons RIGHT */}
-  {actions.some(a =>
-    ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)
-  ) && (
-    <div className="d-flex align-items-center flex-wrap gap-2">
-      <button
-        onClick={handlePoolButtonClick}
-        style={{
-          backgroundColor: "#4a90e2",
-          color: "#fff",
-          border: "none",
-          padding: "10px 20px",
-          borderRadius: "6px",
-          fontWeight: "500",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        {poolMode ? "Make Pool" : "Mark Sample as Pool"}
-      </button>
+          {/* Buttons RIGHT */}
+          {actions.some(a =>
+            ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)
+          ) && (
+              <div className="d-flex align-items-center flex-wrap gap-2">
+                <button
+                  onClick={handlePoolButtonClick}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {poolMode ? "Make Pool" : "Mark Sample as Pool"}
+                </button>
 
-      {(actions.includes('add_full') ||
-        actions.includes('add_basic') ||
-        actions.includes('all')) && (
-        <button
-          onClick={() => {
-            setMode("Individual");
-            setShowAddModal(true);
-          }}
-          style={{
-            backgroundColor: "#4a90e2",
-            color: "#fff",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "6px",
-            fontWeight: "500",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-          }}
-        >
-          <i className="fas fa-vial"></i> Add Sample
-        </button>
-      )}
-    </div>
-  )}
-</div>
+                {(actions.includes('add_full') ||
+                  actions.includes('add_basic') ||
+                  actions.includes('all')) && (
+                    <button
+                      onClick={() => {
+                        setMode("Individual");
+                        setShowAddModal(true);
+                      }}
+                      style={{
+                        backgroundColor: "#4a90e2",
+                        color: "#fff",
+                        border: "none",
+                        padding: "10px 20px",
+                        borderRadius: "6px",
+                        fontWeight: "500",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      <i className="fas fa-vial"></i> Add Sample
+                    </button>
+                  )}
+              </div>
+            )}
+        </div>
 
 
         {/* Table */}
@@ -1203,24 +1208,24 @@ const handlePrint = (barcodeId) => {
                   </th>
                 )}
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="col-md-1 px-2">
-
+                  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
                     <div className="d-flex flex-column align-items-center">
                       <input
                         type="text"
-                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        // style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}  // a bit wide table
-                        style={{ width: "100%" }}
+                        style={{ minWidth: "110px" }}
                       />
-                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
+                      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
                         {label}
                       </span>
-
                     </div>
                   </th>
                 ))}
+
+
+
                 {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
@@ -1334,10 +1339,10 @@ ${sample.box_id || "N/A"} = Box ID`;
                     {actions.some(action => ["edit", "dispatch", "history", "all"].includes(action)) && (
                       <td className="text-center align-middle">
                         <div className="d-flex justify-content-center gap-2 px-1">
-{(actions.includes("edit")|| actions.includes("add") || actions.includes("all")) && (sample.samplemode !== 'Individual')&& (sample.samplemode !== 'Pooled')&& (
+                          {(actions.includes("edit") || actions.includes("add") || actions.includes("all")) && (sample.samplemode !== 'Individual') && (sample.samplemode !== 'Pooled') && (
                             <button
                               className="btn btn-success btn-sm"
-                              onClick={() =>  handleTestRsultsandUnit(sample)}
+                              onClick={() => handleTestRsultsandUnit(sample)}
                               title="Test Result and Unit"
                             >
                               <FontAwesomeIcon icon={faRuler} size="sm" />
@@ -1381,7 +1386,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                               <i class="fas fa-vial"></i>
                             </button>
                           )}
-                         
+
 
                         </div>
                       </td>
@@ -1662,13 +1667,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     }}
                                   >
                                     <option value="" hidden></option>
-                                    {AnalyteNames.map(
-                                      (name, index) => (
-                                        <option key={index} value={name}>
-                                          {name}
-                                        </option>
-                                      )
-                                    )}
+                                    {AnalyteNames.map((item, index) => (
+                                      <option key={index} value={item.name}>
+                                        {item.name}
+                                      </option>
+                                    ))}
+
                                   </select>
                                 </div>
                                 <div className="form-group col-md-4">
@@ -1862,6 +1866,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         value={formData.TestResultUnit}
                                         onChange={handleInputChange}
                                         required
+                                        disabled={!!formData.TestResultUnit} // ✅ Disable if unit is auto-set
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
@@ -1881,6 +1886,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                         ))}
                                       </select>
                                     )}
+
                                   </div>
                                 </div>
                               </div>
@@ -2510,24 +2516,24 @@ ${sample.box_id || "N/A"} = Box ID`;
                         </div>
                       )}
 
-                     <button
-  type="submit"
-  className="btn btn-primary"
-  disabled={isSubmitting} // prevent multiple clicks
->
-  {isSubmitting ? (
-    <>
-      <span
-        className="spinner-border spinner-border-sm me-2"
-        role="status"
-        aria-hidden="true"
-      ></span>
-      {showAddModal ? "Saving..." : "Updating..."}
-    </>
-  ) : (
-    showAddModal ? "Save" : "Update"
-  )}
-</button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={isSubmitting} // prevent multiple clicks
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            {showAddModal ? "Saving..." : "Updating..."}
+                          </>
+                        ) : (
+                          showAddModal ? "Save" : "Update"
+                        )}
+                      </button>
 
                     </div>
                     <div className="text-start text-muted fs-6 mb-3 ms-3" style={{ marginTop: '-8px' }}>
@@ -2714,11 +2720,12 @@ ${sample.box_id || "N/A"} = Box ID`;
                                           value={level}
                                           checked={mode === level}
                                           onChange={(e) => {
-                                             setFormData((prev) => ({
-                                            ...prev,
-                                            finalConcentration: e.target.value,
-                                          }))
-                                            setMode(level)}}
+                                            setFormData((prev) => ({
+                                              ...prev,
+                                              finalConcentration: e.target.value,
+                                            }))
+                                            setMode(level)
+                                          }}
                                           required
                                         />
                                         <label
@@ -2731,7 +2738,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                                     ))}
                                   </div>
                                 </div>
-                             
+
                                 <div className="form-group col-md-6">
                                   <label>
                                     Volume <span className="text-danger">*</span>
@@ -2961,7 +2968,7 @@ ${sample.box_id || "N/A"} = Box ID`;
             </div>
           </>
         )}
-{(showAddtestResultandUnitModal || showEdittestResultandUnitModal) && (
+        {(showAddtestResultandUnitModal || showEdittestResultandUnitModal) && (
           <>
             {/* Bootstrap Backdrop with Blur */}
             <div
@@ -3021,137 +3028,137 @@ ${sample.box_id || "N/A"} = Box ID`;
                     </button>
                   </div>
                   <form
-                    onSubmit={handleAddTestResult }
+                    onSubmit={handleAddTestResult}
                   >
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
-                            {/* Only show selected fields in pool mode */}
-                            <div className="col-md-12">
-                              <div className="row">
-                               
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Test Result & Unit{" "}
-                                    <span className="text-danger"></span>
-                                  </label>
-                                  <div
+                        {/* Only show selected fields in pool mode */}
+                        <div className="col-md-12">
+                          <div className="row">
+
+                            <div className="form-group col-md-6">
+                              <label>
+                                Test Result & Unit{" "}
+                                <span className="text-danger"></span>
+                              </label>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "10px",
+                                  alignItems: "center",
+                                }}
+                              >
+                                {/* Test Result Dropdown or Numeric Input */}
+                                {!showTestResultNumericInput ? (
+                                  <select
+                                    className="form-control"
+                                    value={formData.TestResult}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val === "Value") {
+                                        setShowTestResultNumericInput(true);
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResult: "",
+                                        }));
+                                      } else {
+                                        setShowTestResultNumericInput(
+                                          false
+                                        ); // Ensure this is reset
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResult: val,
+                                          TestResultUnit: "",
+                                        })); // Clear unit
+                                      }
+                                    }}
+
                                     style={{
-                                      display: "flex",
-                                      gap: "10px",
-                                      alignItems: "center",
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
+                                      minWidth: "140px",
                                     }}
                                   >
-                                    {/* Test Result Dropdown or Numeric Input */}
-                                    {!showTestResultNumericInput ? (
-                                      <select
-                                        className="form-control"
-                                        value={formData.TestResult}
-                                        onChange={(e) => {
-                                          const val = e.target.value;
-                                          if (val === "Value") {
-                                            setShowTestResultNumericInput(true);
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResult: "",
-                                            }));
-                                          } else {
-                                            setShowTestResultNumericInput(
-                                              false
-                                            ); // Ensure this is reset
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResult: val,
-                                              TestResultUnit: "",
-                                            })); // Clear unit
-                                          }
-                                        }}
-
-                                        style={{
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
-                                          minWidth: "140px",
-                                        }}
-                                      >
-                                        <option value="" disabled hidden>
-                                          Select result
+                                    <option value="" disabled hidden>
+                                      Select result
+                                    </option>
+                                    <option value="Positive">
+                                      Positive
+                                    </option>
+                                    <option value="Negative">
+                                      Negative
+                                    </option>
+                                    <option value="Value">Value</option>
+                                  </select>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="Enter numeric value"
+                                    value={formData.TestResult}
+                                    onChange={(e) =>
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        TestResult: e.target.value,
+                                      }))
+                                    }
+                                    style={{
+                                      width: "110px",
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
+                                      paddingRight: "10px",
+                                    }}
+                                    autoFocus
+                                    onBlur={() => {
+                                      if (!formData.TestResult) {
+                                        setShowTestResultNumericInput(
+                                          false
+                                        );
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResultUnit: "",
+                                        })); // Clear unit
+                                      }
+                                    }}
+                                  />
+                                )}
+                                {/* Conditionally render Unit Dropdown */}
+                                {showTestResultNumericInput && (
+                                  <select
+                                    className="form-control"
+                                    name="TestResultUnit"
+                                    value={formData.TestResultUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      backgroundColor:
+                                        !formData.TestResultUnit
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      minWidth: "100px",
+                                    }}
+                                  >
+                                    <option value="" hidden>
+                                      Unit
+                                    </option>
+                                    {testresultunitNames.map(
+                                      (name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
                                         </option>
-                                        <option value="Positive">
-                                          Positive
-                                        </option>
-                                        <option value="Negative">
-                                          Negative
-                                        </option>
-                                        <option value="Value">Value</option>
-                                      </select>
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        className="form-control"
-                                        placeholder="Enter numeric value"
-                                        value={formData.TestResult}
-                                        onChange={(e) =>
-                                          setFormData((prev) => ({
-                                            ...prev,
-                                            TestResult: e.target.value,
-                                          }))
-                                        }
-                                        style={{
-                                          width: "110px",
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
-                                          paddingRight: "10px",
-                                        }}
-                                        autoFocus
-                                        onBlur={() => {
-                                          if (!formData.TestResult) {
-                                            setShowTestResultNumericInput(
-                                              false
-                                            );
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResultUnit: "",
-                                            })); // Clear unit
-                                          }
-                                        }}
-                                      />
+                                      )
                                     )}
-                                    {/* Conditionally render Unit Dropdown */}
-                                    {showTestResultNumericInput && (
-                                      <select
-                                        className="form-control"
-                                        name="TestResultUnit"
-                                        value={formData.TestResultUnit}
-                                        onChange={handleInputChange}
-                                        required
-                                        style={{
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          backgroundColor:
-                                            !formData.TestResultUnit
-                                              ? "#fdecea"
-                                              : "#fff",
-                                          minWidth: "100px",
-                                        }}
-                                      >
-                                        <option value="" hidden>
-                                          Unit
-                                        </option>
-                                        {testresultunitNames.map(
-                                          (name, index) => (
-                                            <option key={index} value={name}>
-                                              {name}
-                                            </option>
-                                          )
-                                        )}
-                                      </select>
-                                    )}
-                                  </div>
-                                </div>
+                                  </select>
+                                )}
                               </div>
                             </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
@@ -3159,7 +3166,7 @@ ${sample.box_id || "N/A"} = Box ID`;
                         {showAddtestResultandUnitModal ? "Save" : "Update"}
                       </button>
                     </div>
-                   
+
                   </form>
                 </div>
               </div>

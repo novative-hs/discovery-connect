@@ -47,7 +47,7 @@ const StepFlow = () => {
   return (
     <div className="container my-5">
       <h4 className="text-center mb-5" style={{ fontWeight: "bold", color: "#2b2c7f" }}>
-        Process for Requesting Samples for Research
+        Process for requesting samples for Research and Product Development
       </h4>
 
       <div className="d-flex justify-content-center position-relative flex-wrap">

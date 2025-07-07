@@ -68,7 +68,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
         style={{ maxWidth: "800px", width: "90%" }}>
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Order Summary</h5>
+              <h5 className="modal-title">Payment Detail</h5>
               <button
                 type="button"
                 className="btn-close"

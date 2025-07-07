@@ -89,92 +89,85 @@ const createPoolSampleTable = () => {
 };
 
 // Function to get all samples with 'In Stock' status
-const getSamples = (userId, page, pageSize, searchField, searchValue, callback) => {
-
-  const user_account_id = parseInt(userId, 10);
-  if (isNaN(user_account_id)) {
-    return callback(new Error("Invalid user_account_id"), null);
-  }
-
+const getSamples = (user_account_id, page, pageSize, searchField, searchValue, callback) => {
+  const userId = parseInt(user_account_id, 10);
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 50;
   const offset = (pageInt - 1) * pageSizeInt;
 
-  // Search filtering
-  let searchClause = "";
-  const params = [user_account_id];
-  if (searchField && searchValue) {
-
-    if (searchField === "status") {
-      searchClause = ` AND s.status LIKE ?`;
-    } else {
-      // For all other fields, dynamically add field without alias
-      searchClause = ` AND ${searchField} LIKE ?`;
-    }
-    params.push(`%${searchValue}%`);
+  if (isNaN(userId)) {
+    return callback(new Error("Invalid user_account_id"), null);
   }
 
-  // Pagination
-  params.push(pageSizeInt, offset);
+  // Step 1: Get the collectionsite_id for the given user
+  const siteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
 
-  const query = `
-    SELECT s.*
-    FROM sample s
-    JOIN user_account ua_sample ON s.user_account_id = ua_sample.id
-    JOIN collectionsitestaff cs_sample ON ua_sample.id = cs_sample.user_account_id
+  mysqlConnection.query(siteQuery, [userId], (err, siteResult) => {
+    if (err || siteResult.length === 0) {
+      return callback(err || new Error("Collection site not found"), null);
+    }
 
-    -- Join to get the collection_id of the logged-in user
-    JOIN collectionsitestaff cs_user ON cs_user.user_account_id = ?
-    
-    WHERE cs_sample.collectionsite_id = cs_user.collectionsite_id
-      AND s.quantity > 0
-      AND s.status = "In Stock"
-      AND s.is_deleted = FALSE
-      AND ua_sample.accountType = "CollectionSitesStaff"
-      ${searchClause}
-    ORDER BY s.created_at DESC
-    LIMIT ? OFFSET ?;
-  `;
+    const collectionsite_id = siteResult[0].collectionsite_id;
 
+    // Step 2: Build the search clause
+    let searchClause = "";
+    const searchParams = [];
 
-  mysqlConnection.query(query, params, (err, results) => {
+    if (searchField && searchValue) {
+      searchClause = ` AND s.${searchField} LIKE ?`;
+      searchParams.push(`%${searchValue}%`);
+    }
 
-    if (err) return callback(err, null);
+    // Step 3: Query samples from all staff under this collection site
+    const dataQuery = `
+      SELECT s.*
+      FROM sample s
+      JOIN user_account ua ON s.user_account_id = ua.id
+      JOIN collectionsitestaff cs ON ua.id = cs.user_account_id
+      WHERE cs.collectionsite_id = ?
+        AND s.status = 'In Stock'
+        AND s.is_deleted = FALSE
+        AND ua.accountType = 'CollectionSitesStaff'
+        ${searchClause}
+      ORDER BY s.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
 
-    // Add locationids to each sample
-    const enrichedResults = results.map(sample => ({
-      ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
-        .filter(Boolean)
-        .join("-"),
-    }));
-    // Count query
-    const countParams = params.slice(0, -2); // remove limit/offset
     const countQuery = `
       SELECT COUNT(*) AS totalCount
       FROM sample s
-      JOIN user_account ua_sample ON s.user_account_id = ua_sample.id
-      JOIN collectionsitestaff cs_sample ON ua_sample.id = cs_sample.user_account_id
-      JOIN collectionsitestaff cs_user ON cs_user.user_account_id = ?
-      WHERE cs_sample.collectionsite_id = cs_user.collectionsite_id
-        AND s.status = "In Stock"
+      JOIN user_account ua ON s.user_account_id = ua.id
+      JOIN collectionsitestaff cs ON ua.id = cs.user_account_id
+      WHERE cs.collectionsite_id = ?
+        AND s.status = 'In Stock'
         AND s.is_deleted = FALSE
-        AND ua_sample.accountType = "CollectionSitesStaff"
-        ${searchClause};
+        AND ua.accountType = 'CollectionSitesStaff'
+        ${searchClause}
     `;
 
-    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-      if (err) {
-        conosle.log(err)
-        return callback(err, null)
-      };
-      callback(null, {
-        results: enrichedResults,
-        totalCount: countResults[0].totalCount,
+    const dataParams = [collectionsite_id, ...searchParams, pageSizeInt, offset];
+    const countParams = [collectionsite_id, ...searchParams];
+
+    mysqlConnection.query(dataQuery, dataParams, (err, results) => {
+      if (err) return callback(err);
+
+      const enrichedResults = results.map(sample => ({
+        ...sample,
+        locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+      }));
+
+      mysqlConnection.query(countQuery, countParams, (err, countResult) => {
+        if (err) return callback(err);
+
+        callback(null, {
+          results: enrichedResults,
+          totalCount: countResult[0].totalCount,
+        });
       });
     });
   });
 };
+
 
 const getAllSamples = (callback) => {
 
@@ -372,7 +365,6 @@ const getAllSampleinIndex = (name, callback) => {
     callback(null, results);
   });
 }
-
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
     SELECT 
@@ -383,13 +375,15 @@ const getAllCSSamples = (limit, offset, callback) => {
       c.name AS CityName,
       d.name AS DistrictName,
       IFNULL(q.total_quantity, 0) AS total_quantity,
-      IFNULL(q.total_allocated, 0) AS total_allocated
+      IFNULL(q.total_allocated, 0) AS total_allocated,
+      a.image AS analyteImage
     FROM sample s
     LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
     LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
     LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
     LEFT JOIN city c ON cs.city = c.id
     LEFT JOIN district d ON cs.district = d.id
+    LEFT JOIN analyte a ON a.name = s.Analyte
     INNER JOIN (
       SELECT Analyte, MAX(id) AS max_id
       FROM sample
@@ -437,45 +431,26 @@ const getAllCSSamples = (limit, offset, callback) => {
         return callback(dataErr, null);
       }
 
-      const imageFolder = path.join(__dirname, '../uploads/Images');
-      fs.readdir(imageFolder, (fsErr, files) => {
-        if (fsErr) {
-          console.error("❌ Image folder read error:", fsErr);
-          return callback(fsErr, null);
+      const updatedResults = results.map((sample) => {
+        let imageUrl = null;
+
+        if (sample.analyteImage) {
+          const base64Image = sample.analyteImage.toString('base64');
+          imageUrl = `data:image/jpeg;base64,${base64Image}`;
         }
 
-        const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-        const totalSamples = results.length;
-        const totalImages = imageFiles.length;
-
-        let selectedImages = [];
-
-        if (totalImages >= totalSamples) {
-          selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
-        } else {
-          for (let i = 0; i < totalSamples; i++) {
-            const img = imageFiles[i % totalImages];
-            selectedImages.push(img);
-          }
-        }
-
-        const updatedResults = results.map((sample, index) => {
-          const selectedImage = selectedImages[index];
-          const imagePath = path.join(imageFolder, selectedImage);
-          const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
-
-          return {
-            ...sample,
-            imageUrl: `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`,
-            total_remaining: Math.max(0, (sample.total_quantity || 0) - (sample.total_allocated || 0))
-          };
-        });
-
-        callback(null, { data: updatedResults, totalCount });
+        return {
+          ...sample,
+          imageUrl,
+          total_remaining: Math.max(0, (sample.total_quantity || 0) - (sample.total_allocated || 0))
+        };
       });
+
+      callback(null, { data: updatedResults, totalCount });
     });
   });
 };
+
 
 
 // Function to get a sample by its ID
@@ -507,7 +482,7 @@ GROUP BY s.id
   });
 };
 
-// Function to create a new sample (Collectionsites will add samples)
+
 const createSample = (data, callback) => {
   const id = uuidv4(); // ID for the new sample (individual or pool)
   const masterID = uuidv4();
@@ -533,7 +508,51 @@ const createSample = (data, callback) => {
   ) {
     data.volume = 0; // or use null if you want to skip it
   }
+const duplicateCheckQuery = `
+  SELECT * FROM sample
+  WHERE 
+    LOWER(PatientName) = LOWER(?) AND
+    age = ? AND
+    gender = ? AND
+    MRNumber = ? AND
+    phoneNumber = ? AND
+    TestResult = ? AND
+    TestResultUnit = ? AND
+    VolumeUnit = ? AND
+    volume = ? AND
+    SampleTypeMatrix = ? AND
+    ContainerType = ? AND
+    Analyte = ?
+`;
 
+const duplicateCheckValues = [
+  data.patientname?.toLowerCase() || null,
+  data.age,
+  data.gender,
+  data.MRNumber,
+  data.phoneNumber,
+  data.TestResult,
+  data.TestResultUnit,
+  data.VolumeUnit,
+  data.volume, // ✅ fixed this line
+  data.SampleTypeMatrix,
+  data.ContainerType,
+  data.Analyte,
+];
+
+mysqlConnection.query(duplicateCheckQuery, duplicateCheckValues, (dupErr, dupResults) => {
+  if (dupErr) {
+    console.error("❌ Error checking duplicates:", dupErr);
+    return callback(dupErr, null);
+  }
+
+  if (dupResults.length > 0) {
+    // Duplicate exists
+    return callback(
+      new Error("Duplicate entry: This patient sample already exists."),
+      null
+    );
+  }
   const insertQuery = `
    INSERT INTO sample (
       id, MRNumber, samplemode,FinalConcentration, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, 
@@ -672,6 +691,7 @@ const createSample = (data, callback) => {
       );
     });
   });
+});
 };
 
 // Function to update a sample by its ID (in Collectionsite)

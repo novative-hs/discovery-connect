@@ -154,13 +154,25 @@ const createSample = (req, res) => {
   if (DateOfSampling >= today) {
     return res.status(400).json({ error: "DateOfSampling must be before today" });
   }
-  SampleModel.createSample(sampleData, (err, result) => {
-    if (err) {
-      console.error('Error creating sample:', err);
-      return res.status(500).json({ error: "Error creating sample" });
+ SampleModel.createSample(sampleData, (err, result) => {
+  if (err) {
+    console.error("Error creating sample:", err);
+
+    if (
+      err.message === "Duplicate entry: This patient sample already exists."
+    ) {
+      return res.status(409).json({ error: err.message }); // <-- 409 Conflict
     }
-    res.status(201).json({ message: "Sample created successfully", id: result.insertId });
+
+    return res.status(500).json({ error: "Error creating sample" });
+  }
+
+  res.status(201).json({
+    message: "Sample created successfully",
+    id: result.insertId,
   });
+});
+
 };
 
 // Controller to update a sample

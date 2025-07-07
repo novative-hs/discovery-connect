@@ -52,6 +52,7 @@ const CartArea = () => {
                         </tr>
                         <tr>
                           <th>Analyte</th>
+                          
                           <th>Quantity</th>
                           <th>Remove</th>
                         </tr>
@@ -66,7 +67,7 @@ const CartArea = () => {
                                   alt="Sample"
                                   style={{ width: "60px", borderRadius: "8px" }}
                                 />
-                                <span>{item.Analyte}{item.volume}{item.VolumeUnit}</span>
+                                <span>{item.Analyte} ({item.Volume}{item.VolumeUnit})</span>
                               </div>
                             </td>
                             <td>{item.quantity}</td>

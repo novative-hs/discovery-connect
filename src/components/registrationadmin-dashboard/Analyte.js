@@ -43,7 +43,6 @@ const AnalyteArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get/analyte`
         );
-        console.log("analyte",response.data)
         setAnalytename(response.data);
         setFilteredAnalytename(response.data); // Initialize filtered list
       } catch (error) {

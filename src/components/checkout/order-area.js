@@ -123,7 +123,7 @@ const handleSubmit = async (paymentId) => {
   return (
     <div className="container py-4" style={{ maxWidth: "750px" }}>
       {/* View Order Button */}
-      <div className="d-flex justify-content-center mb-4">
+      {/* <div className="d-flex justify-content-center mb-4">
         <button
           className="btn text-white"
           onClick={() => setShowOrderDetails(!showOrderDetails)}
@@ -131,10 +131,10 @@ const handleSubmit = async (paymentId) => {
         >
           {showOrderDetails ? "Hide Order Details" : "View Your Order"}
         </button>
-      </div>
+      </div> */}
 
       {/* Order Table */}
-      {showOrderDetails && (
+      {/* {showOrderDetails && (
         <div className="table-responsive mb-4">
           <table className="table table-striped table-bordered align-middle">
             <thead className="table-dark text-center">
@@ -183,7 +183,7 @@ const handleSubmit = async (paymentId) => {
             </tfoot>
           </table>
         </div>
-      )}
+      )} */}
 
       {/* Payment Accordion */}
       <div className="accordion" id="paymentAccordion">

@@ -68,6 +68,7 @@ const FilterProductArea = ({ selectedProduct, closeModals }) => {
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
     setUserID(storedUserID);
+    
   }, []);
 
 useEffect(() => {
@@ -159,11 +160,17 @@ useEffect(() => {
   const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
 
 const handleAddToCart = (sample) => {
-  
+  console.log(sample,"sample")
   dispatch(
     add_cart_product({
       id: sample.id,
       Analyte: sample.Analyte,
+      Volume:sample.volume,
+      ContainerType:sample.ContainerType,
+      SampleTypeMatrix:sample.SampleTypeMatrix,
+      VolumeUnit:sample.VolumeUnit,
+      TestResult:sample.TestResult,
+      TestResultUnit:sample.TestResultUnit,
       quantity: sample.quantity ?? 1,
       price:sample.price,
       imageUrl: image_url || "",
