@@ -516,7 +516,7 @@ const duplicateCheckQuery = `
     gender = ? AND
     MRNumber = ? AND
     phoneNumber = ? AND
-    TestResult = ? AND
+       CAST(TestResult AS DECIMAL(10,2)) = ? AND
     TestResultUnit = ? AND
     VolumeUnit = ? AND
     volume = ? AND
@@ -531,7 +531,7 @@ const duplicateCheckValues = [
   data.gender,
   data.MRNumber,
   data.phoneNumber,
-  data.TestResult,
+  parseFloat(data.TestResult),
   data.TestResultUnit,
   data.VolumeUnit,
   data.volume, // ✅ fixed this line
