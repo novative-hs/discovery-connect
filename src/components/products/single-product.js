@@ -1,10 +1,8 @@
-// components/SingleProduct.js
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "react-bootstrap/Modal";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
-import { add_cart_product } from "src/redux/features/cartSlice";
 
 const SingleProduct = ({ product }) => {
   const { imageUrl, Analyte, total_allocated, total_quantity } = product || {};
@@ -12,63 +10,43 @@ const SingleProduct = ({ product }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const cartItems = useSelector((state) => state.cart?.cart_products || []);
-
-  const handleAddToCart = (product) => {
+  const handleViewDetails = (product) => {
     setSelectedProduct(product);
     setShowModal(true);
   };
 
-  const isAlreadyAdded = (Analyte) =>
-    cartItems.some((item) => item.Analyte === Analyte);
-
   return (
     <>
-<div
-  className="shadow rounded border bg-white overflow-hidden mb-3 w-100 h-100 d-flex flex-column"
-  style={{
-    padding: "0.75rem",
-    minHeight: "320px",
-    justifyContent: "space-between",
-  }}
->
-  <div className="product__thumb w-img mb-2 rounded overflow-hidden">
-    <Image
-      src={imageUrl}
-      alt="product image"
-      width={250}
-      height={150}
-      style={{
-        objectFit: "cover",
-        width: "100%",
-        height: "150px",
-        borderRadius: "8px",
-      }}
-    />
-  </div>
+      <div
+        className="product-card-hover border border-secondary rounded-3 shadow bg-white d-flex flex-column p-3 h-100"
+        onClick={() => handleViewDetails(product)}
+        role="button"
+        title="Click to show sample detail"
+      >
+        {/* Product Image */}
+        <div className="product__thumb mb-3 rounded overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt="product image"
+            width={250}
+            height={150}
+            className="w-100 object-fit-cover rounded"
+          />
+        </div>
 
-  <h6 className="fw-bold text-dark mb-1" style={{ minHeight: "40px" }}>
-    {Analyte}
-  </h6>
+        {/* Analyte Name */}
+        <h6 className="fw-bold text-dark mb-2 min-height-40">{Analyte}</h6>
 
-  <div className="d-flex justify-content-between text-muted small mb-1">
-    <span>Stock: <strong>{total_quantity}</strong></span>
-  </div>
+        {/* Stock & Allocation Info */}
+        <div className="text-muted small mb-1">
+          Stock: <strong>{total_quantity}</strong>
+        </div>
+        <div className="text-muted small mb-3">
+          Allocated: <strong>{total_allocated ?? 0}</strong>
+        </div>
+      </div>
 
-  <div className="text-muted small mb-2">
-    Allocated: <strong>{total_allocated ?? 0}</strong>
-  </div>
-
-  <button
-    onClick={() => handleAddToCart(product)}
-    className="btn btn-danger btn-sm w-100 mt-auto"
-  >
-    Add to Cart
-  </button>
-</div>
-
-
-
+      {/* Modal */}
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -89,6 +67,18 @@ const SingleProduct = ({ product }) => {
           )}
         </Modal.Body>
       </Modal>
+
+      <style jsx>{`
+        .product-card-hover {
+          cursor: pointer;
+          transition: transform 0.4s ease, border-color 0.3s ease;
+        }
+
+        .product-card-hover:hover {
+          transform: scale(1.08);
+          border-color: #0d6efd !important; /* Bootstrap primary blue */
+        }
+      `}</style>
     </>
   );
 };

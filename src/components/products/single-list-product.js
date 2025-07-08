@@ -1,123 +1,119 @@
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import { Eye } from "@svg/index";
+import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import {
   add_cart_product,
   initialOrderQuantity,
 } from "src/redux/features/cartSlice";
 import { setProduct } from "src/redux/features/productSlice";
+import Modal from "react-bootstrap/Modal";
+import FilterProductArea from "@components/user-dashboard/filter-samples";
 
 const SingleListProduct = ({ product }) => {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const handleQuickView = (prd) => {
-    dispatch(initialOrderQuantity());
-    dispatch(setProduct(prd));
+  const handleViewDetails = (product) => {
+    setSelectedProduct(product);
+    setShowModal(true);
   };
 
-  const handleAddToCart = (product) => {
-    dispatch(add_cart_product(product));
+  const handleModalClose = () => {
+    setShowModal(false);
+    setSelectedProduct(null);
   };
-
-  const cartItems = useSelector((state) => state.cart?.cart_products || []);
-  const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
 
   return (
-    <div
-      className="product__item p-3 mb-4"
-      style={{
-        border: "1px solid #e0e0e0",
-        borderRadius: "12px",
-        background: "#fff",
-        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-      }}
-    >
-      <div className="row align-items-center gx-3">
-        <div className="col-5">
-          <div
-            className="product__thumb position-relative"
-            style={{
-              borderRadius: "8px",
-              overflow: "hidden",
-              height: "240px",
-            }}
-          >
-            <Image
-              src={product.imageUrl}
-              alt="product image"
-              width={960}
-              height={1125}
-              style={{
-                objectFit: "cover",
-                width: "100%",
-                height: "100%",
-                borderRadius: "8px",
+    <>
+      <div
+        className="p-3 mb-4 bg-white border border-secondary rounded shadow-sm transition-all"
+        style={{
+          cursor: "pointer",
+          transition: "transform 0.3s ease, border-color 0.3s ease",
+        }}
+        onClick={() => handleViewDetails(product)}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.05)";
+          e.currentTarget.style.borderColor = "#0d6efd"; // Bootstrap primary
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.borderColor = "#6c757d"; // Bootstrap secondary
+        }}
+        role="button"
+        title="Click to show sample detail"
+      >
+        <div className="row align-items-center gx-3">
+          <div className="col-5">
+            <div className="rounded overflow-hidden" style={{ height: "240px" }}>
+              <Image
+                src={product.imageUrl}
+                alt="product"
+                width={960}
+                height={1125}
+                className="w-100 h-100 object-fit-cover rounded"
+              />
+            </div>
+          </div>
+
+          <div className="col-7">
+            <h3
+              className="fw-semibold mb-2 text-dark"
+              style={{ fontSize: "20px", transition: "color 0.3s ease" }}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent modal open
+                router.push("/shop");
               }}
-            />
-            {product.discount > 0 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  left: "10px",
-                  backgroundColor: "red",
-                  color: "#fff",
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  borderRadius: "4px",
-                }}
-              >
-                Sale
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="col-7">
-          <h3 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "8px" }}>
-            {product.Analyte}
-          </h3>
-
-          <div className="text-muted mb-1">
-            Price: <strong className="text-dark">Rs. {product.price}</strong>
-          </div>
-          <div className="text-muted mb-1">Stock: {product.total_quantity}</div>
-          <div className="text-muted mb-2">
-            Allocated: <strong>{product.total_allocated ?? 0}</strong>
-          </div>
-
-          <p style={{ fontSize: "14px", color: "#555", marginBottom: "12px" }}>
-            Get high-quality blood samples for your research at Discovery Connect.
-            Fast shipping and reliable sourcing!
-          </p>
-
-          <div className="d-flex gap-2">
-            {product.quantity === 0 ? (
-              <button className="btn w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
-                Sample Allocated
-              </button>
-            ) : isInCart(product.id) ? (
-              <button className="btn btn-secondary w-75" disabled>
-                Added
-              </button>
-            ) : (
-              <button className="btn btn-danger w-75" onClick={() => handleAddToCart(product)}>
-                Add to Cart
-              </button>
-            )}
-
-            <button
-              onClick={() => handleQuickView(product)}
-              className="btn btn-outline-danger w-25"
-              title="Quick View"
+              onMouseOver={(e) => (e.currentTarget.style.color = "#dc3545")}
+              onMouseOut={(e) => (e.currentTarget.style.color = "#212529")}
+              title="Go to Shop"
             >
-              <Eye product={product} />
-            </button>
+              {product.Analyte}
+            </h3>
+
+            {/* <div className="text-muted mb-1">
+              Price: <strong className="text-dark">Rs. {product.price}</strong>
+            </div> */}
+            <div className="text-muted mb-1">
+              Stock: {product.total_quantity}
+            </div>
+            <div className="text-muted mb-2">
+              Allocated: <strong>{product.total_allocated ?? 0}</strong>
+            </div>
+
+            <p style={{ fontSize: "14px", color: "#555" }}>
+              Get high-quality blood samples for your research at Discovery
+              Connect. Fast shipping and reliable sourcing!
+            </p>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal */}
+      <Modal
+        show={showModal}
+        onHide={handleModalClose}
+        size="xl"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Filter Samples</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedProduct && (
+            <FilterProductArea
+              selectedProduct={selectedProduct}
+              closeModals={handleModalClose}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
+    </>
   );
 };
 

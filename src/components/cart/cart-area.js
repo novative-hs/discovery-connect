@@ -62,12 +62,19 @@ const CartArea = () => {
                           <tr key={i} className="text-center align-middle">
                             <td className="text-start">
                               <div className="d-flex align-items-center gap-3">
-                                <img
+                                {/* <img
                                   src={item.imageUrl}
                                   alt="Sample"
                                   style={{ width: "60px", borderRadius: "8px" }}
-                                />
-                                <span>{item.Analyte} ({item.Volume}{item.VolumeUnit})</span>
+                                /> */}
+                              <span>
+  {item.Analyte} (
+  {[item.gender, item.age, `${item.TestResult}${item.TestResultUnit}`, `${item.Volume}${item.VolumeUnit}`]
+    .filter(Boolean) 
+    .join(", ")}
+  )
+</span>
+
                               </div>
                             </td>
                             <td>{item.quantity}</td>

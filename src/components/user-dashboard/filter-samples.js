@@ -160,25 +160,31 @@ useEffect(() => {
   const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
 
 const handleAddToCart = (sample) => {
-  console.log(sample,"sample")
+
+  const defaultAge = sample.age || "";
+  const defaultGender = sample.gender || "";
+
   dispatch(
     add_cart_product({
       id: sample.id,
+      age: defaultAge,
+      gender: defaultGender,
       Analyte: sample.Analyte,
-      Volume:sample.volume,
-      ContainerType:sample.ContainerType,
-      SampleTypeMatrix:sample.SampleTypeMatrix,
-      VolumeUnit:sample.VolumeUnit,
-      TestResult:sample.TestResult,
-      TestResultUnit:sample.TestResultUnit,
+      Volume: sample.volume,
+      ContainerType: sample.ContainerType,
+      SampleTypeMatrix: sample.SampleTypeMatrix,
+      VolumeUnit: sample.VolumeUnit,
+      TestResult: sample.TestResult,
+      TestResultUnit: sample.TestResultUnit,
       quantity: sample.quantity ?? 1,
-      price:sample.price,
-      imageUrl: image_url || "",
+      price: sample.price,
+      imageUrl: sample.image_url || "",
     })
   );
-  closeModals();
 
+  closeModals();
 };
+
 
 
   return (
