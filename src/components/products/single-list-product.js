@@ -1,12 +1,14 @@
 import React from "react";
 import Image from "next/image";
 import { Eye } from "@svg/index";
-import { useDispatch } from "react-redux";
-import { add_cart_product, initialOrderQuantity } from "src/redux/features/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  add_cart_product,
+  initialOrderQuantity,
+} from "src/redux/features/cartSlice";
 import { setProduct } from "src/redux/features/productSlice";
-import { useSelector } from 'react-redux';
-const SingleListProduct = ({ product }) => {
 
+const SingleListProduct = ({ product }) => {
   const dispatch = useDispatch();
 
   const handleQuickView = (prd) => {
@@ -15,28 +17,32 @@ const SingleListProduct = ({ product }) => {
   };
 
   const handleAddToCart = (product) => {
-
     dispatch(add_cart_product(product));
   };
+
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
-  const isInCart = (sampleId) => {
-    return cartItems.some((item) => item.id === sampleId);
-  };
+  const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
+
   return (
     <div
-      className="product__item"
+      className="product__item p-3 mb-4"
       style={{
         border: "1px solid #e0e0e0",
         borderRadius: "12px",
-        padding: "16px",
-        marginBottom: "24px",
         background: "#fff",
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
       }}
     >
-      <div className="row" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <div className="col-xl-5 col-lg-5" style={{ flex: "1 1 40%" }}>
-          <div className="product__thumb" style={{ borderRadius: "8px", overflow: "hidden", height: "240px" }}>
+      <div className="row align-items-center gx-3">
+        <div className="col-5">
+          <div
+            className="product__thumb position-relative"
+            style={{
+              borderRadius: "8px",
+              overflow: "hidden",
+              height: "240px",
+            }}
+          >
             <Image
               src={product.imageUrl}
               alt="product image"
@@ -68,33 +74,27 @@ const SingleListProduct = ({ product }) => {
           </div>
         </div>
 
-        <div className="col-xl-7 col-lg-7" style={{ flex: "1 1 55%" }}>
+        <div className="col-7">
           <h3 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "8px" }}>
             {product.Analyte}
           </h3>
 
-          <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "4px" }}>
-            Price: <strong style={{ color: "#000" }}>Rs. {product.price}</strong>
+          <div className="text-muted mb-1">
+            Price: <strong className="text-dark">Rs. {product.price}</strong>
           </div>
-
-          <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "4px" }}>
-            Stock: {product.total_quantity}
-          </div>
-
-          <div style={{ color: "#6c757d", fontSize: "14px", marginBottom: "10px" }}>
-            Allocated:{" "}
-            <strong >
-              {product.total_allocated ?? 0}
-            </strong>
+          <div className="text-muted mb-1">Stock: {product.total_quantity}</div>
+          <div className="text-muted mb-2">
+            Allocated: <strong>{product.total_allocated ?? 0}</strong>
           </div>
 
           <p style={{ fontSize: "14px", color: "#555", marginBottom: "12px" }}>
-            Get high-quality blood samples for your research at Discovery Connect. Fast shipping and reliable sourcing!
+            Get high-quality blood samples for your research at Discovery Connect.
+            Fast shipping and reliable sourcing!
           </p>
 
           <div className="d-flex gap-2">
             {product.quantity === 0 ? (
-              <button className="btn  w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
+              <button className="btn w-75" disabled style={{ backgroundColor: "black", color: "white" }}>
                 Sample Allocated
               </button>
             ) : isInCart(product.id) ? (
@@ -109,9 +109,7 @@ const SingleListProduct = ({ product }) => {
 
             <button
               onClick={() => handleQuickView(product)}
-              className="btn btn-outline-danger w-15"
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
+              className="btn btn-outline-danger w-25"
               title="Quick View"
             >
               <Eye product={product} />

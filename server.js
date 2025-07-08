@@ -5,8 +5,13 @@ const bodyParser = require("body-parser");
 const cors = require("cors"); // Import CORS
 const app = express();
 const port = process.env.PORT || 5000;
-const compression = require("compression");
-app.use(compression());
+// const helmet = require("helmet");
+// const compression = require("compression");
+
+// app.use(helmet());         // 🔐 Security headers
+// app.use(compression()); 
+
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
