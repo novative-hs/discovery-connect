@@ -24,44 +24,50 @@ const SingleProduct = ({ product }) => {
 
   return (
     <>
-     <div className="h-100 d-flex flex-column shadow rounded border justify-content-between bg-white overflow-hidden mb-4" style={{ padding: "1rem" }}>
+<div
+  className="shadow rounded border bg-white overflow-hidden mb-3 w-100 h-100 d-flex flex-column"
+  style={{
+    padding: "0.75rem",
+    minHeight: "320px",
+    justifyContent: "space-between",
+  }}
+>
+  <div className="product__thumb w-img mb-2 rounded overflow-hidden">
+    <Image
+      src={imageUrl}
+      alt="product image"
+      width={250}
+      height={150}
+      style={{
+        objectFit: "cover",
+        width: "100%",
+        height: "150px",
+        borderRadius: "8px",
+      }}
+    />
+  </div>
 
-        <div className="product__thumb w-img mb-3 rounded overflow-hidden">
-          <Image
-            src={imageUrl}
-            alt="product image"
-            width={960}
-            height={1125}
-            style={{
-              objectFit: "cover",
-              width: "100%",
-              height: "250px",
-              borderRadius: "12px",
-            }}
-          />
-        </div>
+  <h6 className="fw-bold text-dark mb-1" style={{ minHeight: "40px" }}>
+    {Analyte}
+  </h6>
 
-        <h5 className="mb-2 fw-bold text-dark" style={{ minHeight: "48px" }}>
-          {Analyte}
-        </h5>
+  <div className="d-flex justify-content-between text-muted small mb-1">
+    <span>Stock: <strong>{total_quantity}</strong></span>
+  </div>
 
-        <div className="d-flex justify-content-between text-muted small mb-1">
-          <span>Stock: <strong>{total_quantity}</strong></span>
-        </div>
+  <div className="text-muted small mb-2">
+    Allocated: <strong>{total_allocated ?? 0}</strong>
+  </div>
 
-        <div className="text-muted small mb-3">
-          Allocated: <strong>{total_allocated ?? 0}</strong>
-        </div>
+  <button
+    onClick={() => handleAddToCart(product)}
+    className="btn btn-danger btn-sm w-100 mt-auto"
+  >
+    Add to Cart
+  </button>
+</div>
 
-        <div className="d-flex gap-2 mt-auto">
-          <button
-            onClick={() => handleAddToCart(product)}
-            className="btn btn-danger w-100"
-          >
-            Add to Cart
-          </button>
-        </div>
-      </div>
+
 
       <Modal
         show={showModal}

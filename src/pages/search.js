@@ -105,18 +105,21 @@ export default function Search({ query }) {
                 </div>
               </div>
             </div>
-            <div className="shop__main">
-              <div className="row">
-                {product_items?.slice(0, next)?.map((product) => (
-                  <div
-                    key={product._id}
-                    className="col-xl-3 col-lg-4 col-md-6 col-sm-6"
-                  >
-                    <SingleProduct product={product} />
-                  </div>
-                ))}
-              </div>
-            </div>
+           
+ <div className="shop__main container">
+  <div className="row g-4">
+    {product_items?.slice(0, next)?.map((product) => (
+      <div
+        key={product._id}
+        className="col-12 col-sm-6 col-md-4 col-xl-3 d-flex"
+      >
+        <SingleProduct product={product} />
+      </div>
+    ))}
+  </div>
+</div>
+
+
             {next < product_items?.length && (
               <div className="row">
                 <div className="col-xxl-12">
