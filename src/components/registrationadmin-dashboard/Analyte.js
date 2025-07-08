@@ -207,15 +207,19 @@ payload.append("image", formData.image); // must be a File object
     setShowEditModal(true);
   };
  
-  const handleUpdate = async (e) => {
+const handleUpdate = async (e) => {
   e.preventDefault();
   try {
     const form = new FormData();
     form.append("name", formData.name);
     form.append("added_by", formData.added_by);
-    form.append("testresultunit_id", formData.testresultunit_id);
-    if (formData.image) {
-      form.append("image", formData.image); // append only if image is selected
+
+    if (formData.testresultunit_id) {
+      form.append("testresultunit_id", formData.testresultunit_id);
+    }
+
+    if (formData.image instanceof File) {
+      form.append("image", formData.image);
     }
 
     await axios.put(
@@ -233,10 +237,7 @@ payload.append("image", formData.image); // must be a File object
     setAnalytename(response.data);
     setShowEditModal(false);
     setSuccessMessage("Analyte updated successfully.");
-
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 3000);
+    setTimeout(() => setSuccessMessage(""), 3000);
 
     setFormData({
       name: "",
@@ -249,6 +250,7 @@ payload.append("image", formData.image); // must be a File object
     console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
   }
 };
+
 
 
   const handleDelete = async () => {
@@ -627,7 +629,7 @@ image:""
     name="testresultunit_id" // 👈 match backend key if you're storing the id
     value={formData.testresultunit_id || ""}
     onChange={handleInputChange}
-    required
+    // required
   >
     <option value="">Select Unit</option>
     {testResultUnit?.map((unit) => (

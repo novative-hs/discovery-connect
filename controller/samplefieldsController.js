@@ -17,21 +17,30 @@ const getAllSampleFields = (req, res) => {
 
 // Controller to create a sample field dynamically
 const createSampleFields = (req, res) => {
-  
   const { tableName } = req.params;
   const newSampleFieldsData = req.body;
- const files = req.files;
- newSampleFieldsData.image = files?.image?.[0]?.buffer || null;
+  const files = req.files;
+
+  // ✅ If file was uploaded, grab the buffer (e.g., for image stored as BLOB)
+  newSampleFieldsData.image = files?.image?.[0]?.buffer || null;
+
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return res.status(400).json({ error: "Invalid table name" });
   }
+
   samplefieldsModel.createSampleFields(tableName, newSampleFieldsData, (err, result) => {
     if (err) {
-      return res.status(500).json({ error: "Error creating sample fields" });
+      console.error("❌ Backend Error:", err); // ✅ SHOW REAL ERROR
+      return res.status(500).json({ error: err.message || "Error creating sample fields" });
     }
-    res.status(201).json({ message: "Sample fields added successfully", id: result.insertId });
+
+    res.status(201).json({
+      message: "Sample fields added successfully",
+      id: result.insertId || null,
+    });
   });
 };
+
 
 // Controller to update a sample field dynamically
 const updateSampleFields = (req, res) => {

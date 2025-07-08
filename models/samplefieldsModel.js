@@ -365,8 +365,7 @@ const getAnalyteName=(callback)=>{
 }
 // Function to create all SampleFields
 const createSampleFields = (tableName, data, callback) => {
-  const { bulkData, name, added_by, testresultunit_id,image } = data || {};
-  
+  const { bulkData, name, added_by, testresultunit_id, image } = data || {};
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
 
@@ -380,7 +379,6 @@ const createSampleFields = (tableName, data, callback) => {
         let values = [];
 
         if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
-          // ✅ Handle bulk insert
           values = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
 
           const insertQuery = `INSERT IGNORE INTO \`${tableName}\` (name, added_by) VALUES ?;`;
@@ -399,26 +397,39 @@ const createSampleFields = (tableName, data, callback) => {
           await connection.promise().query(historyQuery, [historyValues]);
         }
 
-        // ✅ Handle single insert for `analyte` with testresultunit_id
-        else if (tableName === "analyte" && name && added_by && testresultunit_id) {
+        // Single insert for analyte
+        else if (tableName === "analyte" && name && added_by) {
+          const insertAnalyte = `
+            INSERT INTO analyte (name, added_by, testresultunit_id, image)
+            VALUES (?, ?, ?, ?);
+          `;
 
-          // Insert into analyte
-         const insertAnalyte = `INSERT INTO analyte (name, added_by, testresultunit_id, image) VALUES (?, ?, ?, ?);`;
-const [result] = await connection.promise().query(insertAnalyte, [name, added_by, testresultunit_id, image]);
+          const testResultUnitValue = testresultunit_id || null;
+          const safeImage = typeof image === "string" && image.length > 0 ? image : null;
 
+          console.log("🧪 Inserting analyte with:", { name, added_by, testResultUnitValue, safeImage: safeImage?.slice(0, 50) });
 
-          // Insert into history
-          const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, analyte_id, status) VALUES (?, ?, ?, ?);`;
+          const [result] = await connection.promise().query(
+            insertAnalyte,
+            [name, added_by, testResultUnitValue, safeImage]
+          );
+
+          const historyQuery = `
+            INSERT INTO registrationadmin_history
+            (created_name, added_by, analyte_id, status)
+            VALUES (?, ?, ?, ?);
+          `;
           await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
         }
 
         else {
-          throw new Error("Invalid data or missing testresultunit_id");
+          throw new Error("Invalid data or missing required fields.");
         }
 
         connection.commit();
         callback(null, { success: true });
       } catch (err) {
+        console.error("❌ Error during createSampleFields:", err.message, err.stack);
         connection.rollback();
         callback(err);
       } finally {
@@ -427,6 +438,7 @@ const [result] = await connection.promise().query(insertAnalyte, [name, added_by
     });
   });
 };
+
 
 
 // Function to update a record dynamically
