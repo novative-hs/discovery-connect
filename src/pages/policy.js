@@ -16,11 +16,7 @@ export default function Policy() {
           Welcome to Discovery-Connect
         </h2>
       }
-      subtitle={
-        <h3 style={{ fontFamily: 'Roboto, sans-serif', fontWeight: '400' }}>
-          We are Coming Soon!
-        </h3>
-      }
+     
     />
       <PolicyArea />
       <Footer />

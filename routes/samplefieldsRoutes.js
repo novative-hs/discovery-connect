@@ -16,6 +16,7 @@ router.post('/post-samplefields/:tableName', (req, res, next) => {
     next();}, upload.fields([
         { name: 'image', maxCount: 1 },
     ]),samplefieldsController.createSampleFields);
+    
 router.put('/put-samplefields/:tableName/:id',upload.fields([
         { name: 'image', maxCount: 1 },
     ]), samplefieldsController.updateSampleFields);

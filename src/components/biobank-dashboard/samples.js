@@ -19,6 +19,8 @@ import InputMask from "react-input-mask";
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
   const [mode, setMode] = useState("");
+  const [showActionModal, setShowActionModal] = useState(false);
+const [statusmode, setstatusMode] = useState(""); 
   const [selectedSample, setSelectedSample] = useState(null);
   const [selectedSamples, setSelectedSamples] = useState([]);
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
@@ -85,6 +87,7 @@ const BioBankSampleArea = () => {
   const [pageSize, setPageSize] = useState(10);
   const [priceFilter, setPriceFilter] = useState("");
   const [poolMode, setPoolMode] = useState(false);
+  const [visibilitystatuschange, setVisibilityStatusChange] = useState(false);
   const [analyteOptions, setAnalyteOptions] = useState([]);
   const [showAddPoolModal, setshowAddPoolModal] = useState(false);
   const [showEditPoolModal, setShowEditPoolModal] = useState(false);
@@ -402,7 +405,7 @@ const BioBankSampleArea = () => {
     }
   };
 
-
+  
 
   const getSamplePrice = async (selectedSampleName) => {
     try {
@@ -850,18 +853,36 @@ const BioBankSampleArea = () => {
     }
   };
 
-  const handleVisibilityStatusClick = async (e) => {
-    e.preventDefault(); // Prevent form from reloading page
-    let isMounted = true;
+  const handleVisibilityButtonClick = () => {
+    if (visibilitystatuschange) {
+      const selected = [...selectedSamples];
+      if (selected.length < 1) {
+        alert("Please select at least one samples to make as public/non-public.");
+        return;
+      }
+      setShowVisibilityModal(true);
+    } else {
+      setVisibilityStatusChange(true);
+    }
+  };
+const handleVisibilityStatusClick = async (e) => {
+  e.preventDefault();
 
-    try {
+  if (!visibilitystatus || selectedSamples.length === 0) {
+    alert("Please select visibility and at least one sample.");
+    return;
+  }
+
+  try {
+    // Update each selected sample one by one
+    for (const sampleId of selectedSamples) {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/UpdateSampleStatus/${selectedSampleVisibilityId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/UpdateSampleStatus/${sampleId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            sample_visibility: visibilitystatus || "",
+            sample_visibility: visibilitystatus,
             added_by: id,
           }),
         }
@@ -869,21 +890,29 @@ const BioBankSampleArea = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Backend error response:", errorText);
-        throw new Error("Failed to update sample status.");
+        console.error(`Failed for sample ${sampleId}:`, errorText);
+        throw new Error(`Failed to update sample ${sampleId}`);
       }
-
-      const data = await response.json();
-      setSuccessMessage("Successfully changed sample visibility status")
-      setTimeout(() => setSuccessMessage(""), 3000);
-      setShowVisibilityModal(false);
-setVisibilityStatus("")
-      // ✅ Optional: Refresh the sample list
-      fetchSamples(1, itemsPerPage, { searchField, searchValue });
-    } catch (error) {
-      console.error("Update error:", error);
     }
-  };
+
+    // All updates succeeded
+    setSuccessMessage("Successfully changed sample visibility status");
+    setTimeout(() => setSuccessMessage(""), 3000);
+
+    // Reset UI
+    setShowVisibilityModal(false);
+    setVisibilityStatus("");
+    setVisibilityStatusChange(false);
+    setSelectedSamples([]);
+
+    // Refresh sample list
+    fetchSamples(1, itemsPerPage, { searchField, searchValue });
+
+  } catch (error) {
+    console.error("Update error:", error);
+  }
+};
+
 
   const openVisibilitystatusModal = (sample) => {
     setSelectedSampleName(sample.Analyte);
@@ -1174,56 +1203,92 @@ setVisibilityStatus("")
               </button>
             ) : null}
           </div>
-          <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
-            <button
-              onClick={handlePoolButtonClick}
-              style={{
-                backgroundColor: "#4a90e2",
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "6px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              }}
-            >
-              {poolMode ? "Make Pool" : "Mark Sample as Pool"}
-            </button>
-            {/* Add Sample Button */}
-            <div className="d-flex justify-content-end align-items-center">
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="btn d-flex align-items-center gap-2 px-3 py-2"
-                style={{
-                  backgroundColor: "#3b82f6", // Tailwind blue-500
-                  color: "#fff",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  fontWeight: "500",
-                }}
-              >
-                <i className="fas fa-vial"></i> Add Sample
-              </button>
-            </div>
-          </div>
+           
+         <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+  
+  {/* Make Sample Public Button - Primary Theme */}
+{mode !== "pool" && mode !== "visibility" && (
+  <button
+    onClick={() => setShowActionModal(true)}
+    className="btn btn-primary d-flex align-items-center gap-2 px-3 py-2"
+  >
+    <i className="fas fa-vial"></i> Mark Samples
+  </button>
+)}
+
+{mode === "visibility" && visibilitystatuschange && (
+  <div className="d-flex gap-2 align-items-center mt-3">
+    <button onClick={handleVisibilityButtonClick} className="btn btn-success">
+      Make Public / Non-Public
+    </button>
+    <button
+      onClick={() => {
+        setVisibilityStatusChange(false);
+        setSelectedSamples([]);
+        setMode("");
+      }}
+      className="btn btn-outline-danger"
+    >
+      <i className="fas fa-times"></i>
+    </button>
+  </div>
+)}
+
+{mode === "pool" && poolMode && (
+  <div className="d-flex gap-2 align-items-center mt-3">
+    <button onClick={handlePoolButtonClick} className="btn btn-success">
+      Make Pool
+    </button>
+    <button
+      onClick={() => {
+        setPoolMode(false);
+        setSelectedSamples([]);
+        setMode("");
+      }}
+      className="btn btn-outline-danger"
+    >
+      <i className="fas fa-times"></i>
+    </button>
+  </div>
+)}
+
+
+
+
+  {/* Add Sample Button - Success Theme */}
+  <div className="d-flex justify-content-end align-items-center">
+    <button
+      onClick={() => setShowAddModal(true)}
+      className="btn d-flex align-items-center gap-2 px-3 py-2"
+      style={{
+        backgroundColor: "#198754", // Bootstrap Success Green
+        color: "#fff",
+        borderRadius: "8px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        fontWeight: "500",
+      }}
+    >
+      <i className="fas fa-vial"></i> Add Sample
+    </button>
+  </div>
+</div>
+
         </div>
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
-                {poolMode && (
-                  <th className="text-center">
-                    <div className="d-flex flex-column align-items-center">
-                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                        Pool
-                      </span>
-                    </div>
-                  </th>
-                )}
+              {(poolMode || visibilitystatuschange) && (
+  <th className="text-center">
+    <div className="d-flex flex-column align-items-center">
+      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
+        {visibilitystatuschange ? 'Public/Non-Public' : 'Pool'}
+      </span>
+    </div>
+  </th>
+)}
+
              {tableHeaders.map(({ label, key }, index) => (
   <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
     <div className="d-flex flex-column align-items-center">
@@ -1252,7 +1317,7 @@ setVisibilityStatus("")
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                    {poolMode && (
+                    {(poolMode || visibilitystatuschange) && (
                       <td className="text-center">
                         <input
                           type="checkbox"
@@ -3170,6 +3235,40 @@ Box ID=${sample.box_id || "----"} `;
             </div>
           </>
         )}
+{showActionModal && (
+  <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal-dialog modal-sm modal-dialog-centered">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Select Action</h5>
+          <button type="button" className="btn-close" onClick={() => setShowActionModal(false)}></button>
+        </div>
+        <div className="modal-body d-flex flex-column gap-2">
+          <button
+            className="btn btn-outline-info"
+            onClick={() => {
+              setMode("pool");
+              setPoolMode(true);
+              setShowActionModal(false);
+            }}
+          >
+            Mark as Pool
+          </button>
+          <button
+            className="btn btn-outline-success"
+            onClick={() => {
+              setMode("visibility");
+              setVisibilityStatusChange(true);
+              setShowActionModal(false);
+            }}
+          >
+            Change Visibility
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {showVisibilityModal && (
           <>
@@ -3194,9 +3293,12 @@ Box ID=${sample.box_id || "----"} `;
               <div className="modal-dialog" role="document">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title">
-                      <h5 className="modal-title">{selectedSampleName} -{selectedSampleVolume}{selectedSampleUnit}</h5>
-                    </h5>
+                   <h5 className="modal-title">
+  {visibilitystatuschange
+    ? 'Public / NonPublic'
+    : `${selectedSampleName} - ${selectedSampleVolume}${selectedSampleUnit}`}
+</h5>
+
                     <button
                       type="button"
                       className="close"
