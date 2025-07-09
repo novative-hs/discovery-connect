@@ -158,7 +158,7 @@ payload.append("image", formData.image); // must be a File object
   try {
   
 
-    await axios.post(`${url}/samplefields/post-samplefields/analyte`, payload, {
+    await axios.post(`${url}/samplefields/post-analytes/analyte`, payload, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -310,7 +310,7 @@ const handleUpdate = async (e) => {
        const payload = data.map((row) => ({ name: row.name, added_by: id }));
  
        try {
-         await axios.post(`${url}/samplefields/post-samplefields/analyte`, { bulkData: payload });
+         await axios.post(`${url}/samplefields/post-analytes/analyte`, { bulkData: payload });
          const response = await axios.get(`${url}/samplefields/get/analyte`);
          setFilteredAnalytename(response.data);
          setAnalytename(response.data);

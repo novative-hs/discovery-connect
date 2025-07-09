@@ -363,9 +363,104 @@ const getAnalyteName=(callback)=>{
     }
   });
 }
+
+const createAnalyte = (data, callback) => {
+  const { bulkData, name, added_by, testresultunit_id, image } = data || {};
+
+  if (!added_by) {
+    return callback(new Error("Missing 'added_by' field."));
+  }
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err);
+
+    connection.beginTransaction(async (err) => {
+      if (err) {
+        connection.release();
+        return callback(err);
+      }
+
+      try {
+        // ✅ BULK INSERT: only `name` is required
+        if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
+          const uniqueNames = Array.from(
+            new Set(
+              bulkData
+                .map((item) => (typeof item.name === "string" ? item.name.trim() : null))
+                .filter((name) => !!name)
+            )
+          );
+
+          if (uniqueNames.length === 0) {
+            throw new Error("No valid analyte names provided in bulk.");
+          }
+
+          const insertValues = uniqueNames.map((name) => [name, added_by]);
+
+          const insertQuery = `
+            INSERT IGNORE INTO analyte (name, added_by)
+            VALUES ?
+          `;
+          await connection.promise().query(insertQuery, [insertValues]);
+
+          const [rows] = await connection.promise().query(
+            `SELECT id, name FROM analyte WHERE name IN (?)`,
+            [uniqueNames]
+          );
+
+          const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
+
+          const historyQuery = `
+            INSERT INTO registrationadmin_history
+            (created_name, added_by, analyte_id, status)
+            VALUES ?
+          `;
+          await connection.promise().query(historyQuery, [historyValues]);
+        }
+
+        // ✅ SINGLE INSERT: name, added_by, testresultunit_id are required
+        else if (name && added_by && testresultunit_id) {
+          const safeImage = typeof image === "string" && image.length > 0 ? image : null;
+
+          const insertQuery = `
+            INSERT INTO analyte (name, added_by, testresultunit_id, image)
+            VALUES (?, ?, ?, ?);
+          `;
+          const [result] = await connection.promise().query(
+            insertQuery,
+            [name.trim(), added_by, testresultunit_id, safeImage]
+          );
+
+          const historyQuery = `
+            INSERT INTO registrationadmin_history
+            (created_name, added_by, analyte_id, status)
+            VALUES (?, ?, ?, ?);
+          `;
+          await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
+        }
+
+        // ❌ INVALID INPUT
+        else {
+          throw new Error("Invalid analyte data or missing required fields.");
+        }
+
+        connection.commit();
+        callback(null, { success: true });
+      } catch (err) {
+        console.error("❌ Error during createAnalyte:", err.message, err.stack);
+        connection.rollback();
+        callback(err);
+      } finally {
+        connection.release();
+      }
+    });
+  });
+};
+
+
 // Function to create all SampleFields
 const createSampleFields = (tableName, data, callback) => {
-  const { bulkData, name, added_by, testresultunit_id, image } = data || {};
+  const { bulkData, name, added_by } = data || {};
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
 
@@ -373,7 +468,10 @@ const createSampleFields = (tableName, data, callback) => {
     if (err) return callback(err);
 
     connection.beginTransaction(async (err) => {
-      if (err) return connection.release(), callback(err);
+      if (err) {
+        connection.release();
+        return callback(err);
+      }
 
       try {
         let values = [];
@@ -395,34 +493,18 @@ const createSampleFields = (tableName, data, callback) => {
           const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
           const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, ${idColumn}, status) VALUES ?;`;
           await connection.promise().query(historyQuery, [historyValues]);
-        }
+        } else if (name && added_by) {
+          const insertQuery = `INSERT INTO \`${tableName}\` (name, added_by) VALUES (?, ?);`;
+          const [result] = await connection.promise().query(insertQuery, [name, added_by]);
 
-        // Single insert for analyte
-        else if (tableName === "analyte" && name && added_by) {
-          const insertAnalyte = `
-            INSERT INTO analyte (name, added_by, testresultunit_id, image)
-            VALUES (?, ?, ?, ?);
-          `;
-
-          const testResultUnitValue = testresultunit_id || null;
-          const safeImage = typeof image === "string" && image.length > 0 ? image : null;
-
-          console.log("🧪 Inserting analyte with:", { name, added_by, testResultUnitValue, safeImage: safeImage?.slice(0, 50) });
-
-          const [result] = await connection.promise().query(
-            insertAnalyte,
-            [name, added_by, testResultUnitValue, safeImage]
-          );
-
+          const idColumn = `${tableName}_id`;
           const historyQuery = `
             INSERT INTO registrationadmin_history
-            (created_name, added_by, analyte_id, status)
+            (created_name, added_by, ${idColumn}, status)
             VALUES (?, ?, ?, ?);
           `;
           await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
-        }
-
-        else {
+        } else {
           throw new Error("Invalid data or missing required fields.");
         }
 
@@ -438,6 +520,7 @@ const createSampleFields = (tableName, data, callback) => {
     });
   });
 };
+
 
 
 
@@ -571,5 +654,6 @@ module.exports = {
   createTestKitManufacturerTable,
   createTestSystemTable,
   createTestSystemManufacturerTable,
-  getAnalyteName
+  getAnalyteName,
+  createAnalyte
 };
