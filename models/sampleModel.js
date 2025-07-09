@@ -500,198 +500,187 @@ const createSample = (data, callback) => {
 
   if (data.age === null || data.age === "") {
     data.age = null;
-    data.age = null;
   }
-  if (
-    data.volume === "" ||
-    data.volume === null
-  ) {
+
+  if (data.volume === "" || data.volume === null) {
     data.volume = 0; // or use null if you want to skip it
   }
-const duplicateCheckQuery = `
-  SELECT * FROM sample
-  WHERE 
-    LOWER(PatientName) = LOWER(?) AND
-    age = ? AND
-    gender = ? AND
-    MRNumber = ? AND
-    phoneNumber = ? AND
-       CAST(TestResult AS DECIMAL(10,2)) = ? AND
-    TestResultUnit = ? AND
-    VolumeUnit = ? AND
-    volume = ? AND
-    SampleTypeMatrix = ? AND
-    ContainerType = ? AND
-    Analyte = ?
-`;
 
-const duplicateCheckValues = [
-  data.patientname?.toLowerCase() || null,
-  data.age,
-  data.gender,
-  data.MRNumber,
-  data.phoneNumber,
-  parseFloat(data.TestResult),
-  data.TestResultUnit,
-  data.VolumeUnit,
-  data.volume, // ✅ fixed this line
-  data.SampleTypeMatrix,
-  data.ContainerType,
-  data.Analyte,
-];
+  // ✅ Duplicate check only for Individual samples
+  if (data.mode === "Individual") {
+    const duplicateCheckQuery = `
+      SELECT * FROM sample
+      WHERE 
+        LOWER(PatientName) = LOWER(?) AND
+        age = ? AND
+        gender = ? AND
+        MRNumber = ? AND
+        phoneNumber = ? AND
+        CAST(TestResult AS DECIMAL(10,2)) = ? AND
+        TestResultUnit = ? AND
+        VolumeUnit = ? AND
+        volume = ? AND
+        SampleTypeMatrix = ? AND
+        ContainerType = ? AND
+        Analyte = ?
+    `;
 
-mysqlConnection.query(duplicateCheckQuery, duplicateCheckValues, (dupErr, dupResults) => {
-  if (dupErr) {
-    console.error("❌ Error checking duplicates:", dupErr);
-    return callback(dupErr, null);
+    const duplicateCheckValues = [
+      data.patientname?.toLowerCase() || null,
+      data.age,
+      data.gender,
+      data.MRNumber,
+      data.phoneNumber,
+      parseFloat(data.TestResult),
+      data.TestResultUnit,
+      data.VolumeUnit,
+      data.volume,
+      data.SampleTypeMatrix,
+      data.ContainerType,
+      data.Analyte,
+    ];
+
+    mysqlConnection.query(duplicateCheckQuery, duplicateCheckValues, (dupErr, dupResults) => {
+      if (dupErr) {
+        console.error("❌ Error checking duplicates:", dupErr);
+        return callback(dupErr, null);
+      }
+
+      if (dupResults.length > 0) {
+        return callback(new Error("Duplicate entry: This patient sample already exists."), null);
+      }
+
+      // Proceed with insert after duplicate check
+      insertSample();
+    });
+  } else {
+    // Directly insert for pooled sample
+    insertSample();
   }
 
-  if (dupResults.length > 0) {
-    // Duplicate exists
-    return callback(
-      new Error("Duplicate entry: This patient sample already exists."),
-      null
-    );
-  }
-  const insertQuery = `
-   INSERT INTO sample (
-      id, MRNumber, samplemode,FinalConcentration, room_number, freezer_id, box_id, user_account_id, volume, PatientName, PatientLocation, 
-      Analyte, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp, ContainerType, CountryOfCollection,
-       price, SamplePriceCurrency, quantity,VolumeUnit, SampleTypeMatrix, SmokingStatus, AlcoholOrDrugAbuse, 
-       InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles, DateOfSampling, ConcurrentMedicalConditions, 
-       ConcurrentMedications, TestResult, TestResultUnit, TestMethod, TestKitManufacturer, TestSystem, TestSystemManufacturer,
-        status, logo, samplepdf
-    ) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  // ✅ Extraction of insert logic to avoid duplication
+  function insertSample() {
+    const insertQuery = `
+      INSERT INTO sample (
+        id, MRNumber, samplemode, FinalConcentration, room_number, freezer_id, box_id, user_account_id, volume,
+        PatientName, PatientLocation, Analyte, age, phoneNumber, gender, ethnicity, samplecondition, storagetemp,
+        ContainerType, CountryOfCollection, price, SamplePriceCurrency, quantity, VolumeUnit, SampleTypeMatrix,
+        SmokingStatus, AlcoholOrDrugAbuse, InfectiousDiseaseTesting, InfectiousDiseaseResult, FreezeThawCycles,
+        DateOfSampling, ConcurrentMedicalConditions, ConcurrentMedications, TestResult, TestResultUnit, TestMethod,
+        TestKitManufacturer, TestSystem, TestSystemManufacturer, status, logo, samplepdf
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-  const insertValues = [
-    id,
-    data.MRNumber,
-    data.mode,
-    data.finalConcentration,
-    room_number,
-    freezer_id,
-    box_id,
-    data.user_account_id,
-    data.volume,
-    data.patientname,
-    data.patientlocation,
-    data.Analyte,
-    data.age,
-    data.phoneNumber,
-    data.gender,
-    data.ethnicity,
-    data.samplecondition,
-    data.storagetemp,
-    data.ContainerType,
-    data.CountryOfCollection,
-    data.price,
-    data.SamplePriceCurrency,
-    data.quantity,
-    data.VolumeUnit,
-    data.SampleTypeMatrix,
-    data.SmokingStatus,
-    data.AlcoholOrDrugAbuse,
-    data.InfectiousDiseaseTesting,
-    data.InfectiousDiseaseResult,
-    data.FreezeThawCycles,
-    data.DateOfSampling,
-    data.ConcurrentMedicalConditions,
-    data.ConcurrentMedications,
-    data.TestResult,
-    data.TestResultUnit,
-    data.TestMethod,
-    data.TestKitManufacturer,
-    data.TestSystem,
-    data.TestSystemManufacturer,
-    "In Stock",
-    data.logo,
-    data.samplepdf,
-  ];
+    const insertValues = [
+      id,
+      data.MRNumber,
+      data.mode,
+      data.finalConcentration,
+      room_number,
+      freezer_id,
+      box_id,
+      data.user_account_id,
+      data.volume,
+      data.patientname,
+      data.patientlocation,
+      data.Analyte,
+      data.age,
+      data.phoneNumber,
+      data.gender,
+      data.ethnicity,
+      data.samplecondition,
+      data.storagetemp,
+      data.ContainerType,
+      data.CountryOfCollection,
+      data.price,
+      data.SamplePriceCurrency,
+      data.quantity,
+      data.VolumeUnit,
+      data.SampleTypeMatrix,
+      data.SmokingStatus,
+      data.AlcoholOrDrugAbuse,
+      data.InfectiousDiseaseTesting,
+      data.InfectiousDiseaseResult,
+      data.FreezeThawCycles,
+      data.DateOfSampling,
+      data.ConcurrentMedicalConditions,
+      data.ConcurrentMedications,
+      data.TestResult,
+      data.TestResultUnit,
+      data.TestMethod,
+      data.TestKitManufacturer,
+      data.TestSystem,
+      data.TestSystemManufacturer,
+      "In Stock",
+      data.logo,
+      data.samplepdf,
+    ];
 
-  mysqlConnection.query(insertQuery, insertValues, (err, results) => {
-    if (err) {
-      console.error("❌ Error inserting into sample:", err);
-      return callback(err, null);
-    }
-
-    // Set masterID
-    const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
-    mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
+    mysqlConnection.query(insertQuery, insertValues, (err, results) => {
       if (err) {
-        console.error("❌ Error updating masterID:", err);
+        console.error("❌ Error inserting into sample:", err);
         return callback(err, null);
       }
 
-      // Log to history
-      const historyQuery = `
-        INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
-        VALUES (?, ?, 'add', ?)
-      `;
-      mysqlConnection.query(
-        historyQuery,
-        [id, data.user_account_id || null, data.Analyte || null],
-        (err, historyResults) => {
+      const updateQuery = `UPDATE sample SET masterID = ? WHERE id = ?`;
+      mysqlConnection.query(updateQuery, [masterID, id], (err, updateResults) => {
+        if (err) {
+          console.error("❌ Error updating masterID:", err);
+          return callback(err, null);
+        }
+
+        const historyQuery = `
+          INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
+          VALUES (?, ?, 'add', ?)
+        `;
+        mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.Analyte || null], (err, historyResults) => {
           if (err) {
             console.error("❌ Error inserting into sample_history:", err);
             return callback(err, null);
           }
 
-          // ✅ If mode is pool, handle poolsample logic
+          // ✅ Pool logic
           if ((data.mode !== "Individual") && data.poolSamples) {
-            const poolSamplesArray = JSON.parse(data.poolSamples); // Array of sample IDs
+            const poolSamplesArray = JSON.parse(data.poolSamples);
 
             const poolInsertValues = [];
             const valuePlaceholders = [];
 
             poolSamplesArray.forEach((sampleId) => {
               valuePlaceholders.push("(?, ?)");
-              poolInsertValues.push(sampleId, id); // Flattened
+              poolInsertValues.push(sampleId, id);
             });
 
             const poolInsertQuery = `
-  INSERT INTO poolsample (sample_id, poolsample_id)
-  VALUES ${valuePlaceholders.join(", ")}
-`;
-            mysqlConnection.query(
-              poolInsertQuery,
-              poolInsertValues,
-              (err, poolInsertResults) => {
+              INSERT INTO poolsample (sample_id, poolsample_id)
+              VALUES ${valuePlaceholders.join(", ")}
+            `;
+            mysqlConnection.query(poolInsertQuery, poolInsertValues, (err, poolInsertResults) => {
+              if (err) {
+                console.error("❌ Error inserting into poolsample:", err);
+                return callback(err, null);
+              }
+
+              const updateStatusQuery = `
+                UPDATE sample SET status = 'Pooled'
+                WHERE id IN (?)
+              `;
+              mysqlConnection.query(updateStatusQuery, [poolSamplesArray], (err, statusResults) => {
                 if (err) {
-                  console.error("❌ Error inserting into poolsample:", err);
+                  console.error("❌ Error updating sample statuses to Pooled Sample:", err);
                   return callback(err, null);
                 }
 
-                // ✅ Update status of those samples to "Pooled Sample"
-                const updateStatusQuery = `
-              UPDATE sample SET status = 'Pooled'
-              WHERE id IN (?)
-            `;
-                mysqlConnection.query(
-                  updateStatusQuery,
-                  [poolSamplesArray],
-                  (err, statusResults) => {
-                    if (err) {
-                      console.error(
-                        "❌ Error updating sample statuses to Pooled Sample:",
-                        err
-                      );
-                      return callback(err, null);
-                    }
-
-                    return callback(null, { insertId: id, masterID });
-                  }
-                );
-              }
-            );
+                return callback(null, { insertId: id, masterID });
+              });
+            });
           } else {
-            // Mode was "individual", return success
             return callback(null, { insertId: id, masterID });
           }
-        }
-      );
+        });
+      });
     });
-  });
-});
+  }
 };
 
 // Function to update a sample by its ID (in Collectionsite)
