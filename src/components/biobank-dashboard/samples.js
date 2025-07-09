@@ -1454,7 +1454,7 @@ Box ID=${sample.box_id || "----"} `;
                         >
                           <FontAwesomeIcon icon={faDollarSign} size="sm" />
                         </button>
-                        <div className="d-flex justify-content-center gap-3">
+                        {/* <div className="d-flex justify-content-center gap-3">
                           <button
                             className="btn btn-dark btn-sm"
                             onClick={() => openVisibilitystatusModal(sample)}
@@ -1462,7 +1462,7 @@ Box ID=${sample.box_id || "----"} `;
                           >
                             <FontAwesomeIcon icon={faEye} size="xs" />
                           </button>
-                        </div>
+                        </div> */}
                         <button
                           className="btn btn-danger btn-sm py-0 px-1"
                           onClick={() => {
