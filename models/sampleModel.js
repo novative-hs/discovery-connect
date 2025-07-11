@@ -814,12 +814,12 @@ const updateSampleStatus = (id, status, callback) => {
 const updatetestResultandUnit = (id, data, callback) => {
   const query = `
     UPDATE sample
-    SET samplemode = ?, TestResult = ?, TestResultUnit = ?
+    SET samplemode = ?, TestResult = ?, TestResultUnit = ?,samplepdf=?
     WHERE id = ?`;
 
   mysqlConnection.query(
     query,
-    [data.mode, data.TestResult, data.TestResultUnit, id],
+    [data.mode, data.TestResult, data.TestResultUnit,data.samplepdf ,id],
     (err, result) => {
       callback(err, result);
     }

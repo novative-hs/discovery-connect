@@ -20,6 +20,8 @@ const SampleArea = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationError, setLocationError] = useState("")
   const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
+  const [selectedSampleTypeMatrixes, setSelectedSampleTypeMatrixes] = useState([]);
+
   const [showEdittestResultandUnitModal, setShowEditTestResultandUnitModal] = useState("")
   const [mode, setMode] = useState("");
   const [staffAction, setStaffAction] = useState("");
@@ -197,11 +199,11 @@ const SampleArea = () => {
   };
   useEffect(() => {
     const action = sessionStorage.getItem("staffAction") || "";
-    console.log("staffAction from sessionStorage:", action);
+
     setStaffAction(action);
 
     const splitActions = action.split(",").map(a => a.trim());
-    console.log("Parsed actions array:", splitActions);
+
     setActions(splitActions);
   }, []);
 
@@ -485,8 +487,9 @@ const SampleArea = () => {
   const handlePoolButtonClick = () => {
     if (poolMode) {
       const selected = [...selectedSamples];
+
       if (selected.length < 1) {
-        alert("Please select at least one samples to create a pool.");
+        alert("Please select at least one sample to create a pool.");
         return;
       }
 
@@ -496,9 +499,22 @@ const SampleArea = () => {
         .filter(Boolean);
 
       const uniqueAnalytes = [...new Set(selectedAnalytes)];
-      console.log("🔍 Unique analytes:", uniqueAnalytes); // ✅
-
       setAnalyteOptions(uniqueAnalytes);
+      const selectedSampleData = samples.filter((s) => selected.includes(s.id));
+
+
+      // ✅ Corrected this line by using 'selected' instead of 'updated'
+      const selectedMatrixes = samples
+        .filter((s) => selected.includes(s.id))
+        .map((s) => s.SampleTypeMatrix?.trim())
+        .filter(Boolean);
+
+      const uniqueMatrixes = [...new Set(selectedMatrixes)];
+
+
+
+      setSelectedSampleTypeMatrixes(uniqueMatrixes);
+
 
       if (uniqueAnalytes.length === 1) {
         setSelectedSampleName(uniqueAnalytes[0]);
@@ -520,6 +536,7 @@ const SampleArea = () => {
       setPoolMode(true);
     }
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -553,10 +570,6 @@ const SampleArea = () => {
       formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
     }
 
-    for (let key in formData) {
-      console.log(key, formData[key]);
-    }
-    console.log("Final effectiveMode:", effectiveMode);
 
     try {
       const response = await axios.post(
@@ -603,7 +616,8 @@ const SampleArea = () => {
         {
           mode: "Pooled",
           TestResult: formData.TestResult,
-          TestResultUnit: formData.TestResultUnit
+          TestResultUnit: formData.TestResultUnit,
+          samplepdf:formData.samplepdf,
         },
         {
           headers: {
@@ -612,7 +626,7 @@ const SampleArea = () => {
         }
       );
 
-      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage , itemsPerPage, { searchField, searchValue });
 
       setSelectedSampleId("")
       setSelectedSampleName("");
@@ -670,7 +684,7 @@ const SampleArea = () => {
         }
       );
 
-      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
 
       alert("Sample dispatched successfully!");
 
@@ -711,7 +725,7 @@ const SampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
-      console.log(data)
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -725,7 +739,7 @@ const SampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getpoolsamplehistory/${id}`
       );
       const data = await response.json();
-      console.log(data)
+
       setPoolHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -766,7 +780,7 @@ const SampleArea = () => {
 
     setSelectedSampleId(sample.id);
     setEditSample(sample);
-    console.log(sample)
+
     setMode(sample.samplemode)
     // Combine the location parts into "room-box-freezer" format
     const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
@@ -970,7 +984,7 @@ const SampleArea = () => {
           },
         }
       );
-      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
 
       setShowEditModal(false);
       setShowEditPoolModal(false);
@@ -1256,25 +1270,25 @@ const SampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                           {(poolMode) && (
-  <td className="text-center">
-    {sample.samplemode === "Individual" ? (
-      <input
-        type="checkbox"
-        checked={selectedSamples.includes(sample.id)}
-        onChange={() => {
-          setSelectedSamples((prev) =>
-            prev.includes(sample.id)
-              ? prev.filter((id) => id !== sample.id)
-              : [...prev, sample.id]
-          );
-        }}
-      />
-    ) : (
-      <span className="text-muted">—</span> // Optional dash
-    )}
-  </td>
-)}
+                    {(poolMode) && (
+                      <td className="text-center">
+                        {sample.samplemode === "Individual" ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedSamples.includes(sample.id)}
+                            onChange={() => {
+                              setSelectedSamples((prev) =>
+                                prev.includes(sample.id)
+                                  ? prev.filter((id) => id !== sample.id)
+                                  : [...prev, sample.id]
+                              );
+                            }}
+                          />
+                        ) : (
+                          <span className="text-muted">—</span> // Optional dash
+                        )}
+                      </td>
+                    )}
 
                     {tableHeaders.map(({ key }, index) => (
                       <td
@@ -1303,6 +1317,11 @@ const SampleArea = () => {
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
                             {sample.Analyte || "----"}
+                          </span>
+                        ) : key === "samplemode" &&
+                          ["Low", "Medium", "High"].includes(sample.samplemode) ? (
+                          <span className="text-danger fw-semibold">
+                            Add to Pool - {sample.samplemode}
                           </span>
                         ) : (() => {
                           if (key === "locationids") {
@@ -1357,14 +1376,14 @@ const SampleArea = () => {
                               ? "-----"
                               : `${sample.age} years`;
                           } else if (key === "TestResult") {
-                            return `${sample.TestResult} ${sample.TestResultUnit || "----"
-                              }`;
+                            return `${sample.TestResult} ${sample.TestResultUnit || "----"}`;
                           } else {
                             return sample[key] || "----";
                           }
                         })()}
                       </td>
                     ))}
+
                     {actions.some(action =>
                       ["edit", "dispatch", "history", "all"].includes(action)
                     ) && (
@@ -1471,10 +1490,10 @@ const SampleArea = () => {
         )}
         <div>
           {totalCount > 0 && (
-           <p>
-  Showing {(currentPage - 1) * pageSize + 1} to{" "}
-  {Math.min(currentPage * pageSize, totalCount)} of {totalCount} records
-</p>
+            <p>
+              Showing {(currentPage - 1) * pageSize + 1} to{" "}
+              {Math.min(currentPage * pageSize, totalCount)} of {totalCount} records
+            </p>
 
           )}
         </div>
@@ -2878,8 +2897,7 @@ const SampleArea = () => {
                                 </div>
                                 <div className="form-group col-md-6">
                                   <label>
-                                    Sample Type Matrix{" "}
-                                    <span className="text-danger">*</span>
+                                    Sample Type Matrix <span className="text-danger">*</span>
                                   </label>
                                   <select
                                     className="form-control"
@@ -2890,22 +2908,19 @@ const SampleArea = () => {
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor:
-                                        !formData.SampleTypeMatrix
-                                          ? "#fdecea"
-                                          : "#fff",
+                                      backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
                                     }}
                                   >
                                     <option value="" hidden></option>
-                                    {sampletypematrixNames.map(
-                                      (name, index) => (
-                                        <option key={index} value={name}>
-                                          {name}
-                                        </option>
-                                      )
-                                    )}
+                                    {selectedSampleTypeMatrixes.map((matrix, index) => (
+                                      <option key={index} value={matrix}>
+                                        {matrix}
+                                      </option>
+                                    ))}
                                   </select>
+
                                 </div>
+
                                 <div className="form-group col-md-6">
                                   <label>
                                     Container Type{" "}
@@ -2932,49 +2947,6 @@ const SampleArea = () => {
                                       </option>
                                     ))}
                                   </select>
-                                </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Sample PDF <span className="text-danger">*</span>
-                                  </label>
-                                  <div className="d-flex align-items-center">
-                                    <input
-                                      name="samplepdf"
-                                      type="file"
-                                      accept="application/pdf"
-                                      onChange={(e) =>
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          samplepdf: e.target.files[0],
-                                        }))
-                                      }
-                                      className="form-control"
-                                      required={!formData.samplepdf}
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: !formData.samplepdf
-                                          ? "#fdecea"
-                                          : "#fff",
-                                        border: "1px solid #ced4da",
-                                      }}
-                                    />
-                                    {(formData.samplepdf instanceof File || samplePdfPreview) && (
-                                      <a
-                                        href={
-                                          formData.samplepdf instanceof File
-                                            ? URL.createObjectURL(formData.samplepdf)
-                                            : samplePdfPreview
-                                        }
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="ms-3"
-                                        style={{ fontSize: "13px" }}
-                                      >
-                                        View PDF
-                                      </a>
-                                    )}
-                                  </div>
                                 </div>
                                 <div className="form-group col-md-6">
                                   <label>
@@ -3220,6 +3192,49 @@ const SampleArea = () => {
                                       )
                                     )}
                                   </select>
+                                )}
+                              </div>
+                            </div>
+                            <div className="form-group col-md-6">
+                              <label>
+                                Test Result Report <span className="text-danger">*</span>
+                              </label>
+                              <div className="d-flex align-items-center">
+                                <input
+                                  name="samplepdf"
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={(e) =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      samplepdf: e.target.files[0],
+                                    }))
+                                  }
+                                  className="form-control"
+                                  required={!formData.samplepdf}
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.samplepdf
+                                      ? "#fdecea"
+                                      : "#fff",
+                                    border: "1px solid #ced4da",
+                                  }}
+                                />
+                                {(formData.samplepdf instanceof File || samplePdfPreview) && (
+                                  <a
+                                    href={
+                                      formData.samplepdf instanceof File
+                                        ? URL.createObjectURL(formData.samplepdf)
+                                        : samplePdfPreview
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ms-3"
+                                    style={{ fontSize: "13px" }}
+                                  >
+                                    View PDF
+                                  </a>
                                 )}
                               </div>
                             </div>
