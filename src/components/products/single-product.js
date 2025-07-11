@@ -25,13 +25,15 @@ const SingleProduct = ({ product }) => {
       >
         {/* Product Image */}
         <div className="product__thumb mb-3 rounded overflow-hidden">
-          <Image
-            src={imageUrl}
-            alt="product image"
-            width={250}
-            height={150}
-            className="w-100 object-fit-cover rounded"
-          />
+        <Image
+  src={imageUrl}
+  alt="product image"
+  width={250}
+  height={150}
+  className="w-100 object-fit-cover rounded"
+  unoptimized // ← Allow base64 and any custom URLs
+/>
+
         </div>
 
         {/* Analyte Name */}

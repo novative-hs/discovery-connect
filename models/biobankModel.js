@@ -30,7 +30,7 @@ const getBiobankSamples = (
   callback
 ) => {
   const pageInt = parseInt(page, 10) || 1;
-  const pageSizeInt = parseInt(pageSize, 10) || 10;
+  const pageSizeInt = parseInt(pageSize, 10) || 50;
   const offset = (pageInt - 1) * pageSizeInt;
 
   let baseWhereShared = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
@@ -106,7 +106,7 @@ const getBiobankSamples = (
     FROM sample
     JOIN collectionsitestaff ON sample.user_account_id = collectionsitestaff.user_account_id
     JOIN collectionsite ON collectionsitestaff.collectionsite_id = collectionsite.id
-    WHERE ${baseWhereShared}
+    WHERE ${baseWhereShared} AND sample.user_account_id != ?
   `;
 
   const ownSamplesQuery = `
@@ -133,8 +133,9 @@ const getBiobankSamples = (
     ) AS countCombined
   `;
 
-  const finalParams = [...paramsShared, ...paramsOwn, user_account_id, pageSizeInt, offset];
-  const countParams = [...paramsShared, ...paramsOwn, user_account_id];
+ const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
+const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
+
 
   mysqlConnection.query(dataQuery, finalParams, (err, results) => {
     if (err) {

@@ -39,88 +39,108 @@ const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
   const offset = (pageInt - 1) * pageSizeInt;
 
   const getUserAccountQuery = `
-   SELECT cs.user_account_id
-FROM collectionsite cs
-JOIN collectionsitestaff cstaff ON cs.id = cstaff.collectionsite_id
-WHERE cstaff.user_account_id = ?
-LIMIT 1;
-
+    SELECT cs.user_account_id
+    FROM collectionsite cs
+    JOIN collectionsitestaff cstaff ON cs.id = cstaff.collectionsite_id
+    WHERE cstaff.user_account_id = ?
+    LIMIT 1;
   `;
 
-mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
-  if (err) return callback({ status: 500, message: "Error getting collection site user account" });
-  if (!rows.length) return callback({ status: 404, message: "Collection site not found for this staff ID" });
+  mysqlConnection.query(getUserAccountQuery, [staffId], (err, rows) => {
+    if (err) return callback({ status: 500, message: "Error getting collection site user account" });
+    if (!rows.length) return callback({ status: 404, message: "Collection site not found for this staff ID" });
 
-  const userAccountId = rows[0].user_account_id; // ✅ Fix: assign user_account_id here
+    const userAccountId = rows[0].user_account_id;
 
-  let searchClause = "";
-  const params = [userAccountId, "Returned"];
-  if (searchField && searchValue) {
-    searchClause = ` AND s.${searchField} LIKE ?`;
-    params.push(`%${searchValue}%`);
-  }
-  params.push(pageSizeInt, offset);
+    let searchClause = "";
+    const params = [userAccountId, "Returned"];
+    const likeValue = `%${searchValue?.toLowerCase() || ""}%`;
 
-  const query = `
-    SELECT sr.*, sr.sampleID, s.Analyte, s.MRNumber, s.age, s.gender,
- s.samplecondition,s.ethnicity,s.ContainerType,s.CountryOfCollection,s.SamplePriceCurrency,s.VolumeUnit,
- s.AlcoholOrDrugAbuse,
-  s.ConcurrentMedicalConditions,
-    s.ConcurrentMedications,
-    s.TestResult,
-    s.TestResultUnit,
-    s.TestMethod,
-    s.TestKitManufacturer,
-    s.TestSystem,
-    s.TestSystemManufacturer,
-    s.InfectiousDiseaseTesting,
-    s.InfectiousDiseaseResult,
-    s.FreezeThawCycles,
-    s.DateOfSampling,
-    s.SampleTypeMatrix,
-    s.SmokingStatus
-    FROM discoveryconnect.samplereturn sr
-    JOIN discoveryconnect.sample s ON sr.sampleID = s.id
-   WHERE sr.TransferTo = ?
-        AND sr.status = ?
-      ${searchClause}
-    ORDER BY sr.id DESC
-    LIMIT ? OFFSET ?
-  `;
+    if (searchField && searchValue) {
+      switch (searchField) {
+        case "volume":
+          searchClause = ` AND LOWER(CONCAT_WS(' ', s.volume, s.VolumeUnit)) LIKE ?`;
+          params.push(likeValue);
+          break;
 
-  mysqlConnection.query(query, params, (err, results) => {
-    if (err) return callback({ status: 500, message: "Error fetching returned samples" });
+        case "TestResult":
+          searchClause = ` AND LOWER(CONCAT_WS(' ', s.TestResult, s.TestResultUnit)) LIKE ?`;
+          params.push(likeValue);
+          break;
 
-    const countQuery = `
-      SELECT COUNT(*) AS totalCount
+        case "gender":
+          searchClause = ` AND LOWER(s.gender) LIKE ?`;
+          params.push(`${searchValue.toLowerCase()}%`);
+          break;
+
+        case "SamplePrice":
+          searchClause = ` AND LOWER(CONCAT_WS(' ', s.price, s.SamplePriceCurrency)) LIKE ?`;
+          params.push(likeValue);
+          break;
+
+        case "Analyte":
+        case "MRNumber":
+        case "age":
+          searchClause = ` AND LOWER(s.${searchField}) LIKE ?`;
+          params.push(likeValue);
+          break;
+
+        default:
+          searchClause = ` AND LOWER(s.${searchField}) LIKE ?`;
+          params.push(likeValue);
+          break;
+      }
+    }
+
+    params.push(pageSizeInt, offset);
+
+    const query = `
+      SELECT sr.*, sr.sampleID, s.Analyte, s.MRNumber, s.age, s.gender,
+        s.samplecondition, s.ethnicity, s.ContainerType, s.CountryOfCollection, s.SamplePriceCurrency,
+        s.VolumeUnit, s.AlcoholOrDrugAbuse, s.ConcurrentMedicalConditions, s.ConcurrentMedications,
+        s.TestResult, s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem,
+        s.TestSystemManufacturer, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult,
+        s.FreezeThawCycles, s.DateOfSampling, s.SampleTypeMatrix, s.SmokingStatus
       FROM samplereturn sr
       JOIN sample s ON sr.sampleID = s.id
       WHERE sr.TransferTo = ?
         AND sr.status = ?
-        ${searchClause};
+        ${searchClause}
+      ORDER BY sr.id DESC
+      LIMIT ? OFFSET ?
     `;
 
-    const countParams = [userAccountId, "Returned"];
-    if (searchField && searchValue) {
-      countParams.push(`%${searchValue}%`);
-    }
+    mysqlConnection.query(query, params, (err, results) => {
+      if (err) return callback({ status: 500, message: "Error fetching returned samples" });
 
-    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-      if (err) return callback({ status: 500, message: "Error fetching sample count" });
+      const countQuery = `
+        SELECT COUNT(*) AS totalCount
+        FROM samplereturn sr
+        JOIN sample s ON sr.sampleID = s.id
+        WHERE sr.TransferTo = ?
+          AND sr.status = ?
+          ${searchClause}
+      `;
 
-      const totalCount = countResults[0].totalCount;
+      const countParams = [userAccountId, "Returned"];
+      if (searchField && searchValue) {
+        countParams.push(likeValue);
+      }
 
-      return callback(null, {
-        results,
-        totalCount,
-        currentPage: pageInt,
-        pageSize: pageSizeInt
+      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+        if (err) return callback({ status: 500, message: "Error fetching sample count" });
+
+        return callback(null, {
+          results,
+          totalCount: countResults[0].totalCount,
+          currentPage: pageInt,
+          pageSize: pageSizeInt
+        });
       });
     });
   });
-});
-
 };
+
 
 
 

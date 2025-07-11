@@ -10,7 +10,7 @@ const create_biobankTable = (req, res) => {
 const getBiobankSamples = (req, res) => {
   const id = parseInt(req.params.id);
   const page = req.query.page || 1;
-  const pageSize = req.query.pageSize || 10;
+  const pageSize = req.query.pageSize || 50;
 
   const priceFilter = req.query.priceFilter || null;
   const searchField = req.query.searchField || null;

@@ -99,7 +99,6 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
     return callback(new Error("Invalid user_account_id"), null);
   }
 
-  // Step 1: Get the collectionsite_id for the given user
   const siteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
 
   mysqlConnection.query(siteQuery, [userId], (err, siteResult) => {
@@ -109,16 +108,46 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
 
     const collectionsite_id = siteResult[0].collectionsite_id;
 
-    // Step 2: Build the search clause
     let searchClause = "";
     const searchParams = [];
 
+    const likeValue = `%${searchValue?.toLowerCase() || ""}%`;
+
     if (searchField && searchValue) {
-      searchClause = ` AND s.${searchField} LIKE ?`;
-      searchParams.push(`%${searchValue}%`);
+      switch (searchField) {
+        case "locationids":
+          searchClause = ` AND (LOWER(s.room_number) LIKE ? OR LOWER(s.freezer_id) LIKE ? OR LOWER(s.box_id) LIKE ?)`;
+          searchParams.push(likeValue, likeValue, likeValue);
+          break;
+
+        case "price":
+          searchClause = ` AND LOWER(CONCAT_WS(' ', s.price, s.SamplePriceCurrency)) LIKE ?`;
+          searchParams.push(likeValue);
+          break;
+
+        case "volume":
+          searchClause = ` AND LOWER(CONCAT_WS(' ', s.volume, s.VolumeUnit)) LIKE ?`;
+          searchParams.push(likeValue);
+          break;
+
+        case "TestResult":
+          searchClause = ` AND LOWER(CONCAT_WS(' ', s.TestResult, s.TestResultUnit)) LIKE ?`;
+          searchParams.push(likeValue);
+          break;
+
+        case "gender":
+        case "sample_visibility":
+          searchClause = ` AND LOWER(s.${searchField}) LIKE ?`;
+          searchParams.push(`${searchValue.toLowerCase()}%`);
+          break;
+
+        default:
+          searchClause = ` AND LOWER(s.${searchField}) LIKE ?`;
+          searchParams.push(likeValue);
+          break;
+      }
     }
 
-    // Step 3: Query samples from all staff under this collection site
     const dataQuery = `
       SELECT s.*
       FROM sample s
@@ -167,6 +196,7 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
     });
   });
 };
+
 
 
 const getAllSamples = (callback) => {
@@ -662,7 +692,7 @@ const createSample = (data, callback) => {
               }
 
               const updateStatusQuery = `
-                UPDATE sample SET status = 'Pooled'
+                UPDATE sample SET status = 'Pooled' AND sample_visibility='Non-Public'
                 WHERE id IN (?)
               `;
               mysqlConnection.query(updateStatusQuery, [poolSamplesArray], (err, statusResults) => {

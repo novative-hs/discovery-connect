@@ -40,6 +40,36 @@ const tablesAndColumns = [
         references: { table: "testresultunit", column: "id" },
       },
       {
+        column: "low_minconcentration",
+        type: "INT",
+        nullable: true,
+      },
+      {
+        column: "low_maxconcentration",
+        type: "INT",
+        nullable: true,
+      },
+      {
+        column: "medium_minconcentration",
+        type: "INT",
+        nullable: true,
+      },
+      {
+        column: "medium_maxconcentration",
+        type: "INT",
+        nullable: true,
+      },
+      {
+        column: "high_minconcentration",
+        type: "INT",
+        nullable: true,
+      },
+      {
+        column: "high_maxconcentration",
+        type: "INT",
+        nullable: true,
+      },,
+       {
         column: "image",
         type: "LONGBLOB",
         nullable: true,

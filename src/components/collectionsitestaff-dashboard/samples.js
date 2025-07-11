@@ -74,8 +74,10 @@ const SampleArea = () => {
   const [logoPreview, setLogoPreview] = useState(null);
   const [samplePdfPreview, setSamplePdfPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(50);
   const [totalPages, setTotalPages] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
   const [transferDetails, setTransferDetails] = useState({
@@ -321,13 +323,20 @@ const SampleArea = () => {
       // Use backend total count
       const totalCount = ownResponse.data.totalCount + receivedResponse.data.totalCount;
       const totalPages = Math.ceil(totalCount / pageSize);
+      const ownPageSize = ownResponse.data.pageSize || pageSize;
+      const receivedPageSize = receivedResponse.data.pageSize || pageSize;
 
+      // Choose the larger (or preferred) one — here we take the max
+      const serverPageSize = Math.max(ownPageSize, receivedPageSize);
+
+      setPageSize(serverPageSize);
       // Show only current page data (already paginated by backend)
       setSamples(merged);               // merged current page
       setFilteredSamplename(merged);   // show current page
       setTotalPages(totalPages);
       setfiltertotal(totalCount);
-
+      setTotalCount(totalCount);
+      setPageSize(serverPageSize);
     } catch (error) {
       console.error("Fetch error:", error);
     }
@@ -603,7 +612,8 @@ const SampleArea = () => {
         }
       );
 
-      fetchSamples(1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+
       setSelectedSampleId("")
       setSelectedSampleName("");
       setShowAddTestResultandUnitModal(false);
@@ -660,7 +670,8 @@ const SampleArea = () => {
         }
       );
 
-      fetchSamples(1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+
       alert("Sample dispatched successfully!");
 
       setTransferDetails({
@@ -959,7 +970,8 @@ const SampleArea = () => {
           },
         }
       );
-      fetchSamples(1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+
       setShowEditModal(false);
       setShowEditPoolModal(false);
       setSuccessMessage("Sample updated successfully.");
@@ -1039,6 +1051,8 @@ const SampleArea = () => {
     mg: 10000,
     g: 5000,
   };
+
+
   const handlePrint = (barcodeId) => {
     const barcodeString = barcodeId?.toString() || "";
 
@@ -1064,8 +1078,8 @@ const SampleArea = () => {
           }
           svg {
             width: 90%;
-            height: auto;
-            max-height: 90%;
+            height: 100%;     /* Allow full vertical space */
+            max-height: 100%; /* Remove 90% cap */
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -1076,11 +1090,12 @@ const SampleArea = () => {
           window.onload = function() {
             JsBarcode("#barcode", "${barcodeString}", {
               format: "CODE128",
-              height: 80,         // Increase line height
-              width: 1,           // Keep lines narrow
+              height: 100,         // 🔼 Increased height
+              width: 1,
               displayValue: false,
               margin: 0
             });
+
             setTimeout(() => {
               window.print();
               window.close();
@@ -1093,6 +1108,7 @@ const SampleArea = () => {
 
     printWindow.document.close();
   };
+
 
 
 
@@ -1194,65 +1210,72 @@ const SampleArea = () => {
 
 
         {/* Table */}
-        <div className="table-responsive w-100">
-          <table className="table table-bordered table-hover text-center align-middle w-auto border">
+        <div className="table-wrapper w-100" style={{ overflowX: "hidden" }}>
+          <table
+            className="table table-bordered table-hover text-center align-middle border"
+            style={{ width: "100%" }} // Removed tableLayout: "fixed"
+          >
             <thead className="table-primary text-dark">
-              <tr className="text-center">
+              <tr>
                 {poolMode && (
-                  <th className="text-center">
+                  <th>
                     <div className="d-flex flex-column align-items-center">
-                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                        Pool
-                      </span>
+                      <span className="fw-bold fs-6 text-wrap">Pool</span>
                     </div>
                   </th>
                 )}
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+                  <th key={index}>
                     <div className="d-flex flex-column align-items-center">
                       <input
                         type="text"
-                        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
+                        className="form-control form-control-sm text-center"
                         placeholder={`Search ${label}`}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "110px" }}
+                        style={{
+                          fontSize: "13px",
+                          padding: "2px 4px",
+                          width: "100%",
+                          maxWidth: "130px", // limit input width
+                        }}
                       />
-                      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
-                        {label}
-                      </span>
+                      <span className="fw-bold fs-6 text-center text-wrap">{label}</span>
                     </div>
                   </th>
                 ))}
-
-
-
                 {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
-                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                    Action
+                  <th>
+                    <span className="fw-bold fs-6">Action</span>
                   </th>
                 )}
               </tr>
             </thead>
+
+
             <tbody className="table-light">
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
-                  <tr>
+                  <tr key={sample.id}>
                     {poolMode && (
-                      <td className="text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedSamples.includes(sample.id)}
-                          onChange={() => {
-                            setSelectedSamples((prev) =>
-                              prev.includes(sample.id)
-                                ? prev.filter((id) => id !== sample.id)
-                                : [...prev, sample.id]
-                            );
-                          }}
+  <td className="text-center">
+    {sample.samplemode === "Pooled" ? (
+      <span className="text-muted">—</span> // or leave empty if preferred
+    ) : (
+      <input
+        type="checkbox"
+        checked={selectedSamples.includes(sample.id)}
+        onChange={() => {
+          setSelectedSamples((prev) =>
+            prev.includes(sample.id)
+              ? prev.filter((id) => id !== sample.id)
+              : [...prev, sample.id]
+          );
+        }}
+      />
+    )}
+  </td>
+)}
 
-                        />
-                      </td>
-                    )}
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -1261,141 +1284,173 @@ const SampleArea = () => {
                             ? "text-end"
                             : key === "Analyte" || key === "PatientName"
                               ? "text-start"
-                              : "text-center text-truncate"
+                              : "text-center"
                         }
-                        style={{ maxWidth: "150px", wordWrap: "break-word", whiteSpace: "normal" }}
+                        style={{
+                          maxWidth: "150px",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                        }}
                       >
                         {key === "Analyte" ? (
                           <span
-                            className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
+                            className="text-primary fw-semibold fs-6 text-decoration-underline"
                             role="button"
                             title="Sample Details"
                             onClick={() => openModal(sample)}
-                            style={{
-                              cursor: "pointer",
-                              transition: "color 0.2s",
-                            }}
+                            style={{ cursor: "pointer", transition: "color 0.2s" }}
                             onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
                             {sample.Analyte || "----"}
                           </span>
-                        ) : (
-                          (() => {
-                            if (key === "locationids") {
-                              const tooltip = `${sample.room_number || "N/A"} = Room Number
-${sample.freezer_id || "N/A"} = Freezer ID
-${sample.box_id || "N/A"} = Box ID`;
+                        ) : (() => {
+                          if (key === "locationids") {
+                            const tooltip = `${sample.room_number || "N/A"} = Room Number\n${sample.freezer_id || "N/A"} = Freezer ID\n${sample.box_id || "N/A"} = Box ID`;
 
-                              // To show logo while clicking on location IDs
-                              const handleLogoClick = () => {
-                                const logo =
-                                  typeof sample.logo === "string"
-                                    ? sample.logo
-                                    : sample.logo?.data
-                                      ? URL.createObjectURL(
-                                        new Blob([new Uint8Array(sample.logo.data)], { type: "image/png" })
-                                      )
-                                      : null;
-                                if (logo) {
-                                  setSelectedLogoUrl(logo);
-                                  setShowLogoModal(true);
-                                }
-                              };
+                            const handleLogoClick = () => {
+                              const logo =
+                                typeof sample.logo === "string"
+                                  ? sample.logo
+                                  : sample.logo?.data
+                                    ? URL.createObjectURL(
+                                      new Blob([new Uint8Array(sample.logo.data)], {
+                                        type: "image/png",
+                                      })
+                                    )
+                                    : null;
+                              if (logo) {
+                                setSelectedLogoUrl(logo);
+                                setShowLogoModal(true);
+                              }
+                            };
 
-                              return (
-                                <span title={tooltip} style={{ cursor: "help", textDecoration: "underline", color: "#007bff" }} onClick={handleLogoClick}>
-                                  {sample.locationids || "----"}
-                                </span>
-                              );
-                            } else if (key === "volume") {
-                              return `${sample.volume} ${sample.VolumeUnit || ""}`;
-                            }
-                            else if (key === "barcode") {
-                              return <button
+                            return (
+                              <span
+                                title={tooltip}
+                                style={{
+                                  cursor: "help",
+                                  textDecoration: "underline",
+                                  color: "#007bff",
+                                }}
+                                onClick={handleLogoClick}
+                              >
+                                {sample.locationids || "----"}
+                              </span>
+                            );
+                          } else if (key === "volume") {
+                            return `${sample.volume} ${sample.VolumeUnit || ""}`;
+                          } else if (key === "barcode") {
+                            return (
+                              <button
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => {
                                   setSelectedBarcodeId(sample.id);
-                                  handlePrint(sample.id); // Pass the ID directly
+                                  handlePrint(sample.id);
                                 }}
                               >
                                 Print Barcode
                               </button>
-                            }
-                            else if (key === "age") {
-                              if (!sample.age || sample.age === 0) {
-                                return "-----";
-                              }
-                              return `${sample.age} years`;
-                            } else if (key === "TestResult") {
-                              return `${sample.TestResult} ${sample.TestResultUnit || "----"}`;
-                            } else {
-                              return sample[key] || "----";
-                            }
-                          })()
-                        )}
+                            );
+                          } else if (key === "age") {
+                            return !sample.age || sample.age === 0
+                              ? "-----"
+                              : `${sample.age} years`;
+                          } else if (key === "TestResult") {
+                            return `${sample.TestResult} ${sample.TestResultUnit || "----"
+                              }`;
+                          } else {
+                            return sample[key] || "----";
+                          }
+                        })()}
                       </td>
                     ))}
-                    {actions.some(action => ["edit", "dispatch", "history", "all"].includes(action)) && (
-                      <td className="text-center align-middle">
-                        <div className="d-flex justify-content-center gap-2 px-1">
-                          {(actions.includes("edit") || actions.includes("add") || actions.includes("all")) && (sample.samplemode !== 'Individual') && (sample.samplemode !== 'Pooled') && (
+                    {actions.some(action =>
+                      ["edit", "dispatch", "history", "all"].includes(action)
+                    ) && (
+                        <td className="text-center align-middle">
+                          <div className="dropdown">
                             <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleTestRsultsandUnit(sample)}
-                              title="Test Result and Unit"
+                              className="btn btn-light btn-sm"
+                              type="button"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false"
                             >
-                              <FontAwesomeIcon icon={faRuler} size="sm" />
+                              <i className="fas fa-ellipsis-v text-dark"></i>
                             </button>
-                          )}
-                          {(actions.includes("edit") || actions.includes("all")) && (
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(sample)}
-                              title="Edit"
-                            >
-                              <FontAwesomeIcon icon={faEdit} size="sm" />
-                            </button>
-                          )}
+                            <ul className="dropdown-menu dropdown-menu-end p-1 shadow-sm">
+                              {(actions.includes("edit") || actions.includes("add") || actions.includes("all")) &&
+                                sample.samplemode !== "Individual" &&
+                                sample.samplemode !== "Pooled" && (
+                                  <li>
+                                    <button
+                                      className="dropdown-item text-success fw-semibold"
+                                      onClick={() => handleTestRsultsandUnit(sample)}
+                                    >
+                                      <FontAwesomeIcon icon={faRuler} className="me-2" />
+                                      Test Result & Unit
+                                    </button>
+                                  </li>
+                                )}
+                              {(actions.includes("edit") || actions.includes("all")) && (
+                                <li>
+                                  <button
+                                    className="dropdown-item text-success fw-semibold"
+                                    onClick={() => handleEditClick(sample)}
+                                  >
+                                    <FontAwesomeIcon icon={faEdit} className="me-2" />
+                                    Edit
+                                  </button>
+                                </li>
+                              )}
+                              {(actions.includes("dispatch") || actions.includes("all")) && (
+                                <li>
+                                  <button
+                                    className="dropdown-item text-primary fw-semibold"
+                                    onClick={() => handleTransferClick(sample)}
+                                  >
+                                    <FontAwesomeIcon icon={faExchangeAlt} className="me-2" />
+                                    Transfer
+                                  </button>
+                                </li>
+                              )}
+                              {(actions.includes("history") || actions.includes("all")) && (
+                                <li>
+                                  <button
+                                    className="dropdown-item text-warning fw-semibold"
+                                    onClick={() => handleShowHistory("sample", sample.id)}
+                                  >
+                                    <i className="fa fa-history me-2"></i>
+                                    History
+                                  </button>
+                                </li>
+                              )}
+                              {(actions.includes("history") || actions.includes("all")) &&
+                                sample.samplemode !== "Individual" && (
+                                  <li>
+                                    <button
+                                      className="dropdown-item text-warning fw-semibold"
+                                      onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
+                                    >
+                                      <i className="fas fa-vial me-2"></i>
+                                      Pool Sample History
+                                    </button>
+                                  </li>
+                                )}
+                            </ul>
+                          </div>
+                        </td>
 
-                          {(actions.includes("dispatch") || actions.includes("all")) && (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleTransferClick(sample)}
-                              title="Transfer"
-                            >
-                              <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                            </button>
-                          )}
 
-                          {(actions.includes("history") || actions.includes("all")) && (
-                            <button
-                              className="btn btn-outline-success btn-sm"
-                              onClick={() => handleShowHistory("sample", sample.id)}
-                              title="History"
-                            >
-                              <i className="fa fa-history"></i>
-                            </button>
-                          )}
-                          {(actions.includes("history") || actions.includes("all")) && (sample.samplemode !== 'Individual') && (
-                            <button
-                              className="btn btn-outline-success btn-sm"
-                              onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
-                              title="Track Sample History"
-                            >
-                              <i class="fas fa-vial"></i>
-                            </button>
-                          )}
-
-
-                        </div>
-                      </td>
-                    )}
+                      )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td
+                    colSpan={tableHeaders.length + (poolMode ? 2 : 1)}
+                    className="text-center"
+                  >
                     No samples available
                   </td>
                 </tr>
@@ -1403,6 +1458,8 @@ ${sample.box_id || "N/A"} = Box ID`;
             </tbody>
           </table>
         </div>
+
+
 
         {/* Pagination */}
         {totalPages >= 0 && (
@@ -1412,6 +1469,15 @@ ${sample.box_id || "N/A"} = Box ID`;
             focusPage={currentPage - 1} // If using react-paginate, which is 0-based
           />
         )}
+        <div>
+          {totalCount > 0 && (
+           <p>
+  Showing {(currentPage - 1) * pageSize + 1} to{" "}
+  {Math.min(currentPage * pageSize, totalCount)} of {totalCount} records
+</p>
+
+          )}
+        </div>
 
         {/* Modal for Adding and Editing Samples */}
         {(showAddModal || showEditModal) && (
