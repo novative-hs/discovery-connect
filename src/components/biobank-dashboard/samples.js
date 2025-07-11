@@ -1351,25 +1351,27 @@ const BioBankSampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                    {(poolMode || visibilitystatuschange) && (
-                      <td className="text-center">
-                        {sample.samplemode === "Pooled" ? (
-                          <span className="text-muted">—</span> // or leave empty if preferred
-                        ) : (
-                          <input
-                            type="checkbox"
-                            checked={selectedSamples.includes(sample.id)}
-                            onChange={() => {
-                              setSelectedSamples((prev) =>
-                                prev.includes(sample.id)
-                                  ? prev.filter((id) => id !== sample.id)
-                                  : [...prev, sample.id]
-                              );
-                            }}
-                          />
-                        )}
-                      </td>
-                    )}
+                   {(poolMode || visibilitystatuschange) && (
+  <td className="text-center">
+    {sample.samplemode === "Individual" ? (
+      <input
+        type="checkbox"
+        checked={selectedSamples.includes(sample.id)}
+        onChange={() => {
+          setSelectedSamples((prev) =>
+            prev.includes(sample.id)
+              ? prev.filter((id) => id !== sample.id)
+              : [...prev, sample.id]
+          );
+        }}
+      />
+    ) : (
+      <span className="text-muted">—</span> // Optional dash
+    )}
+  </td>
+)}
+
+
 
                     {tableHeaders.map(({ key }, index) => (
                       <td

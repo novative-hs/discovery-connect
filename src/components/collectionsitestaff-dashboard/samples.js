@@ -1256,11 +1256,9 @@ const SampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                    {poolMode && (
+                           {(poolMode) && (
   <td className="text-center">
-    {sample.samplemode === "Pooled" ? (
-      <span className="text-muted">—</span> // or leave empty if preferred
-    ) : (
+    {sample.samplemode === "Individual" ? (
       <input
         type="checkbox"
         checked={selectedSamples.includes(sample.id)}
@@ -1272,6 +1270,8 @@ const SampleArea = () => {
           );
         }}
       />
+    ) : (
+      <span className="text-muted">—</span> // Optional dash
     )}
   </td>
 )}
