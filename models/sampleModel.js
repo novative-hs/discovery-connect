@@ -546,7 +546,7 @@ const createSample = (data, callback) => {
         gender = ? AND
         MRNumber = ? AND
         phoneNumber = ? AND
-        CAST(TestResult AS DECIMAL(10,2)) = ? AND
+        TestResult = ? AND
         TestResultUnit = ? AND
         VolumeUnit = ? AND
         volume = ? AND
@@ -561,7 +561,7 @@ const createSample = (data, callback) => {
       data.gender,
       data.MRNumber,
       data.phoneNumber,
-      parseFloat(data.TestResult),
+      data.TestResult,
       data.TestResultUnit,
       data.VolumeUnit,
       data.volume,
