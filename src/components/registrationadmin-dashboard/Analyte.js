@@ -17,12 +17,18 @@ const AnalyteArea = () => {
   const [logo, setLogo] = useState();
   const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
- const [formData, setFormData] = useState({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-  image:""
-});
+  const [formData, setFormData] = useState({
+    name: "",
+    added_by: id,
+    testresultunit_id: "",
+    image: "",
+    low_min: "",
+    low_max: "",
+    medium_min: "",
+    medium_max: "",
+    high_min: "",
+    high_max: "",
+  });
 
 
   const [editAnalytename, setEditAnalytename] = useState(null); // State for selected City to edit
@@ -71,15 +77,15 @@ const AnalyteArea = () => {
   );
 
   const fetchTestResultUnit = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/testresultunit`
-        );
-        setTestResultUnit(response.data);
-      } catch (error) {
-        console.error("Error fetching test result:", error);
-      }
-    };
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testresultunit`
+      );
+      setTestResultUnit(response.data);
+    } catch (error) {
+      console.error("Error fetching test result:", error);
+    }
+  };
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
@@ -118,7 +124,7 @@ const AnalyteArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -132,55 +138,69 @@ const AnalyteArea = () => {
   };
 
   const handleInputChange = (e) => {
-  const { name, value, files } = e.target;
-  if (name === "image") {
-    setFormData({
-      ...formData,
-      image: files[0], // Handle image file
-    });
-  } else {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  }
-};
+    const { name, value, files } = e.target;
+    if (name === "image") {
+      setFormData({
+        ...formData,
+        image: files[0],
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
+
 
 
   const handleSubmit = async (e) => {
     const payload = new FormData();
-payload.append("name", formData.name);
-payload.append("added_by", formData.added_by);
-payload.append("testresultunit_id", formData.testresultunit_id);
-payload.append("image", formData.image); // must be a File object
+    payload.append("name", formData.name);
+    payload.append("added_by", formData.added_by);
+    payload.append("testresultunit_id", formData.testresultunit_id);
+    payload.append("image", formData.image); // must be a File object
+    payload.append("low_min", formData.low_min);
+    payload.append("low_max", formData.low_max);
+    payload.append("medium_min", formData.medium_min);
+    payload.append("medium_max", formData.medium_max);
+    payload.append("high_min", formData.high_min);
+    payload.append("high_max", formData.high_max);
 
-  e.preventDefault();
-  try {
-  
+    e.preventDefault();
+    try {
 
-    await axios.post(`${url}/samplefields/post-analytes/analyte`, payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
 
-    const response = await axios.get(`${url}/samplefields/get/analyte`);
-    setFilteredAnalytename(response.data);
-    setAnalytename(response.data);
-    setSuccessMessage("Analyte added successfully.");
-    setTimeout(() => setSuccessMessage(""), 3000);
-    setFormData({
-      name:"",
-      added_by:id,
-      testresultunit_id:"",
-      image:""
-    })
-    setLogoPreview(false);
-    setShowAddModal(false);
-  } catch (error) {
-    console.error("Error adding Analyte", error);
-  }
-};
+      await axios.post(`${url}/samplefields/post-analytes/analyte`, payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const response = await axios.get(`${url}/samplefields/get/analyte`);
+      setFilteredAnalytename(response.data);
+      setAnalytename(response.data);
+      setSuccessMessage("Analyte added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setFormData({
+        name: "",
+        added_by: id,
+        testresultunit_id: "",
+        image: "",
+        low_min: "",
+        low_max: "",
+        medium_min: "",
+        medium_max: "",
+        high_min: "",
+        high_max: "",
+      });
+
+      setLogoPreview(false);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding Analyte", error);
+    }
+  };
 
   const handleEditClick = (Analytename) => {
     setSelectedAnalytenameId(Analytename.id);
@@ -188,11 +208,18 @@ payload.append("image", formData.image); // must be a File object
 
     setFormData({
       name: Analytename.name,
-      testresultunit_id:Analytename.testresultunit_id,
+      testresultunit_id: Analytename.testresultunit_id,
       added_by: id,
-      image:Analytename.image,
+      image: Analytename.image,
+      low_min: Analytename.low_minconcentration || "",
+      low_max: Analytename.low_maxconcentration || "",
+      medium_min: Analytename.medium_minconcentration || "",
+      medium_max: Analytename.medium_maxconcentration || "",
+      high_min: Analytename.high_minconcentration || "",
+      high_max: Analytename.high_maxconcentration || "",
     });
-    
+
+
     const logoPreviewUrl =
       typeof Analytename.image === "string"
         ? Analytename.image
@@ -206,50 +233,64 @@ payload.append("image", formData.image); // must be a File object
 
     setShowEditModal(true);
   };
- 
-const handleUpdate = async (e) => {
-  e.preventDefault();
-  try {
-    const form = new FormData();
-    form.append("name", formData.name);
-    form.append("added_by", formData.added_by);
 
-    if (formData.testresultunit_id) {
-      form.append("testresultunit_id", formData.testresultunit_id);
-    }
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const form = new FormData();
+      form.append("name", formData.name);
+      form.append("added_by", formData.added_by);
 
-    if (formData.image instanceof File) {
-      form.append("image", formData.image);
-    }
-
-    await axios.put(
-      `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
-      form,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      if (formData.testresultunit_id) {
+        form.append("testresultunit_id", formData.testresultunit_id);
       }
-    );
 
-    const response = await axios.get(`${url}/samplefields/get/analyte`);
-    setFilteredAnalytename(response.data);
-    setAnalytename(response.data);
-    setShowEditModal(false);
-    setSuccessMessage("Analyte updated successfully.");
-    setTimeout(() => setSuccessMessage(""), 3000);
+      if (formData.image instanceof File) {
+        form.append("image", formData.image);
+      }
+      form.append("low_min", formData.low_min);
+      form.append("low_max", formData.low_max);
+      form.append("medium_min", formData.medium_min);
+      form.append("medium_max", formData.medium_max);
+      form.append("high_min", formData.high_min);
+      form.append("high_max", formData.high_max);
 
-    setFormData({
-      name: "",
-      added_by: id,
-      testresultunit_id: "",
-      image: "",
-    });
-    setLogoPreview(false);
-  } catch (error) {
-    console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
-  }
-};
+
+      await axios.put(
+        `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
+        form,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const response = await axios.get(`${url}/samplefields/get/analyte`);
+      setFilteredAnalytename(response.data);
+      setAnalytename(response.data);
+      setShowEditModal(false);
+      setSuccessMessage("Analyte updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setFormData({
+        name: "",
+        added_by: id,
+        testresultunit_id: "",
+        image: "",
+        low_min: "",
+        low_max: "",
+        medium_min: "",
+        medium_max: "",
+        high_min: "",
+        high_max: "",
+      });
+
+      setLogoPreview(false);
+    } catch (error) {
+      console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
+    }
+  };
 
 
 
@@ -261,7 +302,7 @@ const handleUpdate = async (e) => {
       const response = await axios.get(
         `${url}/samplefields/get/analyte`
       );
-       setFilteredAnalytename(response.data);
+      setFilteredAnalytename(response.data);
       setAnalytename(response.data);
       setSuccessMessage("Analyte deleted successfully.");
 
@@ -298,29 +339,29 @@ const handleUpdate = async (e) => {
     return `${day}-${formattedMonth}-${year}`;
   };
 
-   const handleFileUpload = async (e) => {
-     const file = e.target.files[0];
-     if (!file) return;
- 
-     const reader = new FileReader();
-     reader.onload = async (event) => {
-       const workbook = XLSX.read(event.target.result, { type: "binary" });
-       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-       const data = XLSX.utils.sheet_to_json(sheet);
-       const payload = data.map((row) => ({ name: row.name, added_by: id }));
- 
-       try {
-         await axios.post(`${url}/samplefields/post-analytes/analyte`, { bulkData: payload });
-         const response = await axios.get(`${url}/samplefields/get/analyte`);
-         setFilteredAnalytename(response.data);
-         setAnalytename(response.data);
-         setSuccessMessage("Successfully added")
-       } catch (error) {
-         console.error("Error uploading file", error);
-       }
-     };
-     reader.readAsBinaryString(file);
-   };
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+
+      try {
+        await axios.post(`${url}/samplefields/post-analytes/analyte`, { bulkData: payload });
+        const response = await axios.get(`${url}/samplefields/get/analyte`);
+        setFilteredAnalytename(response.data);
+        setAnalytename(response.data);
+        setSuccessMessage("Successfully added")
+      } catch (error) {
+        console.error("Error uploading file", error);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
   const handleExportToExcel = () => {
     const dataToExport = filteredAnalytename.map((item) => ({
       Name: item.name ?? "", // Fallback to empty string
@@ -452,9 +493,9 @@ const handleUpdate = async (e) => {
                       field: "added_by",
                     },
                     {
-                      label:"Test Result Unit",
-                      placeholder:"Search testresultunit",
-                      field:"testresultunit"
+                      label: "Test Result Unit",
+                      placeholder: "Search testresultunit",
+                      field: "testresultunit"
                     },
                     {
                       label: "Status",
@@ -565,7 +606,7 @@ const handleUpdate = async (e) => {
                 style={{
                   zIndex: 1050,
                   position: "fixed",
-                  top: "120px",
+                  top: "60px",
                   left: "50%",
                   transform: "translateX(-50%)",
                 }}
@@ -586,11 +627,18 @@ const handleUpdate = async (e) => {
                           setShowEditModal(false);
                           setLogoPreview("")
                           setFormData({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-image:""
-    });
+                            name: "",
+                            added_by: id,
+                            testresultunit_id: "",
+                            image: "",
+                            low_min: "",
+                            low_max: "",
+                            medium_min: "",
+                            medium_max: "",
+                            high_min: "",
+                            high_max: "",
+                          });
+
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -608,99 +656,150 @@ image:""
                       onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
                     >
                       <div className="modal-body">
-  {/* Row: Analyte + Test Result Unit */}
-  <div className="row">
-    <div className="col-md-6 mb-3">
-      <label>Analyte</label>
-      <input
-        type="text"
-        className="form-control"
-        name="name"
-        value={formData.name}
-        onChange={handleInputChange}
-        required
-      />
-    </div>
+                        {/* Row: Analyte + Test Result Unit */}
+                        <div className="row">
+                          <div className="col-md-6 mb-3">
+                            <label>Analyte</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
 
- <div className="col-md-6 mb-3">
-  <label>Test Result Unit</label>
-  <select
-    className="form-control"
-    name="testresultunit_id" // 👈 match backend key if you're storing the id
-    value={formData.testresultunit_id || ""}
-    onChange={handleInputChange}
-    // required
-  >
-    <option value="">Select Unit</option>
-    {testResultUnit?.map((unit) => (
-      <option key={unit.id} value={unit.id}>
-        {unit.name}
-      </option>
-    ))}
-  </select>
-</div>
- <div className="col-md-6 mb-3">
-                                  <label>
-                                    Analyte Image
-                                    <span className="text-danger"></span>
-                                  </label>
-                                  <div className="d-flex align-items-center">
-                                  <input
-  type="file"
-  name="image"
-  accept="image/*"
-  className="form-control"
-  onChange={(e) => {
-    const file = e.target.files[0];
-    setFormData({ ...formData, image: file });
-    setLogoPreview(URL.createObjectURL(file)); // for previewing
-  }}
-/>
+                          <div className="col-md-6 mb-3">
+                            <label>Test Result Unit</label>
+                            <select
+                              className="form-control"
+                              name="testresultunit_id" // 👈 match backend key if you're storing the id
+                              value={formData.testresultunit_id || ""}
+                              onChange={handleInputChange}
+                            // required
+                            >
+                              <option value="">Select Unit</option>
+                              {testResultUnit?.map((unit) => (
+                                <option key={unit.id} value={unit.id}>
+                                  {unit.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-md-6 mb-3">
+                            <label>
+                              Analyte Image
+                              <span className="text-danger"></span>
+                            </label>
+                            <div className="d-flex align-items-center">
+                              <input
+                                type="file"
+                                name="image"
+                                accept="image/*"
+                                className="form-control"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  setFormData({ ...formData, image: file });
+                                  setLogoPreview(URL.createObjectURL(file)); // for previewing
+                                }}
+                              />
 
-                                    {logoPreview && (
-                                      <img
-                                        src={logoPreview}
-                                        alt="Logo Preview"
-                                        width="80"
-                                        style={{
-                                          marginLeft: "20px",
-                                          borderRadius: "5px",
-                                        }}
-                                      />
-                                    )}
-                                  </div>
-                                </div>
+                              {logoPreview && (
+                                <img
+                                  src={logoPreview}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{
+                                    marginLeft: "20px",
+                                    borderRadius: "5px",
+                                  }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          <div className="row mt-2">
+                            {/* Low Range */}
+                            <div className="col-md-12 mb-3">
+                              <label className="fw-bold">Low Range</label>
+                              <div className="d-flex gap-2">
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="low_min"
+                                  placeholder="Low Min"
+                                  value={formData.low_min}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="low_max"
+                                  placeholder="Low Max"
+                                  value={formData.low_max}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* Medium Range */}
+                            <div className="col-md-12 mb-3">
+                              <label className="fw-bold">Medium Range</label>
+                              <div className="d-flex gap-2">
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="medium_min"
+                                  placeholder="Medium Min"
+                                  value={formData.medium_min}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="medium_max"
+                                  placeholder="Medium Max"
+                                  value={formData.medium_max}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* High Range */}
+                            <div className="col-md-12 mb-3">
+                              <label className="fw-bold">High Range</label>
+                              <div className="d-flex gap-2">
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="high_min"
+                                  placeholder="High Min"
+                                  value={formData.high_min}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="high_max"
+                                  placeholder="High Max"
+                                  value={formData.high_max}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
 
 
-  </div>
+                        </div>
 
-  {/* Row: Low Label + Range Inputs */}
-  {/* <div className="mb-2">
-    <label className="fw-bold">Low</label>
-  </div>
-
-  <div className="d-flex align-items-center gap-2 mb-3">
-    <input
-      type="number"
-      className="form-control"
-      name="low_min"
-      placeholder="Min"
-      value={formData.low_min || ""}
-      onChange={handleInputChange}
-      required
-    />
-    <span className="mx-2">to</span>
-    <input
-      type="number"
-      className="form-control"
-      name="low_max"
-      placeholder="Max"
-      value={formData.low_max || ""}
-      onChange={handleInputChange}
-      required
-    />
-  </div> */}
-</div>
+                       
+                      </div>
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
