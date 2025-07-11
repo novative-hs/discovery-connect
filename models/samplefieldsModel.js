@@ -365,138 +365,7 @@ const getAnalyteName=(callback)=>{
 }
 
 const createAnalyte = (data, callback) => {
-  const {
-    bulkData,
-    name,
-    added_by,
-    testresultunit_id,
-    image,
-    low_min,
-    low_max,
-    medium_min,
-    medium_max,
-    high_min,
-    high_max
-  } = data || {};
-
-  const tableName = "analyte"; // ✅ Hardcoded here
-
-  mysqlPool.getConnection((err, connection) => {
-    if (err) return callback(err);
-
-    connection.beginTransaction(async (err) => {
-      if (err) {
-        connection.release();
-        return callback(err);
-      }
-
-      try {
-        // BULK INSERT
-        if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
-          const uniqueNames = Array.from(
-            new Set(
-              bulkData
-                .map((item) => (typeof item.name === "string" ? item.name.trim() : null))
-                .filter((name) => !!name)
-            )
-          );
-
-          if (uniqueNames.length === 0) {
-            throw new Error("No valid analyte names provided in bulk.");
-          }
-
-          const insertValues = uniqueNames.map((name) => [name, added_by]);
-
-          const insertQuery = `
-            INSERT IGNORE INTO ${tableName} (name, added_by)
-            VALUES ?;
-          `;
-          await connection.promise().query(insertQuery, [insertValues]);
-
-          const [rows] = await connection.promise().query(
-            `SELECT id, name FROM ${tableName} WHERE name IN (?)`,
-            [uniqueNames]
-          );
-
-          const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
-          const historyQuery = `
-            INSERT INTO registrationadmin_history
-            (created_name, added_by, analyte_id, status)
-            VALUES ?;
-          `;
-          await connection.promise().query(historyQuery, [historyValues]);
-        }
-
-        // SINGLE INSERT
-        else if (name && added_by && testresultunit_id) {
-          const safeImage = image || null;
-
-          const insertQuery = `
-            INSERT INTO ${tableName} 
-              (name, added_by, testresultunit_id, image,
-              low_minconcentration, low_maxconcentration,
-              medium_minconcentration, medium_maxconcentration,
-              high_minconcentration, high_maxconcentration)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-          `;
-          const [result] = await connection.promise().query(insertQuery, [
-            name.trim(),
-            added_by,
-            testresultunit_id,
-            safeImage,
-            low_min,
-            low_max,
-            medium_min,
-            medium_max,
-            high_min,
-            high_max
-          ]);
-
-          const historyQuery = `
-            INSERT INTO registrationadmin_history
-            (created_name, added_by, analyte_id, status)
-            VALUES (?, ?, ?, ?);
-          `;
-          await connection.promise().query(historyQuery, [
-            name,
-            added_by,
-            result.insertId,
-            "active"
-          ]);
-        } else {
-          throw new Error("Invalid analyte data or missing required fields.");
-        }
-
-        connection.commit();
-        callback(null, { success: true });
-      } catch (err) {
-        console.error("❌ Error during createAnalyte:", err.message, err.stack);
-        connection.rollback();
-        callback(err);
-      } finally {
-        connection.release();
-      }
-    });
-  });
-};
-
-
-
-// Function to create all SampleFields
-const createSampleFields = (tableName, data, callback) => {
-  const {
-    bulkData,
-    name,
-    added_by,
-    testresultunit_id,
-    image,
-    low_min,
-    low_max,
-    medium_min,
-    medium_max,
-    high_min,
-    high_max,
-  } = data || {};
+  const { bulkData, name, added_by, testresultunit_id, image } = data || {};
 
   if (!added_by) {
     return callback(new Error("Missing 'added_by' field."));
@@ -512,7 +381,7 @@ const createSampleFields = (tableName, data, callback) => {
       }
 
       try {
-        // ✅ BULK INSERT
+        // ✅ BULK INSERT: only `name` is required
         if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
           const uniqueNames = Array.from(
             new Set(
@@ -530,7 +399,7 @@ const createSampleFields = (tableName, data, callback) => {
 
           const insertQuery = `
             INSERT IGNORE INTO analyte (name, added_by)
-            VALUES ?;
+            VALUES ?
           `;
           await connection.promise().query(insertQuery, [insertValues]);
 
@@ -544,50 +413,33 @@ const createSampleFields = (tableName, data, callback) => {
           const historyQuery = `
             INSERT INTO registrationadmin_history
             (created_name, added_by, analyte_id, status)
-            VALUES ?;
+            VALUES ?
           `;
           await connection.promise().query(historyQuery, [historyValues]);
         }
 
-        // ✅ SINGLE INSERT
+        // ✅ SINGLE INSERT: name, added_by, testresultunit_id are required
         else if (name && added_by && testresultunit_id) {
-          const insertQuery = `
-            INSERT INTO analyte (
-              name, added_by, testresultunit_id, image,
-              low_minconcentration, low_maxconcentration,
-              medium_minconcentration, medium_maxconcentration,
-              high_minconcentration, high_maxconcentration
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-          `;
+          const safeImage = typeof image === "string" && image.length > 0 ? image : null;
 
-          const [result] = await connection.promise().query(insertQuery, [
-            name.trim(),
-            added_by,
-            testresultunit_id,
-            image || null,
-            parseInt(low_min) || null,
-            parseInt(low_max) || null,
-            parseInt(medium_min) || null,
-            parseInt(medium_max) || null,
-            parseInt(high_min) || null,
-            parseInt(high_max) || null,
-          ]);
+          const insertQuery = `
+            INSERT INTO analyte (name, added_by, testresultunit_id, image)
+            VALUES (?, ?, ?, ?);
+          `;
+          const [result] = await connection.promise().query(
+            insertQuery,
+            [name.trim(), added_by, testresultunit_id, safeImage]
+          );
 
           const historyQuery = `
             INSERT INTO registrationadmin_history
             (created_name, added_by, analyte_id, status)
             VALUES (?, ?, ?, ?);
           `;
-          await connection.promise().query(historyQuery, [
-            name,
-            added_by,
-            result.insertId,
-            "active",
-          ]);
+          await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
         }
 
-        // ❌ INVALID
+        // ❌ INVALID INPUT
         else {
           throw new Error("Invalid analyte data or missing required fields.");
         }
@@ -606,20 +458,75 @@ const createSampleFields = (tableName, data, callback) => {
 };
 
 
+// Function to create all SampleFields
+const createSampleFields = (tableName, data, callback) => {
+  const { bulkData, name, added_by } = data || {};
+
+  if (!/^[a-zA-Z_]+$/.test(tableName)) return callback(new Error("Invalid table name"));
+
+  mysqlPool.getConnection((err, connection) => {
+    if (err) return callback(err);
+
+    connection.beginTransaction(async (err) => {
+      if (err) {
+        connection.release();
+        return callback(err);
+      }
+
+      try {
+        let values = [];
+
+        if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
+          values = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
+
+          const insertQuery = `INSERT IGNORE INTO \`${tableName}\` (name, added_by) VALUES ?;`;
+          await connection.promise().query(insertQuery, [values.map(({ name, added_by }) => [name, added_by])]);
+
+          const [rows] = await connection.promise().query(
+            `SELECT id, name FROM \`${tableName}\` WHERE name IN (?)`,
+            [values.map(({ name }) => name)]
+          );
+
+          if (rows.length === 0) throw new Error("Failed to retrieve inserted IDs");
+
+          const idColumn = `${tableName}_id`;
+          const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
+          const historyQuery = `INSERT INTO registrationadmin_history (created_name, added_by, ${idColumn}, status) VALUES ?;`;
+          await connection.promise().query(historyQuery, [historyValues]);
+        } else if (name && added_by) {
+          const insertQuery = `INSERT INTO \`${tableName}\` (name, added_by) VALUES (?, ?);`;
+          const [result] = await connection.promise().query(insertQuery, [name, added_by]);
+
+          const idColumn = `${tableName}_id`;
+          const historyQuery = `
+            INSERT INTO registrationadmin_history
+            (created_name, added_by, ${idColumn}, status)
+            VALUES (?, ?, ?, ?);
+          `;
+          await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
+        } else {
+          throw new Error("Invalid data or missing required fields.");
+        }
+
+        connection.commit();
+        callback(null, { success: true });
+      } catch (err) {
+        console.error("❌ Error during createSampleFields:", err.message, err.stack);
+        connection.rollback();
+        callback(err);
+      } finally {
+        connection.release();
+      }
+    });
+  });
+};
+
+
+
+
 // Function to update a record dynamically
 const updateSampleFields = (tableName, id, data, callback) => {
-  const {
-    name,
-    added_by,
-    testresultunit_id,
-    image,
-    low_min,
-    low_max,
-    medium_min,
-    medium_max,
-    high_min,
-    high_max,
-  } = data;
+  const { name, added_by, testresultunit_id,image } = data;
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return callback(new Error("Invalid table name"), null);
@@ -629,55 +536,28 @@ const updateSampleFields = (tableName, id, data, callback) => {
 
   mysqlConnection.query(fetchQuery, [id], (err, results) => {
     if (err) return callback(err, null);
-    if (results.length === 0) return callback(new Error("Record not found"), null);
+    if (results.length === 0)
+      return callback(new Error("Record not found"), null);
 
     const oldName = results[0].name;
     const idColumn = `${tableName}_id`;
 
+    // Prepare dynamic update query
     let updateQuery = `UPDATE \`${tableName}\` SET name = ?, added_by = ?`;
     const updateParams = [name, added_by];
 
-    // 👉 Only add extra fields for analyte table
+    // If table is analyte, also include testresultunit_id
     if (tableName === "analyte") {
-      if (testresultunit_id) {
-        updateQuery += `, testresultunit_id = ?`;
-        updateParams.push(testresultunit_id);
-      }
-      if (image) {
-        updateQuery += `, image = ?`;
-        updateParams.push(image);
-      }
+  if (testresultunit_id) {
+    updateQuery += `, testresultunit_id = ?`;
+    updateParams.push(testresultunit_id);
+  }
+  if (image) {
+    updateQuery += `, image = ?`;
+    updateParams.push(image);
+  }
+}
 
-      // Handle low range
-      if (low_min !== undefined) {
-        updateQuery += `, low_minconcentration = ?`;
-        updateParams.push(low_min);
-      }
-      if (low_max !== undefined) {
-        updateQuery += `, low_maxconcentration = ?`;
-        updateParams.push(low_max);
-      }
-
-      // Handle medium range
-      if (medium_min !== undefined) {
-        updateQuery += `, medium_minconcentration = ?`;
-        updateParams.push(medium_min);
-      }
-      if (medium_max !== undefined) {
-        updateQuery += `, medium_maxconcentration = ?`;
-        updateParams.push(medium_max);
-      }
-
-      // Handle high range
-      if (high_min !== undefined) {
-        updateQuery += `, high_minconcentration = ?`;
-        updateParams.push(high_min);
-      }
-      if (high_max !== undefined) {
-        updateQuery += `, high_maxconcentration = ?`;
-        updateParams.push(high_max);
-      }
-    }
 
     updateQuery += ` WHERE id = ?`;
     updateParams.push(id);
@@ -702,7 +582,6 @@ const updateSampleFields = (tableName, id, data, callback) => {
     });
   });
 };
-
 
 
 // Function to delete (soft delete) a record dynamically

@@ -42,15 +42,20 @@ const createSampleFields = (req, res) => {
 };
 
 const createAnalyte = (req, res) => {
+  const { tableName } = req.params;
   const newSampleFieldsData = req.body;
   const files = req.files;
 
-  // Add image buffer to body
+  // ✅ If file was uploaded, grab the buffer (e.g., for image stored as BLOB)
   newSampleFieldsData.image = files?.image?.[0]?.buffer || null;
 
-  samplefieldsModel.createAnalyte(newSampleFieldsData, (err, result) => {
+  if (!/^[a-zA-Z_]+$/.test(tableName)) {
+    return res.status(400).json({ error: "Invalid table name" });
+  }
+
+  samplefieldsModel.createSampleFields(tableName, newSampleFieldsData, (err, result) => {
     if (err) {
-      console.error("❌ Backend Error:", err);
+      console.error("❌ Backend Error:", err); // ✅ SHOW REAL ERROR
       return res.status(500).json({ error: err.message || "Error creating sample fields" });
     }
 
@@ -60,8 +65,6 @@ const createAnalyte = (req, res) => {
     });
   });
 };
-
-
 
 
 // Controller to update a sample field dynamically
