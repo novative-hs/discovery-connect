@@ -690,11 +690,11 @@ const createSample = (data, callback) => {
                 console.error("❌ Error inserting into poolsample:", err);
                 return callback(err, null);
               }
+const updateStatusQuery = `
+  UPDATE sample SET status = 'Pooled', sample_visibility = 'Non-Public'
+  WHERE id IN (?)
+`;
 
-              const updateStatusQuery = `
-                UPDATE sample SET status = 'Pooled' AND sample_visibility='Non-Public'
-                WHERE id IN (?)
-              `;
               mysqlConnection.query(updateStatusQuery, [poolSamplesArray], (err, statusResults) => {
                 if (err) {
                   console.error("❌ Error updating sample statuses to Pooled Sample:", err);
