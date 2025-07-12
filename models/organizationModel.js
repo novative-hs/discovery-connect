@@ -198,16 +198,27 @@ const updateOrganizationStatus = async (id, status) => {
     VALUES (?, ?)
   `;
 
-  const updateQuery = "UPDATE organization SET status = ? WHERE id = ?";
+  const updateOrganizationQuery = "UPDATE organization SET status = ? WHERE id = ?";
+  const getOrganizationNameQuery = "SELECT id FROM organization WHERE id = ?";
+  const updateResearchersQuery = "UPDATE researcher SET status = ? WHERE nameofOrganization = ?";
 
   try {
     // Update organization status
-    const [updateResult] = await mysqlConnection.promise().query(updateQuery, [status, id]);
+    const [updateResult] = await mysqlConnection.promise().query(updateOrganizationQuery, [status, id]);
     if (updateResult.affectedRows === 0) {
       throw new Error("No organization found with the given ID.");
     }
 
-    // Insert into history
+    // If status is 'Inactive', update related researchers to 'Unapproved'
+    if (status.toLowerCase() === 'inactive') {
+      const [orgRows] = await mysqlConnection.promise().query(getOrganizationNameQuery, [id]);
+      if (orgRows.length > 0) {
+        const orgid = orgRows[0].id;
+        await mysqlConnection.promise().query(updateResearchersQuery, ['Unapproved', orgid]);
+      }
+    }
+
+    // Insert status change into history
     await mysqlConnection.promise().query(insertHistoryQuery, [id, status]);
 
     return { message: "Status updated successfully" };
@@ -216,6 +227,8 @@ const updateOrganizationStatus = async (id, status) => {
     throw error;
   }
 };
+
+
 
 const updateOrganization = (data, organizationId, callback) => {
   const {
