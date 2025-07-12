@@ -1086,11 +1086,19 @@ const OrganizationArea = () => {
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
                           const {
+                            type,
                             OrganizationName,
-                            created_at,
-                            updated_at,
+                            website,
+                            phoneNumber,
+                            city_name,
+                            country_name,
+                            district_name,
+                            fullAddress,
                             status,
+                            created_at,
+                            updated_at
                           } = log;
+
 
                           // Determine timestamp and person depending on status type:
                           const time =
@@ -1122,11 +1130,28 @@ const OrganizationArea = () => {
                                     marginTop: status === "updated" ? "5px" : "0px",
                                   }}
                                 >
-                                  Organization: <b>{OrganizationName}</b> was{" "}
-                                  <b style={{ color: "green" }}>{status}</b> by Registration Admin at{" "}
-                                  {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
+                                  <div><b>Organization status:</b> {status}</div>
+                                  <div><b>Name:</b> {OrganizationName}</div>
+                                  <div><b>Phone:</b> {phoneNumber}</div>
+                                  <div><b>Country:</b> {country_name}</div>
+                                  <div><b>District:</b> {district_name}</div>
+                                  <div><b>City:</b> {city_name}</div>
+                                  <div><b>Address:</b> {fullAddress}</div>
+
+                                  {status === "added" && created_at && (
+                                    <div>
+                                      <b>Created At:</b> {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
+
+                                  {status === "updated" && updated_at && (
+                                    <div>
+                                      <b>Updated At:</b> {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                    </div>
+                                  )}
                                 </div>
                               )}
+
                               {/* Active */}
                               {(status === "active" ||
                                 status === "inactive") && (
