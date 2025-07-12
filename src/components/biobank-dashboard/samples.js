@@ -18,7 +18,7 @@ import InputMask from "react-input-mask";
 
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  const [mode, setMode] = useState("");
+  const [mode, setMode] = useState("Individual");
   const [showActionModal, setShowActionModal] = useState(false);
   const [statusmode, setstatusMode] = useState("");
   const [selectedSample, setSelectedSample] = useState(null);
@@ -463,15 +463,14 @@ const BioBankSampleArea = () => {
     let isMounted = true;
     e.preventDefault();
 
-    // ✅ 1. Determine effectiveMode
-    const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
-
-    let effectiveMode = mode; // "Individual", "Pooled", or "AddtoPool"
-
-    if (mode === "Pooled") {
-      effectiveMode = isResultFilled ? "Pooled" : "AddtoPool";
-    } else if (mode === "Individual") {
-      effectiveMode = "Individual";
+let effectiveMode = mode;
+    if (
+      mode !== "Individual" &&
+      formData.TestResult?.trim() &&
+      formData.TestResultUnit?.trim()
+    ) {
+      effectiveMode = "Pooled";
+      setMode("Pooled"); // optional: update state for consistency
     }
 
     // ✅ 2. Construct form data
@@ -711,9 +710,8 @@ const BioBankSampleArea = () => {
     setSelectedSampleId(sample.id);
     setSelectedSampleName(sample.Analyte);
     setSelectedSampleVolume(sample.volume);
-    setMode(sample.samplemode || "individual");
+    setMode(sample.samplemode);
     setEditSample(sample);
-    setShowEditModal(true);
 
     // Combine the location parts into "room-freezer-box" format
     const formattedLocationId = `${String(sample.room_number).padStart(
@@ -1001,21 +999,24 @@ const BioBankSampleArea = () => {
       user_account_id: id,
       logo: "",
     });
-    setMode("");
+    setMode("Individual");
     setShowAdditionalFields(false);
     setLogoPreview(null);
   };
 
-  const logoHandler = (file) => {
-    const imageUrl = URL.createObjectURL(file);
+ const logoHandler = (file) => {
+  if (!file) return; // ✅ Don't proceed if no file selected
 
-    setLogoPreview(imageUrl);
-    setLogo(imageUrl); // Update the preview with the new image URL
-    setFormData((prev) => ({
-      ...prev,
-      logo: file,
-    }));
-  };
+  const imageUrl = URL.createObjectURL(file);
+
+  setLogoPreview(imageUrl);
+  setLogo(imageUrl);
+  setFormData((prev) => ({
+    ...prev,
+    logo: file,
+  }));
+};
+
 
   const areMandatoryFieldsFilled = () => {
     if (mode === "Individual") {
