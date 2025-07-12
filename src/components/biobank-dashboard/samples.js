@@ -137,6 +137,7 @@ const BioBankSampleArea = () => {
   const [formData, setFormData] = useState({
     patientname: "",
     patientlocation: "",
+    finalConcentration: "",
     locationids: "",
     Analyte: "",
     age: "",
@@ -741,6 +742,7 @@ let effectiveMode = mode;
     setFormData({
       patientname: sample.PatientName,
       patientlocation: sample.PatientLocation,
+      finalConcentration: sample.finalConcentration,
       MRNumber: sample.MRNumber,
       locationids: formattedLocationId,
       Analyte: sample.Analyte,
@@ -805,62 +807,64 @@ let effectiveMode = mode;
     setShowPriceModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+ const handleUpdate = async (e) => {
+  e.preventDefault();
 
-    const formDataToSend = new FormData();
+  const formDataToSend = new FormData();
 
-    // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
-    let updatedMode = mode;
-    if (
-      mode === "AddtoPool" &&
-      formData.TestResult?.trim() &&
-      formData.TestResultUnit?.trim()
-    ) {
-      updatedMode = "Pooled";
-      setMode("Pooled"); // optional: update state for consistency
+  // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
+  let updatedMode = mode;
+  if (
+    mode !== "Individual" &&
+    formData.TestResult?.trim() &&
+    formData.TestResultUnit?.trim()
+  ) {
+    updatedMode = "Pooled";
+    setMode("Pooled");
+  }
+
+  // Append all fields except logo
+  for (const key in formData) {
+    if (key !== "logo") {
+      formDataToSend.append(key, formData[key]);
     }
+  }
 
-    // Append all form fields except logo
-    for (const key in formData) {
-      if (key !== "logo") {
-        formDataToSend.append(key, formData[key]);
-      }
-    }
+  formDataToSend.append("mode", updatedMode);
 
-    formDataToSend.append("mode", updatedMode); // 👈 append computed mode
+  // Only append logo if it's a File
+  if (formData.logo instanceof File) {
+    formDataToSend.append("logo", formData.logo);
+  }
 
-    // Only append logo if it's a new file
-    if (formData.logo instanceof File) {
-      formDataToSend.append("logo", formData.logo);
-    }
+  try {
+    // 👇 Conditional API endpoint
+    const apiUrl = formData.TestResultUnit?.trim()
+      ?  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`
+      : `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`;
 
-    try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+    await axios.put(apiUrl, formDataToSend, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+    // ✅ Refresh updated data
+    fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
 
+    setShowEditModal(false);
+    setShowEditPoolModal(false);
+    setSuccessMessage("Sample updated successfully.");
+    resetFormData();
 
-      setShowEditModal(false);
-      setShowEditPoolModal(false);
-      setSuccessMessage("Sample updated successfully.");
-      resetFormData();
+    setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+  } catch (error) {
+    console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+  }
+};
 
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
-    }
-  };
 
   const handleVisibilityButtonClick = () => {
     if (visibilitystatuschange) {
@@ -965,6 +969,7 @@ let effectiveMode = mode;
     setFormData({
       patientname: "",
       patientlocation: "",
+          finalConcentration: "",
       locationids: "",
       volume: "",
       Analyte: "",
@@ -1039,6 +1044,7 @@ let effectiveMode = mode;
       return (
         formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
+        formData.finalConcentration?.toString().trim() &&
         formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
         formData.TestResult?.toString().trim() &&
@@ -2837,6 +2843,45 @@ Box ID=${sample.box_id || "----"} `;
                                       />
                                     )}
                                   </InputMask>
+                                </div>
+                                  <div className="form-group col-md-6">
+                                  <label className="mb-2">
+                                    Final Concentration <span className="text-danger">*</span>
+                                  </label>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: "10px",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {["Low", "Medium", "High"].map((level) => (
+                                      <div key={level} className="form-check">
+                                        <input
+                                          className="form-check-input"
+                                          type="radio"
+                                          name="finalConcentration" // name is fine
+                                          id={`finalConcentration-${level}`}
+                                          value={level}
+                                          checked={mode === level}
+                                          onChange={(e) => {
+                                            setFormData((prev) => ({
+                                              ...prev,
+                                              finalConcentration: e.target.value,
+                                            }))
+                                            setMode(level)
+                                          }}
+                                          required
+                                        />
+                                        <label
+                                          className="form-check-label"
+                                          htmlFor={`finalConcentration-${level}`}
+                                        >
+                                          {level}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                                 <div className="form-group col-md-6">
                                   <label>
