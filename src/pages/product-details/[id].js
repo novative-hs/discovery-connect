@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/router";
 // internal
-// import ShopCta from "@components/cta";
+
 import SEO from "@components/seo";
 import Header from "@layout/header";
 import Wrapper from "@layout/wrapper";
@@ -50,7 +50,7 @@ export default function DynamicShopDetails({ query }) {
       <SEO pageTitle={"Shop Details"} />
       <Header style_2={true} />
       {content}
-      {/* <ShopCta /> */}
+      
       {/* <Footer /> */}
     </Wrapper>
   );

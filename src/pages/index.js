@@ -9,7 +9,7 @@ import HeroBanner from "@components/hero-banner";
 import OfferPopularProduct from "@components/offer-product";
 // import ShopBanner from "@components/shop-banner";
 // import ShopFeature from "@components/shop-feature";
-// import ShopCta from "@components/cta";
+
 import Footer from "@layout/footer";
 import BioSpecimenSection from "@components/offer-product/biospecimensection";
 import Services from "@components/offer-product/services";
@@ -33,7 +33,7 @@ const HomeShop = () => {
       <OfferPopularProduct />
       {/* <ShopBanner /> */}
       {/* <ShopFeature /> */}
-      {/* <ShopCta /> */}
+      
       <BackToTopCom/>
       <Footer />
     </Wrapper>

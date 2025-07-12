@@ -5,7 +5,7 @@ import Wrapper from "@layout/wrapper";
 import SEO from "@components/seo";
 import Header from "@layout/header";
 import {ErrorSvg, RightArrowThree} from "@svg/index";
-// import ShopCta from "@components/cta";
+
 import Footer from "@layout/footer";
 
 export default function ErrorPage() {
@@ -40,7 +40,7 @@ export default function ErrorPage() {
         </div>
       </section>
       {/* error area end */}
-      {/* <ShopCta/> */}
+      
       <Footer/>
     </Wrapper>
   );

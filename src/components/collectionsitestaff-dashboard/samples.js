@@ -819,7 +819,7 @@ const SampleArea = () => {
       CountryOfCollection: sample.CountryOfCollection,
       quantity: sample.quantity,
       VolumeUnit: sample.VolumeUnit,
-      SampleTypeMatrix: sample.SampleTypeMatrix,
+      SampleTypeMatrix: sample.SampleTypeMatrix?.trim() || "",
       SmokingStatus: sample.SmokingStatus,
       AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,

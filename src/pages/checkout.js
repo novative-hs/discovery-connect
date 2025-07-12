@@ -6,10 +6,10 @@ import Header from "@layout/header"; // <-- make sure both headers are imported
 import DashbaordHeader from "@layout/dashboardheader";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import Wrapper from "@layout/wrapper";
-import CouponArea from "@components/checkout/coupon-area";
+
 import CheckoutArea from "@components/checkout/checkout-area";
 import Footer from "@layout/footer";
-// import ShopCta from "@components/cta";
+
 import useCheckoutSubmit from "@hooks/use-checkout-submit";
 
 export default function Checkout() {

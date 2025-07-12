@@ -1118,6 +1118,7 @@ const BioBankSampleArea = () => {
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
+        
         {/* Success Message */}
         {successMessage && (
           <div className="alert alert-success text-center" role="alert">

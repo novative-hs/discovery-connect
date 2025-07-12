@@ -2,7 +2,7 @@ import Link from "next/link";
 import { React, useState, useEffect } from "react";
 import { useRouter } from "next/router";  // Importing useRouter for redirect
 // internal
-import ProfileShapes from "./profile-shapes";
+
 import ChangePassword from './change-password';
 import BioBankSampleArea from './samples';
 

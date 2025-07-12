@@ -3,7 +3,7 @@ import { useState } from "react";
 import Wrapper from "@layout/wrapper";
 import SEO from "@components/seo";
 import Header from "@layout/header";
-// import ShopCta from "@components/cta";
+
 import Footer from "@layout/footer";
 import NiceSelect from "@ui/NiceSelect";
 import ErrorMessage from "@components/error-message/error";
@@ -12,7 +12,7 @@ import ProductLoader from "@components/loader/product-loader";
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
 import { useGetShowingProductsQuery } from "src/redux/features/productApi";
 import LoadMoreBtn from "@components/load-more-btn";
-import BreadcrumbTwo from "@components/common/breadcrumb/breadcrumb-2";
+
 
 export default function Search({ query }) {
   const searchText = query?.query;
@@ -137,9 +137,9 @@ export default function Search({ query }) {
     <Wrapper>
       <SEO pageTitle={"Search Products"} />
       <Header style_2={true} />
-      <BreadcrumbTwo title="Search Result" />
+      
       {content}
-      {/* <ShopCta /> */}
+      
       <Footer />
     </Wrapper>
   );

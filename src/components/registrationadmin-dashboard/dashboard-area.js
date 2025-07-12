@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Header from "../../layout/dashboardheader";
-import ProfileShapes from "./profile-shapes";
+
 import ChangePassword from "./change-password";
 
 import StaffManagementPage from "./staffManagementPage";

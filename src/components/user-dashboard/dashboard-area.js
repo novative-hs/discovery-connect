@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 // internal
-import ProfileShapes from "./profile-shapes";
+
 import ChangePassword from "./change-password";
 import UpdateUser from "./update-user";
 import SampleArea from "./samples";
