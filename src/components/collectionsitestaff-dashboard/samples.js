@@ -3630,8 +3630,8 @@ const SampleArea = () => {
                               <th>MR Number</th>
                               <th>Age</th>
                               <th>Gender</th>
-                              <th>Phone</th>
-                              <th>Location</th>
+                              {/* <th>Phone</th>
+                              <th>Location</th> */}
                             </tr>
                           </thead>
                           <tbody>
@@ -3651,8 +3651,8 @@ const SampleArea = () => {
                                 <td>{sample.MRNumber || "—"}</td>
                                 <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
                                 <td>{sample.gender || "—"}</td>
-                                <td>{sample.phoneNumber || "—"}</td>
-                                <td>{sample.PatientLocation || "—"}</td>
+                                {/* <td>{sample.phoneNumber || "—"}</td>
+                                <td>{sample.PatientLocation || "—"}</td> */}
                               </tr>
                             ))}
                           </tbody>
