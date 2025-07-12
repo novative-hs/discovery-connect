@@ -1261,14 +1261,14 @@ const BioBankSampleArea = () => {
                 }}
                 className="btn btn-primary"
               >
-                Make Pool
+                Mark Sample as Pooled
               </button>
             ) : (
               <button
                 onClick={handlePoolButtonClick}
                 className="btn btn-primary"
               >
-                Confirm Pool
+                Mark Pooled
               </button>
             )}
 
