@@ -13,5 +13,5 @@ router.get('/biobank/getQuarantineStock', BioBankController.getQuarantineStock);
 router.get('/biobank/getvisibilitysamples/:id', BioBankController.getBiobankVisibilitySamples);
 router.put('/biobank/UpdateSampleStatus/:id', BioBankController.UpdateSampleStatus);
 router.get("/sample/getprice/:name", BioBankController.getPrice);
-
+router.get('/biobank/getsamplespooled/:id',BioBankController.getBiobankSamplesPooled)
 module.exports = router;

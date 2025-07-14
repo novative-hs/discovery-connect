@@ -1361,7 +1361,6 @@ let effectiveMode = mode;
                   <tr key={sample.id}>
                    {(poolMode || visibilitystatuschange) && (
   <td className="text-center">
-    {sample.samplemode === "Individual" ? (
       <input
         type="checkbox"
         checked={selectedSamples.includes(sample.id)}
@@ -1373,9 +1372,6 @@ let effectiveMode = mode;
           );
         }}
       />
-    ) : (
-      <span className="text-muted">—</span> // Optional dash
-    )}
   </td>
 )}
 

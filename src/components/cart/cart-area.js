@@ -31,6 +31,11 @@ const CartArea = () => {
 
   const subtotal = validItems.reduce((acc, item) => acc + item.price * 1, 0);
 
+  // ✅ Check if all items have price
+  const allItemsHavePrice = cart_products.every(
+    (item) => item.price && item.price > 0
+  );
+
   return (
     <section
       className="cart-area py-5"
@@ -46,38 +51,43 @@ const CartArea = () => {
                     <table className="table table-bordered rounded shadow-sm bg-white">
                       <thead className="table-light text-dark text-center">
                         <tr>
-                          <th colSpan="5" className="text-center fs-6 py-3">
+                          <th colSpan="6" className="text-center fs-6 py-3">
                             Sample Cart Detail
                           </th>
                         </tr>
                         <tr>
+                          <th>Serial No.</th>
+                          <th>Specimen ID</th>
                           <th>Analyte</th>
-                          
                           <th>Quantity</th>
+                          <th>Unit Price</th>
                           <th>Remove</th>
                         </tr>
                       </thead>
                       <tbody>
                         {cart_products.map((item, i) => (
                           <tr key={i} className="text-center align-middle">
-                            <td className="text-start">
-                              <div className="d-flex align-items-center gap-3">
-                                {/* <img
-                                  src={item.imageUrl}
-                                  alt="Sample"
-                                  style={{ width: "60px", borderRadius: "8px" }}
-                                /> */}
-                              <span>
-  {item.Analyte} (
-  {[item.gender, item.age, `${item.TestResult}${item.TestResultUnit}`, `${item.Volume}${item.VolumeUnit}`]
-    .filter(Boolean) 
-    .join(", ")}
-  )
-</span>
-
+                            <td>{i + 1}</td>
+                            <td>{item.masterid}</td>
+                            <td>
+                              <div>{item.Analyte}</div>
+                              <div>
+                                {[
+                                  item.gender,
+                                  item.age,
+                                  `${item.TestResult}${item.TestResultUnit}`,
+                                  `${item.Volume}${item.VolumeUnit}`,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}
                               </div>
                             </td>
                             <td>{item.quantity}</td>
+                            <td>
+                              {item.price && item.price > 0
+                                ? item.price
+                                : "Please Quote"}
+                            </td>
                             <td>
                               <button
                                 className="btn btn-sm btn-outline-danger rounded-circle"
@@ -118,15 +128,15 @@ const CartArea = () => {
                       <button
                         className="tp-btn cursor-pointer w-100"
                         onClick={handleProceedToCheckout}
-                        
                         style={{
                           backgroundColor: "#003366",
                           color: "white",
                           border: "none",
-                          
                         }}
                       >
-                        Proceed to Checkout
+                        {allItemsHavePrice
+                          ? "Proceed to Checkout"
+                          : "Request Quote"}
                       </button>
                     </div>
                   </div>

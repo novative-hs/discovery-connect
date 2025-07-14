@@ -200,14 +200,14 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
 
 
 const getAllSamples = (callback) => {
-
   const query = `
-     SELECT 
+    SELECT 
       s.*,
       cs.CollectionSiteName AS Name,
       bb.Name AS BiobankName,
       c.name AS CityName,
-      d.name AS DistrictName
+      d.name AS DistrictName,
+      a.image AS analyteImage
     FROM 
       sample s
     LEFT JOIN 
@@ -220,45 +220,28 @@ const getAllSamples = (callback) => {
       city c ON cs.city = c.id
     LEFT JOIN 
       district d ON cs.district = d.id
+    LEFT JOIN 
+      analyte a ON a.name = s.Analyte
     WHERE 
       s.status = 'In Stock' 
-      AND s.Quantity>0
-  
+      AND s.Quantity > 0
+      AND sample_visibility="Public"
   `;
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
 
-    const imageFolder = path.join(__dirname, '../uploads/Images');
-
-    fs.readdir(imageFolder, (fsErr, files) => {
-      if (fsErr) return callback(fsErr, null);
-
-      const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-      const totalSamples = results.length;
-      const totalImages = imageFiles.length;
-
-      let selectedImages = [];
-
-      if (totalImages >= totalSamples) {
-        selectedImages = [...imageFiles].sort(() => 0.5 - Math.random()).slice(0, totalSamples);
+    const updatedResults = results.map(sample => {
+      if (sample.analyteImage) {
+        sample.imageUrl = `data:image/png;base64,${Buffer.from(sample.analyteImage).toString('base64')}`;
       } else {
-        for (let i = 0; i < totalSamples; i++) {
-          const img = imageFiles[i % totalImages];
-          selectedImages.push(img);
-        }
+        sample.imageUrl = null; // or fallback image
       }
-
-      const updatedResults = results.map((sample, index) => {
-        const selectedImage = selectedImages[index];
-        const imagePath = path.join(imageFolder, selectedImage);
-        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
-        sample.imageUrl = `data:image/${path.extname(selectedImage).slice(1)};base64,${base64Image}`;
-        return sample;
-      });
-
-      callback(null, updatedResults);
+      delete sample.analyteImage; // optional: remove raw image buffer from the object
+      return sample;
     });
+
+    callback(null, updatedResults);
   });
 };
 
@@ -379,7 +362,7 @@ const getAllVolumnUnits = (name, callback) => {
 };
 
 const getAllSampleinIndex = (name, callback) => {
-  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND sample_visibility="Public" ';
+  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND sample_visibility="Public" AND status="In Stock"';
 
 
   mysqlConnection.query(query, [name], (err, results) => {
@@ -493,7 +476,7 @@ const getSampleById = (id, callback) => {
 
 
 const getPoolSampleDetails = (pooledSampleId, callback) => {
-  
+
   const query = `
    SELECT s.*
 FROM poolsample ps
@@ -507,7 +490,7 @@ GROUP BY s.id
       console.error("❌ Error fetching pooled sample details:", err);
       return callback(err, null);
     }
-    
+
     return callback(null, results); // Array of samples part of this pool
   });
 };
@@ -690,14 +673,16 @@ const createSample = (data, callback) => {
                 console.error("❌ Error inserting into poolsample:", err);
                 return callback(err, null);
               }
-const updateStatusQuery = `
-  UPDATE sample SET status = 'Pooled', sample_visibility = 'Non-Public'
-  WHERE id IN (?)
-`;
+              const newStatus = data.alreadypooled === "Pooled" ? "AddtoPool" : "Pooled";
 
-              mysqlConnection.query(updateStatusQuery, [poolSamplesArray], (err, statusResults) => {
+              const updateStatusQuery = `
+      UPDATE sample SET status = ?, sample_visibility = 'Non-Public'
+      WHERE id IN (?)
+    `;
+
+              mysqlConnection.query(updateStatusQuery, [newStatus, poolSamplesArray], (err, statusResults) => {
                 if (err) {
-                  console.error("❌ Error updating sample statuses to Pooled Sample:", err);
+                  console.error("❌ Error updating sample statuses:", err);
                   return callback(err, null);
                 }
 
@@ -727,21 +712,21 @@ const updateSample = (id, data, file, callback) => {
     freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
     box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
   }
-  
+
 
   const volume = data.volume === '' ? '' : data.volume;
- let age = data.age;
+  let age = data.age;
   if (age === '' || age === null || age === undefined) {
-    age = null; 
+    age = null;
   } else {
     age = Number(age);
     if (isNaN(age)) {
-      age = null; 
+      age = null;
     }
   }
   // Start with fields and values
   const fields = [
-    'PatientName = ?', 'FinalConcentration=?','samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?', 'FinalConcentration=?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -752,7 +737,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname,data.finalConcentration ,data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
+    data.patientname, data.finalConcentration, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
   ];
 
   // Add logo file if available
@@ -783,7 +768,7 @@ const updateSample = (id, data, file, callback) => {
 
     if (result.affectedRows === 0) {
       console.warn('⚠️ No rows updated. Check if the sample ID exists.');
-    } 
+    }
 
     const historyQuery = `
       INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
@@ -819,7 +804,7 @@ const updatetestResultandUnit = (id, data, callback) => {
 
   mysqlConnection.query(
     query,
-    [data.mode, data.TestResult, data.TestResultUnit,data.samplepdf ,id],
+    [data.mode, data.TestResult, data.TestResultUnit, data.samplepdf, id],
     (err, result) => {
       callback(err, result);
     }
@@ -959,6 +944,6 @@ module.exports = {
   getAllSampleinIndex,
   getPoolSampleDetails,
   updatetestResultandUnit,
-  
+
 
 };

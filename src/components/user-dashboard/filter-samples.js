@@ -167,6 +167,7 @@ const handleAddToCart = (sample) => {
   dispatch(
     add_cart_product({
       id: sample.id,
+      masterid:sample.masterID,
       age: defaultAge,
       gender: defaultGender,
       Analyte: sample.Analyte,

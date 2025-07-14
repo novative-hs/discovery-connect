@@ -157,6 +157,146 @@ const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_accoun
     });
   });
 };
+
+const getBiobankSamplesPooled = (
+  user_account_id,
+  page,
+  pageSize,
+  priceFilter,
+  searchField,
+  searchValue,
+  callback
+) => {
+  const pageInt = parseInt(page, 10) || 1;
+  const pageSizeInt = parseInt(pageSize, 10) || 50;
+  const offset = (pageInt - 1) * pageSizeInt;
+
+  let baseWhereShared = `sample.status = "Pooled" AND sample.is_deleted = FALSE`;
+  let baseWhereOwn = `sample.status = "Pooled" AND sample.is_deleted = FALSE`;
+  const paramsShared = [];
+  const paramsOwn = [];
+
+  const likeValue = `%${searchValue?.toLowerCase()}%`;
+
+  // Price filter
+  if (priceFilter === "priceAdded") {
+    baseWhereShared += ` AND sample.price IS NOT NULL AND sample.price > 0`;
+    baseWhereOwn += ` AND sample.price IS NOT NULL AND sample.price > 0`;
+  } else if (priceFilter === "priceNotAdded") {
+    baseWhereShared += ` AND (sample.price IS NULL OR sample.price = 0)`;
+    baseWhereOwn += ` AND (sample.price IS NULL OR sample.price = 0)`;
+  }
+
+  // Search filter
+  if (searchField && searchValue) {
+    switch (searchField) {
+      case "locationids":
+        baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+        baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+        paramsShared.push(likeValue, likeValue, likeValue);
+        paramsOwn.push(likeValue, likeValue, likeValue);
+        break;
+
+      case "price":
+        baseWhereShared += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
+        baseWhereOwn += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "volume":
+        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        paramsShared.push(likeValue, searchValue.toLowerCase());
+        paramsOwn.push(likeValue, searchValue.toLowerCase());
+        break;
+
+      case "TestResult":
+        baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "gender":
+        baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
+        paramsShared.push(`${searchValue.toLowerCase()}%`);
+        paramsOwn.push(`${searchValue.toLowerCase()}%`);
+        break;
+
+      case "CollectionSiteName":
+        baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
+        paramsShared.push(likeValue);
+        break;
+
+      default:
+        baseWhereShared += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+    }
+  }
+
+  const sharedSamplesQuery = `
+    SELECT sample.*, collectionsite.CollectionSiteName
+    FROM sample
+    JOIN collectionsitestaff ON sample.user_account_id = collectionsitestaff.user_account_id
+    JOIN collectionsite ON collectionsitestaff.collectionsite_id = collectionsite.id
+    WHERE ${baseWhereShared} AND sample.user_account_id != ?
+  `;
+
+  const ownSamplesQuery = `
+    SELECT sample.*, NULL AS CollectionSiteName
+    FROM sample
+    WHERE ${baseWhereOwn} AND sample.user_account_id = ?
+  `;
+
+  const dataQuery = `
+    SELECT * FROM (
+      ${sharedSamplesQuery}
+      UNION ALL
+      ${ownSamplesQuery}
+    ) AS merged_samples
+    ORDER BY id DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  const countQuery = `
+    SELECT COUNT(*) AS totalCount FROM (
+      ${sharedSamplesQuery}
+      UNION ALL
+      ${ownSamplesQuery}
+    ) AS countCombined
+  `;
+
+ const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
+const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
+
+
+  mysqlConnection.query(dataQuery, finalParams, (err, results) => {
+    if (err) {
+      console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+      return callback(err);
+    }
+
+    const enrichedResults = results.map((sample) => ({
+      ...sample,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+        .filter(Boolean)
+        .join("-"),
+    }));
+
+    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+      if (err) return callback(err);
+      const totalCount = countResults[0].totalCount;
+      callback(null, { samples: enrichedResults, totalCount });
+    });
+  });
+};
+
+
 // Function to add price and sample price currency from biobank
 const postSamplePrice = (data, callback) => {
   const updateQuery = `
@@ -305,4 +445,5 @@ module.exports = {
   getBiobankVisibilitySamples,
   UpdateSampleStatus,
   getPrice,
+  getBiobankSamplesPooled
 };

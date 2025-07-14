@@ -36,6 +36,35 @@ const getBiobankSamples = (req, res) => {
   });
 };
 
+const getBiobankSamplesPooled = (req, res) => {
+  const id = parseInt(req.params.id);
+  const page = req.query.page || 1;
+  const pageSize = req.query.pageSize || 50;
+
+  const priceFilter = req.query.priceFilter || null;
+  const searchField = req.query.searchField || null;
+  const searchValue = req.query.searchValue || null;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid user_account_id" });
+  }
+
+  BioBankModel.getBiobankSamplesPooled(id, page, pageSize, priceFilter, searchField, searchValue, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples" });
+    }
+
+    const { samples, totalCount } = results;
+    res.status(200).json({
+      samples,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: parseInt(page),
+      pageSize: parseInt(pageSize),
+      totalCount,
+    });
+  });
+};
+
 const getQuarantineStock = (req, res) => {
   BioBankModel.getQuarantineStock((err, results) => {
     if (err) {
@@ -118,6 +147,7 @@ module.exports = {
   getQuarantineStock,
   getBiobankVisibilitySamples,
   UpdateSampleStatus,
-  getPrice
+  getPrice,
+  getBiobankSamplesPooled
 
 };

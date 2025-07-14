@@ -217,6 +217,7 @@ const Header = ({ setActiveTab, activeTab }) => {
             ? [
               { label: "Sample List", tab: "samples" },
               { label: "Sample Dispatch", tab: "sample-dispatch" },
+              { label: "Pooled Sample List", tab: "pooledsample" },
               { label: "Quarantine Stock", tab: "Quarantine-Stock" },
             ]
             : userType == "committeemember"

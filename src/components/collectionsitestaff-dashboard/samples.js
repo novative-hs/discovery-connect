@@ -1272,7 +1272,7 @@ const SampleArea = () => {
                   <tr key={sample.id}>
                     {(poolMode) && (
                       <td className="text-center">
-                        {sample.samplemode === "Individual" ? (
+                        
                           <input
                             type="checkbox"
                             checked={selectedSamples.includes(sample.id)}
@@ -1284,9 +1284,7 @@ const SampleArea = () => {
                               );
                             }}
                           />
-                        ) : (
-                          <span className="text-muted">—</span> // Optional dash
-                        )}
+                      
                       </td>
                     )}
 
