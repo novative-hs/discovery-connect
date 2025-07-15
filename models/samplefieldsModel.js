@@ -10,7 +10,7 @@ const create_AnalyteTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
       testresultunit_id INT,
-      image LONGBLOB,
+      image VARCHAR(500) DEFAULT NULL,
       added_by INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive') DEFAULT 'active',
@@ -364,7 +364,7 @@ const getAnalyteName=(callback)=>{
   });
 }
 
-const createAnalyte = (data, callback) => {
+const createAnalyte = (tableName,data, callback) => {
   const { bulkData, name, added_by, testresultunit_id, image } = data || {};
 
   if (!added_by) {
@@ -552,10 +552,11 @@ const updateSampleFields = (tableName, id, data, callback) => {
     updateQuery += `, testresultunit_id = ?`;
     updateParams.push(testresultunit_id);
   }
-  if (image) {
-    updateQuery += `, image = ?`;
-    updateParams.push(image);
-  }
+if (image) {
+  updateQuery += `, image = ?`;
+  updateParams.push(image);
+}
+
 }
 
 

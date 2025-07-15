@@ -230,10 +230,10 @@ const getAllSamples = (callback) => {
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
-
+console.log("Res",results)
     const updatedResults = results.map(sample => {
       if (sample.analyteImage) {
-        sample.imageUrl = `data:image/png;base64,${Buffer.from(sample.analyteImage).toString('base64')}`;
+        sample.imageUrl = sample.analyteImage;
       } else {
         sample.imageUrl = null; // or fallback image
       }
@@ -443,13 +443,15 @@ const getAllCSSamples = (limit, offset, callback) => {
         console.error("❌ Data Query Error:", dataErr);
         return callback(dataErr, null);
       }
-
+console.log(results)
       const updatedResults = results.map((sample) => {
         let imageUrl = null;
 
         if (sample.analyteImage) {
-          const base64Image = sample.analyteImage.toString('base64');
-          imageUrl = `data:image/jpeg;base64,${base64Image}`;
+        imageUrl = sample.analyteImage.startsWith('/')
+  ? sample.analyteImage
+  : `/${sample.analyteImage}`;
+
         }
 
         return {

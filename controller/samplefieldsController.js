@@ -47,13 +47,16 @@ const createAnalyte = (req, res) => {
   const files = req.files;
 
   // ✅ If file was uploaded, grab the buffer (e.g., for image stored as BLOB)
-  newSampleFieldsData.image = files?.image?.[0]?.buffer || null;
+  newSampleFieldsData.image = req.file
+  ? `assets/img/analytes/${req.file.filename}`
+  : null;
+
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return res.status(400).json({ error: "Invalid table name" });
   }
 
-  samplefieldsModel.createSampleFields(tableName, newSampleFieldsData, (err, result) => {
+  samplefieldsModel.createAnalyte(tableName, newSampleFieldsData, (err, result) => {
     if (err) {
       console.error("❌ Backend Error:", err); // ✅ SHOW REAL ERROR
       return res.status(500).json({ error: err.message || "Error creating sample fields" });
@@ -67,15 +70,12 @@ const createAnalyte = (req, res) => {
 };
 
 
-// Controller to update a sample field dynamically
 const updateSampleFields = (req, res) => {
   const { tableName, id } = req.params;
   const updatedData = req.body;
-  const files = req.files;
 
-  // Attach image buffer if uploaded
-  if (files?.image?.[0]) {
-    updatedData.image = files.image[0].buffer;
+  if (req.file) {
+    updatedData.image = `assets/img/analytes/${req.file.filename}`;
   }
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
@@ -89,6 +89,7 @@ const updateSampleFields = (req, res) => {
     res.status(200).json({ message: "Sample fields updated successfully" });
   });
 };
+
 
 
 // Controller to delete (soft delete) a sample field dynamically

@@ -218,9 +218,10 @@ const handleUpdate = async (e) => {
       form.append("testresultunit_id", formData.testresultunit_id);
     }
 
-    if (formData.image instanceof File) {
-      form.append("image", formData.image);
-    }
+  if (formData.image instanceof File) {
+  form.append("image", formData.image);
+}
+
 
     await axios.put(
       `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
